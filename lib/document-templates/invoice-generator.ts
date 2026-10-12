@@ -1,6 +1,6 @@
-import { PDFDocument, StandardFonts, rgb, PageSizes } from 'pdf-lib';
+import { PDFDocument, StandardFonts, PageSizes } from 'pdf-lib';
 import { fmtCurrency, saveDocument } from '../pdf-engine';
-import { brandDoc, drawBrandHeader, drawKpiBand, stampFooters } from './report-theme';
+import { brandDoc, drawBrandHeader, drawKpiBand, stampFooters, DOC } from './report-theme';
 
 /**
  * Branded invoice PDF — the real document behind every invoice row.
@@ -63,12 +63,12 @@ export async function generateInvoicePdf(input: InvoicePdfInput): Promise<{
   const line = (label: string, value: string, opts?: { big?: boolean; goldBar?: boolean }) => {
     if (!value) return;
     if (opts?.goldBar) {
-      page.drawRectangle({ x: M - 8, y: y - 6, width: width - 2 * (M - 8), height: 22, color: rgb(0.98, 0.94, 0.85) });
+      page.drawRectangle({ x: M - 8, y: y - 6, width: width - 2 * (M - 8), height: 22, color: DOC.highlight });
     }
-    page.drawText(label.toUpperCase(), { x: M, y, size: 7.5, font: bold, color: rgb(0.45, 0.45, 0.45) });
+    page.drawText(label.toUpperCase(), { x: M, y, size: 7.5, font: bold, color: DOC.muted });
     page.drawText(value, {
       x: M + 150, y: y - (opts?.big ? 2 : 0),
-      size: opts?.big ? 13 : 10, font: opts?.big ? bold : font, color: rgb(0.08, 0.08, 0.08),
+      size: opts?.big ? 13 : 10, font: opts?.big ? bold : font, color: DOC.ink,
     });
     y -= opts?.big ? 26 : 20;
   };
@@ -90,7 +90,7 @@ export async function generateInvoicePdf(input: InvoicePdfInput): Promise<{
   y -= 8;
 
   // Totals ladder
-  page.drawLine({ start: { x: M, y: y + 8 }, end: { x: width - M, y: y + 8 }, thickness: 0.75, color: rgb(0.8, 0.8, 0.8) });
+  page.drawLine({ start: { x: M, y: y + 8 }, end: { x: width - M, y: y + 8 }, thickness: 0.75, color: DOC.rule });
   line('Amount', fmtCurrency(amount));
   if (tax > 0) line('Tax', fmtCurrency(tax));
   line('Total Due', fmtCurrency(total), { big: true, goldBar: true });

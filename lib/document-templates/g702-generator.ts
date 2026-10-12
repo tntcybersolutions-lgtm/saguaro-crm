@@ -1,4 +1,4 @@
-import { PDFDocument, StandardFonts, rgb, PageSizes } from 'pdf-lib';
+import { PDFDocument, StandardFonts, PageSizes } from 'pdf-lib';
 import {
   getProjectContext,
   drawField,
@@ -6,7 +6,7 @@ import {
   saveDocument,
 } from '../pdf-engine';
 import { supabaseAdmin } from '../../supabase/admin';
-import { brandDoc, drawBrandHeader, stampFooters } from './report-theme';
+import { brandDoc, drawBrandHeader, stampFooters, DOC } from './report-theme';
 
 export interface G702Input {
   projectId: string;
@@ -64,21 +64,21 @@ export async function generateG702(input: G702Input): Promise<{
     y,
     size: 10,
     font: bold,
-    color: rgb(0, 0, 0),
+    color: DOC.ink,
   });
   page.drawText(`Period From: ${input.periodFrom}`, {
     x: 200,
     y,
     size: 10,
     font,
-    color: rgb(0, 0, 0),
+    color: DOC.ink,
   });
   page.drawText(`Period To: ${input.periodTo}`, {
     x: 380,
     y,
     size: 10,
     font,
-    color: rgb(0, 0, 0),
+    color: DOC.ink,
   });
 
   y -= 25;
@@ -151,7 +151,7 @@ export async function generateG702(input: G702Input): Promise<{
     start: { x: 10, y },
     end: { x: width - 10, y },
     thickness: 1,
-    color: rgb(0.83, 0.63, 0.09),
+    color: DOC.accent,
   });
 
   // Financial summary section
@@ -161,7 +161,7 @@ export async function generateG702(input: G702Input): Promise<{
     y,
     size: 10,
     font: bold,
-    color: rgb(0, 0, 0),
+    color: DOC.ink,
   });
 
   const rows: [string, string][] = [
@@ -195,7 +195,7 @@ export async function generateG702(input: G702Input): Promise<{
       size: 9,
       font:
         i === 0 || i === 2 || i === 5 || i === 6 ? bold : font,
-      color: rgb(0.1, 0.1, 0.1),
+      color: DOC.ink,
     });
     if (val) {
       page.drawText(val, {
@@ -203,7 +203,7 @@ export async function generateG702(input: G702Input): Promise<{
         y,
         size: 9,
         font: bold,
-        color: rgb(0.1, 0.1, 0.1),
+        color: DOC.ink,
       });
     }
   });
@@ -215,21 +215,21 @@ export async function generateG702(input: G702Input): Promise<{
     y: y - 5,
     width: width - 20,
     height: 28,
-    color: rgb(0.05, 0.07, 0.09),
+    color: DOC.ink,
   });
   page.drawText('8. CURRENT PAYMENT DUE', {
     x: 20,
     y: y + 7,
     size: 12,
     font: bold,
-    color: rgb(0.83, 0.63, 0.09),
+    color: DOC.accentOnBand,
   });
   page.drawText(fmtCurrency(currentPaymentDue), {
     x: 400,
     y: y + 7,
     size: 14,
     font: bold,
-    color: rgb(0.83, 0.63, 0.09),
+    color: DOC.accentOnBand,
   });
 
   y -= 20;
@@ -238,14 +238,14 @@ export async function generateG702(input: G702Input): Promise<{
     y,
     size: 9,
     font,
-    color: rgb(0.1, 0.1, 0.1),
+    color: DOC.ink,
   });
   page.drawText(fmtCurrency(contractSumToDate - totalEarnedLessRetainage), {
     x: 430,
     y,
     size: 9,
     font: bold,
-    color: rgb(0.1, 0.1, 0.1),
+    color: DOC.ink,
   });
 
   // Signature blocks
@@ -254,7 +254,7 @@ export async function generateG702(input: G702Input): Promise<{
     start: { x: 10, y },
     end: { x: width - 10, y },
     thickness: 0.5,
-    color: rgb(0.75, 0.75, 0.75),
+    color: DOC.rule,
   });
   y -= 15;
   page.drawText("CONTRACTOR'S CERTIFICATION:", {
@@ -262,17 +262,17 @@ export async function generateG702(input: G702Input): Promise<{
     y,
     size: 9,
     font: bold,
-    color: rgb(0, 0, 0),
+    color: DOC.ink,
   });
   y -= 12;
   page.drawText(
     "The undersigned Contractor certifies that to the best of the Contractor's knowledge, information and belief the Work covered",
-    { x: 10, y, size: 8, font, color: rgb(0.3, 0.3, 0.3) }
+    { x: 10, y, size: 8, font, color: DOC.muted }
   );
   y -= 10;
   page.drawText(
     'by this Application for Payment has been completed in accordance with the Contract Documents.',
-    { x: 10, y, size: 8, font, color: rgb(0.3, 0.3, 0.3) }
+    { x: 10, y, size: 8, font, color: DOC.muted }
   );
 
   y -= 30;
@@ -280,13 +280,13 @@ export async function generateG702(input: G702Input): Promise<{
     start: { x: 10, y },
     end: { x: 250, y },
     thickness: 0.5,
-    color: rgb(0, 0, 0),
+    color: DOC.ink,
   });
   page.drawLine({
     start: { x: 310, y },
     end: { x: width - 10, y },
     thickness: 0.5,
-    color: rgb(0, 0, 0),
+    color: DOC.ink,
   });
   y -= 10;
   page.drawText('Contractor Signature / Date', {
@@ -294,14 +294,14 @@ export async function generateG702(input: G702Input): Promise<{
     y,
     size: 8,
     font,
-    color: rgb(0.5, 0.5, 0.5),
+    color: DOC.faint,
   });
   page.drawText("Architect's Certificate for Payment", {
     x: 310,
     y,
     size: 8,
     font,
-    color: rgb(0.5, 0.5, 0.5),
+    color: DOC.faint,
   });
 
   // Corporate footer on every page: Page X of Y \u2022 company \u2022 generated date

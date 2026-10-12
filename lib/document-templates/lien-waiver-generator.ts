@@ -1,6 +1,6 @@
-import { PDFDocument, StandardFonts, rgb } from 'pdf-lib';
+import { PDFDocument, StandardFonts } from 'pdf-lib';
 import { saveDocument, fmtCurrency } from '../pdf-engine';
-import { brandDoc, drawBrandHeader, stampFooters } from './report-theme';
+import { brandDoc, drawBrandHeader, stampFooters, DOC } from './report-theme';
 import { fmtDate } from '@/lib/format-date';
 
 export type WaiverType =
@@ -125,9 +125,9 @@ export async function generateLienWaiver(
       y,
       size: 9,
       font: bold,
-      color: rgb(0.2, 0.2, 0.2),
+      color: DOC.text,
     });
-    page.drawText(value, { x: 180, y, size: 9, font, color: rgb(0, 0, 0) });
+    page.drawText(value, { x: 180, y, size: 9, font, color: DOC.ink });
     y -= 18;
   });
 
@@ -136,7 +136,7 @@ export async function generateLienWaiver(
     start: { x: 20, y },
     end: { x: width - 20, y },
     thickness: 0.5,
-    color: rgb(0.83, 0.63, 0.09),
+    color: DOC.accent,
   });
   y -= 20;
 
@@ -146,7 +146,7 @@ export async function generateLienWaiver(
     y,
     size: 10,
     font: bold,
-    color: rgb(0, 0, 0),
+    color: DOC.ink,
   });
   y -= 15;
 
@@ -159,7 +159,7 @@ export async function generateLienWaiver(
         y,
         size: 9,
         font,
-        color: rgb(0.2, 0.2, 0.2),
+        color: DOC.text,
       });
       y -= 13;
       line = word;
@@ -173,7 +173,7 @@ export async function generateLienWaiver(
       y,
       size: 9,
       font,
-      color: rgb(0.2, 0.2, 0.2),
+      color: DOC.text,
     });
     y -= 13;
   }
@@ -185,7 +185,7 @@ export async function generateLienWaiver(
     y,
     size: 9,
     font: bold,
-    color: rgb(0, 0, 0),
+    color: DOC.ink,
   });
   y -= 15;
   page.drawRectangle({
@@ -193,7 +193,7 @@ export async function generateLienWaiver(
     y: y - 40,
     width: width - 40,
     height: 40,
-    borderColor: rgb(0.7, 0.7, 0.7),
+    borderColor: DOC.rule,
     borderWidth: 0.5,
   });
   y -= 60;
@@ -204,7 +204,7 @@ export async function generateLienWaiver(
     start: { x: 20, y },
     end: { x: width - 20, y },
     thickness: 0.5,
-    color: rgb(0.75, 0.75, 0.75),
+    color: DOC.rule,
   });
   y -= 15;
   page.drawText('SIGNATURE:', {
@@ -212,26 +212,26 @@ export async function generateLienWaiver(
     y,
     size: 9,
     font: bold,
-    color: rgb(0, 0, 0),
+    color: DOC.ink,
   });
   page.drawLine({
     start: { x: 100, y: y - 3 },
     end: { x: 350, y: y - 3 },
     thickness: 0.5,
-    color: rgb(0, 0, 0),
+    color: DOC.ink,
   });
   page.drawText('TITLE:', {
     x: 360,
     y,
     size: 9,
     font: bold,
-    color: rgb(0, 0, 0),
+    color: DOC.ink,
   });
   page.drawLine({
     start: { x: 400, y: y - 3 },
     end: { x: width - 20, y: y - 3 },
     thickness: 0.5,
-    color: rgb(0, 0, 0),
+    color: DOC.ink,
   });
   y -= 15;
   page.drawText('DATE:', {
@@ -239,26 +239,26 @@ export async function generateLienWaiver(
     y,
     size: 9,
     font: bold,
-    color: rgb(0, 0, 0),
+    color: DOC.ink,
   });
   page.drawLine({
     start: { x: 60, y: y - 3 },
     end: { x: 200, y: y - 3 },
     thickness: 0.5,
-    color: rgb(0, 0, 0),
+    color: DOC.ink,
   });
   page.drawText('NOTARY (if required):', {
     x: 220,
     y,
     size: 9,
     font: bold,
-    color: rgb(0, 0, 0),
+    color: DOC.ink,
   });
   page.drawLine({
     start: { x: 340, y: y - 3 },
     end: { x: width - 20, y: y - 3 },
     thickness: 0.5,
-    color: rgb(0, 0, 0),
+    color: DOC.ink,
   });
 
   // Corporate footer: Page X of Y \u2022 company \u2022 generated date (statute stays in the letterhead)

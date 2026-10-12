@@ -1,6 +1,6 @@
-import { PDFDocument, StandardFonts, rgb, PageSizes } from 'pdf-lib';
+import { PDFDocument, StandardFonts, PageSizes } from 'pdf-lib';
 import { saveDocument, fmtCurrency } from '../pdf-engine';
-import { brandDoc, drawBrandHeader, stampFooters } from './report-theme';
+import { brandDoc, drawBrandHeader, stampFooters, DOC } from './report-theme';
 
 export interface WH347Worker {
   name: string;
@@ -63,28 +63,28 @@ export async function generateWH347(input: WH347Input): Promise<{
       y,
       size: 9,
       font: bold,
-      color: rgb(0, 0, 0),
+      color: DOC.ink,
     });
     page.drawText(`ADDRESS: ${input.contractorAddress}`, {
       x: 10,
       y: y - 12,
       size: 8,
       font,
-      color: rgb(0.2, 0.2, 0.2),
+      color: DOC.text,
     });
     page.drawText(`PAYROLL NO: ${input.payrollNumber}`, {
       x: 360,
       y,
       size: 9,
       font: bold,
-      color: rgb(0, 0, 0),
+      color: DOC.ink,
     });
     page.drawText(`WEEK ENDING: ${input.weekEnding}`, {
       x: 360,
       y: y - 12,
       size: 9,
       font: bold,
-      color: rgb(0, 0, 0),
+      color: DOC.ink,
     });
 
     y -= 30;
@@ -93,14 +93,14 @@ export async function generateWH347(input: WH347Input): Promise<{
       y,
       size: 9,
       font: bold,
-      color: rgb(0, 0, 0),
+      color: DOC.ink,
     });
     page.drawText(`PROJECT NO: ${input.projectNumber}`, {
       x: 360,
       y,
       size: 9,
       font,
-      color: rgb(0, 0, 0),
+      color: DOC.ink,
     });
 
     if (input.federalProjectNumber || input.contractingAgency) {
@@ -111,7 +111,7 @@ export async function generateWH347(input: WH347Input): Promise<{
           y,
           size: 8,
           font,
-          color: rgb(0.3, 0.3, 0.3),
+          color: DOC.muted,
         });
       }
       if (input.contractingAgency) {
@@ -120,7 +120,7 @@ export async function generateWH347(input: WH347Input): Promise<{
           y,
           size: 8,
           font,
-          color: rgb(0.3, 0.3, 0.3),
+          color: DOC.muted,
         });
       }
     }
@@ -130,7 +130,7 @@ export async function generateWH347(input: WH347Input): Promise<{
       start: { x: 10, y },
       end: { x: width - 10, y },
       thickness: 1,
-      color: rgb(0.83, 0.63, 0.09),
+      color: DOC.accent,
     });
 
     // Column headers
@@ -140,7 +140,7 @@ export async function generateWH347(input: WH347Input): Promise<{
       y: y - 14,
       width: width - 20,
       height: 28,
-      color: rgb(0.15, 0.2, 0.25),
+      color: DOC.ink,
     });
 
     const colHeaders = [
@@ -163,7 +163,7 @@ export async function generateWH347(input: WH347Input): Promise<{
           y: y - 2 - li * 8,
           size: 6,
           font: bold,
-          color: rgb(1, 1, 1),
+          color: DOC.paper,
           maxWidth: col.w - 4,
         });
       });
@@ -188,10 +188,10 @@ export async function generateWH347(input: WH347Input): Promise<{
         width: width - 20,
         height: ROW_HEIGHT,
         color: belowPrevailing
-          ? rgb(1, 0.95, 0.88)
+          ? DOC.highlight
           : i % 2 === 0
-          ? rgb(0.96, 0.97, 0.98)
-          : rgb(1, 1, 1),
+          ? DOC.zebra
+          : DOC.paper,
       });
 
       // Name, address, classification
@@ -200,27 +200,27 @@ export async function generateWH347(input: WH347Input): Promise<{
         y: rowY - 5,
         size: 7.5,
         font: bold,
-        color: belowPrevailing ? rgb(0.7, 0.3, 0.05) : rgb(0.05, 0.05, 0.05),
+        color: belowPrevailing ? DOC.warning : DOC.ink,
       });
       page.drawText(worker.address.slice(0, 24), {
         x: 12,
         y: rowY - 14,
         size: 6.5,
         font,
-        color: rgb(0.4, 0.4, 0.4),
+        color: DOC.muted,
       });
       page.drawText(worker.workClassification.slice(0, 22), {
         x: 12,
         y: rowY - 23,
         size: 6.5,
         font,
-        color: rgb(0.3, 0.3, 0.3),
+        color: DOC.muted,
       });
 
       if (belowPrevailing) {
         page.drawText(
           `BELOW PREVAILING (${fmtCurrency(worker.prevailingWageRate!)}/hr)`,
-          { x: 12, y: rowY - 33, size: 6, font: bold, color: rgb(0.8, 0.2, 0) }
+          { x: 12, y: rowY - 33, size: 6, font: bold, color: DOC.danger }
         );
       }
 
@@ -234,7 +234,7 @@ export async function generateWH347(input: WH347Input): Promise<{
           y: rowY - 8,
           size: 6,
           font: hrs > 0 ? bold : font,
-          color: hrs > 8 ? rgb(0.7, 0.2, 0.1) : rgb(0.2, 0.2, 0.2),
+          color: hrs > 8 ? DOC.danger : DOC.text,
         });
       });
 
@@ -263,7 +263,7 @@ export async function generateWH347(input: WH347Input): Promise<{
           y: rowY - 8,
           size: 7,
           font,
-          color: rgb(0.1, 0.1, 0.1),
+          color: DOC.ink,
         });
       });
     });
@@ -277,7 +277,7 @@ export async function generateWH347(input: WH347Input): Promise<{
         y: y - 14,
         width: width - 20,
         height: 16,
-        color: rgb(0.05, 0.07, 0.09),
+        color: DOC.ink,
       });
       const totGross = batch.reduce((s, w) => s + w.grossWages, 0);
       const totDeductions = batch.reduce(
@@ -297,42 +297,42 @@ export async function generateWH347(input: WH347Input): Promise<{
         y: y - 10,
         size: 7.5,
         font: bold,
-        color: rgb(0.83, 0.63, 0.09),
+        color: DOC.accentOnBand,
       });
       page.drawText(totRegHrs.toString(), {
         x: 226,
         y: y - 10,
         size: 7.5,
         font: bold,
-        color: rgb(0.83, 0.63, 0.09),
+        color: DOC.accentOnBand,
       });
       page.drawText(totOtHrs.toString(), {
         x: 264,
         y: y - 10,
         size: 7.5,
         font: bold,
-        color: rgb(0.83, 0.63, 0.09),
+        color: DOC.accentOnBand,
       });
       page.drawText(fmtCurrency(totGross), {
         x: 398,
         y: y - 10,
         size: 7.5,
         font: bold,
-        color: rgb(0.83, 0.63, 0.09),
+        color: DOC.accentOnBand,
       });
       page.drawText(fmtCurrency(totDeductions), {
         x: 461,
         y: y - 10,
         size: 7.5,
         font: bold,
-        color: rgb(0.83, 0.63, 0.09),
+        color: DOC.accentOnBand,
       });
       page.drawText(fmtCurrency(totNet), {
         x: 514,
         y: y - 10,
         size: 7.5,
         font: bold,
-        color: rgb(0.83, 0.63, 0.09),
+        color: DOC.accentOnBand,
       });
     }
 
@@ -343,7 +343,7 @@ export async function generateWH347(input: WH347Input): Promise<{
         start: { x: 10, y },
         end: { x: width - 10, y },
         thickness: 0.5,
-        color: rgb(0.75, 0.75, 0.75),
+        color: DOC.rule,
       });
       y -= 14;
       page.drawText('STATEMENT OF COMPLIANCE (CERTIFICATION)', {
@@ -351,7 +351,7 @@ export async function generateWH347(input: WH347Input): Promise<{
         y,
         size: 9,
         font: bold,
-        color: rgb(0, 0, 0),
+        color: DOC.ink,
       });
       y -= 12;
       const certText =
@@ -371,7 +371,7 @@ export async function generateWH347(input: WH347Input): Promise<{
             y,
             size: 7.5,
             font,
-            color: rgb(0.2, 0.2, 0.2),
+            color: DOC.text,
           });
           y -= 10;
           certLine = word;
@@ -385,7 +385,7 @@ export async function generateWH347(input: WH347Input): Promise<{
           y,
           size: 7.5,
           font,
-          color: rgb(0.2, 0.2, 0.2),
+          color: DOC.text,
         });
         y -= 10;
       }
@@ -395,13 +395,13 @@ export async function generateWH347(input: WH347Input): Promise<{
         start: { x: 10, y },
         end: { x: 280, y },
         thickness: 0.5,
-        color: rgb(0, 0, 0),
+        color: DOC.ink,
       });
       page.drawLine({
         start: { x: 320, y },
         end: { x: width - 10, y },
         thickness: 0.5,
-        color: rgb(0, 0, 0),
+        color: DOC.ink,
       });
       y -= 10;
       page.drawText('Signature / Title', {
@@ -409,14 +409,14 @@ export async function generateWH347(input: WH347Input): Promise<{
         y,
         size: 8,
         font,
-        color: rgb(0.5, 0.5, 0.5),
+        color: DOC.faint,
       });
       page.drawText('Date', {
         x: 320,
         y,
         size: 8,
         font,
-        color: rgb(0.5, 0.5, 0.5),
+        color: DOC.faint,
       });
     }
 

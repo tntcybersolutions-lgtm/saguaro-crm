@@ -3,10 +3,10 @@ import { createServerClient, getUser } from '@/lib/supabase-server';
 import { requirePermission } from '@/lib/permissions';
 import {
   PDFDocument,
-  StandardFonts,
-  rgb,
+  StandardFonts, 
   PageSizes,
 } from 'pdf-lib';
+import { DOC } from '@/lib/document-templates/report-theme';
 import { requestDay } from '@/lib/time-zone';
 
 export const runtime = 'nodejs';
@@ -27,12 +27,12 @@ export const dynamic = 'force-dynamic';
 type Row = Record<string, unknown>;
 
 // ─── Brand colors (match pdf-engine) ─────────────────────────────────────────
-const GOLD = rgb(0.831, 0.627, 0.09);
-const DARK = rgb(0.051, 0.067, 0.086);
-const GRAY = rgb(0.4, 0.4, 0.4);
-const LGRAY = rgb(0.94, 0.94, 0.94);
-const WHITE = rgb(1, 1, 1);
-const BLACK = rgb(0, 0, 0);
+const GOLD = DOC.accent;
+const DARK = DOC.ink;
+const GRAY = DOC.muted;
+const LGRAY = DOC.zebra;
+const WHITE = DOC.paper;
+const BLACK = DOC.ink;
 
 function fmtDate(d?: unknown): string {
   if (!d) return '';
@@ -85,8 +85,8 @@ async function buildRfiPdf(rfis: Row[], projectName: string, today10: string): P
     p.drawRectangle({ x: 0, y: h - 56, width: w, height: 56, color: DARK });
     draw(p, 'SAGUARO', MARGIN, h - 24, 13, bold, GOLD);
     draw(p, 'REQUEST FOR INFORMATION — LOG', MARGIN + 90, h - 24, 12, bold, WHITE);
-    draw(p, projectName || 'Project', MARGIN, h - 42, 9, reg, rgb(0.7, 0.7, 0.7));
-    draw(p, `Generated ${today}  •  ${list.length} RFI(s)`, w - 230, h - 42, 8, reg, rgb(0.7, 0.7, 0.7));
+    draw(p, projectName || 'Project', MARGIN, h - 42, 9, reg, DOC.rule);
+    draw(p, `Generated ${today}  •  ${list.length} RFI(s)`, w - 230, h - 42, 8, reg, DOC.rule);
   }
 
   function footer(p: any, n: number) {
@@ -130,7 +130,7 @@ async function buildRfiPdf(rfis: Row[], projectName: string, today10: string): P
 
     // Status pill (right aligned)
     const pillText = isOverdue ? 'OVERDUE' : status.toUpperCase();
-    const pillColor = isOverdue ? rgb(0.8, 0.2, 0.1) : status === 'answered' || status === 'closed' ? rgb(0.1, 0.5, 0.2) : GOLD;
+    const pillColor = isOverdue ? DOC.danger : status === 'answered' || status === 'closed' ? DOC.success : GOLD;
     draw(page, pillText, width - MARGIN - 70, y - 14, 8, bold, pillColor);
     y -= 28;
 
@@ -157,7 +157,7 @@ async function buildRfiPdf(rfis: Row[], projectName: string, today10: string): P
     // Answer
     if (r.answer) {
       ensureSpace(40);
-      draw(page, 'ANSWER', MARGIN + 6, y, 8, bold, rgb(0.1, 0.45, 0.2));
+      draw(page, 'ANSWER', MARGIN + 6, y, 8, bold, DOC.success);
       y -= 13;
       y = wrap(page, String(r.answer), MARGIN + 6, y, reg, 9, 95);
       if (r.answered_by) {

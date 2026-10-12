@@ -1,11 +1,11 @@
-import { PDFDocument, StandardFonts, rgb, PageSizes } from 'pdf-lib';
+import { PDFDocument, StandardFonts, PageSizes } from 'pdf-lib';
 import {
   getProjectContext,
   drawField,
   fmtCurrency,
   saveDocument,
 } from '../pdf-engine';
-import { brandDoc, drawBrandHeader, stampFooters } from './report-theme';
+import { brandDoc, drawBrandHeader, stampFooters, DOC } from './report-theme';
 
 export interface A101Input {
   /* What the GC typed on the contract form. Values still derive from the
@@ -48,7 +48,7 @@ export async function generateA101(input: A101Input): Promise<{
     let line = '';
     for (const word of words) {
       if ((line + ' ' + word).length > maxChars) {
-        page.drawText(line.trim(), { x, y, size: 8.5, font, color: rgb(0.2, 0.2, 0.2) });
+        page.drawText(line.trim(), { x, y, size: 8.5, font, color: DOC.text });
         y -= 12;
         line = word;
       } else {
@@ -56,7 +56,7 @@ export async function generateA101(input: A101Input): Promise<{
       }
     }
     if (line.trim()) {
-      page.drawText(line.trim(), { x, y, size: 8.5, font, color: rgb(0.2, 0.2, 0.2) });
+      page.drawText(line.trim(), { x, y, size: 8.5, font, color: DOC.text });
       y -= 12;
     }
     return y;
@@ -88,7 +88,7 @@ export async function generateA101(input: A101Input): Promise<{
     start: { x: 10, y },
     end: { x: width - 10, y },
     thickness: 1,
-    color: rgb(0.83, 0.63, 0.09),
+    color: DOC.accent,
   });
 
   // Preamble
@@ -98,7 +98,7 @@ export async function generateA101(input: A101Input): Promise<{
     y,
     size: 11,
     font: bold,
-    color: rgb(0, 0, 0),
+    color: DOC.ink,
   });
 
   y -= 14;
@@ -116,7 +116,7 @@ export async function generateA101(input: A101Input): Promise<{
     y,
     size: 10,
     font: bold,
-    color: rgb(0, 0, 0),
+    color: DOC.ink,
   });
   y -= 14;
   y = wrapText(
@@ -133,7 +133,7 @@ export async function generateA101(input: A101Input): Promise<{
     y,
     size: 10,
     font: bold,
-    color: rgb(0, 0, 0),
+    color: DOC.ink,
   });
   y -= 14;
   const projectDesc = pick('scope', p?.description || p?.scope || `General construction for ${p?.name || 'the Project'} located at ${p?.address || 'the project site'}.`);
@@ -151,7 +151,7 @@ export async function generateA101(input: A101Input): Promise<{
     y,
     size: 10,
     font: bold,
-    color: rgb(0, 0, 0),
+    color: DOC.ink,
   });
   y -= 14;
 
@@ -168,21 +168,21 @@ export async function generateA101(input: A101Input): Promise<{
       y: y - 4,
       width: width - 20,
       height: 18,
-      color: i % 2 === 0 ? rgb(0.96, 0.97, 0.98) : rgb(1, 1, 1),
+      color: i % 2 === 0 ? DOC.zebra : DOC.paper,
     });
     page1.drawText(label, {
       x: 15,
       y: y + 2,
       size: 9,
       font: bold,
-      color: rgb(0.2, 0.2, 0.2),
+      color: DOC.text,
     });
     page1.drawText(value, {
       x: 280,
       y: y + 2,
       size: 9,
       font,
-      color: rgb(0, 0, 0),
+      color: DOC.ink,
     });
   });
 
@@ -193,7 +193,7 @@ export async function generateA101(input: A101Input): Promise<{
     y,
     size: 10,
     font: bold,
-    color: rgb(0, 0, 0),
+    color: DOC.ink,
   });
   y -= 14;
   y = wrapText(
@@ -210,21 +210,21 @@ export async function generateA101(input: A101Input): Promise<{
     y: y - 5,
     width: width - 20,
     height: 28,
-    color: rgb(0.05, 0.07, 0.09),
+    color: DOC.ink,
   });
   page1.drawText('CONTRACT SUM:', {
     x: 20,
     y: y + 7,
     size: 11,
     font: bold,
-    color: rgb(0.83, 0.63, 0.09),
+    color: DOC.accentOnBand,
   });
   page1.drawText(fmtCurrency(Number(pick('contractSum', p?.contract_amount || 0)) || 0), {
     x: 380,
     y: y + 7,
     size: 13,
     font: bold,
-    color: rgb(0.83, 0.63, 0.09),
+    color: DOC.accentOnBand,
   });
 
   y -= 35;
@@ -234,7 +234,7 @@ export async function generateA101(input: A101Input): Promise<{
     y,
     size: 9,
     font,
-    color: rgb(0.2, 0.2, 0.2),
+    color: DOC.text,
   });
 
   // === PAGE 2 ===
@@ -249,7 +249,7 @@ export async function generateA101(input: A101Input): Promise<{
     y,
     size: 10,
     font: bold,
-    color: rgb(0, 0, 0),
+    color: DOC.ink,
   });
   y -= 14;
   y = wrapText(
@@ -273,7 +273,7 @@ export async function generateA101(input: A101Input): Promise<{
     y,
     size: 10,
     font: bold,
-    color: rgb(0, 0, 0),
+    color: DOC.ink,
   });
   y -= 14;
 
@@ -317,12 +317,12 @@ export async function generateA101(input: A101Input): Promise<{
       y,
       size: 10,
       font: bold,
-      color: rgb(0, 0, 0),
+      color: DOC.ink,
     });
     y -= 14;
     for (const [label, value] of supplementary) {
       if (y < 70) { page2 = pdf.addPage(PageSizes.Letter); y = height - 65; }
-      page2.drawText(label + ':', { x: 10, y, size: 8.5, font: bold, color: rgb(0.2, 0.2, 0.2) });
+      page2.drawText(label + ':', { x: 10, y, size: 8.5, font: bold, color: DOC.text });
       y = wrapText(page2, String(value), 130, y, 78);
       y -= 3;
     }
@@ -334,7 +334,7 @@ export async function generateA101(input: A101Input): Promise<{
     start: { x: 10, y },
     end: { x: width - 10, y },
     thickness: 0.5,
-    color: rgb(0.75, 0.75, 0.75),
+    color: DOC.rule,
   });
   y -= 15;
   page2.drawText('IN WITNESS WHEREOF, the parties have executed this Agreement.', {
@@ -342,31 +342,31 @@ export async function generateA101(input: A101Input): Promise<{
     y,
     size: 9,
     font,
-    color: rgb(0.3, 0.3, 0.3),
+    color: DOC.muted,
   });
 
   y -= 25;
   // Owner signature
-  page2.drawText('OWNER:', { x: 10, y, size: 9, font: bold, color: rgb(0, 0, 0) });
+  page2.drawText('OWNER:', { x: 10, y, size: 9, font: bold, color: DOC.ink });
   page2.drawText(pick('ownerName', (ctx.owner as any)?.name || ''), {
     x: 10,
     y: y - 12,
     size: 8,
     font,
-    color: rgb(0.3, 0.3, 0.3),
+    color: DOC.muted,
   });
   page2.drawLine({
     start: { x: 10, y: y - 30 },
     end: { x: 260, y: y - 30 },
     thickness: 0.5,
-    color: rgb(0, 0, 0),
+    color: DOC.ink,
   });
   page2.drawText('Signature / Title / Date', {
     x: 10,
     y: y - 40,
     size: 7,
     font,
-    color: rgb(0.5, 0.5, 0.5),
+    color: DOC.faint,
   });
 
   // Contractor signature
@@ -375,27 +375,27 @@ export async function generateA101(input: A101Input): Promise<{
     y,
     size: 9,
     font: bold,
-    color: rgb(0, 0, 0),
+    color: DOC.ink,
   });
   page2.drawText(pick('contractorName', p?.gc_entity?.name || ''), {
     x: 310,
     y: y - 12,
     size: 8,
     font,
-    color: rgb(0.3, 0.3, 0.3),
+    color: DOC.muted,
   });
   page2.drawLine({
     start: { x: 310, y: y - 30 },
     end: { x: width - 10, y: y - 30 },
     thickness: 0.5,
-    color: rgb(0, 0, 0),
+    color: DOC.ink,
   });
   page2.drawText('Signature / Title / Date', {
     x: 310,
     y: y - 40,
     size: 7,
     font,
-    color: rgb(0.5, 0.5, 0.5),
+    color: DOC.faint,
   });
 
   // Corporate footer on every page: Page X of Y \u2022 company \u2022 generated date

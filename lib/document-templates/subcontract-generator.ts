@@ -1,11 +1,11 @@
-import { PDFDocument, StandardFonts, rgb, PageSizes } from 'pdf-lib';
+import { PDFDocument, StandardFonts, PageSizes } from 'pdf-lib';
 import {
   getProjectContext,
   drawField,
   fmtCurrency,
   saveDocument,
 } from '../pdf-engine';
-import { brandDoc, drawBrandHeader, stampFooters } from './report-theme';
+import { brandDoc, drawBrandHeader, stampFooters, DOC } from './report-theme';
 
 export interface SubcontractInput {
   projectId: string;
@@ -59,7 +59,7 @@ export async function generateSubcontract(input: SubcontractInput): Promise<{
     let line = '';
     for (const word of words) {
       if ((line + ' ' + word).length > maxChars) {
-        page.drawText(line.trim(), { x, y, size: 8.5, font, color: rgb(0.2, 0.2, 0.2) });
+        page.drawText(line.trim(), { x, y, size: 8.5, font, color: DOC.text });
         y -= 12;
         line = word;
       } else {
@@ -67,7 +67,7 @@ export async function generateSubcontract(input: SubcontractInput): Promise<{
       }
     }
     if (line.trim()) {
-      page.drawText(line.trim(), { x, y, size: 8.5, font, color: rgb(0.2, 0.2, 0.2) });
+      page.drawText(line.trim(), { x, y, size: 8.5, font, color: DOC.text });
       y -= 12;
     }
     return y;
@@ -118,7 +118,7 @@ export async function generateSubcontract(input: SubcontractInput): Promise<{
     start: { x: 10, y },
     end: { x: width - 10, y },
     thickness: 1,
-    color: rgb(0.83, 0.63, 0.09),
+    color: DOC.accent,
   });
 
   // Preamble
@@ -128,7 +128,7 @@ export async function generateSubcontract(input: SubcontractInput): Promise<{
     y,
     size: 11,
     font: bold,
-    color: rgb(0, 0, 0),
+    color: DOC.ink,
   });
   y -= 14;
   y = wrapText(
@@ -145,7 +145,7 @@ export async function generateSubcontract(input: SubcontractInput): Promise<{
     y,
     size: 10,
     font: bold,
-    color: rgb(0, 0, 0),
+    color: DOC.ink,
   });
   y -= 14;
   y = wrapText(
@@ -162,7 +162,7 @@ export async function generateSubcontract(input: SubcontractInput): Promise<{
     y,
     size: 10,
     font: bold,
-    color: rgb(0, 0, 0),
+    color: DOC.ink,
   });
   y -= 14;
   const scope = pick('scope', bidPkg?.scope || sub?.scope || sub?.trade || 'As described in the Contract Documents.');
@@ -184,7 +184,7 @@ export async function generateSubcontract(input: SubcontractInput): Promise<{
   if (inclusions) {
     y -= 6;
     room(30);
-    flow.drawText('Included in this scope:', { x: 10, y, size: 8.5, font: bold, color: rgb(0.2, 0.2, 0.2) });
+    flow.drawText('Included in this scope:', { x: 10, y, size: 8.5, font: bold, color: DOC.text });
     y -= 12;
     y = wrapText(flow, inclusions, 10, y);
   }
@@ -200,7 +200,7 @@ export async function generateSubcontract(input: SubcontractInput): Promise<{
   if (exclusions.length) {
     y -= 6;
     room(30);
-    flow.drawText('Expressly excluded from this scope:', { x: 10, y, size: 8.5, font: bold, color: rgb(0.2, 0.2, 0.2) });
+    flow.drawText('Expressly excluded from this scope:', { x: 10, y, size: 8.5, font: bold, color: DOC.text });
     y -= 12;
     exclusions.forEach((item, i) => {
       room(14);
@@ -218,7 +218,7 @@ export async function generateSubcontract(input: SubcontractInput): Promise<{
     y,
     size: 10,
     font: bold,
-    color: rgb(0, 0, 0),
+    color: DOC.ink,
   });
   y -= 14;
 
@@ -237,21 +237,21 @@ export async function generateSubcontract(input: SubcontractInput): Promise<{
     y: y - 5,
     width: width - 20,
     height: 28,
-    color: rgb(0.05, 0.07, 0.09),
+    color: DOC.ink,
   });
   flow.drawText('SUBCONTRACT SUM:', {
     x: 20,
     y: y + 7,
     size: 11,
     font: bold,
-    color: rgb(0.83, 0.63, 0.09),
+    color: DOC.accentOnBand,
   });
   flow.drawText(fmtCurrency(subAmount), {
     x: 380,
     y: y + 7,
     size: 13,
     font: bold,
-    color: rgb(0.83, 0.63, 0.09),
+    color: DOC.accentOnBand,
   });
 
   // === PAGE 2 ===
@@ -266,7 +266,7 @@ export async function generateSubcontract(input: SubcontractInput): Promise<{
     y,
     size: 10,
     font: bold,
-    color: rgb(0, 0, 0),
+    color: DOC.ink,
   });
   y -= 14;
   const retainagePct = pick('retainagePct', p?.retainage_pct || p?.retainage_percent || 10);
@@ -284,7 +284,7 @@ export async function generateSubcontract(input: SubcontractInput): Promise<{
     y,
     size: 10,
     font: bold,
-    color: rgb(0, 0, 0),
+    color: DOC.ink,
   });
   y -= 14;
   y = wrapText(
@@ -301,7 +301,7 @@ export async function generateSubcontract(input: SubcontractInput): Promise<{
     y,
     size: 10,
     font: bold,
-    color: rgb(0, 0, 0),
+    color: DOC.ink,
   });
   y -= 14;
   y = wrapText(
@@ -318,7 +318,7 @@ export async function generateSubcontract(input: SubcontractInput): Promise<{
     y,
     size: 10,
     font: bold,
-    color: rgb(0, 0, 0),
+    color: DOC.ink,
   });
   y -= 14;
   y = wrapText(
@@ -356,11 +356,11 @@ export async function generateSubcontract(input: SubcontractInput): Promise<{
       y,
       size: 10,
       font: bold,
-      color: rgb(0, 0, 0),
+      color: DOC.ink,
     });
     y -= 14;
     for (const [label, value] of supplementary) {
-      page2.drawText(label + ':', { x: 10, y, size: 8.5, font: bold, color: rgb(0.2, 0.2, 0.2) });
+      page2.drawText(label + ':', { x: 10, y, size: 8.5, font: bold, color: DOC.text });
       y = wrapText(page2, value, 150, y, 74);
       y -= 3;
     }
@@ -372,7 +372,7 @@ export async function generateSubcontract(input: SubcontractInput): Promise<{
     start: { x: 10, y },
     end: { x: width - 10, y },
     thickness: 0.5,
-    color: rgb(0.75, 0.75, 0.75),
+    color: DOC.rule,
   });
   y -= 15;
   page2.drawText('IN WITNESS WHEREOF, the parties have executed this Subcontract Agreement.', {
@@ -380,31 +380,31 @@ export async function generateSubcontract(input: SubcontractInput): Promise<{
     y,
     size: 9,
     font,
-    color: rgb(0.3, 0.3, 0.3),
+    color: DOC.muted,
   });
 
   y -= 25;
   // Contractor signature
-  page2.drawText('CONTRACTOR:', { x: 10, y, size: 9, font: bold, color: rgb(0, 0, 0) });
+  page2.drawText('CONTRACTOR:', { x: 10, y, size: 9, font: bold, color: DOC.ink });
   page2.drawText(contractorName, {
     x: 10,
     y: y - 12,
     size: 8,
     font,
-    color: rgb(0.3, 0.3, 0.3),
+    color: DOC.muted,
   });
   page2.drawLine({
     start: { x: 10, y: y - 30 },
     end: { x: 260, y: y - 30 },
     thickness: 0.5,
-    color: rgb(0, 0, 0),
+    color: DOC.ink,
   });
   page2.drawText('Signature / Title / Date', {
     x: 10,
     y: y - 40,
     size: 7,
     font,
-    color: rgb(0.5, 0.5, 0.5),
+    color: DOC.faint,
   });
 
   // Subcontractor signature
@@ -413,27 +413,27 @@ export async function generateSubcontract(input: SubcontractInput): Promise<{
     y,
     size: 9,
     font: bold,
-    color: rgb(0, 0, 0),
+    color: DOC.ink,
   });
   page2.drawText(subName, {
     x: 310,
     y: y - 12,
     size: 8,
     font,
-    color: rgb(0.3, 0.3, 0.3),
+    color: DOC.muted,
   });
   page2.drawLine({
     start: { x: 310, y: y - 30 },
     end: { x: width - 10, y: y - 30 },
     thickness: 0.5,
-    color: rgb(0, 0, 0),
+    color: DOC.ink,
   });
   page2.drawText('Signature / Title / Date', {
     x: 310,
     y: y - 40,
     size: 7,
     font,
-    color: rgb(0.5, 0.5, 0.5),
+    color: DOC.faint,
   });
 
   // Corporate footer on every page: Page X of Y + company + generated date

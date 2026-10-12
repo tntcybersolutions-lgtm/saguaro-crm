@@ -13,20 +13,29 @@
  *
  * Money is NUMERIC-as-TEXT server-side — num()/money() Number() everything,
  * and effectiveTotal() implements the house rule that a stale 0 total defers
- * to amount + tax. Money display is GOLD (#FF8A00 family) per house style.
+ * to amount + tax. Colours come from lib/document-palette (white paper, navy
+ * ink, the app's cyan-blue deepened for print) — the same palette the HTML
+ * print documents use.
  */
 import { PDFDocument, PDFFont, PDFPage, StandardFonts, rgb } from 'pdf-lib';
+import { DOC_HEX, type DocRole } from '../document-palette';
 
 export type ThemeRGB = ReturnType<typeof rgb>;
 
-// ─── House palette ───────────────────────────────────────────────────────────
-export const GOLD = rgb(0.961, 0.62, 0.043); // #FF8A00 — money + accent fallback
-export const INK = rgb(0.051, 0.067, 0.086); // #0D1116 — header/footer charcoal
-export const PAPER = rgb(1, 1, 1);
-export const SLATE = rgb(0.34, 0.37, 0.42); // labels
-export const FAINT = rgb(0.55, 0.57, 0.6); // footer text
-export const MIST = rgb(0.958, 0.961, 0.966); // zebra / KPI fill
-export const HAIRLINE = rgb(0.84, 0.85, 0.87);
+// ─── Document palette (lib/document-palette) ────────────────────────────────
+function rgbOf(hex: string): ThemeRGB {
+  const n = parseInt(hex.replace('#', ''), 16);
+  return rgb(((n >> 16) & 255) / 255, ((n >> 8) & 255) / 255, (n & 255) / 255);
+}
+/** Every document colour by role, as pdf-lib colours. Generators use these, never rgb(). */
+export const DOC = Object.fromEntries(Object.entries(DOC_HEX).map(([k, v]) => [k, rgbOf(v)])) as Record<DocRole, ThemeRGB>;
+export const GOLD = DOC.accent;     // accent fallback (name kept for callers)
+export const INK = DOC.ink;         // letterhead band and figures
+export const PAPER = DOC.paper;
+export const SLATE = DOC.muted;     // labels
+export const FAINT = DOC.faint;     // footer text
+export const MIST = DOC.zebra;      // zebra / KPI fill
+export const HAIRLINE = DOC.rule;
 
 // ─── Money + date helpers (NUMERIC-as-TEXT safe) ─────────────────────────────
 export function num(v: unknown): number {
@@ -111,7 +120,8 @@ export async function resolveBrandingValues(opts: {
 // ─── Brand kit (per-document: fonts + embedded logo) ─────────────────────────
 export interface BrandKit {
   companyName: string;
-  accent: ThemeRGB; // tenant primary color, GOLD fallback
+  accent: ThemeRGB; // tenant primary color, document accent fallback (on paper)
+  bandAccent: ThemeRGB; // tenant primary color, the app's title cyan fallback (on the navy band)
   logo: { img: import('pdf-lib').PDFImage; w: number; h: number } | null;
   reg: PDFFont;
   bold: PDFFont;
@@ -151,6 +161,7 @@ export async function brandDoc(
   return {
     companyName: values.companyName,
     accent: values.accentHex ? hexToRgb01(values.accentHex) : GOLD,
+    bandAccent: values.accentHex ? hexToRgb01(values.accentHex) : DOC.accentOnBand,
     logo,
     reg,
     bold,
@@ -188,13 +199,13 @@ export function drawBrandHeader(
 
   // Typographic letterhead: company wordmark above the doc title.
   const wordmark = kit.companyName.toUpperCase().slice(0, 60);
-  page.drawText(wordmark, { x: textX, y: height - 16, size: 8, font: kit.bold, color: kit.accent });
+  page.drawText(wordmark, { x: textX, y: height - 16, size: 8, font: kit.bold, color: kit.bandAccent });
   page.drawText(opts.title.slice(0, 90), { x: textX, y: height - 32, size: 12.5, font: kit.bold, color: PAPER });
 
   if (opts.docTag) {
     const tag = opts.docTag.slice(0, 40);
     const tw = kit.bold.widthOfTextAtSize(tag, 10);
-    page.drawText(tag, { x: width - M - tw, y: height - 28, size: 10, font: kit.bold, color: kit.accent });
+    page.drawText(tag, { x: width - M - tw, y: height - 28, size: 10, font: kit.bold, color: kit.bandAccent });
   }
 
   let contentY = height - HEADER_BAND_H - 16;
@@ -209,7 +220,7 @@ export function drawBrandHeader(
 export interface KpiItem {
   label: string;
   value: string;
-  money?: boolean; // money values render GOLD per house style
+  money?: boolean; // money values: accent bar, navy figure
 }
 
 /**
@@ -240,7 +251,7 @@ export function drawKpiBand(
     let size = 12.5;
     const val = kpi.value.slice(0, 40);
     while (size > 7 && kit.bold.widthOfTextAtSize(val, size) > cellW - 16) size -= 0.5;
-    page.drawText(val, { x: cx + 9, y: y - 30, size, font: kit.bold, color: kpi.money ? rgb(0.72, 0.46, 0.03) : INK });
+    page.drawText(val, { x: cx + 9, y: y - 30, size, font: kit.bold, color: INK });
   });
   return y - H - 10;
 }

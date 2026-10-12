@@ -1,10 +1,10 @@
-import { PDFDocument, StandardFonts, rgb, PageSizes } from 'pdf-lib';
+import { PDFDocument, StandardFonts, PageSizes } from 'pdf-lib';
 import {
   getProjectContext,
   drawField,
   saveDocument,
 } from '../pdf-engine';
-import { brandDoc, drawBrandHeader, stampFooters } from './report-theme';
+import { brandDoc, drawBrandHeader, stampFooters, DOC } from './report-theme';
 
 export interface PreliminaryNoticeInput {
   projectId: string;
@@ -51,7 +51,7 @@ export async function generatePreliminaryNotice(input: PreliminaryNoticeInput): 
     y,
     size: 9,
     font: bold,
-    color: rgb(0.3, 0.3, 0.3),
+    color: DOC.muted,
   });
 
   // Owner info
@@ -90,7 +90,7 @@ export async function generatePreliminaryNotice(input: PreliminaryNoticeInput): 
     start: { x: 10, y },
     end: { x: width - 10, y },
     thickness: 1,
-    color: rgb(0.83, 0.63, 0.09),
+    color: DOC.accent,
   });
 
   // Notice body
@@ -100,7 +100,7 @@ export async function generatePreliminaryNotice(input: PreliminaryNoticeInput): 
     y,
     size: 11,
     font: bold,
-    color: rgb(0, 0, 0),
+    color: DOC.ink,
   });
 
   y -= 14;
@@ -120,7 +120,7 @@ export async function generatePreliminaryNotice(input: PreliminaryNoticeInput): 
         y,
         size: 8.5,
         font,
-        color: rgb(0.2, 0.2, 0.2),
+        color: DOC.text,
       });
       y -= 12;
       noticeLine = word;
@@ -134,7 +134,7 @@ export async function generatePreliminaryNotice(input: PreliminaryNoticeInput): 
       y,
       size: 8.5,
       font,
-      color: rgb(0.2, 0.2, 0.2),
+      color: DOC.text,
     });
     y -= 12;
   }
@@ -146,7 +146,7 @@ export async function generatePreliminaryNotice(input: PreliminaryNoticeInput): 
     y: y - 55,
     width: width - 20,
     height: 70,
-    color: rgb(0.96, 0.97, 0.98),
+    color: DOC.zebra,
   });
 
   y -= 5;
@@ -155,7 +155,7 @@ export async function generatePreliminaryNotice(input: PreliminaryNoticeInput): 
     y,
     size: 9,
     font: bold,
-    color: rgb(0.7, 0.1, 0.1),
+    color: DOC.danger,
   });
 
   y -= 12;
@@ -173,7 +173,7 @@ export async function generatePreliminaryNotice(input: PreliminaryNoticeInput): 
         y,
         size: 8,
         font,
-        color: rgb(0.3, 0.3, 0.3),
+        color: DOC.muted,
       });
       y -= 11;
       warningLine = word;
@@ -187,7 +187,7 @@ export async function generatePreliminaryNotice(input: PreliminaryNoticeInput): 
       y,
       size: 8,
       font,
-      color: rgb(0.3, 0.3, 0.3),
+      color: DOC.muted,
     });
     y -= 11;
   }
@@ -198,38 +198,38 @@ export async function generatePreliminaryNotice(input: PreliminaryNoticeInput): 
     start: { x: 10, y },
     end: { x: width - 10, y },
     thickness: 0.5,
-    color: rgb(0.75, 0.75, 0.75),
+    color: DOC.rule,
   });
   y -= 15;
 
-  page.drawText('CLAIMANT:', { x: 10, y, size: 9, font: bold, color: rgb(0, 0, 0) });
+  page.drawText('CLAIMANT:', { x: 10, y, size: 9, font: bold, color: DOC.ink });
   page.drawText(`Date: ${new Date().toLocaleDateString()}`, {
     x: 310,
     y,
     size: 9,
     font,
-    color: rgb(0, 0, 0),
+    color: DOC.ink,
   });
 
   page.drawLine({
     start: { x: 10, y: y - 20 },
     end: { x: 260, y: y - 20 },
     thickness: 0.5,
-    color: rgb(0, 0, 0),
+    color: DOC.ink,
   });
   page.drawText(claimantName, {
     x: 10,
     y: y - 30,
     size: 8,
     font,
-    color: rgb(0.3, 0.3, 0.3),
+    color: DOC.muted,
   });
   page.drawText('Signature / Title', {
     x: 10,
     y: y - 40,
     size: 7,
     font,
-    color: rgb(0.5, 0.5, 0.5),
+    color: DOC.faint,
   });
 
   // Corporate footer: Page X of Y \u2022 company \u2022 generated date

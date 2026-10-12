@@ -1,6 +1,6 @@
-import { PDFDocument, StandardFonts, rgb, PageSizes } from 'pdf-lib';
+import { PDFDocument, StandardFonts, PageSizes } from 'pdf-lib';
 import { getProjectContext, drawField, fmtCurrency, saveDocument } from '../pdf-engine';
-import { brandDoc, drawBrandHeader, stampFooters } from './report-theme';
+import { brandDoc, drawBrandHeader, stampFooters, DOC } from './report-theme';
 
 export interface A312Input {
   projectId: string;
@@ -74,21 +74,21 @@ export async function generateA312(input: A312Input): Promise<{
     y: y - 5,
     width: width - 20,
     height: 28,
-    color: rgb(0.05, 0.07, 0.09),
+    color: DOC.ink,
   });
   page1.drawText('PERFORMANCE BOND AMOUNT (100% of Contract):', {
     x: 20,
     y: y + 7,
     size: 10,
     font: bold,
-    color: rgb(0.83, 0.63, 0.09),
+    color: DOC.accentOnBand,
   });
   page1.drawText(fmtCurrency(bondAmount), {
     x: 400,
     y: y + 7,
     size: 13,
     font: bold,
-    color: rgb(0.83, 0.63, 0.09),
+    color: DOC.accentOnBand,
   });
 
   // Separator
@@ -97,7 +97,7 @@ export async function generateA312(input: A312Input): Promise<{
     start: { x: 10, y },
     end: { x: width - 10, y },
     thickness: 1,
-    color: rgb(0.83, 0.63, 0.09),
+    color: DOC.accentOnBand,
   });
 
   // Performance bond body
@@ -107,7 +107,7 @@ export async function generateA312(input: A312Input): Promise<{
     y,
     size: 10,
     font: bold,
-    color: rgb(0, 0, 0),
+    color: DOC.ink,
   });
 
   y -= 12;
@@ -133,7 +133,7 @@ export async function generateA312(input: A312Input): Promise<{
         y,
         size: 8,
         font,
-        color: rgb(0.2, 0.2, 0.2),
+        color: DOC.text,
       });
       y -= 11;
       perfLine = word;
@@ -147,7 +147,7 @@ export async function generateA312(input: A312Input): Promise<{
       y,
       size: 8,
       font,
-      color: rgb(0.2, 0.2, 0.2),
+      color: DOC.text,
     });
     y -= 11;
   }
@@ -158,12 +158,12 @@ export async function generateA312(input: A312Input): Promise<{
     start: { x: 10, y },
     end: { x: width - 10, y },
     thickness: 0.5,
-    color: rgb(0.75, 0.75, 0.75),
+    color: DOC.rule,
   });
   y -= 15;
   page1.drawText(
     'IN WITNESS WHEREOF, the parties have hereunto set their hands and seals on the date set forth below.',
-    { x: 10, y, size: 8.5, font, color: rgb(0.2, 0.2, 0.2) }
+    { x: 10, y, size: 8.5, font, color: DOC.text }
   );
 
   y -= 25;
@@ -172,27 +172,27 @@ export async function generateA312(input: A312Input): Promise<{
     y,
     size: 9,
     font: bold,
-    color: rgb(0, 0, 0),
+    color: DOC.ink,
   });
   page1.drawLine({
     start: { x: 10, y: y - 18 },
     end: { x: 260, y: y - 18 },
     thickness: 0.5,
-    color: rgb(0, 0, 0),
+    color: DOC.ink,
   });
   page1.drawText('Signature / Title / Date', {
     x: 10,
     y: y - 28,
     size: 7,
     font,
-    color: rgb(0.5, 0.5, 0.5),
+    color: DOC.faint,
   });
   page1.drawText(input.principalName, {
     x: 10,
     y: y - 38,
     size: 8,
     font,
-    color: rgb(0.3, 0.3, 0.3),
+    color: DOC.muted,
   });
 
   page1.drawText('SURETY:', {
@@ -200,27 +200,27 @@ export async function generateA312(input: A312Input): Promise<{
     y,
     size: 9,
     font: bold,
-    color: rgb(0, 0, 0),
+    color: DOC.ink,
   });
   page1.drawLine({
     start: { x: 310, y: y - 18 },
     end: { x: width - 10, y: y - 18 },
     thickness: 0.5,
-    color: rgb(0, 0, 0),
+    color: DOC.ink,
   });
   page1.drawText('Attorney-in-Fact / Date', {
     x: 310,
     y: y - 28,
     size: 7,
     font,
-    color: rgb(0.5, 0.5, 0.5),
+    color: DOC.faint,
   });
   page1.drawText(input.suretyName, {
     x: 310,
     y: y - 38,
     size: 8,
     font,
-    color: rgb(0.3, 0.3, 0.3),
+    color: DOC.muted,
   });
 
   // ─── PAGE 2: PAYMENT BOND ─────────────────────────────────────────────────
@@ -257,21 +257,21 @@ export async function generateA312(input: A312Input): Promise<{
     y: y2 - 5,
     width: width - 20,
     height: 28,
-    color: rgb(0.05, 0.07, 0.09),
+    color: DOC.ink,
   });
   page2.drawText('PAYMENT BOND AMOUNT (100% of Contract):', {
     x: 20,
     y: y2 + 7,
     size: 10,
     font: bold,
-    color: rgb(0.83, 0.63, 0.09),
+    color: DOC.accentOnBand,
   });
   page2.drawText(fmtCurrency(bondAmount), {
     x: 400,
     y: y2 + 7,
     size: 13,
     font: bold,
-    color: rgb(0.83, 0.63, 0.09),
+    color: DOC.accentOnBand,
   });
 
   y2 -= 30;
@@ -279,7 +279,7 @@ export async function generateA312(input: A312Input): Promise<{
     start: { x: 10, y: y2 },
     end: { x: width - 10, y: y2 },
     thickness: 1,
-    color: rgb(0.83, 0.63, 0.09),
+    color: DOC.accentOnBand,
   });
 
   y2 -= 14;
@@ -288,7 +288,7 @@ export async function generateA312(input: A312Input): Promise<{
     y: y2,
     size: 10,
     font: bold,
-    color: rgb(0, 0, 0),
+    color: DOC.ink,
   });
 
   y2 -= 12;
@@ -315,7 +315,7 @@ export async function generateA312(input: A312Input): Promise<{
         y: y2,
         size: 8,
         font,
-        color: rgb(0.2, 0.2, 0.2),
+        color: DOC.text,
       });
       y2 -= 11;
       payLine = word;
@@ -329,7 +329,7 @@ export async function generateA312(input: A312Input): Promise<{
       y: y2,
       size: 8,
       font,
-      color: rgb(0.2, 0.2, 0.2),
+      color: DOC.text,
     });
     y2 -= 11;
   }
@@ -340,12 +340,12 @@ export async function generateA312(input: A312Input): Promise<{
     start: { x: 10, y: y2 },
     end: { x: width - 10, y: y2 },
     thickness: 0.5,
-    color: rgb(0.75, 0.75, 0.75),
+    color: DOC.rule,
   });
   y2 -= 15;
   page2.drawText(
     'IN WITNESS WHEREOF, the parties have hereunto set their hands and seals on the date set forth below.',
-    { x: 10, y: y2, size: 8.5, font, color: rgb(0.2, 0.2, 0.2) }
+    { x: 10, y: y2, size: 8.5, font, color: DOC.text }
   );
 
   y2 -= 25;
@@ -354,27 +354,27 @@ export async function generateA312(input: A312Input): Promise<{
     y: y2,
     size: 9,
     font: bold,
-    color: rgb(0, 0, 0),
+    color: DOC.ink,
   });
   page2.drawLine({
     start: { x: 10, y: y2 - 18 },
     end: { x: 260, y: y2 - 18 },
     thickness: 0.5,
-    color: rgb(0, 0, 0),
+    color: DOC.ink,
   });
   page2.drawText('Signature / Title / Date', {
     x: 10,
     y: y2 - 28,
     size: 7,
     font,
-    color: rgb(0.5, 0.5, 0.5),
+    color: DOC.faint,
   });
   page2.drawText(input.principalName, {
     x: 10,
     y: y2 - 38,
     size: 8,
     font,
-    color: rgb(0.3, 0.3, 0.3),
+    color: DOC.muted,
   });
 
   page2.drawText('SURETY:', {
@@ -382,27 +382,27 @@ export async function generateA312(input: A312Input): Promise<{
     y: y2,
     size: 9,
     font: bold,
-    color: rgb(0, 0, 0),
+    color: DOC.ink,
   });
   page2.drawLine({
     start: { x: 310, y: y2 - 18 },
     end: { x: width - 10, y: y2 - 18 },
     thickness: 0.5,
-    color: rgb(0, 0, 0),
+    color: DOC.ink,
   });
   page2.drawText('Attorney-in-Fact / Date', {
     x: 310,
     y: y2 - 28,
     size: 7,
     font,
-    color: rgb(0.5, 0.5, 0.5),
+    color: DOC.faint,
   });
   page2.drawText(input.suretyName, {
     x: 310,
     y: y2 - 38,
     size: 8,
     font,
-    color: rgb(0.3, 0.3, 0.3),
+    color: DOC.muted,
   });
 
   // Corporate footer on every page: Page X of Y \u2022 company \u2022 generated date
