@@ -16,6 +16,7 @@
  */
 import { execFileSync } from 'node:child_process';
 import fs from 'node:fs';
+import http from 'node:http';
 import path from 'node:path';
 
 const ROOT = process.cwd();
@@ -30,14 +31,27 @@ const R = { mode: null, site: SITE, device: null, contexts: [], screens: {}, ste
 const sleep = (ms) => new Promise((r) => setTimeout(r, ms));
 const log = (m) => { R.steps.push(`${new Date().toISOString().slice(11, 19)} ${m}`); console.log(m); };
 
-async function wd(method, p, body, timeoutMs = 600000) {
-  const ctl = new AbortController(); const t = setTimeout(() => ctl.abort(), timeoutMs);
-  try {
-    const res = await fetch(`${AP}${p}`, { method, headers: { 'content-type': 'application/json' }, body: body ? JSON.stringify(body) : undefined, signal: ctl.signal });
-    const json = await res.json().catch(() => ({}));
-    if (!res.ok) throw new Error(`${method} ${p.replace(/session\/[^/]+/, 'session/…')} ${res.status} ${JSON.stringify(json.value?.message || json.value?.error || json).slice(0, 220)}`);
-    return json.value;
-  } finally { clearTimeout(t); }
+/* node:http, not fetch: fetch's built-in 300 s header timeout killed the first
+   session request while WebDriverAgent was still building (run 38304786580). */
+function wd(method, p, body, timeoutMs = 600000) {
+  return new Promise((resolve, reject) => {
+    const data = body ? JSON.stringify(body) : null;
+    const req = http.request(`${AP}${p}`, { method, headers: data ? { 'content-type': 'application/json', 'content-length': Buffer.byteLength(data) } : {} }, (res) => {
+      let buf = '';
+      res.setEncoding('utf8');
+      res.on('data', (c) => { buf += c; });
+      res.on('end', () => {
+        let json = {};
+        try { json = JSON.parse(buf); } catch { /* non-JSON body: reported below */ }
+        if (res.statusCode >= 400) reject(new Error(`${method} ${p.replace(/session\/[^/]+/, 'session/…')} ${res.statusCode} ${JSON.stringify(json.value?.message || json.value?.error || buf).slice(0, 220)}`));
+        else resolve(json.value);
+      });
+    });
+    req.setTimeout(timeoutMs, () => req.destroy(new Error(`${method} ${p} timed out after ${Math.round(timeoutMs / 1000)} s`)));
+    req.on('error', reject);
+    if (data) req.write(data);
+    req.end();
+  });
 }
 let S = '';
 const run = (script, args = []) => wd('POST', `/session/${S}/execute/sync`, { script, args });

@@ -56,6 +56,8 @@ jobs:
           xcrun simctl ui "$UDID" appearance dark
       - name: App shell — launch and sign-in screens
         run: |
+          # Start clean: the checkout carries the previous run's encrypted result.
+          rm -rf tools/ios-evidence
           OUT=tools/ios-evidence/shots; mkdir -p "$OUT"
           APP=$(find app/build/dd/Build/Products -name 'App.app' -maxdepth 3 | head -1)
           xcrun simctl install "$SIM_UDID" "$APP"
