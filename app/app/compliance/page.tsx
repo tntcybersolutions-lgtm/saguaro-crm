@@ -10,7 +10,7 @@ import { FlatStyles, FlatList, Row } from '@/components/ui/flat';
 import NudgeRing from '@/components/intelligence/NudgeRing';
 import { ANCHOR_INSURANCE_EXPIRING } from '@/lib/suggestions';
 
-const GOLD='var(--brand-primary)',DARK='var(--bg-base)',RAISED='var(--bg-surface)',BORDER='rgba(255,255,255,0.12)',DIM='var(--text-secondary)',TEXT='var(--text-primary)',GREEN='var(--success)',RED='var(--danger)',AMBER='var(--warning)';
+const DARK='var(--bg-base)',RAISED='var(--bg-surface)',BORDER='var(--border-default)',DIM='var(--text-secondary)',TEXT='var(--text-primary)',GREEN='var(--success)',RED='var(--danger)',AMBER='var(--warning)';
 
 function ScoreBar({score}:{score:number}){
   const color = score>=80?GREEN:score>=50?AMBER:RED;
@@ -170,7 +170,7 @@ export default function CompliancePage(){
           </div>
           <div style={{display:'flex',gap:6,flexWrap:'wrap'}}>
             {(['all','compliant','at_risk','non_compliant'] as const).map(f=>(
-              <button key={f} onClick={()=>setFilter(f)} style={{padding:'6px 14px',background:filter===f?'color-mix(in srgb, var(--brand-primary) 15%, transparent)':'rgba(255,255,255,0.04)',border:`1px solid ${filter===f?'color-mix(in srgb, var(--brand-primary) 40%, transparent)':BORDER}`,borderRadius:9,color:filter===f?GOLD:DIM,fontSize:12,fontWeight:700,cursor:'pointer'}}>
+              <button key={f} type="button" className="k-chip" aria-pressed={filter===f} onClick={()=>setFilter(f)}>
                 {f==='all'?'All':complianceLabel(f)} ({countFor(f)})
               </button>
             ))}

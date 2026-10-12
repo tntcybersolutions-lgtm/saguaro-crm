@@ -428,7 +428,7 @@ export default function DealPage() {
         { label: 'Probability', value: prob != null ? `${prob}%` : '—', icon: <Gauge size={15} weight="bold" />,
           sub: prob != null ? <span className="k-prog" aria-hidden><span style={{ width: `${prob}%` }} /></span> : 'Not set' },
         { label: 'Next Action', value: lead.next_action_date ? fmtDate(lead.next_action_date) : '—', icon: <CalendarCheck size={15} weight="bold" />,
-          tone: overdue ? 'bad' : 'default', sub: overdue ? 'Overdue' : (lead.next_action ? 'Scheduled' : 'Nothing scheduled') },
+          tone: overdue ? 'bad' : 'default', sub: overdue ? 'Overdue' : lead.next_action_date ? 'Scheduled' : lead.next_action ? 'No date set' : 'Nothing scheduled' },
       ]} />
 
       {/* The one next step, as the concept's alert card. */}

@@ -1,6 +1,7 @@
 'use client';
 
 import React, { useState, useEffect, useMemo, useCallback, useRef } from 'react';
+import { paletteHex } from '@/lib/design-tokens';
 import { textPrompt } from '@/lib/ui/async-dialog';
 import { confirmDialog } from '@/lib/ui/async-dialog';
 import { CATEGORIES } from '@/lib/permission-categories';
@@ -17,7 +18,10 @@ const GREEN = '#4ADE80';
 const RED = '#F87171';
 const AMBER = 'var(--warning)';
 const BLUE = 'var(--info)';
-const ROLE_HEX = '#38BDF8'; // stored role color value (sent to the API) — must stay hex
+/* Role colours are stored with the role (sent to the API), so they stay hex: the
+   approved palette's distinct non-yellow values. Same set as lib/default-roles. */
+const ROLE_SWATCH = { blue: paletteHex.blue, green: paletteHex.green, amber: paletteHex.orange, red: paletteHex.red, white: paletteHex.text, lightSlate: paletteHex.text2, slate: paletteHex.text3 } as const;
+const ROLE_HEX: string = ROLE_SWATCH.blue;
 const PURPLE = '#FBBF24';
 
 /* ── types ── */
@@ -67,36 +71,34 @@ const PERM_LEVELS: PermLevel[] = ['None', 'View', 'Edit', 'Full'];
    imports precisely so this client component can read it. */
 
 const ROLE_PRESETS: { name: string; desc: string; color: string; perms: PermissionMap }[] = [
-  { name: 'Admin', desc: 'Full system access across all modules.', color: '#F87171',
+  { name: 'Admin', desc: 'Full system access across all modules.', color: ROLE_SWATCH.red,
     perms: Object.fromEntries(CATEGORIES.map(c => [c, 'Full' as PermLevel])) },
-  { name: 'Project Manager', desc: 'Manage projects end-to-end, approve COs and pay apps.', color: '#38BDF8',
+  { name: 'Project Manager', desc: 'Manage projects end-to-end, approve COs and pay apps.', color: ROLE_SWATCH.blue,
     perms: Object.fromEntries(CATEGORIES.map(c => [c, c === 'Admin' ? 'View' as PermLevel : 'Full' as PermLevel])) },
-  { name: 'Superintendent', desc: 'Field operations — schedule, safety, daily reporting.', color: '#4ADE80',
+  { name: 'Superintendent', desc: 'Field operations — schedule, safety, daily reporting.', color: ROLE_SWATCH.green,
     perms: Object.fromEntries(CATEGORIES.map(c => {
       if (['Schedule','Safety','Documents','RFIs','Submittals'].includes(c)) return [c, 'Edit' as PermLevel];
       if (['Projects','Budget','Change Orders','Pay Apps','Reports'].includes(c)) return [c, 'View' as PermLevel];
       return [c, 'None' as PermLevel];
     })) },
-  { name: 'Foreman', desc: 'Daily field reporting and crew management.', color: '#FBBF24',
+  { name: 'Foreman', desc: 'Daily field reporting and crew management.', color: ROLE_SWATCH.amber,
     perms: Object.fromEntries(CATEGORIES.map(c => {
       if (['Safety','Schedule'].includes(c)) return [c, 'Edit' as PermLevel];
       if (['Projects','Documents','RFIs','Submittals','Reports'].includes(c)) return [c, 'View' as PermLevel];
       return [c, 'None' as PermLevel];
     })) },
-  { name: 'Subcontractor', desc: 'Limited access for subcontractor partners.', color: '#CBD5E1',
+  { name: 'Subcontractor', desc: 'Limited access for subcontractor partners.', color: ROLE_SWATCH.lightSlate,
     perms: Object.fromEntries(CATEGORIES.map(c => {
       if (['Submittals','RFIs'].includes(c)) return [c, 'Edit' as PermLevel];
       if (['Projects','Documents','Schedule','Safety','Pay Apps'].includes(c)) return [c, 'View' as PermLevel];
       return [c, 'None' as PermLevel];
     })) },
-  { name: 'Read-Only', desc: 'View-only access. Cannot modify any data.', color: '#94A3B8', // stored with the role — a hex, never a CSS variable
+  { name: 'Read-Only', desc: 'View-only access. Cannot modify any data.', color: ROLE_SWATCH.slate, // stored with the role — a hex, never a CSS variable
     perms: Object.fromEntries(CATEGORIES.map(c => [c, 'View' as PermLevel])) },
 ];
 
-/* Role swatches: the approved palette's distinct non-yellow values, stored as
-   hex (yellow stays for actions and selection). Same set as lib/default-roles. */
-const ROLE_COLORS = ['#38BDF8', '#4ADE80', '#FBBF24', '#F87171', '#F8FAFC', '#CBD5E1', '#94A3B8'];
-const ROLE_COLOR_NAME: Record<string, string> = { '#38BDF8': 'Blue', '#4ADE80': 'Green', '#FBBF24': 'Amber', '#F87171': 'Red', '#F8FAFC': 'White', '#CBD5E1': 'Light slate', '#94A3B8': 'Slate' };
+const ROLE_COLORS: string[] = Object.values(ROLE_SWATCH);
+const ROLE_COLOR_NAME: Record<string, string> = { [ROLE_SWATCH.blue]: 'Blue', [ROLE_SWATCH.green]: 'Green', [ROLE_SWATCH.amber]: 'Amber', [ROLE_SWATCH.red]: 'Red', [ROLE_SWATCH.white]: 'White', [ROLE_SWATCH.lightSlate]: 'Light slate', [ROLE_SWATCH.slate]: 'Slate' };
 
 /* ── view types for the two lightweight lookup lists ── */
 interface TenantUser {

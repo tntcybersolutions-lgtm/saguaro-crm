@@ -9,9 +9,9 @@ import { PremiumSurface, ModuleHero, SectionCard, PremiumEmpty, StatStrip, goldB
 import { FlatStyles, Tabs } from '@/components/ui/flat';
 
 /* ─── Palette ─── */
-const GOLD = 'var(--brand-primary)', BG = 'var(--bg-base)', RAISED = 'var(--bg-surface)', BORDER = 'rgba(255,255,255,0.12)',
+const GOLD = 'var(--brand-primary)', BG = 'var(--bg-base)', RAISED = 'var(--bg-surface)', BORDER = 'var(--border-default)',
   TEXT = 'var(--text-primary)', DIM = 'var(--text-secondary)', GREEN = 'var(--success)', RED = 'var(--danger)',
-  AMBER = 'var(--warning)', BLUE = 'var(--brand-primary)', PURPLE = 'var(--warning)';
+  AMBER = 'var(--warning)', BLUE = 'var(--info-fg)', PURPLE = 'var(--warning)';
 
 /* ─── Types ─── */
 type QType = 'text' | 'number' | 'yes_no' | 'rating' | 'file_upload' | 'multi_choice';
@@ -39,7 +39,8 @@ interface Invite { id: string; email: string; sub_name: string; template_id: str
 const CATEGORIES = ['Insurance', 'Bonding', 'Safety', 'References', 'Certifications'] as const;
 // TRADES = canonical SUB_TRADES taxonomy from @/lib/construction-intelligence
 const DEFAULT_DOCS = ['Certificate of Insurance (COI)', 'Performance Bond Letter', 'Safety Record / OSHA Logs', 'References (3+)', 'W-9 Form', 'Business License', 'EMR Letter', 'OSHA 300 Log'];
-const CATEGORY_COLORS: Record<string, string> = { Insurance: BLUE, Bonding: PURPLE, Safety: GREEN, References: GOLD, Certifications: AMBER };
+/* Category series: the shared chart palette (never the action yellow). */
+const CATEGORY_COLORS: Record<string, string> = { Insurance: 'var(--chart-1)', Bonding: 'var(--chart-2)', Safety: 'var(--chart-3)', References: 'var(--chart-4)', Certifications: 'var(--chart-5)' };
 const STATUS_COLORS: Record<string, string> = { pending: AMBER, under_review: BLUE, approved: GREEN, rejected: RED };
 const STATUS_LABELS: Record<string, string> = { pending: 'Pending', under_review: 'Under Review', approved: 'Approved', rejected: 'Rejected' };
 
@@ -54,6 +55,8 @@ function pctColor(pct: number) { return pct >= 80 ? GREEN : pct >= 60 ? AMBER : 
 /* ─── Shared Styles ─── */
 const inputS: React.CSSProperties = { padding: '9px 13px', background: BG, border: `1px solid ${BORDER}`, borderRadius: 8, color: TEXT, fontSize: 13, outline: 'none', width: '100%', boxSizing: 'border-box' };
 const btnS = (bg: string, c: string = 'var(--bg-base)'): React.CSSProperties => ({ padding: '8px 18px', background: bg, color: c, border: 'none', borderRadius: 8, fontWeight: 700, fontSize: 13, cursor: 'pointer' });
+/** The slate secondary button (every action that is not the screen's one primary). */
+const btnSecondary: React.CSSProperties = { ...btnS('var(--action-secondary-bg)', 'var(--action-secondary-fg)'), border: '1px solid var(--action-secondary-border)' };
 const cardS: React.CSSProperties = { background: RAISED, border: `1px solid ${BORDER}`, borderRadius: 10, padding: 16, marginBottom: 10 };
 const chipS = (bg: string, c: string): React.CSSProperties => ({ display: 'inline-block', padding: '3px 10px', borderRadius: 99, fontSize: 12, fontWeight: 700, background: `color-mix(in srgb, ${bg} 13%, transparent)`, color: c });
 // 10000 = the kit overlay layer: above the chat launcher (9999), which otherwise sits on a phone dialog's buttons.
@@ -128,8 +131,8 @@ function RadarChart({ scores, maxScores, size = 220 }: { scores: Record<string, 
         <polygon key={lv} points={cats.map((_, i) => { const a = i * step - Math.PI / 2; return `${cx + r * lv * Math.cos(a)},${cy + r * lv * Math.sin(a)}`; }).join(' ')} fill="none" stroke={BORDER} strokeWidth={1} />
       ))}
       {cats.map((c, i) => { const a = i * step - Math.PI / 2; const lx = cx + (r + 18) * Math.cos(a); const ly = cy + (r + 18) * Math.sin(a); return <text key={c} x={lx} y={ly} fill={CATEGORY_COLORS[c] || DIM} fontSize={10} fontWeight={700} textAnchor="middle" dominantBaseline="middle">{c}</text>; })}
-      <polygon points={pts.map(p => `${p.x},${p.y}`).join(' ')} fill={`color-mix(in srgb, ${GOLD} 20%, transparent)`} stroke={GOLD} strokeWidth={2} />
-      {pts.map((p, i) => <circle key={i} cx={p.x} cy={p.y} r={4} fill={GOLD} />)}
+      <polygon points={pts.map(p => `${p.x},${p.y}`).join(' ')} fill="color-mix(in srgb, var(--chart-1) 20%, transparent)" stroke="var(--chart-1)" strokeWidth={2} />
+      {pts.map((p, i) => <circle key={i} cx={p.x} cy={p.y} r={4} fill="var(--chart-1)" />)}
     </svg>
   );
 }
@@ -974,7 +977,7 @@ export default function PrequalificationPage() {
 
             {/* Status actions */}
             <div style={{ display: 'flex', gap: 10, justifyContent: 'flex-end', paddingTop: 14, borderTop: `1px solid ${BORDER}` }}>
-              {detailSub.status === 'pending' && <button style={btnS(BLUE, TEXT)} onClick={() => { updateStatus(detailSub.id, 'under_review'); }}>Start Review</button>}
+              {detailSub.status === 'pending' && <button style={btnSecondary} onClick={() => { updateStatus(detailSub.id, 'under_review'); }}>Start Review</button>}
               {detailSub.status === 'under_review' && <>
                 <button style={btnS(RED, TEXT)} onClick={() => { updateStatus(detailSub.id, 'rejected'); }}>Reject</button>
                 <button style={btnS(GREEN, 'var(--bg-base)')} onClick={() => { updateStatus(detailSub.id, 'approved'); }}>Approve</button>
@@ -1084,7 +1087,7 @@ function TemplateBuilderModal({ initial, onSave, onClose }: { initial: Template 
           <label style={labelS}>Required Documents</label>
           <div style={{ display: 'flex', flexWrap: 'wrap', gap: 6 }}>
             {DEFAULT_DOCS.map(doc => (
-              <button key={doc} onClick={() => toggleDoc(doc)} style={{ padding: '5px 12px', borderRadius: 8, fontSize: 12, fontWeight: 600, border: `1px solid ${requiredDocs.includes(doc) ? GOLD : BORDER}`, background: requiredDocs.includes(doc) ? `color-mix(in srgb, ${GOLD} 13%, transparent)` : 'transparent', color: requiredDocs.includes(doc) ? GOLD : DIM, cursor: 'pointer' }}>{doc}</button>
+              <button key={doc} type="button" className="k-chip" aria-pressed={requiredDocs.includes(doc)} onClick={() => toggleDoc(doc)}>{doc}</button>
             ))}
           </div>
         </div>
@@ -1093,7 +1096,7 @@ function TemplateBuilderModal({ initial, onSave, onClose }: { initial: Template 
         <div style={{ marginBottom: 18 }}>
           <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 8 }}>
             <label style={labelS}>Questions ({questions.length}) *</label>
-            <button id="pq-add-question" style={{ ...btnS(BLUE, TEXT), padding: '5px 14px', fontSize: 12, minHeight: 44 }} onClick={() => { setEditQIdx(null); setShowAddQ(true); if (err) setErr(''); }}>+ Add Question</button>
+            <button id="pq-add-question" style={{ ...btnSecondary, padding: '5px 14px', fontSize: 12, minHeight: 44 }} onClick={() => { setEditQIdx(null); setShowAddQ(true); if (err) setErr(''); }}>+ Add Question</button>
           </div>
           {questions.length === 0 ? (
             <div style={{ padding: 20, textAlign: 'center', color: DIM, fontSize: 13, background: BG, borderRadius: 8, border: `1px solid ${BORDER}` }}>No questions yet — a template needs at least one. Tap &ldquo;+ Add Question&rdquo; to start.</div>
@@ -1292,7 +1295,7 @@ function InviteModal({ templates, onSend, onClose }: { templates: Template[]; on
 
         <div style={{ display: 'flex', justifyContent: 'flex-end', gap: 10 }}>
           <button type="button" style={{ ...btnS(BORDER, TEXT), minHeight: 44 }} onClick={onClose} disabled={sending}>Cancel</button>
-          <button type="button" style={{ ...btnS(BLUE, TEXT), minHeight: 44 }} onClick={() => void handleSend()} disabled={sending}>{sending ? 'Sending…' : 'Send Invitation'}</button>
+          <button type="button" style={{ ...btnSecondary, minHeight: 44 }} onClick={() => void handleSend()} disabled={sending}>{sending ? 'Sending…' : 'Send Invitation'}</button>
         </div>
       </div>
     </div>

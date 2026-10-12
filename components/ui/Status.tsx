@@ -43,7 +43,7 @@ export function StatusPill({ module, status, size = 'md', changed, style, label,
   const r0 = resolveStatus(module, status);
   const r = label ? { ...r0, label } : r0;
   const pad = size === 'sm' ? '2px 7px' : '3px 9px';
-  const fs = size === 'sm' ? 11 : 12;
+  const fs = 12; // the 12px text floor; sm differs by padding only
 
   return (
     <span
