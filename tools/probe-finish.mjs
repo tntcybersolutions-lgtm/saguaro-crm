@@ -59,7 +59,9 @@ const reachMeasure = (page, rowSel) => page.evaluate((rowSel) => {
   const last = rows[rows.length - 1];
   const r = last.getBoundingClientRect();
   const hit = (x, y) => { const e = document.elementFromPoint(x, y); return !!e && (last === e || last.contains(e)); };
-  const act = [...last.querySelectorAll('a, button')].filter((e) => e.getBoundingClientRect().height > 0).pop();
+  // Only controls a finger can see: My Work hides Snooze / More to a 1px
+  // screen-reader-only box on touch screens (the whole row is the tap there).
+  const act = [...last.querySelectorAll('a, button')].filter((e) => { const q = e.getBoundingClientRect(); return q.width >= 8 && q.height >= 8; }).pop();
   const a = act ? act.getBoundingClientRect() : null;
   const actHit = act ? (() => { const e = document.elementFromPoint(a.left + a.width / 2, a.top + a.height / 2); return !!e && (act === e || act.contains(e)); })() : null;
   const main = getComputedStyle(document.querySelector('.main-content-area'));
