@@ -201,7 +201,7 @@ const CSS = `
 .rpChip:hover { color: var(--text-primary); border-color: var(--border-strong); }
 .rpChip[aria-pressed="true"] { color: var(--brand-primary); background: var(--brand-primary-12); border-color: var(--brand-primary-35); }
 .rpChip:disabled { opacity: .5; cursor: not-allowed; }
-.rpChip:focus-visible { outline: 2px solid var(--brand-primary); }
+.rpChip:focus-visible { outline: 2px solid var(--focus-ring); }
 .rpProgress { padding: 40px 24px; text-align: center; }
 .rpProgress .rpSage { width: 52px; height: 52px; border-radius: 14px; margin: 0 auto 16px; }
 .rpBar { background: rgba(255,255,255,.08); border-radius: 8px; height: 8px; overflow: hidden; max-width: 420px; margin: 0 auto; }
@@ -220,14 +220,14 @@ const CSS = `
 .rpGrid { display: grid; grid-template-columns: repeat(auto-fill, minmax(320px, 1fr)); column-gap: 28px; }
 .rpCard { all: unset; box-sizing: border-box; display: flex; align-items: flex-start; gap: 12px; padding: 12px 4px; min-height: 58px; border-bottom: 1px solid var(--sg-border); cursor: pointer; min-width: 0; -webkit-tap-highlight-color: transparent; }
 .rpCard:hover, .rpCard:active { background: rgba(255,255,255,0.03); }
-.rpCard:focus-visible { outline: 2px solid var(--brand-primary); }
+.rpCard:focus-visible { outline: 2px solid var(--focus-ring); }
 .rpCardIcon { width: 24px; height: 24px; flex-shrink: 0; display: grid; place-items: center; margin-top: 1px; color: var(--text-secondary); }
 .rpCardTitle { font-weight: 700; font-size: var(--fs-md); color: var(--text-primary); margin-bottom: 3px; }
 .rpCardDesc { font-size: var(--fs-xs); color: var(--text-tertiary); line-height: 1.5; }
 .rpCardAsk { font-size: var(--fs-xs); color: var(--text-secondary); line-height: 1.45; margin-top: 5px; }
 .rpHist { all: unset; box-sizing: border-box; display: block; width: 100%; padding: 10px 4px; border-bottom: 1px solid var(--sg-border); cursor: pointer; min-height: 44px; }
 .rpHist:hover { background: rgba(255,255,255,0.03); }
-.rpHist:focus-visible { outline: 2px solid var(--brand-primary); }
+.rpHist:focus-visible { outline: 2px solid var(--focus-ring); }
 .rpHistTitle { font-size: var(--fs-sm); font-weight: 600; color: var(--text-primary); line-height: 1.3; }
 .rpHistSub { font-size: var(--fs-xs); color: var(--text-tertiary); margin-top: 3px; }
 .rpStack { display: flex; flex-direction: column; gap: 0; }

@@ -18,13 +18,13 @@ export const DOC_CATEGORY_LABEL: Record<DocCategory, string> = {
 };
 
 export const DOC_CATEGORY_COLOR: Record<DocCategory, string> = {
-  contracts: '#FFE600',
-  bidding: '#FFE600',
-  billing: '#2CFF7A',
-  closeout: '#2CFF7A',
-  compliance: '#FF8A00',
-  field: '#FF8A00',
-  other: '#A1A1AA',
+  contracts: '#38BDF8',
+  bidding: '#38BDF8',
+  billing: '#4ADE80',
+  closeout: '#4ADE80',
+  compliance: '#CBD5E1',
+  field: '#CBD5E1',
+  other: '#94A3B8',
 };
 
 const CATEGORY_BY_TYPE: Record<string, DocCategory> = {

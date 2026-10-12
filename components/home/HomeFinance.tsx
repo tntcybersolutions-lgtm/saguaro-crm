@@ -283,7 +283,7 @@ const HF_CSS = `
 .hf-card{position:relative;display:block;border-radius:12px;text-decoration:none;color:inherit;overflow:hidden;
   background:var(--bg-surface);border:1px solid var(--border-default);transition:border-color .15s ease, background-color .15s ease}
 a.hf-card:hover{border-color:var(--border-strong);background:var(--bg-row-hover)}
-a.hf-card:focus-visible{outline:2px solid var(--brand-primary);outline-offset:2px}
+a.hf-card:focus-visible{outline:2px solid var(--focus-ring);outline-offset:2px}
 
 .hf-kpis{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:10px}
 .hf-kpi{display:flex;flex-direction:column;gap:4px;min-height:118px;padding:14px 14px 12px}

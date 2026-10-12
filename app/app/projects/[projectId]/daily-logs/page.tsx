@@ -120,7 +120,7 @@ const CSS = `
 .pdlActionsRow > .k-btn { flex: 1 1 auto; }
 .pdlNext { font-size: var(--fs-sm); color: var(--text-tertiary); line-height: 1.5; }
 .pdlBanner { border: 1px solid var(--border-default); border-radius: var(--radius-sm); padding: 12px 14px; background: var(--bg-surface-2); margin-bottom: 16px; }
-.pdlBanner[data-gap="true"] { border-color: rgba(255,77,94,.35); background: rgba(255,77,94,.07); }
+.pdlBanner[data-gap="true"] { border-color: rgba(248,113,113,.35); background: rgba(248,113,113,.07); }
 .pdlBannerTitle { display: flex; align-items: center; gap: 8px; font-size: var(--fs-md); font-weight: 700; color: var(--text-primary); }
 .pdlBanner[data-gap="true"] .pdlBannerTitle { color: var(--status-overdue); }
 .pdlNote { display: flex; gap: 10px; align-items: flex-start; font-size: var(--fs-sm); color: var(--text-secondary); line-height: 1.5; padding: 10px 12px; border-radius: var(--radius-sm); border: 1px solid var(--brand-primary-25); background: var(--brand-primary-08); margin-bottom: 16px; }

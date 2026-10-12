@@ -106,10 +106,10 @@ const CSS = `
 .dlMuted { color: var(--text-tertiary); }
 .dlBadges { display: inline-flex; align-items: center; gap: 6px; }
 .dlNum { font-variant-numeric: tabular-nums; }
-.dlInlineErr { display: flex; align-items: center; gap: 8px; flex-wrap: wrap; font-size: var(--fs-sm); color: var(--status-overdue); padding: 10px 14px; border: 1px solid rgba(255,77,94,.35); border-radius: var(--radius-sm); background: rgba(255,77,94,.08); }
+.dlInlineErr { display: flex; align-items: center; gap: 8px; flex-wrap: wrap; font-size: var(--fs-sm); color: var(--status-overdue); padding: 10px 14px; border: 1px solid rgba(248,113,113,.35); border-radius: var(--radius-sm); background: rgba(248,113,113,.08); }
 .dlInlineErr[data-tone="info"] { color: var(--text-primary); border-color: var(--border-default); background: var(--bg-solid-2); }
 .dlBanner { border: 1px solid var(--border-default); border-radius: var(--radius-sm); padding: 12px 14px; background: var(--bg-surface-2); }
-.dlBanner[data-gap="true"] { border-color: rgba(255,77,94,.35); background: rgba(255,77,94,.07); }
+.dlBanner[data-gap="true"] { border-color: rgba(248,113,113,.35); background: rgba(248,113,113,.07); }
 .dlBannerTitle { font-size: var(--fs-md); font-weight: 700; color: var(--text-primary); }
 .dlBanner[data-gap="true"] .dlBannerTitle { color: var(--status-overdue); }
 .dlNote { display: flex; gap: 10px; align-items: flex-start; font-size: var(--fs-sm); color: var(--text-secondary); line-height: 1.5; padding: 10px 12px; border-radius: var(--radius-sm); border: 1px solid var(--brand-primary-25); background: var(--brand-primary-08); }

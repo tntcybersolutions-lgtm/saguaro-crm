@@ -318,7 +318,7 @@ export default function LienWaiversPage() {
         <div style={{marginBottom:24,display:'grid',gridTemplateColumns:ctx?'minmax(0,1fr) 330px':'1fr',gap:18,alignItems:'start'}}>
           <SectionCard title="Generate Lien Waiver" icon={<FileText size={17} weight="duotone" color="var(--text-secondary)" />}>
             {error && (
-              <div style={{background:'rgba(192,48,48,.12)',border:`1px solid rgba(192,48,48,.3)`,borderRadius:8,padding:'10px 14px',marginBottom:16,color:RED,fontSize:13}}>{error}</div>
+              <div style={{background:'rgba(248,113,113,.12)',border:`1px solid rgba(248,113,113,.3)`,borderRadius:8,padding:'10px 14px',marginBottom:16,color:RED,fontSize:13}}>{error}</div>
             )}
             <div style={{display:'grid',gridTemplateColumns:'1fr 1fr',gap:14,marginBottom:16}}>
               <div>
@@ -411,7 +411,7 @@ export default function LienWaiversPage() {
 
       {/* Error outside form */}
       {error && !showForm && (
-        <div style={{background:'rgba(192,48,48,.12)',border:`1px solid rgba(192,48,48,.3)`,borderRadius:8,padding:'12px 16px',marginBottom:20,color:RED,fontSize:13}}>
+        <div style={{background:'rgba(248,113,113,.12)',border:`1px solid rgba(248,113,113,.3)`,borderRadius:8,padding:'12px 16px',marginBottom:20,color:RED,fontSize:13}}>
           {error}
         </div>
       )}
@@ -532,7 +532,7 @@ export default function LienWaiversPage() {
                       const wBlocks = (w.status==='pending'||w.status==='sent')&&w.blocks_payment!==false&&w.pay_application_id;
                       const appNo = w.pay_application_id?appNoById[w.pay_application_id]:undefined;
                       return (
-                        <tr key={w.id} style={{borderBottom:`1px solid rgba(255,255,255,0.12)`,background:wBlocks?'rgba(192,48,48,.05)':'transparent'}}>
+                        <tr key={w.id} style={{borderBottom:`1px solid rgba(255,255,255,0.12)`,background:wBlocks?'rgba(248,113,113,.05)':'transparent'}}>
                           <td style={{padding:'10px 14px',color:TEXT,fontWeight:600}}>{w.claimant_name||(w.subcontractors as any)?.company_name||(w.subcontractors as any)?.name||'—'}</td>
                           <td style={{padding:'10px 14px',color:DIM,whiteSpace:'nowrap' as const}}>{typeLabel(w.waiver_type)}{w.converted_from_id?<span style={{marginLeft:6,fontSize:12,fontWeight:800,color:'var(--success)'}}>Auto</span>:null}</td>
                           <td style={{padding:'10px 14px',color:DIM,whiteSpace:'nowrap' as const}}>{appNo?`App #${appNo}`:'—'}{wBlocks?<span style={{marginLeft:6,fontSize:12,fontWeight:800,color:'var(--danger)'}}>Gates Paid</span>:null}</td>

@@ -48,7 +48,7 @@ const CSS = `
 .suHead { margin-bottom: 20px; }
 .suHead h2 { font-size: 22px; font-weight: 700; color: var(--text-primary); margin: 0 0 6px; }
 .suHead p { font-size: var(--fs-sm); color: var(--text-tertiary); margin: 0; }
-.suMsg { display: flex; align-items: flex-start; gap: 8px; padding: 10px 14px; border-radius: var(--radius-sm); font-size: var(--fs-sm); margin-bottom: 16px; background: rgba(255,77,94,.08); border: 1px solid rgba(255,77,94,.35); color: var(--status-overdue); }
+.suMsg { display: flex; align-items: flex-start; gap: 8px; padding: 10px 14px; border-radius: var(--radius-sm); font-size: var(--fs-sm); margin-bottom: 16px; background: rgba(248,113,113,.08); border: 1px solid rgba(248,113,113,.35); color: var(--status-overdue); }
 .suMsg > svg { flex-shrink: 0; margin-top: 1px; }
 .suSubmit { width: 100%; justify-content: center; min-height: 46px; margin-top: 6px; }
 .suNext { margin-top: 18px; }

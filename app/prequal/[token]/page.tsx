@@ -202,7 +202,7 @@ export default function PrequalPortal() {
         )}
       </div>
 
-      {feedback && <div style={{ position: 'fixed', bottom: '24px', left: '50%', transform: 'translateX(-50%)', zIndex: 99999, padding: '12px 20px', borderRadius: '8px', background: 'rgba(192,48,48,0.95)', color: '#fff', fontWeight: 600, fontSize: '14px', maxWidth: '90%', textAlign: 'center' }}>{feedback}</div>}
+      {feedback && <div style={{ position: 'fixed', bottom: '24px', left: '50%', transform: 'translateX(-50%)', zIndex: 99999, padding: '12px 20px', borderRadius: '8px', background: 'rgba(248,113,113,0.95)', color: '#fff', fontWeight: 600, fontSize: '14px', maxWidth: '90%', textAlign: 'center' }}>{feedback}</div>}
     </div>
   );
 }

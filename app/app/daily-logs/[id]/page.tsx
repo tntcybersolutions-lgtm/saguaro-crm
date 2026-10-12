@@ -133,7 +133,7 @@ const CSS = `
 .dldActions .k-btn { width: 100%; justify-content: flex-start; }
 .dldBadges { display: inline-flex; align-items: center; gap: 6px; flex-wrap: wrap; }
 .dldNext { font-size: var(--fs-sm); color: var(--text-tertiary); line-height: 1.5; }
-.dldInlineErr { display: flex; align-items: center; gap: 8px; flex-wrap: wrap; font-size: var(--fs-sm); color: var(--status-overdue); padding: 10px 14px; border: 1px solid rgba(255,77,94,.35); border-radius: var(--radius-sm); background: rgba(255,77,94,.08); }
+.dldInlineErr { display: flex; align-items: center; gap: 8px; flex-wrap: wrap; font-size: var(--fs-sm); color: var(--status-overdue); padding: 10px 14px; border: 1px solid rgba(248,113,113,.35); border-radius: var(--radius-sm); background: rgba(248,113,113,.08); }
 .dldComposer { display: flex; gap: 8px; flex-wrap: wrap; }
 .dldDateInput { max-width: 340px; }
 @media (max-width: 640px) {

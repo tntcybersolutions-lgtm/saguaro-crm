@@ -486,7 +486,7 @@ const CSS = `
 .sv-row { width: 100%; text-align: left; display: flex; flex-direction: column; gap: 4px; padding: 12px 10px; border: 0; border-top: 1px solid var(--border-subtle); background: transparent; color: inherit; cursor: pointer; border-radius: 8px; }
 .sv-list li:first-child .sv-row { border-top: 0; }
 .sv-row:hover, .sv-row.sel { background: var(--bg-surface-2); }
-.sv-row:focus-visible, .sv-btn:focus-visible, .sv-seg button:focus-visible { outline: 2px solid var(--brand-primary); outline-offset: 2px; }
+.sv-row:focus-visible, .sv-btn:focus-visible, .sv-seg button:focus-visible { outline: 2px solid var(--focus-ring); outline-offset: 2px; }
 .sv-rowtop { display: flex; gap: 8px; align-items: center; }
 .sv-num { font-size: 13px; font-weight: 750; color: var(--text-secondary); }
 .sv-rowtitle { font-size: 15px; font-weight: 650; }

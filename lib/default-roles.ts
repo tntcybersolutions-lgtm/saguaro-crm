@@ -20,37 +20,37 @@ export interface DefaultRole {
 export const DEFAULT_ROLE_DEFINITIONS: DefaultRole[] = [
   {
     name: 'Project Manager',
-    color: '#FF8A00',
+    color: '#FBBF24',
     description: 'Runs the job end to end — full access to every operational module.',
     permissions: { Projects: 'Full', Budget: 'Full', Schedule: 'Full', Safety: 'Full', Documents: 'Full', RFIs: 'Full', Submittals: 'Full', 'Change Orders': 'Full', 'Pay Apps': 'Full', Reports: 'Full', Sales: 'Edit', Admin: 'View' },
   },
   {
     name: 'Superintendent',
-    color: '#2CFF7A',
+    color: '#4ADE80',
     description: 'Runs the field — schedule, safety, daily logs, submittals.',
     permissions: { Projects: 'View', Budget: 'View', Schedule: 'Edit', Safety: 'Edit', Documents: 'Edit', RFIs: 'Edit', Submittals: 'Edit', 'Change Orders': 'View', 'Pay Apps': 'View', Reports: 'View', Sales: 'None', Admin: 'None' },
   },
   {
     name: 'Foreman',
-    color: '#FF8A00',
+    color: '#FBBF24',
     description: 'Crew lead — field entry for schedule, safety and submittals.',
     permissions: { Projects: 'View', Budget: 'None', Schedule: 'Edit', Safety: 'Edit', Documents: 'View', RFIs: 'View', Submittals: 'View', 'Change Orders': 'None', 'Pay Apps': 'None', Reports: 'View', Sales: 'None', Admin: 'None' },
   },
   {
     name: 'Salesperson',
-    color: '#FF8A00',
+    color: '#FBBF24',
     description: 'Chases the work: owns clients and pipeline in full, sees projects, contracts and bid jackets, views job finances — walled off from Admin and the build-comms tools.',
     permissions: { Sales: 'Full', Projects: 'Full', Documents: 'Full', Reports: 'Full', Schedule: 'View', Budget: 'View', 'Pay Apps': 'View', 'Change Orders': 'View', RFIs: 'None', Submittals: 'None', Safety: 'None', Admin: 'None' },
   },
   {
     name: 'Read-Only',
-    color: '#A3ACBB',
+    color: '#94A3B8',
     description: 'Can see everything, change nothing.',
     permissions: { Projects: 'View', Budget: 'View', Schedule: 'View', Safety: 'View', Documents: 'View', RFIs: 'View', Submittals: 'View', 'Change Orders': 'View', 'Pay Apps': 'View', Reports: 'View', Sales: 'View', Admin: 'None' },
   },
   {
     name: 'Subcontractor',
-    color: '#FF8A00',
+    color: '#FBBF24',
     description: 'Limited sub access — their own RFIs/submittals, view schedule and pay apps.',
     permissions: { Projects: 'View', Budget: 'None', Schedule: 'View', Safety: 'View', Documents: 'View', RFIs: 'Edit', Submittals: 'Edit', 'Change Orders': 'None', 'Pay Apps': 'View', Reports: 'None', Sales: 'None', Admin: 'None' },
   },

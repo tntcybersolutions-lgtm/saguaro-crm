@@ -103,7 +103,7 @@ const badgeStyles: Record<BadgeColor, { bg: string; color: string; border: strin
   red:   { bg: T.redDim,   color: T.red,   border: 'rgba(248,113,113,0.50)' },
   amber: { bg: T.amberDim, color: T.amber, border: 'rgba(255,224,0,0.50)' },
   blue:  { bg: T.blueDim,  color: T.blue,  border: 'rgba(251,191,36,0.50)' },
-  muted: { bg: 'rgba(163,172,187,0.16)', color: T.muted, border: 'rgba(163,172,187,0.45)' },
+  muted: { bg: 'rgba(148,163,184,0.16)', color: T.muted, border: 'rgba(148,163,184,0.45)' },
 };
 
 /** Title Case a raw lowercase/snake_case value for DISPLAY only ("in_progress"

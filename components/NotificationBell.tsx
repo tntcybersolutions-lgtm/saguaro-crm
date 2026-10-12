@@ -146,7 +146,7 @@ export default function NotificationBell() {
             <span style={{ fontWeight: 700, fontSize: 14, color: TEXT }}>Notifications</span>
             <div style={{ display: 'flex', gap: 8, alignItems: 'center' }}>
               {displayCount > 0 && (
-                <span style={{ fontSize: 12, background: 'rgba(192,48,48,.15)', color: 'var(--danger)', padding: '2px 7px', borderRadius: 4, fontWeight: 700 }}>{displayCount} new</span>
+                <span style={{ fontSize: 12, background: 'rgba(248,113,113,.15)', color: 'var(--danger)', padding: '2px 7px', borderRadius: 4, fontWeight: 700 }}>{displayCount} new</span>
               )}
               <button
                 onClick={markAllRead}

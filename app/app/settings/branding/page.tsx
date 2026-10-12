@@ -63,7 +63,7 @@ const CSS = `
 .brChip { all: unset; box-sizing: border-box; display: inline-flex; align-items: center; gap: 8px; min-height: 40px; padding: 0 13px; border-radius: var(--radius-sm); cursor: pointer; background: var(--bg-surface-2); border: 1px solid var(--glass-border); color: var(--text-secondary); font-size: var(--fs-sm); font-weight: 700; }
 .brChip:hover { border-color: var(--border-strong); color: var(--text-primary); }
 .brChip[aria-pressed="true"] { background: var(--brand-primary-12); border-color: var(--brand-primary); color: var(--text-primary); }
-.brChip:focus-visible { outline: 2px solid var(--brand-primary); }
+.brChip:focus-visible { outline: 2px solid var(--focus-ring); }
 .brSwatch { width: 15px; height: 15px; border-radius: 4px; flex-shrink: 0; border: 1px solid rgba(255,255,255,0.2); }
 .brCheck { display: flex; align-items: flex-start; gap: 11px; cursor: pointer; }
 .brCheck input { width: 18px; height: 18px; margin-top: 2px; accent-color: var(--brand-primary); cursor: pointer; flex-shrink: 0; }
@@ -71,7 +71,7 @@ const CSS = `
 .brCheckSub { display: block; font-size: var(--fs-xs); color: var(--text-tertiary); margin-top: 3px; line-height: 1.55; }
 .brMsg { display: flex; align-items: center; gap: 9px; padding: 11px 14px; border-radius: var(--radius-sm); font-size: var(--fs-sm); font-weight: 600; }
 .brMsg[data-ok="true"] { background: rgba(74,222,128,.10); border: 1px solid rgba(74,222,128,.35); color: var(--status-ongoing); }
-.brMsg[data-ok="false"] { background: rgba(255,77,94,.08); border: 1px solid rgba(255,77,94,.35); color: var(--status-overdue); }
+.brMsg[data-ok="false"] { background: rgba(248,113,113,.08); border: 1px solid rgba(248,113,113,.35); color: var(--status-overdue); }
 .brFix { background: var(--bg-surface-2); border: 1px solid var(--border-subtle); border-radius: var(--radius-sm); padding: 10px 12px; }
 .brFixWhat { font-size: var(--fs-sm); font-weight: 800; color: var(--text-primary); margin-bottom: 5px; }
 .brFixRow { display: flex; align-items: center; gap: 8px; font-size: var(--fs-xs); color: var(--text-tertiary); font-family: ui-monospace, monospace; }

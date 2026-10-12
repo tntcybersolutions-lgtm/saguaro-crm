@@ -379,7 +379,7 @@ export default function NewProjectPage() {
         ]}
       />
 
-      {error&&<div style={{background:'rgba(192,48,48,.1)',border:'1px solid rgba(192,48,48,.3)',borderRadius:10,padding:'12px 16px',marginBottom:20,fontSize:13,color:'var(--danger)'}}>{error}</div>}
+      {error&&<div style={{background:'rgba(248,113,113,.1)',border:'1px solid rgba(248,113,113,.3)',borderRadius:10,padding:'12px 16px',marginBottom:20,fontSize:13,color:'var(--danger)'}}>{error}</div>}
 
       {/* What kind of job. One choice that furnishes the rest — retainage, the
           contract type, the CSI spread the budget expects, and the folders the

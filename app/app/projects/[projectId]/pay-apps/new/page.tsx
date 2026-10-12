@@ -79,7 +79,7 @@ const CSS = `
 .pnBarLabel b { color: var(--text-primary); font-variant-numeric: tabular-nums; }
 .pnBarTrack { height: 6px; border-radius: 3px; background: rgba(255,255,255,0.08); overflow: hidden; }
 .pnBarFill { height: 100%; border-radius: 3px; background: var(--status-ongoing); }
-.pnBanner { padding: 10px 14px; border-radius: var(--radius-sm); border: 1px solid rgba(46,229,157,.35); background: rgba(46,229,157,.08); font-size: var(--fs-sm); color: var(--text-primary); }
+.pnBanner { padding: 10px 14px; border-radius: var(--radius-sm); border: 1px solid rgba(74,222,128,.35); background: rgba(74,222,128,.08); font-size: var(--fs-sm); color: var(--text-primary); }
 .pnTableWrap { overflow-x: auto; }
 .pnTable { width: 100%; border-collapse: collapse; font-size: var(--fs-sm); }
 .pnTable th { position: sticky; top: 0; z-index: 1; background: rgba(21,23,28,0.88); text-align: left; padding: 8px 10px; font-size: 12px; font-weight: 700; color: var(--text-tertiary); border-bottom: 1px solid var(--border-default); white-space: nowrap; }
@@ -98,7 +98,7 @@ const CSS = `
 .pnDue > span { font-size: var(--fs-sm); font-weight: 800; color: var(--text-primary); }
 .pnDue > b { font-size: var(--fs-lg); font-weight: 800; color: var(--status-ongoing); font-variant-numeric: tabular-nums; }
 .pnBtns { display: flex; gap: 8px; flex-wrap: wrap; }
-.pnInlineErr { display: flex; align-items: center; gap: 8px; flex-wrap: wrap; font-size: var(--fs-sm); color: var(--status-overdue); padding: 10px 14px; border: 1px solid rgba(255,77,94,.35); border-radius: var(--radius-sm); background: rgba(255,77,94,.08); }
+.pnInlineErr { display: flex; align-items: center; gap: 8px; flex-wrap: wrap; font-size: var(--fs-sm); color: var(--status-overdue); padding: 10px 14px; border: 1px solid rgba(248,113,113,.35); border-radius: var(--radius-sm); background: rgba(248,113,113,.08); }
 .pnMuted { color: var(--text-tertiary); }
 .pnDateInput { width: 100%; }
 @media (max-width: 640px) {

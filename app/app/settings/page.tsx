@@ -110,12 +110,12 @@ const CSS = `
 .stNotice[data-ok="false"] { color: var(--status-overdue); }
 .stPlan { text-align: right; font-size: var(--fs-xs); color: var(--text-tertiary); line-height: 1.6; }
 .stPlan b { color: var(--text-primary); }
-.stWarn { display: flex; justify-content: space-between; align-items: center; gap: 12px; flex-wrap: wrap; padding: 12px 16px; border-radius: var(--radius-sm); border: 1px solid rgba(255,197,61,.35); background: rgba(255,197,61,.08); font-size: var(--fs-sm); color: var(--text-primary); }
+.stWarn { display: flex; justify-content: space-between; align-items: center; gap: 12px; flex-wrap: wrap; padding: 12px 16px; border-radius: var(--radius-sm); border: 1px solid rgba(251,191,36,.35); background: rgba(251,191,36,.08); font-size: var(--fs-sm); color: var(--text-primary); }
 .stWarn svg { color: var(--status-under-contract); vertical-align: -3px; }
 .stBrand { display: grid; grid-template-columns: repeat(auto-fit, minmax(280px, 1fr)); gap: 22px; }
 .stDrop { display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 8px; padding: 22px 16px; border-radius: var(--radius-sm); cursor: pointer; border: 1.5px dashed var(--border-strong); background: var(--bg-surface-2); text-align: center; transition: border-color .15s ease, background .15s ease; }
 .stDrop[data-over="true"] { border-color: var(--brand-primary); background: var(--brand-primary-08); }
-.stDrop:focus-visible { outline: 2px solid var(--brand-primary); }
+.stDrop:focus-visible { outline: 2px solid var(--focus-ring); }
 .stDropTitle { font-size: var(--fs-sm); font-weight: 700; color: var(--text-primary); }
 .stDropSub { font-size: var(--fs-xs); color: var(--text-tertiary); }
 .stShape { margin-top: 10px; padding: 10px 12px; border-radius: var(--radius-sm); font-size: var(--fs-xs); line-height: 1.5; border: 1px solid var(--border-subtle); background: var(--bg-surface-2); color: var(--text-tertiary); }
@@ -124,7 +124,7 @@ const CSS = `
 .stColor { display: flex; align-items: center; gap: 12px; flex-wrap: wrap; }
 .stColor input[type="color"] { width: 48px; height: 40px; border: 1px solid var(--border-default); border-radius: var(--radius-sm); background: none; cursor: pointer; padding: 2px; }
 .stLink { all: unset; color: var(--text-tertiary); font-size: var(--fs-xs); cursor: pointer; text-decoration: underline; }
-.stLink:focus-visible { outline: 2px solid var(--brand-primary); }
+.stLink:focus-visible { outline: 2px solid var(--focus-ring); }
 .stHint { font-size: var(--fs-xs); color: var(--text-tertiary); margin-top: 5px; line-height: 1.5; }
 .stPreview { border-radius: var(--radius-md); border: 1px solid var(--border-default); overflow: hidden; background: var(--bg-solid); }
 .stPreviewHead { padding: 12px; border-bottom: 1px solid var(--border-subtle); }
@@ -137,7 +137,7 @@ const CSS = `
 .stRow { display: flex; align-items: center; gap: 16px; padding: 14px 18px; text-decoration: none; color: inherit; border-bottom: 1px solid var(--border-subtle); min-height: 56px; }
 .stRow:last-child { border-bottom: 0; }
 .stRow:hover { background: rgba(255,255,255,0.03); }
-.stRow:focus-visible { outline: 2px solid var(--brand-primary); outline-offset: -2px; }
+.stRow:focus-visible { outline: 2px solid var(--focus-ring); outline-offset: -2px; }
 .stRow[data-hi="true"] { background: var(--brand-primary-08); }
 .stRowIcon { width: 40px; height: 40px; border-radius: 10px; flex-shrink: 0; display: grid; place-items: center; background: var(--bg-surface-2); border: 1px solid var(--glass-border); color: var(--text-primary); }
 .stRow[data-hi="true"] .stRowIcon { color: var(--text-primary); border-color: var(--brand-primary-35); }

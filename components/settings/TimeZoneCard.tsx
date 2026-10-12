@@ -31,7 +31,7 @@ const CSS = `
 .tzOpt { all: unset; box-sizing: border-box; display: flex; align-items: center; justify-content: space-between; gap: 12px; width: 100%; min-height: 52px; padding: 8px 12px; cursor: pointer; border-bottom: 1px solid var(--border-subtle); color: var(--text-primary); }
 .tzOpt:last-child { border-bottom: 0; }
 .tzOpt:hover { background: rgba(255,255,255,0.03); }
-.tzOpt:focus-visible { outline: 2px solid var(--brand-primary); outline-offset: -2px; }
+.tzOpt:focus-visible { outline: 2px solid var(--focus-ring); outline-offset: -2px; }
 .tzOpt[aria-selected="true"] { background: var(--brand-primary-08); box-shadow: inset 3px 0 0 var(--brand-primary); }
 .tzOptText { display: flex; flex-direction: column; gap: 2px; min-width: 0; }
 .tzOptName { font-size: var(--fs-md); font-weight: 650; }

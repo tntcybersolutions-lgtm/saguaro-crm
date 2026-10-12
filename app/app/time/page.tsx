@@ -134,15 +134,15 @@ const CSS = `
 .tcPickers { display: grid; grid-template-columns: minmax(0, 1fr) minmax(0, 1fr); gap: 10px; width: 100%; max-width: 560px; margin-top: 6px; text-align: left; }
 @media (max-width: 560px) { .tcPickers { grid-template-columns: minmax(0, 1fr); } }
 .tcBigBtn { min-height: 52px; padding: 0 28px; font-size: var(--fs-md); border-radius: var(--radius-md); margin-top: 8px; }
-.tcBigBtn[data-live="true"] { background: rgba(255,77,94,.14); border-color: rgba(255,77,94,.45); color: var(--status-overdue); }
-.tcBigBtn[data-live="false"] { background: rgba(46,229,157,.14); border-color: rgba(46,229,157,.45); color: var(--status-ongoing); }
+.tcBigBtn[data-live="true"] { background: rgba(248,113,113,.14); border-color: rgba(248,113,113,.45); color: var(--status-overdue); }
+.tcBigBtn[data-live="false"] { background: rgba(74,222,128,.14); border-color: rgba(74,222,128,.45); color: var(--status-ongoing); }
 .tcMsg { font-size: var(--fs-sm); color: var(--status-ongoing); }
 .tcMsg[data-tone="err"] { color: var(--status-overdue); }
 .tcDays { display: flex; flex-direction: column; gap: 4px; }
 .tcDay { display: flex; align-items: center; gap: 12px; padding: 5px 0; font-size: var(--fs-sm); }
 .tcDay > span:first-child { width: 110px; flex-shrink: 0; color: var(--text-secondary); }
 .tcBar { flex: 1; height: 6px; border-radius: 999px; background: rgba(255,255,255,0.07); overflow: hidden; }
-.tcBarFill { height: 100%; border-radius: 999px; background: rgba(46,229,157,.75); }
+.tcBarFill { height: 100%; border-radius: 999px; background: rgba(74,222,128,.75); }
 .tcBarFill[data-ot="true"] { background: var(--status-under-contract); }
 .tcDay > b { font-weight: 700; font-variant-numeric: tabular-nums; width: 56px; text-align: right; color: var(--text-primary); }
 .tcMuted { color: var(--text-tertiary); }

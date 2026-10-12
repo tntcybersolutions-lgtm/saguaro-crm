@@ -107,7 +107,7 @@ const INVITE_CSS = `
 
 // ─── Badge ───────────────────────────────────────────────────────────────────
 
-function Badge({ label, color = DIM, bg = 'rgba(148,163,192,.1)' }: { label: string; color?: string; bg?: string }) {
+function Badge({ label, color = DIM, bg = 'rgba(148,163,184,.1)' }: { label: string; color?: string; bg?: string }) {
   return (
     <span style={{ fontSize: 12, fontWeight: 700, padding: '2px 8px', borderRadius: 4, background: bg, color, letterSpacing: 0.3 }}>
       {label.replace(/_/g, ' ').replace(/\b\w/g, c => c.toUpperCase())}
@@ -552,7 +552,7 @@ export default function BidPackageDetailPage() {
         </Link>
       )}
       {pkg.status !== 'closed' && pkg.status !== 'awarded' && (
-        <button onClick={closeBids} disabled={closing} className="pmBtn" style={{ display: 'inline-flex', alignItems: 'center', justifyContent: 'center', gap: 8, padding: '11px 18px', borderRadius: 12, background: 'rgba(192,48,48,.12)', border: '1px solid rgba(192,48,48,.3)', color: 'var(--danger)', fontSize: 14, fontWeight: 800, cursor: 'pointer', opacity: closing ? 0.6 : 1 }}>
+        <button onClick={closeBids} disabled={closing} className="pmBtn" style={{ display: 'inline-flex', alignItems: 'center', justifyContent: 'center', gap: 8, padding: '11px 18px', borderRadius: 12, background: 'rgba(248,113,113,.12)', border: '1px solid rgba(248,113,113,.3)', color: 'var(--danger)', fontSize: 14, fontWeight: 800, cursor: 'pointer', opacity: closing ? 0.6 : 1 }}>
           {closing ? 'Closing…' : <><Lock size={15} weight="bold" /> Close Bidding</>}
         </button>
       )}
@@ -586,7 +586,7 @@ export default function BidPackageDetailPage() {
             <Badge
               label={statusWord}
               color={statusWord === 'awarded' ? 'var(--success)' : statusWord === 'open' ? GOLD : statusWord === 'closed' ? 'var(--danger)' : DIM}
-              bg={statusWord === 'awarded' ? 'rgba(26,138,74,.12)' : statusWord === 'open' ? 'var(--brand-primary-12)' : statusWord === 'closed' ? 'rgba(192,48,48,.12)' : 'rgba(148,163,192,.1)'}
+              bg={statusWord === 'awarded' ? 'rgba(74,222,128,.12)' : statusWord === 'open' ? 'var(--brand-primary-12)' : statusWord === 'closed' ? 'rgba(248,113,113,.12)' : 'rgba(148,163,184,.1)'}
             />
           }
           title={pkg.name}
@@ -620,7 +620,7 @@ export default function BidPackageDetailPage() {
 
         {/* A reload that failed after the page had loaded: say so, keep what is on screen. */}
         {loadError && (
-          <div role="alert" style={{ display: 'flex', alignItems: 'center', gap: 10, flexWrap: 'wrap', marginBottom: 16, padding: '10px 14px', borderRadius: 12, border: '1px solid rgba(192,48,48,.35)', background: 'rgba(192,48,48,.08)', color: TEXT, fontSize: 13 }}>
+          <div role="alert" style={{ display: 'flex', alignItems: 'center', gap: 10, flexWrap: 'wrap', marginBottom: 16, padding: '10px 14px', borderRadius: 12, border: '1px solid rgba(248,113,113,.35)', background: 'rgba(248,113,113,.08)', color: TEXT, fontSize: 13 }}>
             <span style={{ flex: 1, minWidth: 200 }}>{loadError} What is shown may be out of date.</span>
             <button onClick={loadPackage} className="pmBtn" style={{ ...ghostButtonStyle, minHeight: 44 }}>Retry</button>
           </div>
@@ -628,7 +628,7 @@ export default function BidPackageDetailPage() {
 
         {/* What the award did — who was told, who was not. */}
         {awardNote && (
-          <div role="status" data-testid="award-note" style={{ marginBottom: 16, padding: '12px 14px', borderRadius: 12, border: `1px solid ${awardNote.tone === 'ok' ? 'rgba(26,138,74,.35)' : 'var(--brand-primary-35)'}`, background: awardNote.tone === 'ok' ? 'rgba(26,138,74,.08)' : 'var(--brand-primary-08)', display: 'flex', gap: 10, alignItems: 'flex-start' }}>
+          <div role="status" data-testid="award-note" style={{ marginBottom: 16, padding: '12px 14px', borderRadius: 12, border: `1px solid ${awardNote.tone === 'ok' ? 'rgba(74,222,128,.35)' : 'var(--brand-primary-35)'}`, background: awardNote.tone === 'ok' ? 'rgba(74,222,128,.08)' : 'var(--brand-primary-08)', display: 'flex', gap: 10, alignItems: 'flex-start' }}>
             <div style={{ flex: 1, minWidth: 0, fontSize: 13, lineHeight: 1.6, color: TEXT }}>
               {awardNote.lines.map((l, i) => <div key={i} style={i === 0 ? { fontWeight: 800, color: awardNote.tone === 'ok' ? 'var(--success)' : 'var(--warning)' } : undefined}>{l}</div>)}
             </div>
@@ -638,7 +638,7 @@ export default function BidPackageDetailPage() {
 
         {/* Awarded banner */}
         {pkg.awarded_to && (
-          <div style={{ background: 'rgba(26,138,74,.08)', border: '1px solid rgba(26,138,74,.25)', borderRadius: 14, padding: '14px 20px', marginBottom: 20, display: 'flex', alignItems: 'center', gap: 12 }}>
+          <div style={{ background: 'rgba(74,222,128,.08)', border: '1px solid rgba(74,222,128,.25)', borderRadius: 14, padding: '14px 20px', marginBottom: 20, display: 'flex', alignItems: 'center', gap: 12 }}>
             <span style={{ fontSize: 20, display: 'inline-flex' }}><Trophy size={20} color="var(--success)" weight="fill" /></span>
             <div>
               <div style={{ fontSize: 12, fontWeight: 700, color: 'var(--success)', marginBottom: 3 }}>Awarded To</div>
@@ -748,7 +748,7 @@ export default function BidPackageDetailPage() {
                       /* The bid row says whether it won — matching on name or amount marked two equal bids both 'Awarded'. */
                       const isAwarded = sub.awarded;
                       return (
-                        <tr key={sub.id} style={{ borderBottom: `1px solid ${HAIR}`, background: isAwarded ? 'rgba(26,138,74,.06)' : 'transparent' }}>
+                        <tr key={sub.id} style={{ borderBottom: `1px solid ${HAIR}`, background: isAwarded ? 'rgba(74,222,128,.06)' : 'transparent' }}>
                           <td style={{ padding: '12px 16px', color: TEXT, fontWeight: 600 }}>
                             {sub.sub_name}
                             {isAwarded && <span style={{ fontSize: 12, color: 'var(--success)', marginLeft: 8, fontWeight: 700, display: 'inline-flex', alignItems: 'center', gap: 3 }}><Star size={10} color="var(--success)" weight="fill" /> Awarded</span>}
@@ -761,7 +761,7 @@ export default function BidPackageDetailPage() {
                               <button
                                 onClick={() => awardBid(sub.id, sub.sub_name)}
                                 disabled={awarding === sub.id}
-                                style={{ minHeight: 44, padding: '0 14px', background: 'rgba(26,138,74,.1)', border: '1px solid rgba(26,138,74,.3)', borderRadius: 10, color: 'var(--success)', fontSize: 12, fontWeight: 700, cursor: 'pointer', opacity: awarding === sub.id ? 0.5 : 1 }}>
+                                style={{ minHeight: 44, padding: '0 14px', background: 'rgba(74,222,128,.1)', border: '1px solid rgba(74,222,128,.3)', borderRadius: 10, color: 'var(--success)', fontSize: 12, fontWeight: 700, cursor: 'pointer', opacity: awarding === sub.id ? 0.5 : 1 }}>
                                 {awarding === sub.id ? 'Awarding…' : <span style={{ display: 'inline-flex', alignItems: 'center', gap: 5 }}><Trophy size={12} color="var(--success)" weight="fill" /> Award</span>}
                               </button>
                             )}
@@ -967,7 +967,7 @@ export default function BidPackageDetailPage() {
                             disabled={revoking === sub.id}
                             className="pmBtn"
                             aria-label={`Revoke ${sub.company_name}'s link`}
-                            style={{ minHeight: 44, background: 'none', border: '1px solid rgba(192,48,48,.3)', borderRadius: 10, color: 'var(--danger)', fontSize: 13, fontWeight: 700, padding: '0 12px', cursor: 'pointer', opacity: revoking === sub.id ? 0.5 : 1 }}>
+                            style={{ minHeight: 44, background: 'none', border: '1px solid rgba(248,113,113,.3)', borderRadius: 10, color: 'var(--danger)', fontSize: 13, fontWeight: 700, padding: '0 12px', cursor: 'pointer', opacity: revoking === sub.id ? 0.5 : 1 }}>
                             {revoking === sub.id ? 'Revoking…' : 'Revoke Link'}
                           </button>
                         )}

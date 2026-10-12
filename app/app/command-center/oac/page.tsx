@@ -106,9 +106,9 @@ export default function OacPage() {
         >
           <div style={{ display: 'flex', gap: 8, flexWrap: 'wrap' }}>
             {gcCadence.rows.map(({ p, daysSince, current }) => {
-              const bg = current ? 'rgba(74,222,128,0.12)' : daysSince == null ? 'rgba(248,113,113,0.10)' : 'rgba(255,149,0,0.12)';
+              const bg = current ? 'rgba(74,222,128,0.12)' : daysSince == null ? 'rgba(248,113,113,0.10)' : 'rgba(251,191,36,0.12)';
               const fg = current ? C.green : daysSince == null ? C.red : C.yellow;
-              const bd = current ? 'rgba(74,222,128,0.3)' : daysSince == null ? 'rgba(248,113,113,0.25)' : 'rgba(255,149,0,0.3)';
+              const bd = current ? 'rgba(74,222,128,0.3)' : daysSince == null ? 'rgba(248,113,113,0.25)' : 'rgba(251,191,36,0.3)';
               const note = current ? null : daysSince == null ? 'Never' : `${daysSince}d ago`;
               return (
                 <span key={p.id} style={{ display: 'inline-flex', alignItems: 'center', gap: 6, fontSize: 12, fontWeight: 700, padding: '5px 11px', borderRadius: 999, background: bg, color: fg, border: `1px solid ${bd}` }}>

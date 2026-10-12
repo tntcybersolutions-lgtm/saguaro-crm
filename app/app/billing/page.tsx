@@ -87,7 +87,7 @@ function statusBadge(status: string): { label: string; tone: BadgeTone } {
 const CSS = `
 .blWs > .k-page { max-width: none; }
 .blStack { display: flex; flex-direction: column; gap: 16px; }
-.blSuccess { display: flex; align-items: center; gap: 12px; padding: 12px 16px; border-radius: var(--radius-sm); border: 1px solid rgba(46,229,157,.35); background: rgba(46,229,157,.08); color: var(--text-primary); font-size: var(--fs-sm); }
+.blSuccess { display: flex; align-items: center; gap: 12px; padding: 12px 16px; border-radius: var(--radius-sm); border: 1px solid rgba(74,222,128,.35); background: rgba(74,222,128,.08); color: var(--text-primary); font-size: var(--fs-sm); }
 .blSuccess > svg { color: var(--status-ongoing); flex-shrink: 0; }
 .blSuccess b { display: block; color: var(--status-ongoing); }
 .blPlanHead { display: flex; align-items: center; gap: 12px; flex-wrap: wrap; }
@@ -101,9 +101,9 @@ const CSS = `
 .blPlans { display: grid; grid-template-columns: repeat(auto-fit, minmax(260px, 1fr)); gap: 16px; }
 .blPlan { position: relative; display: flex; flex-direction: column; border-radius: 10px; border: 1px solid var(--sg-border); background: none; overflow: hidden; }
 .blPlan[data-popular="true"] { border-color: var(--brand-primary-35); }
-.blPlan[data-current="true"] { border-color: rgba(46,229,157,.5); }
+.blPlan[data-current="true"] { border-color: rgba(74,222,128,.5); }
 .blPlanRibbon { text-align: center; padding: 5px 0; font-size: var(--fs-xs); font-weight: 800; background: var(--brand-primary); color: var(--on-brand); }
-.blPlanRibbon[data-current="true"] { background: rgba(46,229,157,.15); color: var(--status-ongoing); border-bottom: 1px solid rgba(46,229,157,.25); }
+.blPlanRibbon[data-current="true"] { background: rgba(74,222,128,.15); color: var(--status-ongoing); border-bottom: 1px solid rgba(74,222,128,.25); }
 .blPlanBody { padding: 16px; display: flex; flex-direction: column; gap: 12px; flex: 1; }
 .blPlanTitle { font-size: var(--fs-md); font-weight: 800; color: var(--text-primary); }
 .blPlanTag { font-size: var(--fs-xs); color: var(--text-tertiary); margin-top: 2px; }
@@ -121,7 +121,7 @@ const CSS = `
 .blLabel { font-size: var(--fs-xs); font-weight: 700; color: var(--text-tertiary); margin-bottom: 4px; }
 .blAddons { display: grid; grid-template-columns: repeat(auto-fit, minmax(250px, 1fr)); column-gap: 24px; }
 .blAddon { display: flex; flex-direction: column; gap: 8px; padding: 12px 0; border-bottom: 1px solid var(--sg-border); }
-.blAddon[data-on="true"] { border-color: rgba(46,229,157,.35); }
+.blAddon[data-on="true"] { border-color: rgba(74,222,128,.35); }
 .blAddonHead { display: flex; align-items: flex-start; justify-content: space-between; gap: 8px; }
 .blAddonName { font-size: var(--fs-md); font-weight: 800; color: var(--text-primary); line-height: 1.3; }
 .blAddonMeta { display: flex; align-items: center; gap: 8px; font-size: var(--fs-sm); font-weight: 700; color: var(--text-primary); }

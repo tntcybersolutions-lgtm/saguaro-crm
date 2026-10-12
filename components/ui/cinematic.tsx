@@ -53,7 +53,7 @@ a .sgLift:hover,.sgLift[data-interactive]:hover{border-color:var(--border-strong
 .sgIcon svg{fill:var(--text-secondary)}
 .sgBtn{transition:filter .15s ease,background-color .15s ease}
 .sgBtn:hover{filter:brightness(1.06)}
-.sgBtn:focus-visible{outline:2px solid var(--brand-primary);outline-offset:2px}
+.sgBtn:focus-visible{outline:2px solid var(--focus-ring);outline-offset:2px}
 /* Beat the global h1/h2 !important size caps (globals.css) with higher specificity */
 h1.sgHeroTitle{font-size:clamp(28px,4.2vw,46px)!important;font-weight:900!important;line-height:1.04!important;letter-spacing:-0.03em!important;margin:0!important}
 h2.sgSectionTitle{font-size:clamp(16px,1.7vw,19px)!important;font-weight:800!important;line-height:1.2!important;letter-spacing:-0.01em!important;margin:0!important}

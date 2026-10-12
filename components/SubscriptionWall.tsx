@@ -116,8 +116,8 @@ export default function SubscriptionWall({ children }: { children: React.ReactNo
         {/* Icon */}
         <div style={{
           width: 72, height: 72, borderRadius: 20, margin: '0 auto 28px',
-          background: isPastDue ? 'rgba(248,113,113,0.10)' : 'rgba(255,149,0,0.10)',
-          border: `1px solid ${isPastDue ? 'rgba(248,113,113,0.22)' : 'rgba(255,149,0,0.22)'}`,
+          background: isPastDue ? 'rgba(248,113,113,0.10)' : 'rgba(251,191,36,0.10)',
+          border: `1px solid ${isPastDue ? 'rgba(248,113,113,0.22)' : 'rgba(251,191,36,0.22)'}`,
           display: 'flex', alignItems: 'center', justifyContent: 'center',
         }}>
           <svg width="34" height="34" viewBox="0 0 24 24" fill="none" stroke={accent} strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round">

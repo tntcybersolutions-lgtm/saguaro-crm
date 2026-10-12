@@ -81,12 +81,12 @@ const CSS = `
 .apTag { font-size: var(--fs-xs); color: var(--text-tertiary); white-space: nowrap; }
 .apProj { all: unset; box-sizing: border-box; color: var(--link); font-weight: 700; font-size: var(--fs-sm); cursor: pointer; white-space: nowrap; }
 .apProj:hover { text-decoration: underline; }
-.apProj:focus-visible { outline: 2px solid var(--brand-primary); }
+.apProj:focus-visible { outline: 2px solid var(--focus-ring); }
 .apRailNote { font-size: var(--fs-xs); color: var(--text-tertiary); margin-top: 8px; line-height: 1.5; }
 .apRule { height: 1px; background: var(--border-subtle); margin: 10px 0; }
 .apRailLink { all: unset; display: block; cursor: pointer; border-radius: 6px; }
 .apRailLink:hover { background: rgba(255,255,255,0.03); }
-.apRailLink:focus-visible { outline: 2px solid var(--brand-primary); }
+.apRailLink:focus-visible { outline: 2px solid var(--focus-ring); }
 @media (max-width: 640px) {
   .apWs .k-btn, .apWs .k-stat, .apWs select.k-select, .apWs .k-input { min-height: 44px; }
   .apWs .k-table td { height: 48px; }

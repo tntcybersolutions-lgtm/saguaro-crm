@@ -299,7 +299,7 @@ export default function CompliancePage() {
                 </Btn>
                 {prequals[s.id] && (
                   <span style={{
-                    fontSize: 12, fontWeight: 800, padding: '2px 8px', borderRadius: 4, background: prequals[s.id].verdict === 'pass' ? 'rgba(26,138,74,.15)' : prequals[s.id].verdict === 'flag' ? 'color-mix(in srgb, var(--warning) 15%, transparent)' : 'rgba(192,48,48,.15)',
+                    fontSize: 12, fontWeight: 800, padding: '2px 8px', borderRadius: 4, background: prequals[s.id].verdict === 'pass' ? 'rgba(74,222,128,.15)' : prequals[s.id].verdict === 'flag' ? 'color-mix(in srgb, var(--warning) 15%, transparent)' : 'rgba(248,113,113,.15)',
                     color: prequals[s.id].verdict === 'pass' ? 'var(--success)' : prequals[s.id].verdict === 'flag' ? 'var(--warning)' : 'var(--danger)',
                   }}>
                     {prequals[s.id].verdict.charAt(0).toUpperCase() + prequals[s.id].verdict.slice(1)} {prequals[s.id].score}/100
@@ -319,7 +319,7 @@ export default function CompliancePage() {
             const sub = subs.find(s => s.id === subId);
             if (!sub) return null;
             const verdictColor = result.verdict === 'pass' ? 'var(--success)' : result.verdict === 'flag' ? 'var(--warning)' : 'var(--danger)';
-            const verdictBg = result.verdict === 'pass' ? 'rgba(26,138,74,.08)' : result.verdict === 'flag' ? 'color-mix(in srgb, var(--warning) 8%, transparent)' : 'rgba(192,48,48,.08)';
+            const verdictBg = result.verdict === 'pass' ? 'rgba(74,222,128,.08)' : result.verdict === 'flag' ? 'color-mix(in srgb, var(--warning) 8%, transparent)' : 'rgba(248,113,113,.08)';
             return (
               <SectionCard flat key={subId} accent={verdictColor} style={{ marginBottom: 12, border: `1px solid color-mix(in srgb, ${verdictColor} 19%, transparent)` }}>
                 <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 12 }}>

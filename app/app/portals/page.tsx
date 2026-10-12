@@ -86,7 +86,7 @@ const CSS = `
 .poSuccessSub { font-size: var(--fs-sm); color: var(--text-tertiary); margin-bottom: 12px; }
 .poMail { display: flex; align-items: center; gap: 8px; padding: 9px 14px; border-radius: var(--radius-sm); margin-bottom: 16px; text-align: left; font-size: var(--fs-xs); font-weight: 600; }
 .poMail[data-ok="true"] { background: rgba(74,222,128,.08); border: 1px solid rgba(74,222,128,.2); color: var(--status-ongoing); }
-.poMail[data-ok="false"] { background: rgba(255,197,61,.08); border: 1px solid rgba(255,197,61,.3); color: var(--status-under-contract); }
+.poMail[data-ok="false"] { background: rgba(251,191,36,.08); border: 1px solid rgba(251,191,36,.3); color: var(--status-under-contract); }
 .poLink { background: var(--bg-surface-2); border: 1px solid var(--border-default); border-radius: var(--radius-sm); padding: 10px 12px; margin-bottom: 12px; text-align: left; }
 .poLinkLabel { font-size: var(--fs-xs); font-weight: 700; color: var(--text-tertiary); margin-bottom: 6px; }
 .poLinkUrl { font-size: var(--fs-xs); color: var(--text-secondary); word-break: break-all; line-height: 1.5; margin-bottom: 10px; font-family: ui-monospace, monospace; }

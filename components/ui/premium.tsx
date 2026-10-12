@@ -16,7 +16,7 @@
 
 import React from 'react';
 import { Check } from '@phosphor-icons/react';
-import { moduleAccent } from '@/lib/module-identity';
+import { moduleAccent } from '@/lib/ui/app-accent';
 import { STATUS_COLORS } from '@/lib/status-colors';
 
 // Brand hooks (white-label re-themes these via WhiteLabelProvider) ------------

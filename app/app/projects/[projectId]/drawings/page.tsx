@@ -137,7 +137,7 @@ const DW_CSS=`
 .dw-item{all:unset;box-sizing:border-box;display:grid;grid-template-columns:minmax(0,1fr) auto;gap:2px 8px;width:100%;min-height:44px;padding:7px 12px 7px 10px;border-left:2px solid transparent;cursor:pointer}
 .dw-item:hover{background:rgba(255,255,255,0.04)}
 .dw-item[aria-current="true"]{background:var(--brand-primary-08);border-left-color:var(--brand-primary)}
-.dw-item:focus-visible{outline:2px solid var(--brand-primary);outline-offset:-2px}
+.dw-item:focus-visible{outline:2px solid var(--focus-ring);outline-offset:-2px}
 .dw-item-no{font-size:13px;font-weight:700;color:var(--text-primary);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
 .dw-item-rev{font-size:12px;font-weight:600;color:var(--text-secondary);white-space:nowrap;font-variant-numeric:tabular-nums}
 .dw-item-title{font-size:12px;color:var(--text-secondary);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
@@ -154,7 +154,7 @@ const DW_CSS=`
 .dw-pages{display:flex;align-items:center;gap:2px;font-size:12px;color:var(--text-secondary);font-variant-numeric:tabular-nums;white-space:nowrap}
 .dw-ibtn{all:unset;box-sizing:border-box;display:inline-flex;align-items:center;justify-content:center;width:36px;height:36px;flex-shrink:0;border-radius:var(--radius-sm);color:var(--text-secondary);cursor:pointer}
 .dw-ibtn:hover{background:rgba(255,255,255,0.07);color:var(--text-primary)}
-.dw-ibtn:focus-visible{outline:2px solid var(--brand-primary);outline-offset:-2px}
+.dw-ibtn:focus-visible{outline:2px solid var(--focus-ring);outline-offset:-2px}
 .dw-ibtn[aria-pressed="true"]{color:var(--text-primary);background:rgba(255,255,255,0.08)}
 .dw-ibtn:disabled{opacity:.4;cursor:not-allowed}
 .dw-canvas{flex:1;min-height:0;min-width:0;display:flex;flex-direction:column;background:var(--bg-base);overflow:hidden}
@@ -168,14 +168,14 @@ const DW_CSS=`
 .dw-hist{all:unset;box-sizing:border-box;display:flex;align-items:center;gap:8px;width:100%;min-height:40px;padding:6px 8px;border-radius:var(--radius-sm);cursor:pointer;font-size:13px;color:var(--text-primary)}
 .dw-hist:hover{background:rgba(255,255,255,0.05)}
 .dw-hist[aria-current="true"]{background:rgba(255,255,255,0.08)}
-.dw-hist:focus-visible{outline:2px solid var(--brand-primary);outline-offset:-2px}
+.dw-hist:focus-visible{outline:2px solid var(--focus-ring);outline-offset:-2px}
 .dw-link{color:var(--text-primary);text-decoration:underline;text-underline-offset:2px}
 .dw-scrim{display:none}
 .dw-reg{display:flex;flex-direction:column;gap:var(--sp-4);padding:var(--sp-4) var(--sp-6) var(--sp-8);min-width:0}
 .dw-seg{display:inline-flex;border:1px solid var(--border-default);border-radius:var(--radius-sm);overflow:hidden}
 .dw-seg button{all:unset;box-sizing:border-box;height:36px;padding:0 12px;font-size:13px;font-weight:600;color:var(--text-secondary);cursor:pointer;white-space:nowrap}
 .dw-seg button[aria-pressed="true"]{background:rgba(255,255,255,0.10);color:var(--text-primary)}
-.dw-seg button:focus-visible{outline:2px solid var(--brand-primary);outline-offset:-2px}
+.dw-seg button:focus-visible{outline:2px solid var(--focus-ring);outline-offset:-2px}
 @media ${PHONE}{
   .dw-head{padding:10px 16px 0}
   .dw-err{margin:10px 16px 0}

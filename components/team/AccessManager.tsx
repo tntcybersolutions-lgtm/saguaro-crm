@@ -320,7 +320,7 @@ const AM_CSS = `@media (max-width: 767px) {
 }
 .amPerson { background: none; border: 0; padding: 0; margin: 0; font: inherit; color: inherit; text-align: left; cursor: pointer; display: inline-flex; align-items: center; gap: 10px; }
 .amPerson:hover .amPersonName { text-decoration: underline; }
-.amPerson:focus-visible { outline: 2px solid var(--brand-primary); outline-offset: 2px; border-radius: 6px; }`;
+.amPerson:focus-visible { outline: 2px solid var(--focus-ring); outline-offset: 2px; border-radius: 6px; }`;
 
 /* ── loading spinner ── */
 function Spinner() {

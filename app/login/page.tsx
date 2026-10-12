@@ -27,7 +27,7 @@ const CSS = `
 .lgMsg { display: flex; align-items: flex-start; gap: 8px; padding: 10px 14px; border-radius: var(--radius-sm); font-size: var(--fs-sm); margin-bottom: 16px; }
 .lgMsg > svg { flex-shrink: 0; margin-top: 1px; }
 .lgMsg[data-tone="good"] { background: rgba(74,222,128,.10); border: 1px solid rgba(74,222,128,.3); color: var(--status-ongoing); }
-.lgMsg[data-tone="bad"] { background: rgba(255,77,94,.08); border: 1px solid rgba(255,77,94,.35); color: var(--status-overdue); }
+.lgMsg[data-tone="bad"] { background: rgba(248,113,113,.08); border: 1px solid rgba(248,113,113,.35); color: var(--status-overdue); }
 .lgPwdWrap { position: relative; }
 .lgPwdWrap .k-input { padding-right: 44px; }
 .lgPwdToggle { position: absolute; right: 4px; top: 50%; transform: translateY(-50%); }

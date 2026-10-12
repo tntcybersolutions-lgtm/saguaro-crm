@@ -87,7 +87,7 @@ const CSS = `
   -webkit-tap-highlight-color:transparent;transition:background-color .15s ease,border-color .15s ease}
 .pjx-tab svg{color:var(--text-secondary);flex:none}
 .pjx-tab:hover{background:var(--bg-hover);border-color:var(--border-strong)}
-.pjx-tab:focus-visible{outline:2px solid var(--brand-primary);outline-offset:2px}
+.pjx-tab:focus-visible{outline:2px solid var(--focus-ring);outline-offset:2px}
 .pjx-tab[data-active]{background:var(--brand-primary);border-color:var(--brand-primary);color:var(--on-brand);font-weight:700}
 .pjx-tab[data-active] svg{color:var(--on-brand)}
 @media (prefers-reduced-motion:reduce){.pjx-tab{transition:none}}

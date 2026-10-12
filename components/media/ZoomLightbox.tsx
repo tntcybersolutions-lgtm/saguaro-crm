@@ -53,7 +53,7 @@ const CSS = `
 .zlTitle small { display: block; font-size: 12px; font-weight: 600; color: var(--text-tertiary); overflow: hidden; text-overflow: ellipsis; }
 .zlBtn { min-width: 44px; height: 44px; display: inline-flex; align-items: center; justify-content: center; gap: 6px; padding: 0 10px; border-radius: 12px; border: 1px solid rgba(255,255,255,0.12); background: rgba(255,255,255,0.06); color: var(--text-primary); font: inherit; font-size: 13px; font-weight: 700; cursor: pointer; text-decoration: none; flex: 0 0 auto; }
 .zlBtn:hover { background: rgba(255,255,255,0.12); }
-.zlBtn:focus-visible { outline: 2px solid var(--brand-primary); outline-offset: 2px; }
+.zlBtn:focus-visible { outline: 2px solid var(--focus-ring); outline-offset: 2px; }
 .zlBtn[disabled] { opacity: .35; cursor: default; }
 .zlBtn[data-tone="danger"] { color: var(--c-red); }
 .zlSpin { animation: zl-spin .8s linear infinite; }

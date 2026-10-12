@@ -71,7 +71,7 @@ const CSS = `
 .lv-grid .lv-colhead .k-badge { font-size: 12px; }
 .lv-grid .lv-dim { color: var(--text-tertiary); }
 .lv-cell-btn { all: unset; box-sizing: border-box; display: flex; flex-direction: column; align-items: center; justify-content: center; width: 100%; min-height: 40px; padding: 2px 6px; cursor: pointer; font-size: 12px; font-weight: 700; border-radius: 6px; line-height: 1.25; }
-.lv-cell-btn:focus-visible { outline: 2px solid var(--brand-primary); outline-offset: -2px; }
+.lv-cell-btn:focus-visible { outline: 2px solid var(--focus-ring); outline-offset: -2px; }
 .lv-cell-btn small { font-size: 12px; font-weight: 500; color: var(--text-tertiary); }
 .lv-cov { display: inline-block; margin-left: 8px; font-size: 12px; font-weight: 700; white-space: nowrap; }
 .lv-decide { display: grid; grid-template-columns: repeat(auto-fit, minmax(240px, 1fr)); gap: var(--sp-3); }

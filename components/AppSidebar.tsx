@@ -59,7 +59,7 @@ import {
 import { colors, font, radius, shadow, sidebar as sidebarTokens, z } from '../lib/design-tokens';
 import { useWhiteLabel } from './WhiteLabelProvider';
 import { useEntitlements } from '../lib/hooks/useEntitlements';
-import { moduleAccent } from '../lib/module-identity';
+import { moduleAccent } from '@/lib/ui/app-accent';
 import { Pill } from './ui/premium';
 import { PROJECT_NAV_SECTIONS } from '@/lib/project-nav';
 import { useProjectContext, refreshProjectContext } from '@/lib/hooks/useProjectContext';

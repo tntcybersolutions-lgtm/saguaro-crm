@@ -85,7 +85,7 @@ const CSS = `
 .paWaivers[data-ok="true"] { color: var(--status-ongoing); }
 .paCheck { accent-color: var(--brand-primary); cursor: pointer; width: 16px; height: 16px; }
 .paCq { container: paws / inline-size; min-width: 0; }
-.paInlineErr { display: flex; align-items: center; gap: 8px; flex-wrap: wrap; font-size: var(--fs-sm); color: var(--status-overdue); padding: 10px 14px; border: 1px solid rgba(255,77,94,.35); border-radius: var(--radius-sm); background: rgba(255,77,94,.08); }
+.paInlineErr { display: flex; align-items: center; gap: 8px; flex-wrap: wrap; font-size: var(--fs-sm); color: var(--status-overdue); padding: 10px 14px; border: 1px solid rgba(248,113,113,.35); border-radius: var(--radius-sm); background: rgba(248,113,113,.08); }
 .paSkel { height: 14px; border-radius: 4px; background: var(--border-subtle); }
 @media (max-width: 640px) {
   .paWs .k-btn, .paWs .k-stat, .paWs select.k-select, .paWs .k-input { min-height: 44px; }

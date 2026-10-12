@@ -109,7 +109,7 @@ import {
   NotePencil,
   ArrowSquareOut,
 } from '@phosphor-icons/react';
-import { moduleAccent } from '@/lib/module-identity';
+import { moduleAccent } from '@/lib/ui/app-accent';
 import { SUB_TRADES } from '@/lib/construction-intelligence';
 import {
   PROMOTE_RECORD_TYPES,

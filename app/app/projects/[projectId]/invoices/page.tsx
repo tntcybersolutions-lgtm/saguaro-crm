@@ -10,7 +10,7 @@ import { PremiumSurface, ModuleHero, SectionCard, PremiumEmpty, StatStrip, FlowS
 import { SkeletonRow } from '@/components/ui/Skeleton';
 import { Receipt, PencilSimple, Percent, Copy, Trash, Plus, CaretDown, ClockCounterClockwise, Calculator } from '@phosphor-icons/react';
 import { ListToolbar } from '@/components/ui/ListToolbar';
-import { moduleAccent } from '@/lib/module-identity';
+import { moduleAccent } from '@/lib/ui/app-accent';
 import { useUnsavedGuard, useComposerDirty } from '@/lib/useUnsavedGuard';
 import UnsavedGuardModal from '@/components/UnsavedGuardModal';
 import Suggest from '@/components/ui/Suggest';
@@ -38,7 +38,7 @@ interface Invoice {
 // Lowercase-keyed — the server stores lowercase statuses; rows written before
 // the normalization ('Sent', 'Draft') resolve to the same keys via statusKey().
 const STATUS_MAP: Record<string, { bg: string; color: string; label: string }> = {
-  draft: { bg: 'rgba(163,172,187,.2)', color: DIM, label: 'Draft' },
+  draft: { bg: 'rgba(148,163,184,.2)', color: DIM, label: 'Draft' },
   sent: { bg: 'var(--brand-primary-18)', color: 'var(--text-primary)', label: 'Sent' },
   pending: { bg: 'color-mix(in srgb, var(--warning) 20%, transparent)', color: 'var(--warning)', label: 'Pending' },
   approved: { bg: 'rgba(74,222,128,.2)', color: GREEN, label: 'Approved' },
@@ -536,7 +536,7 @@ export default function InvoicesPage() {
               {sortedInvoices.map(inv => {
                 const overdue = isOverdue(inv);
                 const effKey = overdue ? 'overdue' : statusKey(inv.status);
-                const sc = STATUS_MAP[effKey] || { bg: 'rgba(163,172,187,.2)', color: DIM, label: statusKey(inv.status) };
+                const sc = STATUS_MAP[effKey] || { bg: 'rgba(148,163,184,.2)', color: DIM, label: statusKey(inv.status) };
                 return (
                   <tr key={inv.id} style={{ borderBottom: '1px solid rgba(255,255,255,0.08)', background: overdue ? 'rgba(248,113,113,.05)' : 'transparent' }}>
                     <td style={{ padding: '10px 14px', color: 'var(--text-primary)', fontWeight: 700 }}>{inv.invoice_number}</td>

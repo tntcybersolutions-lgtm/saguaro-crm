@@ -159,7 +159,7 @@ export default function CommandCenterPage() {
 
       {/* Needs-attention banner */}
       {needsAttention > 0 && (
-        <div style={{ background: summary.red > 0 ? 'rgba(248,113,113,0.08)' : 'rgba(255,149,0,0.08)', border: `1px solid ${summary.red > 0 ? 'rgba(248,113,113,0.25)' : 'rgba(255,149,0,0.25)'}`, borderRadius: 12, padding: '13px 16px', marginBottom: 18, display: 'flex', alignItems: 'center', gap: 10, fontSize: 14 }}>
+        <div style={{ background: summary.red > 0 ? 'rgba(248,113,113,0.08)' : 'rgba(251,191,36,0.08)', border: `1px solid ${summary.red > 0 ? 'rgba(248,113,113,0.25)' : 'rgba(251,191,36,0.25)'}`, borderRadius: 12, padding: '13px 16px', marginBottom: 18, display: 'flex', alignItems: 'center', gap: 10, fontSize: 14 }}>
           <span style={{ display: 'inline-flex', alignItems: 'center' }}><Warning size={18} weight="fill" color={summary.red > 0 ? C.red : C.yellow} /></span>
           <span style={{ color: C.text }}>
             <b>{needsAttention}</b> {needsAttention === 1 ? 'project needs' : 'projects need'} attention today

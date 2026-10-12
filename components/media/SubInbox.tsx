@@ -44,7 +44,7 @@ const CSS = `
 .sxThumbs { display: grid; grid-template-columns: repeat(auto-fill, minmax(84px, 1fr)); gap: 8px; }
 .sxT { position: relative; aspect-ratio: 1; padding: 0; border-radius: 8px; overflow: hidden; border: 1px solid var(--border-default); background: var(--bg-solid); cursor: zoom-in; color: var(--text-tertiary); display: flex; align-items: center; justify-content: center; }
 .sxT img { width: 100%; height: 100%; object-fit: cover; display: block; }
-.sxT:focus-visible { outline: 2px solid var(--brand-primary); outline-offset: 2px; }
+.sxT:focus-visible { outline: 2px solid var(--focus-ring); outline-offset: 2px; }
 .sxT .pl { position: absolute; left: 6px; top: 6px; width: 22px; height: 22px; border-radius: 50%; background: rgba(8,9,12,0.78); color: var(--text-primary); display: inline-flex; align-items: center; justify-content: center; }
 .sxT .on { position: absolute; right: 4px; bottom: 4px; padding: 1px 5px; border-radius: 5px; background: rgba(8,9,12,0.8); color: var(--c-green); font-size: 12px; font-weight: 800; }
 .sxActs { display: flex; gap: 8px; flex-wrap: wrap; }

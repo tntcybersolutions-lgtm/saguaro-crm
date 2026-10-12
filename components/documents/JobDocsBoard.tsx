@@ -26,7 +26,7 @@ const CSS = `
 .jdbRow { display: grid; grid-template-columns: minmax(220px, 1.5fr) minmax(170px, 1.2fr) repeat(4, minmax(92px, .7fr)) 24px; align-items: center; gap: 16px; padding: 14px 16px; border: 0; border-top: 1px solid var(--border-subtle); background: transparent; color: inherit; font: inherit; text-align: left; cursor: pointer; width: 100%; }
 .jdbRow:first-child { border-top: 0; }
 .jdbRow:hover { background: rgba(255,255,255,0.03); }
-.jdbRow:focus-visible { outline: 2px solid var(--brand-primary); outline-offset: -2px; }
+.jdbRow:focus-visible { outline: 2px solid var(--focus-ring); outline-offset: -2px; }
 .jdbRow[data-sel="true"] { background: rgba(255,224,0,0.05); box-shadow: inset 3px 0 0 var(--brand-primary); cursor: default; }
 .jdbJob { display: flex; align-items: center; gap: 12px; min-width: 0; }
 .jdbName { min-width: 0; }
@@ -45,7 +45,7 @@ const CSS = `
 .jdbBar > i { display: block; height: 100%; border-radius: 6px; background: var(--info); }
 .jdbGo { color: var(--text-tertiary); }
 .jdbClear { display: inline-flex; align-items: center; gap: 6px; min-height: 36px; padding: 0 12px; border-radius: 999px; border: 1px solid var(--border-default); background: rgba(255,255,255,0.04); color: var(--text-primary); font: inherit; font-size: 13px; font-weight: 700; cursor: pointer; }
-.jdbClear:focus-visible { outline: 2px solid var(--brand-primary); outline-offset: 2px; }
+.jdbClear:focus-visible { outline: 2px solid var(--focus-ring); outline-offset: 2px; }
 .jdbEmpty { padding: 18px 16px; font-size: 14px; color: var(--text-tertiary); }
 @media (max-width: 1100px) { .jdbRow { grid-template-columns: minmax(200px, 1.4fr) minmax(150px, 1fr) repeat(2, minmax(88px, .7fr)) 20px; } .jdbHideMd { display: none; } }
 @media (max-width: 767px) {

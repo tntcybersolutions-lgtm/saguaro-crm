@@ -328,7 +328,7 @@ const CSS = `
 .dl-docText { display: flex; flex-direction: column; min-width: 0; }
 .dl-title { all: unset; cursor: pointer; font-size: 14.5px; font-weight: 750; line-height: 1.3; color: var(--title-color, #FFE000); display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden; overflow-wrap: anywhere; }
 .dl-title:hover { text-decoration: underline; }
-.dl-title:focus-visible, .dl-btn:focus-visible, .dl-chips button:focus-visible, .dl-viewtoggle button:focus-visible, .dl-ghead:focus-visible { outline: 2px solid var(--brand-primary); outline-offset: 2px; }
+.dl-title:focus-visible, .dl-btn:focus-visible, .dl-chips button:focus-visible, .dl-viewtoggle button:focus-visible, .dl-ghead:focus-visible { outline: 2px solid var(--focus-ring); outline-offset: 2px; }
 .dl-meta { display: flex; gap: 10px; font-size: 13px; color: var(--text-tertiary); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
 .dl-cat { font-weight: 700; }
 .dl-job { font-size: 14px; color: var(--text-primary); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }

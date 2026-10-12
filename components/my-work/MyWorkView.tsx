@@ -56,7 +56,7 @@ const CSS = `
 .mw .fl-row:has(.mw-tl:active){background:var(--sg-border)}
 .mw .mw-tl{color:inherit;text-decoration:none;outline:none}
 .mw .mw-tl::after{content:'';position:absolute;inset:0}
-.mw .mw-tl:focus-visible::after{outline:2px solid var(--brand-primary);outline-offset:-2px}
+.mw .mw-tl:focus-visible::after{outline:2px solid var(--focus-ring);outline-offset:-2px}
 .mw .fl-act,.mw .mw-more,.mw .fl-chev{position:relative;z-index:1}
 .mw .fl-act::after{inset:-5px -2px}
 .mw .fl-sec-act{position:relative}

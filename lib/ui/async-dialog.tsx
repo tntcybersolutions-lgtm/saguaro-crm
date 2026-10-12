@@ -71,30 +71,31 @@ export function alertDialog(opts: AlertOptions): Promise<void> {
 }
 
 /* ── shared chrome ──────────────────────────────────────────────────── */
+/* Semantic theme tokens (app/globals.css); the fallbacks are the approved values. */
 const overlayS: React.CSSProperties = {
   position: 'fixed', inset: 0, zIndex: 10200, // above everything — incl. the full-screen photo viewer (10050)
-  background: 'rgba(2,4,8,0.72)', backdropFilter: 'blur(4px)',
+  background: 'rgba(16,23,34,0.72)', backdropFilter: 'blur(4px)',
   display: 'flex', alignItems: 'center', justifyContent: 'center', padding: 16,
 };
 const panelS: React.CSSProperties = {
-  width: 'min(460px, 94vw)', background: 'var(--bg-surface, #0E0F12)',
-  border: '1px solid rgba(255,255,255,0.12)', borderRadius: 16,
+  width: 'min(460px, 94vw)', background: 'var(--surface-modal, #1B2636)',
+  border: '1px solid var(--border-default, #334155)', borderRadius: 12,
   boxShadow: '0 24px 60px rgba(0,0,0,0.45)', padding: '20px 20px 16px',
-  color: '#FFFFFF',
+  color: 'var(--text-primary, #F8FAFC)',
 };
 const titleS: React.CSSProperties = { margin: 0, fontSize: 17, fontWeight: 800, letterSpacing: '-0.01em' };
-const msgS: React.CSSProperties = { margin: '8px 0 0', fontSize: 13, lineHeight: 1.5, color: '#A9B4C4' };
-const labelS: React.CSSProperties = { display: 'block', margin: '14px 0 6px', fontSize: 12, fontWeight: 700, color: '#D4D4D8' };
+const msgS: React.CSSProperties = { margin: '8px 0 0', fontSize: 14, lineHeight: 1.5, color: 'var(--text-secondary, #CBD5E1)' };
+const labelS: React.CSSProperties = { display: 'block', margin: '14px 0 6px', fontSize: 13, fontWeight: 700, color: 'var(--text-secondary, #CBD5E1)' };
 const inputS: React.CSSProperties = {
   width: '100%', boxSizing: 'border-box', minHeight: 44, padding: '10px 12px',
-  background: 'var(--bg-surface-2, #15171C)', border: '1px solid rgba(255,255,255,0.18)',
-  borderRadius: 8, color: '#FFFFFF', fontSize: 16, fontFamily: 'inherit',
+  background: 'var(--bg-base, #101722)', border: '1px solid var(--border-default, #334155)',
+  borderRadius: 10, color: 'var(--text-primary, #F8FAFC)', fontSize: 16, fontFamily: 'inherit',
 };
-const rowS: React.CSSProperties = { display: 'flex', justifyContent: 'flex-end', gap: 8, marginTop: 18 };
-const btnBase: React.CSSProperties = { minHeight: 40, padding: '8px 16px', borderRadius: 8, fontSize: 13, fontWeight: 800, cursor: 'pointer', fontFamily: 'inherit' };
-const btnGhost: React.CSSProperties = { ...btnBase, background: 'transparent', border: '1px solid rgba(255,255,255,0.16)', color: '#D4D4D8' };
-const btnPrimary: React.CSSProperties = { ...btnBase, background: 'var(--brand-primary, #FFE600)', border: 'none', color: 'var(--on-brand, #1C1C1E)' };
-const btnDanger: React.CSSProperties = { ...btnBase, background: '#FF3B30', border: 'none', color: '#1a0406' };
+const rowS: React.CSSProperties = { display: 'flex', justifyContent: 'flex-end', flexWrap: 'wrap', gap: 8, marginTop: 18 };
+const btnBase: React.CSSProperties = { minHeight: 44, padding: '8px 18px', borderRadius: 10, fontSize: 14, fontWeight: 700, cursor: 'pointer', fontFamily: 'inherit' };
+const btnGhost: React.CSSProperties = { ...btnBase, background: 'var(--action-secondary-bg, #243247)', border: '1px solid var(--action-secondary-border, #334155)', color: 'var(--action-secondary-fg, #F8FAFC)' };
+const btnPrimary: React.CSSProperties = { ...btnBase, background: 'var(--action-primary-bg, #FFE000)', border: 'none', color: 'var(--action-primary-fg, #101722)' };
+const btnDanger: React.CSSProperties = { ...btnBase, background: 'var(--action-danger-bg)', border: '1px solid var(--danger-border)', color: 'var(--action-danger-fg, #F87171)' };
 
 function useDismiss(onCancel: () => void) {
   useEffect(() => {
