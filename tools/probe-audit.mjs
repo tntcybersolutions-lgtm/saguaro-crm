@@ -26,7 +26,7 @@ const JOB = 'ZZ AUDIT Walk Job 10101543';
 const result = { site: SITE, group: GROUP, ids: {}, screens: {} };
 
 async function login(page) {
-  await page.goto(`${SITE}/login`, { waitUntil: 'domcontentloaded', timeout: 60000 });
+  await page.goto(`${SITE}/login`, { waitUntil: 'networkidle', timeout: 60000 });
   await page.fill('input[name="email"]', process.env.E2E_EMAIL.trim());
   await page.fill('input[name="password"]', process.env.E2E_PASSWORD);
   await page.click('button[type="submit"]');
