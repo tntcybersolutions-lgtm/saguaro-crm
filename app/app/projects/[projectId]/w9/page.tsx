@@ -6,7 +6,7 @@ import { useParams } from 'next/navigation';
 import { T, Badge, Table } from '@/components/ui/shell';
 import {
   PremiumSurface, ModuleHero, SectionCard, PremiumEmpty,
-  StatStrip, FlowSteps, AutoChip,
+  StatStrip, FlowStrip, AutoChip,
   goldButtonStyle, ghostButtonStyle, secondaryButtonStyle
 } from '@/components/ui/premium';
 import { FileText, PaperPlaneTilt, Plus, SealCheck } from '@phosphor-icons/react';
@@ -352,7 +352,7 @@ export default function W9Page() {
         {loading ? (
           <div style={{ textAlign: 'center', padding: 40, color: 'var(--c-text-2)' }}>Loading…</div>
         ) : subs.length === 0 ? (
-          <div style={{ display: 'grid', gridTemplateColumns: ctx ? 'minmax(0, 1fr) 340px' : '1fr', alignItems: 'stretch' }}>
+          <div>
             <PremiumEmpty
               icon={<FileText size={30} weight="duotone" style={{ color: 'var(--text-primary)' }} />}
               title="No W-9s Tracked Yet"
@@ -366,12 +366,12 @@ export default function W9Page() {
               }
             />
             {ctx && (
-              <div style={{ borderLeft: '1px solid rgba(255,255,255,0.08)', padding: '22px 24px' }}>
-                <FlowSteps steps={[
-                  { title: 'Request Goes Out', desc: 'The vendor gets an email with a secure submission link — no account needed.' },
-                  { title: 'Vendor Submits', desc: 'The completed W-9 lands here and the vendor is marked on file.' },
-                  { title: 'Award Gate Clears', desc: 'Bid packages refuse to award to a sub with no W-9 — on file means buyout proceeds.' },
-                  { title: '1099s at Year End', desc: 'TINs are on record before the first check is cut, not chased in January.' },
+              <div style={{ padding: '0 20px 16px' }}>
+                <FlowStrip steps={[
+                  { title: 'Request Goes Out', desc: 'Secure link, no account needed' },
+                  { title: 'Vendor Submits', desc: 'Marked on file here' },
+                  { title: 'Award Gate Clears', desc: 'No W-9, no award' },
+                  { title: '1099s at Year End', desc: 'TINs already on record' },
                 ]} />
               </div>
             )}

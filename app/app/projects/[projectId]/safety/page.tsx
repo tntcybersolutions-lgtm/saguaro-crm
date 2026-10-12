@@ -6,7 +6,7 @@ import { Badge, Table, T } from '@/components/ui/shell';
 import {
   PremiumSurface, ModuleHero, SectionCard, PremiumEmpty,
   StatStrip, FlowSteps, FlowStrip, AutoChip,
-  goldButtonStyle, ghostButtonStyle, goldOutlineButtonStyle, secondaryButtonStyle
+  goldButtonStyle, ghostButtonStyle, goldOutlineButtonStyle, secondaryButtonStyle, railStyle
 } from '@/components/ui/premium';
 import {
   ShieldCheck, ClipboardText, CheckCircle, Warning,
@@ -498,7 +498,7 @@ export default function SafetyPage() {
 
       {/* Create Incident Form */}
       {showForm && (
-        <div style={{ display: 'grid', gridTemplateColumns: ctx ? 'minmax(0, 1fr) 320px' : '1fr', gap: 18, alignItems: 'start', marginBottom: 20 }}>
+        <div className={ctx ? 'pmSplit' : undefined} style={railStyle(320, { gap: 18, alignItems: 'start', marginBottom: 20 })}>
           <SectionCard title="Report Safety Incident" icon={<Warning size={17} weight="duotone" color={RED} />} accent={RED}>
             <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: 14 }}>
               <div>

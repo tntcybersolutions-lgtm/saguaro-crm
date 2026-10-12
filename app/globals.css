@@ -1696,3 +1696,10 @@ a.pmFig:hover,button.pmFig:hover,div.pmFig[role=button]:hover{background:rgba(14
 
 .sag-app .pmHead h1, .pmHead h1 { margin: 0; font-size: 22px; font-weight: 700; line-height: 1.2; letter-spacing: -0.015em; color: var(--sg-text); -webkit-text-fill-color: var(--sg-text); }
 @media (max-width: 767px) { .sag-app .pmHead h1, .pmHead h1 { font-size: 20px; } }
+
+/* Content + side rail (DESIGN_SYSTEM.md §3). One source for every "main column plus
+   a context rail" layout: the rail's width comes from --pm-rail (railStyle() in
+   components/ui/premium.tsx) and the rail stacks under the content below 900px,
+   so a phone never gets a squeezed two-column page. */
+.pmSplit { display: grid; grid-template-columns: minmax(0, 1fr) var(--pm-rail, 320px); gap: 16px; align-items: start; }
+@media (max-width: 899px) { .pmSplit { grid-template-columns: minmax(0, 1fr); } }

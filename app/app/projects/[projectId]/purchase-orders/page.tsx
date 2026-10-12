@@ -7,7 +7,7 @@ import { Badge, Table, T } from '@/components/ui/shell';
 import {
   PremiumSurface, ModuleHero, SectionCard, PremiumEmpty,
   StatStrip, FlowSteps, InsightRow, AutoChip,
-  goldButtonStyle, ghostButtonStyle, secondaryButtonStyle
+  goldButtonStyle, ghostButtonStyle, secondaryButtonStyle, railStyle
 } from '@/components/ui/premium';
 import SaguaroDatePicker from '../../../../../components/SaguaroDatePicker';
 import { Package, Plus, X, Wallet, Copy } from '@phosphor-icons/react';
@@ -408,7 +408,7 @@ export default function PurchaseOrdersPage() {
 
       {/* Create Form — walks in knowing the project: vendors, cost codes, budget, next number */}
       {showForm && (
-        <div style={{ marginBottom: 20, display: 'grid', gridTemplateColumns: 'minmax(0,1fr) 320px', gap: 16, alignItems: 'start' }}>
+        <div className="pmSplit" style={railStyle(320, { marginBottom: 20, gap: 16, alignItems: 'start' })}>
           <SectionCard title="New Purchase Order" icon={<Package size={17} weight="duotone" color="var(--text-secondary)" />}>
             <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: 14 }}>
               <div>

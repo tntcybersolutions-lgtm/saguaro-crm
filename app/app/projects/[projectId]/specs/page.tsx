@@ -6,7 +6,7 @@ import { useParams } from 'next/navigation';
 import { Badge, Btn, Table, T } from '@/components/ui/shell';
 import {
   PremiumSurface, ModuleHero, SectionCard, PremiumEmpty,
-  StatStrip, FlowSteps, InsightRow, AutoChip, goldButtonStyle, ghostButtonStyle, secondaryButtonStyle
+  StatStrip, FlowSteps, InsightRow, AutoChip, goldButtonStyle, ghostButtonStyle, secondaryButtonStyle, railStyle
 } from '@/components/ui/premium';
 import { FileText, Plus, ClockCounterClockwise } from '@phosphor-icons/react';
 import { ListToolbar } from '@/components/ui/ListToolbar';
@@ -256,7 +256,7 @@ export default function SpecsPage() {
 
       {/* Create Form */}
       {showForm && (
-        <div style={{ display: 'grid', gridTemplateColumns: ctx ? 'minmax(0, 1fr) 320px' : '1fr', gap: 18, alignItems: 'start', marginBottom: 24 }}>
+        <div className={ctx ? 'pmSplit' : undefined} style={railStyle(320, { gap: 18, alignItems: 'start', marginBottom: 24 })}>
         <SectionCard
           icon={<Plus size={17} weight="bold" color="var(--text-secondary)" />}
           title="Add Spec Section"

@@ -4,7 +4,7 @@ import { useProjectContext } from '@/lib/hooks/useProjectContext';
 import { useParams } from 'next/navigation';
 import { Badge, Btn, Table, T } from '@/components/ui/shell';
 import {
-  PremiumSurface, ModuleHero, SectionCard, PremiumEmpty, StatStrip, FlowSteps, InsightRow, goldButtonStyle, secondaryButtonStyle
+  PremiumSurface, ModuleHero, SectionCard, PremiumEmpty, StatStrip, FlowSteps, InsightRow, goldButtonStyle, secondaryButtonStyle, railStyle
 } from '@/components/ui/premium';
 import { Bell, CheckCircle, Sparkle, Lightning, ListChecks, ClockCounterClockwise } from '@phosphor-icons/react';
 
@@ -172,7 +172,7 @@ export default function AutopilotPage() {
       )}
 
       {/* Alerts + scan-pipeline rail */}
-      <div style={{ display: 'grid', gridTemplateColumns: 'minmax(0,1fr) 320px', gap: 18, alignItems: 'start' }}>
+      <div className="pmSplit" style={railStyle(320, { gap: 18, alignItems: 'start' })}>
       <SectionCard
         icon={<Bell size={17} weight="duotone" color="var(--text-secondary)" />}
         title="Project Alerts"

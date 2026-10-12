@@ -430,6 +430,12 @@ export const goldOutlineButtonStyle: React.CSSProperties = {
   fontWeight: 600, fontSize: 14, textDecoration: 'none',
 };
 
+/** Inline style for a `.pmSplit` content + side-rail grid (globals.css): the rail's
+ *  width plus any extra layout. The rail stacks under the content below 900px. */
+export function railStyle(rail: number, extra?: React.CSSProperties): React.CSSProperties {
+  return { ['--pm-rail' as string]: `${rail}px`, ...extra } as React.CSSProperties;
+}
+
 /** The slate secondary button. Use it for every action that is not the screen's
  *  one primary — empty-state and section actions that repeat the header's. */
 export const secondaryButtonStyle: React.CSSProperties = goldOutlineButtonStyle;
