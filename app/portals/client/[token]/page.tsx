@@ -111,6 +111,10 @@ type Invoice = {
   id: string;
   number: string;
   amount: number;
+  /** What is still owed. */
+  balance?: number;
+  /** The contractor takes online payments and this invoice has a balance. */
+  payable?: boolean;
   date: string;
   due_date: string;
   status: 'paid' | 'pending' | 'overdue';
@@ -212,6 +216,25 @@ const DOC_CATEGORIES = ['All', 'Contracts', 'Drawings', 'Specs', 'Submittals', '
 export default function ClientPortalPage() {
   const { token } = useParams<{ token: string }>();
   const [activeTab, setActiveTab] = useState<TabId>('dashboard');
+  /* ── Pay online (Stripe Checkout on the contractor's own account) ── */
+  const [payingId, setPayingId] = useState<string | null>(null);
+  const [payError, setPayError] = useState('');
+  const [paidBack, setPaidBack] = useState(false);
+  useEffect(() => {
+    const q = new URLSearchParams(window.location.search);
+    if (q.get('tab') === 'financials') setActiveTab('financials' as TabId);
+    if (q.get('paid') === '1') setPaidBack(true);
+  }, []);
+  const payInvoice = async (id: string) => {
+    setPayingId(id); setPayError('');
+    try {
+      const r = await fetch(`/api/portal/client/pay?token=${token}`, { method: 'POST', headers: { 'Content-Type': 'application/json', 'x-portal-token': token }, body: JSON.stringify({ invoiceId: id }) });
+      const d = await r.json().catch(() => ({}));
+      if (r.ok && d.url) { window.location.href = d.url; return; }
+      setPayError(d.error || "Couldn't open the payment page. Nothing was charged.");
+    } catch { setPayError("Couldn't reach the payment page. Check your connection — nothing was charged."); }
+    setPayingId(null);
+  };
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
 
   /* ── Dashboard state ──────────────────────────────────────────── */
@@ -1338,6 +1361,14 @@ export default function ClientPortalPage() {
         {/* Invoice History */}
         <div style={{ ...cardStyle }}>
           <div style={{ fontSize: 18, fontWeight: 700, color: TEXT, marginBottom: 16 }}>Invoice History</div>
+          {paidBack && (
+            <div role="status" style={{ marginBottom: 14, padding: '12px 14px', borderRadius: 12, border: `1px solid color-mix(in srgb, ${GREEN} 45%, transparent)`, background: `color-mix(in srgb, ${GREEN} 12%, transparent)`, color: TEXT, fontWeight: 700 }}>
+              Thank you — your payment went through. Card payments show as paid within a minute; bank payments clear in a few business days.
+            </div>
+          )}
+          {payError && (
+            <div role="alert" style={{ marginBottom: 14, padding: '12px 14px', borderRadius: 12, border: `1px solid color-mix(in srgb, ${RED} 45%, transparent)`, color: TEXT, fontWeight: 700 }}>{payError}</div>
+          )}
           {invoices.length === 0 ? (
             <EmptyState icon={<Receipt size={44} weight="duotone" color="rgba(255,255,255,0.35)" />} title="No Invoices" subtitle="Invoices will appear here as they are generated." />
           ) : (
@@ -1345,7 +1376,7 @@ export default function ClientPortalPage() {
               <table style={{ width: '100%', borderCollapse: 'collapse', fontSize: 14 }}>
                 <thead>
                   <tr>
-                    {['Invoice #', 'Date', 'Due Date', 'Amount', 'Status'].map((h) => (
+                    {['Invoice #', 'Date', 'Due Date', 'Amount', 'Status', ...(invoices.some((i) => i.payable) ? [''] : [])].map((h) => (
                       <th key={h} style={{ textAlign: 'left', padding: '10px 12px', borderBottom: `1px solid ${BORDER}`, color: DIM, fontSize: 11, fontWeight: 700 }}>{h}</th>
                     ))}
                   </tr>
@@ -1358,6 +1389,20 @@ export default function ClientPortalPage() {
                       <td style={{ padding: '12px', color: DIM }}>{fmtDate(inv.due_date)}</td>
                       <td style={{ padding: '12px', color: TEXT, fontWeight: 700 }}>{fmt(inv.amount)}</td>
                       <td style={{ padding: '12px' }}><span style={badgeStyle(statusColor(inv.status))}>{inv.status}</span></td>
+                      {invoices.some((i) => i.payable) && (
+                        <td style={{ padding: '8px 12px', textAlign: 'right' }}>
+                          {inv.payable && (
+                            <button
+                              type="button"
+                              onClick={() => payInvoice(inv.id)}
+                              disabled={payingId !== null}
+                              style={{ minHeight: 44, padding: '0 18px', borderRadius: 10, border: 'none', background: GOLD, color: 'var(--on-brand)', fontWeight: 800, fontSize: 15, cursor: 'pointer', whiteSpace: 'nowrap' }}
+                            >
+                              {payingId === inv.id ? 'Opening…' : `Pay ${fmt(inv.balance ?? inv.amount)}`}
+                            </button>
+                          )}
+                        </td>
+                      )}
                     </tr>
                   ))}
                 </tbody>

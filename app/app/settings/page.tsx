@@ -38,6 +38,7 @@ const SETTINGS_SECTIONS = [
     sectionIcon: CreditCard,
     items: [
       { icon: CreditCard, label: 'Subscription & Plan', desc: 'Your plan, invoices and add-ons', href: '/app/billing', highlight: true },
+      { icon: CreditCard, label: 'Get Paid Online', desc: 'Owners pay your invoices by card or bank — connect your Stripe account', href: '/app/settings/payments' },
       { icon: DeviceMobile, label: 'Get the iOS App', desc: 'Download Saguaro Control Systems for iPhone & iPad on Apple TestFlight. On Android, open it in Chrome.', href: '/get-the-app' },
       { icon: Bell, label: 'Notifications', desc: 'Configure email and push notification preferences', href: '/app/notification-settings' },
     ],

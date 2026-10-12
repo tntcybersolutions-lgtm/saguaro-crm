@@ -43,6 +43,22 @@ export default function PublicInvoicePage() {
   const [projectName, setProjectName] = useState<string | null>(null);
   const [pdfUrl, setPdfUrl] = useState<string | null>(null);
   const [err, setErr] = useState('');
+  const [payOnline, setPayOnline] = useState(false);
+  const [balance, setBalance] = useState(0);
+  const [paying, setPaying] = useState(false);
+  const [payErr, setPayErr] = useState('');
+  const [paidBack, setPaidBack] = useState(false);
+  useEffect(() => { setPaidBack(new URLSearchParams(window.location.search).get('paid') === '1'); }, []);
+  const pay = async () => {
+    setPaying(true); setPayErr('');
+    try {
+      const r = await fetch('/api/portal/invoice/pay', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ token: params.token }) });
+      const d = await r.json().catch(() => ({}));
+      if (r.ok && d.url) { window.location.href = d.url; return; }
+      setPayErr(d.error || "Couldn't open the payment page. Nothing was charged.");
+    } catch { setPayErr("Couldn't reach the payment page. Check your connection — nothing was charged."); }
+    setPaying(false);
+  };
 
   useEffect(() => {
     if (!params?.token) return;
@@ -51,6 +67,7 @@ export default function PublicInvoicePage() {
       .then((d) => {
         if (d?.invoice) {
           setInv(d.invoice); setFrom(d.from || ''); setProjectName(d.projectName || null); setPdfUrl(d.pdfUrl || null);
+          setPayOnline(!!d.payOnline); setBalance(Number(d.balance) || 0);
         } else setErr(d?.error || 'This invoice link is not valid.');
       })
       .catch(() => setErr('Could not load the invoice.'));
@@ -104,7 +121,18 @@ export default function PublicInvoicePage() {
               <div style={{ padding: '0 22px 16px', fontSize: 12.5, color: DIM, lineHeight: 1.5 }}>{inv.notes}</div>
             )}
 
+            {paidBack && (
+              <div role="status" style={{ margin: '0 22px 12px', padding: '12px 14px', borderRadius: 10, border: '1px solid color-mix(in srgb, var(--success) 45%, transparent)', fontWeight: 700 }}>
+                Thank you — your payment went through. Card payments show as paid within a minute; bank payments clear in a few business days.
+              </div>
+            )}
+            {payErr && <div role="alert" style={{ margin: '0 22px 12px', padding: '12px 14px', borderRadius: 10, border: '1px solid color-mix(in srgb, var(--danger) 45%, transparent)', fontWeight: 700 }}>{payErr}</div>}
             <div style={{ padding: '16px 22px', borderTop: `1px solid ${BORDER}`, display: 'flex', gap: 10, flexWrap: 'wrap' }}>
+              {payOnline && !paidBack && (
+                <button type="button" onClick={pay} disabled={paying} style={{ minHeight: 44, padding: '0 22px', borderRadius: 10, border: 'none', background: GOLD, color: 'var(--on-brand)', fontWeight: 800, fontSize: 15, cursor: 'pointer' }}>
+                  {paying ? 'Opening…' : `Pay ${balance.toLocaleString('en-US', { style: 'currency', currency: 'USD' })} — card or bank`}
+                </button>
+              )}
               {pdfUrl ? (
                 <a href={pdfUrl} target="_blank" rel="noopener noreferrer" style={{ display: 'inline-flex', alignItems: 'center', gap: 8, background: `linear-gradient(180deg, var(--brand-primary-strong), ${GOLD} 60%, var(--brand-primary-hover))`, color: '#0A0A00', fontWeight: 800, fontSize: 14, borderRadius: 10, padding: '11px 20px', textDecoration: 'none', boxShadow: '0 4px 14px var(--brand-primary-25), inset 0 1px 0 rgba(255,255,255,0.35)' }}>
                   Download PDF

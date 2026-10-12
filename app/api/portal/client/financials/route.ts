@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from 'next/server';
 import { createServerClient } from '@/lib/supabase-server';
 import { getPortalSession, PORTAL_PERMS } from '@/lib/portal-auth';
 import { toCents, toDollars, addCents, subCents } from '@/lib/calc';
+import { companyPaymentAccount, invoiceBalanceCents, invoiceIsPayable, onlinePaymentsConfigured } from '@/lib/online-payments';
 
 /** GET — financial summary for the client portal financials tab */
 export async function GET(req: NextRequest) {
@@ -26,10 +27,14 @@ export async function GET(req: NextRequest) {
       .eq('direction', 'receivable')
       .order('created_at', { ascending: false });
 
+    // Pay online only when the contractor's Stripe account can take payments.
+    const payOnline = onlinePaymentsConfigured() && (await companyPaymentAccount(db, tenantId)).ready;
     const invoices = (invoiceRows || []).map((inv: any) => ({
       id: inv.id,
       number: inv.invoice_number || '',
       amount: inv.total ?? inv.amount ?? 0,
+      balance: invoiceBalanceCents(inv) / 100,
+      payable: payOnline && invoiceIsPayable({ ...inv, direction: 'receivable' }),
       date: inv.created_at,
       due_date: inv.due_date,
       status: inv.status || 'pending',
@@ -87,7 +92,7 @@ export async function GET(req: NextRequest) {
       reference: p.id,
     }));
 
-    return NextResponse.json({ invoices, budget_lines, payments });
+    return NextResponse.json({ invoices, budget_lines, payments, payOnline });
   } catch {
     return NextResponse.json({ error: "Internal server error" }, { status: 500 });
   }

@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { createServerClient } from '@/lib/supabase-server';
+import { companyPaymentAccount, invoiceBalanceCents, invoiceIsPayable, onlinePaymentsConfigured } from '@/lib/online-payments';
 
 /**
  * Public tokenized invoice view — GET ?token=<public_token>.
@@ -16,7 +17,7 @@ export async function GET(req: NextRequest) {
     const db = createServerClient() as any;
     const { data: inv } = await db
       .from('invoices')
-      .select('id, tenant_id, project_id, invoice_number, vendor_name, vendor_email, description, amount, tax, total, due_date, status, notes, created_at')
+      .select('id, tenant_id, project_id, invoice_number, vendor_name, vendor_email, description, amount, tax, total, paid_amount, due_date, status, notes, created_at, direction')
       .eq('public_token', token)
       .maybeSingle();
     if (!inv) return NextResponse.json({ error: 'Invoice not found' }, { status: 404 });
@@ -67,6 +68,9 @@ export async function GET(req: NextRequest) {
       from: tenant?.name || 'Saguaro Control Systems',
       projectName,
       pdfUrl,
+      // Pay online: an owner invoice with a balance, from a contractor whose Stripe account is ready.
+      balance: invoiceBalanceCents(inv) / 100,
+      payOnline: invoiceIsPayable(inv) && onlinePaymentsConfigured() && (await companyPaymentAccount(db, inv.tenant_id)).ready,
     });
   } catch {
     return NextResponse.json({ error: 'Internal server error' }, { status: 500 });
