@@ -15,7 +15,7 @@
  */
 import React, { useCallback, useEffect, useRef, useState } from 'react';
 import { useParams, useRouter } from 'next/navigation';
-import { ArrowRight, EnvelopeSimple, UploadSimple, DownloadSimple, CheckCircle, WarningCircle, Trash, PencilSimple } from '@phosphor-icons/react';
+import { ArrowRight, EnvelopeSimple, UploadSimple, DownloadSimple, CheckCircle, WarningCircle, Trash, PencilSimple, User, Phone, Megaphone, MapPin, CalendarBlank, CurrencyDollar, Gauge, CalendarCheck, Funnel, Note, Users, Paperclip, Buildings, Flag } from '@phosphor-icons/react';
 import { confirmDialog } from '@/lib/ui/async-dialog';
 import { useToast } from '@/components/Toast';
 import { humanError } from '@/lib/errors';
@@ -24,9 +24,10 @@ import { LEAD_STAGES, LEAD_SOURCES } from '@/lib/lead-stages';
 import { BUILDING_TYPES } from '@/lib/contractor-trades';
 import { FileTypeBadge } from '@/components/FileTypeBadge';
 import {
-  PageShell, Card, StatRow, Badge, Button, DataTable, EmptyState, DetailList,
+  PageShell, Card, StatRow, Badge, Button, DataTable, EmptyState,
   FormModal, Field, Input, Textarea, Select, FormGrid, DateInput,
-  type Column, type BadgeTone,
+  ItemList, ItemRow, MetaItem, Callout, StagePicker, Timeline,
+  type Column, type BadgeTone, type Tone,
 } from '@/components/ui/kit';
 
 /* Stages read as the six fixed status colors (lib/status-colors) so the deal
@@ -37,6 +38,13 @@ const STAGE_TONE: Record<string, BadgeTone> = {
 };
 const ACTIVITY_TYPES = ['call', 'email', 'meeting', 'note'] as const;
 const ACTIVITY_LABELS: Record<string, string> = { call: 'Phone Call', email: 'Email', meeting: 'Meeting', note: 'Note' };
+const ACTIVITY_ICON: Record<string, React.ReactNode> = {
+  call: <Phone size={15} weight="bold" />, email: <EnvelopeSimple size={15} weight="bold" />,
+  meeting: <Users size={15} weight="bold" />, note: <Note size={15} weight="bold" />,
+};
+const ACTIVITY_TONE: Record<string, Tone> = { call: 'info', email: 'info', meeting: 'success', note: 'neutral' };
+/* The open pipeline in order; Lost sits apart as its own action. */
+const OPEN_STAGES = LEAD_STAGES.filter((s) => s !== 'Lost');
 
 type Lead = {
   id: string; company_name: string | null; contact_name: string | null;
@@ -378,11 +386,23 @@ export default function DealPage() {
     { key: 'created_at', header: 'Added', render: (m) => fmtDate(m.created_at) },
   ];
 
+  const isLost = lead.stage === 'Lost';
+  const prob = lead.probability != null && lead.probability !== '' ? Math.max(0, Math.min(100, Number(lead.probability))) : null;
+  const overdue = !!lead.next_action_date && !isWon && !isLost && new Date(lead.next_action_date) < new Date(new Date().toDateString());
+
   return (
     <PageShell
       crumbs={[...CRUMBS, { label: lead.company_name || 'Deal' }]}
       title={lead.company_name || 'Untitled Deal'}
-      subtitle={`${lead.contact_name || 'No contact'}${lead.project_type ? ` · ${lead.project_type}` : ''}`}
+      badge={<Badge tone={STAGE_TONE[lead.stage || ''] ?? 'neutral'} dot>{lead.stage || 'Unstaged'}</Badge>}
+      meta={
+        <>
+          {lead.contact_name && <MetaItem icon={<User size={14} />}>{lead.contact_name}</MetaItem>}
+          {lead.project_type && <MetaItem icon={<Buildings size={14} />}>{lead.project_type}</MetaItem>}
+          {lead.location && <MetaItem icon={<MapPin size={14} />}>{lead.location}</MetaItem>}
+          {lead.created_at && <MetaItem icon={<CalendarBlank size={14} />}>Created {fmtDate(lead.created_at)}</MetaItem>}
+        </>
+      }
       actions={
         <>
           <Button icon={<PencilSimple size={15} />} onClick={openEdit}>Edit Deal</Button>
@@ -404,59 +424,70 @@ export default function DealPage() {
       }
     >
       <StatRow items={[
-        { label: 'Estimated Value', value: fmt(lead.estimated_value) },
-        { label: 'Stage', value: <Badge tone={STAGE_TONE[lead.stage || ''] ?? 'neutral'} dot>{lead.stage || 'Unstaged'}</Badge> },
-        { label: 'Probability', value: lead.probability != null ? `${Number(lead.probability)}%` : '—' },
-        { label: 'Next Action', value: lead.next_action_date ? fmtDate(lead.next_action_date) : '—', sub: lead.next_action || 'Nothing scheduled' },
+        { label: 'Estimated Value', value: fmt(lead.estimated_value), icon: <CurrencyDollar size={15} weight="bold" /> },
+        { label: 'Probability', value: prob != null ? `${prob}%` : '—', icon: <Gauge size={15} weight="bold" />,
+          sub: prob != null ? <span className="k-prog" aria-hidden><span style={{ width: `${prob}%` }} /></span> : 'Not set' },
+        { label: 'Next Action', value: lead.next_action_date ? fmtDate(lead.next_action_date) : '—', icon: <CalendarCheck size={15} weight="bold" />,
+          tone: overdue ? 'bad' : 'default', sub: overdue ? 'Overdue' : (lead.next_action ? 'Scheduled' : 'Nothing scheduled') },
       ]} />
 
-      {/* Stage bar — the Path 12 spine */}
+      {/* The one next step, as the concept's alert card. */}
+      {isWon ? (
+        <Callout
+          tone="success"
+          icon={<CheckCircle size={20} weight="fill" />}
+          title={lead.project_id ? 'Won — this deal is open as a job' : 'Won — ready to become a job'}
+          text={lead.project_id ? 'Budget, schedule and the client portal live on the job now.' : 'Opening the job carries the customer, value and files across.'}
+        />
+      ) : !isLost && (
+        <Callout
+          tone={overdue ? 'danger' : lead.next_action ? 'info' : 'warning'}
+          icon={overdue ? <WarningCircle size={20} weight="fill" /> : <Flag size={20} weight="fill" />}
+          title={lead.next_action || 'No next step yet'}
+          text={lead.next_action
+            ? (lead.next_action_date ? `${overdue ? 'Was due' : 'Due'} ${fmtDate(lead.next_action_date)}.` : 'No date set.')
+            : 'Add the next step and a date so this deal shows up on My Work.'}
+          actions={<Button icon={<PencilSimple size={15} />} onClick={openEdit}>{lead.next_action ? 'Change' : 'Add Next Step'}</Button>}
+        />
+      )}
+
+      {/* Pipeline — the Path 12 spine */}
       <Card
-        title="Move This Deal"
-        subtitle={isWon ? (lead.project_id ? 'Won — this deal is open as a job.' : 'Won — ready to become a project.') : 'One click moves the deal; the board and sales overview update at once.'}
+        icon={<Funnel size={17} weight="bold" />}
+        title="Pipeline"
+        subtitle="One click moves the deal; the board and sales overview update at once."
+        actions={!isLost ? (
+          <Button variant="ghost" onClick={() => void moveStage('Lost')} disabled={!!savingStage}>{savingStage === 'Lost' ? 'Saving…' : 'Mark as Lost'}</Button>
+        ) : (
+          <Badge tone="closed">Lost</Badge>
+        )}
       >
-        <div className="k-row-actions" style={{ justifyContent: 'flex-start', flexWrap: 'wrap', gap: 8 }}>
-          {LEAD_STAGES.map((s) => {
-            const active = lead.stage === s;
-            return (
-              <Button
-                key={s}
-                variant={active ? 'primary' : s === 'Lost' ? 'ghost' : 'secondary'}
-                onClick={() => moveStage(s)}
-                disabled={!!savingStage || active}
-                aria-current={active ? 'step' : undefined}
-                icon={active && s === 'Won' ? <CheckCircle size={15} weight="fill" /> : undefined}
-              >
-                {savingStage === s ? 'Saving…' : s}
-              </Button>
-            );
-          })}
-        </div>
+        <StagePicker stages={OPEN_STAGES} value={isLost ? null : lead.stage} onSelect={(st) => void moveStage(st)} busy={savingStage} label="Deal stage" />
       </Card>
 
       <div style={{ display: 'grid', gap: 16, gridTemplateColumns: 'repeat(auto-fit, minmax(min(100%, 420px), 1fr))', alignItems: 'start' }}>
-        <Card title="Details">
-          <DetailList items={[
-            ['Contact', lead.contact_name],
-            ['Email', lead.email],
-            ['Phone', lead.phone],
-            ['Source', lead.source],
-            ['Location', lead.location],
-            ['Next Action', lead.next_action],
-            ['Created', lead.created_at ? fmtDate(lead.created_at) : null],
-          ]} />
+        <Card icon={<User size={17} weight="bold" />} title="Contact & Details">
+          <ItemList>
+            <ItemRow icon={<User size={16} />} title="Contact" value={lead.contact_name || '—'} />
+            <ItemRow icon={<EnvelopeSimple size={16} />} tone={lead.email ? 'info' : 'neutral'} title="Email"
+              value={lead.email ? <a href={`mailto:${lead.email}`}>{lead.email}</a> : '—'} />
+            <ItemRow icon={<Phone size={16} />} tone={lead.phone ? 'info' : 'neutral'} title="Phone"
+              value={lead.phone ? <a href={`tel:${lead.phone}`}>{lead.phone}</a> : '—'} />
+            <ItemRow icon={<Megaphone size={16} />} title="Source" value={lead.source || '—'} />
+            <ItemRow icon={<MapPin size={16} />} title="Location" value={lead.location || '—'} />
+          </ItemList>
           {lead.notes && (
             <div style={{ marginTop: 12 }}>
               <div className="k-label" style={{ marginBottom: 6 }}>Notes</div>
-              <div className="k-hint" style={{ whiteSpace: 'pre-wrap', fontSize: 'var(--fs-sm)' }}>{lead.notes}</div>
+              <div style={{ whiteSpace: 'pre-wrap', fontSize: 14, color: 'var(--text-secondary)', lineHeight: 1.5 }}>{lead.notes}</div>
             </div>
           )}
         </Card>
 
-        <Card title="Activity" subtitle="Calls, emails, meetings and notes on this deal.">
+        <Card icon={<Note size={17} weight="bold" />} title="Activity" subtitle="Calls, emails, meetings and notes on this deal.">
           <form
             className="k-toolbar"
-            style={{ marginBottom: 8 }}
+            style={{ marginBottom: 14 }}
             onSubmit={(e) => { e.preventDefault(); void addActivity(); }}
           >
             <Select
@@ -473,22 +504,19 @@ export default function DealPage() {
               aria-label="Activity description"
               style={{ flex: '1 1 200px', width: 'auto' }}
             />
-            <Button type="submit" variant="primary" disabled={actSaving || !actDesc.trim()}>{actSaving ? 'Adding…' : 'Add'}</Button>
+            <Button type="submit" disabled={actSaving || !actDesc.trim()}>{actSaving ? 'Adding…' : 'Add'}</Button>
           </form>
           {activities.length === 0 ? (
-            <div className="k-hint" style={{ padding: '12px 0' }}>No activity yet. The first call or note shows up here.</div>
+            <EmptyState title="No activity yet" text="The first call or note shows up here." />
           ) : (
-            <div className="k-dl">
-              {activities.map((a) => (
-                <div key={a.id} style={{ padding: '9px 0', borderBottom: '1px solid var(--border-subtle)' }}>
-                  <div style={{ display: 'flex', justifyContent: 'space-between', gap: 10 }}>
-                    <Badge tone={a.activity_type === 'note' ? 'neutral' : 'lead'}>{ACTIVITY_LABELS[a.activity_type] || a.activity_type}</Badge>
-                    <span className="k-hint">{fmtDate(a.created_at)}</span>
-                  </div>
-                  <div style={{ fontSize: 'var(--fs-sm)', color: 'var(--text-primary)', marginTop: 6, whiteSpace: 'pre-wrap' }}>{a.description}</div>
-                </div>
-              ))}
-            </div>
+            <Timeline items={activities.map((a) => ({
+              key: a.id,
+              icon: ACTIVITY_ICON[a.activity_type] || <Note size={15} weight="bold" />,
+              tone: ACTIVITY_TONE[a.activity_type] || 'neutral',
+              title: ACTIVITY_LABELS[a.activity_type] || a.activity_type,
+              meta: fmtDate(a.created_at),
+              body: a.description,
+            }))} />
           )}
         </Card>
       </div>
@@ -496,8 +524,9 @@ export default function DealPage() {
       {/* Files & media — upload photos/files/docs/videos; download in place */}
       <Card
         flush
+        icon={<Paperclip size={17} weight="bold" />}
         title="Files & Media"
-        subtitle="Photos, documents and videos for this deal — uploaded here, downloaded here."
+        subtitle={`${media.length} file${media.length === 1 ? '' : 's'} on this deal`}
         actions={
           <>
             <input ref={fileRef} type="file" multiple hidden disabled={uploading} onChange={(e) => { void onUpload(e.target.files); e.currentTarget.value = ''; }} />

@@ -32,12 +32,18 @@ export type Crumb = { label: string; href?: string };
 export function PageShell({
   title,
   subtitle,
+  badge,
+  meta,
   actions,
   crumbs,
   children,
 }: {
   title: React.ReactNode;
   subtitle?: React.ReactNode;
+  /** Status pill beside the title (the record's state), as in the approved concept. */
+  badge?: React.ReactNode;
+  /** One quiet line of facts under the title — icon + text pairs (MetaItem). */
+  meta?: React.ReactNode;
   /** Right side of the header. Exactly one `variant="primary"` button per page. */
   actions?: React.ReactNode;
   crumbs?: Crumb[];
@@ -57,8 +63,12 @@ export function PageShell({
       )}
       <header className="k-head">
         <div style={{ minWidth: 0 }}>
-          <h1 className="k-title">{title}</h1>
+          <div className="k-title-row">
+            <h1 className="k-title">{title}</h1>
+            {badge}
+          </div>
           {subtitle && <p className="k-sub">{subtitle}</p>}
+          {meta && <div className="k-meta">{meta}</div>}
         </div>
         {actions && <div className="k-head-actions">{actions}</div>}
       </header>
@@ -102,12 +112,15 @@ export function Button({ variant = 'secondary', size = 'md', icon, href, childre
 export function Card({
   title,
   subtitle,
+  icon,
   actions,
   flush,
   children,
   style,
 }: {
   title?: React.ReactNode;
+  /** Icon shown in a tile beside the title (IconTile). */
+  icon?: React.ReactNode;
   subtitle?: React.ReactNode;
   actions?: React.ReactNode;
   /** No body padding — for a DataTable or list that runs edge to edge. */
@@ -119,7 +132,8 @@ export function Card({
     <section className="k-card" style={style}>
       {(title || actions) && (
         <div className="k-card-head">
-          <div style={{ minWidth: 0 }}>
+          {icon && <IconTile>{icon}</IconTile>}
+          <div style={{ minWidth: 0, flex: 1 }}>
             {title && <div className="k-card-title">{title}</div>}
             {subtitle && <div className="k-card-sub">{subtitle}</div>}
           </div>
@@ -128,6 +142,115 @@ export function Card({
       )}
       <div className={flush ? 'k-card-flush' : 'k-card-body'}>{children}</div>
     </section>
+  );
+}
+
+// ─── Concept building blocks (DESIGN_SYSTEM.md §3) ───────────────────────────
+// The approved mobile concept: icons sit in slate tiles, rows lead with an icon
+// and end with an action or a chevron, an alert card names one next step, and a
+// picker shows the selected option as the one solid yellow tile.
+
+export type Tone = 'neutral' | 'info' | 'success' | 'warning' | 'danger';
+
+/** A 36px slate tile holding an icon. Tone colours the icon only. */
+export function IconTile({ tone = 'neutral', size = 36, children }: { tone?: Tone; size?: number; children: React.ReactNode }) {
+  return <span className="k-tile" data-tone={tone} style={{ width: size, height: size }} aria-hidden>{children}</span>;
+}
+
+/** One fact in a PageShell meta line: icon + text. */
+export function MetaItem({ icon, children, href }: { icon?: React.ReactNode; children: React.ReactNode; href?: string }) {
+  const inner = <>{icon && <span className="k-meta-ic" aria-hidden>{icon}</span>}<span>{children}</span></>;
+  return href ? <a className="k-meta-item k-link" href={href}>{inner}</a> : <span className="k-meta-item">{inner}</span>;
+}
+
+/** A row: icon tile, title, optional description, then a value, an action or a chevron. */
+export function ItemRow({ icon, tone, title, desc, value, action, href, onClick }: {
+  icon?: React.ReactNode; tone?: Tone; title: React.ReactNode; desc?: React.ReactNode;
+  value?: React.ReactNode; action?: React.ReactNode; href?: string; onClick?: () => void;
+}) {
+  const body = (
+    <>
+      {icon && <IconTile tone={tone}>{icon}</IconTile>}
+      <span className="k-item-text">
+        <span className="k-item-title">{title}</span>
+        {desc && <span className="k-item-desc">{desc}</span>}
+      </span>
+      {value !== undefined && value !== null && <span className="k-item-value">{value}</span>}
+      {action && <span className="k-item-action" onClick={(e) => e.stopPropagation()}>{action}</span>}
+      {(href || onClick) && !action && <CaretRight size={14} className="k-item-chev" aria-hidden />}
+    </>
+  );
+  if (href) return <a className="k-item k-item-link" href={href}>{body}</a>;
+  if (onClick) return <button type="button" className="k-item k-item-link" onClick={onClick}>{body}</button>;
+  return <div className="k-item">{body}</div>;
+}
+
+/** A stack of ItemRows with hairline separators. */
+export function ItemList({ children }: { children: React.ReactNode }) {
+  return <div className="k-items">{children}</div>;
+}
+
+/** The concept's alert card: a status icon, one bold line, a sentence, then the actions. */
+export function Callout({ tone = 'info', icon, title, text, actions }: {
+  tone?: Exclude<Tone, 'neutral'>; icon?: React.ReactNode; title: React.ReactNode; text?: React.ReactNode; actions?: React.ReactNode;
+}) {
+  return (
+    <div className="k-callout" data-tone={tone} role={tone === 'danger' ? 'alert' : undefined}>
+      <div className="k-callout-main">
+        {icon && <span className="k-callout-ic" aria-hidden>{icon}</span>}
+        <div style={{ minWidth: 0 }}>
+          <div className="k-callout-title">{title}</div>
+          {text && <div className="k-callout-text">{text}</div>}
+        </div>
+      </div>
+      {actions && <div className="k-callout-actions">{actions}</div>}
+    </div>
+  );
+}
+
+/** Ordered stages as one connected strip: done stages carry a check, the current
+ *  stage is the solid yellow segment (aria-current), the rest are slate. */
+export function StagePicker({ stages, value, onSelect, busy, label = 'Stage' }: {
+  stages: readonly string[]; value: string | null; onSelect: (s: string) => void; busy?: string | null; label?: string;
+}) {
+  const cur = value ? stages.indexOf(value) : -1;
+  return (
+    <div className="k-stages" role="group" aria-label={label}>
+      {stages.map((s, i) => {
+        const state = i === cur ? 'current' : cur >= 0 && i < cur ? 'done' : 'todo';
+        return (
+          <button
+            key={s}
+            type="button"
+            className="k-stage"
+            data-state={state}
+            aria-current={state === 'current' ? 'step' : undefined}
+            disabled={!!busy}
+            onClick={() => { if (state !== 'current') onSelect(s); }}
+          >
+            <span className="k-stage-n" aria-hidden>{state === 'done' ? '✓' : i + 1}</span>
+            <span className="k-stage-l">{busy === s ? 'Saving…' : s}</span>
+          </button>
+        );
+      })}
+    </div>
+  );
+}
+
+/** A vertical timeline: an icon dot per entry with a connector line. */
+export function Timeline({ items }: { items: { key: string; icon?: React.ReactNode; tone?: Tone; title: React.ReactNode; meta?: React.ReactNode; body?: React.ReactNode }[] }) {
+  return (
+    <ol className="k-tl">
+      {items.map((it) => (
+        <li key={it.key} className="k-tl-item">
+          <span className="k-tl-dot" data-tone={it.tone || 'neutral'} aria-hidden>{it.icon}</span>
+          <div className="k-tl-body">
+            <div className="k-tl-head"><span className="k-tl-title">{it.title}</span>{it.meta && <span className="k-tl-meta">{it.meta}</span>}</div>
+            {it.body && <div className="k-tl-text">{it.body}</div>}
+          </div>
+        </li>
+      ))}
+    </ol>
   );
 }
 
