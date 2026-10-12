@@ -95,7 +95,9 @@ button.fl-row{width:100%;border:0;font:inherit;text-align:left;cursor:pointer}
 .fl-act[disabled]:not([aria-busy=true]){background:var(--disabled-bg);color:var(--disabled-fg);border-color:var(--disabled-border);cursor:default}
 .fl-act[aria-busy=true]{opacity:.8;cursor:progress}
 .fl-tabs{display:flex;margin:10px 16px 4px;background:var(--fl-surface);border:1px solid var(--fl-line);border-radius:10px;padding:2px}
-.fl-tabs button{flex:1;min-height:36px;border:0;background:none;font:inherit;font-size:14px;font-weight:600;color:var(--tab-fg);border-radius:8px;cursor:pointer;white-space:nowrap}
+.fl-tabs{gap:2px}
+.fl-tabs button{flex:1 1 auto;min-width:0;min-height:36px;padding:0 10px;border:0;background:none;font:inherit;font-size:14px;font-weight:600;color:var(--tab-fg);border-radius:8px;cursor:pointer;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+@media (max-width:420px){.fl-tabs button{padding:0 6px;font-size:13px}}
 .fl-tabs button:hover:not([aria-selected=true]){background:var(--tab-hover-bg)}
 .fl-tabs button[aria-selected=true]{background:var(--tab-selected-bg);color:var(--tab-selected-fg);font-weight:700}
 .fl-tabs button:focus-visible{outline:2px solid var(--focus-ring);outline-offset:1px}

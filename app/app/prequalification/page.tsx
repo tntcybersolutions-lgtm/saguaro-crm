@@ -559,9 +559,10 @@ export default function PrequalificationPage() {
               )}
 
               {/* Recent submissions and Expirations side by side */}
-              <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 20 }}>
+              <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(min(100%, 320px), 1fr))', gap: 20 }}>
                 {/* Recent activity */}
                 <SectionCard title="Recent Submissions" icon={<Clipboard size={17} weight="duotone" color="var(--text-secondary)" />}>
+                  {submissions.length === 0 && <p style={{ margin: '4px 0', fontSize: 14, color: DIM, lineHeight: 1.5 }}>No submissions yet. Send a prequal form and the answers land here.</p>}
                   {submissions.slice(0, 5).map(s => (
                     <div key={s.id} style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', padding: '8px 0', borderBottom: `1px solid color-mix(in srgb, ${BORDER} 13%, transparent)`, cursor: 'pointer' }} onClick={() => { setShowDetail(s.id); }}>
                       <div>
@@ -651,7 +652,8 @@ export default function PrequalificationPage() {
               </SectionCard>
 
               <SectionCard flat title="Score by Trade" icon={<ChartBar size={17} weight="duotone" color="var(--text-secondary)" />}>
-                <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(200px, 1fr))', gap: 12 }}>
+                {submissions.length === 0 && <p style={{ margin: '4px 0', fontSize: 14, color: DIM, lineHeight: 1.5 }}>Trade averages appear once subs submit.</p>}
+                <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(min(100%, 200px), 1fr))', gap: 12 }}>
                   {Array.from(new Set(submissions.map(s => s.sub_trade))).map(trade => {
                     const tradeSubs = submissions.filter(s => s.sub_trade === trade);
                     const avg = Math.round(tradeSubs.reduce((a, s) => a + (s.max_score > 0 ? (s.total_score / s.max_score) * 100 : 0), 0) / tradeSubs.length);
@@ -881,7 +883,7 @@ export default function PrequalificationPage() {
             </div>
 
             {/* Score overview + Radar */}
-            <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 20, marginBottom: 24 }}>
+            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(min(100%, 320px), 1fr))', gap: 20, marginBottom: 24 }}>
               <div>
                 <div style={{ fontSize: 14, fontWeight: 700, color: DIM, marginBottom: 8 }}>Overall Score</div>
                 <div style={{ display: 'flex', alignItems: 'baseline', gap: 8, marginBottom: 12 }}>
