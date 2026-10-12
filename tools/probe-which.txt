@@ -1,1 +1,1 @@
-probe-accept
+probe-theme
