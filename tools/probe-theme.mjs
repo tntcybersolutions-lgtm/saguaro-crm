@@ -3,12 +3,16 @@
  * one representative screen per pattern, at 1440 (Chromium) and 390 (WebKit,
  * iPhone 15 metrics — mobile web, NOT iOS):
  *
- *   login (signed out) · Home (dense dashboard) · job page (detail) · Jobs
- *   (list/table) · invoice detail + its Edit form · phone navigation (More) and
- *   notifications · the invoice PDF in the viewer (a generated document).
+ *   login (signed out) · Home (dense dashboard) · My Work and Jobs (lists,
+ *   also composed side by side at the same viewport) · job page (detail) ·
+ *   invoice detail + its Edit form · Settings (a form page) · phone
+ *   navigation (More) and notifications · the invoice PDF in the viewer.
  *
- * Measures the tokens the pass sets (page-title colour, section-heading
- * colour, card edge, tile accent) so the screenshots are not the only proof.
+ * Measures the tokens the theme sets (page-title colour, section-heading
+ * colour, card edge, tile accent) and the page layout (frame gutter, the
+ * title / first card / header action edges against the content area), so
+ * the screenshots are not the only proof. tools/probe-label.txt labels the
+ * run (before / after).
  * Read-only except the invoice PDF, regenerated on the existing ZZ AUDIT test
  * invoice (stores its link on that test record). Nothing is sent.
  */
@@ -16,6 +20,7 @@ import fs from 'node:fs';
 import path from 'node:path';
 import { createRequire } from 'node:module';
 
+const TAG = (() => { try { return fs.readFileSync(new URL('./probe-label.txt', import.meta.url), 'utf8').trim(); } catch { return ''; } })();
 const SITE = (process.env.SITE || 'https://www.saguarocontrol.net').replace(/\/$/, '');
 const ROOT = path.resolve(path.dirname(new URL(import.meta.url).pathname), '..');
 const OUT = path.join(ROOT, 'tools/probe');
@@ -24,7 +29,7 @@ fs.mkdirSync(path.join(OUT, 'shots'), { recursive: true });
 const require = createRequire(path.join(process.env.PLAYWRIGHT_DIR, 'noop.js'));
 const pw = require('playwright');
 const JOB = 'ZZ AUDIT Walk Job 10101543';
-const R = { site: SITE, startedAt: new Date().toISOString(), screens: {}, checks: [], error: null };
+const R = { site: SITE, tag: TAG || null, startedAt: new Date().toISOString(), screens: {}, checks: [], error: null };
 const check = (name, ok, detail) => { R.checks.push({ name, ok: !!ok, detail: detail == null ? undefined : String(detail).slice(0, 200) }); console.log(`${ok ? 'PASS' : 'FAIL'} ${name}${detail != null ? ' — ' + String(detail).slice(0, 120) : ''}`); };
 const shot = (page, name, full = false) => page.screenshot({ path: path.join(OUT, 'shots', `${name}.jpg`), type: 'jpeg', quality: 70, fullPage: full }).catch(() => {});
 async function open(page, url) { try { await page.goto(`${SITE}${url}`, { waitUntil: 'networkidle', timeout: 35000 }); } catch { await page.waitForTimeout(2500); } await page.waitForTimeout(1200); }
@@ -38,7 +43,8 @@ async function login(page) {
 /* What the theme sets, read from the rendered page. */
 const tokens = (page) => page.evaluate(() => {
   const cs = (el) => (el ? getComputedStyle(el) : null);
-  const h1 = document.querySelector('.main-content-area h1, .lgHead h1, h1');
+  const vis = (el) => { const r = el.getBoundingClientRect(); return r.width > 2 && r.height > 2 && getComputedStyle(el).visibility !== 'hidden'; };
+  const h1 = [...document.querySelectorAll('.main-content-area h1, .lgHead h1')].find(vis) || null;
   const sec = document.querySelector('.main-content-area :is(.k-card-title, .pmSecTitle, .fl-sec, h2)');
   const card = document.querySelector('.main-content-area :is(.k-card, .pmSec, .fl-list, .k-stats, .pmStrip, .fl-strip)');
   const tile = document.querySelector('.main-content-area :is(.k-tile, .fl-ti, .k-stat-icon)');
@@ -53,6 +59,28 @@ const tokens = (page) => page.evaluate(() => {
     sideScroll: de.scrollWidth > innerWidth + 1,
   };
 });
+/* The page layout, measured against the content area beside the sidebar:
+   the frame's gutter, and where the title, the first card or list and the
+   header's action sit (px from the content area's left / right edge). */
+const layout = (page) => page.evaluate(() => {
+  const main = document.querySelector('.main-content-area');
+  if (!main) return null;
+  const m = main.getBoundingClientRect();
+  const vis = (el) => { const r = el.getBoundingClientRect(); return r.width > 2 && r.height > 2 && getComputedStyle(el).visibility !== 'hidden'; };
+  const q = (sel) => [...main.querySelectorAll(sel)].find(vis) || null;
+  const r = (el) => { if (!el) return null; const b = el.getBoundingClientRect(); return { left: Math.round(b.left - m.left), right: Math.round(m.right - b.right), width: Math.round(b.width) }; };
+  const frame = q('.k-frame, .k-page');
+  const fs = frame ? getComputedStyle(frame) : null;
+  return {
+    mainW: Math.round(m.width),
+    frame: r(frame),
+    gutter: fs ? [Math.round(parseFloat(fs.paddingLeft)), Math.round(parseFloat(fs.paddingRight))] : null,
+    title: r(q('h1')),
+    action: r(q('.k-head-actions, .pmHeadActs, .k-head > :last-child:not(:first-child), .fh-ctrls')),
+    card: r(q('.fl-list, .fl-strip, .k-card, .k-stats, .pmSec, .pmStrip, .k-table-wrap')),
+  };
+});
+const near = (a, b, tol = 2) => a != null && b != null && Math.abs(a - b) <= tol;
 const rgbHex = (s) => { const m = (s || '').match(/\d+/g); return m ? '#' + m.slice(0, 3).map((v) => (+v).toString(16).padStart(2, '0')).join('').toUpperCase() : null; };
 
 const desktop = await pw.chromium.launch();
@@ -81,15 +109,27 @@ try {
   const zid = new Set(zz.map((j) => j.id));
   const inv = ((await (await api.get(`${SITE}/api/invoices/list`)).json().catch(() => ({}))).invoices || []).find((i) => /^zz audit/i.test(i.vendor_name || '') || zid.has(i.project_id));
 
-  const SCREENS = [['home', '/app'], ['job', `/app/projects/${projectId}/overview`], ['jobs', '/app/projects'], ['invoice', inv ? `/app/invoicing/${inv.id}` : null]];
+  const SCREENS = [['home', '/app'], ['mywork', '/app/my-work'], ['jobs', '/app/projects'], ['job', `/app/projects/${projectId}/overview`], ['invoice', inv ? `/app/invoicing/${inv.id}` : null], ['settings', '/app/settings']];
   for (const [key, url] of SCREENS) {
     if (!url) { check(`${key}: record found`, false); continue; }
     for (const [w, page] of [['1440', gc], ['390', ph]]) {
       await open(page, url);
       await page.mouse.move(0, 0).catch(() => {});
       const t = await tokens(page);
-      R.screens[`${key}-${w}`] = t;
+      const L = await layout(page);
+      R.screens[`${key}-${w}`] = { ...t, layout: L };
       await shot(page, `${key}-${w}`, w === '390');
+      if (w === '1440') await shot(page, `${key}-1440-view`);
+      console.log(`${key} ${w} layout`, JSON.stringify(L));
+      if (L) {
+        const g = w === '1440' ? 24 : 16;
+        check(`${key} ${w}: frame fills the content area (no centred column)`, near(L.frame?.left, 0) && near(L.frame?.right, 0), JSON.stringify(L.frame));
+        check(`${key} ${w}: gutter ${g}px both sides`, near(L.gutter?.[0], g, 1) && near(L.gutter?.[1], g, 1), JSON.stringify(L.gutter));
+        if (L.title) check(`${key} ${w}: title on the left edge`, near(L.title.left, g), JSON.stringify(L.title));
+        if (L.card) check(`${key} ${w}: first card/list on the left edge`, near(L.card.left, g), JSON.stringify(L.card));
+        if (L.card && !['home', 'job'].includes(key)) check(`${key} ${w}: first card/list reaches the right edge`, near(L.card.right, g), JSON.stringify(L.card));
+        if (L.action && w === '1440') check(`${key} ${w}: header action on the right edge`, near(L.action.right, g), JSON.stringify(L.action));
+      }
       console.log(`${key} ${w}`, JSON.stringify({ title: t.title?.color, section: t.section?.color, card: t.cardBorder, tile: t.tile?.color, acc: t.acc, side: t.sideScroll }));
       if (t.title) check(`${key} ${w}: page title cyan-blue #38BDF8`, rgbHex(t.title.color) === '#38BDF8', `${t.title.text} ${t.title.color} ${t.title.size}`);
       if (t.section) check(`${key} ${w}: section heading #7DD3FC`, rgbHex(t.section.color) === '#7DD3FC', `${t.section.text} ${t.section.color}`);
@@ -97,11 +137,33 @@ try {
       check(`${key} ${w}: no sideways scroll`, !t.sideScroll);
     }
   }
+  // My Work and Jobs at the same viewport and zoom: the same edges, and one
+  // image with the two side by side.
+  for (const w of ['1440', '390']) {
+    const a = R.screens[`mywork-${w}`]?.layout, b = R.screens[`jobs-${w}`]?.layout;
+    if (a && b) {
+      check(`My Work vs Jobs ${w}: same title edge`, near(a.title?.left, b.title?.left, 1), `${a.title?.left} / ${b.title?.left}`);
+      check(`My Work vs Jobs ${w}: same list left and right edges`, near(a.card?.left, b.card?.left, 1) && near(a.card?.right, b.card?.right, 1), `${JSON.stringify(a.card)} / ${JSON.stringify(b.card)}`);
+    }
+    const files = w === '1440' ? ['mywork-1440-view', 'jobs-1440-view'] : ['mywork-390', 'jobs-390'];
+    const imgs = files.map((f) => path.join(OUT, 'shots', `${f}.jpg`)).filter((f) => fs.existsSync(f));
+    if (imgs.length === 2) {
+      const pg = await desk.newPage();
+      const src = imgs.map((f) => `data:image/jpeg;base64,${fs.readFileSync(f).toString('base64')}`);
+      const cw = w === '1440' ? 1440 : 780;
+      await pg.setViewportSize({ width: cw * 2 + 24, height: 800 });
+      await pg.setContent(`<body style="margin:0;background:#000;display:flex;gap:24px;align-items:flex-start;font:600 18px system-ui;color:#fff">${src.map((u, i) => `<figure style="margin:0;width:${cw}px"><figcaption style="padding:8px 0">${['My Work', 'Jobs'][i]} · ${w} · ${TAG}</figcaption><img src="${u}" style="display:block;width:${cw}px"></figure>`).join('')}</body>`);
+      await pg.waitForTimeout(400);
+      await pg.screenshot({ path: path.join(OUT, 'shots', `side-by-side-mywork-jobs-${w}.jpg`), type: 'jpeg', quality: 72, fullPage: true });
+      await pg.close();
+    }
+  }
+
   // Module accents on the job page's tools (each tool its domain hue).
   await open(gc, `/app/projects/${projectId}/overview`);
   const toolHues = await gc.evaluate(() => [...new Set([...document.querySelectorAll('.fl-tool .fl-ti')].map((e) => getComputedStyle(e).color))]);
   check('job: tool tiles carry several module hues', toolHues.length >= 3, toolHues.join(' '));
-  const navHues = await gc.evaluate(() => [...new Set([...document.querySelectorAll('.sg-nav-item:not([data-active]) svg')].map((e) => e.getAttribute('color') || getComputedStyle(e).color))]);
+  const navHues = await gc.evaluate(() => [...new Set([...document.querySelectorAll('.sidebar-desktop a:not([aria-current]) svg, nav a:not([aria-current]) svg')].filter((e) => e.getBoundingClientRect().width > 0).map((e) => getComputedStyle(e).color))]);
   check('sidebar: module icons carry several hues', navHues.length >= 3, navHues.slice(0, 8).join(' '));
 
   // A form: the invoice Edit dialog (opened, then cancelled — nothing saved).
