@@ -51,6 +51,13 @@ jobs:
           openssl enc -aes-256-cbc -pbkdf2 -salt -in /tmp/probe.tgz -out tools/probe/result.tgz.enc -pass file:/tmp/k
           openssl pkeyutl -encrypt -pubin -inkey tools/probe-pubkey.pem -pkeyopt rsa_padding_mode:oaep -in /tmp/k -out tools/probe/key.enc
           rm -f /tmp/k /tmp/probe.tgz
+      - name: Keep the encrypted result as a run artifact too
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: probe-result-${{ github.run_id }}
+          path: tools/probe
+          retention-days: 3
       - name: Commit the probe result to this branch
         if: always()
         run: |
@@ -58,5 +65,11 @@ jobs:
           git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
           git add -A tools/probe || exit 0
           git commit -m "iPhone probe result from run ${{ github.run_id }}" || exit 0
-          git pull --rebase origin ${{ github.ref_name }} || true
-          git push origin HEAD:${{ github.ref_name }}
+          # GitHub sometimes rejects a push with a server-side error
+          # ("fatal error in commit_refs"); try again before giving up.
+          for i in 1 2 3 4; do
+            git pull --rebase origin ${{ github.ref_name }} || true
+            git push origin HEAD:${{ github.ref_name }} && exit 0
+            sleep $((i * 10))
+          done
+          exit 1
