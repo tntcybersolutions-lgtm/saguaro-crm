@@ -103,7 +103,7 @@ export default function SharedHeatmap() {
         <div style={{ display: 'flex', flexWrap: 'wrap', gap: 6, margin: '0 0 14px' }}>
           {floors.map((f, i) => (
             <button key={i} onClick={() => setFloorIdx(i)} style={{
-              padding: '6px 12px', borderRadius: 8, fontSize: 12.5, fontWeight: 700, cursor: 'pointer',
+              padding: '6px 12px', borderRadius: 8, fontSize: 13, fontWeight: 700, cursor: 'pointer',
               border: `1px solid ${i === floorIdx ? GOLD : '#30363d'}`,
               background: i === floorIdx ? GOLD : 'transparent', color: i === floorIdx ? NAVY : '#e6edf3',
             }}>{f.name}</button>
@@ -121,7 +121,7 @@ export default function SharedHeatmap() {
         <Card k="Dead Zones" v={s ? `${s.deadZones}` : '0'} />
         <Card k="Dead Area" v={s ? `${Math.round(s.deadArea)} ft²` : '0 ft²'} />
       </div>
-      <div style={{ color: 'var(--text-tertiary)', fontSize: 11.5, marginTop: 8, lineHeight: 1.5 }}>Coverage % is a predictive RF model{cal && cal.sampleCount > 0 ? ` — validated ±${cal.rmseAfter.toFixed(1)} dB against ${cal.sampleCount} survey point${cal.sampleCount === 1 ? '' : 's'}` : ''} — confirm with an on-site walk-test.</div>
+      <div style={{ color: 'var(--text-tertiary)', fontSize: 12, marginTop: 8, lineHeight: 1.5 }}>Coverage % is a predictive RF model{cal && cal.sampleCount > 0 ? ` — validated ±${cal.rmseAfter.toFixed(1)} dB against ${cal.sampleCount} survey point${cal.sampleCount === 1 ? '' : 's'}` : ''} — confirm with an on-site walk-test.</div>
 
       {bom && bom.rows.length > 0 && <>
         <H>Bill of Materials</H>
@@ -150,10 +150,10 @@ export default function SharedHeatmap() {
       </>}
 
       {/* ── Approve → auto-creates the install bid for the team (design-to-money loop) ── */}
-      <div style={{ marginTop: 30, border: `1px solid ${GOLD}`, borderRadius: 12, padding: 18, background: 'color-mix(in srgb, var(--brand-primary) 6%, transparent)' }}>
+      <div style={{ marginTop: 30, border: `1px solid ${GOLD}`, borderRadius: 12, padding: 18, background: 'var(--bg-surface-2)' }}>
         {approved ? (
           <div style={{ textAlign: 'center', padding: '8px 0' }}>
-            <div style={{ fontSize: 18, fontWeight: 800, color: GOLD }}>Design approved — thank you, {approverName}.</div>
+            <div style={{ fontSize: 18, fontWeight: 800, color: 'var(--text-primary)' }}>Design approved — thank you, {approverName}.</div>
             <div style={{ color: 'var(--text-tertiary)', fontSize: 13, marginTop: 6 }}>The team has been notified and will follow up with your install quote.</div>
           </div>
         ) : (
@@ -164,16 +164,16 @@ export default function SharedHeatmap() {
               <input value={approverName} onChange={(ev) => setApproverName(ev.target.value)} placeholder="Your full name" style={inputStyle} />
               <input value={approverEmail} onChange={(ev) => setApproverEmail(ev.target.value)} placeholder="Email (optional)" style={inputStyle} />
             </div>
-            {approveErr && <div style={{ color: '#ff7b72', fontSize: 12.5, marginTop: 8 }}>{approveErr}</div>}
+            {approveErr && <div style={{ color: '#ff7b72', fontSize: 13, marginTop: 8 }}>{approveErr}</div>}
             <button onClick={doApprove} disabled={approving || !approverName.trim()} style={{ marginTop: 12, width: '100%', padding: 12, borderRadius: 10, border: 'none', background: GOLD, color: NAVY, fontWeight: 800, fontSize: 14, cursor: approving ? 'default' : 'pointer', opacity: approving || !approverName.trim() ? 0.6 : 1 }}>{approving ? 'Submitting…' : 'Approve & Request Install Quote'}</button>
           </>
         )}
       </div>
 
-      <p style={{ color: 'var(--text-tertiary)', fontSize: 11, marginTop: 24, borderTop: '1px solid #21262d', paddingTop: 12 }}>
+      <p style={{ color: 'var(--text-tertiary)', fontSize: 12, marginTop: 24, borderTop: '1px solid #21262d', paddingTop: 12 }}>
         {calibrationNote(cal)} Camera ranges per EN 62676-4 DORI. Prices are estimates. Read-only shared view.
       </p>
-      <p style={{ color: '#484f58', fontSize: 10, marginTop: 6, fontFamily: 'ui-monospace,Consolas,monospace' }}>{engineStamp(project)}</p>
+      <p style={{ color: '#484f58', fontSize: 12, marginTop: 6, fontFamily: 'ui-monospace,Consolas,monospace' }}>{engineStamp(project)}</p>
     </Shell>
   );
 }
@@ -184,7 +184,7 @@ function Shell({ children }: { children: React.ReactNode }) {
       <div style={{ background: 'linear-gradient(100deg, var(--bg-base), #161b22)', padding: '18px 26px', display: 'flex', alignItems: 'center', gap: 14 }}>
         <svg width="34" height="34" viewBox="0 0 24 24" fill="none" style={{ stroke: GOLD }} strokeWidth={2} strokeLinecap="round" strokeLinejoin="round"><path d="M12 2v20M12 9c0-2 -1.6-3.5 -3.5-3.5S5 7 5 9v3c0 1.4 1.1 2.5 2.5 2.5S10 13.4 10 12M12 12c0-2 1.6-3.5 3.5-3.5S19 10 19 12v2c0 1.4-1.1 2.5-2.5 2.5S14 15.4 14 14" /></svg>
         <div>
-          <div style={{ color: GOLD, fontSize: 11, fontWeight: 700 }}>Saguaro Control Systems</div>
+          <div style={{ color: 'var(--text-primary)', fontSize: 12, fontWeight: 700 }}>Saguaro Control Systems</div>
           <div style={{ fontSize: 18, fontWeight: 800 }}>Coverage Design</div>
         </div>
       </div>
@@ -201,13 +201,13 @@ function H({ children }: { children: React.ReactNode }) {
 function Card({ k, v }: { k: string; v: string }) {
   return (
     <div style={{ flex: 1, minWidth: 120, border: '1px solid #21262d', borderRadius: 8, padding: '11px 13px', background: '#0a0a0a' }}>
-      <div style={{ fontSize: 10.5, color: 'var(--text-tertiary)' }}>{k}</div>
+      <div style={{ fontSize: 12, color: 'var(--text-tertiary)' }}>{k}</div>
       <div style={{ fontSize: 22, fontWeight: 800, marginTop: 3 }}>{v}</div>
     </div>
   );
 }
 function Th({ children, align }: { children?: React.ReactNode; align?: 'center' | 'right' }) {
-  return <th style={{ textAlign: align || 'left', background: '#0a0a0a', color: 'var(--text-tertiary)', fontSize: 11, padding: '7px 9px', borderBottom: '1px solid #21262d' }}>{children}</th>;
+  return <th style={{ textAlign: align || 'left', background: '#0a0a0a', color: 'var(--text-tertiary)', fontSize: 12, padding: '7px 9px', borderBottom: '1px solid #21262d' }}>{children}</th>;
 }
 function Td({ children, align, bold }: { children?: React.ReactNode; align?: 'center' | 'right'; bold?: boolean }) {
   return <td style={{ textAlign: align || 'left', padding: '7px 9px', borderBottom: '1px solid #161b22', fontWeight: bold ? 800 : 400, fontVariantNumeric: 'tabular-nums' }}>{children}</td>;

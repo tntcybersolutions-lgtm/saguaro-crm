@@ -400,10 +400,10 @@ export function CrewMap({
     return (
       <div style={{ padding: '18px 20px 22px', textAlign: 'center' }}>
         <div style={{ display: 'flex', justifyContent: 'center', marginBottom: 10 }}>
-          <MapTrifold size={26} color={GOLD_HI} weight="fill" />
+          <MapTrifold size={26} color="var(--text-secondary)" weight="fill" />
         </div>
         <div style={{ fontSize: 15, fontWeight: 800, color: 'var(--c-text)', marginBottom: 4 }}>Pick a Project to Map</div>
-        <div style={{ fontSize: 12.5, color: MUTED, maxWidth: 460, margin: '0 auto 14px' }}>
+        <div style={{ fontSize: 13, color: MUTED, maxWidth: 460, margin: '0 auto 14px' }}>
           The site map plots that crew’s live pins and shift heat.
         </div>
         {projects.length > 0 && onPickProject ? (
@@ -417,7 +417,7 @@ export function CrewMap({
                   display: 'inline-flex', alignItems: 'center', gap: 7, padding: '8px 15px',
                   borderRadius: 999, border: '1px solid rgba(255,255,255,0.14)',
                   background: 'rgba(255,255,255,0.07)',
-                  color: 'var(--c-text)', fontSize: 12.5, fontWeight: 700, cursor: 'pointer',
+                  color: 'var(--c-text)', fontSize: 13, fontWeight: 700, cursor: 'pointer',
                 }}
               >
                 <MapTrifold size={14} weight="fill" />{p.name}
@@ -436,8 +436,8 @@ export function CrewMap({
   const windowLabel = WINDOWS.find((w) => w.h === hours)?.label || `${hours}h`;
   const legendItem = (label: string, value: React.ReactNode, accent?: string) => (
     <span style={{ display: 'inline-flex', alignItems: 'baseline', gap: 6, whiteSpace: 'nowrap' }}>
-      <span style={{ fontSize: 11.5, fontWeight: 700, color: FAINT }}>{label}</span>
-      <span style={{ fontSize: 12.5, fontWeight: 800, color: accent || WHITE, fontVariantNumeric: 'tabular-nums' }}>{value}</span>
+      <span style={{ fontSize: 12, fontWeight: 700, color: FAINT }}>{label}</span>
+      <span style={{ fontSize: 13, fontWeight: 800, color: accent || WHITE, fontVariantNumeric: 'tabular-nums' }}>{value}</span>
     </span>
   );
 
@@ -453,7 +453,7 @@ export function CrewMap({
               title={`Heatmap window — last ${w.h} hours`}
               style={{
                 padding: '7px 13px', border: 'none', cursor: 'pointer',
-                fontSize: 11.5, fontWeight: 700, whiteSpace: 'nowrap',
+                fontSize: 12, fontWeight: 700, whiteSpace: 'nowrap',
                 background: hours === w.h ? 'rgba(255,224,0,0.16)' : 'rgba(255,255,255,0.04)',
                 color: hours === w.h ? GOLD_HI : MUTED,
               }}
@@ -487,7 +487,7 @@ export function CrewMap({
       ) : (
         <PremiumEmpty
           compact
-          icon={<MapPin size={26} color={GOLD_HI} weight="fill" />}
+          icon={<MapPin size={26} color="var(--text-secondary)" weight="fill" />}
           title="No positions yet"
           description="Pins appear when crews clock in with the Field app — locations are shared only on shift, with a visible indicator, and every ping feeds this heatmap. Try a wider window to see older heat."
         />
@@ -513,10 +513,10 @@ export function CrewMap({
                 }}
               >
                 <span aria-hidden style={{ width: 8, height: 8, borderRadius: 999, background: tradeColor(c.trade), flexShrink: 0 }} />
-                <span style={{ fontSize: 11.5, fontWeight: 800, color: WHITE, whiteSpace: 'nowrap' }}>{shortName(c.name)}</span>
-                {c.trade && <span style={{ fontSize: 10, color: MUTED, whiteSpace: 'nowrap' }}>{c.trade}</span>}
-                {lowBatt && <span style={{ fontSize: 10, fontWeight: 800, color: GOLD_HI, whiteSpace: 'nowrap' }}>{c.battery_level}%</span>}
-                {stale && <span style={{ fontSize: 10, color: FAINT, whiteSpace: 'nowrap' }}>{minutesAgo(c.updated_at)}m ago</span>}
+                <span style={{ fontSize: 12, fontWeight: 800, color: WHITE, whiteSpace: 'nowrap' }}>{shortName(c.name)}</span>
+                {c.trade && <span style={{ fontSize: 12, color: MUTED, whiteSpace: 'nowrap' }}>{c.trade}</span>}
+                {lowBatt && <span style={{ fontSize: 12, fontWeight: 800, color: 'var(--text-primary)', whiteSpace: 'nowrap' }}>{c.battery_level}%</span>}
+                {stale && <span style={{ fontSize: 12, color: FAINT, whiteSpace: 'nowrap' }}>{minutesAgo(c.updated_at)}m ago</span>}
                 <MapPin size={11} weight="fill" color={FAINT} />
               </a>
             );

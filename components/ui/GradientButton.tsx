@@ -102,8 +102,8 @@ export function GradientButton({
             : 'linear-gradient(180deg, rgba(255,255,255,0.06), rgba(255,255,255,0.02))',
         }
       : {
-          color: GOLD,
-          border: '1px solid color-mix(in srgb, var(--brand-primary) 30%, transparent)',
+          color: 'var(--text-primary)',
+          border: '1px solid var(--border-default)',
           background: hover && !isDisabled
             ? 'color-mix(in srgb, var(--brand-primary) 18%, transparent)'
             : 'color-mix(in srgb, var(--brand-primary) 10%, transparent)',

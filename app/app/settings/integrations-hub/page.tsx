@@ -16,7 +16,7 @@ import { humanError } from '@/lib/errors';
 import Link from 'next/link';
 import {
   PremiumSurface, ModuleHero, SectionCard, StatStrip, IconChip, Pill,
-  goldButtonStyle, ghostButtonStyle, goldOutlineButtonStyle,
+  goldButtonStyle, ghostButtonStyle, goldOutlineButtonStyle, secondaryButtonStyle
 } from '@/components/ui/premium';
 import {
   Plugs, Key, Plus, Copy, Check, Trash, Broadcast, ArrowSquareOut,
@@ -64,7 +64,7 @@ const inputStyle: React.CSSProperties = {
   boxSizing: 'border-box',
 };
 const labelStyle: React.CSSProperties = {
-  display: 'block', fontSize: 10.5, fontWeight: 800,
+  display: 'block', fontSize: 12, fontWeight: 800,
   color: MUTED, marginBottom: 6,
 };
 
@@ -245,7 +245,7 @@ export default function IntegrationsHubPage() {
     <PremiumSurface maxWidth={2200}>
       <ModuleHero
         eyebrow="Workspace"
-        eyebrowIcon={<Plugs size={13} weight="fill" color={GOLD} />}
+        eyebrowIcon={<Plugs size={13} weight="fill" color="var(--text-secondary)" />}
         title="Integration"
         accent="Hub"
         subtitle="Connect your tools, or build with API keys and webhooks."
@@ -278,17 +278,17 @@ export default function IntegrationsHubPage() {
         {market.map((m) => (
           <SectionCard key={m.key} bodyStyle={{ display: 'flex', flexDirection: 'column', gap: 10, height: '100%' }}>
             <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
-              <IconChip size={40}><Plugs size={20} color={GOLD} weight="duotone" /></IconChip>
+              <IconChip size={40}><Plugs size={20} color="var(--text-secondary)" weight="duotone" /></IconChip>
               <div style={{ fontSize: 15, fontWeight: 700, color: WHITE }}>{m.name}</div>
             </div>
             <p style={{ margin: 0, fontSize: 13, color: MUTED, lineHeight: 1.5, flex: 1 }}>{m.desc}</p>
             <div style={{ marginTop: 6 }}>
               {m.state === 'connect' ? (
-                <Link href={m.href} style={{ ...goldButtonStyle, width: '100%', padding: '9px 16px', fontSize: 12.5, boxSizing: 'border-box' }} className="pmBtn">
+                <Link href={m.href} style={{ ...secondaryButtonStyle, width: '100%', padding: '9px 16px', fontSize: 13, boxSizing: 'border-box' }} className="pmBtn">
                   <LinkSimple size={14} weight="bold" /> Connect
                 </Link>
               ) : (
-                <a href={m.href} style={{ ...ghostButtonStyle, width: '100%', padding: '9px 16px', fontSize: 12.5, boxSizing: 'border-box' }} className="pmBtn">
+                <a href={m.href} style={{ ...ghostButtonStyle, width: '100%', padding: '9px 16px', fontSize: 13, boxSizing: 'border-box' }} className="pmBtn">
                   <ArrowSquareOut size={14} weight="bold" /> Request Access
                 </a>
               )}
@@ -302,16 +302,16 @@ export default function IntegrationsHubPage() {
       <SectionCard
         title="API Keys"
         subtitle="REST API keys. The full key is shown once and never again."
-        icon={<Key size={17} color={GOLD} weight="duotone" />}
+        icon={<Key size={17} color="var(--text-secondary)" weight="duotone" />}
         style={{ marginBottom: 24 }}
       >
         <div style={{ display: 'flex', flexDirection: 'column', gap: 18 }}>
           {/* One-time reveal */}
           {revealed && (
-            <div style={{ border: '1px solid var(--brand-primary-35)', background: 'var(--brand-primary-12)', borderRadius: 12, padding: 16 }}>
+            <div style={{ border: '1px solid var(--border-default)', background: 'var(--bg-surface-2)', borderRadius: 12, padding: 16 }}>
               <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 8 }}>
-                <Warning size={16} color={GOLD} weight="fill" />
-                <span style={{ fontSize: 13, fontWeight: 700, color: GOLD_HI }}>Copy this key now — you won&apos;t see it again</span>
+                <Warning size={16} color="var(--text-secondary)" weight="fill" />
+                <span style={{ fontSize: 13, fontWeight: 700, color: 'var(--text-primary)' }}>Copy this key now — you won&apos;t see it again</span>
               </div>
               <div style={{ display: 'flex', gap: 8, alignItems: 'center', flexWrap: 'wrap' }}>
                 <code style={{ flex: 1, minWidth: 200, fontFamily: 'monospace', fontSize: 13, color: WHITE, background: 'rgba(255,255,255,0.05)', padding: '10px 12px', borderRadius: 8, wordBreak: 'break-all' }}>
@@ -355,7 +355,7 @@ export default function IntegrationsHubPage() {
               </div>
             </div>
             <div>
-              <button onClick={createKey} disabled={creatingKey} className="pmBtn" style={{ ...goldButtonStyle, padding: '9px 16px', fontSize: 12.5, cursor: creatingKey ? 'not-allowed' : 'pointer', opacity: creatingKey ? 0.6 : 1 }}>
+              <button onClick={createKey} disabled={creatingKey} className="pmBtn" style={{ ...goldButtonStyle, padding: '9px 16px', fontSize: 13, cursor: creatingKey ? 'not-allowed' : 'pointer', opacity: creatingKey ? 0.6 : 1 }}>
                 <Plus size={14} weight="bold" /> {creatingKey ? 'Creating…' : 'Create API Key'}
               </button>
             </div>
@@ -392,7 +392,7 @@ export default function IntegrationsHubPage() {
       <SectionCard
         title="Outbound Webhooks"
         subtitle={<>Saguaro POSTs a JSON event to your URL with an <code style={{ fontFamily: 'monospace', color: WHITE }}>X-Saguaro-Signature</code> HMAC-SHA256 header you can verify with the endpoint&apos;s secret.</>}
-        icon={<Broadcast size={17} color={GOLD} weight="duotone" />}
+        icon={<Broadcast size={17} color="var(--text-secondary)" weight="duotone" />}
         action={
           <button onClick={() => setShowHookForm((v) => !v)} style={compactGhost} className="pmBtn">
             <Plus size={14} weight="bold" /> Add endpoint
@@ -434,7 +434,7 @@ export default function IntegrationsHubPage() {
                 </div>
               </div>
               <div style={{ display: 'flex', gap: 8 }}>
-                <button onClick={createHook} disabled={savingHook} className="pmBtn" style={{ ...goldButtonStyle, padding: '9px 16px', fontSize: 12.5, cursor: savingHook ? 'not-allowed' : 'pointer', opacity: savingHook ? 0.6 : 1 }}>
+                <button onClick={createHook} disabled={savingHook} className="pmBtn" style={{ ...goldButtonStyle, padding: '9px 16px', fontSize: 13, cursor: savingHook ? 'not-allowed' : 'pointer', opacity: savingHook ? 0.6 : 1 }}>
                   {savingHook ? 'Saving…' : 'Add Webhook'}
                 </button>
                 <button onClick={() => setShowHookForm(false)} style={compactGhost} className="pmBtn">Cancel</button>
@@ -460,7 +460,7 @@ export default function IntegrationsHubPage() {
                 </div>
                 <div style={{ display: 'flex', gap: 6, flexWrap: 'wrap' }}>
                   {(h.events ?? []).map((e: string) => (
-                    <span key={e} style={{ fontSize: 11, fontFamily: 'monospace', color: MUTED, background: 'rgba(255,255,255,0.05)', padding: '2px 8px', borderRadius: 6, border: `1px solid ${BORDER}` }}>{e}</span>
+                    <span key={e} style={{ fontSize: 12, fontFamily: 'monospace', color: MUTED, background: 'rgba(255,255,255,0.05)', padding: '2px 8px', borderRadius: 6, border: `1px solid ${BORDER}` }}>{e}</span>
                   ))}
                 </div>
                 <div style={{ display: 'flex', alignItems: 'center', gap: 8, flexWrap: 'wrap' }}>

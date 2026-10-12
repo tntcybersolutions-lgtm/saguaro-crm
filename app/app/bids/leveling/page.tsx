@@ -297,7 +297,7 @@ function BidLevelingBoard() {
       ${result.budgetCents ? row('vs Budget', (b) => (b.vsBudgetCents! > 0 ? '+' : '') + usd(b.vsBudgetCents!) + ` (${b.vsBudgetPct}%)`) : ''}
       </tbody></table>
       <h3 style="margin:18px 0 6px">Scope Coverage</h3>
-      <table style="border-collapse:collapse;font-size:11px;width:100%"><thead><tr>${head}</tr></thead><tbody>${matrix}</tbody></table>
+      <table style="border-collapse:collapse;font-size:12px;width:100%"><thead><tr>${head}</tr></thead><tbody>${matrix}</tbody></table>
       ${rec ? `<div style="margin-top:16px;padding:10px 12px;border-left:3px solid #4ADE80;background:#f0faf4"><b>Recommendation:</b> ${result.recommendation.rationale}</div>` : ''}
       </body></html>`);
     printHtml(html, 'Bid Tabulation')

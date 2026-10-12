@@ -289,7 +289,7 @@ function Modal({ open, onClose, title, width, children }: {
       <div role="dialog" aria-modal="true" aria-labelledby={titleId} style={{ position: 'relative', background: 'var(--bg-solid-2)', border: `1px solid ${BORDER}`, borderRadius: 'var(--radius-lg, 12px)',
         width: `min(${width ?? 520}px, 100%)`, boxSizing: 'border-box', maxHeight: '85vh', overflowY: 'auto', padding: 'clamp(18px, 5vw, 28px)', zIndex: 1, boxShadow: 'var(--shadow-lg)' }}>
         <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 18, gap: 8 }}>
-          <h3 id={titleId} style={{ color: GOLD, margin: 0, fontSize: 18 }}>{title}</h3>
+          <h3 id={titleId} style={{ color: 'var(--text-primary)', margin: 0, fontSize: 18 }}>{title}</h3>
           <button type="button" onClick={onClose} aria-label="Close" style={{ ...btn('transparent', DIM), fontSize: 20, padding: '2px 8px', lineHeight: 1, minWidth: 44, minHeight: 44 }}>×</button>
         </div>
         {children}
@@ -924,14 +924,14 @@ export function AccessManager({ jump, onChanged }: { jump?: { tab: Tab; n: numbe
 
   if (loading) return (
     <div className="amRoot" style={{ minHeight: '100vh', background: BG, padding: 32 }}>
-      <h1 style={{ color: GOLD, fontSize: 26, margin: 0, marginBottom: 8 }}>Roles & Permissions</h1>
+      <h1 style={{ color: 'var(--text-primary)', fontSize: 26, margin: 0, marginBottom: 8 }}>Roles & Permissions</h1>
       <Spinner />
     </div>
   );
 
   if (error) return (
     <div className="amRoot" style={{ minHeight: '100vh', background: BG, padding: 32 }}>
-      <h1 style={{ color: GOLD, fontSize: 26, margin: 0, marginBottom: 8 }}>Roles & Permissions</h1>
+      <h1 style={{ color: 'var(--text-primary)', fontSize: 26, margin: 0, marginBottom: 8 }}>Roles & Permissions</h1>
       <div style={{ ...card(), borderColor: RED }}>
         <p style={{ color: RED, margin: 0, marginBottom: 12 }}>Error: {error}</p>
         <button onClick={loadData} style={btn(GOLD, 'var(--on-brand)')}>Retry</button>
@@ -945,7 +945,7 @@ export function AccessManager({ jump, onChanged }: { jump?: { tab: Tab; n: numbe
       {/* header */}
       <div className="amHead" style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 20 }}>
         <div>
-          <h1 style={{ color: GOLD, fontSize: 26, margin: 0 }}>Roles & Permissions</h1>
+          <h1 style={{ color: 'var(--text-primary)', fontSize: 26, margin: 0 }}>Roles & Permissions</h1>
           <p style={{ color: DIM, fontSize: 13, margin: '4px 0 0' }}>
             Manage access levels across {CATEGORIES.length} categories — {roles.length} roles configured
           </p>
@@ -1007,18 +1007,18 @@ export function AccessManager({ jump, onChanged }: { jump?: { tab: Tab; n: numbe
                             // eslint-disable-next-line @next/next/no-img-element
                             <img src={r.avatarUrl} alt="" style={{ width: 32, height: 32, borderRadius: 16, objectFit: 'cover', flexShrink: 0 }} />
                           ) : (
-                            <span style={{ width: 32, height: 32, borderRadius: 16, background: 'var(--brand-primary-18)', color: GOLD,
+                            <span style={{ width: 32, height: 32, borderRadius: 16, background: 'var(--bg-surface-2)', color: 'var(--text-primary)',
                               display: 'inline-flex', alignItems: 'center', justifyContent: 'center', fontWeight: 800, fontSize: 12, flexShrink: 0 }}>{ini}</span>
                           )}
                           <span style={{ display: 'inline-flex', flexDirection: 'column', lineHeight: 1.3 }}>
                             <span className="amPersonName" style={{ color: TEXT, fontWeight: 600 }}>{r.name}</span>
-                            <span style={{ color: DIM, fontSize: 11.5 }}>{[r.email, r.title].filter(Boolean).join(' · ') || '—'}</span>
+                            <span style={{ color: DIM, fontSize: 12 }}>{[r.email, r.title].filter(Boolean).join(' · ') || '—'}</span>
                           </span>
                         </button>
                       </td>
                       {/* Base role */}
                       <td data-label="Base Role" style={{ padding: '10px 12px' }}>
-                        <span style={{ display: 'inline-block', padding: '3px 10px', borderRadius: 999, fontSize: 11, fontWeight: 700,
+                        <span style={{ display: 'inline-block', padding: '3px 10px', borderRadius: 999, fontSize: 12, fontWeight: 700,
                           color: isBypass ? 'var(--on-brand)' : DIM,
                           background: isBypass ? `linear-gradient(135deg, ${GOLD}, var(--brand-primary-strong))` : 'rgba(255,255,255,0.05)',
                           border: isBypass ? 'none' : `1px solid ${BORDER}`,
@@ -1031,7 +1031,7 @@ export function AccessManager({ jump, onChanged }: { jump?: { tab: Tab; n: numbe
                       {/* Access — computed exactly the way the server enforces it */}
                       <td data-label="Access" style={{ padding: '10px 12px', maxWidth: 300 }}>
                         {isBypass ? (
-                          <span style={{ color: GOLD, fontSize: 12, fontWeight: 700 }}>Full — admin bypass ({CATEGORIES.length}/{CATEGORIES.length} categories)</span>
+                          <span style={{ color: 'var(--text-primary)', fontSize: 12, fontWeight: 700 }}>Full — admin bypass ({CATEGORIES.length}/{CATEGORIES.length} categories)</span>
                         ) : r.status !== 'active' ? (
                           <span style={{ color: DIM, fontSize: 12 }}>{r.status === 'invited' ? 'No access until the invite is accepted' : 'No sign-in — project contact only'}</span>
                         ) : r.globalGrants.length === 0 && r.projectGrants.length === 0 ? (
@@ -1042,7 +1042,7 @@ export function AccessManager({ jump, onChanged }: { jump?: { tab: Tab; n: numbe
                               const role = roles.find(x => x.id === g.roleId);
                               return (
                                 <span key={g.id} style={{ display: 'inline-flex', alignItems: 'center', gap: 5, background: 'rgba(255,255,255,0.05)',
-                                  border: `1px solid ${BORDER}`, borderRadius: 999, padding: '2px 9px', fontSize: 11, fontWeight: 600, color: TEXT }}>
+                                  border: `1px solid ${BORDER}`, borderRadius: 999, padding: '2px 9px', fontSize: 12, fontWeight: 600, color: TEXT }}>
                                   <span style={{ width: 7, height: 7, borderRadius: 4, background: role?.color ?? BORDER, flexShrink: 0 }} />
                                   {role?.name ?? 'Unknown'}
                                   <button onClick={() => removeAssignment(g.id)} title="Remove this grant"
@@ -1052,8 +1052,8 @@ export function AccessManager({ jump, onChanged }: { jump?: { tab: Tab; n: numbe
                             })}
                             {r.projectGrants.length > 0 && (
                               <span title={r.projectGrants.map(g => `${roles.find(x => x.id === g.roleId)?.name ?? 'Role'} @ ${g.projectName ?? 'Project'}`).join('\n')}
-                                style={{ display: 'inline-flex', alignItems: 'center', background: 'var(--brand-primary-12)', border: `1px solid var(--brand-primary-35)`,
-                                  borderRadius: 999, padding: '2px 9px', fontSize: 11, fontWeight: 700, color: AMBER }}>
+                                style={{ display: 'inline-flex', alignItems: 'center', background: 'var(--bg-surface-2)', border: `1px solid var(--brand-primary-35)`,
+                                  borderRadius: 999, padding: '2px 9px', fontSize: 12, fontWeight: 700, color: AMBER }}>
                                 {r.projectGrants.length} project-scoped
                               </span>
                             )}
@@ -1071,16 +1071,16 @@ export function AccessManager({ jump, onChanged }: { jump?: { tab: Tab; n: numbe
                       {/* Status */}
                       <td data-label="Status" style={{ padding: '10px 12px' }}>
                         {r.status === 'active' ? (
-                          <span style={{ display: 'inline-block', padding: '2px 10px', borderRadius: 4, fontSize: 11, fontWeight: 700,
+                          <span style={{ display: 'inline-block', padding: '2px 10px', borderRadius: 4, fontSize: 12, fontWeight: 700,
                             color: GREEN, background: `color-mix(in srgb, ${GREEN} 9%, transparent)`, border: `1px solid ${GREEN}` }}>Active</span>
                         ) : r.status === 'invited' ? (
-                          <span style={{ display: 'inline-block', padding: '2px 10px', borderRadius: 4, fontSize: 11, fontWeight: 700,
+                          <span style={{ display: 'inline-block', padding: '2px 10px', borderRadius: 4, fontSize: 12, fontWeight: 700,
                             color: inviteExp?.expired ? RED : AMBER, background: inviteExp?.expired ? `color-mix(in srgb, ${RED} 9%, transparent)` : 'color-mix(in srgb, var(--warning) 9%, transparent)',
                             border: `1px solid ${inviteExp?.expired ? RED : AMBER}` }}>
                             {inviteExp?.expired ? 'Invite Expired' : `Invited · Expires ${inviteExp?.label ?? ''}`}
                           </span>
                         ) : (
-                          <span style={{ display: 'inline-block', padding: '2px 10px', borderRadius: 4, fontSize: 11, fontWeight: 700,
+                          <span style={{ display: 'inline-block', padding: '2px 10px', borderRadius: 4, fontSize: 12, fontWeight: 700,
                             color: DIM, background: 'rgba(255,255,255,0.05)', border: `1px solid ${BORDER}` }}>Project Contact</span>
                         )}
                       </td>
@@ -1109,7 +1109,7 @@ export function AccessManager({ jump, onChanged }: { jump?: { tab: Tab; n: numbe
                               style={{ ...btn('transparent', RED), padding: '6px 12px', marginLeft: 4 }}>Cancel</button>
                           </>
                         ) : (
-                          <span style={{ color: DIM, fontSize: 11.5 }}>No sign-in</span>
+                          <span style={{ color: DIM, fontSize: 12 }}>No sign-in</span>
                         )}
                       </td>
                     </tr>
@@ -1120,7 +1120,7 @@ export function AccessManager({ jump, onChanged }: { jump?: { tab: Tab; n: numbe
           </div>
 
           {/* Honest footnote: how Access is computed + what deactivation can and cannot do today. */}
-          <p style={{ color: DIM, fontSize: 11.5, lineHeight: 1.55, marginTop: 4 }}>
+          <p style={{ color: DIM, fontSize: 12, lineHeight: 1.55, marginTop: 4 }}>
             Access is computed exactly the way the server enforces it (lib/permissions): admin/owner base roles bypass everything;
             everyone else takes the highest level per category across their role grants; a member with no grants gets the
             View-only default with Admin locked. Remove deletes the person&apos;s sign-in outright, so access ends immediately;
@@ -1152,14 +1152,14 @@ export function AccessManager({ jump, onChanged }: { jump?: { tab: Tab; n: numbe
                     </div>
                     <div style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
                       {r.isBuiltIn && (
-                        <span style={{ background: 'color-mix(in srgb, var(--brand-primary) 13%, transparent)', color: BLUE, fontSize: 10, fontWeight: 700,
+                        <span style={{ background: 'var(--bg-surface-2)', color: 'var(--text-primary)', fontSize: 12, fontWeight: 700,
                           padding: '2px 8px', borderRadius: 4 }}>Built-In</span>
                       )}
                       {!r.isBuiltIn && (
-                        <span style={{ background: `${PURPLE}22`, color: PURPLE, fontSize: 10, fontWeight: 700,
+                        <span style={{ background: `${PURPLE}22`, color: PURPLE, fontSize: 12, fontWeight: 700,
                           padding: '2px 8px', borderRadius: 4 }}>Custom</span>
                       )}
-                      <span style={{ color: DIM, fontSize: 11 }}>{count} user{count !== 1 ? 's' : ''}</span>
+                      <span style={{ color: DIM, fontSize: 12 }}>{count} user{count !== 1 ? 's' : ''}</span>
                     </div>
                   </div>
                   <p style={{ color: DIM, fontSize: 12, margin: '6px 0 0', lineHeight: 1.4 }}>{r.description}</p>
@@ -1178,15 +1178,15 @@ export function AccessManager({ jump, onChanged }: { jump?: { tab: Tab; n: numbe
                       <div style={{ width: 16, height: 16, borderRadius: '50%', background: selectedRole.color }} />
                       <h2 style={{ color: TEXT, margin: 0, fontSize: 20 }}>{selectedRole.name}</h2>
                       {selectedRole.isBuiltIn ? (
-                        <span style={{ background: 'color-mix(in srgb, var(--brand-primary) 13%, transparent)', color: BLUE, fontSize: 10, fontWeight: 700,
+                        <span style={{ background: 'var(--bg-surface-2)', color: 'var(--text-primary)', fontSize: 12, fontWeight: 700,
                           padding: '2px 8px', borderRadius: 4 }}>Built-In</span>
                       ) : (
-                        <span style={{ background: `${PURPLE}22`, color: PURPLE, fontSize: 10, fontWeight: 700,
+                        <span style={{ background: `${PURPLE}22`, color: PURPLE, fontSize: 12, fontWeight: 700,
                           padding: '2px 8px', borderRadius: 4 }}>CUSTOM</span>
                       )}
                     </div>
                     <p style={{ color: DIM, fontSize: 13, margin: 0 }}>{selectedRole.description}</p>
-                    <p style={{ color: DIM, fontSize: 11, margin: '6px 0 0' }}>
+                    <p style={{ color: DIM, fontSize: 12, margin: '6px 0 0' }}>
                       Created {fmtDate(selectedRole.createdAt)} — Last updated {fmtDate(selectedRole.updatedAt)}
                     </p>
                   </div>
@@ -1202,7 +1202,7 @@ export function AccessManager({ jump, onChanged }: { jump?: { tab: Tab; n: numbe
                 </div>
 
                 {/* permission grid for selected role */}
-                <h4 style={{ color: GOLD, fontSize: 14, marginBottom: 10 }}>Permissions</h4>
+                <h4 style={{ color: 'var(--text-primary)', fontSize: 14, marginBottom: 10 }}>Permissions</h4>
                 <div className="amPermGrid" style={{ display: 'grid', gridTemplateColumns: '160px repeat(4, 1fr)', gap: 0, fontSize: 12 }}>
                   {/* header */}
                   <div style={{ padding: '8px 10px', fontWeight: 700, color: DIM, borderBottom: `1px solid ${BORDER}` }}>Category</div>
@@ -1227,7 +1227,7 @@ export function AccessManager({ jump, onChanged }: { jump?: { tab: Tab; n: numbe
                               cursor: canEdit ? 'pointer' : 'default', transition: 'all .15s',
                               display: 'flex', alignItems: 'center', justifyContent: 'center',
                             }}>
-                              {isActive && <span style={{ color: level === 'None' ? DIM : 'var(--text-primary)', fontSize: 11, fontWeight: 700 }}>
+                              {isActive && <span style={{ color: level === 'None' ? DIM : 'var(--text-primary)', fontSize: 12, fontWeight: 700 }}>
                                 {level === 'None' ? '-' : '\u2713'}
                               </span>}
                             </div>
@@ -1239,7 +1239,7 @@ export function AccessManager({ jump, onChanged }: { jump?: { tab: Tab; n: numbe
                 </div>
 
                 {/* assigned users for this role */}
-                <h4 style={{ color: GOLD, fontSize: 14, marginTop: 22, marginBottom: 10 }}>Assigned Users</h4>
+                <h4 style={{ color: 'var(--text-primary)', fontSize: 14, marginTop: 22, marginBottom: 10 }}>Assigned Users</h4>
                 {assignments.filter(a => a.roleId === selectedRole.id).length === 0 ? (
                   <p style={{ color: DIM, fontSize: 12 }}>No users assigned to this role.</p>
                 ) : (
@@ -1248,7 +1248,7 @@ export function AccessManager({ jump, onChanged }: { jump?: { tab: Tab; n: numbe
                       <div key={a.id} style={{ background: BG, border: `1px solid ${BORDER}`, borderRadius: 8,
                         padding: '6px 12px', display: 'flex', alignItems: 'center', gap: 8, fontSize: 12 }}>
                         <span style={{ color: TEXT, fontWeight: 600 }}>{a.userName}</span>
-                        {a.projectName && <span style={{ color: AMBER, fontSize: 10 }}>({a.projectName})</span>}
+                        {a.projectName && <span style={{ color: AMBER, fontSize: 12 }}>({a.projectName})</span>}
                         <button onClick={() => removeAssignment(a.id)} style={{
                           background: 'transparent', border: 'none', color: RED, cursor: 'pointer',
                           fontSize: 14, padding: 0, lineHeight: 1,
@@ -1281,11 +1281,11 @@ export function AccessManager({ jump, onChanged }: { jump?: { tab: Tab; n: numbe
                     minWidth: 100 }}>
                     <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 3 }}>
                       <div style={{ width: 10, height: 10, borderRadius: '50%', background: r.color }} />
-                      <span style={{ color: TEXT, fontWeight: 600, fontSize: 11 }}>{r.name}</span>
+                      <span style={{ color: TEXT, fontWeight: 600, fontSize: 12 }}>{r.name}</span>
                       {r.isBuiltIn ? (
-                        <span style={{ color: BLUE, fontSize: 9, fontWeight: 700 }}>Built-In</span>
+                        <span style={{ color: 'var(--text-primary)', fontSize: 12, fontWeight: 700 }}>Built-In</span>
                       ) : (
-                        <span style={{ color: PURPLE, fontSize: 9, fontWeight: 700 }}>CUSTOM</span>
+                        <span style={{ color: PURPLE, fontSize: 12, fontWeight: 700 }}>CUSTOM</span>
                       )}
                     </div>
                   </th>
@@ -1304,7 +1304,7 @@ export function AccessManager({ jump, onChanged }: { jump?: { tab: Tab; n: numbe
                       <td key={r.id} style={{ padding: '6px 8px', textAlign: 'center',
                         borderBottom: `1px solid color-mix(in srgb, ${BORDER} 13%, transparent)` }}>
                         <span style={{
-                          display: 'inline-block', padding: '3px 10px', borderRadius: 4, fontSize: 11,
+                          display: 'inline-block', padding: '3px 10px', borderRadius: 4, fontSize: 12,
                           fontWeight: 600, color: level === 'None' ? DIM : 'var(--text-primary)',
                           background: level === 'None' ? `color-mix(in srgb, ${DIM} 8%, transparent)` : `color-mix(in srgb, ${permLevelColor(level)} 13%, transparent)`,
                           border: `1px solid ${level === 'None' ? 'transparent' : permLevelColor(level)}`,
@@ -1316,7 +1316,7 @@ export function AccessManager({ jump, onChanged }: { jump?: { tab: Tab; n: numbe
               ))}
             </tbody>
           </table>
-          <div style={{ marginTop: 16, display: 'flex', gap: 16, fontSize: 11, color: DIM }}>
+          <div style={{ marginTop: 16, display: 'flex', gap: 16, fontSize: 12, color: DIM }}>
             <span><span style={{ display: 'inline-block', width: 10, height: 10, borderRadius: 2, background: GREEN, marginRight: 4 }} />Full = Create, Read, Update, Delete + Approve</span>
             <span><span style={{ display: 'inline-block', width: 10, height: 10, borderRadius: 2, background: BLUE, marginRight: 4 }} />Edit = Create, Read, Update</span>
             <span><span style={{ display: 'inline-block', width: 10, height: 10, borderRadius: 2, background: AMBER, marginRight: 4 }} />View = Read Only</span>
@@ -1345,7 +1345,7 @@ export function AccessManager({ jump, onChanged }: { jump?: { tab: Tab; n: numbe
           <div style={card()}>
             <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center',
               marginBottom: pendingInvites.length ? 14 : 0 }}>
-              <h3 style={{ color: GOLD, margin: 0, fontSize: 15 }}>Pending Invites</h3>
+              <h3 style={{ color: 'var(--text-primary)', margin: 0, fontSize: 15 }}>Pending Invites</h3>
               {pendingInvites.length > 0 && (
                 <span style={{ color: DIM, fontSize: 12 }}>
                   {pendingInvites.length} pending
@@ -1373,7 +1373,7 @@ export function AccessManager({ jump, onChanged }: { jump?: { tab: Tab; n: numbe
                           {inv.name?.trim() ? (
                             <span style={{ display: 'inline-flex', flexDirection: 'column', lineHeight: 1.3 }}>
                               <span>{inv.name}</span>
-                              <span style={{ color: DIM, fontSize: 11.5, fontWeight: 400 }}>{inv.email}</span>
+                              <span style={{ color: DIM, fontSize: 12, fontWeight: 400 }}>{inv.email}</span>
                             </span>
                           ) : inv.email}
                         </td>
@@ -1382,7 +1382,7 @@ export function AccessManager({ jump, onChanged }: { jump?: { tab: Tab; n: numbe
                         <td style={{ padding: '10px 12px' }}>
                           {exp.expired ? (
                             <span style={{ display: 'inline-block', padding: '2px 10px', borderRadius: 4,
-                              fontSize: 11, fontWeight: 700, color: RED, background: `color-mix(in srgb, ${RED} 13%, transparent)`,
+                              fontSize: 12, fontWeight: 700, color: RED, background: `color-mix(in srgb, ${RED} 13%, transparent)`,
                               border: `1px solid ${RED}` }}>Expired</span>
                           ) : (
                             <span style={{ color: AMBER, fontSize: 12, fontWeight: 600 }}>{exp.label}</span>
@@ -1481,7 +1481,7 @@ export function AccessManager({ jump, onChanged }: { jump?: { tab: Tab; n: numbe
                       </span>
                     </th>
                     <th style={{ padding: '10px 12px', textAlign: 'center', borderBottom: `2px solid ${BORDER}`, width: '10%' }}>
-                      <span style={{ color: DIM, fontSize: 11 }}>Match</span>
+                      <span style={{ color: DIM, fontSize: 12 }}>Match</span>
                     </th>
                     <th style={{ padding: '10px 12px', textAlign: 'center', borderBottom: `2px solid ${BORDER}`, width: '30%' }}>
                       <span style={{ display: 'inline-flex', alignItems: 'center', gap: 6 }}>
@@ -1633,7 +1633,7 @@ export function AccessManager({ jump, onChanged }: { jump?: { tab: Tab; n: numbe
                         display: 'flex', alignItems: 'center', justifyContent: 'center',
                         transition: 'all .15s',
                       }}>
-                        {isActive && level !== 'None' && <span style={{ color: 'var(--text-primary)', fontSize: 10, fontWeight: 700 }}>{'\u2713'}</span>}
+                        {isActive && level !== 'None' && <span style={{ color: 'var(--text-primary)', fontSize: 12, fontWeight: 700 }}>{'\u2713'}</span>}
                       </div>
                     </div>
                   );
@@ -1644,13 +1644,13 @@ export function AccessManager({ jump, onChanged }: { jump?: { tab: Tab; n: numbe
           {/* quick set buttons */}
           <div style={{ display: 'flex', gap: 8, marginTop: 10 }}>
             <button onClick={() => setFormPerms(Object.fromEntries(CATEGORIES.map(c => [c, 'None' as PermLevel])))}
-              style={{ ...btn(RAISED, DIM), fontSize: 11, padding: '4px 10px' }}>Set All None</button>
+              style={{ ...btn(RAISED, DIM), fontSize: 12, padding: '4px 10px' }}>Set All None</button>
             <button onClick={() => setFormPerms(Object.fromEntries(CATEGORIES.map(c => [c, 'View' as PermLevel])))}
-              style={{ ...btn(RAISED, AMBER), fontSize: 11, padding: '4px 10px' }}>Set All View</button>
+              style={{ ...btn(RAISED, AMBER), fontSize: 12, padding: '4px 10px' }}>Set All View</button>
             <button onClick={() => setFormPerms(Object.fromEntries(CATEGORIES.map(c => [c, 'Edit' as PermLevel])))}
-              style={{ ...btn(RAISED, BLUE), fontSize: 11, padding: '4px 10px' }}>Set All Edit</button>
+              style={{ ...btn(RAISED, BLUE), fontSize: 12, padding: '4px 10px' }}>Set All Edit</button>
             <button onClick={() => setFormPerms(Object.fromEntries(CATEGORIES.map(c => [c, 'Full' as PermLevel])))}
-              style={{ ...btn(RAISED, GREEN), fontSize: 11, padding: '4px 10px' }}>Set All Full</button>
+              style={{ ...btn(RAISED, GREEN), fontSize: 12, padding: '4px 10px' }}>Set All Full</button>
           </div>
         </div>
 
@@ -1671,7 +1671,7 @@ export function AccessManager({ jump, onChanged }: { jump?: { tab: Tab; n: numbe
             {users.map(u => <option key={u.id} value={u.id}>{u.name}{u.email ? ` (${u.email})` : ''}</option>)}
           </select>
           {users.length === 0 && (
-            <p style={{ color: DIM, fontSize: 11, marginTop: 4 }}>No tenant users found. Invite someone first.</p>
+            <p style={{ color: DIM, fontSize: 12, marginTop: 4 }}>No tenant users found. Invite someone first.</p>
           )}
         </div>
         <div style={{ marginBottom: 16 }}>
@@ -1687,7 +1687,7 @@ export function AccessManager({ jump, onChanged }: { jump?: { tab: Tab; n: numbe
             <option value="">Global (All Projects)</option>
             {projects.map(p => <option key={p.id} value={p.id}>{p.name}</option>)}
           </select>
-          <p style={{ color: DIM, fontSize: 11, marginTop: 4 }}>Leave as Global to apply this role across all projects.</p>
+          <p style={{ color: DIM, fontSize: 12, marginTop: 4 }}>Leave as Global to apply this role across all projects.</p>
         </div>
         <div style={{ display: 'flex', justifyContent: 'flex-end', gap: 10 }}>
           <button onClick={() => setShowAssign(false)} style={btn(RAISED, DIM)}>Cancel</button>
@@ -1704,13 +1704,13 @@ export function AccessManager({ jump, onChanged }: { jump?: { tab: Tab; n: numbe
           <input type="email" value={inviteEmail} onChange={e => setInviteEmail(e.target.value)}
             placeholder="name@company.com" style={{ ...inputStyle(), borderColor: inviteEmailTrim && !inviteEmailValid ? 'rgba(248,113,113,0.55)' : BORDER }} />
           {inviteEmailTrim && !inviteEmailValid && (
-            <p style={{ color: RED, fontSize: 11, marginTop: 4, marginBottom: 0 }}>Enter a valid email address — the invite link is delivered there.</p>
+            <p style={{ color: RED, fontSize: 12, marginTop: 4, marginBottom: 0 }}>Enter a valid email address — the invite link is delivered there.</p>
           )}
           {inviteDupUser && (
-            <p style={{ color: AMBER, fontSize: 11, marginTop: 4, marginBottom: 0 }}>Already a team member ({inviteDupUser.name || inviteDupUser.email}) — no invite needed. Assign them a role from the Users tab instead.</p>
+            <p style={{ color: AMBER, fontSize: 12, marginTop: 4, marginBottom: 0 }}>Already a team member ({inviteDupUser.name || inviteDupUser.email}) — no invite needed. Assign them a role from the Users tab instead.</p>
           )}
           {!inviteDupUser && inviteDupPending && (
-            <p style={{ color: AMBER, fontSize: 11, marginTop: 4, marginBottom: 0 }}>An invite to this address is already pending (sent {relTimeAgo(inviteDupPending.created_at)}) — resending resets its 7-day clock.</p>
+            <p style={{ color: AMBER, fontSize: 12, marginTop: 4, marginBottom: 0 }}>An invite to this address is already pending (sent {relTimeAgo(inviteDupPending.created_at)}) — resending resets its 7-day clock.</p>
           )}
         </div>
         <div style={{ marginBottom: 16 }}>
@@ -1729,16 +1729,16 @@ export function AccessManager({ jump, onChanged }: { jump?: { tab: Tab; n: numbe
             <div style={{ marginTop: 8, padding: '10px 12px', background: 'rgba(255,255,255,0.03)', border: `1px solid ${BORDER}`, borderRadius: 8 }}>
               <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 4 }}>
                 <span style={{ width: 8, height: 8, borderRadius: 4, background: inviteRoleObj.color, flexShrink: 0 }} />
-                <span style={{ color: TEXT, fontSize: 12.5, fontWeight: 700 }}>{inviteRoleObj.name}</span>
-                {inviteRoleObj.isBuiltIn && <span style={{ color: DIM, fontSize: 10, fontWeight: 700 }}>Built-In</span>}
+                <span style={{ color: TEXT, fontSize: 13, fontWeight: 700 }}>{inviteRoleObj.name}</span>
+                {inviteRoleObj.isBuiltIn && <span style={{ color: DIM, fontSize: 12, fontWeight: 700 }}>Built-In</span>}
               </div>
-              {inviteRoleObj.description && <p style={{ color: DIM, fontSize: 11.5, margin: '0 0 6px', lineHeight: 1.45 }}>{inviteRoleObj.description}</p>}
+              {inviteRoleObj.description && <p style={{ color: DIM, fontSize: 12, margin: '0 0 6px', lineHeight: 1.45 }}>{inviteRoleObj.description}</p>}
               <div style={{ display: 'flex', gap: 6, flexWrap: 'wrap' }}>
                 {PERM_LEVELS.slice().reverse().map(lv => {
                   const n = Object.values(inviteRoleObj.permissions).filter(p => p === lv).length;
                   if (!n) return null;
                   return (
-                    <span key={lv} style={{ fontSize: 10.5, fontWeight: 700, color: permLevelColor(lv), background: 'rgba(255,255,255,0.05)', border: `1px solid ${BORDER}`, borderRadius: 999, padding: '2px 8px' }}>
+                    <span key={lv} style={{ fontSize: 12, fontWeight: 700, color: permLevelColor(lv), background: 'rgba(255,255,255,0.05)', border: `1px solid ${BORDER}`, borderRadius: 999, padding: '2px 8px' }}>
                       {n} {lv === 'Full' ? 'Full' : lv}
                     </span>
                   );
@@ -1746,9 +1746,9 @@ export function AccessManager({ jump, onChanged }: { jump?: { tab: Tab; n: numbe
               </div>
             </div>
           ) : (
-            <p style={{ color: DIM, fontSize: 11, marginTop: 6, marginBottom: 0 }}>Member — standard access with no elevated permissions. You can assign a granular role any time from the Users tab.</p>
+            <p style={{ color: DIM, fontSize: 12, marginTop: 6, marginBottom: 0 }}>Member — standard access with no elevated permissions. You can assign a granular role any time from the Users tab.</p>
           )}
-          <p style={{ color: DIM, fontSize: 11, marginTop: 6 }}>An invite email is recorded and the team is notified. Invites expire 7 days after they are sent.</p>
+          <p style={{ color: DIM, fontSize: 12, marginTop: 6 }}>An invite email is recorded and the team is notified. Invites expire 7 days after they are sent.</p>
         </div>
         <div style={{ display: 'flex', justifyContent: 'flex-end', gap: 10 }}>
           <button onClick={() => setShowInvite(false)} style={btn(RAISED, DIM)}>Cancel</button>
@@ -1780,7 +1780,7 @@ export function AccessManager({ jump, onChanged }: { jump?: { tab: Tab; n: numbe
               ))}
             </div>
             {person.status === 'contact' && (
-              <p style={{ color: DIM, fontSize: 12.5, lineHeight: 1.5, margin: '0 0 12px' }}>
+              <p style={{ color: DIM, fontSize: 13, lineHeight: 1.5, margin: '0 0 12px' }}>
                 No sign-in — this person is a contact on {person.projectNames.length === 1 ? 'a job' : 'jobs'}. Edit them on that job&apos;s Team page, or invite them to give them a sign-in.
               </p>
             )}
@@ -1828,10 +1828,10 @@ export function AccessManager({ jump, onChanged }: { jump?: { tab: Tab; n: numbe
                   {roles.map(r => <option key={r.id} value={r.name}>{r.name}</option>)}
                   {pRole && pRole !== 'member' && !roles.some(r => r.name === pRole) && <option value={pRole}>{pRole}</option>}
                 </select>
-                <p style={{ color: DIM, fontSize: 11, margin: '6px 0 0' }}>The email address can&apos;t change — the link already went there. Cancel and invite the right address instead.</p>
+                <p style={{ color: DIM, fontSize: 12, margin: '6px 0 0' }}>The email address can&apos;t change — the link already went there. Cancel and invite the right address instead.</p>
               </div>
             )}
-            {pError && <p role="alert" style={{ color: RED, fontSize: 12.5, margin: '0 0 12px' }}>{pError}</p>}
+            {pError && <p role="alert" style={{ color: RED, fontSize: 13, margin: '0 0 12px' }}>{pError}</p>}
             <div style={{ display: 'flex', justifyContent: 'flex-end', gap: 10 }}>
               <button type="button" onClick={() => setPersonEditing(false)} disabled={pSaving} style={btn(RAISED, DIM)}>Cancel</button>
               <button type="submit" disabled={pSaving} style={{ ...btn(GOLD, 'var(--on-brand)'), opacity: pSaving ? 0.6 : 1 }}>{pSaving ? 'Saving…' : 'Save Changes'}</button>

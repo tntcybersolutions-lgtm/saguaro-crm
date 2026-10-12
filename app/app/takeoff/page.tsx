@@ -204,7 +204,7 @@ const CSS = `
 @keyframes tkscan { 0% { top: 0 } 50% { top: calc(100% - 2px) } 100% { top: 0 } }
 .tkSteps { display: flex; flex-direction: column; gap: 6px; }
 .tkStep { display: flex; align-items: center; gap: 8px; font-size: var(--fs-xs); color: var(--text-tertiary); }
-.tkStep i { width: 18px; height: 18px; border-radius: 50%; flex-shrink: 0; display: grid; place-items: center; font-style: normal; font-size: 10px; font-weight: 700; border: 1px solid var(--border-default); }
+.tkStep i { width: 18px; height: 18px; border-radius: 50%; flex-shrink: 0; display: grid; place-items: center; font-style: normal; font-size: 12px; font-weight: 700; border: 1px solid var(--border-default); }
 .tkStep[data-state="done"] { color: var(--status-ongoing); } .tkStep[data-state="done"] i { border-color: rgba(74,222,128,.35); background: rgba(74,222,128,.12); color: var(--status-ongoing); }
 .tkStep[data-state="active"] { color: var(--text-primary); } .tkStep[data-state="active"] i { border-color: var(--brand-primary-35); background: var(--brand-primary-12); color: var(--brand-primary); }
 .tkDone { display: flex; flex-direction: column; gap: 12px; align-items: center; text-align: center; }
@@ -224,12 +224,12 @@ const CSS = `
 .tkSkelRow { height: 64px; border-bottom: 1px solid var(--border-subtle); background: rgba(255,255,255,0.03); }
 .tkHero { display: flex; gap: 26px; align-items: center; flex-wrap: wrap; }
 .tkHeroCopy { flex: 1 1 300px; min-width: 260px; }
-.tkHeroEyebrow { font-size: var(--fs-xs); font-weight: 800; color: var(--brand-primary); margin-bottom: 10px; }
+.tkHeroEyebrow { font-size: var(--fs-xs); font-weight: 800; color: var(--text-tertiary); margin-bottom: 10px; }
 .tkHeroTitle { font-size: clamp(22px, 3vw, 32px); font-weight: 900; line-height: 1.08; margin: 0 0 12px; color: var(--text-primary); letter-spacing: -0.5px; }
 .tkHeroText { color: var(--text-secondary); font-size: var(--fs-md); line-height: 1.55; margin: 0 0 16px; max-width: ${layout.readingMaxWidth}; }
 .tkHeroList { display: grid; grid-template-columns: 1fr 1fr; gap: 9px 18px; margin: 0 0 20px; max-width: 480px; }
 .tkHeroList > div { display: flex; align-items: center; gap: 8px; font-size: var(--fs-xs); color: var(--text-secondary); }
-.tkHeroList svg { color: var(--brand-primary); flex-shrink: 0; }
+.tkHeroList svg { color: var(--text-secondary); flex-shrink: 0; }
 .tkHeroImg { flex: 1 1 360px; min-width: 280px; border-radius: var(--radius-md); overflow: hidden; border: 1px solid var(--border-default); position: relative; background: var(--bg-solid); }
 .tkHeroImg img { display: block; width: 100%; height: auto; }
 .tkHeroTag { position: absolute; bottom: 10px; left: 10px; background: rgba(13,17,23,.85); color: var(--text-primary); font-size: var(--fs-xs); font-weight: 700; padding: 5px 10px; border-radius: 7px; }
@@ -239,12 +239,12 @@ const CSS = `
 .tkActionRow > div { display: flex; align-items: center; gap: 8px; flex-wrap: wrap; }
 .tkTotalCard { display: flex; justify-content: space-between; align-items: center; gap: 20px; flex-wrap: wrap; }
 .tkTotalName { margin: 0 0 10px; font-size: clamp(18px, 2.4vw, 26px); font-weight: 900; letter-spacing: -0.4px; color: var(--text-primary); line-height: 1.1; }
-.tkTotal { font-size: clamp(30px, 4.2vw, 44px); font-weight: 900; letter-spacing: -0.03em; color: var(--brand-primary); line-height: 1; font-variant-numeric: tabular-nums; }
+.tkTotal { font-size: clamp(30px, 4.2vw, 44px); font-weight: 900; letter-spacing: -0.03em; color: var(--text-primary); line-height: 1; font-variant-numeric: tabular-nums; }
 .tkVerdict { margin: 16px 0 0; font-size: var(--fs-sm); line-height: 1.5; color: var(--text-secondary); }
 .tkRing { position: relative; flex-shrink: 0; }
 .tkRingLabel { position: absolute; inset: 0; display: flex; flex-direction: column; align-items: center; justify-content: center; }
 .tkRingLabel span:first-child { font-weight: 800; line-height: 1; font-variant-numeric: tabular-nums; }
-.tkRingLabel span:last-child { font-size: 9px; font-weight: 700; color: var(--text-tertiary); margin-top: 2px; }
+.tkRingLabel span:last-child { font-size: 12px; font-weight: 700; color: var(--text-tertiary); margin-top: 2px; }
 .tkTrade { display: flex; height: 14px; border-radius: 7px; overflow: hidden; gap: 1px; }
 .tkLegend { display: flex; flex-wrap: wrap; gap: 8px 14px; margin-top: 12px; }
 .tkLegend > span { display: flex; align-items: center; gap: 6px; font-size: var(--fs-xs); color: var(--text-tertiary); }
@@ -262,11 +262,11 @@ const CSS = `
 .tkDesc { display: inline-block; max-width: 360px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; vertical-align: middle; }
 .tkPct { display: flex; align-items: center; gap: 6px; min-width: 90px; }
 .tkPct .tkBar { flex: 1; height: 4px; }
-.tkShowAll { all: unset; box-sizing: border-box; display: block; width: 100%; padding: 12px; text-align: center; color: var(--brand-primary); font-weight: 700; font-size: var(--fs-sm); cursor: pointer; background: var(--bg-surface-2); }
+.tkShowAll { all: unset; box-sizing: border-box; display: block; width: 100%; padding: 12px; text-align: center; color: var(--link); font-weight: 700; font-size: var(--fs-sm); cursor: pointer; background: var(--bg-surface-2); }
 .tkShowAll:focus-visible { outline: 2px solid var(--brand-primary); outline-offset: -2px; }
 .tkRecs { display: flex; flex-direction: column; gap: 10px; }
 .tkRec { display: flex; gap: 10px; align-items: flex-start; font-size: var(--fs-sm); color: var(--text-secondary); line-height: 1.6; }
-.tkRec i { flex-shrink: 0; width: 22px; height: 22px; border-radius: 50%; display: grid; place-items: center; font-style: normal; font-size: 11px; font-weight: 700; background: var(--brand-primary-12); border: 1px solid var(--brand-primary-35); color: var(--brand-primary); }
+.tkRec i { flex-shrink: 0; width: 22px; height: 22px; border-radius: 50%; display: grid; place-items: center; font-style: normal; font-size: 12px; font-weight: 700; background: var(--bg-surface-2); border: 1px solid var(--border-default); color: var(--text-secondary); }
 .tkProse { margin: 0; color: var(--text-secondary); font-size: var(--fs-sm); line-height: 1.7; max-width: ${layout.readingMaxWidth}; }
 .tkSkelCard { border-radius: var(--radius-md); background: var(--bg-surface); border: 1px solid var(--glass-border); padding: 24px; }
 .tkSkelCard div { border-radius: 6px; background: rgba(255,255,255,0.06); }

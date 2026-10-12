@@ -13,7 +13,7 @@ import type { CommItem, CommKind } from '@/lib/jacket-correspondence';
 const CSS = `
 .jcx { display: grid; gap: 12px; min-width: 0; }
 .jcx-filters { display: flex; flex-wrap: wrap; gap: 6px; }
-.jcx-chip { min-height: 44px; padding: 0 14px; border-radius: 999px; border: 1px solid var(--border-default); background: var(--bg-surface-2); color: var(--text-secondary); font-weight: 700; font-size: 13.5px; cursor: pointer; }
+.jcx-chip { min-height: 44px; padding: 0 14px; border-radius: 999px; border: 1px solid var(--border-default); background: var(--bg-surface-2); color: var(--text-secondary); font-weight: 700; font-size: 14px; cursor: pointer; }
 .jcx-chip[aria-pressed="true"] { background: var(--brand-primary); color: var(--on-brand); border-color: transparent; }
 .jcx-list { display: grid; gap: 0; border: 1px solid var(--border-default); border-radius: 14px; overflow: hidden; }
 .jcx-item { display: grid; grid-template-columns: 36px minmax(0, 1fr); gap: 10px; padding: 12px 14px; border-top: 1px solid var(--border-subtle); background: var(--bg-surface); }
@@ -23,11 +23,11 @@ const CSS = `
 .jcx-item[data-kind="ask"] .jcx-ic { color: var(--warning); }
 .jcx-top { display: flex; flex-wrap: wrap; gap: 6px 10px; align-items: center; justify-content: space-between; }
 .jcx-title { font-weight: 800; font-size: 14.5px; color: var(--text-primary); overflow-wrap: anywhere; }
-.jcx-meta { font-size: 12.5px; color: var(--text-tertiary); overflow-wrap: anywhere; }
-.jcx-subject { font-size: 13.5px; color: var(--text-primary); font-weight: 600; margin-top: 2px; overflow-wrap: anywhere; }
-.jcx-body { font-size: 13.5px; color: var(--text-secondary); white-space: pre-wrap; overflow-wrap: anywhere; margin-top: 6px; line-height: 1.5; }
-.jcx-more { min-height: 44px; margin-top: 4px; padding: 0 10px; border: 0; background: transparent; color: var(--brand-primary); font-weight: 700; font-size: 13px; cursor: pointer; display: inline-flex; align-items: center; gap: 4px; }
-.jcx-err { font-size: 12.5px; color: var(--c-red); margin-top: 4px; }
+.jcx-meta { font-size: 13px; color: var(--text-tertiary); overflow-wrap: anywhere; }
+.jcx-subject { font-size: 14px; color: var(--text-primary); font-weight: 600; margin-top: 2px; overflow-wrap: anywhere; }
+.jcx-body { font-size: 14px; color: var(--text-secondary); white-space: pre-wrap; overflow-wrap: anywhere; margin-top: 6px; line-height: 1.5; }
+.jcx-more { min-height: 44px; margin-top: 4px; padding: 0 10px; border: 0; background: transparent; color: var(--link); font-weight: 700; font-size: 13px; cursor: pointer; display: inline-flex; align-items: center; gap: 4px; }
+.jcx-err { font-size: 13px; color: var(--c-red); margin-top: 4px; }
 `;
 
 type Filter = 'all' | 'email' | 'messages' | 'bids';

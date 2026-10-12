@@ -38,7 +38,7 @@ export function MyWorkRow({ it, ctl }: { it: MyWorkItem; ctl: RowControl }) {
   const canRemind = a?.kind === 'remind' && ctl.portalOn(it.packageId, it.portalOn);
 
   let primary: React.ReactNode = null;
-  if (a?.kind === 'portal') primary = <RowAction kind="primary" busy={!!busy} onClick={() => ctl.turnOn(it)} label={`Turn on the bid link for ${it.meta.split(' · ')[0]}`}>{busy || a.label}</RowAction>;
+  if (a?.kind === 'portal') primary = <RowAction busy={!!busy} onClick={() => ctl.turnOn(it)} label={`Turn on the bid link for ${it.meta.split(' · ')[0]}`}>{busy || a.label}</RowAction>;
   else if (a?.kind === 'remind' && canRemind) primary = <RowAction busy={!!busy} onClick={() => ctl.remind(it)}>{busy || a.label}</RowAction>;
   else if (a?.kind === 'ask_coi') primary = <RowAction busy={!!busy} onClick={() => ctl.askCoi(it)}>{busy || a.label}</RowAction>;
   else if (a?.kind === 'link') primary = <RowAction href={a.href}>{a.label}</RowAction>;

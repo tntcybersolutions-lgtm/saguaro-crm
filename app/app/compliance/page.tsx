@@ -3,8 +3,8 @@ import React, { useState, useEffect, useCallback } from 'react';
 import { DataTable, type Column } from '@/components/ui/kit';
 import { StatusPill } from '@/components/ui/Status';
 import Link from 'next/link';
-import { ShieldCheck, Gauge, CheckCircle, WarningCircle, XCircle, FileText, Signature, MagnifyingGlass, Envelope, UsersThree, ArrowRight, Check, X, Warning } from '@phosphor-icons/react';
-import { PremiumSurface, ModuleHero, StatCard, SectionCard, PremiumEmpty, StatStrip, FlowSteps, InsightRow, IconChip, goldButtonStyle, ghostButtonStyle } from '@/components/ui/premium';
+import { ShieldCheck, FileText, Signature, MagnifyingGlass, Envelope, UsersThree, ArrowRight, Check, X, Warning } from '@phosphor-icons/react';
+import { PremiumSurface, ModuleHero, SectionCard, PremiumEmpty, StatStrip, FlowSteps, InsightRow, IconChip, goldButtonStyle, ghostButtonStyle } from '@/components/ui/premium';
 import { moduleAccent } from '@/lib/module-identity';
 import { FlatStyles, FlatList, Row } from '@/components/ui/flat';
 import NudgeRing from '@/components/intelligence/NudgeRing';
@@ -23,7 +23,7 @@ function ScoreBar({score}:{score:number}){
 }
 
 function Badge({label,color,bg}:{label:string,color:string,bg:string}){
-  return <span style={{fontSize:10,fontWeight:700,padding:'2px 8px',borderRadius:4,background:bg,color}}>{label}</span>;
+  return <span style={{fontSize:12,fontWeight:700,padding:'2px 8px',borderRadius:4,background:bg,color}}>{label}</span>;
 }
 
 function StatusDot({ok,warn,label}:{ok?:boolean,warn?:boolean,label:string}){
@@ -86,7 +86,6 @@ export default function CompliancePage(){
   const fmtMoney = (n:number) => '$' + (Math.round(Number(n)||0)).toLocaleString('en-US');
   const totalContract = subs.reduce((t,s)=>t+(Number(s.contract_amount)||0),0);
   const exposure = subs.filter(s=>s.compliance!=='compliant').reduce((t,s)=>t+(Number(s.contract_amount)||0),0);
-  const tradeCount = new Set(subs.map(s=>s.trade).filter(Boolean)).size;
   const w9Missing = subs.filter(s=>!(s.w9?.status==='submitted'||s.w9?.status==='approved')).length;
   const noInsurance = subs.filter(s=>(Number(s.insurance?.active_certs)||0)===0).length;
   const certsExpiring = subs.reduce((t,s)=>t+(Number(s.insurance?.expiring_certs)||0),0);
@@ -128,9 +127,14 @@ export default function CompliancePage(){
       </FlatList>
     </div>
 
-    {/* Risk intelligence strip — the paperwork translated into dollars */}
+    {/* Risk intelligence strip — the paperwork translated into dollars.
+        One summary row: the scorecard average plus the gaps in dollars and
+        paperwork. The compliant / at-risk / non-compliant counts live on the
+        filter chips above the table, so they are not repeated here. */}
     {!loading&&subs.length>0&&<StatStrip items={[
-      {href: '/app/compliance', label:'Subcontractors', value:subs.length, sub:`Across ${tradeCount} trade${tradeCount===1?'':'s'}`},
+      {href: '/app/compliance', label:'Avg Compliance Score', value:typeof summary?.avg_score==='number'?summary.avg_score+'%':'—',
+       accent:typeof summary?.avg_score!=='number'?undefined:summary.avg_score>=80?GREEN:summary.avg_score>=50?AMBER:RED,
+       sub:typeof summary?.avg_score==='number'?'Portfolio average':'No subs scored yet'},
       {href: '/app/compliance', label:'Contract Exposure', value:fmtMoney(exposure), accent:exposure>0?RED:GREEN, sub:totalContract>0?`Of ${fmtMoney(totalContract)} committed sits with non-compliant subs`:'Held by non-compliant subs'},
       {href: '/app/compliance', label:'W-9s Missing', value:w9Missing, accent:w9Missing>0?AMBER:GREEN, sub:w9Missing>0?'Blocks 1099 filing at year end':'Every sub is 1099-ready'},
       /* The sub-line branches on THIS stat's own value, like every other tile
@@ -147,31 +151,6 @@ export default function CompliancePage(){
       {href: '/app/compliance', label:'Waivers Pending', value:waiversPending, accent:waiversPending>0?AMBER:GREEN, sub:waiversPending>0?'Unsigned — hold payment until released':'Lien rights fully released'},
     ]}/>}
 
-    {/* Summary KPIs */}
-    {summary&&<div style={{display:'grid',gridTemplateColumns:'repeat(auto-fit,minmax(200px,1fr))',gap:14,marginBottom:24}}>
-      <StatCard
-        icon={<Gauge size={19} weight="duotone" color={GOLD} />}
-        label="Avg Compliance Score" value={typeof summary.avg_score==='number'?summary.avg_score+'%':'—'}
-        accent={typeof summary.avg_score!=='number'?undefined:summary.avg_score>=80?GREEN:summary.avg_score>=50?AMBER:RED}
-        sub={typeof summary.avg_score==='number'?'Portfolio average':'No subs scored yet'} delay={0.02}
-       href="/app/compliance"/>
-      <StatCard
-        icon={<CheckCircle size={19} weight="duotone" color={GREEN} />}
-        label="Compliant" value={summary.compliant} accent={GREEN}
-        sub="Fully compliant" delay={0.06}
-       href="/app/compliance"/>
-      <StatCard
-        icon={<WarningCircle size={19} weight="duotone" color={AMBER} />}
-        label="At Risk" value={summary.at_risk} accent={AMBER}
-        sub="Needs attention" delay={0.10}
-       href="/app/compliance"/>
-      <StatCard
-        icon={<XCircle size={19} weight="duotone" color={RED} />}
-        label="Non-Compliant" value={summary.non_compliant} accent={RED}
-        sub="Action required" delay={0.14}
-       href="/app/compliance"/>
-    </div>}
-
     {/* Scorecard + detail split */}
     <div style={{display:'grid',gridTemplateColumns:selected?'1fr 360px':'1fr',gap:20,transition:'grid-template-columns .2s',alignItems:'start'}}>
       {/* NudgeRing pulses the scorecard when the suggestion engine flags an
@@ -179,7 +158,7 @@ export default function CompliancePage(){
           this anchor). */}
       <NudgeRing anchorId={ANCHOR_INSURANCE_EXPIRING} style={{minWidth:0}}>
       <SectionCard
-        icon={<ShieldCheck size={17} weight="duotone" color={GOLD} />}
+        icon={<ShieldCheck size={17} weight="duotone" color="var(--text-secondary)" />}
         title="Compliance Scorecard"
         subtitle="Click a subcontractor to view the score breakdown"
       >
@@ -200,7 +179,7 @@ export default function CompliancePage(){
 
         {loading?<div style={{textAlign:'center',padding:40,color:DIM}}>Loading compliance data…</div>
         :filtered.length===0?<PremiumEmpty
-            icon={<ShieldCheck size={30} weight="duotone" color={GOLD} />}
+            icon={<ShieldCheck size={30} weight="duotone" color="var(--text-secondary)" />}
             title={search||filter!=='all'?'No matching subcontractors':'No subcontractors found'}
             description={search||filter!=='all'?'Try clearing your search or filter to see all subcontractors.':'Add subs to your projects and Saguaro scores each one automatically — W-9 (25 pts), insurance certificates (40 pts), and lien waivers (35 pts) roll into a single compliance score across every project.'}
             compact
@@ -218,41 +197,41 @@ export default function CompliancePage(){
       </NudgeRing>
 
       {selected&&<SectionCard
-        icon={<ShieldCheck size={17} weight="duotone" color={GOLD} />}
+        icon={<ShieldCheck size={17} weight="duotone" color="var(--text-secondary)" />}
         title={selected.name}
         action={<button onClick={()=>setSelected(null)} style={{background:'rgba(255,255,255,0.04)',border:`1px solid ${BORDER}`,borderRadius:8,color:DIM,fontSize:16,cursor:'pointer',lineHeight:1,width:28,height:28,display:'inline-flex',alignItems:'center',justifyContent:'center'}}>×</button>}
       >
         <div style={{marginBottom:16}}>
-          <div style={{fontSize:10,fontWeight:700,color:DIM,marginBottom:6}}>Compliance Score</div>
+          <div style={{fontSize:12,fontWeight:700,color:DIM,marginBottom:6}}>Compliance Score</div>
           <ScoreBar score={selected.score}/>
           <div style={{marginTop:6}}><Badge label={complianceLabel(selected.compliance)} color={complianceColor(selected.compliance)} bg={complianceBg(selected.compliance)}/></div>
-          <div style={{fontSize:11,color:DIM,marginTop:8,lineHeight:1.5}}>Score = W-9 (25 pts) + insurance (40 pts) + lien waivers (35 pts). 80+ is compliant; under 50 is non-compliant.</div>
+          <div style={{fontSize:12,color:DIM,marginTop:8,lineHeight:1.5}}>Score = W-9 (25 pts) + insurance (40 pts) + lien waivers (35 pts). 80+ is compliant; under 50 is non-compliant.</div>
           <div style={{marginTop:10}}>
             <InsightRow label="Contract Value" value={Number(selected.contract_amount)>0?fmtMoney(selected.contract_amount):'—'} accent={selected.compliance!=='compliant'&&Number(selected.contract_amount)>0?RED:undefined} strong/>
             {totalContract>0&&Number(selected.contract_amount)>0&&<InsightRow label="Share of Committed" value={`${Math.round((Number(selected.contract_amount)/totalContract)*100)}%`}/>}
           </div>
         </div>
         <div style={{background:RAISED,border:`1px solid ${BORDER}`,borderRadius:10,padding:14,marginBottom:12}}>
-          <div style={{display:'flex',alignItems:'center',gap:7,fontSize:12,fontWeight:700,color:GOLD,marginBottom:10}}><FileText size={15} weight="duotone" color={GOLD} /> W-9 Status</div>
+          <div style={{display:'flex',alignItems:'center',gap:7,fontSize:12,fontWeight:700,color: 'var(--text-primary)',marginBottom:10}}><FileText size={15} weight="duotone" color="var(--text-secondary)" /> W-9 Status</div>
           <StatusDot ok={selected.w9.status==='submitted'||selected.w9.status==='approved'} warn={selected.w9.status==='pending'} label={selected.w9.status==='submitted'||selected.w9.status==='approved'?'W-9 on file':selected.w9.status==='pending'?'W-9 requested — awaiting return':'W-9 not on file'}/>
-          <div style={{fontSize:11,color:DIM,marginTop:6}}>Score contribution: {selected.w9.score}/25 pts</div>
+          <div style={{fontSize:12,color:DIM,marginTop:6}}>Score contribution: {selected.w9.score}/25 pts</div>
         </div>
         <div style={{background:RAISED,border:`1px solid ${BORDER}`,borderRadius:10,padding:14,marginBottom:12}}>
-          <div style={{display:'flex',alignItems:'center',gap:7,fontSize:12,fontWeight:700,color:GOLD,marginBottom:10}}><ShieldCheck size={15} weight="duotone" color={GOLD} /> Insurance</div>
+          <div style={{display:'flex',alignItems:'center',gap:7,fontSize:12,fontWeight:700,color: 'var(--text-primary)',marginBottom:10}}><ShieldCheck size={15} weight="duotone" color="var(--text-secondary)" /> Insurance</div>
           <StatusDot ok={selected.insurance.has_gl} label={selected.insurance.has_gl?'General Liability — Active':'General Liability — Missing'}/>
           <div style={{marginTop:6}}><StatusDot ok={selected.insurance.has_wc} label={selected.insurance.has_wc?'Workers Comp — Active':'Workers Comp — Missing'}/></div>
           {selected.insurance.expiring_certs>0&&<div style={{marginTop:6,fontSize:12,color:AMBER}}>{selected.insurance.expiring_certs} cert(s) expiring within 30 days</div>}
-          <div style={{fontSize:11,color:DIM,marginTop:6}}>Score contribution: {selected.insurance.score}/40 pts</div>
+          <div style={{fontSize:12,color:DIM,marginTop:6}}>Score contribution: {selected.insurance.score}/40 pts</div>
         </div>
         <div style={{background:RAISED,border:`1px solid ${BORDER}`,borderRadius:10,padding:14,marginBottom:12}}>
-          <div style={{display:'flex',alignItems:'center',gap:7,fontSize:12,fontWeight:700,color:GOLD,marginBottom:10}}><Signature size={15} weight="duotone" color={GOLD} /> Lien Waivers</div>
+          <div style={{display:'flex',alignItems:'center',gap:7,fontSize:12,fontWeight:700,color: 'var(--text-primary)',marginBottom:10}}><Signature size={15} weight="duotone" color="var(--text-secondary)" /> Lien Waivers</div>
           {selected.lien_waivers.total===0
             ?<div style={{fontSize:13,color:DIM}}>No lien waivers on record</div>
             :<div>
               <StatusDot ok={selected.lien_waivers.pending===0} warn={selected.lien_waivers.pending>0&&selected.lien_waivers.signed>0} label={`${selected.lien_waivers.signed} of ${selected.lien_waivers.total} signed`}/>
               {selected.lien_waivers.pending>0&&<div style={{fontSize:12,color:AMBER,marginTop:4}}>{selected.lien_waivers.pending} waiver(s) pending signature</div>}
             </div>}
-          <div style={{fontSize:11,color:DIM,marginTop:6}}>Score contribution: {selected.lien_waivers.score}/35 pts</div>
+          <div style={{fontSize:12,color:DIM,marginTop:6}}>Score contribution: {selected.lien_waivers.score}/35 pts</div>
         </div>
         {(()=>{
           const gaps:{title:string;desc?:string}[] = [];
@@ -263,7 +242,7 @@ export default function CompliancePage(){
           if(selected.lien_waivers.pending>0) gaps.push({title:`Chase ${selected.lien_waivers.pending} unsigned waiver${selected.lien_waivers.pending===1?'':'s'}`, desc:'Unreleased lien rights — hold payment until signed.'});
           return gaps.length>0
             ? <div style={{background:RAISED,border:`1px solid ${BORDER}`,borderRadius:10,padding:14,marginBottom:12}}><FlowSteps title="Fix Next" steps={gaps}/></div>
-            : <div style={{background:'rgba(74,222,128,.08)',border:'1px solid rgba(74,222,128,.3)',borderRadius:10,padding:'10px 14px',marginBottom:12,fontSize:12.5,color:GREEN}}>Fully compliant — W-9 on file, insurance active, waivers signed.</div>;
+            : <div style={{background:'rgba(74,222,128,.08)',border:'1px solid rgba(74,222,128,.3)',borderRadius:10,padding:'10px 14px',marginBottom:12,fontSize:13,color:GREEN}}>Fully compliant — W-9 on file, insurance active, waivers signed.</div>;
         })()}
         <div style={{display:'flex',flexDirection:'column' as const,gap:8}}>
           {selected.email&&<a href={`mailto:${selected.email}?subject=Compliance%20Follow-Up`} className="pmBtn" style={{...goldButtonStyle,width:'100%'}}><Envelope size={15} weight="bold" /> Email Sub</a>}

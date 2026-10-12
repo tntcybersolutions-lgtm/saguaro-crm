@@ -54,7 +54,7 @@ export default function MilestonesPage() {
       <div style={{ fontFamily: font, color: C.text }}>
       <ModuleHero
         eyebrow="Command Center"
-        eyebrowIcon={<FlagCheckered size={13} weight="fill" color={C.gold} />}
+        eyebrowIcon={<FlagCheckered size={13} weight="fill" color="var(--text-secondary)" />}
         title="Milestone"
         accent="Variance"
         subtitle="Slippage against each baseline, worst first."
@@ -89,12 +89,12 @@ export default function MilestonesPage() {
       ) : filtered.length === 0 ? (
         rows.length === 0 ? (
           <SectionCard flat>
-            <PremiumEmpty icon={<FlagCheckered size={32} weight="duotone" color={C.gold} />} title="No milestones yet"
+            <PremiumEmpty icon={<FlagCheckered size={32} weight="duotone" color="var(--text-secondary)" />} title="No milestones yet"
               description="Milestones roll up here from every site's schedule. Once baseline and forecast dates are set, the tracker computes each one's slip against baseline and surfaces what's blowing the schedule." />
           </SectionCard>
         ) : (
           <SectionCard flat>
-            <PremiumEmpty compact icon={<FlagCheckered size={26} weight="duotone" color={C.gold} />} title="Nothing matches this filter"
+            <PremiumEmpty compact icon={<FlagCheckered size={26} weight="duotone" color="var(--text-secondary)" />} title="Nothing matches this filter"
               description="No milestone matches the current severity or search. Clear the filters to see the full board." />
           </SectionCard>
         )

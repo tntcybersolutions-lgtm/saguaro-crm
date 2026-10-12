@@ -163,7 +163,7 @@ function StatCluster({ stats }: { stats: Stat[] }) {
       {stats.map((s, i) => (
         <div key={i} style={{ textAlign: 'center' }}>
           <div style={{ fontSize: 24, fontWeight: 700, color: s.color, lineHeight: 1.1, fontVariantNumeric: 'tabular-nums' }}>{s.value}</div>
-          <div style={{ fontSize: 11, color: W.DIM, marginTop: 2 }}>{s.label}</div>
+          <div style={{ fontSize: 12, color: W.DIM, marginTop: 2 }}>{s.label}</div>
         </div>
       ))}
     </div>
@@ -175,7 +175,7 @@ function Bars({ rows }: { rows: { label: string; pct: number; color: string }[] 
     <div style={{ display: 'flex', flexDirection: 'column', gap: 8, width: '100%' }}>
       {rows.map((row, i) => (
         <div key={i}>
-          <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: 11, color: W.DIM, marginBottom: 2 }}>
+          <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: 12, color: W.DIM, marginBottom: 2 }}>
             <span>{row.label}</span><span>{row.pct}%</span>
           </div>
           <div style={{ position: 'relative', height: 8, background: W.BG, borderRadius: 4 }}>
@@ -301,7 +301,7 @@ export function WidgetBody({
               <span style={{ color: W.DIM, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
                 <span style={{ color: W.TEXT, fontWeight: 600 }}>{a.user}</span> {a.action}
               </span>
-              <span style={{ color: W.DIM, fontSize: 10, flexShrink: 0, marginLeft: 8 }}>{relTime(a.at)}</span>
+              <span style={{ color: W.DIM, fontSize: 12, flexShrink: 0, marginLeft: 8 }}>{relTime(a.at)}</span>
             </div>
           ))}
         </div>
@@ -333,7 +333,7 @@ export function WidgetBody({
               <div key={i} style={{ display: 'flex', alignItems: 'center', gap: 8, fontSize: 12 }}>
                 <span style={{ width: 8, height: 8, borderRadius: '50%', background: color, flexShrink: 0 }} />
                 <span style={{ color: W.DIM, flex: 1, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{it.text}</span>
-                {it.priority && <span style={{ color, fontSize: 10, fontWeight: 600, flexShrink: 0, textTransform: 'capitalize' }}>{it.priority}</span>}
+                {it.priority && <span style={{ color, fontSize: 12, fontWeight: 600, flexShrink: 0, textTransform: 'capitalize' }}>{it.priority}</span>}
               </div>
             );
           })}
@@ -348,7 +348,7 @@ export function WidgetBody({
             <CloudSun size={34} color={W.AMBER} weight="duotone" />
           </div>
           <div style={{ fontSize: 14, fontWeight: 600, color: W.TEXT }}>{loc || 'No location set'}</div>
-          <div style={{ fontSize: 11, color: W.DIM, marginTop: 4 }}>
+          <div style={{ fontSize: 12, color: W.DIM, marginTop: 4 }}>
             {loc ? 'Live conditions from the field app' : 'Configure a location in widget settings'}
           </div>
         </div>
@@ -389,7 +389,7 @@ export function ConfiguredDashboard({ layout }: { layout: SavedLayout }) {
               borderRadius: 14, padding: '16px 18px', boxShadow: '0 1px 2px rgba(0,0,0,0.06)',
             }}>
               <div style={{ display: 'flex', alignItems: 'center', gap: 9, marginBottom: 14 }}>
-                <span style={{ display: 'inline-flex', alignItems: 'center', justifyContent: 'center', width: 30, height: 30, borderRadius: 8, background: 'var(--brand-primary-12)' }}>
+                <span style={{ display: 'inline-flex', alignItems: 'center', justifyContent: 'center', width: 30, height: 30, borderRadius: 8, background: 'var(--bg-surface-2)' }}>
                   <Ico size={17} weight="duotone" color={W.GOLD} />
                 </span>
                 <span style={{ fontWeight: 700, fontSize: 15, color: W.TEXT, letterSpacing: '-0.01em' }}>{meta.name}</span>

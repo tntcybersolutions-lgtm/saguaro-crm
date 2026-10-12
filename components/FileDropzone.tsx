@@ -77,22 +77,22 @@ export function FileDropzone({
         onDragLeave={() => setOver(false)}
         onDrop={(e) => { e.preventDefault(); setOver(false); if (e.dataTransfer.files?.length) upload(e.dataTransfer.files); }}
         style={{
-          display: 'flex', flexDirection: compact ? 'row' : 'column', alignItems: 'center', justifyContent: 'center',
-          gap: 10, padding: compact ? '12px 16px' : '26px 20px', cursor: busy ? 'wait' : 'pointer',
-          border: `1.5px dashed ${over ? 'var(--brand-primary)' : 'rgba(255,255,255,0.18)'}`, borderRadius: 'var(--radius-lg)',
-          background: over ? 'var(--brand-primary-12)' : 'var(--bg-surface)', transition: 'all .12s', textAlign: 'center',
-          boxShadow: over ? '0 0 0 3px var(--brand-primary-12)' : 'none',
+          // One compact row: a drop target should not out-weigh the files below it.
+          display: 'flex', flexDirection: 'row', alignItems: 'center', justifyContent: 'center', flexWrap: 'wrap',
+          gap: 10, minHeight: 56, padding: compact ? '10px 14px' : '14px 18px', cursor: busy ? 'wait' : 'pointer',
+          border: `1.5px dashed ${over ? 'var(--info)' : 'var(--border-strong)'}`, borderRadius: 'var(--radius-lg)',
+          background: over ? 'var(--bg-surface-2)' : 'var(--bg-surface)', transition: 'background-color .12s, border-color .12s', textAlign: 'left',
         }}
       >
-        {busy ? <Spinner size={compact ? 18 : 26} color="var(--brand-primary)" className="spin" /> : <UploadSimple size={compact ? 18 : 26} color={over ? 'var(--brand-primary)' : 'var(--text-secondary)'} />}
-        <div style={{ color: 'var(--text-secondary)', fontSize: compact ? 13 : 14 }}>
+        {busy ? <Spinner size={20} color="var(--text-secondary)" className="spin" /> : <UploadSimple size={20} color={over ? 'var(--info)' : 'var(--text-secondary)'} />}
+        <div style={{ color: 'var(--text-secondary)', fontSize: 14 }}>
           <b style={{ color: 'var(--text-primary)' }}>{busy ? msg || 'Uploading…' : 'Drop files or click to browse'}</b>
-          {!compact && !busy && <div style={{ fontSize: 12, color: 'var(--text-tertiary)', marginTop: 4 }}>Images, video, PDF, Office, CAD — up to 500 MB each</div>}
+          {!compact && !busy && <span style={{ color: 'var(--text-secondary)' }}> · images, video, PDF, Office, CAD — up to 500 MB each</span>}
         </div>
         <input ref={inputRef} type="file" multiple style={{ display: 'none' }} disabled={busy}
           onChange={(e) => { if (e.target.files?.length) upload(e.target.files); e.currentTarget.value = ''; }} />
       </label>
-      {msg && !busy && <div style={{ fontSize: 12, color: 'var(--text-tertiary)', marginTop: 6 }}>{msg}</div>}
+      {msg && !busy && <div role="status" style={{ fontSize: 13, color: 'var(--text-secondary)', marginTop: 6 }}>{msg}</div>}
       <style>{`.spin{animation:spin 1s linear infinite}@keyframes spin{to{transform:rotate(360deg)}}`}</style>
     </div>
   );

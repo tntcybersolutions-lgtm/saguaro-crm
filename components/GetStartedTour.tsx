@@ -201,7 +201,7 @@ export default function GetStartedTour() {
         <div style={{ textAlign: 'center', marginBottom: 12 }}>
           <span
             style={{
-              display: 'inline-block', fontSize: 11, fontWeight: 700, color: GOLD,
+              display: 'inline-block', fontSize: 12, fontWeight: 700, color: GOLD,
               background: GOLD_SOFT, padding: '5px 14px', borderRadius: 20,
             }}
           >
@@ -225,8 +225,8 @@ export default function GetStartedTour() {
 
         <div style={{ display: 'flex', justifyContent: 'center', marginBottom: 34 }}>
           <span style={{ display: 'inline-flex', alignItems: 'center', gap: 8 }}>
-            <ScribbleNote color="var(--brand-primary-strong)" size={15} rotate={-4}>No sales call</ScribbleNote>
-            <ScribbleArrow direction="right" width={40} color="var(--brand-primary-strong)" style={{ transform: 'rotate(5deg)' }} />
+            <ScribbleNote color="var(--text-secondary)" size={15} rotate={-4}>No sales call</ScribbleNote>
+            <ScribbleArrow direction="right" width={40} color="var(--text-secondary)" style={{ transform: 'rotate(5deg)' }} />
           </span>
         </div>
 
@@ -266,7 +266,7 @@ export default function GetStartedTour() {
                       <span style={{ display: 'block', fontSize: 14, fontWeight: 650, color: on ? TEXT : DIM }}>
                         {s.nav}
                       </span>
-                      <span style={{ display: 'block', fontSize: 12.5, color: MUTED, marginTop: 2 }}>
+                      <span style={{ display: 'block', fontSize: 13, color: MUTED, marginTop: 2 }}>
                         {s.title}
                       </span>
                     </span>
@@ -282,7 +282,7 @@ export default function GetStartedTour() {
                 style={{
                   minHeight: 44, display: 'inline-flex', alignItems: 'center', gap: 8,
                   background: 'transparent', border: '1px solid ' + LINE, borderRadius: 10,
-                  padding: '0 14px', color: reduced ? MUTED : DIM, fontSize: 12.5, fontWeight: 600,
+                  padding: '0 14px', color: reduced ? MUTED : DIM, fontSize: 13, fontWeight: 600,
                   cursor: reduced ? 'not-allowed' : 'pointer',
                 }}
               >
@@ -311,7 +311,7 @@ export default function GetStartedTour() {
 
               {/* body */}
               <div style={{ padding: '26px 26px 30px', minHeight: 318 }}>
-                <p style={{ margin: '0 0 4px', fontSize: 11, fontWeight: 700, color: GOLD }}>
+                <p style={{ margin: '0 0 4px', fontSize: 12, fontWeight: 700, color: 'var(--text-primary)' }}>
                   Step {step.n} of {STEPS.length}
                 </p>
                 <h3 style={{ margin: '0 0 20px', fontSize: 22, fontWeight: 800, color: TEXT, letterSpacing: '-0.01em' }}>
@@ -326,7 +326,7 @@ export default function GetStartedTour() {
                       const filled = p >= 1;
                       return (
                         <div key={f.label + i} style={{ flex: f.half ? '1 1 44%' : '1 1 100%', minWidth: 0 }}>
-                          <label style={{ display: 'block', fontSize: 10.5, fontWeight: 700, color: MUTED, marginBottom: 6 }}>
+                          <label style={{ display: 'block', fontSize: 12, fontWeight: 700, color: MUTED, marginBottom: 6 }}>
                             {f.label}
                           </label>
                           <div
@@ -338,7 +338,7 @@ export default function GetStartedTour() {
                               transition: 'border-color .25s',
                             }}
                           >
-                            <span style={{ fontSize: 13.5, color: shown ? TEXT : MUTED, whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>
+                            <span style={{ fontSize: 14, color: shown ? TEXT : MUTED, whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>
                               {shown || ' '}
                             </span>
                             {p > 0 && p < 1 && (
@@ -385,7 +385,7 @@ export default function GetStartedTour() {
                   <span
                     style={{
                       display: 'inline-flex', alignItems: 'center', minHeight: 40, padding: '0 20px',
-                      borderRadius: 9, fontSize: 13.5, fontWeight: 700,
+                      borderRadius: 9, fontSize: 14, fontWeight: 700,
                       background: progress >= 1 ? GOLD : 'var(--brand-primary-25)',
                       color: progress >= 1 ? 'var(--on-brand)' : 'rgba(10,10,0,0.7)',
                       transition: 'background .3s, color .3s',
@@ -394,7 +394,7 @@ export default function GetStartedTour() {
                     {step.cta}
                   </span>
                   {step.note && (
-                    <ScribbleNote color="var(--brand-primary-strong)" size={14} rotate={-5} style={{ opacity: progress >= 1 ? 0.95 : 0 , transition: 'opacity .4s' }}>
+                    <ScribbleNote color="var(--text-secondary)" size={14} rotate={-5} style={{ opacity: progress >= 1 ? 0.95 : 0 , transition: 'opacity .4s' }}>
                       {step.note}
                     </ScribbleNote>
                   )}

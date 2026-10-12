@@ -211,35 +211,22 @@ export async function GET(req: NextRequest) {
 
 ---
 
-## 4. DARK THEME ENFORCEMENT
+## 4. DESIGN SYSTEM (navy / slate) — DARK ONLY
 
-All pages in `/app/` and `/field/` use the dark theme. No exceptions.
+`DESIGN_SYSTEM.md` is the rule for colour, type, spacing, depth and components;
+`SITE_UPDATE_PLAN.md` is the platform-wide work plan and status;
+`QA_CHECKLIST.md` is the per-route verification record. Read them before any UI
+change and keep them current.
 
-### Design Tokens (field pages):
-```typescript
-import { F } from '@/lib/field-tokens';
-// F.dark = '#0d1117'      -- page background
-// F.raised = '#0D1D2E'    -- cards, panels
-// F.card = 'rgba(13,29,46,.85)' -- glass card overlay
-// F.border = '#1E3A5F'    -- primary border
-// F.text = '#F0F4FF'      -- primary text
-// F.dim = '#8BAAC8'       -- secondary text
-// F.gold = '#C8960F'      -- brand accent
-// F.green = '#22C55E'     -- success
-// F.red = '#EF4444'       -- error/destructive
-// F.blue = '#3B82F6'      -- info/links
-// F.amber = '#F59E0B'     -- warning
-```
-
-### Desktop app pages (when not using F tokens):
-```typescript
-const BASE = '#0d1117';
-const CARD = '#161b22';
-const BORDER = '#30363d';  // or '#1E3A5F' for navy variant
-const GOLD = '#C8960F';
-const TEXT = '#F0F4FF';
-const DIM = '#8BAAC8';
-```
+- Colours come only from the `app/globals.css` tokens (`--bg-base` #101722,
+  `--bg-surface` #1B2636, `--bg-surface-2` #243247, `--border-default` #334155,
+  `--text-primary/secondary/tertiary`, `--brand-primary` #FFE000, `--link`
+  #38BDF8, `--success/--warning/--danger`). No new hex in pages.
+- Yellow = the one primary action and the selected item. Never numbers, labels,
+  icons, borders or tints.
+- Text floor 12px (captions); labels 13; body 14; inputs 16 on phones.
+- Fix the shared source (token, kit/premium component, layout), then every
+  consumer. No per-page copies, no CSS override layers.
 
 ### Banned in dark-themed pages:
 - `#ffffff`, `#fff`, `bg-white`, `background: white`

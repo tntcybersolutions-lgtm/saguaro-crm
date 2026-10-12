@@ -98,7 +98,7 @@ const CSS = `
 .crProse { font-size: var(--fs-md); line-height: 1.6; color: var(--text-secondary); white-space: pre-wrap; overflow-wrap: anywhere; max-width: ${layout.readingMaxWidth}; }
 .crMembers { display: flex; flex-direction: column; gap: 8px; }
 .crMember { display: flex; align-items: center; gap: 12px; padding: 8px 10px; border-radius: var(--radius-sm); background: var(--bg-surface-2); border: 1px solid var(--border-subtle); }
-.crAvatar { width: 32px; height: 32px; border-radius: 16px; flex-shrink: 0; display: inline-flex; align-items: center; justify-content: center; background: var(--brand-primary-12); border: 1px solid var(--brand-primary-25); color: var(--brand-primary); }
+.crAvatar { width: 32px; height: 32px; border-radius: 16px; flex-shrink: 0; display: inline-flex; align-items: center; justify-content: center; background: var(--bg-surface-2); border: 1px solid var(--border-default); color: var(--text-secondary); }
 .crMemberName { flex: 1; min-width: 0; }
 .crMemberName > div:first-child { font-size: var(--fs-sm); font-weight: 700; color: var(--text-primary); overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
 .crMemberName > div + div { font-size: var(--fs-xs); color: var(--text-tertiary); overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }

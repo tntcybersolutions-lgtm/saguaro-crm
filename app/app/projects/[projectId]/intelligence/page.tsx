@@ -185,7 +185,7 @@ function IntelligenceChat() {
     }
   };
 
-  const renderContent = (content: string, isUser: boolean) => {
+  const renderContent = (content: string) => {
     if (!content) return null;
     // Simple markdown: **bold** → strong, newlines → <br>
     const lines = content.split('\n');
@@ -195,7 +195,7 @@ function IntelligenceChat() {
         <span key={li}>
           {parts.map((part, pi) => {
             if (part.startsWith('**') && part.endsWith('**')) {
-              return <strong key={pi} style={{ color: isUser ? 'var(--on-brand)' : GOLD }}>{part.slice(2, -2)}</strong>;
+              return <strong key={pi} style={{ color: TEXT }}>{part.slice(2, -2)}</strong>;
             }
             return <span key={pi}>{part}</span>;
           })}
@@ -209,7 +209,7 @@ function IntelligenceChat() {
     <PremiumSurface maxWidth={2200} pad="40px 28px 40px">
       <ModuleHero
         eyebrow="Project Intelligence"
-        eyebrowIcon={<Brain size={13} weight="fill" color={GOLD} />}
+        eyebrowIcon={<Brain size={13} weight="fill" color="var(--text-secondary)" />}
         title="Saguaro"
         accent="Intelligence"
         subtitle="Ask about this project — grounded in its own records."
@@ -232,19 +232,19 @@ function IntelligenceChat() {
           {/* Sidebar */}
           <div style={{ width: 260, background: 'rgba(255,255,255,0.015)', borderRight: `1px solid ${SOFT_BORDER}`, padding: '20px 16px', overflowY: 'auto', flexShrink: 0 }}>
             <div style={{ display: 'flex', alignItems: 'center', gap: '8px', marginBottom: '20px' }}>
-              <div style={{ width: '32px', height: '32px', background: `linear-gradient(135deg,${GOLD},var(--brand-primary-strong))`, borderRadius: '8px', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: '16px' }}><Brain size={18} weight="bold" color="var(--on-brand)" /></div>
+              <div style={{ width: '32px', height: '32px', background: 'var(--bg-surface-2)', border: '1px solid var(--border-default)', borderRadius: '8px', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: '16px' }}><Brain size={18} weight="bold" color="var(--on-brand)" /></div>
               <div>
                 <div style={{ color: TEXT, fontWeight: 700, fontSize: '13px' }}>Saguaro Intelligence</div>
-                <div style={{ color: DIM, fontSize: '11px' }}>AI Construction Expert</div>
+                <div style={{ color: DIM, fontSize: '12px' }}>AI Construction Expert</div>
               </div>
             </div>
 
-            <div style={{ width: '8px', height: '8px', borderRadius: '50%', background: 'var(--success)', boxShadow: '0 0 6px #4ADE80', marginBottom: '20px', display: 'inline-block' }} />
-            <span style={{ fontSize: '11px', color: DIM, marginLeft: '6px' }}>Online</span>
+            <div style={{ width: '8px', height: '8px', borderRadius: '50%', background: 'var(--success)', marginBottom: '20px', display: 'inline-block' }} />
+            <span style={{ fontSize: '12px', color: DIM, marginLeft: '6px' }}>Online</span>
 
             {ctx && (
-              <div style={{ marginBottom: 16, padding: '10px 12px', background: 'color-mix(in srgb, var(--brand-primary) 5%, transparent)', border: '1px solid color-mix(in srgb, var(--brand-primary) 15%, transparent)', borderRadius: 8 }}>
-                <div style={{ fontSize: '10px', fontWeight: 700, color: DIM, marginBottom: 6 }}>Context Loaded</div>
+              <div style={{ marginBottom: 16, padding: '10px 12px', background: 'var(--bg-surface-2)', border: '1px solid var(--border-default)', borderRadius: 8 }}>
+                <div style={{ fontSize: '12px', fontWeight: 700, color: DIM, marginBottom: 6 }}>Context Loaded</div>
                 <InsightRow label="Project" value={ctx.project?.name || '-'} />
                 <InsightRow label="Complete" value={`${Number(ctx.project?.percentComplete) || 0}%`} />
                 <InsightRow label="Budget Lines" value={String(Number(ctx.budget?.lineCount) || 0)} />
@@ -254,28 +254,28 @@ function IntelligenceChat() {
             )}
             {smartQuestions.length > 0 && (
               <>
-                <div style={{ fontSize: '10px', fontWeight: 700, color: DIM, marginBottom: '10px', marginTop: '8px' }}>From This Project<AutoChip /></div>
+                <div style={{ fontSize: '12px', fontWeight: 700, color: DIM, marginBottom: '10px', marginTop: '8px' }}>From This Project<AutoChip /></div>
                 {smartQuestions.map(q => (
                   <button key={q} onClick={() => sendMessage(q)}
-                    style={{ display: 'block', width: '100%', textAlign: 'left', padding: '7px 10px', marginBottom: '6px', background: 'var(--brand-primary-12)', border: '1px solid color-mix(in srgb, var(--brand-primary) 30%, transparent)', borderRadius: '6px', color: 'var(--brand-primary-strong)', fontSize: '11px', cursor: 'pointer', transition: 'background 0.15s' }}
-                    onMouseEnter={e => (e.currentTarget as HTMLButtonElement).style.background = 'var(--brand-primary-18)'}
-                    onMouseLeave={e => (e.currentTarget as HTMLButtonElement).style.background = 'var(--brand-primary-12)'}
+                    style={{ display: 'block', width: '100%', textAlign: 'left', padding: '7px 10px', marginBottom: '6px', background: 'var(--bg-surface-2)', border: '1px solid var(--border-default)', borderRadius: '6px', color: 'var(--text-primary)', fontSize: '12px', cursor: 'pointer', transition: 'background 0.15s' }}
+                    onMouseEnter={e => (e.currentTarget as HTMLButtonElement).style.background = 'var(--bg-hover)'}
+                    onMouseLeave={e => (e.currentTarget as HTMLButtonElement).style.background = 'var(--bg-surface-2)'}
                   >{q}</button>
                 ))}
               </>
             )}
-            <div style={{ fontSize: '10px', fontWeight: 700, color: DIM, marginBottom: '10px', marginTop: '8px' }}>Quick Questions</div>
+            <div style={{ fontSize: '12px', fontWeight: 700, color: DIM, marginBottom: '10px', marginTop: '8px' }}>Quick Questions</div>
             {QUICK_QUESTIONS.map(q => (
               <button key={q} onClick={() => sendMessage(q)}
-                style={{ display: 'block', width: '100%', textAlign: 'left', padding: '7px 10px', marginBottom: '6px', background: 'var(--brand-primary-08)', border: '1px solid color-mix(in srgb, var(--brand-primary) 15%, transparent)', borderRadius: '6px', color: GOLD, fontSize: '11px', cursor: 'pointer', transition: 'background 0.15s' }}
-                onMouseEnter={e => (e.currentTarget as HTMLButtonElement).style.background = 'var(--brand-primary-12)'}
-                onMouseLeave={e => (e.currentTarget as HTMLButtonElement).style.background = 'var(--brand-primary-08)'}
+                style={{ display: 'block', width: '100%', textAlign: 'left', padding: '7px 10px', marginBottom: '6px', background: 'var(--bg-surface-2)', border: '1px solid var(--border-default)', borderRadius: '6px', color: 'var(--text-primary)', fontSize: '12px', cursor: 'pointer', transition: 'background 0.15s' }}
+                onMouseEnter={e => (e.currentTarget as HTMLButtonElement).style.background = 'var(--bg-hover)'}
+                onMouseLeave={e => (e.currentTarget as HTMLButtonElement).style.background = 'var(--bg-surface-2)'}
               >{q}</button>
             ))}
 
-            <div style={{ marginTop: '24px', fontSize: '10px', fontWeight: 700, color: DIM, marginBottom: '8px' }}>Expertise</div>
+            <div style={{ marginTop: '24px', fontSize: '12px', fontWeight: 700, color: DIM, marginBottom: '8px' }}>Expertise</div>
             {['CSI MasterFormat', 'AIA Contracts', 'Lien Law (AZ/CA/TX)', 'Davis-Bacon / WH-347', 'OSHA 29 CFR 1926', 'Change Orders & Claims', 'Pay Application Process', 'Construction Finance'].map(item => (
-              <div key={item} style={{ fontSize: '11px', color: DIM, padding: '4px 0', borderBottom: `1px solid ${SOFT_BORDER}` }}>{item}</div>
+              <div key={item} style={{ fontSize: '12px', color: DIM, padding: '4px 0', borderBottom: `1px solid ${SOFT_BORDER}` }}>{item}</div>
             ))}
           </div>
 
@@ -285,28 +285,28 @@ function IntelligenceChat() {
               {messages.map(msg => (
                 <div key={msg.id} style={{ display: 'flex', justifyContent: msg.role === 'user' ? 'flex-end' : 'flex-start' }}>
                   {msg.role === 'assistant' && (
-                    <div style={{ width: '28px', height: '28px', borderRadius: '50%', background: `linear-gradient(135deg,${GOLD},var(--brand-primary-strong))`, display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: '12px', marginRight: '8px', flexShrink: 0, alignSelf: 'flex-end', fontWeight: 900, color: 'var(--on-brand)' }}>S</div>
+                    <div style={{ width: '28px', height: '28px', borderRadius: '50%', background: 'var(--bg-surface-2)', border: '1px solid var(--border-default)', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: '12px', marginRight: '8px', flexShrink: 0, alignSelf: 'flex-end', fontWeight: 900, color: 'var(--on-brand)' }}>S</div>
                   )}
                   <div style={{
                     maxWidth: '78%',
-                    background: msg.role === 'user' ? `linear-gradient(135deg,${GOLD},var(--brand-primary-strong))` : SURFACE,
-                    color: msg.role === 'user' ? 'var(--on-brand)' : TEXT,
+                    background: msg.role === 'user' ? 'var(--bg-surface-2)' : SURFACE,
+                    color: TEXT,
                     padding: '12px 16px',
                     borderRadius: msg.role === 'user' ? '16px 16px 4px 16px' : '16px 16px 16px 4px',
                     fontSize: '13px', lineHeight: '1.6',
                     whiteSpace: 'pre-wrap' as const, wordBreak: 'break-word' as const,
-                    border: msg.role === 'assistant' ? `1px solid ${SOFT_BORDER}` : 'none',
-                    boxShadow: msg.role === 'assistant' ? '0 10px 30px -20px rgba(0,0,0,0.6), inset 0 1px 0 rgba(255,255,255,0.04)' : '0 10px 26px -12px color-mix(in srgb, var(--brand-primary) 50%, transparent)',
+                    border: msg.role === 'assistant' ? `1px solid ${SOFT_BORDER}` : '1px solid var(--border-strong)',
+                    boxShadow: 'none',
                   }}>
-                    {renderContent(msg.content, msg.role === 'user')}
+                    {renderContent(msg.content)}
                     {msg.isStreaming && (
-                      <span style={{ display: 'inline-block', width: '2px', height: '14px', background: GOLD, marginLeft: '2px', animation: 'blink 0.8s infinite', verticalAlign: 'middle' }} />
+                      <span style={{ display: 'inline-block', width: '2px', height: '14px', background: TEXT, marginLeft: '2px', animation: 'blink 0.8s infinite', verticalAlign: 'middle' }} />
                     )}
                   </div>
                 </div>
               ))}
               {isLoading && messages[messages.length - 1]?.isStreaming === false && (
-                <div style={{ alignSelf: 'flex-start', padding: '12px 16px', borderRadius: '10px', background: SURFACE, border: `1px solid ${SOFT_BORDER}`, color: GOLD, fontSize: '18px', letterSpacing: '4px' }}>●●●</div>
+                <div style={{ alignSelf: 'flex-start', padding: '12px 16px', borderRadius: '10px', background: SURFACE, border: `1px solid ${SOFT_BORDER}`, color: 'var(--text-primary)', fontSize: '18px', letterSpacing: '4px' }}>●●●</div>
               )}
               <div ref={messagesEndRef} />
             </div>
@@ -319,11 +319,10 @@ function IntelligenceChat() {
                 onKeyDown={handleKeyDown}
                 placeholder="Ask about costs, schedules, lien waivers, change orders…"
                 disabled={isLoading}
-                style={{ flex: 1, background: 'rgba(255,255,255,0.04)', border: `1px solid ${SOFT_BORDER}`, borderRadius: '10px', padding: '10px 14px', color: TEXT, fontSize: '13px', outline: 'none' }}
+                style={{ flex: 1, background: 'rgba(255,255,255,0.04)', border: `1px solid ${SOFT_BORDER}`, borderRadius: '10px', padding: '10px 14px', color: TEXT, fontSize: '16px', outline: 'none' }}
               />
-              <button onClick={() => sendMessage(input)} disabled={isLoading || !input.trim()}
-                style={{ padding: '10px 20px', background: isLoading || !input.trim() ? 'color-mix(in srgb, var(--brand-primary) 30%, transparent)' : `linear-gradient(135deg,${GOLD},var(--brand-primary-strong))`, border: 'none', borderRadius: '10px', color: 'var(--on-brand)', fontSize: '13px', fontWeight: 800, cursor: isLoading || !input.trim() ? 'not-allowed' : 'pointer', boxShadow: isLoading || !input.trim() ? 'none' : '0 10px 26px -10px color-mix(in srgb, var(--brand-primary) 60%, transparent)' }}>
-                {isLoading ? '…' : <span style={{ display: 'inline-flex', alignItems: 'center', gap: '4px' }}>Ask <ArrowRight size={14} weight="bold" color="var(--on-brand)" /></span>}
+              <button type="button" onClick={() => sendMessage(input)} disabled={isLoading || !input.trim()} className="k-btn k-btn-primary">
+                {isLoading ? '…' : <>Ask <ArrowRight size={14} weight="bold" /></>}
               </button>
             </div>
           </div>

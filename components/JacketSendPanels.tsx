@@ -73,8 +73,8 @@ export function JacketGatePrompt({
       role="alert"
       data-testid="jacket-gate"
       style={{
-        border: '1px solid var(--brand-primary-35)', borderRadius: 12, background: 'var(--brand-primary-08)',
-        padding: '13px 15px', color: TEXT, fontSize: 13.5, lineHeight: 1.6,
+        border: '1px solid var(--border-default)', borderRadius: 12, background: 'var(--bg-surface-2)',
+        padding: '13px 15px', color: TEXT, fontSize: 14, lineHeight: 1.6,
       }}
     >
       <div style={{ display: 'flex', gap: 10, alignItems: 'flex-start' }}>
@@ -130,7 +130,7 @@ function Row({ d }: { d: SendDelivery }) {
       <span style={{ minWidth: 0, overflowWrap: 'anywhere' }}>
         <span style={{ color: TEXT, fontWeight: 700 }}>{d.name || d.email}</span>
         {d.name && <span style={{ color: DIM }}> · {d.email}</span>}
-        <span style={{ display: 'block', color: d.outcome === 'emailed' ? GREEN : d.outcome === 'already_sent' ? DIM : RED, fontSize: 12.5 }}>
+        <span style={{ display: 'block', color: d.outcome === 'emailed' ? GREEN : d.outcome === 'already_sent' ? DIM : RED, fontSize: 13 }}>
           {what}
         </span>
       </span>
@@ -156,7 +156,7 @@ export function JacketSendResult({ result, onDismiss }: { result: SendPayload; o
       style={{ border: '1px solid rgba(255,255,255,0.10)', borderRadius: 12, padding: '12px 14px', background: 'rgba(0,0,0,0.25)' }}
     >
       <div style={{ display: 'flex', alignItems: 'flex-start', gap: 10 }}>
-        <div style={{ flex: 1, minWidth: 0, color: tone, fontWeight: 800, fontSize: 13.5, lineHeight: 1.5 }}>{headline}</div>
+        <div style={{ flex: 1, minWidth: 0, color: tone, fontWeight: 800, fontSize: 14, lineHeight: 1.5 }}>{headline}</div>
         {onDismiss && (
           <button
             type="button"
@@ -169,7 +169,7 @@ export function JacketSendResult({ result, onDismiss }: { result: SendPayload; o
         )}
       </div>
       {result.forced && (result.missing?.length ?? 0) > 0 && (
-        <div style={{ color: DIM, fontSize: 12.5, marginTop: 2 }}>
+        <div style={{ color: DIM, fontSize: 13, marginTop: 2 }}>
           Sent with {listJoin(result.missing!)} empty — you chose to send anyway.
         </div>
       )}
@@ -180,7 +180,7 @@ export function JacketSendResult({ result, onDismiss }: { result: SendPayload; o
         </ul>
       )}
       {(result.invalid?.length ?? 0) > 0 && (
-        <div style={{ color: RED, fontSize: 12.5, marginTop: 6 }}>
+        <div style={{ color: RED, fontSize: 13, marginTop: 6 }}>
           Not used: {result.invalid!.map((v) => `${v.email || '(blank)'} — ${v.error}`).join('; ')}
         </div>
       )}

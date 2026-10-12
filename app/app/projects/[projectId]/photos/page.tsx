@@ -145,7 +145,7 @@ const CSS = `
 .phActionsRow { display: flex; gap: 8px; align-items: center; }
 .phActionsRow > .k-btn { flex: 1 1 auto; }
 .phNext { font-size: var(--fs-sm); color: var(--text-tertiary); line-height: 1.5; }
-.phNext a { color: var(--brand-primary); font-weight: 700; }
+.phNext a { color: var(--link); font-weight: 700; }
 .phDrop { width: 100%; min-height: 96px; display: flex; align-items: center; justify-content: center; gap: 8px; padding: 16px 12px; border-radius: var(--radius-sm); border: 1px dashed var(--brand-primary-35); background: var(--brand-primary-08); color: var(--text-primary); font-weight: 700; font-size: var(--fs-md); cursor: pointer; }
 .phDrop:hover { background: var(--brand-primary-12); }
 .phDrop:focus-visible { outline: 2px solid var(--brand-primary); outline-offset: 2px; }
@@ -160,7 +160,7 @@ const CSS = `
 .phViewer video { width: 100%; max-height: min(70vh, 720px); display: block; background: #000; }
 .phPlay { position: absolute; inset: 0; display: flex; align-items: center; justify-content: center; pointer-events: none; }
 .phPlay > span { width: 44px; height: 44px; border-radius: 50%; background: rgba(8,9,12,0.72); border: 1px solid rgba(255,255,255,0.25); display: inline-flex; align-items: center; justify-content: center; color: #fff; }
-.phDur { position: absolute; right: 6px; bottom: 6px; padding: 2px 6px; border-radius: 6px; background: rgba(8,9,12,0.8); color: #fff; font-size: 11px; font-weight: 700; }
+.phDur { position: absolute; right: 6px; bottom: 6px; padding: 2px 6px; border-radius: 6px; background: rgba(8,9,12,0.8); color: #fff; font-size: 12px; font-weight: 700; }
 .phUploading { display: inline-flex; align-items: center; gap: 8px; min-height: 36px; padding: 0 12px; border-radius: 999px; border: 1px solid var(--border-default); background: rgba(255,255,255,0.04); color: var(--text-secondary); font: inherit; font-size: var(--fs-sm); font-weight: 700; cursor: pointer; }
 .phUploading i { display: block; width: 64px; height: 4px; border-radius: 4px; background: rgba(255,255,255,0.1); overflow: hidden; }
 .phUploading i > b { display: block; height: 100%; background: var(--brand-primary); }

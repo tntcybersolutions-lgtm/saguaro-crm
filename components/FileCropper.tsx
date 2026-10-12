@@ -54,7 +54,7 @@ export function FileCropper({ fileId, url, name, onDone, onClose }: {
     <div onClick={onClose} style={{ position: 'fixed', inset: 0, background: 'rgba(0,0,0,0.8)', zIndex: z.modal, display: 'flex', alignItems: 'center', justifyContent: 'center', padding: 'max(16px, env(safe-area-inset-top)) 16px max(16px, env(safe-area-inset-bottom))' }}>
       <div ref={dialogRef} role="dialog" aria-modal="true" aria-labelledby={titleId} onClick={(e) => e.stopPropagation()} style={{ background: 'var(--bg-surface)', border: '1px solid rgba(255,255,255,0.12)', borderRadius: 14, padding: 16, width: 'min(720px,100%)', maxHeight: '92vh', overflow: 'auto' }}>
         <div style={{ display: 'flex', alignItems: 'center', marginBottom: 12 }}>
-          <Crop size={18} color="var(--brand-primary)" weight="fill" />
+          <Crop size={18} color="var(--text-secondary)" weight="fill" />
           <div id={titleId} style={{ fontWeight: 800, fontSize: 16, marginLeft: 8, flex: 1, color: 'var(--text-primary)' }}>Edit Image</div>
           <button onClick={onClose} aria-label="Close" style={closeBtn}><X size={20} color="var(--text-secondary)" /></button>
         </div>
@@ -71,7 +71,7 @@ export function FileCropper({ fileId, url, name, onDone, onClose }: {
           {/* eslint-disable-next-line @next/next/no-img-element */}
           <img ref={imgRef} src={url} alt={name || ''} draggable={false} style={{ maxWidth: '100%', maxHeight: '58vh', transform: `rotate(${rotate}deg)`, transition: 'transform .15s' }} />
           {rect && rect.w > 2 && (
-            <div style={{ position: 'absolute', left: rect.x, top: rect.y, width: rect.w, height: rect.h, border: '2px solid var(--brand-primary)', background: 'var(--brand-primary-12)', pointerEvents: 'none' }} />
+            <div style={{ position: 'absolute', left: rect.x, top: rect.y, width: rect.w, height: rect.h, border: '2px solid var(--brand-primary)', background: 'var(--bg-surface-2)', pointerEvents: 'none' }} />
           )}
         </div>
         <div style={{ display: 'flex', gap: 8, alignItems: 'center', marginTop: 12, flexWrap: 'wrap' }}>

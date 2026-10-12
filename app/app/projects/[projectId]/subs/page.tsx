@@ -6,7 +6,7 @@ import { humanError } from '@/lib/errors';
 import { useParams } from 'next/navigation';
 import { Handshake, Users, Plus, ShieldCheck, ShieldWarning, AddressBook, WarningCircle, PencilSimple, Trash } from '@phosphor-icons/react';
 import { SUB_TRADES } from '@/lib/construction-intelligence';
-import { PremiumSurface, ModuleHero, SectionCard, PremiumEmpty, StatStrip, FlowSteps, FlowStrip, InsightRow, AutoChip, goldButtonStyle, ghostButtonStyle } from '@/components/ui/premium';
+import { PremiumSurface, ModuleHero, SectionCard, PremiumEmpty, StatStrip, FlowSteps, FlowStrip, InsightRow, AutoChip, goldButtonStyle, ghostButtonStyle, secondaryButtonStyle } from '@/components/ui/premium';
 import { ListToolbar } from '@/components/ui/ListToolbar';
 import { DataTable, FormModal, FormGrid, Field, Input } from '@/components/ui/kit';
 import { StatusPill } from '@/components/ui/Status';
@@ -324,8 +324,8 @@ export default function SubsPage() {
   const totalPaid = subs.reduce((s,sub) => s + (sub.paid_amount||0), 0);
 
   const inpS: React.CSSProperties = {width:'100%',padding:'8px 12px',background:'var(--bg-surface-2)',border:'1px solid rgba(255,255,255,0.12)',borderRadius:6,color:TEXT,fontSize:13,outline:'none',boxSizing:'border-box'};
-  const lblS: React.CSSProperties = {display:'block',fontSize:11,color:DIM,marginBottom:4,fontWeight:600};
-  const hintS: React.CSSProperties = {fontSize:11,color:'var(--c-text-2)',marginTop:5,lineHeight:1.45};
+  const lblS: React.CSSProperties = {display:'block',fontSize:12,color:DIM,marginBottom:4,fontWeight:600};
+  const hintS: React.CSSProperties = {fontSize:12,color:'var(--c-text-2)',marginTop:5,lineHeight:1.45};
 
   const subTrades = Array.from(new Set(subs.map(s => s.trade || '').filter(Boolean))).sort();
   const filteredSubs = subs.filter(s => {
@@ -349,7 +349,7 @@ export default function SubsPage() {
 
       <ModuleHero
         eyebrow="Subcontractors"
-        eyebrowIcon={<Handshake size={13} weight="fill" color={GOLD} />}
+        eyebrowIcon={<Handshake size={13} weight="fill" color="var(--text-secondary)" />}
         title="Subs on"
         accent="This Job"
         subtitle="Who is working this job, what they are contracted for, what they have been paid, and whether their paperwork is current."
@@ -372,7 +372,7 @@ export default function SubsPage() {
       {/* Add — type a company: one in the directory fills the rest */}
       {showForm && (
         <div className="sbAddGrid">
-          <SectionCard title="Add Subcontractor" subtitle="Type a company in your directory — or a new one" icon={<Handshake size={17} weight="duotone" color={GOLD} />}>
+          <SectionCard title="Add Subcontractor" subtitle="Type a company in your directory — or a new one" icon={<Handshake size={17} weight="duotone" color="var(--text-secondary)" />}>
             <form onSubmit={handleCreate} noValidate>
               <div className="sbFields">
                 <div>
@@ -419,7 +419,7 @@ export default function SubsPage() {
           </SectionCard>
 
           <div style={{display:'flex',flexDirection:'column',gap:16}}>
-            <SectionCard flat title="Compliance Snapshot" icon={picked ? (hasComplianceIssue(picked) ? <ShieldWarning size={17} weight="duotone" color="var(--danger)" /> : <ShieldCheck size={17} weight="duotone" color="var(--success)" />) : <ShieldCheck size={17} weight="duotone" color={GOLD} />}>
+            <SectionCard flat title="Compliance Snapshot" icon={picked ? (hasComplianceIssue(picked) ? <ShieldWarning size={17} weight="duotone" color="var(--danger)" /> : <ShieldCheck size={17} weight="duotone" color="var(--success)" />) : <ShieldCheck size={17} weight="duotone" color="var(--text-secondary)" />}>
               {picked ? (
                 <>
                   <InsightRow label="W-9" value={w9Ok(picked)?'On file':'Missing'} accent={w9Ok(picked)?'var(--success)':'var(--danger)'} strong/>
@@ -436,7 +436,7 @@ export default function SubsPage() {
                 </>
               )}
             </SectionCard>
-            <SectionCard flat title="After You Add" icon={<AddressBook size={17} weight="duotone" color={GOLD} />}>
+            <SectionCard flat title="After You Add" icon={<AddressBook size={17} weight="duotone" color="var(--text-secondary)" />}>
               <FlowSteps title="" steps={[
                 {title:'On This Job',desc:'The company joins this job with its contract amount, and stays in your directory for the next one.'},
                 {title:'W-9 Request Auto-Sends',desc:'Over $600 with an email on file, a W-9 e-request goes out automatically.'},
@@ -462,20 +462,20 @@ export default function SubsPage() {
           title="Couldn’t load this job’s subcontractors"
           description={loadError}
           tone="error"
-          action={<button type="button" onClick={() => load()} style={goldButtonStyle} className="pmBtn">Try Again</button>}
+          action={<button type="button" onClick={() => load()} style={secondaryButtonStyle} className="pmBtn">Try Again</button>}
         />
       )}
 
       {!loading && !loadError && subs.length === 0 && (
         <SectionCard>
           <div style={{display:'flex',alignItems:'center',justifyContent:'space-between',gap:12,flexWrap:'wrap',marginBottom:12}}>
-            <div style={{fontSize:13.5,fontWeight:800,color:TEXT}}>
-              <Handshake size={16} weight="duotone" color={GOLD} style={{marginRight:7,verticalAlign:'text-bottom'}} />
+            <div style={{fontSize:14,fontWeight:800,color:TEXT}}>
+              <Handshake size={16} weight="duotone" color="var(--text-secondary)" style={{marginRight:7,verticalAlign:'text-bottom'}} />
               No subcontractors on this job yet
               <span style={{fontWeight:400,color:DIM}}>{showForm ? ' — add the first company in the form above.' : ' — add the first company to start the job’s roster.'}</span>
             </div>
             {!showForm && (
-              <button type="button" onClick={openForm} style={goldButtonStyle} className="pmBtn"><Plus size={15} weight="bold" /> Add Subcontractor</button>
+              <button type="button" onClick={openForm} style={secondaryButtonStyle} className="pmBtn"><Plus size={15} weight="bold" /> Add Subcontractor</button>
             )}
           </div>
           <FlowStrip steps={[
@@ -504,13 +504,13 @@ export default function SubsPage() {
             count={{shown:filteredSubs.length,total:subs.length}}
             style={{marginBottom:14}}
           />
-          <SectionCard title="Subcontractors" subtitle={`${subs.length} on this job — tap one to open it`} icon={<Users size={17} weight="duotone" color={GOLD} />} flush>
+          <SectionCard title="Subcontractors" subtitle={`${subs.length} on this job — tap one to open it`} icon={<Users size={17} weight="duotone" color="var(--text-secondary)" />} flush>
             <DataTable<JobSub>
               columns={[
                 { key: 'name', header: 'Company', primary: true, phone: 'show', accessor: (sub) => sub.company_name || '', render: (sub) => (
                   <span className="k-name"><span className="k-avatar" aria-hidden>{(sub.company_name||'?').split(/\s+/).slice(0,2).map((w: string)=>w[0]?.toUpperCase()||'').join('')}</span><span className="k-name-text"><span>{sub.company_name}</span><span>{sub.contact_email}</span></span></span>
                 ) },
-                { key: 'trade', header: 'Trade', phone: 'show', accessor: (sub) => sub.trade || '', render: (sub) => <span style={{color:GOLD,fontWeight:600}}>{sub.trade||'—'}</span> },
+                { key: 'trade', header: 'Trade', phone: 'show', accessor: (sub) => sub.trade || '', render: (sub) => <span style={{color: 'var(--text-primary)',fontWeight:600}}>{sub.trade||'—'}</span> },
                 { key: 'contact_name', header: 'Contact', phone: 'hide', accessor: (sub) => sub.contact_name || '', render: (sub) => <span className="k-cell-stack"><span>{sub.contact_name||'—'}</span>{sub.contact_phone && <span>{sub.contact_phone}</span>}</span> },
                 { key: 'license_number', header: 'License', phone: 'hide', accessor: (sub) => sub.license_number || '', render: (sub) => sub.license_number ? <span style={{fontFamily:'monospace',fontSize:12}}>{sub.license_number}</span> : <StatusPill module="paperwork" status="not_on_file" size="sm" /> },
                 { key: 'paper', header: 'W-9 / COI', sortable: false, phone: 'show', render: (sub) => { const coi = coiState(sub); return (

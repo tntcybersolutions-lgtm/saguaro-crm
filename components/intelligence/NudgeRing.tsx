@@ -129,7 +129,7 @@ export default function NudgeRing({
               padding: '3px 11px', borderRadius: 999, pointerEvents: 'none',
               background: 'var(--bg-solid-2)', border: `1px solid ${color}`,
               boxShadow: `0 0 14px -4px ${color}`,
-              fontSize: 10, fontWeight: 900,
+              fontSize: 12, fontWeight: 900,
               color, whiteSpace: 'nowrap',
             }}
           >
@@ -139,7 +139,7 @@ export default function NudgeRing({
             }} />
             {matched.length} flagged
             {dollars > 0 && (
-              <span style={{ color: 'var(--brand-primary-strong)' }}>
+              <span style={{ color: 'var(--text-primary)' }}>
                 {'$' + Math.round(dollars).toLocaleString('en-US')}
               </span>
             )}

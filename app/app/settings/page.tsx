@@ -140,13 +140,13 @@ const CSS = `
 .stRow:focus-visible { outline: 2px solid var(--brand-primary); outline-offset: -2px; }
 .stRow[data-hi="true"] { background: var(--brand-primary-08); }
 .stRowIcon { width: 40px; height: 40px; border-radius: 10px; flex-shrink: 0; display: grid; place-items: center; background: var(--bg-surface-2); border: 1px solid var(--glass-border); color: var(--text-primary); }
-.stRow[data-hi="true"] .stRowIcon { color: var(--brand-primary); border-color: var(--brand-primary-35); }
+.stRow[data-hi="true"] .stRowIcon { color: var(--text-primary); border-color: var(--brand-primary-35); }
 .stRowLabel { font-size: var(--fs-md); font-weight: 600; color: var(--text-primary); margin-bottom: 2px; }
-.stRow[data-hi="true"] .stRowLabel { color: var(--brand-primary); }
+.stRow[data-hi="true"] .stRowLabel { color: var(--text-primary); }
 .stRowDesc { font-size: var(--fs-xs); color: var(--text-tertiary); }
 .stRow > svg:last-child { color: var(--text-tertiary); flex-shrink: 0; }
 .stCta { display: flex; gap: 20px; align-items: center; flex-wrap: wrap; }
-.stCta > svg { color: var(--brand-primary); flex-shrink: 0; }
+.stCta > svg { color: var(--text-secondary); flex-shrink: 0; }
 .stFoot { text-align: center; padding: 8px 0 16px; display: flex; flex-direction: column; align-items: center; gap: 14px; }
 .stFoot a { font-size: var(--fs-sm); color: var(--text-tertiary); text-decoration: underline; }
 @media (max-width: 640px) {

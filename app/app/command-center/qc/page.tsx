@@ -56,7 +56,7 @@ export default function QCPage() {
         ) : trades.list.length === 0 ? (
           <SectionCard flat>
             <PremiumEmpty
-              icon={<MagnifyingGlass size={32} weight="duotone" color={C.gold} />}
+              icon={<MagnifyingGlass size={32} weight="duotone" color="var(--text-secondary)" />}
               title="No QC checklist for this site"
               description={`Sites launched from the template come pre-loaded with the ${QC_TRADES.length}-trade QC checklist.`}
             />
@@ -69,7 +69,7 @@ export default function QCPage() {
               {href: '/app/command-center/qc',  label: 'QC Complete', value: `${trades.pct}%`, accent: trades.pct >= 100 ? C.green : C.gold },
             ]} />
             <SectionCard
-              icon={<MagnifyingGlass size={16} weight="duotone" color={C.gold} />}
+              icon={<MagnifyingGlass size={16} weight="duotone" color="var(--text-secondary)" />}
               title="Trade Checklist"
               subtitle="Tap a trade to mark it passed — it syncs across the whole team."
               bodyStyle={{ padding: '10px 20px 12px' }}

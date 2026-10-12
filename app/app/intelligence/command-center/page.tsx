@@ -131,7 +131,7 @@ function SortButton({ active, label, onClick }: { active: boolean; label: string
         border: `1px solid ${active ? GOLD : BORDER}`,
         background: active ? `color-mix(in srgb, ${GOLD} 9%, transparent)` : 'transparent',
         color: active ? GOLD : DIM,
-        fontSize: 11,
+        fontSize: 12,
         fontWeight: 600,
         cursor: 'pointer',
         whiteSpace: 'nowrap',
@@ -153,7 +153,7 @@ function FilterPill({ active, label, onClick, color }: { active: boolean; label:
         border: `1px solid ${active ? c : BORDER}`,
         background: active ? `color-mix(in srgb, ${c} 8%, transparent)` : 'transparent',
         color: active ? c : DIM,
-        fontSize: 11,
+        fontSize: 12,
         fontWeight: 600,
         cursor: 'pointer',
         whiteSpace: 'nowrap',
@@ -241,7 +241,7 @@ export default function CommandCenterPage() {
       {/* Header */}
       <ModuleHero
         eyebrow="Intelligence"
-        eyebrowIcon={<Broadcast size={13} weight="fill" color={GOLD} />}
+        eyebrowIcon={<Broadcast size={13} weight="fill" color="var(--text-secondary)" />}
         title="Command"
         accent="Center"
         subtitle="Health, budget, and open items across the portfolio."
@@ -250,7 +250,7 @@ export default function CommandCenterPage() {
       {/* Summary stats */}
       <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(180px, 1fr))', gap: 12, marginBottom: 24 }}>
         <StatCard
-          icon={<Buildings size={19} weight="duotone" color={GOLD} />}
+          icon={<Buildings size={19} weight="duotone" color="var(--text-secondary)" />}
           label="Projects"
           value={String(projects.length)}
           sub={`${filtered.length} shown`}
@@ -276,10 +276,10 @@ export default function CommandCenterPage() {
       </div>
 
       {/* Sort + Filter controls */}
-      <SectionCard title="Sort & Filter" icon={<Funnel size={17} weight="duotone" color={GOLD} />} style={{ marginBottom: 24 }}>
+      <SectionCard title="Sort & Filter" icon={<Funnel size={17} weight="duotone" color="var(--text-secondary)" />} style={{ marginBottom: 24 }}>
         {/* Sort controls */}
         <div style={{ marginBottom: 16 }}>
-          <div style={{ fontSize: 11, color: DIM, fontWeight: 600, marginBottom: 8 }}>Sort By</div>
+          <div style={{ fontSize: 12, color: DIM, fontWeight: 600, marginBottom: 8 }}>Sort By</div>
           <div style={{ display: 'flex', gap: 6, overflowX: 'auto', paddingBottom: 4 }}>
             <SortButton active={sortBy === 'progress'} label="Progress" onClick={() => setSortBy('progress')} />
             <SortButton active={sortBy === 'budget_variance'} label="Budget Variance" onClick={() => setSortBy('budget_variance')} />
@@ -290,11 +290,11 @@ export default function CommandCenterPage() {
 
         {/* Filter controls */}
         <div>
-          <div style={{ fontSize: 11, color: DIM, fontWeight: 600, marginBottom: 8 }}>Filter</div>
+          <div style={{ fontSize: 12, color: DIM, fontWeight: 600, marginBottom: 8 }}>Filter</div>
           <div style={{ display: 'flex', gap: 6, flexWrap: 'wrap' }}>
             <FilterPill active={statusFilter === 'all'} label="All" onClick={() => setStatusFilter('all')} />
             <FilterPill active={statusFilter === 'active'} label="Active" onClick={() => setStatusFilter('active')} color={GREEN} />
-            <FilterPill active={statusFilter === 'completed'} label="Completed" onClick={() => setStatusFilter('completed')} color={BLUE} />
+            <FilterPill active={statusFilter === 'completed'} label="Completed" onClick={() => setStatusFilter('completed')} color="var(--text-secondary)" />
             <FilterPill active={statusFilter === 'on-hold'} label="On Hold" onClick={() => setStatusFilter('on-hold')} color={AMBER} />
             {projectTypes.length > 1 && (
               <>
@@ -315,7 +315,7 @@ export default function CommandCenterPage() {
       <SectionCard
         title="Projects"
         subtitle={loading ? undefined : `${sorted.length} shown`}
-        icon={<Buildings size={17} weight="duotone" color={GOLD} />}
+        icon={<Buildings size={17} weight="duotone" color="var(--text-secondary)" />}
       >
         {/* Loading */}
         {loading && (
@@ -333,7 +333,7 @@ export default function CommandCenterPage() {
         {/* Empty */}
         {!loading && sorted.length === 0 && (
           <PremiumEmpty
-            icon={<Buildings size={30} weight="duotone" color={GOLD} />}
+            icon={<Buildings size={30} weight="duotone" color="var(--text-secondary)" />}
             title="No projects match your filters"
             description="Adjust the sort or filter controls above to see your projects."
           />
@@ -370,14 +370,14 @@ export default function CommandCenterPage() {
                     </div>
                     <div style={{ display: 'flex', gap: 6, flexWrap: 'wrap' }}>
                       <span style={{
-                        fontSize: 9, fontWeight: 700,
+                        fontSize: 12, fontWeight: 700,
                         color: typeColor, background: `color-mix(in srgb, ${typeColor} 8%, transparent)`, border: `1px solid color-mix(in srgb, ${typeColor} 20%, transparent)`,
                         borderRadius: 4, padding: '2px 6px',
                       }}>
                         {titleize(project.type)}
                       </span>
                       <span style={{
-                        fontSize: 9, fontWeight: 700,
+                        fontSize: 12, fontWeight: 700,
                         color: statusColor, background: `color-mix(in srgb, ${statusColor} 8%, transparent)`, border: `1px solid color-mix(in srgb, ${statusColor} 20%, transparent)`,
                         borderRadius: 4, padding: '2px 6px',
                       }}>
@@ -391,10 +391,10 @@ export default function CommandCenterPage() {
                 {/* Budget row */}
                 <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
                   <div>
-                    <div style={{ fontSize: 10, color: DIM, fontWeight: 600, marginBottom: 2 }}>Budget</div>
+                    <div style={{ fontSize: 12, color: DIM, fontWeight: 600, marginBottom: 2 }}>Budget</div>
                     <div style={{ display: 'flex', alignItems: 'baseline', gap: 6 }}>
                       <span style={{ fontSize: 14, fontWeight: 700, color: TEXT }}>{formatCurrency(project.budget_original)}</span>
-                      <span style={{ fontSize: 11, color: DIM }}>vs</span>
+                      <span style={{ fontSize: 12, color: DIM }}>vs</span>
                       <span style={{ fontSize: 14, fontWeight: 700, color: variance.color }}>{formatCurrency(project.budget_actual)}</span>
                     </div>
                   </div>
@@ -411,9 +411,9 @@ export default function CommandCenterPage() {
                   <div style={{ display: 'flex', gap: 12 }}>
                     <OpenItemPill label="RFIs" count={project.open_rfis} color="var(--warning)" />
                     <OpenItemPill label="Punch" count={project.open_punch} color="var(--warning)" />
-                    <OpenItemPill label="COs" count={project.open_cos} color={BLUE} />
+                    <OpenItemPill label="COs" count={project.open_cos} color="var(--text-secondary)" />
                   </div>
-                  <span style={{ fontSize: 11, color: DIM }}>{formatDate(project.last_activity)}</span>
+                  <span style={{ fontSize: 12, color: DIM }}>{formatDate(project.last_activity)}</span>
                 </div>
               </Link>
             );
@@ -433,11 +433,11 @@ function OpenItemPill({ label, count, color }: { label: string; count: number; c
         width: 20, height: 20, borderRadius: '50%',
         display: 'flex', alignItems: 'center', justifyContent: 'center',
         background: count > 0 ? `color-mix(in srgb, ${color} 13%, transparent)` : `color-mix(in srgb, ${DIM} 7%, transparent)`,
-        fontSize: 10, fontWeight: 800, color: count > 0 ? color : DIM,
+        fontSize: 12, fontWeight: 800, color: count > 0 ? color : DIM,
       }}>
         {count}
       </span>
-      <span style={{ fontSize: 10, color: DIM }}>{label}</span>
+      <span style={{ fontSize: 12, color: DIM }}>{label}</span>
     </div>
   );
 }

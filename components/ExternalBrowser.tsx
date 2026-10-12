@@ -78,7 +78,7 @@ export function ExternalBrowser({ projectId, onImported, onClose }: { projectId?
     <div onClick={onClose} style={{ position: 'fixed', inset: 0, background: 'rgba(0,0,0,0.72)', zIndex: z.modal, display: 'flex', alignItems: 'center', justifyContent: 'center', padding: 16 }}>
       <div role="dialog" aria-modal="true" aria-labelledby={titleId} onClick={(e) => e.stopPropagation()} style={{ background: 'var(--bg-elevated)', backdropFilter: 'var(--glass-blur)', WebkitBackdropFilter: 'var(--glass-blur)', border: `1px solid ${T.border}`, borderRadius: 14, width: 'min(680px,100%)', maxHeight: '88vh', display: 'flex', flexDirection: 'column' }}>
         <div style={{ display: 'flex', alignItems: 'center', padding: '14px 16px', borderBottom: `1px solid ${T.border}` }}>
-          <CloudArrowDown size={20} color={T.gold} weight="fill" />
+          <CloudArrowDown size={20} color="var(--text-secondary)" weight="fill" />
           <div id={titleId} style={{ fontWeight: 800, fontSize: 16, marginLeft: 8, flex: 1, color: T.white }}>Import from Cloud Storage</div>
           <button type="button" onClick={onClose} aria-label="Close" style={{ background: 'none', border: 'none', cursor: 'pointer', minWidth: 44, minHeight: 44, display: 'inline-flex', alignItems: 'center', justifyContent: 'center', margin: '-10px -10px -10px 0' }}><X size={20} color={T.muted} /></button>
         </div>
@@ -86,38 +86,38 @@ export function ExternalBrowser({ projectId, onImported, onClose }: { projectId?
         {!active ? (
           <div style={{ padding: 16 }}>
             {connState === 'loading' ? (
-              <div role="status" style={{ display: 'flex', alignItems: 'center', gap: 10, color: T.muted, fontSize: 14, padding: 12 }}><Spinner size={18} color={T.gold} className="spin" /> Loading your connected storage…</div>
+              <div role="status" style={{ display: 'flex', alignItems: 'center', gap: 10, color: T.muted, fontSize: 14, padding: 12 }}><Spinner size={18} color="var(--text-secondary)" className="spin" /> Loading your connected storage…</div>
             ) : connState === 'error' ? (
               <div role="alert" style={{ color: T.muted, fontSize: 14, padding: 12 }}>
                 Couldn&apos;t load your connected storage.{' '}
-                <button type="button" onClick={() => void loadConnectors()} style={{ background: 'none', border: 'none', color: T.gold, cursor: 'pointer', fontWeight: 700, fontSize: 14, minHeight: 44, padding: 0 }}>Try again</button>
+                <button type="button" onClick={() => void loadConnectors()} style={{ background: 'none', border: 'none', color: 'var(--text-primary)', cursor: 'pointer', fontWeight: 700, fontSize: 14, minHeight: 44, padding: 0 }}>Try again</button>
               </div>
             ) : connectors.length === 0 ? (
-              <div style={{ color: T.muted, fontSize: 14, padding: 12, lineHeight: 1.5 }}>No cloud storage is connected yet. Connect Google Drive, Dropbox, OneDrive, Box or Egnyte in <a href="/app/settings/storage" style={{ color: T.gold, fontWeight: 700 }}>Settings → External Storage</a>, then come back to import.</div>
+              <div style={{ color: T.muted, fontSize: 14, padding: 12, lineHeight: 1.5 }}>No cloud storage is connected yet. Connect Google Drive, Dropbox, OneDrive, Box or Egnyte in <a href="/app/settings/storage" style={{ color: 'var(--link)', fontWeight: 700 }}>Settings → External Storage</a>, then come back to import.</div>
             ) : connectors.map((c) => (
               <button type="button" key={c.id} onClick={() => open(c)} style={{ display: 'flex', alignItems: 'center', gap: 10, width: '100%', minHeight: 48, textAlign: 'left', background: T.bg, border: `1px solid ${T.border}`, borderRadius: 10, padding: 12, marginBottom: 8, cursor: 'pointer', color: T.white }}>
-                <Folder size={18} color={T.gold} /><span style={{ flex: 1, fontWeight: 600, fontSize: 14 }}>{c.display_name}</span><CaretRight size={15} color={T.muted} />
+                <Folder size={18} color="var(--text-secondary)" /><span style={{ flex: 1, fontWeight: 600, fontSize: 14 }}>{c.display_name}</span><CaretRight size={15} color={T.muted} />
               </button>
             ))}
           </div>
         ) : (
           <>
-            <div style={{ display: 'flex', alignItems: 'center', gap: 4, padding: '10px 16px', flexWrap: 'wrap', fontSize: 12.5, borderBottom: `1px solid ${T.border}` }}>
-              <button onClick={() => { setActive(null); setItems([]); }} style={{ background: 'none', border: 'none', color: T.gold, cursor: 'pointer', display: 'inline-flex', alignItems: 'center', gap: 3 }}><House size={13} />Connections</button>
+            <div style={{ display: 'flex', alignItems: 'center', gap: 4, padding: '10px 16px', flexWrap: 'wrap', fontSize: 13, borderBottom: `1px solid ${T.border}` }}>
+              <button onClick={() => { setActive(null); setItems([]); }} style={{ background: 'none', border: 'none', color: 'var(--text-primary)', cursor: 'pointer', display: 'inline-flex', alignItems: 'center', gap: 3 }}><House size={13} />Connections</button>
               {stack.map((s, i) => (<React.Fragment key={i}><CaretRight size={11} color={T.muted} /><button onClick={() => upTo(i)} style={{ background: 'none', border: 'none', color: i === stack.length - 1 ? T.white : T.gold, cursor: 'pointer' }}>{s.name}</button></React.Fragment>))}
             </div>
             <div style={{ flex: 1, overflow: 'auto', padding: 8, minHeight: 260 }}>
-              {loading ? <div style={{ display: 'flex', justifyContent: 'center', padding: 40 }}><Spinner size={26} color={T.gold} className="spin" /></div>
+              {loading ? <div style={{ display: 'flex', justifyContent: 'center', padding: 40 }}><Spinner size={26} color="var(--text-secondary)" className="spin" /></div>
                 : err ? <div style={{ color: T.red, fontSize: 13, padding: 16 }}>{err}</div>
                   : items.length === 0 ? <div style={{ color: T.muted, fontSize: 13, padding: 16 }}>Empty folder.</div>
                     : items.map((it, i) => (
                       <div key={i} style={{ display: 'flex', alignItems: 'center', gap: 10, padding: '9px 10px', borderRadius: 8, cursor: it.kind === 'folder' ? 'pointer' : 'default' }}
                         onClick={() => it.kind === 'folder' && into(it)}
                         onMouseEnter={(e) => (e.currentTarget.style.background = T.bg)} onMouseLeave={(e) => (e.currentTarget.style.background = 'transparent')}>
-                        {it.kind === 'folder' ? <Folder size={17} color={T.gold} /> : <FileText size={17} color={T.muted} />}
-                        <div style={{ flex: 1, minWidth: 0 }}><div style={{ fontSize: 13.5, color: T.white, whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>{it.name}</div>{it.kind === 'file' && it.size ? <div style={{ fontSize: 11.5, color: T.muted }}>{fmtSize(it.size)}</div> : null}</div>
+                        {it.kind === 'folder' ? <Folder size={17} color="var(--text-secondary)" /> : <FileText size={17} color={T.muted} />}
+                        <div style={{ flex: 1, minWidth: 0 }}><div style={{ fontSize: 14, color: T.white, whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>{it.name}</div>{it.kind === 'file' && it.size ? <div style={{ fontSize: 12, color: T.muted }}>{fmtSize(it.size)}</div> : null}</div>
                         {it.kind === 'folder' ? <CaretRight size={14} color={T.muted} />
-                          : <button onClick={(e) => { e.stopPropagation(); importFile(it); }} disabled={!!importing} style={{ display: 'inline-flex', alignItems: 'center', gap: 5, background: T.gold, color: T.bg, border: 'none', borderRadius: 7, padding: '6px 11px', minHeight: 44, fontSize: 12.5, fontWeight: 700, cursor: 'pointer' }}>{importing === it.path ? '…' : <><DownloadSimple size={13} weight="bold" />Import</>}</button>}
+                          : <button onClick={(e) => { e.stopPropagation(); importFile(it); }} disabled={!!importing} style={{ display: 'inline-flex', alignItems: 'center', gap: 5, background: T.gold, color: T.bg, border: 'none', borderRadius: 7, padding: '6px 11px', minHeight: 44, fontSize: 13, fontWeight: 700, cursor: 'pointer' }}>{importing === it.path ? '…' : <><DownloadSimple size={13} weight="bold" />Import</>}</button>}
                       </div>
                     ))}
             </div>

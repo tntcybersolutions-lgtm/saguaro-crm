@@ -320,12 +320,12 @@ export default function PublicSigningPage() {
           <h2 style={{ margin: '0 0 8px', fontSize: 16, fontWeight: 700, color: TEXT_DARK }}>{signature?.doc_title}</h2>
           <div style={{ display: 'flex', gap: 16, flexWrap: 'wrap', marginBottom: 12 }}>
             <div>
-              <span style={{ fontSize: 11, fontWeight: 700, color: TEXT_DIM }}>Signer</span>
+              <span style={{ fontSize: 12, fontWeight: 700, color: TEXT_DIM }}>Signer</span>
               <p style={{ margin: '2px 0 0', fontSize: 14, color: TEXT_DARK }}>{signature?.signer_name}</p>
             </div>
             {signature?.signer_company && (
               <div>
-                <span style={{ fontSize: 11, fontWeight: 700, color: TEXT_DIM }}>Company</span>
+                <span style={{ fontSize: 12, fontWeight: 700, color: TEXT_DIM }}>Company</span>
                 <p style={{ margin: '2px 0 0', fontSize: 14, color: TEXT_DARK }}>{signature.signer_company}</p>
               </div>
             )}
@@ -335,7 +335,7 @@ export default function PublicSigningPage() {
               href={signature.pdf_url}
               target="_blank"
               rel="noopener noreferrer"
-              style={{ display: 'inline-flex', alignItems: 'center', gap: 6, padding: '8px 16px', background: 'color-mix(in srgb, var(--brand-primary) 6%, transparent)', border: '1px solid var(--brand-primary-18)', borderRadius: 8, color: GOLD, fontSize: 13, fontWeight: 700, textDecoration: 'none' }}
+              style={{ display: 'inline-flex', alignItems: 'center', gap: 6, padding: '8px 16px', background: 'var(--bg-surface-2)', border: '1px solid var(--border-default)', borderRadius: 8, color: 'var(--link)', fontSize: 13, fontWeight: 700, textDecoration: 'none' }}
             >
               <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
                 <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z" />
@@ -349,8 +349,8 @@ export default function PublicSigningPage() {
         {/* A proposal's own terms — what is being agreed to. */}
         {proposal && (
           <div style={{ background: CARD, border: `1px solid ${BORDER_LT}`, borderRadius: 12, padding: 20, marginBottom: 16 }}>
-            <p style={{ margin: '0 0 4px', fontSize: 11, fontWeight: 700, color: TEXT_DIM }}>Contract amount</p>
-            <p style={{ margin: '0 0 14px', fontSize: 30, fontWeight: 800, color: GOLD }}>{money(proposal.amount)}</p>
+            <p style={{ margin: '0 0 4px', fontSize: 12, fontWeight: 700, color: TEXT_DIM }}>Contract amount</p>
+            <p style={{ margin: '0 0 14px', fontSize: 30, fontWeight: 800, color: 'var(--text-primary)' }}>{money(proposal.amount)}</p>
             {([
               ['Introduction', proposal.introduction],
               ['Scope of work', proposal.scope],
@@ -358,7 +358,7 @@ export default function PublicSigningPage() {
               ['Exclusions', proposal.exclusions],
             ] as const).filter(([, v]) => v).map(([label, v]) => (
               <div key={label} style={{ marginBottom: 12 }}>
-                <p style={{ margin: '0 0 4px', fontSize: 11, fontWeight: 700, color: TEXT_DIM }}>{label}</p>
+                <p style={{ margin: '0 0 4px', fontSize: 12, fontWeight: 700, color: TEXT_DIM }}>{label}</p>
                 <p style={{ margin: 0, fontSize: 14, color: TEXT_DARK, whiteSpace: 'pre-wrap', lineHeight: 1.5 }}>{String(v)}</p>
               </div>
             ))}
@@ -371,7 +371,7 @@ export default function PublicSigningPage() {
         {/* Message */}
         {request?.message && (
           <div style={{ background: CARD, border: `1px solid ${BORDER_LT}`, borderRadius: 12, padding: 16, marginBottom: 16, boxShadow: '0 1px 4px rgba(0,0,0,.04)' }}>
-            <p style={{ margin: '0 0 4px', fontSize: 11, fontWeight: 700, color: TEXT_DIM }}>Message</p>
+            <p style={{ margin: '0 0 4px', fontSize: 12, fontWeight: 700, color: TEXT_DIM }}>Message</p>
             <p style={{ margin: 0, fontSize: 14, color: TEXT_DARK, whiteSpace: 'pre-wrap' }}>{request.message}</p>
           </div>
         )}

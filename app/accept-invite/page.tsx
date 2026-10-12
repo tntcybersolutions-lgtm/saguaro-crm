@@ -50,9 +50,9 @@ function Spinner({ size = 18, color = '#101722' }: { size?: number; color?: stri
 function DetailRow({ icon, label, value }: { icon: React.ReactNode; label: string; value: string }) {
   return (
     <div style={{ display: 'flex', alignItems: 'center', gap: 12, padding: '11px 0', borderBottom: `1px solid rgba(255,255,255,0.06)` }}>
-      <span style={{ color: GOLD, display: 'inline-flex', flexShrink: 0 }}>{icon}</span>
+      <span style={{ color: 'var(--text-primary)', display: 'inline-flex', flexShrink: 0 }}>{icon}</span>
       <div style={{ minWidth: 0 }}>
-        <div style={{ fontSize: 11, fontWeight: 700, color: DIM }}>{label}</div>
+        <div style={{ fontSize: 12, fontWeight: 700, color: DIM }}>{label}</div>
         <div style={{ fontSize: 14, fontWeight: 600, color: TEXT, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{value}</div>
       </div>
     </div>
@@ -142,11 +142,11 @@ export default function AcceptInvitePage() {
           <img src="/logo-full.jpg" alt="Saguaro Control Systems" style={{ height: 36, width: 'auto', objectFit: 'contain', borderRadius: 4 }} />
           <span style={{ display: 'flex', flexDirection: 'column', lineHeight: 1.15 }}>
             <span style={{ fontWeight: 900, fontSize: 15, letterSpacing: '-0.01em', background: `linear-gradient(90deg,${GOLD},var(--brand-primary-strong))`, WebkitBackgroundClip: 'text', WebkitTextFillColor: 'transparent' }}>Saguaro</span>
-            <span style={{ fontSize: 10, color: DIM, letterSpacing: .5, fontWeight: 600 }}>Control Systems</span>
+            <span style={{ fontSize: 12, color: DIM, letterSpacing: .5, fontWeight: 600 }}>Control Systems</span>
           </span>
         </Link>
         <Link href="/login" style={{ fontSize: 13, color: DIM, textDecoration: 'none', fontWeight: 600 }}>
-          Have an account? <span style={{ color: GOLD }}>Sign In →</span>
+          Have an account? <span style={{ color: 'var(--text-primary)' }}>Sign In →</span>
         </Link>
       </nav>
 
@@ -156,7 +156,7 @@ export default function AcceptInvitePage() {
           {/* ── Loading ── */}
           {loading && (
             <div style={{ ...card, textAlign: 'center', padding: '48px 28px' }}>
-              <Spinner size={26} color={GOLD} />
+              <Spinner size={26} color="var(--text-secondary)" />
               <p style={{ color: DIM, fontSize: 14, marginTop: 16 }}>Verifying your invitation…</p>
             </div>
           )}
@@ -184,7 +184,7 @@ export default function AcceptInvitePage() {
           {/* ── Expired ── */}
           {!loading && invite && invite.reason === 'expired' && (
             <StateCard
-              icon={<ClockCountdown size={48} weight="duotone" color={GOLD} />}
+              icon={<ClockCountdown size={48} weight="duotone" color="var(--text-secondary)" />}
               title="This Invitation Expired"
               body={`Invitations are valid for 7 days. Ask ${invite.inviterName || 'your teammate'} to send you a new invite to ${invite.company || 'the team'}.`}
               cta={<Link href="/login" style={ctaSecondary}>Go to Sign In</Link>}
@@ -207,7 +207,7 @@ export default function AcceptInvitePage() {
               icon={<CheckCircle size={48} weight="fill" color={GREEN} />}
               title="You're In"
               body={`Welcome to ${invite?.company || 'the team'}. Taking you to your dashboard…`}
-              cta={<span style={{ display: 'inline-flex', alignItems: 'center', gap: 8, color: DIM, fontSize: 13 }}><Spinner size={14} color={GOLD} /> Redirecting…</span>}
+              cta={<span style={{ display: 'inline-flex', alignItems: 'center', gap: 8, color: DIM, fontSize: 13 }}><Spinner size={14} color="var(--text-secondary)" /> Redirecting…</span>}
             />
           )}
 
@@ -215,8 +215,8 @@ export default function AcceptInvitePage() {
           {!loading && invite && invite.reason === 'pending' && !accepted && (
             <>
               <div style={{ textAlign: 'center', marginBottom: 24 }}>
-                <div style={{ display: 'inline-flex', width: 60, height: 60, borderRadius: 14, background: 'var(--brand-primary-12)', border: '1px solid var(--brand-primary-35)', alignItems: 'center', justifyContent: 'center', marginBottom: 16 }}>
-                  <Buildings size={30} weight="duotone" color={GOLD} />
+                <div style={{ display: 'inline-flex', width: 60, height: 60, borderRadius: 14, background: 'var(--bg-surface-2)', border: '1px solid var(--border-default)', alignItems: 'center', justifyContent: 'center', marginBottom: 16 }}>
+                  <Buildings size={30} weight="duotone" color="var(--text-secondary)" />
                 </div>
                 <h1 style={{ fontSize: 22, fontWeight: 700, letterSpacing: '-0.02em', margin: '0 0 6px', color: TEXT }}>
                   Join {invite.company}
@@ -276,7 +276,7 @@ export default function AcceptInvitePage() {
                     <a href={signupHref} style={{ ...ctaSecondary, width: '100%', justifyContent: 'center' }}>
                       <UserPlus size={16} weight="bold" /> Create a New Account
                     </a>
-                    <p style={{ fontSize: 11, color: 'rgba(203,213,225,0.6)', margin: '14px 0 0', textAlign: 'center', lineHeight: 1.5 }}>
+                    <p style={{ fontSize: 12, color: 'rgba(203,213,225,0.6)', margin: '14px 0 0', textAlign: 'center', lineHeight: 1.5 }}>
                       New here? Create your account with <strong style={{ color: DIM }}>{invite.email}</strong>, then reopen this invitation link to finish joining.
                     </p>
                   </>
@@ -288,7 +288,7 @@ export default function AcceptInvitePage() {
           {/* Trust footer */}
           <div style={{ marginTop: 20, textAlign: 'center', display: 'flex', justifyContent: 'center', alignItems: 'center', gap: 8 }}>
             <ShieldCheck size={13} weight="duotone" color="rgba(203,213,225,0.6)" />
-            <span style={{ fontSize: 10, color: 'rgba(203,213,225,0.6)', fontWeight: 600 }}>
+            <span style={{ fontSize: 12, color: 'rgba(203,213,225,0.6)', fontWeight: 600 }}>
               Secure Invitation · Saguaro Control Systems
             </span>
           </div>
@@ -328,7 +328,7 @@ const errorBox: React.CSSProperties = {
   marginBottom: 16, fontSize: 13, color: RED, lineHeight: 1.45,
 };
 const noticeBox: React.CSSProperties = {
-  background: 'color-mix(in srgb, var(--brand-primary) 8%, transparent)', border: '1px solid var(--brand-primary-25)',
+  background: 'var(--bg-surface-2)', border: '1px solid var(--border-default)',
   borderRadius: 8, padding: '11px 14px', marginBottom: 14, fontSize: 13,
   color: DIM, lineHeight: 1.5,
 };

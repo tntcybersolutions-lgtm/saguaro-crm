@@ -164,10 +164,10 @@ export default function CostControlPage() {
     setViewingId(rep.id); setShowHistory(false); setMsg(''); setErr('');
   };
 
-  const inp: React.CSSProperties = { background: BG, border: `1px solid ${LINE}`, borderRadius: 6, color: TEXT, padding: '6px 8px', fontSize: 12.5, width: '100%', textAlign: 'right' };
-  const cell = (v: number, over = false) => <span style={{ textAlign: 'right', fontSize: 12.5, color: over && v < 0 ? RED : TEXT, fontWeight: over ? 700 : 400 }}>{usd(v)}</span>;
-  const toolBtn: React.CSSProperties = { ...ghostButtonStyle, gap: 6, padding: '9px 14px', fontSize: 12.5, borderRadius: 10 };
-  const toolGold: React.CSSProperties = { ...goldButtonStyle, gap: 6, padding: '9px 16px', fontSize: 12.5, borderRadius: 10 };
+  const inp: React.CSSProperties = { background: BG, border: `1px solid ${LINE}`, borderRadius: 6, color: TEXT, padding: '6px 8px', fontSize: 13, width: '100%', textAlign: 'right' };
+  const cell = (v: number, over = false) => <span style={{ textAlign: 'right', fontSize: 13, color: over && v < 0 ? RED : TEXT, fontWeight: over ? 700 : 400 }}>{usd(v)}</span>;
+  const toolBtn: React.CSSProperties = { ...ghostButtonStyle, gap: 6, padding: '9px 14px', fontSize: 13, borderRadius: 10 };
+  const toolGold: React.CSSProperties = { ...goldButtonStyle, gap: 6, padding: '9px 16px', fontSize: 13, borderRadius: 10 };
   const GRID = '1.5fr 0.9fr 0.8fr 1.05fr 1.05fr 1fr 1fr 26px';
 
   return (
@@ -175,7 +175,7 @@ export default function CostControlPage() {
       {/* Header */}
       <ModuleHero
         eyebrow="Cost Control · Budget vs. Committed vs. Actual"
-        eyebrowIcon={<ChartLineUp size={13} weight="fill" color={GOLD} />}
+        eyebrowIcon={<ChartLineUp size={13} weight="fill" color="var(--text-secondary)" />}
         title="Cost"
         accent="Control"
         subtitle="Committed, actual, and projected final cost per code."
@@ -197,26 +197,26 @@ export default function CostControlPage() {
       </SectionCard>
 
       {(msg || err) && (
-        <div style={{ marginBottom: 12, fontSize: 12.5, color: err ? RED : GREEN, display: 'inline-flex', alignItems: 'center', gap: 6 }}>
+        <div style={{ marginBottom: 12, fontSize: 13, color: err ? RED : GREEN, display: 'inline-flex', alignItems: 'center', gap: 6 }}>
           {err ? <X size={14} weight="bold" /> : <CheckCircle size={14} weight="fill" />}{err || msg}
         </div>
       )}
-      {viewingId && <div style={{ marginBottom: 12, fontSize: 12.5, color: GOLD, display: 'inline-flex', alignItems: 'center', gap: 6 }}><ClockCounterClockwise size={14} weight="bold" />Viewing a saved snapshot — read-only figures. Press &ldquo;Back to Live&rdquo; to edit.</div>}
+      {viewingId && <div style={{ marginBottom: 12, fontSize: 13, color: 'var(--text-primary)', display: 'inline-flex', alignItems: 'center', gap: 6 }}><ClockCounterClockwise size={14} weight="bold" />Viewing a saved snapshot — read-only figures. Press &ldquo;Back to Live&rdquo; to edit.</div>}
 
       {/* history panel */}
       {showHistory && (
-        <SectionCard title="Saved Cost Reports" icon={<ClockCounterClockwise size={17} weight="duotone" color={GOLD} />} flush style={{ marginBottom: 16 }}>
+        <SectionCard title="Saved Cost Reports" icon={<ClockCounterClockwise size={17} weight="duotone" color="var(--text-secondary)" />} flush style={{ marginBottom: 16 }}>
           {reports.length === 0 ? (
-            <PremiumEmpty compact icon={<ClockCounterClockwise size={30} weight="duotone" color={GOLD} />} title="No saved reports yet" description="Save a cost report to start building history." />
+            <PremiumEmpty compact icon={<ClockCounterClockwise size={30} weight="duotone" color="var(--text-secondary)" />} title="No saved reports yet" description="Save a cost report to start building history." />
           ) : (
             reports.map((rep) => (
               <div key={rep.id} style={{ display: 'flex', alignItems: 'center', gap: 12, padding: '12px 20px', borderTop: `1px solid ${LINE}`, cursor: 'pointer' }} onClick={() => viewReport(rep)}>
-                <ClockCounterClockwise size={16} color={GOLD} />
+                <ClockCounterClockwise size={16} color="var(--text-secondary)" />
                 <span style={{ fontWeight: 600, fontSize: 13, color: TEXT }}>{rep.report_date}</span>
                 <span style={{ color: DIM, fontSize: 12 }}>{rep.title || `${(rep.lines || []).length} lines`}</span>
                 <div style={{ flex: 1 }} />
-                <span style={{ fontSize: 12.5, color: DIM }}>Budget {usd(rep.totals?.revisedBudgetCents || 0)}</span>
-                <span style={{ fontSize: 12.5, color: (rep.totals?.varianceCents ?? 0) < 0 ? RED : GREEN, fontWeight: 700 }}>Var {usd(rep.totals?.varianceCents || 0)}</span>
+                <span style={{ fontSize: 13, color: DIM }}>Budget {usd(rep.totals?.revisedBudgetCents || 0)}</span>
+                <span style={{ fontSize: 13, color: (rep.totals?.varianceCents ?? 0) < 0 ? RED : GREEN, fontWeight: 700 }}>Var {usd(rep.totals?.varianceCents || 0)}</span>
               </div>
             ))
           )}
@@ -225,10 +225,10 @@ export default function CostControlPage() {
 
       {/* summary */}
       <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(180px, 1fr))', gap: 12, marginBottom: 18 }}>
-        <StatCard icon={<Wallet size={19} weight="duotone" color={GOLD} />} label="Revised Budget" value={usd(r.revisedBudgetCents)} delay={0.02}  href="/app/billing/cost-control"/>
-        <StatCard icon={<Handshake size={19} weight="duotone" color={GOLD} />} label="Committed" value={usd(r.committedCents)} delay={0.06}  href="/app/billing/cost-control"/>
-        <StatCard icon={<Receipt size={19} weight="duotone" color={GOLD} />} label="Spent to Date" value={usd(r.actualCents)} delay={0.10}  href="/app/billing/cost-control"/>
-        <StatCard icon={<TrendUp size={19} weight="duotone" color={GOLD} />} label="Projected Final" value={usd(r.projectedFinalCents)} delay={0.14}  href="/app/billing/cost-control"/>
+        <StatCard icon={<Wallet size={19} weight="duotone" color="var(--text-secondary)" />} label="Revised Budget" value={usd(r.revisedBudgetCents)} delay={0.02}  href="/app/billing/cost-control"/>
+        <StatCard icon={<Handshake size={19} weight="duotone" color="var(--text-secondary)" />} label="Committed" value={usd(r.committedCents)} delay={0.06}  href="/app/billing/cost-control"/>
+        <StatCard icon={<Receipt size={19} weight="duotone" color="var(--text-secondary)" />} label="Spent to Date" value={usd(r.actualCents)} delay={0.10}  href="/app/billing/cost-control"/>
+        <StatCard icon={<TrendUp size={19} weight="duotone" color="var(--text-secondary)" />} label="Projected Final" value={usd(r.projectedFinalCents)} delay={0.14}  href="/app/billing/cost-control"/>
         <StatCard
           icon={<Scales size={19} weight="duotone" color={r.varianceCents < 0 ? RED : GREEN} />}
           label="Variance"
@@ -240,13 +240,13 @@ export default function CostControlPage() {
       </div>
 
       {/* table */}
-      <SectionCard title="Cost Breakdown" subtitle="Budget vs. committed vs. actual — per cost code" icon={<Table size={17} weight="duotone" color={GOLD} />} flush>
+      <SectionCard title="Cost Breakdown" subtitle="Budget vs. committed vs. actual — per cost code" icon={<Table size={17} weight="duotone" color="var(--text-secondary)" />} flush>
         <div style={{ overflow: 'auto' }}>
-          <div style={{ display: 'grid', gridTemplateColumns: GRID, background: PANEL, padding: '10px 16px', fontSize: 10.5, color: DIM, fontWeight: 700, minWidth: 980, gap: 6 }}>
+          <div style={{ display: 'grid', gridTemplateColumns: GRID, background: PANEL, padding: '10px 16px', fontSize: 12, color: DIM, fontWeight: 700, minWidth: 980, gap: 6 }}>
             <span>Cost Code / Description</span><span style={{ textAlign: 'right' }}>Budget</span><span style={{ textAlign: 'right' }}>Changes</span><span style={{ textAlign: 'right' }}>Committed</span><span style={{ textAlign: 'right' }}>Actual</span><span style={{ textAlign: 'right' }}>Projected</span><span style={{ textAlign: 'right' }}>Variance</span><span />
           </div>
           {rows.length === 0 && !loading && (
-            <PremiumEmpty compact icon={<Table size={30} weight="duotone" color={GOLD} />} title="No cost lines yet" description="This project has no budget lines, purchase orders, or invoices — or pick another project." />
+            <PremiumEmpty compact icon={<Table size={30} weight="duotone" color="var(--text-secondary)" />} title="No cost lines yet" description="This project has no budget lines, purchase orders, or invoices — or pick another project." />
           )}
           {rows.map((l) => {
             const rr = r.rows.find((x) => x.id === l.id)!;
@@ -261,16 +261,16 @@ export default function CostControlPage() {
                   <input value={l.comOv !== null ? l.comOv : d(l.comAuto)} onChange={(e) => upd(l.id, { comOv: e.target.value })} disabled={ro}
                     style={{ ...inp, borderColor: l.comOv !== null ? GOLD : LINE }} />
                   {!ro && (l.comOv !== null
-                    ? <button onClick={() => upd(l.id, { comOv: null })} title="Reset to auto" style={{ background: 'none', border: 'none', color: GOLD, cursor: 'pointer', fontSize: 10, display: 'inline-flex', alignItems: 'center', gap: 3, padding: '2px 0' }}><ArrowUUpLeft size={11} weight="bold" />Override · auto {usd(l.comAuto)}</button>
-                    : <span style={{ fontSize: 10, color: DIM }}>{l.manual ? 'Manual line' : 'Auto · POs'}</span>)}
+                    ? <button onClick={() => upd(l.id, { comOv: null })} title="Reset to auto" style={{ background: 'none', border: 'none', color: 'var(--text-primary)', cursor: 'pointer', fontSize: 12, display: 'inline-flex', alignItems: 'center', gap: 3, padding: '2px 0' }}><ArrowUUpLeft size={11} weight="bold" />Override · auto {usd(l.comAuto)}</button>
+                    : <span style={{ fontSize: 12, color: DIM }}>{l.manual ? 'Manual line' : 'Auto · POs'}</span>)}
                 </div>
                 {/* Actual — auto from invoices, optional override */}
                 <div>
                   <input value={l.actOv !== null ? l.actOv : d(l.actAuto)} onChange={(e) => upd(l.id, { actOv: e.target.value })} disabled={ro}
                     style={{ ...inp, borderColor: l.actOv !== null ? GOLD : LINE }} />
                   {!ro && (l.actOv !== null
-                    ? <button onClick={() => upd(l.id, { actOv: null })} title="Reset to auto" style={{ background: 'none', border: 'none', color: GOLD, cursor: 'pointer', fontSize: 10, display: 'inline-flex', alignItems: 'center', gap: 3, padding: '2px 0' }}><ArrowUUpLeft size={11} weight="bold" />Override · auto {usd(l.actAuto)}</button>
-                    : <span style={{ fontSize: 10, color: DIM }}>{l.manual ? 'Manual line' : 'Auto · invoices'}</span>)}
+                    ? <button onClick={() => upd(l.id, { actOv: null })} title="Reset to auto" style={{ background: 'none', border: 'none', color: 'var(--text-primary)', cursor: 'pointer', fontSize: 12, display: 'inline-flex', alignItems: 'center', gap: 3, padding: '2px 0' }}><ArrowUUpLeft size={11} weight="bold" />Override · auto {usd(l.actAuto)}</button>
+                    : <span style={{ fontSize: 12, color: DIM }}>{l.manual ? 'Manual line' : 'Auto · invoices'}</span>)}
                 </div>
                 {cell(rr.projectedFinalCents)}{cell(rr.varianceCents, true)}
                 {ro ? <span /> : <button onClick={() => removeRow(l.id)} title="Remove line" style={{ background: 'none', border: 'none', color: DIM, cursor: 'pointer', display: 'inline-flex', justifyContent: 'center' }}><X size={13} weight="bold" /></button>}
@@ -283,8 +283,8 @@ export default function CostControlPage() {
 
       {/* sources footnote */}
       {(sources.committed || sources.actual) && !viewingId && (
-        <div style={{ marginTop: 12, fontSize: 11, color: DIM, display: 'flex', gap: 6, alignItems: 'center', flexWrap: 'wrap' }}>
-          <Sparkle size={12} color={GOLD} weight="fill" />
+        <div style={{ marginTop: 12, fontSize: 12, color: DIM, display: 'flex', gap: 6, alignItems: 'center', flexWrap: 'wrap' }}>
+          <Sparkle size={12} color="var(--text-secondary)" weight="fill" />
           <span>Committed: {sources.committed}. Actual: {sources.actual}. Budget: {sources.budget}.</span>
         </div>
       )}

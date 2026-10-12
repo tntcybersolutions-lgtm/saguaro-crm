@@ -72,7 +72,7 @@ function LeadForm() {
 
         {state === 'gone' && (
           <div style={{ textAlign: 'center', paddingTop: 60 }}>
-            <WarningCircle size={40} weight="duotone" color={GOLD} />
+            <WarningCircle size={40} weight="duotone" color="var(--text-secondary)" />
             <h1 style={{ fontSize: 22, margin: '12px 0 6px' }}>This form is no longer active</h1>
             <p style={{ color: DIM, fontSize: 16 }}>Please contact the contractor directly.</p>
           </div>
@@ -88,7 +88,7 @@ function LeadForm() {
 
         {state === 'ready' && (
           <form onSubmit={submit} noValidate={false}>
-            <div style={{ fontSize: 13, fontWeight: 800, color: GOLD, letterSpacing: '.04em' }}>{company}</div>
+            <div style={{ fontSize: 13, fontWeight: 800, color: 'var(--text-primary)', letterSpacing: '.04em' }}>{company}</div>
             <h1 style={{ fontSize: 28, lineHeight: 1.2, margin: '6px 0 6px' }}>Request a quote</h1>
             <p style={{ color: DIM, fontSize: 16, margin: '0 0 22px', lineHeight: 1.55 }}>Tell us about your project and we will get back to you.</p>
 

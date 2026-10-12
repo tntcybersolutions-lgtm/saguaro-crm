@@ -13,7 +13,7 @@ import { useProjectContext } from '@/lib/hooks/useProjectContext';
 import { humanError } from '@/lib/errors';
 import { useParams } from 'next/navigation';
 import { Btn, T } from '@/components/ui/shell';
-import { PremiumSurface, ModuleHero, SectionCard, StatCard, PremiumEmpty, StatStrip, InsightRow, AutoChip, ghostButtonStyle } from '@/components/ui/premium';
+import { PremiumSurface, ModuleHero, SectionCard, PremiumEmpty, StatStrip, ghostButtonStyle } from '@/components/ui/premium';
 import { ListToolbar } from '@/components/ui/ListToolbar';
 import { FileThumb, FilePreview, KIND_TINT } from '@/components/FilePreview';
 import { FileDropzone } from '@/components/FileDropzone';
@@ -21,7 +21,7 @@ import { FileCropper } from '@/components/FileCropper';
 import { ExternalBrowser } from '@/components/ExternalBrowser';
 import { classifyKind, KIND_LABEL, type FileKind } from '@/lib/filekind';
 import {
-  Folder, FolderOpen, FilmSlate, ImageSquare, X, DownloadSimple, PencilSimple, FolderSimplePlus, Crop, ShareNetwork,
+  Folder, FolderOpen, X, DownloadSimple, PencilSimple, FolderSimplePlus, Crop, ShareNetwork,
   Trash, ArrowCounterClockwise, MagnifyingGlass, LinkSimple, EnvelopeSimple, ChatText, MicrosoftTeamsLogo, SlackLogo,
   CloudArrowDown, CloudArrowUp, ListBullets, SquaresFour, CaretRight, FilePdf, FileDoc, FileXls, FileImage,
   FileVideo, FileAudio, File as FileIcon, Sparkle, Compass,
@@ -47,15 +47,12 @@ const sourceOf = (f: any): string => (isLinked(f) ? SOURCE_LABEL[f.source] || 'L
    names (two lines before "…"), what each file is, where it came from, and
    when — grouped by folder. Photos and video keep a picture grid. */
 const FL_CSS = `
-.fl-views{display:inline-flex;padding:3px;border:1px solid var(--border-default);border-radius:999px;gap:2px}
-.fl-views button{all:unset;cursor:pointer;display:inline-flex;align-items:center;gap:6px;min-height:32px;padding:0 12px;border-radius:999px;font-size:12.5px;font-weight:700;color:var(--text-secondary)}
+.fl-views{display:inline-flex;padding:3px;border:1px solid var(--border-subtle);border-radius:12px;gap:2px;background:var(--bg-surface)}
+.fl-views button{all:unset;cursor:pointer;display:inline-flex;align-items:center;gap:6px;min-height:36px;padding:0 12px;border-radius:9px;font-size:13px;font-weight:600;color:var(--text-secondary)}
 .fl-views button[aria-pressed="true"]{background:var(--brand-primary);color:var(--on-brand)}
 .fl-views button:focus-visible{outline:2px solid var(--brand-primary);outline-offset:2px}
 .fl-group{margin-bottom:18px}
 .fl-ghead{display:flex;align-items:center;gap:8px;padding:0 4px 8px;font-size:12px;font-weight:700;letter-spacing:.06em;text-transform:uppercase;color:var(--text-tertiary)}
-.fl-empty{display:grid;grid-template-columns:minmax(0,1fr) 320px;align-items:stretch}
-.fl-empty-aside{border-left:1px solid var(--border-subtle);padding:20px 22px}
-@media (max-width:767px){.fl-empty{grid-template-columns:minmax(0,1fr)}.fl-empty-aside{border-left:0;border-top:1px solid var(--border-subtle);padding:16px}}
 .fl-ghead b{font-weight:700;letter-spacing:0;color:var(--text-secondary);background:var(--bg-surface-2);border:1px solid var(--border-default);border-radius:999px;padding:0 8px;font-size:12px}
 .fl-ghead i{flex:1;height:1px;background:var(--border-subtle)}
 .fl-list{border:1px solid var(--border-default);border-radius:14px;overflow:hidden;background:var(--c-card)}
@@ -67,9 +64,9 @@ const FL_CSS = `
 .fl-meta{display:flex;flex-wrap:wrap;align-items:center;gap:4px 10px;margin-top:4px;font-size:12px;color:var(--text-secondary)}
 .fl-kind{font-weight:800;color:var(--tint)}
 .fl-src{display:inline-flex;align-items:center;gap:5px;font-size:12px;font-weight:700;color:var(--text-secondary);min-width:0}
-.fl-src[data-sage="true"]{color:var(--brand-primary)}
+.fl-src[data-sage="true"]{color: var(--text-secondary)}
 .fl-src span{overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
-.fl-date{font-size:12.5px;color:var(--text-secondary);text-align:right;font-variant-numeric:tabular-nums}
+.fl-date{font-size:13px;color:var(--text-secondary);text-align:right;font-variant-numeric:tabular-nums}
 .fl-go{color:var(--c-orange)}
 .fl-acts{grid-column:2/-1;display:flex;gap:6px}
 .fl-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(210px,1fr));gap:14px}
@@ -194,11 +191,8 @@ export default function FilesPage() {
       <PremiumSurface maxWidth={2200}>
         {/* Header */}
         <ModuleHero
-          eyebrow={ctx?.project?.name || 'Media Library'}
-          eyebrowIcon={<Folder size={13} weight="fill" color="var(--brand-primary)" />}
-          title="Files &"
-          accent="Media"
-          subtitle="Upload, preview, edit, and share any file."
+          title="Files & Media"
+          subtitle={ctx?.project?.name ? `${ctx.project.name} · plans, permits, contracts, photos and video in one place.` : 'Plans, permits, contracts, photos and video in one place.'}
           actions={
             <button onClick={() => setShowImport(true)} style={ghostButtonStyle} className="pmBtn">
               <CloudArrowDown size={15} weight="bold" /> Import from Cloud
@@ -218,21 +212,12 @@ export default function FilesPage() {
           ]} />
         )}
 
-        {/* KPI row */}
-        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(180px, 1fr))', gap: 12, marginBottom: 20 }}>
-          <StatCard icon={<Folder size={19} weight="duotone" color={T.gold} />} label="Total Files" value={String(counts.total)} accent={T.gold} delay={0.02} onClick={filtersActive ? clearFilters : undefined} sub={filtersActive ? 'Filtered — tap to show all' : undefined}/>
-          <StatCard icon={<ImageSquare size={19} weight="duotone" color={KIND_TINT.image} />} label="Photos" value={String(counts.image)} accent={KIND_TINT.image} delay={0.06}  href={`/app/projects/${projectId}/photos`}/>
-          <StatCard icon={<FilmSlate size={19} weight="duotone" color={KIND_TINT.video} />} label="Videos" value={String(counts.video)} accent={KIND_TINT.video} delay={0.10} onClick={counts.video > 0 || kindFilter === 'video' ? toggleVideos : undefined} active={kindFilter === 'video'}/>
-        </div>
-
         {!trash && (
           <div style={{ marginBottom: 16 }}>
             <FileDropzone projectId={projectId} folder={folder !== 'all' ? folder : null} onUploaded={(rows) => { if (rows?.length) { setFiles((prev) => [...rows, ...prev]); flash(`${rows.length} uploaded.`); } }} />
-            <div style={{ display: 'flex', alignItems: 'center', gap: 4, flexWrap: 'wrap', marginTop: 8, fontSize: 11.5, color: 'var(--c-text-2)' }}>
-              <span>Uploads land in {folder !== 'all' ? <b style={{ color: 'var(--brand-primary-strong)' }}>{folder}</b> : 'the library root'}</span><AutoChip label={folder !== 'all' ? 'Folder' : 'Auto'} />
-              <span style={{ marginLeft: 6 }}>· dated {new Date().toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' })}</span><AutoChip />
-              <span style={{ marginLeft: 6 }}>· any format, video up to 500MB</span>
-            </div>
+            <p style={{ margin: '8px 0 0', fontSize: 13, color: 'var(--text-secondary)' }}>
+              Uploads go to {folder !== 'all' ? <b style={{ color: 'var(--text-primary)' }}>{folder}</b> : 'the library'}.
+            </p>
           </div>
         )}
 
@@ -240,7 +225,7 @@ export default function FilesPage() {
 
         {/* Library */}
         <SectionCard
-          icon={<Folder size={17} weight="duotone" color={T.gold} />}
+          icon={<Folder size={17} weight="duotone" color="var(--text-secondary)" />}
           title={trash ? 'Trash' : 'Library'}
           subtitle={`${filtered.length} ${filtered.length === 1 ? 'file' : 'files'}${recentOnly ? ' · added this week' : ''}${!trash && folder !== 'all' ? ` · ${folder}` : ''}`}
           action={
@@ -274,37 +259,18 @@ export default function FilesPage() {
             : filtered.length === 0 ? (
               trash || files.length > 0 ? (
                 <PremiumEmpty
-                  icon={trash ? <Trash size={30} weight="duotone" color={T.gold} /> : <MagnifyingGlass size={30} weight="duotone" color={T.gold} />}
+                  icon={trash ? <Trash size={30} weight="duotone" color="var(--text-secondary)" /> : <MagnifyingGlass size={30} weight="duotone" color="var(--text-secondary)" />}
                   title={trash ? 'Trash Is Empty' : 'No Files Match'}
                   description={trash ? 'Deleted files show up here and can be restored before permanent removal.' : 'Try a different search term or filter to find what you’re looking for.'}
                   action={!trash && filtersActive ? <button type="button" onClick={clearFilters} style={{ ...ghostButtonStyle, minHeight: 44 }} className="pmBtn">Clear Filters</button> : undefined}
                   compact
                 />
               ) : (
-                <div className={ctx ? 'fl-empty' : undefined}>
-                  <PremiumEmpty
-                    icon={<Folder size={30} weight="duotone" color={T.gold} />}
-                    title="The Project File Room, Empty for Now"
-                    description="Drop files above — plans, permits, contracts, submittal PDFs, site photos and video all live here, previewable and shareable from one place."
-                    compact
-                  />
-                  {ctx && (
-                    <div className="fl-empty-aside">
-                      <div style={{ fontSize: 13, fontWeight: 700, color: 'var(--text-primary)', marginBottom: 10 }}>What Belongs Here</div>
-                      <InsightRow label="Drawings & Specs" value="PDF · CAD" />
-                      <InsightRow label="Contracts & Permits" value="PDF · DOC" />
-                      <InsightRow label="Site Photos & Video" value="Up to 500MB" />
-                      <InsightRow label="Submittal & RFI Backup" value="Any format" />
-                      <div style={{ height: 1, background: 'rgba(255,255,255,0.08)', margin: '10px 0' }} />
-                      {ctx?.recent?.lastDailyLogDate && <InsightRow label="Last Daily Log" value={fmtDate(ctx.recent.lastDailyLogDate)} />}
-                      {Number(ctx?.counts?.openRfis) > 0 && <InsightRow label="Open RFIs" value={String(ctx.counts.openRfis)} accent="var(--brand-primary-strong)" />}
-                      {Number(ctx?.counts?.openSubmittals) > 0 && <InsightRow label="Open Submittals" value={String(ctx.counts.openSubmittals)} accent="var(--brand-primary-strong)" />}
-                      <div style={{ marginTop: 12, fontSize: 12, color: T.muted, lineHeight: 1.55 }}>
-                        Photos and attachments captured in the field land alongside what you drop here — everything previews inline and shares by link, email, or SMS.
-                      </div>
-                    </div>
-                  )}
-                </div>
+                <PremiumEmpty
+                  title="No files yet"
+                  description="Drop files above or use Import from Cloud. Photos and attachments from the field land here too."
+                  compact
+                />
               )
             ) : view === 'list' ? (
               <div>
@@ -387,7 +353,7 @@ export default function FilesPage() {
             <div style={{ display: 'flex', alignItems: 'center', marginBottom: 12 }}>
               <div style={{ flex: 1, minWidth: 0 }}>
                 <div style={{ fontWeight: 800, fontSize: 17, color: T.white, whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>{sel.file_name}</div>
-                <div style={{ fontSize: 12.5, color: T.muted }}>{KIND_LABEL[kindOf(sel)]} · {fmtSize(sel.file_size)} · {fmtDate(sel.created_at)}{sel.uploaded_by_name ? ` · ${sel.uploaded_by_name}` : ''}</div>
+                <div style={{ fontSize: 13, color: T.muted }}>{KIND_LABEL[kindOf(sel)]} · {fmtSize(sel.file_size)} · {fmtDate(sel.created_at)}{sel.uploaded_by_name ? ` · ${sel.uploaded_by_name}` : ''}</div>
               </div>
               <button onClick={closePreview} aria-label="Close" style={CLOSE_BTN}><X size={20} color={T.muted} /></button>
             </div>
@@ -438,9 +404,9 @@ function ExportMenu({ file, onClose, onToast }: { file: any; onClose: () => void
   return (
     <div onClick={onClose} style={OVERLAY}>
       <div ref={ref} role="dialog" aria-modal="true" aria-label="Export to Cloud" onClick={(e) => e.stopPropagation()} style={{ background: 'var(--bg-elevated)', backdropFilter: 'var(--glass-blur)', WebkitBackdropFilter: 'var(--glass-blur)', border: `1px solid ${T.border}`, borderRadius: 14, padding: 18, width: 'min(360px,100%)' }}>
-        <div style={{ display: 'flex', alignItems: 'center', marginBottom: 12 }}><CloudArrowUp size={18} color={T.gold} weight="fill" /><div style={{ fontWeight: 800, fontSize: 16, marginLeft: 8, flex: 1, color: T.white }}>Export to Cloud</div><button onClick={onClose} aria-label="Close" style={CLOSE_BTN}><X size={18} color={T.muted} /></button></div>
-        {connectors.length === 0 ? <div style={{ color: T.muted, fontSize: 13 }}>No connected storage. Add one in <a href="/app/settings/storage" style={{ color: T.gold }}>Settings → External Storage</a>.</div>
-          : <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>{connectors.map((c) => <button key={c.id} disabled={!!busy} onClick={() => exportTo(c)} style={{ display: 'flex', alignItems: 'center', gap: 10, background: T.bg, border: `1px solid ${T.border}`, borderRadius: 10, padding: '11px 14px', minHeight: 44, cursor: 'pointer', color: T.white, fontSize: 14, textAlign: 'left' }}><Folder size={16} color={T.gold} />{busy === c.id ? 'Uploading…' : c.display_name}</button>)}</div>}
+        <div style={{ display: 'flex', alignItems: 'center', marginBottom: 12 }}><CloudArrowUp size={18} color="var(--text-secondary)" weight="fill" /><div style={{ fontWeight: 800, fontSize: 16, marginLeft: 8, flex: 1, color: T.white }}>Export to Cloud</div><button onClick={onClose} aria-label="Close" style={CLOSE_BTN}><X size={18} color={T.muted} /></button></div>
+        {connectors.length === 0 ? <div style={{ color: T.muted, fontSize: 13 }}>No connected storage. Add one in <a href="/app/settings/storage" style={{ color: 'var(--link)' }}>Settings → External Storage</a>.</div>
+          : <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>{connectors.map((c) => <button key={c.id} disabled={!!busy} onClick={() => exportTo(c)} style={{ display: 'flex', alignItems: 'center', gap: 10, background: T.bg, border: `1px solid ${T.border}`, borderRadius: 10, padding: '11px 14px', minHeight: 44, cursor: 'pointer', color: T.white, fontSize: 14, textAlign: 'left' }}><Folder size={16} color="var(--text-secondary)" />{busy === c.id ? 'Uploading…' : c.display_name}</button>)}</div>}
       </div>
     </div>
   );
@@ -477,15 +443,15 @@ function ShareMenu({ file, onClose, onToast }: { file: any; onClose: () => void;
   return (
     <div onClick={onClose} style={OVERLAY}>
       <div ref={ref} role="dialog" aria-modal="true" aria-label="Share File" onClick={(e) => e.stopPropagation()} style={{ background: 'var(--bg-elevated)', backdropFilter: 'var(--glass-blur)', WebkitBackdropFilter: 'var(--glass-blur)', border: `1px solid ${T.border}`, borderRadius: 14, padding: 18, width: 'min(360px,100%)' }}>
-        <div style={{ display: 'flex', alignItems: 'center', marginBottom: 12 }}><ShareNetwork size={18} color={T.gold} weight="fill" /><div style={{ fontWeight: 800, fontSize: 16, marginLeft: 8, flex: 1, color: T.white }}>Share File</div><button onClick={onClose} aria-label="Close" style={CLOSE_BTN}><X size={18} color={T.muted} /></button></div>
+        <div style={{ display: 'flex', alignItems: 'center', marginBottom: 12 }}><ShareNetwork size={18} color="var(--text-secondary)" weight="fill" /><div style={{ fontWeight: 800, fontSize: 16, marginLeft: 8, flex: 1, color: T.white }}>Share File</div><button onClick={onClose} aria-label="Close" style={CLOSE_BTN}><X size={18} color={T.muted} /></button></div>
         <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
           {opts.map((o) => (
             <button key={o.c} disabled={!!busy} onClick={() => share(o.c)} style={{ display: 'flex', alignItems: 'center', gap: 11, background: T.bg, border: `1px solid ${T.border}`, borderRadius: 10, padding: '11px 14px', minHeight: 44, cursor: 'pointer', color: T.white, fontSize: 14, textAlign: 'left' }}>
-              <span style={{ color: T.gold }}>{o.icon}</span>{busy === o.c ? 'Working…' : o.label}
+              <span style={{ color: 'var(--text-primary)' }}>{o.icon}</span>{busy === o.c ? 'Working…' : o.label}
             </button>
           ))}
         </div>
-        <div style={{ fontSize: 11.5, color: T.muted, marginTop: 12, lineHeight: 1.5 }}>Slack/Teams post to your workspace's Incoming Webhook (set it in Settings → Integrations).</div>
+        <div style={{ fontSize: 12, color: T.muted, marginTop: 12, lineHeight: 1.5 }}>Slack/Teams post to your workspace's Incoming Webhook (set it in Settings → Integrations).</div>
       </div>
     </div>
   );

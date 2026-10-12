@@ -505,7 +505,7 @@ const CSS = `
 .sv-dl div { display: grid; grid-template-columns: 110px minmax(0, 1fr); gap: 10px; }
 .sv-dl dt { font-size: 13px; color: var(--text-tertiary); }
 .sv-dl dd { margin: 0; font-size: 14px; }
-.sv-link { color: var(--brand-primary); text-decoration: none; font-weight: 700; }
+.sv-link { color: var(--link); text-decoration: none; font-weight: 700; }
 .sv-grid { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 12px; }
 .sv-span2 { grid-column: span 2; }
 .sv-field { display: flex; flex-direction: column; gap: 6px; font-size: 13px; color: var(--text-secondary); font-weight: 650; }
@@ -519,8 +519,8 @@ const CSS = `
 .sv-btn:disabled { opacity: .55; cursor: not-allowed; }
 .sv-primary { background: var(--brand-primary); color: var(--on-brand); }
 .sv-ghost { background: var(--bg-surface-2); border-color: var(--glass-border); color: var(--text-primary); }
-.sv-linkbtn { background: none; border: 0; color: var(--brand-primary); font-weight: 700; cursor: pointer; font-size: 13px; }
-.sv-msg { display: flex; flex-wrap: wrap; align-items: center; gap: 8px; margin-top: 12px; padding: 10px 12px; border-radius: 10px; font-size: 13.5px; }
+.sv-linkbtn { background: none; border: 0; color: var(--link); font-weight: 700; cursor: pointer; font-size: 13px; }
+.sv-msg { display: flex; flex-wrap: wrap; align-items: center; gap: 8px; margin-top: 12px; padding: 10px 12px; border-radius: 10px; font-size: 14px; }
 .sv-ok { background: rgba(74,222,128,.1); color: #4ADE80; }
 .sv-err { color: #F87171; }
 .sv-msg.sv-err, .sv-msg.sv-conflict { background: rgba(248,113,113,.1); color: #F87171; }

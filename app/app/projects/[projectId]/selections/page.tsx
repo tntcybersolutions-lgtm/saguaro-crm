@@ -8,7 +8,7 @@ import { useParams } from 'next/navigation';
 import { getAuthHeaders } from '@/lib/supabase-browser';
 import { SUB_TRADES, SUB_TRADES_BY_DIVISION } from '@/lib/construction-intelligence';
 import { Palette, X, Plus, Package, Hourglass, SealCheck, Scales, ChartBar, ListChecks, WarningCircle } from '@phosphor-icons/react';
-import { PremiumSurface, ModuleHero, StatCard, SectionCard, PremiumEmpty, StatStrip, FlowSteps, FlowStrip, InsightRow, AutoChip, goldButtonStyle, ghostButtonStyle, goldOutlineButtonStyle } from '@/components/ui/premium';
+import { PremiumSurface, ModuleHero, StatCard, SectionCard, PremiumEmpty, StatStrip, FlowSteps, FlowStrip, InsightRow, AutoChip, goldButtonStyle, ghostButtonStyle, goldOutlineButtonStyle, secondaryButtonStyle } from '@/components/ui/premium';
 import { ListToolbar } from '@/components/ui/ListToolbar';
 import { useUnsavedGuard, useComposerDirty } from '@/lib/useUnsavedGuard';
 import UnsavedGuardModal from '@/components/UnsavedGuardModal';
@@ -37,7 +37,7 @@ const inp:React.CSSProperties={
   border:'1px solid rgba(255,255,255,0.12)',borderRadius:7,color:'var(--text-primary)',
   fontSize:13,outline:'none',boxSizing:'border-box',
 };
-const HINT:React.CSSProperties={fontSize:11,color:'var(--c-text-2)',marginTop:5,lineHeight:1.45};
+const HINT:React.CSSProperties={fontSize:12,color:'var(--c-text-2)',marginTop:5,lineHeight:1.45};
 const isoDate=(d:Date)=>`${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,'0')}-${String(d.getDate()).padStart(2,'0')}`;
 
 const EMPTY:Record<string,any>={
@@ -49,7 +49,7 @@ const EMPTY:Record<string,any>={
 function Field({label,children,auto}:{label:string;children:React.ReactNode;auto?:boolean}){
   return(
     <div>
-      <label style={{display:'block',fontSize:11,fontWeight:700,color:DIM,
+      <label style={{display:'block',fontSize:12,fontWeight:700,color:DIM,
         marginBottom:5}}>{label}{auto&&<AutoChip/>}</label>
       {children}
     </div>
@@ -58,7 +58,7 @@ function Field({label,children,auto}:{label:string;children:React.ReactNode;auto
 
 function Pill({label,color}:{label:string;color:string}){
   return(
-    <span style={{fontSize:10,fontWeight:700,padding:'3px 9px',borderRadius:20,
+    <span style={{fontSize:12,fontWeight:700,padding:'3px 9px',borderRadius:20,
       background:`color-mix(in srgb, ${color} 13%, transparent)`,color}}>
       {label}
     </span>
@@ -243,7 +243,7 @@ export default function SelectionsPage(){
           {/* Header */}
           <ModuleHero
             eyebrow="Selections"
-            eyebrowIcon={<Palette size={13} weight="fill" color={GOLD} />}
+            eyebrowIcon={<Palette size={13} weight="fill" color="var(--text-secondary)" />}
             title="Client"
             accent="Selections"
             subtitle="Materials, finishes & owner approvals"
@@ -256,7 +256,7 @@ export default function SelectionsPage(){
 
           {/* KPIs */}
           <div style={{display:'grid',gridTemplateColumns:'repeat(auto-fit,minmax(180px,1fr))',gap:12,marginBottom:24}}>
-            <StatCard icon={<Package size={19} weight="duotone" color={GOLD}/>}
+            <StatCard icon={<Package size={19} weight="duotone" color="var(--text-secondary)"/>}
               label="Total Items" value={String(items.length)} delay={0.02} href={`/app/projects/${projectId}/selections`}/>
             <StatCard icon={<Hourglass size={19} weight="duotone" color={ORANGE}/>}
               label="Pending Decision" value={String(pendingCount)} accent={ORANGE} delay={0.06} href={`/app/projects/${projectId}/selections`}/>
@@ -272,7 +272,7 @@ export default function SelectionsPage(){
             <div style={{marginBottom:20}}>
               <SectionCard flat
                 title="Budget vs Allowance"
-                icon={<ChartBar size={17} weight="duotone" color={GOLD}/>}
+                icon={<ChartBar size={17} weight="duotone" color="var(--text-secondary)"/>}
                 action={<span style={{fontSize:13,fontWeight:800,color:overage>0?RED:GREEN}}>
                   {fmt(totalCost)} / {fmt(totalAllowance)}
                 </span>}
@@ -287,7 +287,7 @@ export default function SelectionsPage(){
           )}
 
           {/* Selections list */}
-          <SectionCard title="Selections" icon={<ListChecks size={17} weight="duotone" color={GOLD}/>}>
+          <SectionCard title="Selections" icon={<ListChecks size={17} weight="duotone" color="var(--text-secondary)"/>}>
             {/* Toolbar */}
             <ListToolbar
               module="selections"
@@ -320,13 +320,13 @@ export default function SelectionsPage(){
             {!loading&&!loadError&&items.length===0&&(
               <div>
                 <div style={{display:'flex',alignItems:'center',justifyContent:'space-between',gap:12,flexWrap:'wrap',marginBottom:12}}>
-                  <div style={{fontSize:13.5,fontWeight:800,color:TEXT}}>
-                    <Palette size={16} weight="duotone" color={GOLD} style={{marginRight:7,verticalAlign:'text-bottom'}} />
+                  <div style={{fontSize:14,fontWeight:800,color:TEXT}}>
+                    <Palette size={16} weight="duotone" color="var(--text-secondary)" style={{marginRight:7,verticalAlign:'text-bottom'}} />
                     No selections yet
                     <span style={{fontWeight:400,color:DIM}}>{mode==='create' ? ' — log the first one in the panel; the decision date is already defaulted.' : ' — track material selections, finishes, and owner approvals.'}</span>
                   </div>
                   {mode!=='create'&&(
-                    <button onClick={openCreate} style={goldButtonStyle} className="pmBtn"><Plus size={15} weight="bold" /> Add Selection</button>
+                    <button onClick={openCreate} style={secondaryButtonStyle} className="pmBtn"><Plus size={15} weight="bold" /> Add Selection</button>
                   )}
                 </div>
                 <FlowStrip steps={[
@@ -341,10 +341,10 @@ export default function SelectionsPage(){
             {/* Grouped by category */}
             {!loading&&filtered.length>0&&Object.entries(grouped).map(([cat,catItems])=>(
               <div key={cat} style={{marginBottom:24}}>
-                <div style={{fontSize:12,fontWeight:800,color:GOLD,
+                <div style={{fontSize:12,fontWeight:800,color: 'var(--text-primary)',
                   marginBottom:10,display:'flex',alignItems:'center',gap:8}}>
                   {cat}
-                  <span style={{fontSize:10,fontWeight:600,color:DIM}}>
+                  <span style={{fontSize:12,fontWeight:600,color:DIM}}>
                     {catItems.length} item{catItems.length!==1?'s':''}
                   </span>
                 </div>
@@ -377,7 +377,7 @@ export default function SelectionsPage(){
                           </div>
                           <div style={{textAlign:'right',flexShrink:0}}>
                             {item.cost>0&&<div style={{fontWeight:800,fontSize:14,color:TEXT}}>{fmt(item.cost)}</div>}
-                            {item.allowance>0&&<div style={{fontSize:11,color:DIM}}>Allowance: {fmt(item.allowance)}</div>}
+                            {item.allowance>0&&<div style={{fontSize:12,color:DIM}}>Allowance: {fmt(item.allowance)}</div>}
                           </div>
                         </div>
                       </div>
@@ -403,8 +403,8 @@ export default function SelectionsPage(){
               {mode==='view'&&selected&&(
                 <>
                   <button onClick={()=>openEdit(selected)}
-                    style={{padding:'6px 14px',background:'var(--brand-primary-12)',border:'1px solid var(--brand-primary-25)',
-                      borderRadius:6,color:'var(--brand-primary-strong)',fontSize:12,fontWeight:700,cursor:'pointer'}}>
+                    style={{padding:'6px 14px',background:'var(--bg-surface-2)',border:'1px solid var(--border-default)',
+                      borderRadius:6,color: 'var(--text-primary)',fontSize:12,fontWeight:700,cursor:'pointer'}}>
                     Edit
                   </button>
                   <button onClick={()=>deleteItem(selected)} disabled={deleting}
@@ -555,7 +555,7 @@ export default function SelectionsPage(){
             ):selected?(
               <div style={{display:'flex',flexDirection:'column',gap:14}}>
                 <div style={{background:RAISED,border:`1px solid ${BORDER}`,borderRadius:10,padding:16}}>
-                  <div style={{fontSize:10,fontWeight:700,color:GOLD,
+                  <div style={{fontSize:12,fontWeight:700,color: 'var(--text-primary)',
                     marginBottom:6}}>{selected.category}</div>
                   <div style={{fontSize:18,fontWeight:800,color:TEXT,marginBottom:8}}>{selected.item}</div>
                   <div style={{display:'flex',gap:8,flexWrap:'wrap',marginBottom:12}}>
@@ -595,7 +595,7 @@ export default function SelectionsPage(){
                   ].filter(x=>x.v).map(x=>(
                     <div key={x.l} style={{background:'var(--bg-surface-2)',border:`1px solid ${BORDER}`,
                       borderRadius:8,padding:'10px 12px'}}>
-                      <div style={{fontSize:10,fontWeight:700,color:DIM,marginBottom:4}}>{x.l}</div>
+                      <div style={{fontSize:12,fontWeight:700,color:DIM,marginBottom:4}}>{x.l}</div>
                       <div style={{fontSize:13,color:TEXT}}>{x.v}</div>
                     </div>
                   ))}
@@ -604,14 +604,14 @@ export default function SelectionsPage(){
                 {selected.cost>0&&selected.allowance>0&&(
                   <div style={{background:selected.cost>selected.allowance?'rgba(192,48,48,.07)':'rgba(26,138,74,.07)',
                     border:`1px solid ${selected.cost>selected.allowance?RED:GREEN}33`,borderRadius:8,padding:'10px 14px'}}>
-                    <div style={{fontSize:11,fontWeight:700,color:DIM,marginBottom:4}}>
+                    <div style={{fontSize:12,fontWeight:700,color:DIM,marginBottom:4}}>
                       Budget Impact
                     </div>
                     <div style={{fontSize:14,fontWeight:800,color:selected.cost>selected.allowance?RED:GREEN}}>
                       {fmt(selected.cost-selected.allowance)} vs allowance
                     </div>
                     {selected.cost>selected.allowance&&selected.owner_approved&&String(selected.status||'').toLowerCase()!=='pending'&&(
-                      <a href={`/app/projects/${projectId}/change-orders`} style={{display:'inline-block',marginTop:6,fontSize:12,fontWeight:700,color:'var(--brand-primary-strong)'}}>
+                      <a href={`/app/projects/${projectId}/change-orders`} style={{display:'inline-block',marginTop:6,fontSize:12,fontWeight:700,color: 'var(--link)'}}>
                         The overage is a change order — open Change Orders
                       </a>
                     )}
@@ -620,8 +620,8 @@ export default function SelectionsPage(){
 
                 {selected.link&&(
                   <a href={selected.link} target="_blank" rel="noopener noreferrer"
-                    style={{display:'block',padding:'10px 14px',background:'var(--brand-primary-12)',
-                      border:'1px solid var(--brand-primary-25)',borderRadius:8,color:'var(--brand-primary-strong)',
+                    style={{display:'block',padding:'10px 14px',background:'var(--bg-surface-2)',
+                      border:'1px solid var(--border-default)',borderRadius:8,color: 'var(--link)',
                       fontSize:13,fontWeight:600,textAlign:'center',textDecoration:'none'}}>
                     View Product Link
                   </a>
@@ -629,7 +629,7 @@ export default function SelectionsPage(){
 
                 {selected.notes&&(
                   <div style={{background:'var(--bg-surface-2)',border:`1px solid ${BORDER}`,borderRadius:8,padding:'12px 14px'}}>
-                    <div style={{fontSize:10,fontWeight:700,color:DIM,marginBottom:6}}>Notes</div>
+                    <div style={{fontSize:12,fontWeight:700,color:DIM,marginBottom:6}}>Notes</div>
                     <div style={{fontSize:13,color:TEXT,lineHeight:1.6,whiteSpace:'pre-wrap'}}>{selected.notes}</div>
                   </div>
                 )}

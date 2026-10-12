@@ -52,7 +52,7 @@ export function StatCard({ label, value, sub, trend, accent, onClick, href, styl
       <span className="pmFigV" style={accent ? { color: accent } : undefined}>
         {value}
         {trend && (
-          <span style={{ marginLeft: 6, fontSize: 11, fontWeight: 700, color: trendColor }}>
+          <span style={{ marginLeft: 6, fontSize: 12, fontWeight: 700, color: trendColor }}>
             <span aria-hidden>{glyph}</span> {trend.value}
           </span>
         )}

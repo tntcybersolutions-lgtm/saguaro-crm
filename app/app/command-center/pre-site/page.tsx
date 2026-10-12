@@ -70,7 +70,7 @@ export default function PreSitePage() {
         ) : view.list.length === 0 ? (
           <SectionCard flat>
             <PremiumEmpty
-              icon={<Clipboard size={32} weight="duotone" color={C.gold} />}
+              icon={<Clipboard size={32} weight="duotone" color="var(--text-secondary)" />}
               title="No pre-site checklist for this site"
               description={`Sites launched from the template come pre-loaded with the ${PRESITE_CHECKLIST.length}-point pre-site feasibility inspection.`}
             />
@@ -89,7 +89,7 @@ export default function PreSitePage() {
               </div>
             )}
             <SectionCard
-              icon={<Clipboard size={16} weight="duotone" color={C.gold} />}
+              icon={<Clipboard size={16} weight="duotone" color="var(--text-secondary)" />}
               title="Feasibility Checklist"
               subtitle={`${view.list.length} points — pass what clears, flag what could kill or re-price the deal.`}
               bodyStyle={{ padding: '6px 20px 10px' }}

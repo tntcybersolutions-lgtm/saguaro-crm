@@ -31,7 +31,7 @@ function SLARow({ label, target, current, met }: { label: string; target: string
       <span style={{ flex: '1 1 200px', fontSize: 14, fontWeight: 700 }}>{label}</span>
       <span style={{ flex: '0 0 120px', fontSize: 12, color: C.dim, textAlign: 'right' }}>target {target}</span>
       <span style={{ flex: '0 0 110px', fontSize: 14, fontWeight: 800, textAlign: 'right', fontVariantNumeric: 'tabular-nums' }}>{current}</span>
-      <span style={{ flex: '0 0 96px', fontSize: 11, fontWeight: 800, color: col, background: `${col}14`, padding: '4px 9px', borderRadius: 999, textAlign: 'center' }}>{badge}</span>
+      <span style={{ flex: '0 0 96px', fontSize: 12, fontWeight: 800, color: col, background: `${col}14`, padding: '4px 9px', borderRadius: 999, textAlign: 'center' }}>{badge}</span>
     </div>
   );
 }
@@ -51,7 +51,7 @@ function IndexBar({ label, pct, invert, hint }: { label: string; pct: number | n
       <div style={{ height: 8, borderRadius: 4, background: 'rgba(255,255,255,0.08)', overflow: 'hidden' }}>
         <div style={{ height: '100%', width: `${v ?? 0}%`, background: color, borderRadius: 4, transition: 'width .3s' }} />
       </div>
-      {hint && <div style={{ fontSize: 11, color: C.dim, marginTop: 6 }}>{hint}</div>}
+      {hint && <div style={{ fontSize: 12, color: C.dim, marginTop: 6 }}>{hint}</div>}
     </div>
   );
 }
@@ -138,7 +138,7 @@ export default function KpiDashboardPage() {
       <div style={{ fontFamily: font, color: C.text }}>
       <ModuleHero
         eyebrow="Portfolio Intelligence"
-        eyebrowIcon={<ChartLineUp size={13} weight="fill" color={C.gold} />}
+        eyebrowIcon={<ChartLineUp size={13} weight="fill" color="var(--text-secondary)" />}
         title="KPI"
         accent="Dashboard"
         subtitle="The whole portfolio in numbers."

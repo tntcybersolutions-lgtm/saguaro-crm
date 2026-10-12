@@ -55,7 +55,7 @@ export function FileTypeBadge({
         display: 'inline-flex', alignItems: 'center', justifyContent: 'center',
         minWidth: size, height: size - 8, padding: '0 7px', borderRadius: 6,
         background: `${meta.color}22`, color: meta.color,
-        fontSize: 10, fontWeight: 900, letterSpacing: 0.4, lineHeight: 1,
+        fontSize: 12, fontWeight: 900, letterSpacing: 0.4, lineHeight: 1,
         border: `1px solid ${meta.color}66`, flexShrink: 0,
         ...style,
       }}

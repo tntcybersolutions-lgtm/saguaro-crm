@@ -469,7 +469,7 @@ const CSS = `
   background: var(--bg-surface-2); border: 1px solid var(--border-default); color: var(--c-text-2); font-size: 14px; font-weight: 700; }
 .jp-trig-tile { display: inline-grid; place-items: center; width: 28px; height: 28px; border-radius: 8px; flex-shrink: 0; color: var(--text-secondary); background: var(--bg-surface); border: 1px solid var(--border-default); }
 .jp-trig-text { display: flex; flex-direction: column; min-width: 0; line-height: 1.15; }
-.jp-trig-meta { color: var(--c-text-3); font-size: 11px; font-weight: 700; letter-spacing: .02em; overflow: hidden; text-overflow: ellipsis; }
+.jp-trig-meta { color: var(--c-text-3); font-size: 12px; font-weight: 700; letter-spacing: .02em; overflow: hidden; text-overflow: ellipsis; }
 .jp-trigger:hover { background: var(--bg-hover); color: var(--c-text); }
 .jp-trigger[data-in-job] { color: var(--c-text); }
 .jp-trigger[data-in-job]:hover { border-color: var(--border-strong); }
@@ -487,13 +487,13 @@ const CSS = `
 .jp-panel .jp-search input:focus, .jp-panel .jp-search input:focus-visible { border: 0 !important; box-shadow: none !important; outline: none !important; background: transparent !important; }
 .jp-panel .jp-search:focus-within { box-shadow: inset 0 -2px 0 rgba(255,224,0,0.45); }
 .jp-panel .jp-search input::placeholder { color: var(--c-text-3); font-weight: 500; }
-.jp-kbd { font-family: inherit; font-size: 11px; font-weight: 700; line-height: 1; color: var(--c-text-3); padding: 4px 6px; border-radius: 6px; border: 1px solid var(--border-default); background: rgba(255,255,255,0.03); }
+.jp-kbd { font-family: inherit; font-size: 12px; font-weight: 700; line-height: 1; color: var(--c-text-3); padding: 4px 6px; border-radius: 6px; border: 1px solid var(--border-default); background: rgba(255,255,255,0.03); }
 .jp-iconbtn { display: inline-flex; align-items: center; justify-content: center; width: 36px; height: 36px; border-radius: 9px; border: 0; background: transparent; color: var(--c-text-2); cursor: pointer; }
 .jp-iconbtn:hover { background: rgba(255,255,255,0.06); color: var(--c-text); }
 .jp-note { padding: 8px 14px; font-size: 12px; color: var(--c-text-2); background: rgba(255,224,0,0.04); border-bottom: 1px solid var(--border-subtle); }
 .jp-note b { color: var(--c-text); font-weight: 750; }
 .jp-scroll { flex: 1; overflow-y: auto; overscroll-behavior: contain; padding: 4px 6px 8px; }
-.jp-group { display: flex; align-items: center; justify-content: space-between; width: 100%; padding: 12px 10px 6px; font-size: 10.5px; font-weight: 800; letter-spacing: 0.12em; text-transform: uppercase; color: var(--c-text-3); }
+.jp-group { display: flex; align-items: center; justify-content: space-between; width: 100%; padding: 12px 10px 6px; font-size: 12px; font-weight: 800; letter-spacing: 0.12em; text-transform: uppercase; color: var(--c-text-3); }
 .jp-group-btn { background: transparent; border: 0; cursor: pointer; min-height: 36px; text-align: left; }
 .jp-group-btn:hover { color: var(--c-text-2); }
 .jp-opt { display: flex; align-items: center; gap: 11px; min-height: 48px; padding: 7px 10px; border-radius: 10px; cursor: pointer; }
@@ -509,9 +509,9 @@ const CSS = `
 .jp-prog { display: flex; align-items: center; gap: 8px; margin-top: 4px; }
 .jp-bar { position: relative; flex: 0 1 140px; height: 4px; border-radius: 999px; background: rgba(255,255,255,0.08); overflow: hidden; }
 .jp-bar > i { display: block; height: 100%; border-radius: inherit; background: var(--info); }
-.jp-pct { color: var(--c-text-2); font-size: 11.5px; font-weight: 800; font-variant-numeric: tabular-nums; }
+.jp-pct { color: var(--c-text-2); font-size: 12px; font-weight: 800; font-variant-numeric: tabular-nums; }
 .jp-check { color: var(--c-yellow); flex-shrink: 0; }
-.jp-empty { padding: 18px 12px; font-size: 13.5px; color: var(--c-text-2); line-height: 1.45; }
+.jp-empty { padding: 18px 12px; font-size: 14px; color: var(--c-text-2); line-height: 1.45; }
 .jp-linkbtn { background: none; border: 0; padding: 0; color: var(--link); font: inherit; font-weight: 700; cursor: pointer; }
 .jp-foot { display: flex; align-items: center; justify-content: space-between; gap: 8px; padding: 6px 8px; border-top: 1px solid var(--border-subtle); }
 .jp-footlink { display: inline-flex; align-items: center; gap: 6px; min-height: 36px; padding: 0 10px; border-radius: 9px; font-size: 13px; font-weight: 700; color: var(--c-text-2); text-decoration: none; }

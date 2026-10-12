@@ -34,7 +34,7 @@ const inputStyle: React.CSSProperties = {
   width: '100%', marginTop: 3,
   background: 'linear-gradient(180deg, rgba(255,255,255,0.05), rgba(255,255,255,0.02))',
   border: `1px solid ${BORDER}`, borderRadius: 8, color: WHITE,
-  padding: '9px 11px', fontSize: 13.5, outline: 'none', boxSizing: 'border-box',
+  padding: '9px 11px', fontSize: 14, outline: 'none', boxSizing: 'border-box',
 };
 
 type Field = { key: string; label: string; required?: boolean; placeholder?: string; secret?: boolean };
@@ -147,7 +147,7 @@ function StorageSettings() {
     <PremiumSurface maxWidth={2200}>
       <ModuleHero
         eyebrow="Workspace"
-        eyebrowIcon={<CloudArrowUp size={13} weight="fill" color={GOLD} />}
+        eyebrowIcon={<CloudArrowUp size={13} weight="fill" color="var(--text-secondary)" />}
         title="External"
         accent="Storage"
         subtitle="Connect your company cloud. Your team signs in with their own account."
@@ -171,7 +171,7 @@ function StorageSettings() {
       <SectionCard flat
         title="Connected Storage"
         subtitle={connectors.length ? 'Test, tune, or remove existing connections' : undefined}
-        icon={<CloudArrowUp size={17} weight="duotone" color={GOLD} />}
+        icon={<CloudArrowUp size={17} weight="duotone" color="var(--text-secondary)" />}
         style={{ marginBottom: 24 }}
       >
         <div style={{ display: 'flex', flexDirection: 'column', gap: 10 }}>
@@ -189,7 +189,7 @@ function StorageSettings() {
       <SectionCard
         title="Connect in One Click"
         subtitle="Your team signs in with their existing account — no API keys, nothing to paste."
-        icon={<CheckCircle size={17} weight="duotone" color={GOLD} />}
+        icon={<CheckCircle size={17} weight="duotone" color="var(--text-secondary)" />}
       >
         <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(230px, 1fr))', gap: 12 }}>
           {loading && <><SkeletonRow h={110} /><SkeletonRow h={110} /><SkeletonRow h={110} /></>}
@@ -202,9 +202,9 @@ function StorageSettings() {
                 border: `1px solid ${BORDER}`,
                 borderRadius: 12, padding: 14, cursor: 'pointer', color: WHITE,
               }}>
-              <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}><CloudArrowUp size={18} color={GOLD} weight="fill" /><span style={{ fontWeight: 700, fontSize: 14 }}>{p.label}</span></div>
+              <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}><CloudArrowUp size={18} color="var(--text-secondary)" weight="fill" /><span style={{ fontWeight: 700, fontSize: 14 }}>{p.label}</span></div>
               <div style={{ color: MUTED, fontSize: 12, marginTop: 6, lineHeight: 1.4 }}>{p.blurb}</div>
-              <div style={{ marginTop: 8, fontSize: 11.5, color: GOLD_HI }}>Connect with Sign-In →</div>
+              <div style={{ marginTop: 8, fontSize: 12, color: 'var(--text-primary)' }}>Connect with Sign-In →</div>
             </button>
           ))}
         </div>
@@ -226,7 +226,7 @@ function StorageSettings() {
                 }}>
                 <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}><CloudArrowUp size={18} color={MUTED} weight="fill" /><span style={{ fontWeight: 700, fontSize: 14 }}>{p.label}</span></div>
                 <div style={{ color: MUTED, fontSize: 12, marginTop: 6, lineHeight: 1.4 }}>{p.blurb}</div>
-                <div style={{ marginTop: 8, fontSize: 11.5, color: GOLD_HI }}>Enter Credentials →</div>
+                <div style={{ marginTop: 8, fontSize: 12, color: 'var(--text-primary)' }}>Enter Credentials →</div>
               </button>
             ))}
           </div>
@@ -237,20 +237,20 @@ function StorageSettings() {
         <div onClick={() => setAdding(null)} style={{ position: 'fixed', inset: 0, background: 'rgba(0,0,0,0.72)', zIndex: 60, display: 'flex', alignItems: 'center', justifyContent: 'center', padding: 16 }}>
           <div onClick={(e) => e.stopPropagation()} style={{ background: 'var(--bg-surface)', border: `1px solid ${BORDER}`, borderRadius: 14, padding: 18, width: 'min(460px,100%)', maxHeight: '90vh', overflow: 'auto' }}>
             <div style={{ display: 'flex', alignItems: 'center', marginBottom: 14 }}>
-              <IconChip size={32}><CloudArrowUp size={16} weight="fill" color={GOLD} /></IconChip>
+              <IconChip size={32}><CloudArrowUp size={16} weight="fill" color="var(--text-secondary)" /></IconChip>
               <div style={{ fontWeight: 800, fontSize: 16, flex: 1, color: WHITE, marginLeft: 10 }}>Connect {providers.find((p) => p.id === adding)?.label}</div>
               <button onClick={() => setAdding(null)} style={{ background: 'none', border: 'none', cursor: 'pointer' }}><X size={19} color={MUTED} /></button>
             </div>
             {(FORM_FIELDS[adding] || []).map((f) => (
               <label key={f.key} style={{ display: 'block', marginBottom: 10 }}>
-                <span style={{ fontSize: 12.5, color: MUTED }}>{f.label}{f.required ? ' *' : ''}</span>
+                <span style={{ fontSize: 13, color: MUTED }}>{f.label}{f.required ? ' *' : ''}</span>
                 <input type={f.secret ? 'password' : 'text'} autoComplete="off" value={form[f.key] ?? ''} placeholder={f.placeholder}
                   onChange={(e) => setForm({ ...form, [f.key]: e.target.value })}
                   style={{ ...inputStyle, fontFamily: f.secret ? 'monospace' : undefined }} />
               </label>
             ))}
             <button onClick={submitForm} disabled={busy} className="pmBtn" style={{ ...goldButtonStyle, width: '100%', marginTop: 6, cursor: busy ? 'not-allowed' : 'pointer', opacity: busy ? 0.6 : 1 }}>{busy ? 'Verifying…' : 'Test & Connect'}</button>
-            <div style={{ fontSize: 11.5, color: MUTED, marginTop: 10, lineHeight: 1.5 }}>Credentials are encrypted server-side and never shown again. We verify them before saving.</div>
+            <div style={{ fontSize: 12, color: MUTED, marginTop: 10, lineHeight: 1.5 }}>Credentials are encrypted server-side and never shown again. We verify them before saving.</div>
           </div>
         </div>
       )}
@@ -276,9 +276,9 @@ function ConnectorCard({ c, onTest, onRemove, onSaveConfig }: { c: any; onTest: 
       </div>
       {needsSite && (
         <div style={{ padding: '0 14px 14px', display: 'flex', gap: 8, alignItems: 'flex-end', flexWrap: 'wrap' }}>
-          <label style={{ flex: 1, minWidth: 220 }}><span style={{ fontSize: 11.5, color: MUTED }}>SharePoint Site ID (Required to Browse)</span>
+          <label style={{ flex: 1, minWidth: 220 }}><span style={{ fontSize: 12, color: MUTED }}>SharePoint Site ID (Required to Browse)</span>
             <input value={cfg.siteId || ''} onChange={(e) => setCfg({ ...cfg, siteId: e.target.value })} placeholder="contoso.sharepoint.com,<siteGuid>,<webGuid>"
-              style={{ ...inputStyle, fontSize: 12.5, padding: '8px 10px' }} /></label>
+              style={{ ...inputStyle, fontSize: 13, padding: '8px 10px' }} /></label>
           <button onClick={() => onSaveConfig(cfg)} className="pmBtn" style={{ ...goldButtonStyle, padding: '8px 14px', fontSize: 12 }}><Gear size={13} />Save</button>
         </div>
       )}

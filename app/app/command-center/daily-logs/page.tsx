@@ -34,7 +34,7 @@ export default function DailyLogsPage() {
       <div style={{ fontFamily: font, color: C.text }}>
       <ModuleHero
         eyebrow="Command Center"
-        eyebrowIcon={<Clipboard size={13} weight="fill" color={C.gold} />}
+        eyebrowIcon={<Clipboard size={13} weight="fill" color="var(--text-secondary)" />}
         title="Daily Superintendent"
         accent="Reports"
         subtitle="Every site reports by 4 PM."
@@ -58,7 +58,7 @@ export default function DailyLogsPage() {
       {/* 4 PM compliance */}
       <SectionCard flat
         title="Today's 4 PM Compliance"
-        icon={<CheckCircle size={16} weight="duotone" color={C.gold} />}
+        icon={<CheckCircle size={16} weight="duotone" color="var(--text-secondary)" />}
         action={<span style={{ fontSize: 13, fontWeight: 700, color: compliance.reported === compliance.total ? C.green : C.red, whiteSpace: 'nowrap' }}>{compliance.reported}/{compliance.total} reported</span>}
         style={{ marginBottom: 18 }}
       >
@@ -79,10 +79,10 @@ export default function DailyLogsPage() {
         </div>
       </SectionCard>
 
-      <SectionCard title="Recent Reports" subtitle="Last 21 days, newest first" icon={<Clipboard size={16} weight="duotone" color={C.gold} />}>
+      <SectionCard title="Recent Reports" subtitle="Last 21 days, newest first" icon={<Clipboard size={16} weight="duotone" color="var(--text-secondary)" />}>
         {loading ? <><FlatStyles /><RowSkeleton rows={6} /></>
         : (logs as any[]).length === 0 ? (
-          <PremiumEmpty icon={<Clipboard size={32} weight="duotone" color={C.gold} />} title="No daily reports yet"
+          <PremiumEmpty icon={<Clipboard size={32} weight="duotone" color="var(--text-secondary)" />} title="No daily reports yet"
             description="Every superintendent submits a daily report — photos, manpower, weather, progress, and problems — by 4 PM local. They roll up here across all sites."
             action={<GoldButton icon={<Plus size={15} weight="bold" />} onClick={() => setSubmitting(true)}>Submit the First</GoldButton>} />
         ) : (
@@ -122,7 +122,7 @@ function SubmitForm({ projects, onDone }: { projects: any[]; onDone: () => void 
   const [err, setErr] = useState('');
   const set = (k: string, v: any) => setF((p) => ({ ...p, [k]: v }));
   const inp: React.CSSProperties = { padding: '8px 10px', borderRadius: 8, border: `1px solid ${C.border}`, fontSize: 13, outline: 'none', background: 'var(--bg-surface-2)', width: '100%' };
-  const lbl: React.CSSProperties = { fontSize: 11, fontWeight: 700, color: C.dim, marginBottom: 4, display: 'block' };
+  const lbl: React.CSSProperties = { fontSize: 12, fontWeight: 700, color: C.dim, marginBottom: 4, display: 'block' };
 
   async function submit() {
     if (!f.project_id) { setErr('Pick a site.'); return; }
@@ -131,7 +131,7 @@ function SubmitForm({ projects, onDone }: { projects: any[]; onDone: () => void 
   }
 
   return (
-    <SectionCard title="Daily Superintendent Report" subtitle="Photos, manpower, weather, progress, problems — the whole day in one entry." icon={<HardHat size={16} weight="duotone" color={C.gold} />} style={{ marginBottom: 18 }}>
+    <SectionCard title="Daily Superintendent Report" subtitle="Photos, manpower, weather, progress, problems — the whole day in one entry." icon={<HardHat size={16} weight="duotone" color="var(--text-secondary)" />} style={{ marginBottom: 18 }}>
       <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(180px, 1fr))', gap: 12 }}>
         <div><label style={lbl}>Site *</label><select style={inp} value={f.project_id || ''} onChange={(e) => set('project_id', e.target.value)}><option value="">Select…</option>{projects.map((p: any) => <option key={p.id} value={p.id}>{p.name}</option>)}</select></div>
         <div><label style={lbl}>Date</label><SaguaroDatePicker style={inp} value={f.log_date} onChange={(v) => set('log_date', v)} /></div>

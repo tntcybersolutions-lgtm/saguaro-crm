@@ -174,8 +174,8 @@ const CSS = `
 .jl-chip span{font-variant-numeric:tabular-nums;color:var(--fl-text-3);font-weight:600}
 .jl-chip[aria-pressed=true]{background:var(--fl-line);color:var(--fl-text);border-color:var(--fl-line-strong)}
 .jl-chip[aria-pressed=true] span{color:var(--fl-text-2)}
-.jl-count{margin-left:auto;font-size:12.5px;color:var(--fl-text-3)}
-.jl-inline{color:var(--brand-primary);font-weight:650;text-decoration:none;background:none;border:0;padding:0;font:inherit;cursor:pointer;min-height:44px}
+.jl-count{margin-left:auto;font-size:13px;color:var(--fl-text-3)}
+.jl-inline{color: var(--link);font-weight:650;text-decoration:none;background:none;border:0;padding:0;font:inherit;cursor:pointer;min-height:44px}
 /* The brief's one action sits inside the sentence; its tap area reaches 44px without moving a word. */
 .jl .fl-brief-act{position:relative;display:inline-block}
 .jl .fl-brief-act::after{content:"";position:absolute;inset:-12px -6px}

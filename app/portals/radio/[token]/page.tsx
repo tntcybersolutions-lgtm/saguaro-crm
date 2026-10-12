@@ -201,8 +201,8 @@ export default function RadioGuestPage() {
   if (denied) return (
     <div style={{ minHeight: '100vh', background: DARK, display: 'flex', alignItems: 'center', justifyContent: 'center', fontFamily: 'system-ui,sans-serif', padding: 24 }}>
       <div style={{ textAlign: 'center', maxWidth: 440 }}>
-        <div style={{ color: GOLD, fontWeight: 800, fontSize: 22, letterSpacing: '-0.01em', marginBottom: 6 }}>Saguaro</div>
-        <div style={{ fontSize: 11, fontWeight: 700, color: DIM, marginBottom: 22 }}>Radio</div>
+        <div style={{ color: 'var(--text-primary)', fontWeight: 800, fontSize: 22, letterSpacing: '-0.01em', marginBottom: 6 }}>Saguaro</div>
+        <div style={{ fontSize: 12, fontWeight: 700, color: DIM, marginBottom: 22 }}>Radio</div>
         <div style={{ fontSize: 20, fontWeight: 800, color: TEXT }}>This Radio Link Is No Longer Active</div>
         <div style={{ fontSize: 14, color: DIM, marginTop: 10, lineHeight: 1.6 }}>The invitation has expired or was revoked by the project team. Ask your contact at the general contractor for a fresh link.</div>
       </div>
@@ -230,16 +230,16 @@ export default function RadioGuestPage() {
       <header style={{ position: 'sticky', top: 0, zIndex: 10, background: 'rgba(10,10,10,0.92)', backdropFilter: 'blur(8px)', borderBottom: `1px solid ${BORDER}`, padding: '12px 16px' }}>
         <div style={{ maxWidth: 760, margin: '0 auto', display: 'flex', alignItems: 'center', gap: 12, flexWrap: 'wrap' }}>
           <div style={{ display: 'flex', alignItems: 'baseline', gap: 8, flexShrink: 0 }}>
-            <span style={{ fontWeight: 800, fontSize: 16, color: GOLD, letterSpacing: '-0.01em' }}>Saguaro</span>
-            <span style={{ fontSize: 11, fontWeight: 700, color: DIM }}>Radio</span>
+            <span style={{ fontWeight: 800, fontSize: 16, color: 'var(--text-primary)', letterSpacing: '-0.01em' }}>Saguaro</span>
+            <span style={{ fontSize: 12, fontWeight: 700, color: DIM }}>Radio</span>
           </div>
           <div style={{ flex: 1, minWidth: 140 }}>
             <div style={{ fontSize: 15, fontWeight: 700, color: TEXT, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{channel?.name || 'Project Channel'}</div>
-            {label && <div style={{ fontSize: 11, color: DIM, marginTop: 1 }}>Guest access: <span style={{ color: GOLD, fontWeight: 700 }}>{label}</span></div>}
+            {label && <div style={{ fontSize: 12, color: DIM, marginTop: 1 }}>Guest access: <span style={{ color: 'var(--text-primary)', fontWeight: 700 }}>{label}</span></div>}
           </div>
           <div style={{ display: 'flex', alignItems: 'center', gap: 7, background: GREEN + '14', border: `1px solid ${GREEN}44`, borderRadius: 20, padding: '5px 12px', flexShrink: 0 }}>
             <span style={{ width: 8, height: 8, borderRadius: '50%', background: GREEN, animation: 'sgLivePulse 1.8s ease-out infinite' }} />
-            <span style={{ fontSize: 11, fontWeight: 800, color: GREEN }}>Live</span>
+            <span style={{ fontSize: 12, fontWeight: 800, color: GREEN }}>Live</span>
           </div>
         </div>
       </header>
@@ -251,7 +251,7 @@ export default function RadioGuestPage() {
             <div style={{ fontSize: 12, color: DIM }}>Live channel traffic updates every few seconds.</div>
             <div style={{ display: 'flex', border: `1px solid ${BORDER}`, borderRadius: 8, overflow: 'hidden' }}>
               {(['en', 'es'] as const).map(l => (
-                <button key={l} onClick={() => setLang(l)} style={{ padding: '6px 14px', border: 'none', cursor: 'pointer', fontSize: 11, fontWeight: 800, letterSpacing: .6, background: lang === l ? GOLD : 'transparent', color: lang === l ? '#101722' : DIM }}>{l.toUpperCase()}</button>
+                <button key={l} onClick={() => setLang(l)} style={{ padding: '6px 14px', border: 'none', cursor: 'pointer', fontSize: 12, fontWeight: 800, letterSpacing: .6, background: lang === l ? GOLD : 'transparent', color: lang === l ? '#101722' : DIM }}>{l.toUpperCase()}</button>
               ))}
             </div>
           </div>
@@ -266,9 +266,9 @@ export default function RadioGuestPage() {
                 const c = m.kind === 'panic' ? RED : AMBER;
                 return (
                   <div key={m.id} style={{ padding: '10px 14px', background: c + '11', border: `1px solid ${c}55`, borderRadius: 8, marginBottom: 10, ...(flashIds.has(m.id) ? { animation: 'sgRadioRing 2.4s ease-out' } : {}) }}>
-                    <div style={{ fontSize: 11, fontWeight: 800, color: c, marginBottom: 4 }}>{'\u26A0'} {m.kind === 'panic' ? 'Panic' : 'Alert'} &middot; {m.sender_name || 'Unknown'}{m.patched_from ? <span style={{ marginLeft: 6, fontSize: 9, fontWeight: 700, color: GOLD, background: `color-mix(in srgb, ${GOLD} 8%, transparent)`, border: `1px solid color-mix(in srgb, ${GOLD} 27%, transparent)`, borderRadius: 10, padding: '1px 7px', letterSpacing: .5, verticalAlign: 'middle' }}>Via Patched Channel</span> : null}</div>
+                    <div style={{ fontSize: 12, fontWeight: 800, color: c, marginBottom: 4 }}>{'\u26A0'} {m.kind === 'panic' ? 'Panic' : 'Alert'} &middot; {m.sender_name || 'Unknown'}{m.patched_from ? <span style={{ marginLeft: 6, fontSize: 12, fontWeight: 700, color: 'var(--text-primary)', background: `color-mix(in srgb, ${GOLD} 8%, transparent)`, border: `1px solid color-mix(in srgb, ${GOLD} 27%, transparent)`, borderRadius: 10, padding: '1px 7px', letterSpacing: .5, verticalAlign: 'middle' }}>Via Patched Channel</span> : null}</div>
                     {shown && <div style={{ fontSize: 13, color: TEXT, lineHeight: 1.5 }}>{shown}</div>}
-                    <div style={{ fontSize: 10, color: DIM, marginTop: 4 }}>{new Date(m.created_at).toLocaleTimeString()}</div>
+                    <div style={{ fontSize: 12, color: DIM, marginTop: 4 }}>{new Date(m.created_at).toLocaleTimeString()}</div>
                   </div>
                 );
               }
@@ -280,9 +280,9 @@ export default function RadioGuestPage() {
                   <div key={m.id} style={{ display: 'flex', justifyContent: mine ? 'flex-end' : 'flex-start', marginBottom: 10, ...(flashIds.has(m.id) ? { animation: 'sgRadioFlash 2.4s ease-out', borderRadius: 10 } : {}) }}>
                     <div style={{ display: 'inline-flex', alignItems: 'center', gap: 8, padding: '6px 12px', background: tc + '14', border: `1px solid ${tc}55`, borderRadius: 20, flexWrap: 'wrap' }}>
                       <span style={{ width: 7, height: 7, borderRadius: '50%', background: tc, flexShrink: 0 }} />
-                      <span style={{ fontSize: 11, fontWeight: 800, color: tc }}>{tl}</span>
-                      <span style={{ fontSize: 10, color: DIM }}>{mine ? 'You' : (m.sender_name || 'Unknown')} &middot; {new Date(m.created_at).toLocaleTimeString()}</span>
-                      {m.patched_from && <span style={{ fontSize: 9, fontWeight: 700, color: GOLD, background: `color-mix(in srgb, ${GOLD} 8%, transparent)`, border: `1px solid color-mix(in srgb, ${GOLD} 27%, transparent)`, borderRadius: 10, padding: '1px 7px', letterSpacing: .5 }}>Via Patched Channel</span>}
+                      <span style={{ fontSize: 12, fontWeight: 800, color: tc }}>{tl}</span>
+                      <span style={{ fontSize: 12, color: DIM }}>{mine ? 'You' : (m.sender_name || 'Unknown')} &middot; {new Date(m.created_at).toLocaleTimeString()}</span>
+                      {m.patched_from && <span style={{ fontSize: 12, fontWeight: 700, color: 'var(--text-primary)', background: `color-mix(in srgb, ${GOLD} 8%, transparent)`, border: `1px solid color-mix(in srgb, ${GOLD} 27%, transparent)`, borderRadius: 10, padding: '1px 7px', letterSpacing: .5 }}>Via Patched Channel</span>}
                     </div>
                   </div>
                 );
@@ -290,15 +290,15 @@ export default function RadioGuestPage() {
               return (
                 <div key={m.id} style={{ display: 'flex', justifyContent: mine ? 'flex-end' : 'flex-start', marginBottom: 10, ...(flashIds.has(m.id) ? { animation: 'sgRadioFlash 2.4s ease-out', borderRadius: 10 } : {}) }}>
                   <div style={{ maxWidth: '82%', padding: '10px 14px', borderRadius: 12, background: mine ? `color-mix(in srgb, ${GOLD} 10%, transparent)` : DARK, border: `1px solid ${mine ? `color-mix(in srgb, ${GOLD} 27%, transparent)` : BORDER}`, borderBottomRightRadius: mine ? 2 : 12, borderBottomLeftRadius: mine ? 12 : 2 }}>
-                    <div style={{ fontSize: 11, fontWeight: 700, color: mine ? GOLD : DIM, marginBottom: 4 }}>{mine ? 'You' : (m.sender_name || 'Unknown')}{m.patched_from ? <span style={{ marginLeft: 6, fontSize: 9, fontWeight: 700, color: GOLD, background: `color-mix(in srgb, ${GOLD} 8%, transparent)`, border: `1px solid color-mix(in srgb, ${GOLD} 27%, transparent)`, borderRadius: 10, padding: '1px 7px', letterSpacing: .5, verticalAlign: 'middle' }}>Via Patched Channel</span> : null}</div>
+                    <div style={{ fontSize: 12, fontWeight: 700, color: mine ? GOLD : DIM, marginBottom: 4 }}>{mine ? 'You' : (m.sender_name || 'Unknown')}{m.patched_from ? <span style={{ marginLeft: 6, fontSize: 12, fontWeight: 700, color: 'var(--text-primary)', background: `color-mix(in srgb, ${GOLD} 8%, transparent)`, border: `1px solid color-mix(in srgb, ${GOLD} 27%, transparent)`, borderRadius: 10, padding: '1px 7px', letterSpacing: .5, verticalAlign: 'middle' }}>Via Patched Channel</span> : null}</div>
                     {m.kind === 'voice' ? (
                       <div>
                         <RadioWave seed={String(m.id || '')} color={mine ? GOLD : DIM} />
                         {m.audio_url ? <audio controls preload="none" src={m.audio_url} style={{ width: 230, maxWidth: '100%', height: 36, display: 'block' }} /> : <div style={{ fontSize: 12, color: DIM }}>Voice message</div>}
-                        <div style={{ fontSize: 10, color: DIM, marginTop: 4 }}>{m.audio_duration_secs ? `${m.audio_duration_secs}s voice` : 'voice'}</div>
+                        <div style={{ fontSize: 12, color: DIM, marginTop: 4 }}>{m.audio_duration_secs ? `${m.audio_duration_secs}s voice` : 'voice'}</div>
                         {(t[lang] || m.transcript) && (
                           <div style={{ fontSize: 12, color: DIM, marginTop: 6, lineHeight: 1.5, fontStyle: t[lang] ? 'normal' : 'italic', borderLeft: `2px solid ${BORDER}`, paddingLeft: 8 }}>
-                            {t[lang] && <span style={{ color: GOLD, fontWeight: 800, fontSize: 9, letterSpacing: .8, marginRight: 6 }}>{lang.toUpperCase()}</span>}
+                            {t[lang] && <span style={{ color: 'var(--text-primary)', fontWeight: 800, fontSize: 12, letterSpacing: .8, marginRight: 6 }}>{lang.toUpperCase()}</span>}
                             &ldquo;{t[lang] || m.transcript}&rdquo;
                           </div>
                         )}
@@ -311,7 +311,7 @@ export default function RadioGuestPage() {
                     ) : (
                       <div style={{ fontSize: 13, color: TEXT, lineHeight: 1.5 }}>{shown}</div>
                     )}
-                    <div style={{ fontSize: 10, color: DIM, marginTop: 4, textAlign: mine ? 'right' : 'left' }}>{new Date(m.created_at).toLocaleTimeString()}</div>
+                    <div style={{ fontSize: 12, color: DIM, marginTop: 4, textAlign: mine ? 'right' : 'left' }}>{new Date(m.created_at).toLocaleTimeString()}</div>
                   </div>
                 </div>
               );
@@ -344,7 +344,7 @@ export default function RadioGuestPage() {
 
       {/* ── Footer ── */}
       <footer style={{ textAlign: 'center', padding: '10px 16px 18px' }}>
-        <div style={{ fontSize: 11, color: DIM }}>Powered by <strong style={{ color: GOLD }}>Saguaro Control Systems</strong></div>
+        <div style={{ fontSize: 12, color: DIM }}>Powered by <strong style={{ color: 'var(--text-primary)' }}>Saguaro Control Systems</strong></div>
       </footer>
 
       {/* ── Toast ── */}

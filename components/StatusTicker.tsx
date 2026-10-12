@@ -99,9 +99,9 @@ function TickerItem({ a, ghost = false }: { a: ActivityRow; ghost?: boolean }) {
       <span style={{ fontSize: 9.5, fontWeight: 900, color: st.color, flexShrink: 0 }}>
         {st.label}
       </span>
-      <span style={{ fontSize: 12.5, fontWeight: 600, color: 'var(--c-text-2)' }}>{label}</span>
-      {a.project_name && <span style={{ fontSize: 11.5, color: 'var(--c-text-2)' }}>· {a.project_name}</span>}
-      <span style={{ fontSize: 10.5, color: 'var(--c-text-2)', flexShrink: 0 }}>· {timeAgo(a.created_at)}</span>
+      <span style={{ fontSize: 13, fontWeight: 600, color: 'var(--c-text-2)' }}>{label}</span>
+      {a.project_name && <span style={{ fontSize: 12, color: 'var(--c-text-2)' }}>· {a.project_name}</span>}
+      <span style={{ fontSize: 12, color: 'var(--c-text-2)', flexShrink: 0 }}>· {timeAgo(a.created_at)}</span>
     </Link>
   );
 }
@@ -137,7 +137,7 @@ export default function StatusTicker({ style }: { style?: React.CSSProperties })
         background: 'rgba(20,20,22,0.6)', position: 'relative', zIndex: 1,
       }}>
         <span aria-hidden style={{ width: 8, height: 8, borderRadius: 999, background: 'var(--success)', boxShadow: '0 0 10px #4ADE80', animation: 'stTickerDot 2s ease-in-out infinite' }} />
-        <span style={{ fontSize: 10, fontWeight: 900, color: 'var(--c-text-2)', whiteSpace: 'nowrap' }}>
+        <span style={{ fontSize: 12, fontWeight: 900, color: 'var(--c-text-2)', whiteSpace: 'nowrap' }}>
           New Activity
         </span>
       </div>

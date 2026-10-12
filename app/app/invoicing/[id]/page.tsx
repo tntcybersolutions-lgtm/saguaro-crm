@@ -160,7 +160,7 @@ const CSS = `
 .idTable tfoot td { font-weight: 800; color: var(--text-primary); background: var(--bg-surface-2); border-top: 2px solid var(--border-default); }
 .idTotalDue { font-size: var(--fs-lg); }
 .idDoc { display: flex; align-items: center; gap: 14px; flex-wrap: wrap; }
-.idDocIcon { display: inline-flex; align-items: center; justify-content: center; width: 40px; height: 40px; border-radius: var(--radius-sm); background: var(--brand-primary-12); border: 1px solid var(--brand-primary-25); color: var(--brand-primary); flex-shrink: 0; }
+.idDocIcon { display: inline-flex; align-items: center; justify-content: center; width: 40px; height: 40px; border-radius: var(--radius-sm); background: var(--bg-surface-2); border: 1px solid var(--border-default); color: var(--text-secondary); flex-shrink: 0; }
 .idDocMeta { flex: 1 1 240px; min-width: 0; }
 .idDocMeta > div:first-child { font-size: var(--fs-md); font-weight: 700; color: var(--text-primary); overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
 .idDocMeta > div + div { font-size: var(--fs-sm); color: var(--text-tertiary); margin-top: 2px; }

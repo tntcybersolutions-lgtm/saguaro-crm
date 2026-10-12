@@ -10,7 +10,7 @@ import React, { useState, useEffect } from 'react';
 import { SUB_TRADES, SUB_TRADES_BY_DIVISION } from '@/lib/construction-intelligence';
 import {
   PremiumSurface, ModuleHero, SectionCard, StatStrip, PremiumEmpty, FlowStrip,
-  goldButtonStyle, ghostButtonStyle,
+  goldButtonStyle, ghostButtonStyle, secondaryButtonStyle
 } from '@/components/ui/premium';
 import { Skeleton } from '@/components/ui/Skeleton';
 import { moduleAccent } from '@/lib/module-identity';
@@ -26,8 +26,8 @@ const DIM = 'var(--text-secondary)', MUTED = 'var(--text-secondary)', TEXT = 'va
 const BIDS = moduleAccent('bids');
 
 const INP: React.CSSProperties = { width: '100%', padding: '9px 12px', background: DARK, border: `1px solid ${BORDER}`, borderRadius: 8, color: TEXT, fontSize: 13, outline: 'none', boxSizing: 'border-box' };
-const LBL: React.CSSProperties = { display: 'block', fontSize: 11, fontWeight: 700, color: DIM, marginBottom: 6 };
-const TH: React.CSSProperties = { padding: '10px 14px', textAlign: 'left', fontSize: 10.5, fontWeight: 700, color: MUTED, borderBottom: `1px solid ${BORDER}`, whiteSpace: 'nowrap' };
+const LBL: React.CSSProperties = { display: 'block', fontSize: 12, fontWeight: 700, color: DIM, marginBottom: 6 };
+const TH: React.CSSProperties = { padding: '10px 14px', textAlign: 'left', fontSize: 12, fontWeight: 700, color: MUTED, borderBottom: `1px solid ${BORDER}`, whiteSpace: 'nowrap' };
 const TD: React.CSSProperties = { padding: '12px 14px', fontSize: 13, color: TEXT, verticalAlign: 'top' };
 
 // Shapes returned by GET /api/bids/win-factors and GET /api/bids/history.
@@ -146,7 +146,7 @@ export default function IntelligencePage() {
           {href: '/app/bid-intelligence',  label: 'Overall Win Rate', value: `${headlineWinRate}%`, accent: headlineWinRate >= 50 ? GREEN : undefined, sub: `${recordWins}W · ${recordLosses}L recorded`, icon: <Trophy size={11} weight="bold" color={BIDS.hex} /> },
           {href: '/app/bid-intelligence',  label: 'Avg Winning Margin', value: `${(avgMargin||0).toFixed(1)}%`, icon: <Percent size={11} weight="bold" color={BIDS.hex} /> },
           {href: '/app/bid-intelligence',  label: 'Bids Analyzed', value: String(bidsAnalyzed), sub: 'Marked Won or Lost', icon: <Stack size={11} weight="bold" color={BIDS.hex} /> },
-          {href: '/app/bid-intelligence',  label: 'Total Bid Value', value: `$${totalValue.toLocaleString()}`, accent: totalValue > 0 ? GOLD : undefined, sub: 'Across logged bids', icon: <CurrencyCircleDollar size={11} weight="bold" color={GOLD_HI} /> },
+          {href: '/app/bid-intelligence',  label: 'Total Bid Value', value: `$${totalValue.toLocaleString()}`, accent: totalValue > 0 ? GOLD : undefined, sub: 'Across logged bids', icon: <CurrencyCircleDollar size={11} weight="bold" color="var(--text-secondary)" /> },
           {href: '/app/bid-intelligence',  label: 'Trades Tracked', value: String(factors.length), sub: factors.length > 0 ? 'Learned win factors' : 'None learned yet', icon: <ChartBar size={11} weight="bold" color={BIDS.hex} /> },
         ]} />
       )}
@@ -191,12 +191,12 @@ export default function IntelligencePage() {
             {/* Machined verdict band — micro-caps labels over hairline-separated figures */}
             <div style={{display:'grid',gridTemplateColumns:'repeat(4,1fr)',gap:0,marginBottom:20,borderTop:`1px solid ${HAIRLINE}`,borderBottom:`1px solid ${HAIRLINE}`}}>
               {[{l:'Fit Score',v:`${result['score']}/100`,c:TEXT},{l:'Win Probability',v:`${result['winProbability']}%`,c:GREEN},{l:'Recommendation',v:String(result['recommendation']??'').replace(/^./,ch=>ch.toUpperCase()),c:GOLD_HI},{l:'Suggested Margin',v:`${result['suggestedMargin']}%`,c:TEXT}].map((k,i)=>(
-                <div key={k.l} style={{textAlign:'center' as const,padding:'16px 10px',borderLeft:i>0?`1px solid ${HAIRLINE}`:'none'}}><div style={{fontSize:10,color:MUTED,fontWeight:700,marginBottom:8}}>{k.l}</div><div style={{fontSize:22,fontWeight:800,color:k.c,fontVariantNumeric:'tabular-nums' as const,letterSpacing:'-0.01em'}}>{k.v}</div></div>
+                <div key={k.l} style={{textAlign:'center' as const,padding:'16px 10px',borderLeft:i>0?`1px solid ${HAIRLINE}`:'none'}}><div style={{fontSize:12,color:MUTED,fontWeight:700,marginBottom:8}}>{k.l}</div><div style={{fontSize:22,fontWeight:800,color:k.c,fontVariantNumeric:'tabular-nums' as const,letterSpacing:'-0.01em'}}>{k.v}</div></div>
               ))}
             </div>
             <div style={{background:DARK,border:`1px solid ${BORDER}`,borderRadius:10,padding:14,fontSize:13,color:DIM,lineHeight:1.7}}>{result['reasoning'] as string}</div>
             {Array.isArray(result['riskFactors'])&&(result['riskFactors'] as string[]).length>0&&<div style={{marginTop:14}}>
-              <div style={{fontSize:11,color:MUTED,fontWeight:700,marginBottom:8}}>Risk Factors</div>
+              <div style={{fontSize:12,color:MUTED,fontWeight:700,marginBottom:8}}>Risk Factors</div>
               {(result['riskFactors'] as string[]).map((rf,i)=>(
                 <div key={i} style={{display:'flex',gap:8,alignItems:'flex-start',fontSize:12,color:DIM,lineHeight:1.6,marginBottom:5}}>
                   <span style={{width:5,height:5,borderRadius:'50%',background:RED,marginTop:6,flexShrink:0}}/>{rf}
@@ -233,7 +233,7 @@ export default function IntelligencePage() {
             title="No win intelligence yet"
             description="Mark bids Won/Lost to build your win intelligence. Saguaro learns from every outcome and shows where you win — and where you leave money on the table."
             action={
-              <button onClick={()=>setScoring(true)} style={goldButtonStyle} className="pmBtn">
+              <button onClick={()=>setScoring(true)} style={secondaryButtonStyle} className="pmBtn">
                 <Sparkle size={15} weight="bold" /> Score New Opportunity
               </button>
             }
@@ -269,7 +269,7 @@ export default function IntelligencePage() {
               <div style={{height:5,background:'rgba(255,255,255,.08)',borderRadius:3}}>
                 <div style={{height:'100%',width:`${wr}%`,background:wr>=60?GREEN:wr>0?DIM:RED,borderRadius:3}}/>
               </div>
-              <div style={{display:'flex',gap:14,marginTop:5,fontSize:10,color:MUTED,flexWrap:'wrap' as const}}>
+              <div style={{display:'flex',gap:14,marginTop:5,fontSize:12,color:MUTED,flexWrap:'wrap' as const}}>
                 {Number.isFinite(ci)&&ci>0&&<span>Competitive index <span style={{color:DIM,fontWeight:600}}>{ci.toFixed(2)}x</span></span>}
                 {Number.isFinite(over)&&<span>Avg above winner <span style={{color:DIM,fontWeight:600}}>{over>0?'+':''}{over.toFixed(1)}%</span></span>}
                 <span>{f.sample_count||0} sample{(f.sample_count||0)!==1?'s':''}</span>
@@ -277,8 +277,8 @@ export default function IntelligencePage() {
             </div>
           );})}
           {best && (
-            <div style={{marginTop:20,display:'flex',gap:10,alignItems:'flex-start',background:'linear-gradient(180deg, var(--brand-primary-08), rgba(255,255,255,0.02))',border:'1px solid color-mix(in srgb, var(--brand-primary) 30%, transparent)',borderRadius:10,padding:14,fontSize:12,color:DIM,lineHeight:1.6}}>
-              <Sparkle size={14} weight="fill" color={GOLD_HI} style={{marginTop:2,flexShrink:0}} />
+            <div style={{marginTop:20,display:'flex',gap:10,alignItems:'flex-start',background:'linear-gradient(180deg, var(--brand-primary-08), rgba(255,255,255,0.02))',border:'1px solid var(--border-default)',borderRadius:10,padding:14,fontSize:12,color:DIM,lineHeight:1.6}}>
+              <Sparkle size={14} weight="fill" color="var(--text-secondary)" style={{marginTop:2,flexShrink:0}} />
               <span><strong style={{color:TEXT,fontWeight:700}}>AI Recommendation:</strong> Strongest on {tradeLabel(best)} — {Math.round((best.win_rate||0)*100)}% win rate.{worst && worst!==best && (worst.win_rate||0) < (best.win_rate||0) ? ` Weakest on ${tradeLabel(worst)} — ${Math.round((worst.win_rate||0)*100)}% win rate; sharpen pricing or qualify harder there.` : ''}</span>
             </div>
           )}
@@ -313,13 +313,13 @@ export default function IntelligencePage() {
                 onMouseLeave={e=>(e.currentTarget.style.background='transparent')}>
                 <td style={{...TD,fontWeight:600,maxWidth:180,overflow:'hidden',textOverflow:'ellipsis',whiteSpace:'nowrap' as const}}>{proj}</td>
                 <td style={{...TD,color:DIM}}>{type}</td>
-                <td style={{...TD,textAlign:'right' as const,color:GOLD,fontWeight:700,fontVariantNumeric:'tabular-nums' as const,whiteSpace:'nowrap' as const}}>${amt.toLocaleString()}</td>
+                <td style={{...TD,textAlign:'right' as const,color: 'var(--text-primary)',fontWeight:700,fontVariantNumeric:'tabular-nums' as const,whiteSpace:'nowrap' as const}}>${amt.toLocaleString()}</td>
                 <td style={{...TD,textAlign:'right' as const,color:DIM,fontVariantNumeric:'tabular-nums' as const}}>{mp==null?'—':`${mp}%`}</td>
                 <td style={TD}>
-                  <span style={{fontSize:10,fontWeight:800,padding:'3px 9px',borderRadius:999,background:won?'rgba(26,138,74,.15)':lost?'rgba(192,48,48,.12)':'rgba(255,255,255,.06)',color:won?GREEN:lost?RED:DIM,whiteSpace:'nowrap' as const}}>
+                  <span style={{fontSize:12,fontWeight:800,padding:'3px 9px',borderRadius:999,background:won?'rgba(26,138,74,.15)':lost?'rgba(192,48,48,.12)':'rgba(255,255,255,.06)',color:won?GREEN:lost?RED:DIM,whiteSpace:'nowrap' as const}}>
                     {(o.outcome||'').toString().replace(/^./,ch=>ch.toUpperCase())||'—'}
                   </span>
-                  {lost&&o.loss_reason&&<div style={{fontSize:10,color:MUTED,marginTop:3}}>{o.loss_reason}</div>}
+                  {lost&&o.loss_reason&&<div style={{fontSize:12,color:MUTED,marginTop:3}}>{o.loss_reason}</div>}
                 </td>
               </tr>
             );})}</tbody>

@@ -161,7 +161,7 @@ export default function BulkActionBar({
       {/* Selected count */}
       <span
         style={{
-          color: GOLD,
+          color: 'var(--text-primary)',
           fontWeight: 700,
           fontSize: 14,
           whiteSpace: 'nowrap',

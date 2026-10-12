@@ -237,7 +237,7 @@ function Pane({
     <div style={{ flex: 1, minWidth: 0, display: 'flex', flexDirection: 'column' }}>
       {label && (
         <div style={{
-          padding: '8px 14px', fontSize: 11, fontWeight: 800,
+          padding: '8px 14px', fontSize: 12, fontWeight: 800,
           color: DIM, whiteSpace: 'nowrap', overflow: 'hidden',
           textOverflow: 'ellipsis', flexShrink: 0,
           background: 'rgba(255,255,255,0.03)',
@@ -260,7 +260,7 @@ function Pane({
           <div style={{ color: '#F87171', fontSize: 13, maxWidth: 360, textAlign: 'center', marginTop: 56, lineHeight: 1.65 }}>
             {err}
             <div style={{ marginTop: 14 }}>
-              <a href={url} target="_blank" rel="noopener noreferrer" style={{ color: DIM, fontSize: 12.5 }}>
+              <a href={url} target="_blank" rel="noopener noreferrer" style={{ color: DIM, fontSize: 13 }}>
                 Try Opening It Directly
               </a>
             </div>
@@ -268,7 +268,7 @@ function Pane({
         ) : (
           <>
             {busy && (
-              <div style={{ color: DIM, fontSize: 12.5, marginTop: 56, letterSpacing: '0.04em' }}>
+              <div style={{ color: DIM, fontSize: 13, marginTop: 56, letterSpacing: '0.04em' }}>
                 Rendering…
               </div>
             )}
@@ -365,12 +365,12 @@ export default function PdfViewer() {
     height: 34, padding: '0 12px', borderRadius: 9, cursor: 'pointer',
     background: 'rgba(255,255,255,0.06)',
     border: `1px solid ${HAIR}`,
-    color: TEXT, fontSize: 12.5, fontWeight: 700,
+    color: TEXT, fontSize: 13, fontWeight: 700,
     backdropFilter: 'blur(6px)',
     transition: 'background .14s ease, border-color .14s ease',
   };
   const active: React.CSSProperties = {
-    background: 'var(--brand-primary-18)',
+    background: 'var(--bg-surface-2)',
     borderColor: 'color-mix(in srgb, var(--brand-primary) 55%, transparent)',
     color: '#FDE68A',
   };
@@ -417,7 +417,7 @@ export default function PdfViewer() {
         <button style={chip} onClick={() => setPage((p) => Math.max(1, p - 1))} disabled={page <= 1} aria-label="Previous page">
           <CaretLeft size={14} weight="bold" />
         </button>
-        <span style={{ fontSize: 12.5, color: DIM, fontVariantNumeric: 'tabular-nums', minWidth: 72, textAlign: 'center' }}>
+        <span style={{ fontSize: 13, color: DIM, fontVariantNumeric: 'tabular-nums', minWidth: 72, textAlign: 'center' }}>
           {page} / {pages}
         </span>
         <button style={chip} onClick={() => setPage((p) => Math.min(pages, p + 1))} disabled={page >= pages} aria-label="Next page">
@@ -429,7 +429,7 @@ export default function PdfViewer() {
         <button style={chip} onClick={() => { setFit(false); setZoom((z) => Math.max(0.3, z - 0.2)); }} aria-label="Zoom out">
           <MagnifyingGlassMinus size={14} weight="bold" />
         </button>
-        <span style={{ fontSize: 12.5, color: DIM, minWidth: 52, textAlign: 'center', fontVariantNumeric: 'tabular-nums' }}>
+        <span style={{ fontSize: 13, color: DIM, minWidth: 52, textAlign: 'center', fontVariantNumeric: 'tabular-nums' }}>
           {fit ? 'Fit' : `${Math.round(zoom * 100)}%`}
         </span>
         <button style={chip} onClick={() => { setFit(false); setZoom((z) => Math.min(5, z + 0.2)); }} aria-label="Zoom in">
@@ -514,7 +514,7 @@ export default function PdfViewer() {
       </div>
 
       <div style={{
-        padding: '8px 16px', fontSize: 11, color: DIM, flexShrink: 0,
+        padding: '8px 16px', fontSize: 12, color: DIM, flexShrink: 0,
         background: 'linear-gradient(180deg, rgba(12,17,25,0.88), rgba(8,11,17,0.92))',
         backdropFilter: 'blur(18px) saturate(160%)',
         borderTop: `1px solid ${HAIR}`,

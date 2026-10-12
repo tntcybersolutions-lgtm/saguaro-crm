@@ -149,7 +149,7 @@ const CSS = `
 .scGanttRow:hover { background: rgba(255,255,255,0.03); }
 .scGanttRow > span { white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
 .scGanttRow > span:first-child { font-size: var(--fs-sm); font-weight: 600; color: var(--text-primary); }
-.scGanttRow > span + span { font-size: 10px; color: var(--text-tertiary); }
+.scGanttRow > span + span { font-size: 12px; color: var(--text-tertiary); }
 .scGanttScroll { overflow-x: auto; flex: 1; }
 .scLegend { display: flex; align-items: center; gap: 16px; flex-wrap: wrap; padding: 10px 16px; border-top: 1px solid var(--border-default); font-size: var(--fs-xs); color: var(--text-tertiary); }
 .scLegend > span { display: inline-flex; align-items: center; gap: 6px; }

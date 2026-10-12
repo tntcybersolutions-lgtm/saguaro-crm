@@ -4,9 +4,9 @@ import { useProjectContext } from '@/lib/hooks/useProjectContext';
 import { useParams } from 'next/navigation';
 import { Badge, Btn, Table, T } from '@/components/ui/shell';
 import {
-  PremiumSurface, ModuleHero, StatCard, SectionCard, PremiumEmpty, StatStrip, FlowSteps, InsightRow, goldButtonStyle,
+  PremiumSurface, ModuleHero, SectionCard, PremiumEmpty, StatStrip, FlowSteps, InsightRow, goldButtonStyle, secondaryButtonStyle
 } from '@/components/ui/premium';
-import { Bell, WarningCircle, Warning, CheckCircle, Sparkle, Lightning, ListChecks, ClockCounterClockwise } from '@phosphor-icons/react';
+import { Bell, CheckCircle, Sparkle, Lightning, ListChecks, ClockCounterClockwise } from '@phosphor-icons/react';
 
 interface Alert {
   id: string;
@@ -26,7 +26,6 @@ const SEVERITY_BADGE: Record<string, 'red' | 'amber' | 'gold' | 'blue' | 'muted'
 };
 
 // Palette aligned with the dashboard kit (desert-dusk semantic accents).
-const GOLD = 'var(--brand-primary)';
 const RED = 'var(--danger)';
 const AMBER = 'var(--warning)';
 const GREEN = 'var(--success)';
@@ -39,7 +38,6 @@ const SCAN_RULES = [
   { title: 'Pending Lien Waivers', desc: 'Waivers still awaiting signature.', match: (a: Alert) => /waiver/i.test(a.alert_type) },
   { title: 'Stale Change Orders', desc: 'COs sitting in pending for more than 14 days.', match: (a: Alert) => /change order/i.test(a.alert_type) },
 ];
-const fmtD = (d?: string | null) => d ? new Date(d).toLocaleDateString('en-US', { month: 'short', day: 'numeric' }) : '—';
 const fmtM = (n: unknown) => '$' + (Number(n) || 0).toLocaleString('en-US', { maximumFractionDigits: 0 });
 
 export default function AutopilotPage() {
@@ -122,7 +120,6 @@ export default function AutopilotPage() {
   const activeAlerts = alerts.filter(a => a.status !== 'dismissed');
   const criticalCount = activeAlerts.filter(a => a.severity === 'critical').length;
   const highCount = activeAlerts.filter(a => a.severity === 'high').length;
-  const isClear = activeAlerts.length === 0;
   const ruleCounts = SCAN_RULES.map(r => activeAlerts.filter(a => r.match(a)).length);
 
   // What the engine watches on this project — from the live context snapshot.
@@ -148,62 +145,25 @@ export default function AutopilotPage() {
       {/* Header */}
       <ModuleHero
         eyebrow={ctx?.project?.name || 'AI Monitoring'}
-        eyebrowIcon={<Sparkle size={13} weight="fill" color={GOLD} />}
+        eyebrowIcon={<Sparkle size={13} weight="fill" color="var(--text-secondary)" />}
         title="Project"
         accent="Autopilot"
         subtitle="Deterministic checks on live project data. Re-scans every 6 hours."
         actions={scanButton}
       />
 
-      {/* What Autopilot is watching — the live surface area of this project */}
-      {ctx && (
-        <StatStrip items={[
-          {href: `/app/projects/${projectId}/rfis`,  label: 'Open RFIs', value: String(Number(counts?.openRfis) || 0), accent: Number(counts?.openRfis) ? GOLD : undefined, sub: 'Checked for overdue responses' },
-          {href: `/app/projects/${projectId}/change-orders`,  label: 'Pending COs', value: String(pendingCos), accent: pendingCos ? AMBER : undefined, sub: 'Flagged when stale > 14 days' },
-          {href: `/app/projects/${projectId}/subs`,  label: 'Subs on the Job', value: String((ctx?.subs || []).length), sub: 'Insurance + waivers tracked' },
-          {href: `/app/projects/${projectId}/invoices`,  label: 'Invoices', value: String(Number(counts?.invoices) || 0), sub: 'Due dates watched' },
-          {href: `/app/projects/${projectId}/submittals`,  label: 'Open Submittals', value: String(Number(counts?.openSubmittals) || 0), sub: 'In review' },
-          {href: `/app/projects/${projectId}/daily-logs`,  label: 'Last Daily Log', value: fmtD(ctx?.recent?.lastDailyLogDate), sub: ctx?.recent?.lastDailyLogDate ? 'Field reporting active' : 'No logs yet' },
-        ]} />
-      )}
-
-      {/* Stats */}
-      <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(190px, 1fr))', gap: 16, marginBottom: 28 }}>
-        <StatCard
-          icon={<Bell size={19} weight="duotone" color={GOLD} />}
-          label="Active Alerts"
-          value={String(activeAlerts.length)}
-          accent={activeAlerts.length ? GOLD : undefined}
-          sub={activeAlerts.length === 1 ? '1 open on this project' : `${activeAlerts.length} open on this project`}
-          delay={0.02}
-         href={`/app/projects/${projectId}/autopilot`}/>
-        <StatCard
-          icon={<WarningCircle size={19} weight="duotone" color={RED} />}
-          label="Critical"
-          value={String(criticalCount)}
-          accent={criticalCount ? RED : undefined}
-          sub="Need immediate action"
-          delay={0.06}
-         href={`/app/projects/${projectId}/autopilot`}/>
-        <StatCard
-          icon={<Warning size={19} weight="duotone" color={AMBER} />}
-          label="High"
-          value={String(highCount)}
-          accent={highCount ? AMBER : undefined}
-          sub="Review soon"
-          delay={0.10}
-         href={`/app/projects/${projectId}/autopilot`}/>
-        <StatCard
-          icon={isClear
-            ? <CheckCircle size={19} weight="duotone" color={GREEN} />
-            : <WarningCircle size={19} weight="duotone" color={AMBER} />}
-          label="Status"
-          value={isClear ? 'Clear' : 'Action Needed'}
-          accent={isClear ? GREEN : AMBER}
-          sub={isClear ? 'All clear' : 'Requires review'}
-          delay={0.14}
-         href={`/app/projects/${projectId}/autopilot`}/>
-      </div>
+      {/* One summary row: the alerts this page is for, then the live surface
+          the checks watch (RFIs; subs' insurance + waivers). Pending COs sit
+          in the "What These Checks Guard" rail below, so they are not repeated. */}
+      <StatStrip items={[
+        { href: `/app/projects/${projectId}/autopilot`, label: 'Active Alerts', value: String(activeAlerts.length), sub: activeAlerts.length === 1 ? '1 open on this project' : `${activeAlerts.length} open on this project` },
+        { href: `/app/projects/${projectId}/autopilot`, label: 'Critical', value: String(criticalCount), accent: criticalCount ? RED : undefined, sub: 'Need immediate action' },
+        { href: `/app/projects/${projectId}/autopilot`, label: 'High', value: String(highCount), accent: highCount ? AMBER : undefined, sub: 'Review soon' },
+        ...(ctx ? [
+          { href: `/app/projects/${projectId}/rfis`, label: 'Open RFIs', value: String(Number(counts?.openRfis) || 0), sub: 'Checked for overdue responses' },
+          { href: `/app/projects/${projectId}/subs`, label: 'Subs on the Job', value: String((ctx?.subs || []).length), sub: 'Insurance + waivers tracked' },
+        ] : []),
+      ]} />
 
       {toast && (
         <div style={{ marginBottom: 20, padding: '10px 14px', background: T.greenDim, border: `1px solid rgba(74,222,128,0.3)`, borderRadius: 10, color: T.green, fontSize: 13 }}>
@@ -214,7 +174,7 @@ export default function AutopilotPage() {
       {/* Alerts + scan-pipeline rail */}
       <div style={{ display: 'grid', gridTemplateColumns: 'minmax(0,1fr) 320px', gap: 18, alignItems: 'start' }}>
       <SectionCard
-        icon={<Bell size={17} weight="duotone" color={GOLD} />}
+        icon={<Bell size={17} weight="duotone" color="var(--text-secondary)" />}
         title="Project Alerts"
         subtitle="Issues detected by Autopilot on this project"
         action={<span style={{ fontSize: 12, color: T.muted }}>{activeAlerts.length} active</span>}
@@ -227,7 +187,7 @@ export default function AutopilotPage() {
             icon={<CheckCircle size={30} weight="duotone" color={GREEN} />}
             title="No Active Alerts on This Project"
             description="All four checks came back clean — RFIs answered on time, insurance current, lien waivers signed, and change orders moving. Autopilot re-scans automatically every 6 hours; run one now after any big change."
-            action={scanButton}
+            action={<button onClick={runScan} disabled={running} className="pmBtn" style={{ ...secondaryButtonStyle, opacity: running ? 0.6 : 1 }}>{running ? 'Scanning…' : 'Run a Scan Now'}</button>}
           />
         ) : (
           <Table
@@ -251,7 +211,7 @@ export default function AutopilotPage() {
         <SectionCard flat
           title="Scan Pipeline"
           subtitle={running ? 'Running checks…' : 'Runs automatically every 6 hours'}
-          icon={<ListChecks size={17} weight="duotone" color={GOLD} />}
+          icon={<ListChecks size={17} weight="duotone" color="var(--text-secondary)" />}
         >
           <FlowSteps title="" steps={SCAN_RULES.map((r, i) => ({
             title: r.title + (running ? '' : ruleCounts[i] > 0 ? ` — ${ruleCounts[i]} alert${ruleCounts[i] === 1 ? '' : 's'}` : ' — Clear'),
@@ -260,14 +220,14 @@ export default function AutopilotPage() {
           }))} />
         </SectionCard>
         {ctx && (
-          <SectionCard flat title="What These Checks Guard" icon={<ClockCounterClockwise size={17} weight="duotone" color={GOLD} />}>
+          <SectionCard flat title="What These Checks Guard" icon={<ClockCounterClockwise size={17} weight="duotone" color="var(--text-secondary)" />}>
             <InsightRow label="Revised Contract" value={fmtM(money?.revisedContract)} strong />
             <InsightRow label="Billed to Date" value={`${fmtM(money?.billedToDate)} · ${Number(money?.billedPct) || 0}%`} />
             <InsightRow label="Paid to Date" value={fmtM(money?.paidToDate)} accent={GREEN} />
             {pendingCos > 0 && <InsightRow label="Pending COs" value={String(pendingCos)} accent={AMBER} />}
             {Number(counts?.openPunch) > 0 && <InsightRow label="Open Punch" value={String(Number(counts?.openPunch) || 0)} />}
             {Number(ctx?.schedule?.criticalCount) > 0 && <InsightRow label="Critical-Path Tasks" value={String(Number(ctx?.schedule?.criticalCount) || 0)} accent={RED} />}
-            <div style={{ fontSize: 11, color: 'var(--c-text-2)', marginTop: 8, lineHeight: 1.5 }}>
+            <div style={{ fontSize: 12, color: 'var(--c-text-2)', marginTop: 8, lineHeight: 1.5 }}>
               An unanswered RFI, a lapsed cert, or a stale CO puts this money at risk — that is what the alerts on the left protect.
             </div>
           </SectionCard>

@@ -22,7 +22,6 @@
 import React, { useEffect, useRef } from 'react';
 import Link from 'next/link';
 import { usePathname, useParams } from 'next/navigation';
-import { useProject } from '@/lib/hooks/useProjects';
 import { PROJECT_PHASES, phaseForPath } from '@/lib/project-nav';
 
 export default function ProjectLayout({ children }: { children: React.ReactNode }) {
@@ -32,13 +31,8 @@ export default function ProjectLayout({ children }: { children: React.ReactNode 
   const base = `/app/projects/${projectId}`;
   const rel = pathname.startsWith(base) ? pathname.slice(base.length) : '';
   const onJobPage = rel === '' || rel === '/' || rel.startsWith('/overview');
-  /* A tool page's own top bar already goes back to the job; deeper pages' does not. */
-  const showBack = !onJobPage && rel.split('/').filter(Boolean).length >= 2;
   const real = !!projectId && projectId !== 'new';
 
-  /* Same SWR key as the job page's aggregate — opening a job costs one request. */
-  const { project } = useProject(real ? projectId : null);
-  const name = String((project as { name?: string } | null)?.name || '');
   const activeKey = onJobPage ? 'overview' : phaseForPath(rel);
 
   /* Phone: keep the current phase in view in the swipe row (no page scroll). */
@@ -53,13 +47,10 @@ export default function ProjectLayout({ children }: { children: React.ReactNode 
   return (
     <div className="pjx" style={{ minWidth: 0, background: 'var(--bg-base)', minHeight: 'calc(100vh - 56px)' }}>
       <style dangerouslySetInnerHTML={{ __html: CSS }} />
+      {/* No separate "‹ Job" link: the Overview tab is the way back to the job,
+          so the tab row sits in the same place on every job page. */}
       {real && (
-        <nav className="pjx-bar" data-job-bar="" data-no-back={showBack ? undefined : ''} aria-label="Job">
-          {showBack && (
-            <Link href={`${base}/overview`} className="pjx-back" aria-label={`Back to ${name || 'the job'}`}>
-              <span aria-hidden="true">‹</span><span className="pjx-back-name">{name || 'Job'}</span>
-            </Link>
-          )}
+        <nav className="pjx-bar" data-job-bar="" aria-label="Job">
           <div className="pjx-tabs" ref={tabsRef}>
             {PROJECT_PHASES.map((ph) => {
               const active = ph.key === activeKey;
@@ -90,12 +81,8 @@ export default function ProjectLayout({ children }: { children: React.ReactNode 
    and client text match (tools/check-style-escapes.mjs). */
 const CSS = `
 .pjx-bar{display:flex;flex-wrap:wrap;align-items:center;gap:0 8px;min-height:44px;padding:0 8px 0 4px;border-bottom:1px solid var(--fl-line,var(--border-default));min-width:0}
-.pjx-back{display:inline-flex;align-items:center;gap:4px;min-height:44px;padding:0 10px 0 8px;color:var(--link);font-size:15px;font-weight:600;text-decoration:none;min-width:0;flex:0 1 auto;-webkit-tap-highlight-color:transparent}
-.pjx-back:hover{color:var(--link-hover)}
-.pjx-back>span:first-child{font-size:22px;line-height:1;margin-top:-2px}
-.pjx-back-name{white-space:nowrap;overflow:hidden;text-overflow:ellipsis;max-width:min(60vw,420px)}
 /* Phase tabs: slate pills; the phase you are in is the one yellow pill. */
-.pjx-tab{display:inline-flex;align-items:center;gap:7px;min-height:44px;padding:0 15px;border-radius:999px;flex:0 0 auto;white-space:nowrap;text-decoration:none;
+.pjx-tab{display:inline-flex;align-items:center;gap:7px;min-height:44px;padding:0 15px;border-radius:10px;flex:0 0 auto;white-space:nowrap;text-decoration:none;
   border:1px solid var(--border-default);background:var(--bg-surface-2);color:var(--text-primary);font-size:14px;font-weight:600;
   -webkit-tap-highlight-color:transparent;transition:background-color .15s ease,border-color .15s ease}
 .pjx-tab svg{color:var(--text-secondary);flex:none}
@@ -106,7 +93,6 @@ const CSS = `
 @media (prefers-reduced-motion:reduce){.pjx-tab{transition:none}}
 @media (max-width:767px){
   .pjx-bar{padding:0}
-  .pjx-back{padding-left:12px}
   .pjx-tabs{display:flex;flex-wrap:nowrap;gap:8px;width:100%;overflow-x:auto;overscroll-behavior-x:contain;scroll-snap-type:x proximity;scrollbar-width:none;padding:8px 12px;
     -webkit-mask-image:linear-gradient(90deg,black calc(100% - 28px),transparent);mask-image:linear-gradient(90deg,black calc(100% - 28px),transparent)}
   .pjx-tabs::-webkit-scrollbar{display:none}
@@ -114,8 +100,7 @@ const CSS = `
 }
 @media (min-width:768px){
   .pjx-bar{padding:0 clamp(8px,1.2vw,20px) 0 4px;min-height:60px}
-  .pjx-tabs{display:flex;flex-wrap:wrap;justify-content:flex-end;align-items:center;gap:8px;margin-left:auto;min-width:0;padding:8px 2px}
+  .pjx-tabs{display:flex;flex-wrap:wrap;justify-content:flex-start;align-items:center;gap:8px;min-width:0;padding:8px 2px}
   .pjx-tab{min-height:40px}
-  .pjx-bar[data-no-back] .pjx-tabs{margin-left:0;justify-content:flex-start}
 }
 `;

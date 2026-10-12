@@ -16,7 +16,7 @@ import React, { useState, useEffect, useMemo, useCallback } from 'react';
 import { humanError } from '@/lib/errors';
 import {
   PremiumSurface, ModuleHero, SectionCard, StatStrip, IconChip, Pill,
-  goldButtonStyle, ghostButtonStyle,
+  goldButtonStyle, ghostButtonStyle, secondaryButtonStyle
 } from '@/components/ui/premium';
 import { PdfIcon, XlsIcon, CsvIcon, DocIcon, FileButton } from '@/components/ui/FileTypeIcon';
 import {
@@ -197,7 +197,7 @@ const inputStyle: React.CSSProperties = {
   outline: 'none',
 };
 const labelStyle: React.CSSProperties = {
-  fontSize: 10.5,
+  fontSize: 12,
   fontWeight: 800,
 
   color: MUTED,
@@ -487,14 +487,14 @@ export default function ReportBuilderPage() {
           .rb-print-area, .rb-print-area * { color: #000 !important; }
           .rb-print-area { box-shadow: none !important; background: #fff !important; }
           .rb-print-area table { border-collapse: collapse; width: 100%; }
-          .rb-print-area th, .rb-print-area td { border: 1px solid #999 !important; padding: 6px 8px !important; font-size: 11px; }
+          .rb-print-area th, .rb-print-area td { border: 1px solid #999 !important; padding: 6px 8px !important; font-size: 12px; }
         }
       `}</style>
 
       <div className="rb-noprint">
         <ModuleHero
           eyebrow="Analytics"
-          eyebrowIcon={<ChartBar size={13} weight="fill" color={GOLD} />}
+          eyebrowIcon={<ChartBar size={13} weight="fill" color="var(--text-secondary)" />}
           title="Custom Report"
           accent="Builder"
           subtitle="Build a report over live project data, then run or export."
@@ -529,7 +529,7 @@ export default function ReportBuilderPage() {
           <SectionCard
             title="1 · Source"
             subtitle="Which records, in what order"
-            icon={<Table size={16} weight="duotone" color={GOLD} />}
+            icon={<Table size={16} weight="duotone" color="var(--text-secondary)" />}
           >
             <div style={{ display: 'flex', flexDirection: 'column', gap: 14 }}>
               <div>
@@ -580,7 +580,7 @@ export default function ReportBuilderPage() {
           <SectionCard
             title="2 · Columns"
             subtitle={`${selectedCols.length} of ${entity.columns.length} selected`}
-            icon={<Columns size={16} weight="duotone" color={GOLD} />}
+            icon={<Columns size={16} weight="duotone" color="var(--text-secondary)" />}
           >
             <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(150px, 1fr))', gap: 8 }}>
               {entity.columns.map((c) => {
@@ -609,7 +609,7 @@ export default function ReportBuilderPage() {
           <SectionCard
             title="3 · Filters"
             subtitle={filters.length ? `${filters.length} active` : 'optional'}
-            icon={<Funnel size={16} weight="duotone" color={GOLD} />}
+            icon={<Funnel size={16} weight="duotone" color="var(--text-secondary)" />}
             action={
               <button onClick={addFilter} style={{ ...ghostButtonStyle, padding: '7px 12px', fontSize: 12 }} className="pmBtn">
                 <Plus size={13} weight="bold" /> Add filter
@@ -657,7 +657,7 @@ export default function ReportBuilderPage() {
           <SectionCard
             title="Saved Reports"
             subtitle="Reusable configurations, shared with your team"
-            icon={<FloppyDisk size={16} weight="duotone" color={GOLD} />}
+            icon={<FloppyDisk size={16} weight="duotone" color="var(--text-secondary)" />}
           >
             <div style={{ display: 'flex', flexDirection: 'column', gap: 12 }}>
               <div style={{ display: 'flex', gap: 6, alignItems: 'center' }}>
@@ -667,11 +667,11 @@ export default function ReportBuilderPage() {
                   placeholder="Report name"
                   style={{ ...inputStyle, flex: 1 }}
                 />
-                <button onClick={saveReport} disabled={saving} className="pmBtn" style={{ ...goldButtonStyle, padding: '9px 14px', fontSize: 12.5, cursor: saving ? 'not-allowed' : 'pointer', opacity: saving ? 0.6 : 1 }}>
+                <button onClick={saveReport} disabled={saving} className="pmBtn" style={{ ...secondaryButtonStyle, padding: '9px 14px', fontSize: 13, cursor: saving ? 'not-allowed' : 'pointer', opacity: saving ? 0.6 : 1 }}>
                   {saving ? 'Saving…' : loadedId ? 'Update' : 'Save'}
                 </button>
               </div>
-              {loadedId && <div style={{ fontSize: 11, color: FAINT }}>Editing a saved report — Update overwrites it.</div>}
+              {loadedId && <div style={{ fontSize: 12, color: FAINT }}>Editing a saved report — Update overwrites it.</div>}
               <div style={{ display: 'flex', flexDirection: 'column', gap: 6 }}>
                 {savedLoading && (
                   <>
@@ -696,7 +696,7 @@ export default function ReportBuilderPage() {
                   >
                     <div style={{ flex: 1, minWidth: 0 }}>
                       <div style={{ fontSize: 13, fontWeight: 600, color: WHITE, whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>{rep.name}</div>
-                      <div style={{ fontSize: 11, color: FAINT }}>{ENTITY_MAP[rep.entity]?.label || rep.entity}</div>
+                      <div style={{ fontSize: 12, color: FAINT }}>{ENTITY_MAP[rep.entity]?.label || rep.entity}</div>
                     </div>
                     <button onClick={() => loadReport(rep)} className="pmBtn" style={{ ...ghostButtonStyle, padding: '6px 12px', fontSize: 12 }}>Load</button>
                     <button
@@ -718,7 +718,7 @@ export default function ReportBuilderPage() {
             flush
             title={reportName || `${entity.label} Report`}
             subtitle={result ? `${result.rowCount} row${result.rowCount === 1 ? '' : 's'} · live tenant data` : 'Results land here'}
-            icon={<ChartBar size={16} weight="duotone" color={GOLD} />}
+            icon={<ChartBar size={16} weight="duotone" color="var(--text-secondary)" />}
             action={
               <div className="rb-noprint" style={{ display: 'flex', gap: 8, flexWrap: 'wrap', alignItems: 'center' }}>
                 <FileButton icon={<PdfIcon size={16} />} label={exporting === 'pdf' ? 'Building…' : 'PDF'} onClick={() => exportAs('pdf')} disabled={!result || result.rowCount === 0 || !!exporting} title="Branded corporate PDF — letterhead, KPI band, totals" />
@@ -745,10 +745,10 @@ export default function ReportBuilderPage() {
               {!running && !result && (
                 <div style={{ padding: '52px 24px', textAlign: 'center' }}>
                   <div style={{ display: 'inline-flex', marginBottom: 16 }}>
-                    <IconChip size={56}><ChartBar size={26} weight="duotone" color={GOLD} /></IconChip>
+                    <IconChip size={56}><ChartBar size={26} weight="duotone" color="var(--text-secondary)" /></IconChip>
                   </div>
                   <div style={{ fontSize: 16, fontWeight: 800, color: WHITE, marginBottom: 6 }}>No report run yet</div>
-                  <div style={{ fontSize: 13.5, color: MUTED, lineHeight: 1.55, maxWidth: 380, margin: '0 auto' }}>
+                  <div style={{ fontSize: 14, color: MUTED, lineHeight: 1.55, maxWidth: 380, margin: '0 auto' }}>
                     Configure your report on the left, then press <strong style={{ color: WHITE }}>Run Report</strong>. Results come straight from your live project data.
                   </div>
                 </div>
@@ -760,7 +760,7 @@ export default function ReportBuilderPage() {
                       {result.columns.map((c) => (
                         <th key={c.key} style={{
                           padding: '10px 14px', textAlign: c.type === 'currency' || c.type === 'number' || c.type === 'percent' ? 'right' : 'left',
-                          color: MUTED, fontWeight: 700, fontSize: 11,
+                          color: MUTED, fontWeight: 700, fontSize: 12,
                           borderBottom: `1px solid ${BORDER}`, whiteSpace: 'nowrap', position: 'sticky', top: 0, zIndex: 1,
                           background: 'var(--bg-surface-2)',
                         }}>{c.label}</th>
@@ -772,7 +772,7 @@ export default function ReportBuilderPage() {
                       <React.Fragment key={g.key || '_all'}>
                         {result.groupBy && (
                           <tr>
-                            <td colSpan={result.columns.length} style={{ padding: '8px 14px', background: 'var(--brand-primary-12)', color: GOLD_HI, fontWeight: 700, fontSize: 12, letterSpacing: '0.04em', borderBottom: `1px solid ${BORDER}` }}>
+                            <td colSpan={result.columns.length} style={{ padding: '8px 14px', background: 'var(--bg-surface-2)', color: 'var(--text-primary)', fontWeight: 700, fontSize: 12, letterSpacing: '0.04em', borderBottom: `1px solid ${BORDER}` }}>
                               {ENTITY_MAP[entityKey]?.columns.find((c) => c.key === result.groupBy)?.label || result.groupBy}: {g.key} · {g.rows.length}
                             </td>
                           </tr>
@@ -795,10 +795,10 @@ export default function ReportBuilderPage() {
                         {result.groupBy && currencyCols.length > 0 && (
                           <tr style={{ borderBottom: `1px solid ${BORDER}` }}>
                             {result.columns.map((c, ci) => {
-                              if (ci === 0) return <td key={c.key} style={{ padding: '8px 14px', color: FAINT, fontSize: 11, fontWeight: 700 }}>Subtotal</td>;
+                              if (ci === 0) return <td key={c.key} style={{ padding: '8px 14px', color: FAINT, fontSize: 12, fontWeight: 700 }}>Subtotal</td>;
                               if (c.type === 'currency') {
                                 const sum = g.rows.reduce((acc, r) => acc + (Number(r[c.key]) || 0), 0);
-                                return <td key={c.key} style={{ padding: '8px 14px', textAlign: 'right', color: GOLD_HI, fontWeight: 700, fontVariantNumeric: 'tabular-nums' }}>{fmtCell(sum, 'currency')}</td>;
+                                return <td key={c.key} style={{ padding: '8px 14px', textAlign: 'right', color: 'var(--text-primary)', fontWeight: 700, fontVariantNumeric: 'tabular-nums' }}>{fmtCell(sum, 'currency')}</td>;
                               }
                               return <td key={c.key} />;
                             })}
@@ -817,7 +817,7 @@ export default function ReportBuilderPage() {
                           if (ci === 0) return <td key={c.key} style={{ padding: '10px 14px', color: WHITE, fontWeight: 700 }}>Total</td>;
                           if (c.type === 'currency') {
                             const sum = result.rows.reduce((acc, r) => acc + (Number(r[c.key]) || 0), 0);
-                            return <td key={c.key} style={{ padding: '10px 14px', textAlign: 'right', color: GOLD_HI, fontWeight: 800, fontVariantNumeric: 'tabular-nums' }}>{fmtCell(sum, 'currency')}</td>;
+                            return <td key={c.key} style={{ padding: '10px 14px', textAlign: 'right', color: 'var(--text-primary)', fontWeight: 800, fontVariantNumeric: 'tabular-nums' }}>{fmtCell(sum, 'currency')}</td>;
                           }
                           return <td key={c.key} />;
                         })}
@@ -837,7 +837,7 @@ export default function ReportBuilderPage() {
         <SectionCard
           title="Scheduled Deliveries"
           subtitle="Scheduled reports, emailed with the full CSV attached."
-          icon={<Clock size={16} weight="duotone" color={GOLD} />}
+          icon={<Clock size={16} weight="duotone" color="var(--text-secondary)" />}
         >
           <div style={{ display: 'flex', flexDirection: 'column', gap: 12 }}>
             {schedError && (
@@ -873,12 +873,12 @@ export default function ReportBuilderPage() {
                   }}
                 >
                   <div style={{ display: 'flex', alignItems: 'center', gap: 10, flexWrap: 'wrap' }}>
-                    <div style={{ flex: 1, minWidth: 160, fontSize: 13.5, fontWeight: 700, color: WHITE, whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>{tpl.name}</div>
-                    {savingThis && <span style={{ fontSize: 11, color: FAINT }}>Saving…</span>}
+                    <div style={{ flex: 1, minWidth: 160, fontSize: 14, fontWeight: 700, color: WHITE, whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>{tpl.name}</div>
+                    {savingThis && <span style={{ fontSize: 12, color: FAINT }}>Saving…</span>}
                     <Pill tone={s.enabled ? 'green' : 'neutral'}>{s.enabled ? 'Active' : 'Canceled'}</Pill>
                   </div>
 
-                  <div style={{ display: 'flex', gap: 14, flexWrap: 'wrap', fontSize: 11.5, color: FAINT }}>
+                  <div style={{ display: 'flex', gap: 14, flexWrap: 'wrap', fontSize: 12, color: FAINT }}>
                     {s.enabled && <span>Next run: <span style={{ color: MUTED }}>{fmtWhen(s.nextRun)}</span></span>}
                     {s.lastRunAt && <span>Last ran {fmtWhen(s.lastRunAt)}{s.lastStatus ? ` · ${s.lastStatus}` : ''}</span>}
                   </div>
@@ -934,8 +934,8 @@ export default function ReportBuilderPage() {
                     </div>
                   ) : (
                     <div style={{ display: 'flex', gap: 12, alignItems: 'center', flexWrap: 'wrap' }}>
-                      <span style={{ fontSize: 12.5, color: MUTED }}>Canceled — no more emails will be sent. Re-enable to resume with the same cadence and recipients.</span>
-                      <button onClick={() => saveSchedule(tpl.id, { ...s, enabled: true })} disabled={savingThis} className="pmBtn" style={{ ...goldButtonStyle, padding: '8px 14px', fontSize: 12 }}>
+                      <span style={{ fontSize: 13, color: MUTED }}>Canceled — no more emails will be sent. Re-enable to resume with the same cadence and recipients.</span>
+                      <button onClick={() => saveSchedule(tpl.id, { ...s, enabled: true })} disabled={savingThis} className="pmBtn" style={{ ...secondaryButtonStyle, padding: '8px 14px', fontSize: 12 }}>
                         Re-enable
                       </button>
                     </div>

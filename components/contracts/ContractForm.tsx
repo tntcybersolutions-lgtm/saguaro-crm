@@ -139,9 +139,9 @@ export default function ContractForm({
     <div style={{ display: 'flex', flexDirection: 'column', gap: 18 }}>
       <div>
         <h2 style={{ margin: '0 0 4px', color: TEXT, fontSize: 20, fontWeight: 800 }}>{data.title}</h2>
-        <p style={{ margin: 0, color: DIM, fontSize: 13.5 }}>{data.blurb}</p>
+        <p style={{ margin: 0, color: DIM, fontSize: 14 }}>{data.blurb}</p>
         {auto.size > 0 && (
-          <p style={{ margin: '10px 0 0', color: DIM, fontSize: 12.5 }}>
+          <p style={{ margin: '10px 0 0', color: DIM, fontSize: 13 }}>
             <span style={autoChip}>AUTO</span>{' '}
             {auto.size} field{auto.size === 1 ? '' : 's'} filled in from this project. Change anything —
             it is a starting point, not a lock.
@@ -151,7 +151,7 @@ export default function ContractForm({
 
       {sections.map((sec) => (
         <div key={sec.section} style={{ background: CARD, border: `1px solid ${BORDER}`, borderRadius: 12, padding: '16px 18px' }}>
-          <div style={{ color: GOLD, fontSize: 11, fontWeight: 800, marginBottom: 14 }}>
+          <div style={{ color: 'var(--text-primary)', fontSize: 12, fontWeight: 800, marginBottom: 14 }}>
             {sec.section}
           </div>
           <div style={{ display: 'flex', flexWrap: 'wrap', gap: 14 }}>
@@ -159,7 +159,7 @@ export default function ContractForm({
               <div key={f.key} style={{ flex: f.half ? '1 1 44%' : '1 1 100%', minWidth: 220 }}>
                 <label style={labelStyle}>
                   {f.label}
-                  {f.required && <span style={{ color: GOLD, marginLeft: 4 }}>*</span>}
+                  {f.required && <span style={{ color: 'var(--text-primary)', marginLeft: 4 }}>*</span>}
                   {auto.has(f.key) && <span style={autoChip}>AUTO</span>}
                 </label>
                 <FieldControl field={f} value={values[f.key]} onChange={(v) => set(f.key, v)} />
@@ -170,7 +170,7 @@ export default function ContractForm({
         </div>
       ))}
 
-      {error && <p style={{ color: 'var(--danger)', fontSize: 13.5, margin: 0 }}>{error}</p>}
+      {error && <p style={{ color: 'var(--danger)', fontSize: 14, margin: 0 }}>{error}</p>}
 
       <div style={{ display: 'flex', gap: 12, alignItems: 'center', flexWrap: 'wrap' }}>
         <button
@@ -186,12 +186,12 @@ export default function ContractForm({
           {busy ? 'Generating…' : 'Preview & Generate'}
         </button>
         {onCancel && (
-          <button onClick={onCancel} style={{ minHeight: 44, padding: '0 20px', borderRadius: 9, background: 'transparent', border: `1px solid ${BORDER}`, color: DIM, fontSize: 13.5, fontWeight: 600, cursor: 'pointer' }}>
+          <button onClick={onCancel} style={{ minHeight: 44, padding: '0 20px', borderRadius: 9, background: 'transparent', border: `1px solid ${BORDER}`, color: DIM, fontSize: 14, fontWeight: 600, cursor: 'pointer' }}>
             Cancel
           </button>
         )}
         {missing.length > 0 && (
-          <span style={{ color: DIM, fontSize: 12.5 }}>
+          <span style={{ color: DIM, fontSize: 13 }}>
             Still needed: {missing.join(', ')}
           </span>
         )}
@@ -264,7 +264,7 @@ function FieldControl({ field, value, onChange }: {
           {(field.options ?? []).map((opt) => {
             const on = picked.includes(opt);
             return (
-              <label key={opt} style={{ display: 'flex', alignItems: 'center', gap: 10, minHeight: 44, padding: '0 6px', cursor: 'pointer', color: on ? TEXT : DIM, fontSize: 13.5 }}>
+              <label key={opt} style={{ display: 'flex', alignItems: 'center', gap: 10, minHeight: 44, padding: '0 6px', cursor: 'pointer', color: on ? TEXT : DIM, fontSize: 14 }}>
                 <input type="checkbox" checked={on} onChange={() => toggle(opt)} style={{ width: 17, height: 17, accentColor: GOLD, cursor: 'pointer', flex: '0 0 auto' }} />
                 {opt}
               </label>
@@ -281,17 +281,17 @@ function FieldControl({ field, value, onChange }: {
 
 const labelStyle: React.CSSProperties = {
   display: 'flex', alignItems: 'center', gap: 8,
-  fontSize: 11, fontWeight: 700, color: DIM,
+  fontSize: 12, fontWeight: 700, color: DIM,
   marginBottom: 6,
 };
 
 const autoChip: React.CSSProperties = {
-  fontSize: 9, fontWeight: 800, letterSpacing: '0.08em',
-  color: GOLD, background: 'var(--brand-primary-12)',
-  border: '1px solid var(--brand-primary-35)',
+  fontSize: 12, fontWeight: 800, letterSpacing: '0.08em',
+  color: 'var(--text-primary)', background: 'var(--bg-surface-2)',
+  border: '1px solid var(--border-default)',
   borderRadius: 4, padding: '1px 5px',
 };
 
 const hintStyle: React.CSSProperties = {
-  marginTop: 6, fontSize: 11.5, lineHeight: 1.45, color: 'rgba(139,170,200,0.75)',
+  marginTop: 6, fontSize: 12, lineHeight: 1.45, color: 'rgba(139,170,200,0.75)',
 };

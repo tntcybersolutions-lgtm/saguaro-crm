@@ -13,7 +13,7 @@ import {
 } from '@phosphor-icons/react';
 import {
   PremiumSurface, ModuleHero, StatCard, SectionCard, PremiumEmpty,
-  goldButtonStyle, ghostButtonStyle,
+  goldButtonStyle, ghostButtonStyle, secondaryButtonStyle
 } from '@/components/ui/premium';
 import { SHEET_DISCIPLINES } from '@/lib/construction-intelligence';
 
@@ -475,7 +475,7 @@ function EstimatePage() {
     background: DARK, color: TEXT, border: `1px solid ${BORDER}`, borderRadius: 8,
     padding: '9px 11px', fontSize: 13, width: '100%', boxSizing: 'border-box', outline: 'none',
   };
-  const smallGoldBtn: CSSProperties = { ...goldButtonStyle, padding: '7px 13px', fontSize: 12.5, borderRadius: 10 };
+  const smallGoldBtn: CSSProperties = { ...goldButtonStyle, padding: '7px 13px', fontSize: 13, borderRadius: 10 };
 
   return (
     <PremiumSurface maxWidth={2200}>
@@ -492,7 +492,7 @@ function EstimatePage() {
       </div>
       <ModuleHero
         eyebrow="Takeoff Estimate"
-        eyebrowIcon={<Calculator size={13} weight="fill" color={GOLD} />}
+        eyebrowIcon={<Calculator size={13} weight="fill" color="var(--text-secondary)" />}
         title={project?.name || 'Loading…'}
         subtitle="Sheet-by-sheet quantity takeoff and live cost estimating."
         actions={<>
@@ -504,7 +504,7 @@ function EstimatePage() {
             }}
             style={{
               background: DARK, color: TEXT, border: `1px solid ${BORDER}`, borderRadius: 12,
-              padding: '10px 14px', fontSize: 13.5, fontWeight: 700, minWidth: 200, cursor: 'pointer',
+              padding: '10px 14px', fontSize: 14, fontWeight: 700, minWidth: 200, cursor: 'pointer',
             }}
           >
             <option value="" disabled>Select Takeoff</option>
@@ -520,7 +520,7 @@ function EstimatePage() {
 
       {/* KPI ROW */}
       <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(180px, 1fr))', gap: 12, marginBottom: 24 }}>
-        <StatCard icon={<Calculator size={19} weight="duotone" color={GOLD} />} label="Total Cost" value={currency(grandTotal)} accent={GOLD} sub="Material + labor" delay={0.02}  href={`/app/projects/${projectId}/takeoff/estimate`}/>
+        <StatCard icon={<Calculator size={19} weight="duotone" color="var(--text-secondary)" />} label="Total Cost" value={currency(grandTotal)} accent={GOLD} sub="Material + labor" delay={0.02}  href={`/app/projects/${projectId}/takeoff/estimate`}/>
         <StatCard icon={<Cube size={19} weight="duotone" color="var(--warning)" />} label="Material" value={currency(totalMaterial)} accent="var(--warning)" sub="Rolled up" delay={0.06}  href={`/app/projects/${projectId}/takeoff/estimate`}/>
         <StatCard icon={<Users size={19} weight="duotone" color="var(--success)" />} label="Labor" value={currency(totalLabor)} accent="var(--success)" sub="Rolled up" delay={0.10}  href={`/app/projects/${projectId}/takeoff/estimate`}/>
       </div>
@@ -534,10 +534,10 @@ function EstimatePage() {
           {/* Sheets */}
           <SectionCard
             title="Sheets"
-            icon={<Stack size={17} weight="duotone" color={GOLD} />}
+            icon={<Stack size={17} weight="duotone" color="var(--text-secondary)" />}
             flush
             action={
-              <button onClick={() => setAddingSheet(true)} style={smallGoldBtn} className="pmBtn">
+              <button onClick={() => setAddingSheet(true)} style={{ ...secondaryButtonStyle, padding: '7px 13px', fontSize: 13 }} className="pmBtn">
                 <Plus size={13} weight="bold" /> Add Sheet
               </button>
             }
@@ -565,7 +565,7 @@ function EstimatePage() {
                 )}
                 <div style={{ display: 'flex', gap: 8 }}>
                   <button onClick={addSheet} style={{ ...smallGoldBtn, flex: 1 }} className="pmBtn">Save</button>
-                  <button onClick={() => { setAddingSheet(false); setNewSheetName(''); setSheetError(null); }} style={{ ...ghostButtonStyle, flex: 1, padding: '7px 13px', fontSize: 12.5, borderRadius: 10 }} className="pmBtn">Cancel</button>
+                  <button onClick={() => { setAddingSheet(false); setNewSheetName(''); setSheetError(null); }} style={{ ...ghostButtonStyle, flex: 1, padding: '7px 13px', fontSize: 13, borderRadius: 10 }} className="pmBtn">Cancel</button>
                 </div>
               </div>
             )}
@@ -591,15 +591,15 @@ function EstimatePage() {
                 >
                   <div style={{
                     width: 40, height: 40, borderRadius: 6, background: DARK, border: `1px solid ${BORDER}`,
-                    display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 10, color: DIM, flexShrink: 0,
+                    display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 12, color: DIM, flexShrink: 0,
                   }}>
                     {s.thumbnail_url ? <img src={s.thumbnail_url} alt="" style={{ width: 40, height: 40, borderRadius: 6, objectFit: 'cover' }} /> : 'PDF'}
                   </div>
                   <div style={{ flex: 1, minWidth: 0 }}>
                     <div style={{ fontSize: 13, fontWeight: 700, color: selectedSheet?.id === s.id ? GOLD : TEXT, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{s.name}</div>
                     <div style={{ display: 'flex', alignItems: 'center', gap: 6, marginTop: 3 }}>
-                      <span style={{ fontSize: 10, padding: '1px 6px', borderRadius: 4, background: getDisciplineColor(s.discipline), color: 'var(--text-primary)', fontWeight: 700 }}>{s.discipline}</span>
-                      {s.sheet_number && <span style={{ fontSize: 11, color: DIM }}>{s.sheet_number}</span>}
+                      <span style={{ fontSize: 12, padding: '1px 6px', borderRadius: 4, background: getDisciplineColor(s.discipline), color: 'var(--text-primary)', fontWeight: 700 }}>{s.discipline}</span>
+                      {s.sheet_number && <span style={{ fontSize: 12, color: DIM }}>{s.sheet_number}</span>}
                     </div>
                   </div>
                 </div>
@@ -610,7 +610,7 @@ function EstimatePage() {
           {/* Assembly Library */}
           <SectionCard
             title="Assembly Library"
-            icon={<Cube size={17} weight="duotone" color={GOLD} />}
+            icon={<Cube size={17} weight="duotone" color="var(--text-secondary)" />}
             flush
             action={
               <button
@@ -639,9 +639,9 @@ function EstimatePage() {
                   >
                     <div>
                       <div style={{ fontWeight: 600, color: TEXT }}>{a.name}</div>
-                      <div style={{ fontSize: 11, color: DIM }}>{a.unit}</div>
+                      <div style={{ fontSize: 12, color: DIM }}>{a.unit}</div>
                     </div>
-                    <div style={{ color: GOLD, fontWeight: 700, fontSize: 13 }}>{currency(a.total_cost)}</div>
+                    <div style={{ color: 'var(--text-primary)', fontWeight: 700, fontSize: 13 }}>{currency(a.total_cost)}</div>
                   </div>
                 ))}
               </div>
@@ -654,7 +654,7 @@ function EstimatePage() {
           {!selectedSheet ? (
             <SectionCard flat flush>
               <PremiumEmpty
-                icon={<FileText size={30} weight="duotone" color={GOLD} />}
+                icon={<FileText size={30} weight="duotone" color="var(--text-secondary)" />}
                 title="Select or Add a Sheet to Begin"
                 description="Choose a sheet from the left, or add a new one to start capturing quantities and line-item costs."
               />
@@ -663,10 +663,10 @@ function EstimatePage() {
             <SectionCard
               title="Line Items"
               subtitle={`${selectedSheet.name} · ${selectedSheet.discipline}`}
-              icon={<ListNumbers size={17} weight="duotone" color={GOLD} />}
+              icon={<ListNumbers size={17} weight="duotone" color="var(--text-secondary)" />}
               flush
               action={
-                <button onClick={() => setAddingRow(true)} style={smallGoldBtn} className="pmBtn">
+                <button onClick={() => setAddingRow(true)} style={{ ...secondaryButtonStyle, padding: '7px 13px', fontSize: 13 }} className="pmBtn">
                   <Plus size={13} weight="bold" /> Add Line Item
                 </button>
               }
@@ -688,7 +688,7 @@ function EstimatePage() {
                     <thead>
                       <tr>
                         {['#', 'CSI Code', 'Description', 'Qty', 'Unit', 'Unit Cost', 'Extended', 'Labor Hrs', 'Actions'].map(h => (
-                          <th key={h} style={{ textAlign: 'left', padding: '8px 10px', borderBottom: `2px solid ${BORDER}`, color: DIM, fontSize: 11, whiteSpace: 'nowrap' }}>{h}</th>
+                          <th key={h} style={{ textAlign: 'left', padding: '8px 10px', borderBottom: `2px solid ${BORDER}`, color: DIM, fontSize: 12, whiteSpace: 'nowrap' }}>{h}</th>
                         ))}
                       </tr>
                     </thead>
@@ -740,7 +740,7 @@ function EstimatePage() {
                             <td style={{ padding: '8px 10px' }}>{editable('quantity', item.quantity, 60)}</td>
                             <td style={{ padding: '8px 10px' }}>{editable('unit', item.unit, 50)}</td>
                             <td style={{ padding: '8px 10px' }}>{editable('unit_cost', item.unit_cost, 80)}</td>
-                            <td style={{ padding: '8px 10px', color: GOLD, fontWeight: 600 }}>{currency(num(item.quantity) * num(item.unit_cost))}</td>
+                            <td style={{ padding: '8px 10px', color: 'var(--text-primary)', fontWeight: 600 }}>{currency(num(item.quantity) * num(item.unit_cost))}</td>
                             <td style={{ padding: '8px 10px' }}>{editable('labor_hours', item.labor_hours, 60)}</td>
                             <td style={{ padding: '8px 10px' }}>
                               <button
@@ -756,7 +756,7 @@ function EstimatePage() {
                       })}
                       {/* Add Row */}
                       {addingRow && (
-                        <tr style={{ borderBottom: `1px solid rgba(255,255,255,0.06)`, background: 'var(--brand-primary-08)' }}>
+                        <tr style={{ borderBottom: `1px solid rgba(255,255,255,0.06)`, background: 'var(--bg-surface-2)' }}>
                           <td style={{ padding: '8px 10px', color: DIM }}>+</td>
                           <td style={{ padding: '8px 10px' }}>
                             <input value={newRow.csi_code} onChange={e => setNewRow(r => ({ ...r, csi_code: e.target.value }))} placeholder="CSI Code" style={{ background: DARK, color: TEXT, border: `1px solid ${BORDER}`, borderRadius: 3, padding: '3px 6px', width: 100, fontSize: 13 }} />
@@ -773,13 +773,13 @@ function EstimatePage() {
                           <td style={{ padding: '8px 10px' }}>
                             <input type="number" value={newRow.unit_cost || ''} onChange={e => setNewRow(r => ({ ...r, unit_cost: num(e.target.value) }))} placeholder="0.00" style={{ background: DARK, color: TEXT, border: `1px solid ${BORDER}`, borderRadius: 3, padding: '3px 6px', width: 80, fontSize: 13 }} />
                           </td>
-                          <td style={{ padding: '8px 10px', color: GOLD, fontWeight: 600 }}>{currency(num(newRow.quantity) * num(newRow.unit_cost))}</td>
+                          <td style={{ padding: '8px 10px', color: 'var(--text-primary)', fontWeight: 600 }}>{currency(num(newRow.quantity) * num(newRow.unit_cost))}</td>
                           <td style={{ padding: '8px 10px' }}>
                             <input type="number" value={newRow.labor_hours || ''} onChange={e => setNewRow(r => ({ ...r, labor_hours: num(e.target.value) }))} placeholder="0" style={{ background: DARK, color: TEXT, border: `1px solid ${BORDER}`, borderRadius: 3, padding: '3px 6px', width: 60, fontSize: 13 }} />
                           </td>
                           <td style={{ padding: '8px 10px', display: 'flex', gap: 4 }}>
-                            <button onClick={addLineItem} style={{ background: GOLD, color: 'var(--on-brand)', border: 'none', borderRadius: 3, padding: '4px 8px', fontSize: 11, fontWeight: 600, cursor: 'pointer' }}>Save</button>
-                            <button onClick={() => { setAddingRow(false); setNewRow({ ...emptyLineItem }); }} style={{ background: RAISED, color: DIM, border: `1px solid ${BORDER}`, borderRadius: 3, padding: '4px 8px', fontSize: 11, cursor: 'pointer' }}>Cancel</button>
+                            <button onClick={addLineItem} style={{ background: GOLD, color: 'var(--on-brand)', border: 'none', borderRadius: 3, padding: '4px 8px', fontSize: 12, fontWeight: 600, cursor: 'pointer' }}>Save</button>
+                            <button onClick={() => { setAddingRow(false); setNewRow({ ...emptyLineItem }); }} style={{ background: RAISED, color: DIM, border: `1px solid ${BORDER}`, borderRadius: 3, padding: '4px 8px', fontSize: 12, cursor: 'pointer' }}>Cancel</button>
                           </td>
                         </tr>
                       )}
@@ -790,7 +790,7 @@ function EstimatePage() {
                         <td style={{ padding: '10px', fontWeight: 700, color: TEXT }}>{lineItems.reduce((s, i) => s + num(i.quantity), 0)}</td>
                         <td style={{ padding: '10px' }}></td>
                         <td style={{ padding: '10px' }}></td>
-                        <td style={{ padding: '10px', fontWeight: 700, color: GOLD }}>{currency(totalExtended)}</td>
+                        <td style={{ padding: '10px', fontWeight: 700, color: 'var(--text-primary)' }}>{currency(totalExtended)}</td>
                         <td style={{ padding: '10px', fontWeight: 700, color: TEXT }}>{totalLaborHrs.toFixed(1)}</td>
                         <td></td>
                       </tr>
@@ -807,7 +807,7 @@ function EstimatePage() {
           <div style={{ flex: '1 1 260px', minWidth: 250, maxWidth: 320 }}>
             <SectionCard
               title="Item Details"
-              icon={<SlidersHorizontal size={17} weight="duotone" color={GOLD} />}
+              icon={<SlidersHorizontal size={17} weight="duotone" color="var(--text-secondary)" />}
               flush
               action={
                 <button onClick={() => setRightOpen(false)} style={{ ...ghostButtonStyle, padding: '6px 10px', borderRadius: 10 }} className="pmBtn" aria-label="Close item details">
@@ -829,7 +829,7 @@ function EstimatePage() {
                   { label: 'Duration (Days)', field: 'duration', type: 'number' },
                 ].map(({ label, field, type }) => (
                   <div key={field}>
-                    <label style={{ fontSize: 11, color: DIM, display: 'block', marginBottom: 4, fontWeight: 700 }}>{label}</label>
+                    <label style={{ fontSize: 12, color: DIM, display: 'block', marginBottom: 4, fontWeight: 700 }}>{label}</label>
                     <input
                       type={type}
                       value={(detailDraft as unknown as Record<string, unknown>)[field] as string | number || ''}
@@ -839,7 +839,7 @@ function EstimatePage() {
                   </div>
                 ))}
                 <div>
-                  <label style={{ fontSize: 11, color: DIM, display: 'block', marginBottom: 4, fontWeight: 700 }}>Notes</label>
+                  <label style={{ fontSize: 12, color: DIM, display: 'block', marginBottom: 4, fontWeight: 700 }}>Notes</label>
                   <textarea
                     value={detailDraft.notes || ''}
                     onChange={e => setDetailDraft(d => d ? { ...d, notes: e.target.value } : d)}
@@ -848,7 +848,7 @@ function EstimatePage() {
                   />
                 </div>
                 <div>
-                  <label style={{ fontSize: 11, color: DIM, display: 'block', marginBottom: 4, fontWeight: 700 }}>Subcontractor</label>
+                  <label style={{ fontSize: 12, color: DIM, display: 'block', marginBottom: 4, fontWeight: 700 }}>Subcontractor</label>
                   <input
                     value={detailDraft.subcontractor || ''}
                     onChange={e => setDetailDraft(d => d ? { ...d, subcontractor: e.target.value } : d)}
@@ -868,11 +868,11 @@ function EstimatePage() {
 
       {/* PRICING & MARKUP */}
       <div style={{ marginTop: 24 }}>
-        <SectionCard title="Pricing & Markup" icon={<SlidersHorizontal size={17} weight="duotone" color={GOLD} />}>
+        <SectionCard title="Pricing & Markup" icon={<SlidersHorizontal size={17} weight="duotone" color="var(--text-secondary)" />}>
           <div style={{ display: 'flex', alignItems: 'center', gap: 20, flexWrap: 'wrap' }}>
             <div style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
               <span style={{ fontSize: 12, color: DIM }}>Grand Total:</span>
-              <span style={{ fontSize: 18, fontWeight: 800, color: GOLD, fontVariantNumeric: 'tabular-nums' }}>{currency(grandTotal)}</span>
+              <span style={{ fontSize: 18, fontWeight: 800, color: 'var(--text-primary)', fontVariantNumeric: 'tabular-nums' }}>{currency(grandTotal)}</span>
             </div>
             <div style={{ height: 22, width: 1, background: BORDER }}></div>
             <div style={{ display: 'flex', alignItems: 'center', gap: 12, flexWrap: 'wrap' }}>
@@ -882,7 +882,7 @@ function EstimatePage() {
                 { label: 'Contingency %', value: contingency, setter: setContingency },
               ].map(({ label, value, setter }) => (
                 <div key={label} style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
-                  <span style={{ fontSize: 11, color: DIM }}>{label}</span>
+                  <span style={{ fontSize: 12, color: DIM }}>{label}</span>
                   <input
                     type="number"
                     value={value || ''}
@@ -909,7 +909,7 @@ function EstimatePage() {
                     target="_blank"
                     onClick={inAppFileClick(`/api/takeoff-projects/${selectedTakeoff.id}/export/pdf`, 'Takeoff estimate', (m) => showToast(m, 'error'))}
                     rel="noopener noreferrer"
-                    style={{ ...ghostButtonStyle, padding: '9px 15px', fontSize: 12.5, borderRadius: 10 }}
+                    style={{ ...ghostButtonStyle, padding: '9px 15px', fontSize: 13, borderRadius: 10 }}
                     className="pmBtn"
                   >
                     <FilePdf size={15} weight="duotone" /> Export PDF
@@ -919,7 +919,7 @@ function EstimatePage() {
                     target="_blank"
                     onClick={inAppFileClick(`/api/takeoff-projects/${selectedTakeoff.id}/export/excel`, 'Takeoff estimate', (m) => showToast(m, 'error'))}
                     rel="noopener noreferrer"
-                    style={{ ...ghostButtonStyle, padding: '9px 15px', fontSize: 12.5, borderRadius: 10 }}
+                    style={{ ...ghostButtonStyle, padding: '9px 15px', fontSize: 13, borderRadius: 10 }}
                     className="pmBtn"
                   >
                     <MicrosoftExcelLogo size={15} weight="duotone" /> Export Excel

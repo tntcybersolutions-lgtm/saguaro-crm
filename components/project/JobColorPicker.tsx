@@ -58,8 +58,8 @@ export default function JobColorPicker({ projectId, color, onSaved }: { projectI
           </button>
         );
       })}
-      <span style={{ fontSize: 12.5, color: 'var(--text-tertiary)', marginLeft: 4 }}>{JOB_COLORS.find((c) => c.hex === current)?.name}</span>
-      {err && <span role="alert" style={{ fontSize: 12.5, color: 'var(--danger)' }}>{err}</span>}
+      <span style={{ fontSize: 13, color: 'var(--text-tertiary)', marginLeft: 4 }}>{JOB_COLORS.find((c) => c.hex === current)?.name}</span>
+      {err && <span role="alert" style={{ fontSize: 13, color: 'var(--danger)' }}>{err}</span>}
     </div>
   );
 }

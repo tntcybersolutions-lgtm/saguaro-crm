@@ -126,8 +126,8 @@ function CashFlow({ f }: { f: FinanceHome }) {
                   <stop offset="100%" stopColor={BLUE} stopOpacity={0} />
                 </linearGradient>
               </defs>
-              <XAxis dataKey="label" tickLine={false} axisLine={false} tick={{ fill: CHART.textTertiary, fontSize: 11 }} interval="preserveStartEnd" minTickGap={14} />
-              <YAxis tickFormatter={axisMoney} tickLine={false} axisLine={false} width={46} tick={{ fill: CHART.textTertiary, fontSize: 11 }} />
+              <XAxis dataKey="label" tickLine={false} axisLine={false} tick={{ fill: CHART.textTertiary, fontSize: 12 }} interval="preserveStartEnd" minTickGap={14} />
+              <YAxis tickFormatter={axisMoney} tickLine={false} axisLine={false} width={46} tick={{ fill: CHART.textTertiary, fontSize: 12 }} />
               <Tooltip content={<CashTip />} cursor={{ stroke: 'rgba(255,255,255,0.18)' }} />
               <Area type="monotone" dataKey="billed" stroke={BLUE} strokeWidth={2.2} fill="url(#hf-billed)" isAnimationActive={false} />
               {/* Collected is a dashed line over the billed area: when an owner pays every

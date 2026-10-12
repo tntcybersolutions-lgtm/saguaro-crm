@@ -60,14 +60,14 @@ export default function EscalationsPage() {
   if (gateLoading) return <GateLoading />;
   if (!ready) return null;
 
-  const pill: React.CSSProperties = { fontSize: 11, fontWeight: 600, padding: '3px 8px', borderRadius: 6, background: 'var(--bg-surface-2)', color: C.dim };
+  const pill: React.CSSProperties = { fontSize: 12, fontWeight: 600, padding: '3px 8px', borderRadius: 6, background: 'var(--bg-surface-2)', color: C.dim };
 
   return (
     <PremiumSurface maxWidth={2200} pad="28px 24px 60px">
       <div style={{ fontFamily: font, color: C.text }}>
       <ModuleHero
         eyebrow="Command Center"
-        eyebrowIcon={<Flag size={13} weight="fill" color={C.gold} />}
+        eyebrowIcon={<Flag size={13} weight="fill" color="var(--text-secondary)" />}
         title="Escalation"
         accent="Matrix"
         subtitle="Everything past its date across all sites."
@@ -87,11 +87,11 @@ export default function EscalationsPage() {
       <AttentionBanner red={summary.red} yellow={summary.yellow} noun="escalation" />
 
       {/* 4-level escalation matrix — who owns it as it ages (Super → PM → Director → Exec). */}
-      <SectionCard flat title="Escalation Matrix" subtitle="Who owns it now — ownership climbs as items age." icon={<Ladder size={16} weight="duotone" color={C.gold} />} style={{ marginBottom: 18 }}>
+      <SectionCard flat title="Escalation Matrix" subtitle="Who owns it now — ownership climbs as items age." icon={<Ladder size={16} weight="duotone" color="var(--text-secondary)" />} style={{ marginBottom: 18 }}>
         <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(150px, 1fr))', gap: 10 }}>
           {[
             { n: 1, owner: 'Superintendent', hint: '0–2d overdue', color: 'var(--success)' },
-            { n: 2, owner: 'Project Manager', hint: '3–6d overdue', color: 'var(--brand-primary)' },
+            { n: 2, owner: 'Project Manager', hint: '3–6d overdue', color: 'var(--text-primary)' },
             { n: 3, owner: 'Director of Construction', hint: '7–13d overdue', color: 'var(--warning)' },
             { n: 4, owner: 'Executive Leadership', hint: '14d+ overdue', color: 'var(--danger)' },
           ].map((lv) => {
@@ -99,11 +99,11 @@ export default function EscalationsPage() {
             return (
               <div key={lv.n} style={{ background: 'rgba(255,255,255,0.02)', border: '1px solid rgba(255,255,255,0.08)', borderLeft: `4px solid ${lv.color}`, borderRadius: 12, padding: '12px 14px', opacity: count ? 1 : 0.6 }}>
                 <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
-                  <span style={{ fontSize: 11, fontWeight: 800, color: 'var(--text-primary)', background: lv.color, borderRadius: 6, padding: '2px 7px' }}>L{lv.n}</span>
+                  <span style={{ fontSize: 12, fontWeight: 800, color: 'var(--text-primary)', background: lv.color, borderRadius: 6, padding: '2px 7px' }}>L{lv.n}</span>
                   <span style={{ fontSize: 22, fontWeight: 900, color: count ? lv.color : C.dim, marginLeft: 'auto', fontVariantNumeric: 'tabular-nums' }}>{count}</span>
                 </div>
                 <div style={{ fontSize: 13, fontWeight: 700, marginTop: 6 }}>{lv.owner}</div>
-                <div style={{ fontSize: 11, color: C.faint }}>{lv.hint}</div>
+                <div style={{ fontSize: 12, color: C.faint }}>{lv.hint}</div>
               </div>
             );
           })}
@@ -126,12 +126,12 @@ export default function EscalationsPage() {
       ) : filtered.length === 0 ? (
         rows.length === 0 ? (
           <SectionCard flat>
-            <PremiumEmpty icon={<Flag size={32} weight="duotone" color={C.gold} />} title="No escalations"
+            <PremiumEmpty icon={<Flag size={32} weight="duotone" color="var(--text-secondary)" />} title="No escalations"
               description="Nothing has been escalated across your sites. When an RFI, submittal or action item runs past its date and gets bumped up the chain, it lands here — sorted worst first so you always know what to chase." />
           </SectionCard>
         ) : (
           <SectionCard flat>
-            <PremiumEmpty compact icon={<Flag size={26} weight="duotone" color={C.gold} />} title="Nothing matches this filter"
+            <PremiumEmpty compact icon={<Flag size={26} weight="duotone" color="var(--text-secondary)" />} title="Nothing matches this filter"
               description="No escalation matches the current severity or search. Clear the filters to see the full list." />
           </SectionCard>
         )
@@ -164,11 +164,11 @@ export default function EscalationsPage() {
                 </div>
 
                 <div style={{ display: 'flex', flexWrap: 'wrap', gap: 5, marginTop: 12, alignItems: 'center' }}>
-                  {lvl && <span style={{ fontSize: 11, fontWeight: 700, padding: '3px 8px', borderRadius: 6, background: `${lvl.color}18`, color: lvl.color, border: `1px solid ${lvl.color}44` }}>L{lvl.level} · {lvl.owner}</span>}
+                  {lvl && <span style={{ fontSize: 12, fontWeight: 700, padding: '3px 8px', borderRadius: 6, background: `${lvl.color}18`, color: lvl.color, border: `1px solid ${lvl.color}44` }}>L{lvl.level} · {lvl.owner}</span>}
                   {it.item_type && <span style={pill}>{(() => { const t = String(it.item_type).replace(/_/g, ' '); return t.length <= 3 ? t.toUpperCase() : t.charAt(0).toUpperCase() + t.slice(1); })()}</span>}
                   {h.resolved && it.resolved_at && <span style={pill}>Resolved {fmtDate(it.resolved_at)}</span>}
                   {!h.resolved && h.daysOverdue > 0 && (
-                    <span style={{ fontSize: 11, fontWeight: 700, color: C.dim, marginLeft: 'auto' }}>{h.daysOverdue}d overdue</span>
+                    <span style={{ fontSize: 12, fontWeight: 700, color: C.dim, marginLeft: 'auto' }}>{h.daysOverdue}d overdue</span>
                   )}
                 </div>
               </LiftCard>

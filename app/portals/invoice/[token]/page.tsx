@@ -94,10 +94,10 @@ export default function PublicInvoicePage() {
           <div style={{ background: CARD, border: `1px solid ${BORDER}`, borderRadius: 14, overflow: 'hidden' }}>
             <div style={{ padding: '18px 22px', borderBottom: `1px solid ${BORDER}`, display: 'flex', justifyContent: 'space-between', alignItems: 'center', gap: 12, flexWrap: 'wrap' }}>
               <div>
-                <div style={{ fontSize: 11, fontWeight: 800, color: DIM }}>Invoice</div>
-                <div style={{ fontSize: 20, fontWeight: 800, color: GOLD }}>{inv.invoiceNumber}</div>
+                <div style={{ fontSize: 12, fontWeight: 800, color: DIM }}>Invoice</div>
+                <div style={{ fontSize: 20, fontWeight: 800, color: 'var(--text-primary)' }}>{inv.invoiceNumber}</div>
               </div>
-              <span style={{ fontSize: 11, fontWeight: 800, textTransform: 'capitalize', color: statusColor, border: `1px solid color-mix(in srgb, ${statusColor} 33%, transparent)`, background: `color-mix(in srgb, ${statusColor} 10%, transparent)`, borderRadius: 999, padding: '4px 12px' }}>{inv.status}</span>
+              <span style={{ fontSize: 12, fontWeight: 800, textTransform: 'capitalize', color: statusColor, border: `1px solid color-mix(in srgb, ${statusColor} 33%, transparent)`, background: `color-mix(in srgb, ${statusColor} 10%, transparent)`, borderRadius: 999, padding: '4px 12px' }}>{inv.status}</span>
             </div>
 
             <div style={{ padding: '18px 22px', display: 'grid', gap: 12 }}>
@@ -113,12 +113,12 @@ export default function PublicInvoicePage() {
               {inv.tax > 0 && <Row label="Tax" value={money(inv.tax)} />}
               <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', background: `color-mix(in srgb, ${GOLD} 8%, transparent)`, border: `1px solid color-mix(in srgb, ${GOLD} 25%, transparent)`, borderRadius: 10, padding: '12px 14px' }}>
                 <span style={{ fontSize: 12, fontWeight: 800, color: DIM }}>Total Due</span>
-                <span style={{ fontSize: 22, fontWeight: 800, color: GOLD, fontVariantNumeric: 'tabular-nums' }}>{money(inv.total)}</span>
+                <span style={{ fontSize: 22, fontWeight: 800, color: 'var(--text-primary)', fontVariantNumeric: 'tabular-nums' }}>{money(inv.total)}</span>
               </div>
             </div>
 
             {inv.notes && (
-              <div style={{ padding: '0 22px 16px', fontSize: 12.5, color: DIM, lineHeight: 1.5 }}>{inv.notes}</div>
+              <div style={{ padding: '0 22px 16px', fontSize: 13, color: DIM, lineHeight: 1.5 }}>{inv.notes}</div>
             )}
 
             {paidBack && (
@@ -144,7 +144,7 @@ export default function PublicInvoicePage() {
           </div>
         )}
 
-        <div style={{ textAlign: 'center', marginTop: 18, fontSize: 11, color: DIM }}>
+        <div style={{ textAlign: 'center', marginTop: 18, fontSize: 12, color: DIM }}>
           Powered by Saguaro Control Systems
         </div>
       </div>
@@ -156,7 +156,7 @@ function Row({ label, value }: { label: string; value: string }) {
   return (
     <div style={{ display: 'flex', justifyContent: 'space-between', gap: 16 }}>
       <span style={{ fontSize: 12, fontWeight: 700, color: DIM, flexShrink: 0 }}>{label}</span>
-      <span style={{ fontSize: 13.5, fontWeight: 600, textAlign: 'right' }}>{value}</span>
+      <span style={{ fontSize: 14, fontWeight: 600, textAlign: 'right' }}>{value}</span>
     </div>
   );
 }

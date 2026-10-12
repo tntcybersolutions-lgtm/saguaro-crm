@@ -6,7 +6,7 @@ import { useState, useEffect, useCallback, useRef } from 'react';
 import { useParams, useSearchParams } from 'next/navigation';
 import Link from 'next/link';
 import { Globe, ArrowsLeftRight, Shield, WifiHigh, Printer, VideoCamera, HardDrives, Laptop, Phone, Plug, CellSignalFull, BatteryFull, Package, Plus, X, CheckCircle, WarningCircle, Clock } from '@phosphor-icons/react';
-import { PremiumSurface, ModuleHero, SectionCard, StatCard, PremiumEmpty, FlowStrip, goldButtonStyle, ghostButtonStyle } from '@/components/ui/premium';
+import { PremiumSurface, ModuleHero, SectionCard, StatCard, PremiumEmpty, FlowStrip, goldButtonStyle, ghostButtonStyle, secondaryButtonStyle } from '@/components/ui/premium';
 import { useUnsavedGuard, useComposerDirty } from '@/lib/useUnsavedGuard';
 import UnsavedGuardModal from '@/components/UnsavedGuardModal';
 
@@ -207,7 +207,7 @@ export default function DeviceInventoryPage() {
       {/* Header */}
       <ModuleHero
         eyebrow="Network"
-        eyebrowIcon={<HardDrives size={13} weight="fill" color={GOLD} />}
+        eyebrowIcon={<HardDrives size={13} weight="fill" color="var(--text-secondary)" />}
         title="Device"
         accent="Inventory"
         subtitle="Routers, switches, access points, and endpoints."
@@ -225,7 +225,7 @@ export default function DeviceInventoryPage() {
       {/* KPI Row */}
       <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(180px, 1fr))', gap: 12, marginBottom: 24 }}>
         <StatCard
-          icon={<Package size={19} weight="duotone" color={GOLD} />}
+          icon={<Package size={19} weight="duotone" color="var(--text-secondary)" />}
           label="Total Devices" value={String(devices.length)} accent={GOLD}
           sub="In inventory" delay={0.02}
          href={`/app/projects/${projectId}/network/devices`}/>
@@ -249,7 +249,7 @@ export default function DeviceInventoryPage() {
       {/* Add Device Form */}
       {showForm && (
         <div style={{ marginBottom: 24 }}>
-          <SectionCard title="Add New Device" icon={<Plus size={16} weight="bold" color={GOLD} />}>
+          <SectionCard title="Add New Device" icon={<Plus size={16} weight="bold" color="var(--text-secondary)" />}>
             <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(200px, 1fr))', gap: 12 }}>
               <div>
                 <label style={labelStyle}>Device Type</label>
@@ -362,8 +362,8 @@ export default function DeviceInventoryPage() {
           <SectionCard flat
             title={selectedDevice.hostname}
             subtitle={`${selectedDevice.manufacturer} ${selectedDevice.model} · ${deviceTypeLabel(selectedDevice.device_type)}`}
-            icon={<DeviceTypeIcon type={selectedDevice.device_type} size={18} color={GOLD} />}
-            style={{ borderColor: 'var(--brand-primary-35)' }}
+            icon={<DeviceTypeIcon type={selectedDevice.device_type} size={18} color="var(--text-secondary)" />}
+            style={{ borderColor: 'var(--border-default)' }}
             action={
               <button
                 onClick={() => setSelectedDevice(null)}
@@ -390,14 +390,14 @@ export default function DeviceInventoryPage() {
                 { label: 'Firmware', value: selectedDevice.firmware_version || 'N/A' },
               ].map(item => (
                 <div key={item.label}>
-                  <div style={{ color: DIM, fontSize: 11, fontWeight: 600 }}>{item.label}</div>
+                  <div style={{ color: DIM, fontSize: 12, fontWeight: 600 }}>{item.label}</div>
                   <div style={{ color: TEXT, fontSize: 14, fontWeight: 500, marginTop: 2 }}>{item.value}</div>
                 </div>
               ))}
             </div>
             {selectedDevice.notes && (
               <div style={{ marginTop: 12, padding: 12, background: 'rgba(255,255,255,0.04)', borderRadius: 8 }}>
-                <div style={{ color: DIM, fontSize: 11, fontWeight: 600, marginBottom: 4 }}>Notes</div>
+                <div style={{ color: DIM, fontSize: 12, fontWeight: 600, marginBottom: 4 }}>Notes</div>
                 <div style={{ color: TEXT, fontSize: 13 }}>{selectedDevice.notes}</div>
               </div>
             )}
@@ -406,12 +406,12 @@ export default function DeviceInventoryPage() {
       )}
 
       {/* Device Table */}
-      <SectionCard title="All Devices" icon={<HardDrives size={17} weight="duotone" color={GOLD} />} flush>
+      <SectionCard title="All Devices" icon={<HardDrives size={17} weight="duotone" color="var(--text-secondary)" />} flush>
         {filteredDevices.length === 0 ? (
           <div style={{ padding: 20 }}>
             <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 12, flexWrap: 'wrap', marginBottom: 12 }}>
-              <div style={{ fontSize: 13.5, fontWeight: 800, color: TEXT }}>
-                <Package size={16} weight="duotone" color={GOLD} style={{ marginRight: 7, verticalAlign: 'text-bottom' }} />
+              <div style={{ fontSize: 14, fontWeight: 800, color: TEXT }}>
+                <Package size={16} weight="duotone" color="var(--text-secondary)" style={{ marginRight: 7, verticalAlign: 'text-bottom' }} />
                 {devices.length === 0 ? 'No devices yet' : 'No devices match your filters'}
                 <span style={{ fontWeight: 400, color: DIM }}>
                   {devices.length === 0
@@ -420,7 +420,7 @@ export default function DeviceInventoryPage() {
                 </span>
               </div>
               {!showForm && (
-                <button onClick={() => { setShowForm(true); setSelectedDevice(null); }} style={goldButtonStyle} className="pmBtn"><Plus size={15} weight="bold" /> Add Device</button>
+                <button onClick={() => { setShowForm(true); setSelectedDevice(null); }} style={secondaryButtonStyle} className="pmBtn"><Plus size={15} weight="bold" /> Add Device</button>
               )}
             </div>
             {devices.length === 0 && (
@@ -438,7 +438,7 @@ export default function DeviceInventoryPage() {
               <thead>
                 <tr>
                   {['', 'Hostname', 'Type', 'Manufacturer', 'Model', 'IP Address', 'MAC', 'VLAN', 'Location', 'Status'].map(col => (
-                    <th key={col} style={{ padding: '12px 14px', textAlign: 'left', color: DIM, fontSize: 11, fontWeight: 700, borderBottom: `1px solid ${BORDER}`, whiteSpace: 'nowrap' }}>{col}</th>
+                    <th key={col} style={{ padding: '12px 14px', textAlign: 'left', color: DIM, fontSize: 12, fontWeight: 700, borderBottom: `1px solid ${BORDER}`, whiteSpace: 'nowrap' }}>{col}</th>
                   ))}
                 </tr>
               </thead>
@@ -457,7 +457,7 @@ export default function DeviceInventoryPage() {
                     <td style={{ padding: '12px 14px', borderBottom: `1px solid ${BORDER}`, color: DIM, fontSize: 12 }}>{manufacturerLabel(dev.manufacturer)}</td>
                     <td style={{ padding: '12px 14px', borderBottom: `1px solid ${BORDER}`, color: DIM, fontSize: 12 }}>{dev.model}</td>
                     <td style={{ padding: '12px 14px', borderBottom: `1px solid ${BORDER}`, color: TEXT, fontSize: 12, fontFamily: 'monospace' }}>{dev.ip_address || '—'}</td>
-                    <td style={{ padding: '12px 14px', borderBottom: `1px solid ${BORDER}`, color: DIM, fontSize: 11, fontFamily: 'monospace' }}>{dev.mac_address || '—'}</td>
+                    <td style={{ padding: '12px 14px', borderBottom: `1px solid ${BORDER}`, color: DIM, fontSize: 12, fontFamily: 'monospace' }}>{dev.mac_address || '—'}</td>
                     <td style={{ padding: '12px 14px', borderBottom: `1px solid ${BORDER}`, color: DIM, fontSize: 12 }}>{dev.vlan_name || '—'}</td>
                     <td style={{ padding: '12px 14px', borderBottom: `1px solid ${BORDER}`, color: DIM, fontSize: 12 }}>{dev.location || '—'}</td>
                     <td style={{ padding: '12px 14px', borderBottom: `1px solid ${BORDER}` }}>

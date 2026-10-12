@@ -37,7 +37,7 @@ function Row({ icon, label, value }: { icon: React.ReactNode; label: string; val
   return (
     <div style={{ display: 'flex', alignItems: 'baseline', gap: 9, padding: '7px 0', borderTop: '1px solid rgba(255,255,255,0.06)' }}>
       <span style={{ display: 'inline-flex', flexShrink: 0, transform: 'translateY(2px)' }}>{icon}</span>
-      <span style={{ fontSize: 11, fontWeight: 700, color: DIM, minWidth: 92 }}>
+      <span style={{ fontSize: 12, fontWeight: 700, color: DIM, minWidth: 92 }}>
         {label}
       </span>
       <span style={{ fontSize: 13, fontWeight: 700, color: TEXT, minWidth: 0, wordBreak: 'break-word' }}>{value}</span>
@@ -59,7 +59,7 @@ export default function ProjectPreview({
         borderRadius: 16,
         padding: '20px 22px',
         background: 'var(--bg-surface)',
-        border: '1px solid var(--brand-primary-18)',
+        border: '1px solid var(--border-default)',
         boxShadow: '0 20px 44px -28px rgba(0,0,0,0.95), inset 0 1px 0 rgba(255,255,255,0.05)',
       }}
     >
@@ -77,7 +77,7 @@ export default function ProjectPreview({
       />
 
       <div style={{ position: 'relative' }}>
-        <div style={{ fontSize: 10.5, fontWeight: 900, color: GOLD, marginBottom: 8 }}>
+        <div style={{ fontSize: 12, fontWeight: 900, color: 'var(--text-primary)', marginBottom: 8 }}>
           What You Are Creating
         </div>
 
@@ -94,23 +94,23 @@ export default function ProjectPreview({
         >
           {named || 'Name it above…'}
         </div>
-        <div style={{ fontSize: 12.5, color: DIM, marginBottom: 12, minHeight: 18 }}>
+        <div style={{ fontSize: 13, color: DIM, marginBottom: 12, minHeight: 18 }}>
           {address.trim() || 'and give it an address'}
         </div>
 
-        <Row icon={<Hash size={13} weight="bold" color={GOLD_HI} />} label="Number" value={projectNumber || '—'} />
+        <Row icon={<Hash size={13} weight="bold" color="var(--text-secondary)" />} label="Number" value={projectNumber || '—'} />
         {templateName && (
-          <Row icon={<Buildings size={13} weight="duotone" color={GOLD_HI} />} label="Job Type" value={templateName} />
+          <Row icon={<Buildings size={13} weight="duotone" color="var(--text-secondary)" />} label="Job Type" value={templateName} />
         )}
-        <Row icon={<MapPin size={13} weight="duotone" color={GOLD_HI} />} label="Jurisdiction" value={jurisdiction || '—'} />
-        <Row icon={<Percent size={13} weight="bold" color={GOLD_HI} />} label="Retainage" value={`${retainagePct}%`} />
-        <Row icon={<Scales size={13} weight="duotone" color={GOLD_HI} />} label="Contract" value={contractType || '—'} />
+        <Row icon={<MapPin size={13} weight="duotone" color="var(--text-secondary)" />} label="Jurisdiction" value={jurisdiction || '—'} />
+        <Row icon={<Percent size={13} weight="bold" color="var(--text-secondary)" />} label="Retainage" value={`${retainagePct}%`} />
+        <Row icon={<Scales size={13} weight="duotone" color="var(--text-secondary)" />} label="Contract" value={contractType || '—'} />
 
         {folders.length > 0 && (
           <div style={{ marginTop: 13, paddingTop: 12, borderTop: '1px solid rgba(255,255,255,0.06)' }}>
             <div style={{ display: 'flex', alignItems: 'center', gap: 7, marginBottom: 8 }}>
-              <Folder size={13} weight="duotone" color={GOLD_HI} />
-              <span style={{ fontSize: 11, fontWeight: 700, color: DIM }}>
+              <Folder size={13} weight="duotone" color="var(--text-secondary)" />
+              <span style={{ fontSize: 12, fontWeight: 700, color: DIM }}>
                 {folders.length} folders · {divisionCount} CSI divisions
               </span>
             </div>
@@ -119,7 +119,7 @@ export default function ProjectPreview({
                 <span
                   key={x}
                   style={{
-                    fontSize: 10.5,
+                    fontSize: 12,
                     fontWeight: 600,
                     padding: '3px 8px',
                     borderRadius: 6,
@@ -135,7 +135,7 @@ export default function ProjectPreview({
           </div>
         )}
 
-        <div style={{ marginTop: 13, fontSize: 11.5, lineHeight: 1.5, color: 'var(--c-text-2)' }}>
+        <div style={{ marginTop: 13, fontSize: 12, lineHeight: 1.5, color: 'var(--c-text-2)' }}>
           Saguaro filled these in. Every one of them is editable on the form, now or later.
         </div>
       </div>

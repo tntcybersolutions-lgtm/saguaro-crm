@@ -3,10 +3,10 @@ import React, { useState, useEffect, useMemo, useCallback } from 'react';
 import { DataTable, type Column } from '@/components/ui/kit';
 import { useProjects } from '@/lib/hooks/useProjects';
 import SaguaroDatePicker from '@/components/SaguaroDatePicker';
-import { PremiumSurface, ModuleHero, SectionCard, StatCard, PremiumEmpty, StatStrip, FlowSteps, InsightRow, AutoChip, goldButtonStyle, ghostButtonStyle, goldOutlineButtonStyle } from '@/components/ui/premium';
+import { PremiumSurface, ModuleHero, SectionCard, PremiumEmpty, StatStrip, FlowSteps, InsightRow, AutoChip, goldButtonStyle, ghostButtonStyle, goldOutlineButtonStyle } from '@/components/ui/premium';
 import { SUB_TRADES } from '@/lib/construction-intelligence';
 import {
-  ShieldWarning, ClipboardText, FolderOpen, CheckCircle, XCircle, Timer, Warning,
+  ShieldWarning, ClipboardText, Timer, Warning,
   CurrencyDollar, ShieldSlash, ChartBar, Tag, Wrench, PlusCircle, Buildings,
 } from '@phosphor-icons/react';
 import { ListToolbar } from '@/components/ui/ListToolbar';
@@ -95,7 +95,7 @@ const emptyForm = (): Omit<WarrantyClaim, 'id'> => ({
 /* ───── STYLE HELPERS ───── */
 const css = {
   page: { background: BG, minHeight: '100vh', color: TEXT, fontFamily: "'Inter','Segoe UI',sans-serif", padding: 32 } as React.CSSProperties,
-  h1: { fontSize: 28, fontWeight: 700, color: GOLD, margin: 0 } as React.CSSProperties,
+  h1: { fontSize: 28, fontWeight: 700, color: 'var(--text-primary)', margin: 0 } as React.CSSProperties,
   h2: { fontSize: 20, fontWeight: 600, color: TEXT, margin: '24px 0 12px' } as React.CSSProperties,
   h3: { fontSize: 16, fontWeight: 600, color: TEXT, margin: '16px 0 8px' } as React.CSSProperties,
   card: { background: RAISED, border: `1px solid ${BORDER}`, borderRadius: 10, padding: 20, marginBottom: 16 } as React.CSSProperties,
@@ -103,7 +103,7 @@ const css = {
   stat: (accent: string) => ({ background: RAISED, border: `1px solid ${BORDER}`, borderRadius: 10, padding: '16px 20px', flex: '1 1 160px', borderLeft: `4px solid ${accent}` }) as React.CSSProperties,
   statVal: { fontSize: 28, fontWeight: 700, color: TEXT } as React.CSSProperties,
   statLbl: { fontSize: 12, color: DIM, marginTop: 4} as React.CSSProperties,
-  badge: (c: string) => ({ display: 'inline-block', padding: '2px 10px', borderRadius: 12, fontSize: 11, fontWeight: 600, background: `color-mix(in srgb, ${c} 13%, transparent)`, color: c, border: `1px solid color-mix(in srgb, ${c} 27%, transparent)`, textTransform: 'capitalize' as const }) as React.CSSProperties,
+  badge: (c: string) => ({ display: 'inline-block', padding: '2px 10px', borderRadius: 12, fontSize: 12, fontWeight: 600, background: `color-mix(in srgb, ${c} 13%, transparent)`, color: c, border: `1px solid color-mix(in srgb, ${c} 27%, transparent)`, textTransform: 'capitalize' as const }) as React.CSSProperties,
   btn: (bg: string) => ({ padding: '8px 18px', border: 'none', borderRadius: 6, cursor: 'pointer', fontWeight: 600, fontSize: 13, color: bg === GOLD || bg === AMBER ? 'var(--on-brand)' : 'var(--text-primary)', background: bg, transition: 'opacity .15s' }) as React.CSSProperties,
   btnOutline: (c: string) => ({ padding: '6px 14px', border: `1px solid ${c}`, borderRadius: 6, cursor: 'pointer', fontWeight: 600, fontSize: 12, color: c, background: 'transparent' }) as React.CSSProperties,
   input: { width: '100%', padding: '8px 12px', borderRadius: 6, border: `1px solid ${BORDER}`, background: BG, color: TEXT, fontSize: 13, outline: 'none', boxSizing: 'border-box' as const } as React.CSSProperties,
@@ -112,7 +112,7 @@ const css = {
   label: { fontSize: 12, color: DIM, marginBottom: 4, display: 'block', fontWeight: 500 } as React.CSSProperties,
   field: { flex: '1 1 220px', marginBottom: 12 } as React.CSSProperties,
   table: { width: '100%', borderCollapse: 'collapse' as const, fontSize: 13 } as React.CSSProperties,
-  th: { textAlign: 'left' as const, padding: '10px 12px', borderBottom: `1px solid ${BORDER}`, color: DIM, fontSize: 11} as React.CSSProperties,
+  th: { textAlign: 'left' as const, padding: '10px 12px', borderBottom: `1px solid ${BORDER}`, color: DIM, fontSize: 12} as React.CSSProperties,
   td: { padding: '10px 12px', borderBottom: `1px solid color-mix(in srgb, ${BORDER} 8%, transparent)` } as React.CSSProperties,
   trHover: { cursor: 'pointer', transition: 'background .15s' } as React.CSSProperties,
   overlay: { position: 'fixed' as const, inset: 0, background: 'var(--bg-base)', zIndex: 1000, display: 'flex', alignItems: 'center', justifyContent: 'center' } as React.CSSProperties,
@@ -122,7 +122,7 @@ const css = {
   photoThumb: { width: 64, height: 64, objectFit: 'cover' as const, borderRadius: 6, border: `1px solid ${BORDER}`, cursor: 'pointer' } as React.CSSProperties,
   timeline: { borderLeft: `2px solid ${BORDER}`, marginLeft: 8, paddingLeft: 20 } as React.CSSProperties,
   timelineDot: (c: string) => ({ width: 12, height: 12, borderRadius: '50%', background: c, position: 'absolute' as const, left: -27, top: 4 }) as React.CSSProperties,
-  expiredTag: { display: 'inline-block', padding: '2px 8px', borderRadius: 8, fontSize: 10, fontWeight: 700, background: `color-mix(in srgb, ${RED} 13%, transparent)`, color: RED, border: `1px solid color-mix(in srgb, ${RED} 27%, transparent)`, marginLeft: 8 } as React.CSSProperties,
+  expiredTag: { display: 'inline-block', padding: '2px 8px', borderRadius: 8, fontSize: 12, fontWeight: 700, background: `color-mix(in srgb, ${RED} 13%, transparent)`, color: RED, border: `1px solid color-mix(in srgb, ${RED} 27%, transparent)`, marginLeft: 8 } as React.CSSProperties,
 };
 
 /* The create form sits beside a context rail on desktop; on a phone the rail
@@ -412,11 +412,11 @@ export default function WarrantyClaimsPage() {
       <div style={{ display: 'flex', flexDirection: 'column', gap: 6 }}>
         {entries.map(([k, v]) => (
           <div key={k} style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
-            <span style={{ width: 90, fontSize: 11, color: DIM, textTransform: 'capitalize', textAlign: 'right', flexShrink: 0 }}>{k}</span>
+            <span style={{ width: 90, fontSize: 12, color: DIM, textTransform: 'capitalize', textAlign: 'right', flexShrink: 0 }}>{k}</span>
             <div style={{ flex: 1, height: 16, background: BG, borderRadius: 4, overflow: 'hidden' }}>
               <div style={{ height: '100%', width: `${(v / max) * 100}%`, background: colorMap?.[k] || GOLD, borderRadius: 4, transition: 'width .4s' }} />
             </div>
-            <span style={{ fontSize: 11, color: TEXT, minWidth: 36, textAlign: 'right', whiteSpace: 'nowrap' }}>{money ? `$${(Number(v) || 0).toLocaleString()}` : v}</span>
+            <span style={{ fontSize: 12, color: TEXT, minWidth: 36, textAlign: 'right', whiteSpace: 'nowrap' }}>{money ? `$${(Number(v) || 0).toLocaleString()}` : v}</span>
           </div>
         ))}
       </div>
@@ -430,7 +430,7 @@ export default function WarrantyClaimsPage() {
       {/* header */}
       <ModuleHero
         eyebrow="Warranty Program"
-        eyebrowIcon={<ShieldWarning size={13} weight="fill" color={GOLD} />}
+        eyebrowIcon={<ShieldWarning size={13} weight="fill" color="var(--text-secondary)" />}
         title="Warranty"
         accent="Claims"
         subtitle="Track, manage, and resolve warranty claims across all projects"
@@ -461,16 +461,18 @@ export default function WarrantyClaimsPage() {
         ))}
       </div>
 
-      {/* Pipeline intelligence strip — the warranty program at a glance */}
+      {/* Pipeline intelligence strip — the warranty program at a glance (the one summary;
+          per-status counts, Denied included, are on the pipeline right under it) */}
       {selectedProject && !loading && !loadError && claims.length > 0 && (
         <>
           <StatStrip items={[
             {href: '/app/warranty-claims',  label: 'Claims', value: stats.total, sub: `${stats.open} open · ${stats.closed} closed` },
             {href: '/app/warranty-claims', label: 'Emergency', value: stats.emergency, accent: stats.emergency > 0 ? RED : undefined, sub: stats.emergency > 0 ? 'Need immediate action' : 'None outstanding' },
-            {href: '/app/warranty-claims', label: 'Avg Resolution', value: `${stats.avgDays}d`, sub: 'Reported to completed' },
-            {href: '/app/warranty-claims',  label: 'Warranty Cost', value: `$${(Number(stats.totalCost) || 0).toLocaleString()}`, sub: `${claims.filter(c => c.covered_under_warranty).length} covered · ${claims.filter(c => !c.covered_under_warranty).length} not covered` },
+            /* An average over zero resolved claims is not "0 days" — it is unknown. */
+            {href: '/app/warranty-claims', label: 'Avg Resolution', value: stats.resolvedCount > 0 ? `${stats.avgDays}d` : '—', sub: 'Reported to completed' },
+            /* $0 across claims that never had a cost entered is a fabrication. */
+            {href: '/app/warranty-claims',  label: 'Warranty Cost', value: stats.costedCount > 0 ? `$${(Number(stats.totalCost) || 0).toLocaleString()}` : '—', sub: `${claims.filter(c => c.covered_under_warranty).length} covered · ${claims.filter(c => !c.covered_under_warranty).length} not covered` },
             {href: '/app/warranty-claims', label: 'Expired Coverage', value: stats.expiredCount, accent: stats.expiredCount > 0 ? RED : undefined, sub: stats.expiredCount > 0 ? 'Claims past warranty' : 'All inside warranty' },
-            {href: '/app/warranty-claims', label: 'Denied', value: stats.denied, sub: `Of ${stats.total} total claim${stats.total === 1 ? '' : 's'}` },
           ]} />
           <StatusPipeline
             byStatus={stats.byStatus}
@@ -484,7 +486,7 @@ export default function WarrantyClaimsPage() {
       {!selectedProject && activeTab !== 'create' && (
         <SectionCard flat>
           <PremiumEmpty
-            icon={<Buildings size={30} weight="duotone" color={GOLD} />}
+            icon={<Buildings size={30} weight="duotone" color="var(--text-secondary)" />}
             title="Select a project"
             description="Choose a project above to view its warranty claims."
           />
@@ -514,7 +516,7 @@ export default function WarrantyClaimsPage() {
       {selectedProject && !loading && !loadError && activeTab === 'dashboard' && claims.length === 0 && (
         <SectionCard>
           <PremiumEmpty
-            icon={<ShieldWarning size={30} weight="duotone" color={GOLD} />}
+            icon={<ShieldWarning size={30} weight="duotone" color="var(--text-secondary)" />}
             title="No warranty claims on this project"
             description="Warranty claims track defects reported after closeout. Each one moves through a pipeline — submitted, acknowledged, scheduled, in progress, completed — with contractor dispatch, cost, and homeowner communication all on the record."
             action={<button style={goldButtonStyle} className="pmBtn" onClick={() => { setForm(emptyForm()); setActiveTab('create'); }}><PlusCircle size={16} weight="bold" /> Log the First Claim</button>}
@@ -525,32 +527,18 @@ export default function WarrantyClaimsPage() {
       {/* ═══ DASHBOARD TAB ═══ */}
       {selectedProject && !loading && !loadError && activeTab === 'dashboard' && claims.length > 0 && (
         <div>
-          {/* stat cards */}
-          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(180px, 1fr))', gap: 12 }}>
-            <StatCard icon={<ClipboardText size={19} weight="duotone" color={GOLD} />} label="Total Claims" value={stats.total} accent={GOLD} delay={0.02}  href="/app/warranty-claims"/>
-            <StatCard icon={<FolderOpen size={19} weight="duotone" color={BLUE} />} label="Open" value={stats.open} accent={BLUE} delay={0.06}  href="/app/warranty-claims"/>
-            <StatCard icon={<CheckCircle size={19} weight="duotone" color={GREEN} />} label="Closed" value={stats.closed} accent={GREEN} delay={0.10}  href="/app/warranty-claims"/>
-            <StatCard icon={<XCircle size={19} weight="duotone" color={RED} />} label="Denied" value={stats.denied} accent={RED} delay={0.14}  href="/app/warranty-claims"/>
-            {/* An average over zero resolved claims is not "0 days" — it is unknown. */}
-            <StatCard icon={<Timer size={19} weight="duotone" color={AMBER} />} label="Avg Resolution" value={stats.resolvedCount > 0 ? `${stats.avgDays}d` : '—'} accent={AMBER} delay={0.18}  href="/app/warranty-claims"/>
-            <StatCard icon={<Warning size={19} weight="duotone" color={RED} />} label="Emergency" value={stats.emergency} accent={RED} delay={0.22}  href="/app/warranty-claims"/>
-            {/* $0 across claims that never had a cost entered is a fabrication. */}
-            <StatCard icon={<CurrencyDollar size={19} weight="duotone" color={GOLD} />} label="Total Cost" value={stats.costedCount > 0 ? `$${stats.totalCost.toLocaleString()}` : '—'} accent={GOLD} delay={0.26}  href="/app/warranty-claims"/>
-            <StatCard icon={<ShieldSlash size={19} weight="duotone" color={RED} />} label="Expired Warranty" value={stats.expiredCount} accent={RED} delay={0.30}  href="/app/warranty-claims"/>
-          </div>
-
           {/* charts row */}
           <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(340px, 1fr))', gap: 20, marginTop: 24 }}>
-            <SectionCard flat title="Claims by Status" icon={<ChartBar size={17} weight="duotone" color={GOLD} />}>
+            <SectionCard flat title="Claims by Status" icon={<ChartBar size={17} weight="duotone" color="var(--text-secondary)" />}>
               <MiniBar data={stats.byStatus} colorMap={STATUS_COLORS} />
             </SectionCard>
-            <SectionCard flat title="Claims by Category" icon={<Tag size={17} weight="duotone" color={GOLD} />}>
+            <SectionCard flat title="Claims by Category" icon={<Tag size={17} weight="duotone" color="var(--text-secondary)" />}>
               <MiniBar data={stats.byCat} emptyNote="No claim has a category set yet." />
             </SectionCard>
-            <SectionCard flat title="Cost by Category" icon={<CurrencyDollar size={17} weight="duotone" color={GOLD} />}>
+            <SectionCard flat title="Cost by Category" icon={<CurrencyDollar size={17} weight="duotone" color="var(--text-secondary)" />}>
               <MiniBar data={stats.costByCat} money emptyNote="No repair cost has been recorded yet." />
             </SectionCard>
-            <SectionCard flat title="Claims by Trade" icon={<Wrench size={17} weight="duotone" color={GOLD} />}>
+            <SectionCard flat title="Claims by Trade" icon={<Wrench size={17} weight="duotone" color="var(--text-secondary)" />}>
               <MiniBar data={stats.byTrade} emptyNote="No claim has been dispatched to a trade yet." />
             </SectionCard>
           </div>
@@ -586,7 +574,7 @@ export default function WarrantyClaimsPage() {
           {filtered.length === 0 ? (
             <SectionCard>
               <PremiumEmpty
-                icon={<ClipboardText size={30} weight="duotone" color={GOLD} />}
+                icon={<ClipboardText size={30} weight="duotone" color="var(--text-secondary)" />}
                 title={claims.length > 0 ? 'No claims match these filters' : 'No warranty claims found'}
                 description={claims.length > 0 ? 'Clear the filters above to see the full pipeline again.' : 'Log the first homeowner defect — it enters the pipeline at submitted and tracks dispatch, cost, and communication through closeout.'}
                 action={<button style={goldButtonStyle} className="pmBtn" onClick={() => { setForm(emptyForm()); setActiveTab('create'); }}><PlusCircle size={16} weight="bold" /> New Claim</button>}
@@ -611,7 +599,7 @@ export default function WarrantyClaimsPage() {
       {/* ═══ CREATE CLAIM TAB ═══ */}
       {activeTab === 'create' && (
         <div className="wcCreate">
-        <SectionCard title="New Warranty Claim" subtitle={selectedProject ? `${projects.find(p => p.id === selectedProject)?.name || 'This project'} — homeowner defect intake` : 'Homeowner defect intake — pick the project it belongs to'} icon={<PlusCircle size={17} weight="duotone" color={GOLD} />}>
+        <SectionCard title="New Warranty Claim" subtitle={selectedProject ? `${projects.find(p => p.id === selectedProject)?.name || 'This project'} — homeowner defect intake` : 'Homeowner defect intake — pick the project it belongs to'} icon={<PlusCircle size={17} weight="duotone" color="var(--text-secondary)" />}>
           <div style={css.row}>
             <div style={css.field}>
               <label style={css.label} htmlFor="wc-project">Project *</label>
@@ -620,7 +608,7 @@ export default function WarrantyClaimsPage() {
                 {projects.map(p => <option key={p.id} value={p.id}>{p.name}</option>)}
               </select>
             </div>
-            <div style={css.field}><label style={css.label}>Claim #<AutoChip /></label>{selectedProject && !loading && !loadError ? (<><div style={{ ...css.input, display: 'flex', alignItems: 'center', color: GOLD, fontFamily: 'monospace', fontWeight: 700 }}>{`WC-${String(claims.length + 1).padStart(4, '0')}`}</div><div style={{ fontSize: 11, color: 'var(--c-text-2)', marginTop: 4 }}>Numbered automatically — {claims.length} claim{claims.length === 1 ? '' : 's'} on this project so far.</div></>) : (<><div style={{ ...css.input, display: 'flex', alignItems: 'center', color: DIM }}>Assigned on save</div><div style={{ fontSize: 11, color: 'var(--c-text-2)', marginTop: 4 }}>{selectedProject && loading ? 'Reading this project\u2019s claims…' : 'Numbered automatically once the project is picked.'}</div></>)}</div>
+            <div style={css.field}><label style={css.label}>Claim #<AutoChip /></label>{selectedProject && !loading && !loadError ? (<><div style={{ ...css.input, display: 'flex', alignItems: 'center', color: 'var(--text-primary)', fontFamily: 'monospace', fontWeight: 700 }}>{`WC-${String(claims.length + 1).padStart(4, '0')}`}</div><div style={{ fontSize: 12, color: 'var(--c-text-2)', marginTop: 4 }}>Numbered automatically — {claims.length} claim{claims.length === 1 ? '' : 's'} on this project so far.</div></>) : (<><div style={{ ...css.input, display: 'flex', alignItems: 'center', color: DIM }}>Assigned on save</div><div style={{ fontSize: 12, color: 'var(--c-text-2)', marginTop: 4 }}>{selectedProject && loading ? 'Reading this project\u2019s claims…' : 'Numbered automatically once the project is picked.'}</div></>)}</div>
           </div>
           <div style={css.row}>
             <div style={css.field}><label style={css.label}>Title *</label><input style={css.input} value={form.title} onChange={e => setForm({ ...form, title: e.target.value })} placeholder="e.g. Master bath shower pan leak" /></div>
@@ -643,7 +631,7 @@ export default function WarrantyClaimsPage() {
           <div style={css.row}>
             <div style={css.field}><label style={css.label}>Location</label><input style={css.input} value={form.location} onChange={e => setForm({ ...form, location: e.target.value })} /></div>
             <div style={css.field}><label style={css.label}>Reported By</label><input style={css.input} value={form.reported_by} onChange={e => setForm({ ...form, reported_by: e.target.value })} /></div>
-            <div style={css.field}><label style={css.label}>Reported Date{form.reported_date === today && <AutoChip />}</label><SaguaroDatePicker style={css.input} value={form.reported_date} onChange={v => setForm({ ...form, reported_date: v })} /><div style={{ fontSize: 11, color: 'var(--c-text-2)', marginTop: 4 }}>Defaults to today — resolution time is measured from this date.</div></div>
+            <div style={css.field}><label style={css.label}>Reported Date{form.reported_date === today && <AutoChip />}</label><SaguaroDatePicker style={css.input} value={form.reported_date} onChange={v => setForm({ ...form, reported_date: v })} /><div style={{ fontSize: 12, color: 'var(--c-text-2)', marginTop: 4 }}>Defaults to today — resolution time is measured from this date.</div></div>
           </div>
 
           <div style={css.row}>
@@ -652,7 +640,7 @@ export default function WarrantyClaimsPage() {
                 <option value="">Not assigned yet</option>
                 {SUB_TRADES.map(t => <option key={t} value={t}>{t}</option>)}
               </select>
-              <div style={{ fontSize: 11, color: 'var(--c-text-2)', marginTop: 4 }}>Canonical trade list — drives the claims-by-trade cost rollup.</div>
+              <div style={{ fontSize: 12, color: 'var(--c-text-2)', marginTop: 4 }}>Canonical trade list — drives the claims-by-trade cost rollup.</div>
             </div>
             <div style={css.field}><label style={css.label}>Assigned Contractor</label><input style={css.input} value={form.assigned_contractor} onChange={e => setForm({ ...form, assigned_contractor: e.target.value })} /></div>
             <div style={css.field}><label style={css.label}>Scheduled Date</label><SaguaroDatePicker style={css.input} value={form.scheduled_date} onChange={v => setForm({ ...form, scheduled_date: v })} /></div>
@@ -682,14 +670,14 @@ export default function WarrantyClaimsPage() {
 
         {/* Context rail — what the program already knows + what happens next */}
         <div style={{ display: 'flex', flexDirection: 'column', gap: 16 }}>
-          <SectionCard flat title="Program Snapshot" icon={<ChartBar size={17} weight="duotone" color={GOLD} />}>
+          <SectionCard flat title="Program Snapshot" icon={<ChartBar size={17} weight="duotone" color="var(--text-secondary)" />}>
             <InsightRow label="Open Claims" value={stats.open} />
             <InsightRow label="Emergency" value={stats.emergency} accent={stats.emergency > 0 ? RED : undefined} />
             <InsightRow label="Avg Resolution" value={`${stats.avgDays} days`} />
             <InsightRow label="Warranty Cost" value={`$${(Number(stats.totalCost) || 0).toLocaleString()}`} accent={GOLD} />
             {Object.keys(stats.byCat).length > 0 && <InsightRow label="Most Reported" value={Object.entries(stats.byCat).sort((a, b) => b[1] - a[1])[0][0]} />}
           </SectionCard>
-          <SectionCard flat title="After You Create" icon={<Timer size={17} weight="duotone" color={GOLD} />}>
+          <SectionCard flat title="After You Create" icon={<Timer size={17} weight="duotone" color="var(--text-secondary)" />}>
             <FlowSteps title="" steps={[
               { title: 'Claim enters the pipeline', desc: 'Starts at submitted — acknowledge it to start the clock.' },
               { title: 'Dispatch the trade', desc: 'Assign a contractor and service date straight from the claims list.' },
@@ -710,7 +698,7 @@ export default function WarrantyClaimsPage() {
             {/* header */}
             <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: 16 }}>
               <div>
-                <span style={{ fontFamily: 'monospace', color: GOLD, fontSize: 13 }}>{detailClaim.claim_number}</span>
+                <span style={{ fontFamily: 'monospace', color: 'var(--text-primary)', fontSize: 13 }}>{detailClaim.claim_number}</span>
                 <h2 style={{ ...css.h2, marginTop: 4 }}>{detailClaim.title}</h2>
                 <div style={{ display: 'flex', gap: 8, marginTop: 6 }}>
                   <StatusPill module="warranty_claims" status={detailClaim.status} />
@@ -733,7 +721,7 @@ export default function WarrantyClaimsPage() {
               <div><span style={{ color: DIM }}>Contractor:</span> {detailClaim.assigned_contractor || '---'}</div>
               <div><span style={{ color: DIM }}>Scheduled:</span> {detailClaim.scheduled_date || '---'}</div>
               <div><span style={{ color: DIM }}>Completed:</span> {detailClaim.completed_date || '---'}</div>
-              <div><span style={{ color: DIM }}>Cost:</span> <span style={{ fontFamily: 'monospace', color: GOLD }}>${(Number(detailClaim.cost) || 0).toLocaleString()}</span></div>
+              <div><span style={{ color: DIM }}>Cost:</span> <span style={{ fontFamily: 'monospace', color: 'var(--text-primary)' }}>${(Number(detailClaim.cost) || 0).toLocaleString()}</span></div>
             </div>
 
             {/* description */}
@@ -757,7 +745,7 @@ export default function WarrantyClaimsPage() {
                         <div style={{ width: 28, height: 28, borderRadius: '50%', background: isCurrent ? GOLD : isPast ? `color-mix(in srgb, ${GREEN} 20%, transparent)` : BG, border: `2px solid ${c}`, display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 12, fontWeight: 700, color: isCurrent ? BG : isPast ? GREEN : DIM }}>
                           {isPast ? '\u2713' : i + 1}
                         </div>
-                        <span style={{ fontSize: 9, color: isCurrent ? GOLD : DIM, textTransform: 'capitalize', maxWidth: 60, textAlign: 'center' }}>{s.replace('_', ' ')}</span>
+                        <span style={{ fontSize: 12, color: isCurrent ? GOLD : DIM, textTransform: 'capitalize', maxWidth: 60, textAlign: 'center' }}>{s.replace('_', ' ')}</span>
                       </div>
                     </React.Fragment>
                   );
@@ -825,7 +813,7 @@ export default function WarrantyClaimsPage() {
                 {(detailClaim.communication_log || []).map(entry => (
                   <div key={entry.id} style={{ position: 'relative', marginBottom: 16, paddingBottom: 4 }}>
                     <div style={css.timelineDot(BLUE)} />
-                    <div style={{ fontSize: 11, color: DIM }}>{new Date(entry.date).toLocaleString()} &mdash; {entry.from}</div>
+                    <div style={{ fontSize: 12, color: DIM }}>{new Date(entry.date).toLocaleString()} &mdash; {entry.from}</div>
                     <div style={{ fontSize: 13, color: TEXT, marginTop: 2 }}>{entry.message}</div>
                   </div>
                 ))}
@@ -853,7 +841,7 @@ export default function WarrantyClaimsPage() {
           <div style={{ ...css.modal, maxWidth: 480 }} onClick={e => e.stopPropagation()}>
             <button style={css.close} onClick={() => setDispatchClaim(null)}>&times;</button>
             <h2 style={{ ...css.h2, marginTop: 0 }}>Dispatch Contractor</h2>
-            <p style={{ color: DIM, fontSize: 13, marginBottom: 16 }}>Assign trade and contractor for claim <span style={{ color: GOLD, fontFamily: 'monospace' }}>{dispatchClaim.claim_number}</span></p>
+            <p style={{ color: DIM, fontSize: 13, marginBottom: 16 }}>Assign trade and contractor for claim <span style={{ color: 'var(--text-primary)', fontFamily: 'monospace' }}>{dispatchClaim.claim_number}</span></p>
             <div style={css.row}>
               <div style={css.field}>
                 <label style={css.label}>Trade</label>
@@ -895,25 +883,25 @@ export default function WarrantyClaimsPage() {
         <SectionCard style={{ marginTop: 16 }} bodyStyle={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexWrap: 'wrap', gap: 16 }}>
           <div style={{ display: 'flex', gap: 24 }}>
             <div>
-              <span style={{ color: DIM, fontSize: 11}}>Filtered Total Cost</span>
-              <div style={{ fontSize: 18, fontWeight: 700, fontFamily: 'monospace', color: GOLD }}>
+              <span style={{ color: DIM, fontSize: 12}}>Filtered Total Cost</span>
+              <div style={{ fontSize: 18, fontWeight: 700, fontFamily: 'monospace', color: 'var(--text-primary)' }}>
                 ${filtered.reduce((s, c) => s + (Number(c.cost) || 0), 0).toLocaleString()}
               </div>
             </div>
             <div>
-              <span style={{ color: DIM, fontSize: 11}}>Covered Claims</span>
+              <span style={{ color: DIM, fontSize: 12}}>Covered Claims</span>
               <div style={{ fontSize: 18, fontWeight: 700, color: GREEN }}>
                 {filtered.filter(c => c.covered_under_warranty).length}
               </div>
             </div>
             <div>
-              <span style={{ color: DIM, fontSize: 11}}>Not Covered</span>
+              <span style={{ color: DIM, fontSize: 12}}>Not Covered</span>
               <div style={{ fontSize: 18, fontWeight: 700, color: RED }}>
                 {filtered.filter(c => !c.covered_under_warranty).length}
               </div>
             </div>
             <div>
-              <span style={{ color: DIM, fontSize: 11}}>Expired Warranties</span>
+              <span style={{ color: DIM, fontSize: 12}}>Expired Warranties</span>
               <div style={{ fontSize: 18, fontWeight: 700, color: AMBER }}>
                 {filtered.filter(c => isExpired(c.warranty_expiry)).length}
               </div>
@@ -989,7 +977,7 @@ export default function WarrantyClaimsPage() {
                     <tr key={c.id} style={css.trHover} onClick={() => { setDetailClaim(c); setActiveTab('claims'); }}
                       onMouseEnter={e => (e.currentTarget.style.background = `color-mix(in srgb, ${BORDER} 20%, transparent)`)}
                       onMouseLeave={e => (e.currentTarget.style.background = 'transparent')}>
-                      <td style={css.td}><span style={{ fontFamily: 'monospace', color: GOLD }}>{c.claim_number}</span></td>
+                      <td style={css.td}><span style={{ fontFamily: 'monospace', color: 'var(--text-primary)' }}>{c.claim_number}</span></td>
                       <td style={css.td}>{c.title}</td>
                       <td style={css.td}><span style={{ textTransform: 'capitalize' }}>{c.category}</span></td>
                       <td style={css.td}>{c.warranty_expiry}</td>
@@ -1030,7 +1018,7 @@ function StatusPipeline({ byStatus, active, onPick }: { byStatus: Record<string,
               style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 4, padding: '6px 12px', borderRadius: 10, cursor: 'pointer', flexShrink: 0, background: on ? 'color-mix(in srgb, var(--brand-primary) 14%, transparent)' : 'transparent', border: `1px solid ${on ? 'color-mix(in srgb, var(--brand-primary) 45%, transparent)' : 'transparent'}` }}
             >
               <span style={{ fontSize: 17, fontWeight: 800, color: n > 0 ? c : DIM, fontVariantNumeric: 'tabular-nums' }}>{n}</span>
-              <span style={{ fontSize: 10, fontWeight: 700, color: on ? GOLD : DIM, whiteSpace: 'nowrap', textTransform: 'capitalize' }}>{s.replace('_', ' ')}</span>
+              <span style={{ fontSize: 12, fontWeight: 700, color: on ? GOLD : DIM, whiteSpace: 'nowrap', textTransform: 'capitalize' }}>{s.replace('_', ' ')}</span>
             </button>
           </React.Fragment>
         );

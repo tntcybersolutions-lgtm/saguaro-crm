@@ -84,8 +84,8 @@ export default function OnboardingStep4() {
         {/* Logo */}
         <div style={{textAlign:'center',marginBottom:36}}>
           <a href="/" style={{textDecoration:'none',display:'inline-flex',alignItems:'center',gap:8}}>
-            <Cactus size={28} weight="fill" color={GOLD} />
-            <span style={{fontWeight:900,fontSize:20,color:GOLD}}>Saguaro</span>
+            <Cactus size={28} weight="fill" color="var(--text-secondary)" />
+            <span style={{fontWeight:900,fontSize:20,color: 'var(--text-primary)'}}>Saguaro</span>
           </a>
         </div>
 
@@ -103,7 +103,7 @@ export default function OnboardingStep4() {
                 }}>
                   {s.done ? <Check size={16} weight="bold" /> : s.num}
                 </div>
-                <span style={{fontSize:11,color:s.active?TEXT:DIM,fontWeight:s.active?700:400}}>{s.label}</span>
+                <span style={{fontSize:12,color:s.active?TEXT:DIM,fontWeight:s.active?700:400}}>{s.label}</span>
               </div>
               {i<STEPS.length-1&&(
                 <div style={{flex:1,height:2,background:BORDER,margin:'17px 8px 0'}}/>
@@ -115,7 +115,7 @@ export default function OnboardingStep4() {
         {/* Success state */}
         {success ? (
           <div style={{background:RAISED,border:`1px solid rgba(74,222,128,.3)`,borderRadius:16,padding:40,textAlign:'center'}}>
-            <div style={{marginBottom:20}}><Confetti size={56} weight="fill" color={GOLD} /></div>
+            <div style={{marginBottom:20}}><Confetti size={56} weight="fill" color="var(--text-secondary)" /></div>
             <h1 style={{fontSize:28,fontWeight:900,margin:'0 0 12px',color:TEXT}}>You're All Set</h1>
             <p style={{color:DIM,fontSize:15,margin:'0 0 8px',lineHeight:1.6}}>
               Invites sent. Your team members will receive an email with instructions to create their account.
@@ -133,7 +133,7 @@ export default function OnboardingStep4() {
         ) : (
           <div style={{background:RAISED,border:`1px solid ${BORDER}`,borderRadius:16,padding:40}}>
             <div style={{marginBottom:28}}>
-              <div style={{fontSize:12,fontWeight:700,color:GOLD,marginBottom:8}}>Step 4 of 4</div>
+              <div style={{fontSize:12,fontWeight:700,color: 'var(--text-primary)',marginBottom:8}}>Step 4 of 4</div>
               <h1 style={{fontSize:26,fontWeight:900,margin:'0 0 6px',color:TEXT}}>Invite Your Team</h1>
               <p style={{color:DIM,fontSize:14,margin:0}}>Everyone gets unlimited access — no extra charge per user.</p>
             </div>
@@ -145,8 +145,8 @@ export default function OnboardingStep4() {
             <div style={{display:'flex',flexDirection:'column',gap:12,marginBottom:20}}>
               {/* Column headers */}
               <div style={{display:'flex',gap:10}}>
-                <div style={{flex:1,fontSize:11,fontWeight:700,color:DIM}}>Email Address</div>
-                <div style={{minWidth:160,fontSize:11,fontWeight:700,color:DIM}}>Role</div>
+                <div style={{flex:1,fontSize:12,fontWeight:700,color:DIM}}>Email Address</div>
+                <div style={{minWidth:160,fontSize:12,fontWeight:700,color:DIM}}>Role</div>
               </div>
 
               {invites.map((inv,i)=>(
@@ -192,7 +192,7 @@ export default function OnboardingStep4() {
               </a>
             </div>
 
-            <div style={{marginTop:24,padding:'12px 16px',background:'color-mix(in srgb, var(--brand-primary) 6%, transparent)',border:'1px solid var(--brand-primary-18)',borderRadius:8,fontSize:12,color:DIM,textAlign:'center'}}>
+            <div style={{marginTop:24,padding:'12px 16px',background:'var(--bg-surface-2)',border:'1px solid var(--border-default)',borderRadius:8,fontSize:12,color:DIM,textAlign:'center'}}>
               You can invite more team members anytime from <strong style={{color:TEXT}}>Settings → Team</strong>.
             </div>
           </div>

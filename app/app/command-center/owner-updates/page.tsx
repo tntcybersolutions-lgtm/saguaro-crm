@@ -121,7 +121,7 @@ export default function OwnerUpdatesPage() {
         ) : updates.length === 0 ? (
           <SectionCard flat>
             <PremiumEmpty
-              icon={<EnvelopeSimple size={32} weight="duotone" color={C.gold} />}
+              icon={<EnvelopeSimple size={32} weight="duotone" color="var(--text-secondary)" />}
               title="No active sites yet"
               description="Launch a site from the Rollout Pipeline and its weekly owner update drafts itself here — status, schedule, procurement, and open items in one owner-ready note."
             />
@@ -188,7 +188,7 @@ export default function OwnerUpdatesPage() {
 function Stat({ label, value, color }: { label: React.ReactNode; value: React.ReactNode; color?: string }) {
   return (
     <div style={{ background: 'rgba(255,255,255,0.04)', border: `1px solid rgba(255,255,255,0.07)`, borderRadius: 10, padding: '10px 12px' }}>
-      <div style={{ fontSize: 10, fontWeight: 700, color: C.faint }}>{label}</div>
+      <div style={{ fontSize: 12, fontWeight: 700, color: C.faint }}>{label}</div>
       <div style={{ fontSize: 16, fontWeight: 800, color: color || C.text, marginTop: 2, fontVariantNumeric: 'tabular-nums' }}>{value}</div>
     </div>
   );

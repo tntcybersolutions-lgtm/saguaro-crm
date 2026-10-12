@@ -19,7 +19,7 @@ import { stateFromAddress } from '@/lib/us-state';
 const GOLD='var(--brand-primary)',DARK='var(--bg-surface-2)',BORDER='rgba(255,255,255,0.12)',DIM='var(--text-secondary)',TEXT='var(--text-primary)';
 const INPUT_STYLE = {width:'100%',padding:'10px 12px',background:DARK,border:`1px solid ${BORDER}`,borderRadius:8,color:TEXT,fontSize:13,outline:'none'};
 const SELECT_STYLE = {...INPUT_STYLE,cursor:'pointer'};
-const HINT:React.CSSProperties = {fontSize:11,color:'var(--c-text-2)',marginTop:6,lineHeight:1.45};
+const HINT:React.CSSProperties = {fontSize:12,color:'var(--c-text-2)',marginTop:6,lineHeight:1.45};
 const fmt = (n:number) => '$'+(Number(n)||0).toLocaleString('en-US',{maximumFractionDigits:0});
 const fmtDate = (d?:string|null) => d ? new Date(d+'T00:00:00').toLocaleDateString('en-US',{month:'short',day:'numeric',year:'numeric'}) : '—';
 const todayIso = () => { const d = new Date(); return `${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,'0')}-${String(d.getDate()).padStart(2,'0')}`; };
@@ -60,7 +60,7 @@ const CATEGORY_BY_BUILDING_TYPE: Record<string,string> = {
 
 const FIELD = ({label,auto,hint,children}:{label:string,auto?:boolean,hint?:React.ReactNode,children:React.ReactNode}) => (
   <div style={{marginBottom:16}}>
-    <label style={{display:'block',fontSize:11,fontWeight:700,color:DIM, marginBottom:6}}>{label}{auto && <AutoChip/>}</label>
+    <label style={{display:'block',fontSize:12,fontWeight:700,color:DIM, marginBottom:6}}>{label}{auto && <AutoChip/>}</label>
     {children}
     {hint && <div style={HINT}>{hint}</div>}
   </div>
@@ -353,7 +353,7 @@ export default function NewProjectPage() {
       `}</style>
       <ModuleHero
         eyebrow="New Project"
-        eyebrowIcon={<Plus size={13} weight="fill" color={GOLD} />}
+        eyebrowIcon={<Plus size={13} weight="fill" color="var(--text-secondary)" />}
         title="Create"
         accent="New Project"
         subtitle="Type only what the system can't already know."
@@ -386,7 +386,7 @@ export default function NewProjectPage() {
           documents land in. Every one of them stays editable below; this is a
           starting point, not a lock. */}
       <div style={{ marginBottom: 18 }}>
-        <div style={{ fontSize: 11, fontWeight: 800, color: GOLD, marginBottom: 10 }}>
+        <div style={{ fontSize: 12, fontWeight: 800, color: 'var(--text-primary)', marginBottom: 10 }}>
           Step 1 · What Kind of Job Is This?
         </div>
         <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(230px, 1fr))', gap: 12 }}>
@@ -421,7 +421,7 @@ export default function NewProjectPage() {
                   <span style={{ fontSize: 14, fontWeight: 800, color: on ? 'var(--brand-primary)' : 'var(--text-primary)' }}>{t.name}</span>
                 </div>
                 <div style={{ fontSize: 12, lineHeight: 1.5, color: 'var(--c-text-2)', marginBottom: 8 }}>{t.blurb}</div>
-                <div style={{ fontSize: 11.5, lineHeight: 1.45, color: 'var(--c-text-2)', fontStyle: 'italic' }}>{t.example}</div>
+                <div style={{ fontSize: 12, lineHeight: 1.45, color: 'var(--c-text-2)', fontStyle: 'italic' }}>{t.example}</div>
                 <div style={{ display: 'flex', flexWrap: 'wrap', gap: 6, marginTop: 10 }}>
                   {[
                     `${t.retainagePct}% Retainage`,
@@ -430,7 +430,7 @@ export default function NewProjectPage() {
                     `${t.folders.length} Folders`,
                   ].map((chip) => (
                     <span key={chip} style={{
-                      fontSize: 10, fontWeight: 700, padding: '2px 7px', borderRadius: 6,
+                      fontSize: 12, fontWeight: 700, padding: '2px 7px', borderRadius: 6,
                       background: 'rgba(255,255,255,0.06)', color: 'var(--c-text-2)',
                     }}>{chip}</span>
                   ))}
@@ -453,7 +453,7 @@ export default function NewProjectPage() {
           <div>
             <div style={{display:'grid',gridTemplateColumns:'1fr 1fr',gap:16}}>
               <div>
-                <SectionCard title="Step 2 · Name and Location" icon={<Buildings size={17} weight="duotone" color={GOLD} />} style={{marginBottom:16}}>
+                <SectionCard title="Step 2 · Name and Location" icon={<Buildings size={17} weight="duotone" color="var(--text-secondary)" />} style={{marginBottom:16}}>
                 {showDetails && (
                   <FIELD label="Sector" hint={sectorDef?.flags ? 'Public-sector work — prevailing wage and public-agency compliance pre-set below.' : 'Filters building types, derives the category, and pre-sets compliance for public work.'}>
                     <div style={{display:'flex',flexWrap:'wrap' as const,gap:5,background:'rgba(255,255,255,0.04)',borderRadius:10,padding:4,border:'1px solid rgba(255,255,255,0.08)'}}>
@@ -461,7 +461,7 @@ export default function NewProjectPage() {
                         const active = sector===s.key;
                         return (
                           <button type="button" key={s.key} onClick={()=>pickSector(s.key)} className="pmBtn npSeg"
-                            style={{padding:'6px 12px',borderRadius:7,border:'none',cursor:'pointer',fontWeight:800,fontSize:11.5,whiteSpace:'nowrap' as const,
+                            style={{padding:'6px 12px',borderRadius:7,border:'none',cursor:'pointer',fontWeight:800,fontSize:12,whiteSpace:'nowrap' as const,
                               background:active?`linear-gradient(180deg,var(--brand-primary-strong),${GOLD} 60%,var(--brand-primary-hover))`:'transparent',color:active?'var(--on-brand)':DIM,transition:'all .15s',
                               boxShadow:active?'0 2px 10px color-mix(in srgb, var(--brand-primary) 28%, transparent), inset 0 1px 0 rgba(255,255,255,0.35)':'none'}}>
                             {s.label}
@@ -495,8 +495,8 @@ export default function NewProjectPage() {
                               transition: 'background .15s, border-color .15s',
                             }}
                           >
-                            <div style={{ fontSize: 13.5, fontWeight: 800, color: on ? 'var(--brand-primary-strong)' : 'var(--text-primary)', marginBottom: 3 }}>{c.title}</div>
-                            <div style={{ fontSize: 11.5, color: 'var(--text-secondary)', lineHeight: 1.45 }}>{c.detail}</div>
+                            <div style={{ fontSize: 14, fontWeight: 800, color: on ? 'var(--brand-primary-strong)' : 'var(--text-primary)', marginBottom: 3 }}>{c.title}</div>
+                            <div style={{ fontSize: 12, color: 'var(--text-secondary)', lineHeight: 1.45 }}>{c.detail}</div>
                           </button>
                         );
                       })}
@@ -524,7 +524,7 @@ export default function NewProjectPage() {
                 </>)}
                 </SectionCard>
 
-                <SectionCard title="Location" icon={<MapPin size={17} weight="duotone" color={GOLD} />} style={{marginBottom:16}}>
+                <SectionCard title="Location" icon={<MapPin size={17} weight="duotone" color="var(--text-secondary)" />} style={{marginBottom:16}}>
                   <FIELD label="Project Address"><input data-tour="project-address" value={address} onChange={e=>setAddress(e.target.value)} required placeholder="123 Main St, Phoenix, AZ 85001" style={INPUT_STYLE}/></FIELD>
                 {/* Defaults to the portfolio standard; only matters if it differs. */}
                 {showDetails && (
@@ -535,7 +535,7 @@ export default function NewProjectPage() {
                 </SectionCard>
 
                 {showDetails && (
-                <SectionCard title="Compliance" icon={<ShieldCheck size={17} weight="duotone" color={GOLD} />}>
+                <SectionCard title="Compliance" icon={<ShieldCheck size={17} weight="duotone" color="var(--text-secondary)" />}>
                   <FIELD label="Prevailing Wage" hint="Davis-Bacon or state law turns on certified payroll (WH-347) tracking for every sub.">
                     <select value={prevailingWage} onChange={e=>setPrevailingWage(e.target.value)} style={SELECT_STYLE}>
                       <option>No</option><option>Yes — Davis-Bacon</option><option>Yes — State Law</option>
@@ -552,7 +552,7 @@ export default function NewProjectPage() {
 
               <div>
                 {showDetails && (<>
-                <SectionCard title="Contract & Money" icon={<CurrencyDollar size={17} weight="duotone" color={GOLD} />} style={{marginBottom:16}}>
+                <SectionCard title="Contract & Money" icon={<CurrencyDollar size={17} weight="duotone" color="var(--text-secondary)" />} style={{marginBottom:16}}>
                   <FIELD label="Contract Value" hint={budgetNum>0 ? <>Reads as <b style={{color:TEXT}}>{fmt(budgetNum)}</b> — seeds the budget and prints as G702 line 1.</> : 'Seeds the budget and prints as G702 line 1 — refine after buyout.'}>
                     <input value={budget} onChange={e=>setBudget(e.target.value)} placeholder="$1,250,000" style={INPUT_STYLE}/>
                   </FIELD>
@@ -566,8 +566,8 @@ export default function NewProjectPage() {
                       <input type="number" value={retainage} onChange={e=>{setRetainage(e.target.value);setAuto(a=>({...a,ret:false}));}} min="0" max="20" style={INPUT_STYLE}/>
                     </FIELD>
                   </div>
-                  <div style={{fontSize:11,fontWeight:700,color:DIM, margin:'2px 0 10px',display:'flex',alignItems:'center',gap:6}}>
-                    <CalendarBlank size={14} weight="duotone" color={GOLD}/> Contract Milestones
+                  <div style={{fontSize:12,fontWeight:700,color:DIM, margin:'2px 0 10px',display:'flex',alignItems:'center',gap:6}}>
+                    <CalendarBlank size={14} weight="duotone" color="var(--text-secondary)"/> Contract Milestones
                   </div>
                   <div style={{display:'grid',gridTemplateColumns:'1fr 1fr',gap:16}}>
                     <FIELD label="Award Date"><SaguaroDatePicker value={awardDate} onChange={setAwardDate} style={INPUT_STYLE}/></FIELD>
@@ -580,7 +580,7 @@ export default function NewProjectPage() {
                   </div>
                 </SectionCard>
 
-                <SectionCard title="Team & Contacts" icon={<UsersThree size={17} weight="duotone" color={GOLD} />}>
+                <SectionCard title="Team & Contacts" icon={<UsersThree size={17} weight="duotone" color="var(--text-secondary)" />}>
                   <FIELD label="Owner Name" hint={ownerNames.length>0 ? `${ownerNames.length} owner${ownerNames.length===1?'':'s'} on file — start typing to reuse.` : 'Owner approvals and pay-app routing start here.'}>
                     <Suggest value={owner} onChange={e=>onOwnerChange(e.target.value)} placeholder="Desert Health Partners LLC" style={INPUT_STYLE} options={ownerNames} />
                   </FIELD>
@@ -599,10 +599,10 @@ export default function NewProjectPage() {
             </div>
 
             <div style={{marginTop:18,marginBottom:10}}>
-              <div style={{fontSize:11,fontWeight:800, color:GOLD,marginBottom:6}}>
+              <div style={{fontSize:12,fontWeight:800, color: 'var(--text-primary)',marginBottom:6}}>
                 Step 3 · Add Your Drawings
               </div>
-              <div style={{fontSize:12.5,color:'var(--c-text-2)',lineHeight:1.5,maxWidth:560}}>
+              <div style={{fontSize:13,color:'var(--c-text-2)',lineHeight:1.5,maxWidth:560}}>
                 Drop the plan set on the next screen and Saguaro measures every trade, prices it, and writes
                 your budget and bid packages from it. You can skip it and add plans later.
               </div>
@@ -651,7 +651,7 @@ export default function NewProjectPage() {
               folders={tpl?.folders ?? []}
               divisionCount={tpl?.divisions.length ?? 0}
             />
-            <SectionCard flat title="What Gets Created" icon={<Stack size={17} weight="duotone" color={GOLD} />} bodyStyle={{padding:'6px 20px 20px'}}>
+            <SectionCard flat title="What Gets Created" icon={<Stack size={17} weight="duotone" color="var(--text-secondary)" />} bodyStyle={{padding:'6px 20px 20px'}}>
               <FlowSteps title="" steps={[
                 {title:'Project Workspace', desc:'Overview, directory, documents, daily logs and photo feed — live the moment you hit Create.'},
                 {title:'Budget & Bid Packages', desc:'CSI-coded budget lines and trade bid packages — sub awards commit dollars automatically.'},
@@ -660,19 +660,19 @@ export default function NewProjectPage() {
               ]}/>
             </SectionCard>
 
-            <SectionCard flat title="Smart Defaults" icon={<Sparkle size={17} weight="duotone" color={GOLD} />}>
+            <SectionCard flat title="Smart Defaults" icon={<Sparkle size={17} weight="duotone" color="var(--text-secondary)" />}>
               <InsightRow label="Project Number" value={projectNumber||'—'} accent={GOLD} strong/>
               <InsightRow label="Category" value={PROJECT_CATEGORIES.find(c=>c.value===type)?.label||type}/>
               <InsightRow label="Retainage" value={`${Number(retainage)||10}%`}/>
               <InsightRow label="Start Date" value={fmtDate(startDate)}/>
               <InsightRow label="Jurisdiction" value={stateJurisdiction||'—'}/>
-              <div style={{fontSize:11.5,color:'var(--c-text-2)',lineHeight:1.5,marginTop:10,paddingTop:10,borderTop:'1px solid rgba(255,255,255,0.08)'}}>
+              <div style={{fontSize:12,color:'var(--c-text-2)',lineHeight:1.5,marginTop:10,paddingTop:10,borderTop:'1px solid rgba(255,255,255,0.08)'}}>
                 Auto chips mark what Saguaro pre-filled. Every value stays editable — nothing locks until you create the project.
               </div>
             </SectionCard>
 
-            <div style={{background:'var(--brand-primary-08)',border:'1px solid var(--brand-primary-18)',borderRadius:12,padding:'14px 18px',fontSize:13,color:DIM,display:'flex',gap:10,alignItems:'flex-start'}}>
-              <Sparkle size={16} weight="fill" color={GOLD} style={{flexShrink:0,marginTop:2}}/>
+            <div style={{background:'var(--bg-surface-2)',border:'1px solid var(--border-default)',borderRadius:12,padding:'14px 18px',fontSize:13,color:DIM,display:'flex',gap:10,alignItems:'flex-start'}}>
+              <Sparkle size={16} weight="fill" color="var(--text-secondary)" style={{flexShrink:0,marginTop:2}}/>
               <div>
                 <strong style={{color:TEXT}}>AI Auto-Build on First Award:</strong> when the first bid is awarded, Saguaro automatically creates 24 schedule tasks, a CSI-coded budget, sub packages, a safety plan, QC checkpoints and the contact directory.
               </div>

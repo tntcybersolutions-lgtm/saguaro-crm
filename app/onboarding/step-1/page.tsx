@@ -39,8 +39,8 @@ export default function OnboardingStep1() {
         {/* Logo */}
         <div style={{ textAlign: 'center', marginBottom: 40 }}>
           <a href="/" style={{ textDecoration: 'none', display: 'inline-flex', alignItems: 'center', gap: 8 }}>
-            <Cactus size={32} weight="fill" color={GOLD} />
-            <span style={{ fontWeight: 900, fontSize: 22, color: GOLD }}>Saguaro</span>
+            <Cactus size={32} weight="fill" color="var(--text-secondary)" />
+            <span style={{ fontWeight: 900, fontSize: 22, color: 'var(--text-primary)' }}>Saguaro</span>
           </a>
         </div>
 
@@ -52,7 +52,7 @@ export default function OnboardingStep1() {
                 <div style={{ width: 36, height: 36, borderRadius: '50%', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 14, fontWeight: 800, background: s.active ? GOLD : 'rgba(255,255,255,.08)', color: s.active ? '#101722' : DIM, border: `2px solid ${s.active ? GOLD : BORDER}` }}>
                   {s.num}
                 </div>
-                <span style={{ fontSize: 11, color: s.active ? TEXT : DIM, fontWeight: s.active ? 700 : 400 }}>{s.label}</span>
+                <span style={{ fontSize: 12, color: s.active ? TEXT : DIM, fontWeight: s.active ? 700 : 400 }}>{s.label}</span>
               </div>
               {i < STEPS.length - 1 && (
                 <div style={{ flex: 1, height: 2, background: BORDER, margin: '17px 8px 0' }} />
@@ -64,7 +64,7 @@ export default function OnboardingStep1() {
         {/* Card */}
         <div style={{ background: RAISED, border: `1px solid ${BORDER}`, borderRadius: 16, padding: 40 }}>
           <div style={{ textAlign: 'center', marginBottom: 32 }}>
-            <div style={{ marginBottom: 16 }}><Confetti size={48} weight="fill" color={GOLD} /></div>
+            <div style={{ marginBottom: 16 }}><Confetti size={48} weight="fill" color="var(--text-secondary)" /></div>
             <h1 style={{ fontSize: 28, fontWeight: 900, margin: '0 0 10px', color: TEXT }}>Welcome to Saguaro</h1>
             <p style={{ color: DIM, fontSize: 15, margin: 0, lineHeight: 1.6 }}>
               You're all set. Your 30-day free trial starts now — no credit card required.
@@ -75,7 +75,7 @@ export default function OnboardingStep1() {
           <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 14, marginBottom: 32 }}>
             {FEATURES.map(f => (
               <div key={f.title} style={{ background: '#1c1c1e', border: `1px solid ${BORDER}`, borderRadius: 10, padding: '14px 16px' }}>
-                <div style={{ marginBottom: 8 }}><f.icon size={24} weight="duotone" color={GOLD} /></div>
+                <div style={{ marginBottom: 8 }}><f.icon size={24} weight="duotone" color="var(--text-secondary)" /></div>
                 <div style={{ fontWeight: 700, fontSize: 13, color: TEXT, marginBottom: 4 }}>{f.title}</div>
                 <div style={{ fontSize: 12, color: DIM, lineHeight: 1.5 }}>{f.desc}</div>
               </div>
@@ -98,8 +98,8 @@ export default function OnboardingStep1() {
             </a>
           </div>
 
-          <div style={{ marginTop: 24, padding: 16, background: 'color-mix(in srgb, var(--brand-primary) 6%, transparent)', border: '1px solid var(--brand-primary-18)', borderRadius: 8, fontSize: 12, color: DIM, textAlign: 'center' }}>
-            <Lightbulb size={14} weight="fill" color={GOLD} style={{ verticalAlign: 'middle' }} /> <strong style={{ color: TEXT }}>Pro Tip:</strong> Start with the AI Takeoff — upload any blueprint PDF and see it calculate every material automatically in under 60 seconds.
+          <div style={{ marginTop: 24, padding: 16, background: 'var(--bg-surface-2)', border: '1px solid var(--border-default)', borderRadius: 8, fontSize: 12, color: DIM, textAlign: 'center' }}>
+            <Lightbulb size={14} weight="fill" color="var(--text-secondary)" style={{ verticalAlign: 'middle' }} /> <strong style={{ color: TEXT }}>Pro Tip:</strong> Start with the AI Takeoff — upload any blueprint PDF and see it calculate every material automatically in under 60 seconds.
           </div>
         </div>
 

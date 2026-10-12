@@ -26,7 +26,7 @@ const CSS = `
   box-shadow: 0 18px 40px -14px rgba(0,0,0,.8); font-size: 15px; line-height: 1.3; }
 .stc[data-place="top"] { bottom: auto; top: calc(env(safe-area-inset-top, 0px) + 10px); }
 .stc-head { display: flex; align-items: center; justify-content: space-between; gap: 8px; }
-.stc-title { font-size: 11.5px; font-weight: 800; letter-spacing: .12em; color: var(--text-secondary); }
+.stc-title { font-size: 12px; font-weight: 800; letter-spacing: .12em; color: var(--text-secondary); }
 .stc[data-tone="bad"] .stc-title { color: var(--c-red); }
 .stc[data-tone="nosig"] .stc-title { color: var(--c-orange); }
 .stc[data-tone="done"] .stc-title { color: var(--c-green); }
@@ -55,7 +55,7 @@ const CSS = `
 .stc-detail { margin-top: 2px; font-size: 13px; font-weight: 600; color: var(--text-secondary); overflow-wrap: anywhere; }
 .stc-bar { margin-top: 6px; height: 4px; border-radius: 4px; background: var(--border-subtle); overflow: hidden; }
 .stc-bar > span { display: block; height: 100%; background: var(--gold); border-radius: 4px; transition: width .25s ease; }
-.stc-more { font-size: 12.5px; color: var(--text-tertiary); padding: 4px 0 2px; }
+.stc-more { font-size: 13px; color: var(--text-tertiary); padding: 4px 0 2px; }
 @media (max-width: 767px) {
   .stc { left: 12px; right: 12px; width: auto; transform: none; bottom: calc(var(--sag-tabbar-h, 0px) + 8px); }
 }

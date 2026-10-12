@@ -107,8 +107,8 @@ export function PeopleDirectory() {
     <div style={{ background: DARK, color: TEXT, minHeight: '100vh', fontFamily: 'system-ui,Segoe UI,sans-serif' }}>
       <div style={{ maxWidth: 1180, margin: '0 auto', padding: '24px 20px 80px' }}>
         <div style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
-          <UsersThree size={26} weight="fill" color={GOLD} />
-          <div style={{ flex: 1 }}><h1 style={{ fontSize: 26, fontWeight: 800, margin: 0 }}>People</h1><p style={{ color: DIM, margin: 0, fontSize: 13.5 }}>Your crew — records, certifications, assignments, and incident history.</p></div>
+          <UsersThree size={26} weight="fill" color="var(--text-secondary)" />
+          <div style={{ flex: 1 }}><h1 style={{ fontSize: 26, fontWeight: 800, margin: 0 }}>People</h1><p style={{ color: DIM, margin: 0, fontSize: 14 }}>Your crew — records, certifications, assignments, and incident history.</p></div>
           <button onClick={() => { setF({ employment_type: 'hourly' }); setSaveErr(null); setAdding(true); }} style={{ ...btn, display: 'inline-flex', alignItems: 'center', gap: 6 }}><Plus size={15} weight="bold" />Add Employee</button>
         </div>
 
@@ -128,9 +128,9 @@ export function PeopleDirectory() {
             <div style={{ display: 'flex', flexDirection: 'column', gap: 8, maxHeight: '72vh', overflowY: 'auto' }}>
               {filtered.length === 0 ? <div style={{ color: DIM, fontSize: 13, padding: 12 }}>{emps.length ? 'No matches' : 'No employees yet — add your first.'}</div> : filtered.map((e) => (
                 <button key={e.id} onClick={() => setSelId(e.id)} style={{ display: 'flex', alignItems: 'center', gap: 10, textAlign: 'left', background: selId === e.id ? 'var(--brand-primary-12)' : RAISED, border: `1px solid ${selId === e.id ? GOLD : BORDER}`, borderRadius: 10, padding: 10, cursor: 'pointer', color: TEXT }}>
-                  <div style={{ width: 38, height: 38, borderRadius: 19, background: 'var(--brand-primary-18)', display: 'flex', alignItems: 'center', justifyContent: 'center', color: GOLD, fontWeight: 800, fontSize: 13 }}>{initials(nameOf(e))}</div>
-                  <div style={{ flex: 1, minWidth: 0 }}><div style={{ fontWeight: 700, fontSize: 14 }}>{nameOf(e)}</div><div style={{ color: DIM, fontSize: 12.5 }}>{[e.title, e.trade].filter(Boolean).join(' · ') || 'No title'}</div></div>
-                  {e.osha_30_certified ? <span style={{ fontSize: 10, color: GREEN, fontWeight: 700 }}>OSHA30</span> : e.osha_10_certified ? <span style={{ fontSize: 10, color: GREEN, fontWeight: 700 }}>OSHA10</span> : null}
+                  <div style={{ width: 38, height: 38, borderRadius: 19, background: 'var(--bg-surface-2)', display: 'flex', alignItems: 'center', justifyContent: 'center', color: 'var(--text-primary)', fontWeight: 800, fontSize: 13 }}>{initials(nameOf(e))}</div>
+                  <div style={{ flex: 1, minWidth: 0 }}><div style={{ fontWeight: 700, fontSize: 14 }}>{nameOf(e)}</div><div style={{ color: DIM, fontSize: 13 }}>{[e.title, e.trade].filter(Boolean).join(' · ') || 'No title'}</div></div>
+                  {e.osha_30_certified ? <span style={{ fontSize: 12, color: GREEN, fontWeight: 700 }}>OSHA30</span> : e.osha_10_certified ? <span style={{ fontSize: 12, color: GREEN, fontWeight: 700 }}>OSHA10</span> : null}
                 </button>
               ))}
             </div>
@@ -143,7 +143,7 @@ export function PeopleDirectory() {
             ) : (
               <div style={{ display: 'flex', flexDirection: 'column', gap: 14 }}>
                 <div style={{ background: RAISED, border: `1px solid ${BORDER}`, borderRadius: 12, padding: 18, display: 'flex', alignItems: 'center', gap: 14 }}>
-                  <div style={{ width: 56, height: 56, borderRadius: 28, background: 'var(--brand-primary-18)', display: 'flex', alignItems: 'center', justifyContent: 'center', color: GOLD, fontWeight: 800, fontSize: 19 }}>{initials(nameOf(detail))}</div>
+                  <div style={{ width: 56, height: 56, borderRadius: 28, background: 'var(--bg-surface-2)', display: 'flex', alignItems: 'center', justifyContent: 'center', color: 'var(--text-primary)', fontWeight: 800, fontSize: 19 }}>{initials(nameOf(detail))}</div>
                   <div style={{ flex: 1 }}><div style={{ fontSize: 20, fontWeight: 800 }}>{nameOf(detail)}</div><div style={{ color: DIM, fontSize: 14 }}>{[detail.title, detail.trade].filter(Boolean).join(' · ') || 'No title'}</div></div>
                   <button onClick={() => { setF({ first_name: detail.first_name ?? '', last_name: detail.last_name ?? '', title: detail.title ?? '', trade: detail.trade ?? '', email: detail.email ?? '', phone: detail.phone ?? '', address: detail.address ?? '', regular_rate: String(detail.regular_rate ?? ''), overtime_rate: String(detail.overtime_rate ?? ''), emergency_contact_name: detail.emergency_contact_name ?? '', emergency_contact_phone: detail.emergency_contact_phone ?? '' }); setEditing(true); }} style={{ ...btn, background: 'transparent', color: TEXT, border: `1px solid ${BORDER}`, display: 'inline-flex', gap: 6, alignItems: 'center' }}><PencilSimple size={14} />Edit</button>
                   <button onClick={() => patch({ is_active: !(detail.is_active !== false) })} style={{ ...btn, background: 'transparent', color: detail.is_active !== false ? GREEN : DIM, border: `1px solid ${BORDER}` }}>{detail.is_active !== false ? 'Active' : 'Inactive'}</button>
@@ -151,7 +151,7 @@ export function PeopleDirectory() {
 
                 <Section title="Contact & Pay">
                   <Info I={Envelope} k="Email" v={detail.email} /><Info I={Phone} k="Phone" v={detail.phone} /><Info I={MapPin} k="Address" v={detail.address} />
-                  <Info I={Briefcase} k="Type" v={detail.employment_type} /><Info I={CurrencyDollar} k="Rate" v={Number(detail.regular_rate) > 0 ? <span style={{ color: GOLD, fontWeight: 800 }}>{`$${(Number(detail.regular_rate) || 0).toFixed(2)}/hr${Number(detail.overtime_rate) > 0 ? ` · OT $${(Number(detail.overtime_rate) || 0).toFixed(2)}` : ''}`}</span> : null} />
+                  <Info I={Briefcase} k="Type" v={detail.employment_type} /><Info I={CurrencyDollar} k="Rate" v={Number(detail.regular_rate) > 0 ? <span style={{ color: 'var(--text-primary)', fontWeight: 800 }}>{`$${(Number(detail.regular_rate) || 0).toFixed(2)}/hr${Number(detail.overtime_rate) > 0 ? ` · OT $${(Number(detail.overtime_rate) || 0).toFixed(2)}` : ''}`}</span> : null} />
                   <Info I={FirstAid} k="Emergency" v={detail.emergency_contact_name ? `${detail.emergency_contact_name}${detail.emergency_contact_phone ? ` · ${detail.emergency_contact_phone}` : ''}` : null} />
                 </Section>
 
@@ -173,16 +173,16 @@ export function PeopleDirectory() {
 
                 <Section title="Project Assignments" action={unassigned.length ? <select onChange={(e) => { if (e.target.value) addAssign(e.target.value); e.target.value = ''; }} defaultValue="" style={{ ...inp, width: 'auto', fontSize: 13 }}><option value="">+ Assign to…</option>{unassigned.map((p) => <option key={p.id} value={p.id}>{p.name}</option>)}</select> : null}>
                   {assigns.length === 0 ? <span style={{ color: DIM, fontSize: 13 }}>Not assigned to any project.</span> : assigns.map((a) => (
-                    <div key={a.id} style={{ display: 'flex', alignItems: 'center', gap: 10, padding: '7px 0', borderBottom: `1px solid ${BORDER}` }}><Folder size={16} color={GOLD} weight="fill" /><span style={{ flex: 1 }}>{projName(a.project_id)}</span><button onClick={() => rmAssign(a.id)} style={{ background: 'none', border: 'none', cursor: 'pointer' }}><X size={15} color={DIM} /></button></div>
+                    <div key={a.id} style={{ display: 'flex', alignItems: 'center', gap: 10, padding: '7px 0', borderBottom: `1px solid ${BORDER}` }}><Folder size={16} color="var(--text-secondary)" weight="fill" /><span style={{ flex: 1 }}>{projName(a.project_id)}</span><button onClick={() => rmAssign(a.id)} style={{ background: 'none', border: 'none', cursor: 'pointer' }}><X size={15} color={DIM} /></button></div>
                   ))}
                 </Section>
 
                 <Section title="Incidents & Notes" action={<button onClick={() => setLoggingInc(true)} style={{ ...btn, padding: '6px 12px', fontSize: 13 }}>+ Log</button>}>
                   {incidents.length === 0 ? <span style={{ color: DIM, fontSize: 13 }}>No incidents on record.</span> : incidents.map((it) => { const m = incMeta(it.incident_type); const sc = it.severity === 'high' || it.severity === 'critical' ? RED : it.severity === 'medium' ? AMBER : DIM; return (
                     <div key={it.id} style={{ borderLeft: `3px solid ${sc}`, background: DARK, borderRadius: 8, padding: 12, marginBottom: 8 }}>
-                      <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}><m.I size={15} color={m.c} weight="fill" /><span style={{ color: m.c, fontWeight: 800, fontSize: 11.5 }}>{m.l}</span><span style={{ marginLeft: 'auto', color: DIM, fontSize: 12 }}>{fmtDate(it.occurred_at)}</span></div>
+                      <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}><m.I size={15} color={m.c} weight="fill" /><span style={{ color: m.c, fontWeight: 800, fontSize: 12 }}>{m.l}</span><span style={{ marginLeft: 'auto', color: DIM, fontSize: 12 }}>{fmtDate(it.occurred_at)}</span></div>
                       {it.title ? <div style={{ fontWeight: 700, marginTop: 4 }}>{it.title}</div> : null}
-                      {it.description ? <div style={{ color: DIM, fontSize: 13.5, marginTop: 2 }}>{it.description}</div> : null}
+                      {it.description ? <div style={{ color: DIM, fontSize: 14, marginTop: 2 }}>{it.description}</div> : null}
                       {(it.equipment_involved || it.action_taken) ? <div style={{ color: DIM, fontSize: 12, marginTop: 4 }}>{it.equipment_involved ? `Equipment: ${it.equipment_involved}. ` : ''}{it.action_taken ? `Action: ${it.action_taken}` : ''}</div> : null}
                     </div>
                   ); })}
@@ -213,7 +213,7 @@ export function PeopleDirectory() {
 
       {loggingInc && (
         <Modal title="Log Incident / Note" onClose={() => setLoggingInc(false)}>
-          <div style={{ display: 'flex', gap: 8, flexWrap: 'wrap', marginBottom: 10 }}>{INC_TYPES.map((t) => { const on = inc.incident_type === t.v; return <button key={t.v} onClick={() => setInc({ ...inc, incident_type: t.v })} style={{ display: 'inline-flex', alignItems: 'center', gap: 6, border: `1px solid ${on ? t.c : BORDER}`, background: on ? `${t.c}22` : 'transparent', color: on ? t.c : DIM, borderRadius: 8, padding: '7px 10px', cursor: 'pointer', fontSize: 12.5, fontWeight: 700 }}><t.I size={14} weight="fill" />{t.l}</button>; })}</div>
+          <div style={{ display: 'flex', gap: 8, flexWrap: 'wrap', marginBottom: 10 }}>{INC_TYPES.map((t) => { const on = inc.incident_type === t.v; return <button key={t.v} onClick={() => setInc({ ...inc, incident_type: t.v })} style={{ display: 'inline-flex', alignItems: 'center', gap: 6, border: `1px solid ${on ? t.c : BORDER}`, background: on ? `${t.c}22` : 'transparent', color: on ? t.c : DIM, borderRadius: 8, padding: '7px 10px', cursor: 'pointer', fontSize: 13, fontWeight: 700 }}><t.I size={14} weight="fill" />{t.l}</button>; })}</div>
           <input value={inc.title ?? ''} onChange={(e) => setInc({ ...inc, title: e.target.value })} placeholder="Title / summary" style={inp} />
           <textarea value={inc.description ?? ''} onChange={(e) => setInc({ ...inc, description: e.target.value })} placeholder="What happened…" style={{ ...inp, marginTop: 8, minHeight: 64, resize: 'vertical' }} />
           <div style={{ display: 'flex', gap: 8, marginTop: 8 }}><SaguaroDatePicker value={inc.occurred_at} onChange={(v) => setInc({ ...inc, occurred_at: v })} style={inp} /><select value={inc.severity} onChange={(e) => setInc({ ...inc, severity: e.target.value })} style={inp}>{['low', 'medium', 'high', 'critical'].map((s) => <option key={s} value={s}>{s}</option>)}</select></div>

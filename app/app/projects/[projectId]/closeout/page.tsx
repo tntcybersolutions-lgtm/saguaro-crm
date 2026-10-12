@@ -6,7 +6,6 @@ import { ProgressBar, Badge, T } from '@/components/ui/shell';
 import {
   PremiumSurface,
   ModuleHero,
-  StatCard,
   SectionCard,
   StatStrip,
   FlowSteps,
@@ -14,7 +13,7 @@ import {
   goldButtonStyle,
   ghostButtonStyle,
 } from '@/components/ui/premium';
-import { CheckCircle, Hourglass, ChartBar, Check, Package, ListChecks } from '@phosphor-icons/react';
+import { CheckCircle, ChartBar, Check, Package, ListChecks } from '@phosphor-icons/react';
 import { ListToolbar } from '@/components/ui/ListToolbar';
 import { openPdf } from '@/components/PdfViewer';
 
@@ -177,7 +176,6 @@ export default function CloseoutPage() {
      prefer it, and recompute the billed % against the same number. */
   const gateRevised = Number(gate?.contract?.revised) || 0;
   const revised = gateRevised || Number(money?.revisedContract) || 0;
-  const approvedCoCount = gateRevised ? Number(gate?.contract?.approvedCoCount) || 0 : Number(money?.approvedCoCount) || 0;
   const billed = Number(money?.billedToDate) || 0;
   const billedPct = revised > 0 ? Math.round((billed / revised) * 1000) / 10 : 0;
   const openPunch = Number(ctx?.counts?.openPunch) || 0;
@@ -304,7 +302,7 @@ export default function CloseoutPage() {
       {/* Header */}
       <ModuleHero
         eyebrow={ctx?.project?.name || 'Closeout'}
-        eyebrowIcon={<Package size={13} weight="fill" color="var(--brand-primary)" />}
+        eyebrowIcon={<Package size={13} weight="fill" color="var(--text-secondary)" />}
         title="Project"
         accent="Closeout"
         subtitle={`${completed} of ${total} items complete — ${pct}% ready for handover.`}
@@ -357,18 +355,18 @@ export default function CloseoutPage() {
           }
           icon={gate.closed
             ? <CheckCircle size={17} weight="duotone" color={T.green} />
-            : <ListChecks size={17} weight="duotone" color="var(--brand-primary)" />}
+            : <ListChecks size={17} weight="duotone" color="var(--text-secondary)" />}
         >
           <div style={{ display: 'flex', gap: 16, alignItems: 'flex-start', flexWrap: 'wrap' }}>
             <div style={{ flex: 1, minWidth: 280 }}>
               {gate.closed ? (
-                <div style={{ fontSize: 12.5, color: T.muted, lineHeight: 1.6 }}>
+                <div style={{ fontSize: 13, color: T.muted, lineHeight: 1.6 }}>
                   {gate.project?.substantial_completion_date && <div>Substantial completion: {gate.project.substantial_completion_date}</div>}
                   {gate.project?.final_completion_date && <div>Final completion: {gate.project.final_completion_date}</div>}
                   <div>Reopening puts it back on the active list and clears the closeout date.</div>
                 </div>
               ) : gate.blockers.length === 0 && gate.unchecked.length === 0 ? (
-                <div style={{ fontSize: 12.5, color: T.muted }}>
+                <div style={{ fontSize: 13, color: T.muted }}>
                   Punch list, RFIs, change orders, pay applications and lien waivers are all clear.
                 </div>
               ) : (
@@ -381,8 +379,8 @@ export default function CloseoutPage() {
                       style={{
                         display: 'inline-flex', alignItems: 'center', gap: 6,
                         padding: '5px 10px', borderRadius: 8, textDecoration: 'none',
-                        border: '1px solid var(--brand-primary-35)', background: 'var(--brand-primary-08)',
-                        color: 'var(--brand-primary-strong)', fontSize: 11.5, fontWeight: 700, whiteSpace: 'nowrap',
+                        border: '1px solid var(--border-default)', background: 'var(--bg-surface-2)',
+                        color: 'var(--link)', fontSize: 12, fontWeight: 700, whiteSpace: 'nowrap',
                       }}
                     >
                       {b.label}
@@ -392,7 +390,7 @@ export default function CloseoutPage() {
                       a closeout gate that rubber-stamps on an error is worse
                       than no gate. */}
                   {gate.unchecked.length > 0 && (
-                    <span style={{ fontSize: 11.5, color: 'var(--danger)', fontWeight: 700, alignSelf: 'center' }}>
+                    <span style={{ fontSize: 12, color: 'var(--danger)', fontWeight: 700, alignSelf: 'center' }}>
                       Could not check: {gate.unchecked.join(', ')}
                     </span>
                   )}
@@ -440,44 +438,19 @@ export default function CloseoutPage() {
         </SectionCard>
       )}
 
-      {/* Contract intelligence strip — what the system already knows */}
-      {ctx && (
-        <StatStrip items={[
-          {href: `/app/projects/${projectId}/contracts`,  label: 'Revised Contract', value: fmtM(revised), sub: `${approvedCoCount} approved CO${approvedCoCount === 1 ? '' : 's'}` },
-          {href: `/app/projects/${projectId}/closeout`,  label: 'Billed to Date', value: fmtM(billed), sub: `${billedPct}% of revised` },
-          {href: `/app/projects/${projectId}/closeout`,  label: 'Balance to Finish', value: fmtM(balanceToFinish), accent: balanceAccent, sub: balanceSub },
-          {href: `/app/projects/${projectId}/closeout`,  label: 'Retainage Held', value: `≈${fmtM(retainageHeld)}`, sub: `${Number(money?.retainagePct) || 0}% — releases at closeout` },
-          {href: `/app/projects/${projectId}/punch-list`,  label: 'Open Punch', value: String(openPunch), accent: openPunch > 0 ? 'var(--danger)' : T.green, sub: openPunch > 0 ? 'Blocks final inspection' : 'List is clear' },
-          {href: `/app/projects/${projectId}/closeout`,  label: 'Subs to Clear', value: String(subCount), sub: 'Final waivers + W-9s' },
-        ]} />
-      )}
-
-      {/* Stats */}
-      <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(180px, 1fr))', gap: 12, marginBottom: 24 }}>
-        <StatCard
-          icon={<CheckCircle size={19} weight="duotone" color={T.green} />}
-          label="Completed"
-          value={String(completed)}
-          sub={`Of ${total} items`}
-          accent={completed > 0 ? T.green : undefined}
-          delay={0.02}
-         href={`/app/projects/${projectId}/closeout`}/>
-        <StatCard
-          icon={<Hourglass size={19} weight="duotone" color="var(--brand-primary)" />}
-          label="Remaining"
-          value={String(total - completed)}
-          sub={total - completed === 0 ? 'All complete' : 'Still outstanding'}
-          delay={0.06}
-         href={`/app/projects/${projectId}/closeout`}/>
-        <StatCard
-          icon={<ChartBar size={19} weight="duotone" color="var(--brand-primary)" />}
-          label="Progress"
-          value={`${pct}%`}
-          sub={pct === 100 ? 'Ready to export' : 'To handover'}
-          accent={pct === 100 ? T.green : 'var(--brand-primary)'}
-          delay={0.10}
-         href={`/app/projects/${projectId}/closeout`}/>
-      </div>
+      {/* One summary row: what is left on the checklist, then the contract
+          money and field items that close with it. Completed / progress are
+          already in the header line and the progress bar below; the revised
+          contract and billed-to-date roll up into Balance to Finish. */}
+      <StatStrip items={[
+        { href: `/app/projects/${projectId}/closeout`, label: 'Remaining', value: String(total - completed), sub: total - completed === 0 ? 'All complete' : 'Still outstanding' },
+        ...(ctx ? [
+          { href: `/app/projects/${projectId}/closeout`, label: 'Balance to Finish', value: fmtM(balanceToFinish), accent: fullyBilled ? T.green : undefined, sub: balanceSub },
+          { href: `/app/projects/${projectId}/closeout`, label: 'Retainage Held', value: `≈${fmtM(retainageHeld)}`, sub: `${Number(money?.retainagePct) || 0}% — releases at closeout` },
+          { href: `/app/projects/${projectId}/punch-list`, label: 'Open Punch', value: String(openPunch), accent: openPunch > 0 ? 'var(--danger)' : T.green, sub: openPunch > 0 ? 'Blocks final inspection' : 'List is clear' },
+          { href: `/app/projects/${projectId}/closeout`, label: 'Subs to Clear', value: String(subCount), sub: 'Final waivers + W-9s' },
+        ] : []),
+      ]} />
 
       {toast && (
         <div style={{ marginBottom: 16, padding: '10px 14px', background: T.greenDim, border: `1px solid rgba(74,222,128,0.3)`, borderRadius: 10, color: T.green, fontSize: 13 }}>
@@ -491,7 +464,7 @@ export default function CloseoutPage() {
       {/* Progress Bar */}
       <SectionCard flat
         title="Closeout Progress"
-        icon={<ChartBar size={17} weight="duotone" color="var(--brand-primary)" />}
+        icon={<ChartBar size={17} weight="duotone" color="var(--text-secondary)" />}
         action={<span style={{ fontSize: 14, fontWeight: 800, color: pct === 100 ? T.green : 'var(--brand-primary-strong)', fontVariantNumeric: 'tabular-nums' }}>{pct}%</span>}
         style={{ marginBottom: 24 }}
       >
@@ -519,7 +492,7 @@ export default function CloseoutPage() {
       <SectionCard
         title="Closeout Checklist"
         subtitle={`${completed}/${total} complete`}
-        icon={<ListChecks size={17} weight="duotone" color="var(--brand-primary)" />}
+        icon={<ListChecks size={17} weight="duotone" color="var(--text-secondary)" />}
         flush
       >
         {visibleItems.length === 0 ? (
@@ -546,7 +519,7 @@ export default function CloseoutPage() {
                 {item.label}
               </span>
               {sig?.hint && item.status !== 'complete' && (
-                <div style={{ fontSize: 11.5, color: sig.warn ? 'var(--brand-primary-strong)' : sig.ready ? T.green : 'rgba(255,255,255,0.5)', marginTop: 3, lineHeight: 1.45 }}>{sig.hint}</div>
+                <div style={{ fontSize: 12, color: sig.warn ? 'var(--brand-primary-strong)' : sig.ready ? T.green : 'rgba(255,255,255,0.5)', marginTop: 3, lineHeight: 1.45 }}>{sig.hint}</div>
               )}
             </div>
             {sig?.ready && item.status !== 'complete' && <Badge label="Ready" color="green" />}
@@ -557,7 +530,7 @@ export default function CloseoutPage() {
                 onClick={() => generateDoc(item)}
                 disabled={generating === item.id}
                 className="pmBtn"
-                style={{ ...ghostButtonStyle, padding: '7px 14px', fontSize: 12.5, opacity: generating === item.id ? 0.5 : 1, cursor: generating === item.id ? 'not-allowed' : 'pointer' }}
+                style={{ ...ghostButtonStyle, padding: '7px 14px', fontSize: 13, opacity: generating === item.id ? 0.5 : 1, cursor: generating === item.id ? 'not-allowed' : 'pointer' }}
               >
                 {generating === item.id ? 'Generating…' : item.generateLabel}
               </button>
@@ -569,7 +542,7 @@ export default function CloseoutPage() {
 
       {/* Context rail — the path to handover, from live project data */}
       <div style={{ display: 'flex', flexDirection: 'column', gap: 16 }}>
-        <SectionCard flat title="Path to Handover" icon={<Package size={17} weight="duotone" color="var(--brand-primary)" />}>
+        <SectionCard flat title="Path to Handover" icon={<Package size={17} weight="duotone" color="var(--text-secondary)" />}>
           <FlowSteps title="" steps={[
             { title: 'Clear the Punch List', done: !!ctx && openPunch === 0, desc: openPunch > 0 ? `${openPunch} item${openPunch === 1 ? '' : 's'} still open.` : 'No open punch items on record.' },
             { title: 'Bill the Contract Out', done: fullyBilled, desc: revised > 0 ? `${fmtM(billed)} of ${fmtM(revised)} billed (${billedPct}%).` : 'Contract money flows in from pay applications.' },
@@ -580,7 +553,7 @@ export default function CloseoutPage() {
           ]} />
         </SectionCard>
         {ctx && (
-          <SectionCard flat title="What Saguaro Knows" icon={<ChartBar size={17} weight="duotone" color="var(--brand-primary)" />}>
+          <SectionCard flat title="What Saguaro Knows" icon={<ChartBar size={17} weight="duotone" color="var(--text-secondary)" />}>
             <InsightRow label="Revised Contract" value={fmtM(revised)} strong />
             <InsightRow label="Billed to Date" value={`${fmtM(billed)} · ${billedPct}%`} />
             <InsightRow label="Balance to Finish" value={fmtM(balanceToFinish)} accent={balanceAccent} />

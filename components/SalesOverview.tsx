@@ -67,11 +67,11 @@ function FollowUpRow({ f, tone }: { f: FollowUp; tone: string }) {
         borderTop: `1px solid ${BORDER}`, textDecoration: 'none',
       }}
     >
-      <span style={{ color: tone, fontSize: 12.5, fontWeight: 800, whiteSpace: 'nowrap', minWidth: 78 }}>
+      <span style={{ color: tone, fontSize: 13, fontWeight: 800, whiteSpace: 'nowrap', minWidth: 78 }}>
         {dayLabel(f.due)}
       </span>
       <span style={{ color: TEXT, fontSize: 13, flex: 1, minWidth: 0 }}>{f.what}</span>
-      <span style={{ color: DIM, fontSize: 12.5, whiteSpace: 'nowrap' }}>{f.who}</span>
+      <span style={{ color: DIM, fontSize: 13, whiteSpace: 'nowrap' }}>{f.who}</span>
     </Link>
   );
 }
@@ -96,21 +96,21 @@ export default function SalesOverview({ style }: { style?: React.CSSProperties }
 
   if (loading) {
     return (
-      <SectionCard title="Sales" icon={<TrendUp size={17} weight="duotone" color={GOLD} />} style={style} flush>
+      <SectionCard title="Sales" icon={<TrendUp size={17} weight="duotone" color="var(--text-secondary)" />} style={style} flush>
         <div style={{ padding: '18px 20px', color: DIM, fontSize: 13 }}>Loading your pipeline…</div>
       </SectionCard>
     );
   }
   if (error || !d) {
     return (
-      <SectionCard title="Sales" icon={<TrendUp size={17} weight="duotone" color={GOLD} />} style={style} flush>
+      <SectionCard title="Sales" icon={<TrendUp size={17} weight="duotone" color="var(--text-secondary)" />} style={style} flush>
         <PremiumEmpty
           icon={<WarningCircle size={28} weight="duotone" color={RED} />}
           title="Could not load your sales overview"
           description={error || 'No data came back.'}
           tone="error"
           compact
-          action={<button onClick={load} style={{ padding: '8px 14px', background: 'var(--brand-primary-12)', border: `1px solid var(--brand-primary-25)`, borderRadius: 8, color: GOLD, fontWeight: 700, fontSize: 12.5, cursor: 'pointer' }}>Try Again</button>}
+          action={<button onClick={load} style={{ padding: '8px 14px', background: 'var(--bg-surface-2)', border: `1px solid var(--brand-primary-25)`, borderRadius: 8, color: 'var(--text-primary)', fontWeight: 700, fontSize: 13, cursor: 'pointer' }}>Try Again</button>}
         />
       </SectionCard>
     );
@@ -129,14 +129,14 @@ export default function SalesOverview({ style }: { style?: React.CSSProperties }
           label="Contract Value"
           value={money(contract.activeValue)}
           sub={`${contract.activeCount} active job${contract.activeCount === 1 ? '' : 's'}`}
-          icon={<CurrencyDollar size={17} weight="duotone" color={GOLD} />}
+          icon={<CurrencyDollar size={17} weight="duotone" color="var(--text-secondary)" />}
           href="/app/projects"
         />
         <StatCard
           label="Pipeline"
           value={money(pipeline.value)}
           sub={`${pipeline.openCount} open · ${money(pipeline.weightedValue)} weighted`}
-          icon={<Kanban size={17} weight="duotone" color={GOLD} />}
+          icon={<Kanban size={17} weight="duotone" color="var(--text-secondary)" />}
           href="/app/leads"
         />
         <StatCard
@@ -150,7 +150,7 @@ export default function SalesOverview({ style }: { style?: React.CSSProperties }
           label="Win Rate"
           value={outcomes.winRate === null ? '—' : `${outcomes.winRate}%`}
           sub={outcomes.winRate === null ? 'nothing decided yet' : `${outcomes.wonCount} won · ${outcomes.lostCount} lost`}
-          icon={<Target size={17} weight="duotone" color={GOLD} />}
+          icon={<Target size={17} weight="duotone" color="var(--text-secondary)" />}
           href="/app/leads"
         />
       </div>
@@ -172,9 +172,9 @@ export default function SalesOverview({ style }: { style?: React.CSSProperties }
       <SectionCard
         title="Follow-ups"
         subtitle="Late first, then today, then the week ahead"
-        icon={<CalendarBlank size={17} weight="duotone" color={GOLD} />}
+        icon={<CalendarBlank size={17} weight="duotone" color="var(--text-secondary)" />}
         action={
-          <Link href="/app/leads" style={{ fontSize: 12.5, fontWeight: 700, color: GOLD, textDecoration: 'none', display: 'inline-flex', alignItems: 'center', gap: 5 }}>
+          <Link href="/app/leads" style={{ fontSize: 13, fontWeight: 700, color: 'var(--link)', textDecoration: 'none', display: 'inline-flex', alignItems: 'center', gap: 5 }}>
             Open leads <ArrowRight size={13} weight="bold" />
           </Link>
         }

@@ -135,7 +135,7 @@ const CSS = `
 .bpList .k-table tbody tr:hover td:first-child { background: linear-gradient(rgba(255,255,255,0.03), rgba(255,255,255,0.03)), var(--bg-solid); }
 .bpPkg { display: flex; flex-direction: column; gap: 2px; max-width: 300px; min-width: 0; }
 .bpPkg > span { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
-.bpPkg > span:first-child { font-size: var(--fs-xs); font-weight: 800; color: var(--brand-primary); }
+.bpPkg > span:first-child { font-size: var(--fs-xs); font-weight: 800; color: var(--text-secondary); }
 .bpPkg > span + span { color: var(--text-primary); font-weight: 700; }
 .bpMuted { color: var(--text-tertiary); }
 .bpMoney { font-variant-numeric: tabular-nums; white-space: nowrap; color: var(--text-primary); font-weight: 600; }
@@ -144,7 +144,7 @@ const CSS = `
 .bpDue[data-tone="soon"] { color: var(--status-under-contract); font-weight: 700; }
 .bpVs[data-tone="under"] { color: var(--status-ongoing); font-weight: 700; }
 .bpVs[data-tone="over"] { color: var(--status-overdue); font-weight: 700; }
-.bpJacket { all: unset; color: var(--brand-primary); font-weight: 700; font-size: var(--fs-xs); cursor: pointer; display: inline-flex; align-items: center; gap: 4px; }
+.bpJacket { all: unset; color: var(--link); font-weight: 700; font-size: var(--fs-xs); cursor: pointer; display: inline-flex; align-items: center; gap: 4px; }
 .bpJacket:focus-visible { outline: 2px solid var(--brand-primary); }
 .bpSteps { display: flex; gap: 6px; margin: -4px 0 16px; }
 .bpStep { flex: 1; text-align: center; font-size: var(--fs-xs); color: var(--text-tertiary); }
@@ -161,7 +161,7 @@ const CSS = `
 .bpLines td { padding: 6px 6px; vertical-align: middle; border-bottom: 1px solid var(--border-subtle); }
 .bpLines .k-input { min-height: 36px; }
 .bpLinesFoot { display: flex; justify-content: space-between; align-items: center; margin-top: 12px; gap: 10px; flex-wrap: wrap; }
-.bpTotal { font-size: var(--fs-md); color: var(--brand-primary); font-weight: 800; font-variant-numeric: tabular-nums; }
+.bpTotal { font-size: var(--fs-md); color: var(--text-primary); font-weight: 800; font-variant-numeric: tabular-nums; }
 .bpSubRow { display: flex; align-items: center; gap: 12px; padding: 10px 14px; background: var(--bg-surface-2); border: 1px solid var(--border-subtle); border-radius: var(--radius-sm); cursor: pointer; min-height: 44px; }
 .bpSubRow[data-on="true"] { border-color: var(--brand-primary-35); background: var(--brand-primary-08); }
 .bpSubRow input { width: 16px; height: 16px; accent-color: var(--brand-primary); flex-shrink: 0; }

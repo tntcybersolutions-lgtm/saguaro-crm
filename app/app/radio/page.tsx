@@ -536,7 +536,7 @@ const whenLabel = (iso: string) =>
 const rowActionStyle: React.CSSProperties = {
   display: 'inline-flex', alignItems: 'center', gap: 5, padding: '3px 9px', borderRadius: 8,
   background: 'rgba(255,255,255,0.05)', border: `1px solid ${BORDER}`,
-  color: MUTED, fontSize: 10.5, fontWeight: 800, cursor: 'pointer', whiteSpace: 'nowrap',
+  color: MUTED, fontSize: 12, fontWeight: 800, cursor: 'pointer', whiteSpace: 'nowrap',
 };
 
 /* ── Machined toolbar kit — the ONE secondary-control geometry (32px). No
@@ -590,16 +590,16 @@ const popoverStyle = (width: number): React.CSSProperties => ({
 const menuItemStyle = (enabled: boolean): React.CSSProperties => ({
   display: 'flex', alignItems: 'center', gap: 9, width: '100%', boxSizing: 'border-box',
   height: 34, padding: '0 10px', borderRadius: 9, background: 'transparent', border: 'none',
-  color: enabled ? WHITE : FAINT, fontSize: 12.5, fontWeight: 700, textAlign: 'left',
+  color: enabled ? WHITE : FAINT, fontSize: 13, fontWeight: 700, textAlign: 'left',
   cursor: enabled ? 'pointer' : 'default', whiteSpace: 'nowrap',
 });
 const fieldStyle: React.CSSProperties = {
   width: '100%', boxSizing: 'border-box', padding: '9px 12px',
   background: FIELD_BG, border: FIELD_BORDER, borderRadius: 10,
-  color: WHITE, fontSize: 12.5, outline: 'none',
+  color: WHITE, fontSize: 13, outline: 'none',
 };
 const eyebrowStyle: React.CSSProperties = {
-  fontSize: 10, fontWeight: 900, color: FAINT,
+  fontSize: 12, fontWeight: 900, color: FAINT,
 };
 
 /* ── Dialog ────────────────────────────────────────────────────────────────
@@ -649,7 +649,7 @@ function Dialog({
       >
         <div style={{ display: 'flex', alignItems: 'center', gap: 9, padding: '13px 16px', borderBottom: `1px solid ${BORDER}`, flexShrink: 0 }}>
           {icon}
-          <span style={{ fontSize: 11, fontWeight: 900, color: GOLD_HI, flex: 1, minWidth: 0, whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>
+          <span style={{ fontSize: 12, fontWeight: 900, color: 'var(--text-primary)', flex: 1, minWidth: 0, whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>
             {title}
           </span>
           <button onClick={onClose} aria-label="Close" style={closeBtnStyle}><X size={15} weight="bold" /></button>
@@ -716,7 +716,7 @@ function PromoteField({ label, hint, wide, children }: {
     <label style={{ display: 'block', minWidth: 0, gridColumn: wide ? '1 / -1' : undefined }}>
       <span style={{ ...eyebrowStyle, display: 'block', marginBottom: 5 }}>{label}</span>
       {children}
-      {hint && <span style={{ display: 'block', fontSize: 10.5, color: FAINT, marginTop: 4, lineHeight: 1.4 }}>{hint}</span>}
+      {hint && <span style={{ display: 'block', fontSize: 12, color: FAINT, marginTop: 4, lineHeight: 1.4 }}>{hint}</span>}
     </label>
   );
 }
@@ -725,14 +725,14 @@ function PromoteField({ label, hint, wide, children }: {
 const TONES: Record<string, { label: string; color: string; border: string; soft: string; freq: number; hold: number }> = {
   ack: { label: 'Ack', color: GREEN, border: GREEN_BORDER, soft: GREEN_SOFT, freq: 880, hold: 0.22 },
   negative: { label: 'Negative', color: RED, border: RED_BORDER, soft: RED_SOFT, freq: 294, hold: 0.3 },
-  comein: { label: 'Come In', color: GOLD_HI, border: AMBER_BORDER, soft: AMBER_SOFT, freq: 587, hold: 0.45 },
+  comein: { label: 'Come In', color: 'var(--text-primary)', border: AMBER_BORDER, soft: AMBER_SOFT, freq: 587, hold: 0.45 },
 };
 
 /* Presence status — roster dot colors + labels (server enum). */
 const PRESENCE: Record<string, { label: string; color: string }> = {
   available: { label: 'Available', color: GREEN },
   busy: { label: 'Busy', color: RED },
-  on_route: { label: 'On Route', color: GOLD_HI },
+  on_route: { label: 'On Route', color: 'var(--text-primary)' },
   off: { label: 'Off', color: FAINT },
 };
 
@@ -2677,15 +2677,15 @@ export default function RadioDispatchPage() {
         </div>
       );
     }
-    if (dirError) return <div style={{ fontSize: 11.5, color: RED }}>Could not load the directory — close and reopen to retry.</div>;
-    if (dirData && !dirReady) return <div style={{ fontSize: 11.5, color: FAINT }}>Directory unavailable — this server does not expose it yet.</div>;
+    if (dirError) return <div style={{ fontSize: 12, color: RED }}>Could not load the directory — close and reopen to retry.</div>;
+    if (dirData && !dirReady) return <div style={{ fontSize: 12, color: FAINT }}>Directory unavailable — this server does not expose it yet.</div>;
     const q = opts.query.trim().toLowerCase();
     const hit = (p: DirectoryPerson) =>
       !q || personName(p).toLowerCase().includes(q) || String(p.role || '').toLowerCase().includes(q) || String(p.company || '').toLowerCase().includes(q);
     const staff = dirStaff.filter((p) => { const u = personUserId(p); return u && !opts.excludeUsers?.has(u) && hit(p); });
     const subs = opts.staffOnly ? [] : dirSubs.filter((p) => { const s = personSubId(p); return s && !opts.excludeSubs?.has(s) && hit(p); });
     if (!staff.length && !subs.length) {
-      return <div style={{ fontSize: 11.5, color: FAINT }}>{q ? 'No one matches that search.' : 'Nobody available to add.'}</div>;
+      return <div style={{ fontSize: 12, color: FAINT }}>{q ? 'No one matches that search.' : 'Nobody available to add.'}</div>;
     }
     const row = (p: DirectoryPerson, sub: boolean) => {
       const key = personKey(p);
@@ -2717,7 +2717,7 @@ export default function RadioDispatchPage() {
               {on && <Check size={10} weight="bold" />}
             </span>
           ) : (
-            <span aria-hidden style={{ flexShrink: 0, display: 'inline-flex', color: GOLD_HI }}>
+            <span aria-hidden style={{ flexShrink: 0, display: 'inline-flex', color: 'var(--text-primary)' }}>
               {opts.pickIcon || <UserPlus size={13} weight="bold" />}
             </span>
           )}
@@ -2929,9 +2929,9 @@ export default function RadioDispatchPage() {
     const text = translated || base;
     if (!text) return null;
     return (
-      <div style={{ fontSize: 12.5, color: MUTED, lineHeight: 1.5, marginTop: 6, fontStyle: translated ? 'normal' : 'italic' }}>
+      <div style={{ fontSize: 13, color: MUTED, lineHeight: 1.5, marginTop: 6, fontStyle: translated ? 'normal' : 'italic' }}>
         {translated && m.detected_lang && m.detected_lang !== lang && (
-          <span style={{ color: FAINT, fontWeight: 800, fontSize: 10, marginRight: 6 }}>
+          <span style={{ color: FAINT, fontWeight: 800, fontSize: 12, marginRight: 6 }}>
             {lang.toUpperCase()}
           </span>
         )}
@@ -2957,7 +2957,7 @@ export default function RadioDispatchPage() {
             flexShrink: 0, width: 32, height: 32, borderRadius: 10, padding: 0, cursor: 'pointer',
             display: 'inline-flex', alignItems: 'center', justifyContent: 'center',
             background: isPlaying ? 'linear-gradient(180deg, var(--brand-primary-35), color-mix(in srgb, var(--brand-primary) 16%, transparent))' : 'var(--brand-primary-12)',
-            border: `1px solid ${AMBER_BORDER}`, color: GOLD_HI,
+            border: `1px solid ${AMBER_BORDER}`, color: 'var(--text-primary)',
           }}
         >
           {isPlaying ? <Pause size={13} weight="fill" /> : <Play size={13} weight="fill" />}
@@ -3028,14 +3028,14 @@ export default function RadioDispatchPage() {
             display: 'inline-flex', alignItems: 'center', justifyContent: 'center',
             background: panic ? RED_SOFT : 'var(--brand-primary-12)',
             border: panic ? `1px solid ${RED_BORDER}` : '1px solid var(--brand-primary-25)',
-            color: panic ? RED : GOLD_HI, fontSize: 11.5, fontWeight: 900,
+            color: panic ? RED : GOLD_HI, fontSize: 12, fontWeight: 900,
           }}
         >
           {panic ? <Siren size={16} weight="fill" /> : alert ? <Warning size={16} weight="fill" /> : m.kind === 'voice' ? <SpeakerHigh size={15} weight="fill" /> : m.kind === 'tone' ? <BellRinging size={15} weight="fill" /> : initialsOf(m.sender_name)}
         </span>
         <div style={{ minWidth: 0, flex: 1 }}>
           <div style={{ display: 'flex', alignItems: 'baseline', gap: 8, flexWrap: 'wrap' }}>
-            <span style={{ fontSize: 12.5, fontWeight: 800, color: panic ? RED : alert ? GOLD_HI : WHITE }}>
+            <span style={{ fontSize: 13, fontWeight: 800, color: panic ? RED : alert ? GOLD_HI : WHITE }}>
               {senderShort(m.sender_name)}
             </span>
             {m.patched_from && (
@@ -3057,19 +3057,19 @@ export default function RadioDispatchPage() {
               </span>
             )}
             {alert && (
-              <span style={{ fontSize: 9.5, fontWeight: 900, color: GOLD_HI, border: `1px solid ${AMBER_BORDER}`, borderRadius: 999, padding: '1px 7px' }}>
+              <span style={{ fontSize: 9.5, fontWeight: 900, color: 'var(--text-primary)', border: `1px solid ${AMBER_BORDER}`, borderRadius: 999, padding: '1px 7px' }}>
                 ALERT
               </span>
             )}
             {m.kind === 'voice' && m.audio_duration_secs != null && (
-              <span style={{ fontSize: 11, color: FAINT, fontVariantNumeric: 'tabular-nums' }}>{secsLabel(m.audio_duration_secs)}</span>
+              <span style={{ fontSize: 12, color: FAINT, fontVariantNumeric: 'tabular-nums' }}>{secsLabel(m.audio_duration_secs)}</span>
             )}
             {unheardClip && (
-              <span style={{ fontSize: 9, fontWeight: 900, color: GOLD_HI, background: AMBER_SOFT, border: `1px solid ${AMBER_BORDER}`, borderRadius: 999, padding: '1px 6px' }}>
+              <span style={{ fontSize: 12, fontWeight: 900, color: 'var(--text-primary)', background: AMBER_SOFT, border: `1px solid ${AMBER_BORDER}`, borderRadius: 999, padding: '1px 6px' }}>
                 NEW
               </span>
             )}
-            <span style={{ fontSize: 11, color: FAINT, marginLeft: 'auto', whiteSpace: 'nowrap', fontVariantNumeric: 'tabular-nums' }}>
+            <span style={{ fontSize: 12, color: FAINT, marginLeft: 'auto', whiteSpace: 'nowrap', fontVariantNumeric: 'tabular-nums' }}>
               {timeOf(m.created_at)}
               {m.edited_at && <span title={`Edited ${timeOf(m.edited_at)}`} style={{ marginLeft: 6, fontStyle: 'italic' }}>edited</span>}
             </span>
@@ -3079,7 +3079,7 @@ export default function RadioDispatchPage() {
               <button
                 onClick={() => openPromote(m)}
                 title="Turn this transmission into a tracked record — the audio goes with it as evidence"
-                style={{ ...rowActionStyle, color: GOLD_HI, borderColor: AMBER_BORDER, background: AMBER_SOFT }}
+                style={{ ...rowActionStyle, color: 'var(--text-primary)', borderColor: AMBER_BORDER, background: AMBER_SOFT }}
               >
                 <NotePencil size={11} weight="bold" /> Make a record
               </button>
@@ -3117,7 +3117,7 @@ export default function RadioDispatchPage() {
 
           {tone && (
             <div style={{ marginTop: 6 }}>
-              <span style={{ display: 'inline-flex', alignItems: 'center', gap: 6, padding: '4px 12px', borderRadius: 999, background: tone.soft, border: `1px solid ${tone.border}`, color: tone.color, fontSize: 11, fontWeight: 900 }}>
+              <span style={{ display: 'inline-flex', alignItems: 'center', gap: 6, padding: '4px 12px', borderRadius: 999, background: tone.soft, border: `1px solid ${tone.border}`, color: tone.color, fontSize: 12, fontWeight: 900 }}>
                 <BellRinging size={12} weight="fill" /> {tone.label}
                 <span style={{ color: FAINT, fontWeight: 700, letterSpacing: 'normal' }}>beep</span>
               </span>
@@ -3134,13 +3134,13 @@ export default function RadioDispatchPage() {
           )}
 
           {m.kind !== 'voice' && m.kind !== 'tone' && m.body && (
-            <div style={{ fontSize: 13.5, color: panic ? 'var(--danger)' : WHITE, lineHeight: 1.55, marginTop: 4, overflowWrap: 'anywhere' }}>
+            <div style={{ fontSize: 14, color: panic ? 'var(--danger)' : WHITE, lineHeight: 1.55, marginTop: 4, overflowWrap: 'anywhere' }}>
               {m.body}
             </div>
           )}
           {m.kind !== 'voice' && translatedBody && translatedBody !== m.body && (
-            <div style={{ fontSize: 12.5, color: MUTED, lineHeight: 1.5, marginTop: 4 }}>
-              <span style={{ color: FAINT, fontWeight: 800, fontSize: 10, marginRight: 6 }}>{lang.toUpperCase()}</span>
+            <div style={{ fontSize: 13, color: MUTED, lineHeight: 1.5, marginTop: 4 }}>
+              <span style={{ color: FAINT, fontWeight: 800, fontSize: 12, marginRight: 6 }}>{lang.toUpperCase()}</span>
               {translatedBody}
             </div>
           )}
@@ -3159,7 +3159,7 @@ export default function RadioDispatchPage() {
                   style={{
                     width: 24, height: 24, borderRadius: 999, textDecoration: 'none',
                     display: 'inline-flex', alignItems: 'center', justifyContent: 'center',
-                    fontSize: 10.5, fontWeight: 900, fontVariantNumeric: 'tabular-nums',
+                    fontSize: 12, fontWeight: 900, fontVariantNumeric: 'tabular-nums',
                     background: i === trail.length - 1 ? 'rgba(248,113,113,0.35)' : RED_SOFT,
                     border: `1px solid ${RED_BORDER}`, color: 'var(--danger)',
                   }}
@@ -3179,7 +3179,7 @@ export default function RadioDispatchPage() {
                 display: 'inline-flex', alignItems: 'center', gap: 6, marginTop: 8,
                 padding: '5px 12px', borderRadius: 999, textDecoration: 'none',
                 background: RED_SOFT, border: `1px solid ${RED_BORDER}`,
-                color: 'var(--danger)', fontSize: 11.5, fontWeight: 800,
+                color: 'var(--danger)', fontSize: 12, fontWeight: 800,
               }}
             >
               <MapPin size={13} weight="fill" /> Open location in Google Maps
@@ -3196,7 +3196,7 @@ export default function RadioDispatchPage() {
                   display: 'inline-flex', alignItems: 'center', gap: 5,
                   padding: '3px 9px', borderRadius: 999, textDecoration: 'none',
                   background: a.soft, border: `1px solid ${a.ring}`, color: a.hex,
-                  fontSize: 10.5, fontWeight: 800, whiteSpace: 'nowrap',
+                  fontSize: 12, fontWeight: 800, whiteSpace: 'nowrap',
                 };
                 const label = <>→ {l.recordLabel}</>;
                 return l.href ? (
@@ -3211,14 +3211,14 @@ export default function RadioDispatchPage() {
           )}
 
           {showSeen && (
-            <div style={{ display: 'flex', alignItems: 'center', gap: 4, fontSize: 10.5, color: FAINT, marginTop: 5 }}>
+            <div style={{ display: 'flex', alignItems: 'center', gap: 4, fontSize: 12, color: FAINT, marginTop: 5 }}>
               <Check size={11} weight="bold" /> Seen by {seenN}
             </div>
           )}
           {showHeard && (
             <div
               title={played.length ? `Played by: ${heardNames}` : 'Nobody has played this clip yet'}
-              style={{ display: 'flex', alignItems: 'center', gap: 4, fontSize: 10.5, color: played.length ? GREEN : FAINT, marginTop: 5, fontWeight: 700 }}
+              style={{ display: 'flex', alignItems: 'center', gap: 4, fontSize: 12, color: played.length ? GREEN : FAINT, marginTop: 5, fontWeight: 700 }}
             >
               <Check size={11} weight="bold" />
               {presentN > 0
@@ -3262,7 +3262,7 @@ export default function RadioDispatchPage() {
         >
           <span
             style={{
-              flexShrink: 0, fontSize: 10, fontWeight: 900,
+              flexShrink: 0, fontSize: 12, fontWeight: 900,
               fontVariantNumeric: 'tabular-nums', color: isActive ? GOLD_HI : FAINT,
               border: `1px solid ${isActive ? AMBER_BORDER : BORDER}`, borderRadius: 7, padding: '4px 7px',
             }}
@@ -3277,11 +3277,11 @@ export default function RadioDispatchPage() {
               <span style={{ fontSize: 13, fontWeight: 800, color: isActive ? GOLD_HI : WHITE, whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>
                 {c.name}
               </span>
-              {c.locked && <Lock size={11} weight="fill" color={GOLD_HI} style={{ flexShrink: 0 }} />}
-              {c.priority && <Star size={11} weight="fill" color={GOLD_HI} style={{ flexShrink: 0 }} />}
+              {c.locked && <Lock size={11} weight="fill" color="var(--text-secondary)" style={{ flexShrink: 0 }} />}
+              {c.priority && <Star size={11} weight="fill" color="var(--text-secondary)" style={{ flexShrink: 0 }} />}
               {lm?.kind === 'panic' && <Siren size={12} weight="fill" color={RED} style={{ flexShrink: 0 }} />}
             </span>
-            <span style={{ display: 'block', fontSize: 10.5, color: FAINT, marginTop: 2, whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>
+            <span style={{ display: 'block', fontSize: 12, color: FAINT, marginTop: 2, whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>
               {c.members} on roster
               {onCh > 0 && <span style={{ color: GREEN, fontWeight: 800 }}>{` · ${onCh} live`}</span>}
               {` · ${preview}`}
@@ -3295,7 +3295,7 @@ export default function RadioDispatchPage() {
               flexShrink: 0, minWidth: 20, height: 20, padding: '0 6px', borderRadius: 999,
               display: 'inline-flex', alignItems: 'center', justifyContent: 'center',
               background: `linear-gradient(180deg, ${GOLD_HI}, ${GOLD})`,
-              color: 'var(--on-brand)', fontSize: 10.5, fontWeight: 900, fontVariantNumeric: 'tabular-nums',
+              color: 'var(--on-brand)', fontSize: 12, fontWeight: 900, fontVariantNumeric: 'tabular-nums',
             }}
           >
             {unread > 99 ? '99+' : unread}
@@ -3362,8 +3362,8 @@ export default function RadioDispatchPage() {
         </span>
         <div style={{ minWidth: 0, flex: 1 }}>
           <div style={{ display: 'flex', alignItems: 'center', gap: 8, flexWrap: 'wrap' }}>
-            <span style={{ fontSize: 12.5, fontWeight: 800, color: WHITE }}>You</span>
-            <span style={{ fontSize: 11, color: FAINT, fontVariantNumeric: 'tabular-nums' }}>{p.secs.toFixed(1)}s · {sizeLabel(p.bytes)}</span>
+            <span style={{ fontSize: 13, fontWeight: 800, color: WHITE }}>You</span>
+            <span style={{ fontSize: 12, color: FAINT, fontVariantNumeric: 'tabular-nums' }}>{p.secs.toFixed(1)}s · {sizeLabel(p.bytes)}</span>
             <span
               style={{
                 fontSize: 9.5, fontWeight: 900, borderRadius: 999, padding: '1px 8px',
@@ -3373,11 +3373,11 @@ export default function RadioDispatchPage() {
               {working ? 'Sending' : held ? 'Held — Not Delivered' : 'Queued — Retrying'}
             </span>
             {working && <EqBars size={12} />}
-            <span style={{ fontSize: 11, color: FAINT, marginLeft: 'auto', whiteSpace: 'nowrap', fontVariantNumeric: 'tabular-nums' }}>
+            <span style={{ fontSize: 12, color: FAINT, marginLeft: 'auto', whiteSpace: 'nowrap', fontVariantNumeric: 'tabular-nums' }}>
               {timeOf(new Date(p.createdAt).toISOString())}
             </span>
           </div>
-          <div style={{ fontSize: 11.5, color: held ? 'var(--danger)' : MUTED, marginTop: 5, lineHeight: 1.45 }}>
+          <div style={{ fontSize: 12, color: held ? 'var(--danger)' : MUTED, marginTop: 5, lineHeight: 1.45 }}>
             {working
               ? `Delivering to ${p.channelName}…`
               : held
@@ -3386,7 +3386,7 @@ export default function RadioDispatchPage() {
           </div>
           {!working && (
             <div style={{ display: 'flex', gap: 6, marginTop: 8 }}>
-              <button onClick={() => retryClip(p)} style={{ ...rowActionStyle, color: GOLD_HI, borderColor: AMBER_BORDER, background: 'color-mix(in srgb, var(--brand-primary) 14%, transparent)' }}>
+              <button onClick={() => retryClip(p)} style={{ ...rowActionStyle, color: 'var(--text-primary)', borderColor: AMBER_BORDER, background: 'var(--bg-surface-2)' }}>
                 <PaperPlaneRight size={11} weight="bold" /> Retry
               </button>
               <button onClick={() => discardClip(p)} title="Delete this recording for good" style={{ ...rowActionStyle, color: 'var(--danger)', borderColor: RED_BORDER, background: RED_SOFT }}>
@@ -3527,8 +3527,8 @@ export default function RadioDispatchPage() {
             >
               <span
                 style={{
-                  flexShrink: 0, fontSize: 10, fontWeight: 900,
-                  fontVariantNumeric: 'tabular-nums', color: GOLD_HI,
+                  flexShrink: 0, fontSize: 12, fontWeight: 900,
+                  fontVariantNumeric: 'tabular-nums', color: 'var(--text-primary)',
                   border: `1px solid ${AMBER_BORDER}`, borderRadius: 7, padding: '3px 7px',
                 }}
               >
@@ -3538,7 +3538,7 @@ export default function RadioDispatchPage() {
                 <span style={{ display: 'block', fontSize: 13, fontWeight: 800, color: WHITE, whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis', lineHeight: 1.2 }}>
                   {active ? active.name : firstLoad ? 'Loading channels…' : 'No channel tuned'}
                 </span>
-                <span style={{ display: 'block', fontSize: 10, color: FAINT, whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis', marginTop: 1 }}>
+                <span style={{ display: 'block', fontSize: 12, color: FAINT, whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis', marginTop: 1 }}>
                   {active
                     ? `${active.project_name ? `${active.project_name} · ` : active.kind === 'direct' ? 'Direct · ' : 'Organization · '}${active.members} on roster${active.locked ? ' · locked' : ''}${active.priority ? ' · priority' : ''}`
                     : 'Pick one to start'}
@@ -3551,7 +3551,7 @@ export default function RadioDispatchPage() {
                     flexShrink: 0, minWidth: 20, height: 20, padding: '0 6px', borderRadius: 999,
                     display: 'inline-flex', alignItems: 'center', justifyContent: 'center',
                     background: `linear-gradient(180deg, ${GOLD_HI}, ${GOLD})`, color: 'var(--on-brand)',
-                    fontSize: 10.5, fontWeight: 900, fontVariantNumeric: 'tabular-nums',
+                    fontSize: 12, fontWeight: 900, fontVariantNumeric: 'tabular-nums',
                   }}
                 >
                   {unreadElsewhere > 99 ? '99+' : unreadElsewhere}
@@ -3627,9 +3627,9 @@ export default function RadioDispatchPage() {
 
             <Dropdown open={rosterOpen && !!active} onClose={() => setRosterOpen(false)} anchorRef={rosterRef} width={380}>
               <div style={{ flexShrink: 0, display: 'flex', alignItems: 'center', gap: 8, padding: '11px 12px', borderBottom: `1px solid ${BORDER}` }}>
-                <UsersThree size={14} weight="bold" color={GOLD_HI} />
-                <span style={{ fontSize: 11, fontWeight: 900, color: GOLD_HI, whiteSpace: 'nowrap' }}>On Channel</span>
-                <span style={{ fontSize: 11, color: FAINT, flex: 1, minWidth: 0, whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>{active?.name}</span>
+                <UsersThree size={14} weight="bold" color="var(--text-secondary)" />
+                <span style={{ fontSize: 12, fontWeight: 900, color: 'var(--text-primary)', whiteSpace: 'nowrap' }}>On Channel</span>
+                <span style={{ fontSize: 12, color: FAINT, flex: 1, minWidth: 0, whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>{active?.name}</span>
                 <button onClick={() => setRosterOpen(false)} aria-label="Close the roster" style={closeBtnStyle}><X size={14} weight="bold" /></button>
               </div>
               {/* ── the one scroll region of this dropdown ── */}
@@ -3637,7 +3637,7 @@ export default function RadioDispatchPage() {
                 {listenerTruth && (
                   <div
                     style={{
-                      padding: '8px 10px', borderRadius: 10, marginBottom: 10, fontSize: 11.5, lineHeight: 1.45,
+                      padding: '8px 10px', borderRadius: 10, marginBottom: 10, fontSize: 12, lineHeight: 1.45,
                       background: listenerTruth.tone === 'none' ? RED_SOFT : listenerTruth.tone === 'idle' ? AMBER_SOFT : GREEN_SOFT,
                       border: `1px solid ${listenerTruth.tone === 'none' ? RED_BORDER : listenerTruth.tone === 'idle' ? AMBER_BORDER : GREEN_BORDER}`,
                       color: listenerTruth.tone === 'none' ? 'var(--danger)' : listenerTruth.tone === 'idle' ? GOLD_HI : GREEN,
@@ -3683,9 +3683,9 @@ export default function RadioDispatchPage() {
                     {Array.from({ length: 3 }).map((_, i) => <Skeleton key={i} height={40} borderRadius={10} />)}
                   </div>
                 )}
-                {rosterError && <div style={{ fontSize: 11.5, color: RED }}>Could not load the roster. Close and reopen to retry.</div>}
+                {rosterError && <div style={{ fontSize: 12, color: RED }}>Could not load the roster. Close and reopen to retry.</div>}
                 {rosterData && rosterMembers.length === 0 && (
-                  <div style={{ fontSize: 11.5, color: FAINT }}>No members on this channel yet.</div>
+                  <div style={{ fontSize: 12, color: FAINT }}>No members on this channel yet.</div>
                 )}
                 {rosterMembers.map((mem, idx) => {
                   const self = !!myUserId && mem.user_id === myUserId;
@@ -3703,7 +3703,7 @@ export default function RadioDispatchPage() {
                           {senderShort(mem.display_name)}{self ? ' (you)' : ''}
                         </span>
                         {mem.call_sign && (
-                          <span style={{ flexShrink: 0, fontSize: 10, fontWeight: 900, color: GOLD_HI, border: `1px solid ${AMBER_BORDER}`, borderRadius: 999, padding: '1px 7px' }}>
+                          <span style={{ flexShrink: 0, fontSize: 12, fontWeight: 900, color: 'var(--text-primary)', border: `1px solid ${AMBER_BORDER}`, borderRadius: 999, padding: '1px 7px' }}>
                             {mem.call_sign}
                           </span>
                         )}
@@ -3737,7 +3737,7 @@ export default function RadioDispatchPage() {
                           </button>
                         )}
                       </div>
-                      <div style={{ fontSize: 10, color: FAINT, marginTop: 3, paddingLeft: 17 }}>
+                      <div style={{ fontSize: 12, color: FAINT, marginTop: 3, paddingLeft: 17 }}>
                         {pres ? pres.label : 'No status'}
                         {mem.role === 'dispatcher' ? ' · dispatcher' : ''}
                         {onNow ? ' · on channel now' : mem.last_seen_at ? ` · seen ${timeOf(mem.last_seen_at)}` : ''}
@@ -3764,10 +3764,10 @@ export default function RadioDispatchPage() {
                             ))}
                           </select>
                           <div style={{ display: 'flex', gap: 8, alignItems: 'center' }}>
-                            <button onClick={saveProfile} disabled={savingProfile} className="pmBtn" style={{ ...goldButtonStyle, padding: '7px 12px', fontSize: 11.5, opacity: savingProfile ? 0.6 : 1 }}>
+                            <button onClick={saveProfile} disabled={savingProfile} className="pmBtn" style={{ ...goldButtonStyle, padding: '7px 12px', fontSize: 12, opacity: savingProfile ? 0.6 : 1 }}>
                               {savingProfile ? 'Saving…' : 'Save'}
                             </button>
-                            <button onClick={() => setEditingProfile(false)} style={{ background: 'none', border: 'none', color: FAINT, fontSize: 11.5, fontWeight: 700, cursor: 'pointer' }}>
+                            <button onClick={() => setEditingProfile(false)} style={{ background: 'none', border: 'none', color: FAINT, fontSize: 12, fontWeight: 700, cursor: 'pointer' }}>
                               Cancel
                             </button>
                           </div>
@@ -3873,14 +3873,14 @@ export default function RadioDispatchPage() {
                   <ClockCounterClockwise size={14} weight="bold" color={active ? GOLD_HI : FAINT} /> Recording log
                 </button>
                 <button onClick={() => { setMenuOpen(false); setMapOpen(true); }} style={menuItemStyle(true)}>
-                  <MapTrifold size={14} weight="bold" color={GOLD_HI} /> Site map
+                  <MapTrifold size={14} weight="bold" color="var(--text-secondary)" /> Site map
                 </button>
                 <div aria-hidden style={{ height: 1, background: BORDER, margin: '6px 4px' }} />
                 <button onClick={() => { setMenuOpen(false); setShowNew(true); }} style={menuItemStyle(true)}>
-                  <Plus size={14} weight="bold" color={GOLD_HI} /> New talkgroup
+                  <Plus size={14} weight="bold" color="var(--text-secondary)" /> New talkgroup
                 </button>
                 <button onClick={() => { setMenuOpen(false); setDirectOpen(true); }} style={menuItemStyle(true)}>
-                  <ChatCircleText size={14} weight="bold" color={GOLD_HI} /> Direct message
+                  <ChatCircleText size={14} weight="bold" color="var(--text-secondary)" /> Direct message
                 </button>
                 <div aria-hidden style={{ height: 1, background: BORDER, margin: '6px 4px' }} />
                 <div style={{ display: 'flex', alignItems: 'center', gap: 8, padding: '4px 10px 8px' }}>
@@ -3892,7 +3892,7 @@ export default function RadioDispatchPage() {
                         onClick={() => pickLang(l)}
                         style={{
                           padding: '5px 12px', border: 'none', cursor: 'pointer',
-                          fontSize: 11, fontWeight: 900,
+                          fontSize: 12, fontWeight: 900,
                           background: lang === l ? 'linear-gradient(180deg, var(--brand-primary-25), color-mix(in srgb, var(--brand-primary) 14%, transparent))' : FIELD_BG,
                           color: lang === l ? GOLD_HI : MUTED,
                         }}
@@ -3902,7 +3902,7 @@ export default function RadioDispatchPage() {
                     ))}
                   </div>
                 </div>
-                <div style={{ fontSize: 10.5, color: FAINT, lineHeight: 1.45, padding: '6px 10px 2px', borderTop: `1px solid ${BORDER}`, marginTop: 4 }}>
+                <div style={{ fontSize: 12, color: FAINT, lineHeight: 1.45, padding: '6px 10px 2px', borderTop: `1px solid ${BORDER}`, marginTop: 4 }}>
                   {streamStatus}
                 </div>
               </div>
@@ -3926,7 +3926,7 @@ export default function RadioDispatchPage() {
           {micOpen ? (
             <>
               <EqBars color={RED} size={15} />
-              <span style={{ fontSize: 10.5, fontWeight: 900, color: RED, whiteSpace: 'nowrap' }}>On Air</span>
+              <span style={{ fontSize: 12, fontWeight: 900, color: RED, whiteSpace: 'nowrap' }}>On Air</span>
               <span style={{ fontSize: 13, fontWeight: 800, color: WHITE, fontVariantNumeric: 'tabular-nums', whiteSpace: 'nowrap' }}>
                 {txSecs.toFixed(1)}s
               </span>
@@ -3934,7 +3934,7 @@ export default function RadioDispatchPage() {
                 {`Keyed up on ${active?.name || 'this channel'} — release to send`}
               </span>
               {txSecs * 1000 > TX_WARN_MS && (
-                <span style={{ fontSize: 10.5, fontWeight: 900, color: RED, whiteSpace: 'nowrap' }}>
+                <span style={{ fontSize: 12, fontWeight: 900, color: RED, whiteSpace: 'nowrap' }}>
                   {Math.max(0, Math.ceil((MAX_TX_MS - txSecs * 1000) / 1000))}s TO CUT-OFF
                 </span>
               )}
@@ -3942,25 +3942,25 @@ export default function RadioDispatchPage() {
             </>
           ) : keyed ? (
             <>
-              <EqBars color={GOLD_HI} size={15} />
-              <span style={{ fontSize: 10.5, fontWeight: 900, color: GOLD_HI, whiteSpace: 'nowrap' }}>OPENING MIC…</span>
+              <EqBars color="var(--text-secondary)" size={15} />
+              <span style={{ fontSize: 12, fontWeight: 900, color: 'var(--text-primary)', whiteSpace: 'nowrap' }}>OPENING MIC…</span>
               <span style={{ fontSize: 12, color: MUTED, fontWeight: 700 }}>Hold the key — start talking when it turns red</span>
             </>
           ) : playingId ? (
             <>
-              <EqBars color={GOLD_HI} size={15} />
-              <span style={{ fontSize: 10.5, fontWeight: 900, color: GOLD_HI, whiteSpace: 'nowrap' }}>Now Playing</span>
+              <EqBars color="var(--text-secondary)" size={15} />
+              <span style={{ fontSize: 12, fontWeight: 900, color: 'var(--text-primary)', whiteSpace: 'nowrap' }}>Now Playing</span>
               <span style={{ fontSize: 12, color: MUTED, fontWeight: 700, whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis', minWidth: 0 }}>
                 {`${senderShort(playingMsg?.sender_name ?? null)}${catchingUp ? ' · catch-up' : ''}${playingMsg?.audio_duration_secs ? ` · ${secsLabel(playingMsg.audio_duration_secs)}` : ''}`}
               </span>
               {catchingUp && (
-                <button onClick={stopPlayback} title="Stop the catch-up playback" style={{ ...rowActionStyle, marginLeft: 'auto', color: GOLD_HI, borderColor: AMBER_BORDER, background: 'color-mix(in srgb, var(--brand-primary) 14%, transparent)' }}>
+                <button onClick={stopPlayback} title="Stop the catch-up playback" style={{ ...rowActionStyle, marginLeft: 'auto', color: 'var(--text-primary)', borderColor: AMBER_BORDER, background: 'var(--bg-surface-2)' }}>
                   <Pause size={11} weight="fill" /> Stop catch-up
                 </button>
               )}
             </>
           ) : (
-            <span style={{ fontSize: 10.5, fontWeight: 800, color: FAINT, whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis', minWidth: 0 }}>
+            <span style={{ fontSize: 12, fontWeight: 800, color: FAINT, whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis', minWidth: 0 }}>
               {active ? `Standing By — ${(channelNo.get(active.id) || '')} ${active.name}` : 'Standing By'}
             </span>
           )}
@@ -3981,8 +3981,8 @@ export default function RadioDispatchPage() {
               style={{
                 position: 'sticky', top: 0, zIndex: 30, pointerEvents: 'none',
                 display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 10, height: 88,
-                borderRadius: 14, border: `2px dashed ${AMBER_BORDER}`, background: 'var(--brand-primary-12)',
-                color: GOLD_HI, fontSize: 13, fontWeight: 800, marginBottom: 10,
+                borderRadius: 14, border: `2px dashed ${AMBER_BORDER}`, background: 'var(--bg-surface-2)',
+                color: 'var(--text-primary)', fontSize: 13, fontWeight: 800, marginBottom: 10,
               }}
             >
               <Paperclip size={18} weight="bold" /> Drop to share on {active?.name || 'this channel'}
@@ -3998,7 +3998,7 @@ export default function RadioDispatchPage() {
           )}
           {!firstLoad && !chError && channels.length === 0 && (
             <PremiumEmpty
-              icon={<Broadcast size={30} color={GOLD_HI} weight="fill" />}
+              icon={<Broadcast size={30} color="var(--text-secondary)" weight="fill" />}
               title="No channels yet"
               description={projectId ? 'Open a project to auto-create its All Hands talkgroup, or start a custom channel.' : 'Start a custom channel, or open Radio from a project to spin up its All Hands talkgroup.'}
               action={<button onClick={() => setShowNew(true)} className="pmBtn" style={goldButtonStyle}><Plus size={14} weight="bold" /> New Talkgroup</button>}
@@ -4023,7 +4023,7 @@ export default function RadioDispatchPage() {
                 <VividGoldChip icon={<Broadcast size={20} weight="fill" />} size={40} />
                 <div style={{ minWidth: 0 }}>
                   <div style={{ fontSize: 15, fontWeight: 900, color: WHITE, letterSpacing: '-0.01em' }}>Saguaro Radio — standing by</div>
-                  <div style={{ fontSize: 11.5, color: MUTED, marginTop: 1 }}>
+                  <div style={{ fontSize: 12, color: MUTED, marginTop: 1 }}>
                     {channels.length
                       ? `Monitoring ${stats.monitored} of ${stats.channels} talkgroup${stats.channels === 1 ? '' : 's'} — traffic appears here the moment anyone keys up.`
                       : 'No talkgroups yet — create your first channel and the band comes alive.'}
@@ -4033,11 +4033,11 @@ export default function RadioDispatchPage() {
               <FrequencyDial seed={activeId || 'saguaro'} />
               {lastTraffic?.lastMessage && (
                 <div style={{ display: 'flex', alignItems: 'center', gap: 8, flexWrap: 'wrap', padding: '8px 12px', marginTop: 12, borderRadius: 10, background: NEST, border: `1px solid ${BORDER}` }}>
-                  <span style={{ fontSize: 9.5, fontWeight: 900, color: GOLD_HI, whiteSpace: 'nowrap' }}>Last Traffic</span>
+                  <span style={{ fontSize: 9.5, fontWeight: 900, color: 'var(--text-primary)', whiteSpace: 'nowrap' }}>Last Traffic</span>
                   <span style={{ fontSize: 12, color: WHITE, fontWeight: 700, minWidth: 0, flex: 1, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
                     {senderShort(lastTraffic.lastMessage.sender)} — {trafficPreview(lastTraffic.lastMessage)}
                   </span>
-                  <span style={{ fontSize: 11, color: FAINT, whiteSpace: 'nowrap', fontVariantNumeric: 'tabular-nums' }}>
+                  <span style={{ fontSize: 12, color: FAINT, whiteSpace: 'nowrap', fontVariantNumeric: 'tabular-nums' }}>
                     {lastTraffic.name} · {whenLabel(lastTraffic.lastMessage.at)}
                   </span>
                 </div>
@@ -4063,10 +4063,10 @@ export default function RadioDispatchPage() {
         {/* ── Pending attachment tray ─────────────────────────────────── */}
         {(pendingFile || attachError) && (
           <div style={{ flexShrink: 0, borderTop: `1px solid ${BORDER}`, padding: '10px 12px', background: NEST }}>
-            {attachError && <div style={{ fontSize: 11.5, color: RED, marginBottom: pendingFile ? 8 : 0 }}>{attachError}</div>}
+            {attachError && <div style={{ fontSize: 12, color: RED, marginBottom: pendingFile ? 8 : 0 }}>{attachError}</div>}
             {pendingFile && (
               <div style={{ display: 'flex', alignItems: 'center', gap: 8, flexWrap: 'wrap' }}>
-                <span style={{ display: 'inline-flex', alignItems: 'center', gap: 6, maxWidth: 240, padding: '6px 10px', borderRadius: 10, background: AMBER_SOFT, border: `1px solid ${AMBER_BORDER}`, color: GOLD_HI, fontSize: 11.5, fontWeight: 800 }}>
+                <span style={{ display: 'inline-flex', alignItems: 'center', gap: 6, maxWidth: 240, padding: '6px 10px', borderRadius: 10, background: AMBER_SOFT, border: `1px solid ${AMBER_BORDER}`, color: 'var(--text-primary)', fontSize: 12, fontWeight: 800 }}>
                   <Paperclip size={12} weight="bold" style={{ flexShrink: 0 }} />
                   <span style={{ minWidth: 0, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{pendingFile.name}</span>
                   <span style={{ color: FAINT, fontWeight: 700, flexShrink: 0 }}>{sizeLabel(pendingFile.size)}</span>
@@ -4079,7 +4079,7 @@ export default function RadioDispatchPage() {
                   autoFocus
                   style={{ ...fieldStyle, flex: 1, minWidth: 160, padding: '8px 12px' }}
                 />
-                <button onClick={sendMedia} disabled={uploadingMedia} className="pmBtn" style={{ ...goldButtonStyle, padding: '8px 14px', fontSize: 12.5, opacity: uploadingMedia ? 0.6 : 1 }}>
+                <button onClick={sendMedia} disabled={uploadingMedia} className="pmBtn" style={{ ...goldButtonStyle, padding: '8px 14px', fontSize: 13, opacity: uploadingMedia ? 0.6 : 1 }}>
                   {uploadingMedia ? 'Sending…' : 'Send'}
                 </button>
                 <button onClick={clearAttach} disabled={uploadingMedia} aria-label="Cancel attachment" style={{ background: 'none', border: 'none', color: FAINT, fontSize: 12, fontWeight: 700, cursor: 'pointer' }}>
@@ -4143,7 +4143,7 @@ export default function RadioDispatchPage() {
                         : micError ? 'MIC PROBLEM — PRESS TO RETRY'
                           : 'Hold to Talk'}
                 </span>
-                <span style={{ fontSize: 10, fontWeight: 800, opacity: 0.78, maxWidth: '100%', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
+                <span style={{ fontSize: 12, fontWeight: 800, opacity: 0.78, maxWidth: '100%', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
                   {micOpen ? 'Release to Send'
                     : keyed ? 'Wait for Red Before You Speak'
                       : micError ? micError
@@ -4153,8 +4153,8 @@ export default function RadioDispatchPage() {
               {micOpen && <span style={{ marginLeft: 'auto' }}><EqBars color={WHITE} size={20} /></span>}
             </button>
           ) : (
-            <div style={{ display: 'flex', alignItems: 'center', gap: 10, height: 62, padding: '0 18px', borderRadius: 14, background: FIELD_BG, border: FIELD_BORDER, color: MUTED, fontSize: 12.5, fontWeight: 700 }}>
-              <Warning size={18} weight="fill" color={GOLD_HI} style={{ flexShrink: 0 }} />
+            <div style={{ display: 'flex', alignItems: 'center', gap: 10, height: 62, padding: '0 18px', borderRadius: 14, background: FIELD_BG, border: FIELD_BORDER, color: MUTED, fontSize: 13, fontWeight: 700 }}>
+              <Warning size={18} weight="fill" color="var(--text-secondary)" style={{ flexShrink: 0 }} />
               This browser cannot record audio (no MediaRecorder). Text, alerts, tones and attachments still work — use Chrome, Edge, or Safari 14.6+ to key up.
             </div>
           )}
@@ -4167,7 +4167,7 @@ export default function RadioDispatchPage() {
                 <span
                   style={{
                     display: 'inline-flex', alignItems: 'center', gap: 6, minWidth: 0,
-                    fontSize: 11, fontWeight: 800, letterSpacing: '0.02em',
+                    fontSize: 12, fontWeight: 800, letterSpacing: '0.02em',
                     color: txReceipt.tone === 'ok' ? GREEN : txReceipt.tone === 'bad' ? 'var(--danger)' : txReceipt.tone === 'warn' ? MUTED : GOLD_HI,
                   }}
                 >
@@ -4181,7 +4181,7 @@ export default function RadioDispatchPage() {
                 <span
                   style={{
                     display: 'inline-flex', alignItems: 'center', gap: 6, minWidth: 0, marginLeft: 'auto',
-                    fontSize: 11, fontWeight: 800,
+                    fontSize: 12, fontWeight: 800,
                     color: listenerTruth.tone === 'none' ? 'var(--danger)' : GOLD_HI,
                   }}
                 >
@@ -4190,7 +4190,7 @@ export default function RadioDispatchPage() {
                   {listenerTruth.tone === 'none' && (
                     <button
                       onClick={() => { setRosterOpen(true); setRosterAddOpen(true); setRosterAddQuery(''); }}
-                      style={{ ...rowActionStyle, color: GOLD_HI, borderColor: AMBER_BORDER, background: 'color-mix(in srgb, var(--brand-primary) 14%, transparent)' }}
+                      style={{ ...rowActionStyle, color: 'var(--text-primary)', borderColor: AMBER_BORDER, background: 'var(--bg-surface-2)' }}
                     >
                       <UserPlus size={11} weight="bold" /> Add someone
                     </button>
@@ -4231,7 +4231,7 @@ export default function RadioDispatchPage() {
               onKeyDown={(e) => { if (e.key === 'Enter' && !e.shiftKey) { e.preventDefault(); sendText('text'); } }}
               placeholder={micOpen ? 'Transmitting… release the key to send' : active ? `Message ${active.name}` : 'Tune to a channel'}
               disabled={!active || sending}
-              style={{ ...fieldStyle, flex: '1 1 220px', minWidth: 160, height: 42, padding: '0 14px', fontSize: 13.5, borderRadius: 11 }}
+              style={{ ...fieldStyle, flex: '1 1 220px', minWidth: 160, height: 42, padding: '0 14px', fontSize: 14, borderRadius: 11 }}
             />
             <span style={{ flexShrink: 0, display: 'inline-flex', gap: 4 }}>
               {(['ack', 'negative', 'comein'] as const).map((tn) => (
@@ -4260,7 +4260,7 @@ export default function RadioDispatchPage() {
                 flexShrink: 0, display: 'inline-flex', alignItems: 'center', justifyContent: 'center', gap: 6,
                 height: 42, padding: '0 14px', borderRadius: 11, cursor: 'pointer',
                 background: AMBER_SOFT, border: `1px solid ${AMBER_BORDER}`,
-                color: GOLD_HI, fontWeight: 800, fontSize: 12.5,
+                color: 'var(--text-primary)', fontWeight: 800, fontSize: 13,
                 opacity: !active || !draft.trim() || sending ? 0.5 : 1,
               }}
             >
@@ -4278,7 +4278,7 @@ export default function RadioDispatchPage() {
           </div>
 
           {/* The honest line about what this transport actually is. */}
-          <div style={{ fontSize: 10.5, color: FAINT, marginTop: 9, lineHeight: 1.45 }}>
+          <div style={{ fontSize: 12, color: FAINT, marginTop: 9, lineHeight: 1.45 }}>
             Push-to-talk clips: your key-down records, your release delivers, and every member&apos;s console plays it back — typically in about a second. {streamStatus}
           </div>
         </div>
@@ -4287,7 +4287,7 @@ export default function RadioDispatchPage() {
       {/* ══ DIALOGS — each one has exactly one scroll region ═════════════ */}
 
       {/* Site map — live crew pins + human heatmap */}
-      <Dialog open={mapOpen} onClose={() => setMapOpen(false)} title="Site Map" icon={<MapTrifold size={15} weight="bold" color={GOLD_HI} />} width={980}>
+      <Dialog open={mapOpen} onClose={() => setMapOpen(false)} title="Site Map" icon={<MapTrifold size={15} weight="bold" color="var(--text-secondary)" />} width={980}>
         <CrewMap
           crew={crewData?.crew ?? []}
           bins={heatData?.bins ?? []}
@@ -4307,7 +4307,7 @@ export default function RadioDispatchPage() {
           }}
           loading={mapLoading}
         />
-        <div style={{ fontSize: 11, color: FAINT, marginTop: 12 }}>
+        <div style={{ fontSize: 12, color: FAINT, marginTop: 12 }}>
           Live crew pins over a shift heatmap — positions appear when crews clock in with the Field app.
         </div>
       </Dialog>
@@ -4321,7 +4321,7 @@ export default function RadioDispatchPage() {
         width={720}
       >
         {assistQueue.length === 0 ? (
-          <div style={{ fontSize: 12.5, color: FAINT }}>Queue is clear — no field requests waiting on dispatch.</div>
+          <div style={{ fontSize: 13, color: FAINT }}>Queue is clear — no field requests waiting on dispatch.</div>
         ) : (
           <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
             {assistQueue.map((a) => {
@@ -4348,14 +4348,14 @@ export default function RadioDispatchPage() {
                   </span>
                   <div style={{ flex: 1, minWidth: 180 }}>
                     <span style={{ fontSize: 13, fontWeight: 800, color: WHITE }}>{senderShort(a.requester_name)}</span>
-                    {a.note && <span style={{ fontSize: 12.5, color: MUTED }}> — {a.note}</span>}
+                    {a.note && <span style={{ fontSize: 13, color: MUTED }}> — {a.note}</span>}
                     {acked && a.acknowledged_by && (
-                      <div style={{ fontSize: 10.5, color: FAINT, marginTop: 2 }}>
+                      <div style={{ fontSize: 12, color: FAINT, marginTop: 2 }}>
                         Acknowledged by {senderShort(a.acknowledged_by)}{a.acknowledged_at ? ` · ${timeOf(a.acknowledged_at)}` : ''}
                       </div>
                     )}
                   </div>
-                  <span title={new Date(a.created_at).toLocaleString()} style={{ fontSize: 11, color: acked ? FAINT : GOLD_HI, fontWeight: 800, fontVariantNumeric: 'tabular-nums', whiteSpace: 'nowrap' }}>
+                  <span title={new Date(a.created_at).toLocaleString()} style={{ fontSize: 12, color: acked ? FAINT : GOLD_HI, fontWeight: 800, fontVariantNumeric: 'tabular-nums', whiteSpace: 'nowrap' }}>
                     {ageLabel(a.created_at, assistNow)} ago
                   </span>
                   {a.location && typeof a.location.lat === 'number' && (
@@ -4364,7 +4364,7 @@ export default function RadioDispatchPage() {
                     </a>
                   )}
                   {!acked && (
-                    <button onClick={() => triageAssist(a.id, 'ack')} disabled={assistBusy === a.id} title="Acknowledge — tells the requester dispatch is on it" style={{ ...rowActionStyle, color: GOLD_HI, borderColor: AMBER_BORDER, background: 'color-mix(in srgb, var(--brand-primary) 14%, transparent)', opacity: assistBusy === a.id ? 0.6 : 1 }}>
+                    <button onClick={() => triageAssist(a.id, 'ack')} disabled={assistBusy === a.id} title="Acknowledge — tells the requester dispatch is on it" style={{ ...rowActionStyle, color: 'var(--text-primary)', borderColor: AMBER_BORDER, background: 'color-mix(in srgb, var(--brand-primary) 14%, transparent)', opacity: assistBusy === a.id ? 0.6 : 1 }}>
                       <Check size={11} weight="bold" /> Ack
                     </button>
                   )}
@@ -4383,22 +4383,22 @@ export default function RadioDispatchPage() {
         open={shareOpen && !!active}
         onClose={closeShare}
         title={`GUEST ACCESS — ${active?.name || ''}`}
-        icon={<ShareNetwork size={15} weight="bold" color={GOLD_HI} />}
+        icon={<ShareNetwork size={15} weight="bold" color="var(--text-secondary)" />}
         width={520}
         footer={
           <>
-            <button onClick={createGuestLink} disabled={creatingLink} className="pmBtn" style={{ ...goldButtonStyle, padding: '10px 18px', fontSize: 12.5, opacity: creatingLink ? 0.6 : 1 }}>
+            <button onClick={createGuestLink} disabled={creatingLink} className="pmBtn" style={{ ...goldButtonStyle, padding: '10px 18px', fontSize: 13, opacity: creatingLink ? 0.6 : 1 }}>
               <ShareNetwork size={13} weight="bold" /> {creatingLink ? 'Creating…' : 'Create guest link'}
             </button>
-            <span style={{ fontSize: 10.5, color: FAINT, flex: 1, minWidth: 140 }}>Guests join in a browser — no account, no app.</span>
+            <span style={{ fontSize: 12, color: FAINT, flex: 1, minWidth: 140 }}>Guests join in a browser — no account, no app.</span>
           </>
         }
       >
         {createdUrl && (
           <div style={{ padding: 10, borderRadius: 10, background: GREEN_SOFT, border: `1px solid ${GREEN_BORDER}`, marginBottom: 12 }}>
-            <div style={{ fontSize: 10, fontWeight: 900, color: GREEN, marginBottom: 5 }}>LINK READY — SEND IT TO YOUR GUEST</div>
+            <div style={{ fontSize: 12, fontWeight: 900, color: GREEN, marginBottom: 5 }}>LINK READY — SEND IT TO YOUR GUEST</div>
             <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
-              <span style={{ flex: 1, minWidth: 0, fontSize: 11.5, color: WHITE, overflowWrap: 'anywhere', lineHeight: 1.4 }}>{createdUrl}</span>
+              <span style={{ flex: 1, minWidth: 0, fontSize: 12, color: WHITE, overflowWrap: 'anywhere', lineHeight: 1.4 }}>{createdUrl}</span>
               <button onClick={() => copyShare('created', createdUrl)} style={{ ...rowActionStyle, flexShrink: 0, color: copiedKey === 'created' ? GREEN : MUTED, borderColor: copiedKey === 'created' ? GREEN_BORDER : BORDER }}>
                 {copiedKey === 'created' ? <Check size={11} weight="bold" /> : <Copy size={11} weight="bold" />} {copiedKey === 'created' ? 'Copied' : 'Copy'}
               </button>
@@ -4429,22 +4429,22 @@ export default function RadioDispatchPage() {
             <option value="never">No Expiry</option>
           </select>
         </div>
-        {shareError && <div style={{ fontSize: 11.5, color: RED, marginBottom: 10 }}>{shareError}</div>}
+        {shareError && <div style={{ fontSize: 12, color: RED, marginBottom: 10 }}>{shareError}</div>}
         <div style={{ ...eyebrowStyle, marginBottom: 8 }}>Active Links</div>
         {linksKey && !linkData && !linkError && (
           <div style={{ display: 'flex', flexDirection: 'column', gap: 6 }}>
             {Array.from({ length: 2 }).map((_, i) => <Skeleton key={i} height={38} borderRadius={10} />)}
           </div>
         )}
-        {linkError && <div style={{ fontSize: 11.5, color: RED }}>Could not load guest links. Close and reopen to retry.</div>}
-        {linkData && guestLinks.length === 0 && <div style={{ fontSize: 11.5, color: FAINT }}>No guest links yet — create one below.</div>}
+        {linkError && <div style={{ fontSize: 12, color: RED }}>Could not load guest links. Close and reopen to retry.</div>}
+        {linkData && guestLinks.length === 0 && <div style={{ fontSize: 12, color: FAINT }}>No guest links yet — create one below.</div>}
         {guestLinks.map((l) => {
           const expired = !!l.expires_at && new Date(l.expires_at).getTime() < Date.now();
           return (
             <div key={l.id} style={{ display: 'flex', alignItems: 'center', gap: 8, padding: '8px 10px', borderRadius: 10, background: NEST, border: `1px solid ${BORDER}`, marginBottom: 6 }}>
               <div style={{ flex: 1, minWidth: 0 }}>
                 <div style={{ fontSize: 12, fontWeight: 800, color: WHITE, whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>{l.label || 'Guest link'}</div>
-                <div style={{ fontSize: 10, color: expired ? RED : FAINT, marginTop: 1, whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>
+                <div style={{ fontSize: 12, color: expired ? RED : FAINT, marginTop: 1, whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>
                   {l.can_talk === false ? 'Listen-only' : 'Talk + listen'}
                   {' · '}
                   {expired ? 'Expired' : l.expires_at ? `Expires ${new Date(l.expires_at).toLocaleDateString()}` : 'No Expiry'}
@@ -4468,14 +4468,14 @@ export default function RadioDispatchPage() {
         open={patchOpen}
         onClose={() => setPatchOpen(false)}
         title="Patch Board"
-        icon={<PlugsConnected size={15} weight="bold" color={GOLD_HI} />}
+        icon={<PlugsConnected size={15} weight="bold" color="var(--text-secondary)" />}
         width={480}
         footer={
           <button
             onClick={() => postPatch(patchA, patchB, false)}
             disabled={!patchA || !patchB || patchBusy}
             className="pmBtn"
-            style={{ ...goldButtonStyle, padding: '10px 18px', fontSize: 12.5, opacity: !patchA || !patchB || patchBusy ? 0.55 : 1 }}
+            style={{ ...goldButtonStyle, padding: '10px 18px', fontSize: 13, opacity: !patchA || !patchB || patchBusy ? 0.55 : 1 }}
           >
             <PlugsConnected size={13} weight="bold" /> {patchBusy ? 'Working…' : 'Patch channels'}
           </button>
@@ -4500,8 +4500,8 @@ export default function RadioDispatchPage() {
             <div style={{ ...eyebrowStyle, marginBottom: 8 }}>Active Patches</div>
             {patches.map((p) => (
               <div key={p.id} style={{ display: 'flex', alignItems: 'center', gap: 8, padding: '8px 10px', borderRadius: 10, background: NEST, border: `1px solid ${AMBER_BORDER}`, marginBottom: 6 }}>
-                <PlugsConnected size={13} weight="bold" color={GOLD_HI} style={{ flexShrink: 0 }} />
-                <span style={{ flex: 1, minWidth: 0, fontSize: 11.5, fontWeight: 800, color: WHITE, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
+                <PlugsConnected size={13} weight="bold" color="var(--text-secondary)" style={{ flexShrink: 0 }} />
+                <span style={{ flex: 1, minWidth: 0, fontSize: 12, fontWeight: 800, color: WHITE, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
                   {channelName(p.channel_a)} + {channelName(p.channel_b)}
                 </span>
                 <button onClick={() => postPatch(p.channel_a, p.channel_b, true)} disabled={patchBusy} title="Release this patch — the channels stop mirroring" style={{ ...rowActionStyle, color: 'var(--danger)', borderColor: RED_BORDER, background: RED_SOFT, opacity: patchBusy ? 0.6 : 1 }}>
@@ -4511,7 +4511,7 @@ export default function RadioDispatchPage() {
             ))}
           </>
         ) : (
-          <div style={{ fontSize: 11.5, color: FAINT, lineHeight: 1.5 }}>
+          <div style={{ fontSize: 12, color: FAINT, lineHeight: 1.5 }}>
             Patch two talkgroups and their traffic mirrors both ways until you release it. Mirrored rows are tagged &ldquo;via &lt;channel&gt;&rdquo; in the feed.
           </div>
         )}
@@ -4522,7 +4522,7 @@ export default function RadioDispatchPage() {
         open={bcOpen}
         onClose={() => setBcOpen(false)}
         title={`BROADCAST — ${bcSel.size}/8 CHANNELS`}
-        icon={<Megaphone size={15} weight="bold" color={GOLD_HI} />}
+        icon={<Megaphone size={15} weight="bold" color="var(--text-secondary)" />}
         width={560}
         footer={
           <>
@@ -4530,20 +4530,20 @@ export default function RadioDispatchPage() {
               onClick={sendBroadcast}
               disabled={bcSel.size < 2 || !bcText.trim() || bcBusy}
               className="pmBtn"
-              style={{ ...goldButtonStyle, padding: '10px 18px', fontSize: 12.5, opacity: bcSel.size < 2 || !bcText.trim() || bcBusy ? 0.55 : 1 }}
+              style={{ ...goldButtonStyle, padding: '10px 18px', fontSize: 13, opacity: bcSel.size < 2 || !bcText.trim() || bcBusy ? 0.55 : 1 }}
             >
               <Megaphone size={13} weight="bold" /> {bcBusy ? 'Sending…' : bcSel.size >= 2 ? `Send to ${bcSel.size} channels` : 'Send broadcast'}
             </button>
-            <span style={{ fontSize: 10.5, color: FAINT, flex: 1, minWidth: 150 }}>Pick two to eight channels — one message lands on all of them at once.</span>
+            <span style={{ fontSize: 12, color: FAINT, flex: 1, minWidth: 150 }}>Pick two to eight channels — one message lands on all of them at once.</span>
           </>
         }
       >
         {bcSent && (
           <div style={{ padding: '9px 11px', borderRadius: 10, background: GREEN_SOFT, border: `1px solid ${GREEN_BORDER}`, marginBottom: 12 }}>
-            <div style={{ fontSize: 10, fontWeight: 900, color: GREEN, marginBottom: 3 }}>
+            <div style={{ fontSize: 12, fontWeight: 900, color: GREEN, marginBottom: 3 }}>
               SENT TO {bcSent.length} CHANNEL{bcSent.length === 1 ? '' : 's'}
             </div>
-            <div style={{ fontSize: 11.5, color: WHITE, lineHeight: 1.5 }}>{bcSent.join(' · ')}</div>
+            <div style={{ fontSize: 12, color: WHITE, lineHeight: 1.5 }}>{bcSent.join(' · ')}</div>
           </div>
         )}
         <input
@@ -4601,7 +4601,7 @@ export default function RadioDispatchPage() {
         open={logOpen && !!active}
         onClose={() => setLogOpen(false)}
         title={`CHANNEL LOG — ${active?.name || ''}`}
-        icon={<ClockCounterClockwise size={15} weight="bold" color={GOLD_HI} />}
+        icon={<ClockCounterClockwise size={15} weight="bold" color="var(--text-secondary)" />}
         width={880}
         className="sagRadioLogOverlay"
         footer={
@@ -4609,7 +4609,7 @@ export default function RadioDispatchPage() {
             <button onClick={() => window.print()} title="Print or save this record as a PDF" style={{ ...goldOutlineButtonStyle, padding: '8px 14px', fontSize: 12 }}>
               <Printer size={12} weight="bold" /> Print / Export
             </button>
-            <span style={{ fontSize: 10.5, color: FAINT, flex: 1, minWidth: 150 }}>
+            <span style={{ fontSize: 12, color: FAINT, flex: 1, minWidth: 150 }}>
               Newest 100 transmissions in range, oldest first.
             </span>
           </>
@@ -4637,7 +4637,7 @@ export default function RadioDispatchPage() {
         <div id="sagRadioLogPrint">
           <div style={{ borderBottom: `1px solid ${BORDER}`, paddingBottom: 8, marginBottom: 8 }}>
             <div style={{ fontSize: 14, fontWeight: 900, color: WHITE }}>Saguaro Radio — channel record: {active?.name}</div>
-            <div style={{ fontSize: 11, color: MUTED, marginTop: 3 }}>
+            <div style={{ fontSize: 12, color: MUTED, marginTop: 3 }}>
               {logFrom || logTo ? `Range ${logFrom || 'start'} to ${logTo || 'now'}` : 'Most recent traffic'}
               {logSearch.trim() ? ` · filter "${logSearch.trim()}"` : ''}
               {` · ${logRows.length} transmission${logRows.length === 1 ? '' : 's'}`}
@@ -4655,10 +4655,10 @@ export default function RadioDispatchPage() {
           )}
           {logRows.map((m) => (
             <div key={m.id} style={{ display: 'flex', gap: 10, alignItems: 'baseline', padding: '6px 2px', borderBottom: `1px solid ${BORDER}` }}>
-              <span style={{ flexShrink: 0, width: 148, fontSize: 11, color: MUTED, fontVariantNumeric: 'tabular-nums' }}>
+              <span style={{ flexShrink: 0, width: 148, fontSize: 12, color: MUTED, fontVariantNumeric: 'tabular-nums' }}>
                 {new Date(m.created_at).toLocaleString()}
               </span>
-              <span style={{ flexShrink: 0, width: 120, fontSize: 11.5, fontWeight: 800, color: WHITE, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
+              <span style={{ flexShrink: 0, width: 120, fontSize: 12, fontWeight: 800, color: WHITE, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
                 {senderShort(m.sender_name)}
               </span>
               <span style={{ flexShrink: 0, width: 52, fontSize: 9.5, fontWeight: 900, color: m.kind === 'panic' ? RED : m.kind === 'alert' ? GOLD_HI : FAINT }}>
@@ -4670,7 +4670,7 @@ export default function RadioDispatchPage() {
               </span>
             </div>
           ))}
-          <div style={{ fontSize: 10, color: FAINT, marginTop: 8 }}>End of record.</div>
+          <div style={{ fontSize: 12, color: FAINT, marginTop: 8 }}>End of record.</div>
         </div>
       </Dialog>
 
@@ -4679,7 +4679,7 @@ export default function RadioDispatchPage() {
         open={showNew}
         onClose={closeNewModal}
         title="New Talkgroup"
-        icon={<Plus size={15} weight="bold" color={GOLD_HI} />}
+        icon={<Plus size={15} weight="bold" color="var(--text-secondary)" />}
         width={520}
         footer={
           <>
@@ -4687,7 +4687,7 @@ export default function RadioDispatchPage() {
               onClick={createChannel}
               disabled={!newName.trim() || creating}
               className="pmBtn"
-              style={{ ...goldButtonStyle, padding: '10px 18px', fontSize: 12.5, opacity: !newName.trim() || creating ? 0.6 : 1 }}
+              style={{ ...goldButtonStyle, padding: '10px 18px', fontSize: 13, opacity: !newName.trim() || creating ? 0.6 : 1 }}
             >
               {creating ? 'Creating…' : newSel.length ? `Create + add ${newSel.length} member${newSel.length === 1 ? '' : 's'}` : 'Create channel'}
             </button>
@@ -4723,10 +4723,10 @@ export default function RadioDispatchPage() {
         </div>
         <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 8 }}>
           <span style={eyebrowStyle}>Members</span>
-          <span style={{ fontSize: 10, fontWeight: 900, fontVariantNumeric: 'tabular-nums', color: newSel.length ? GOLD_HI : FAINT, border: `1px solid ${newSel.length ? AMBER_BORDER : BORDER}`, borderRadius: 999, padding: '1px 8px' }}>
+          <span style={{ fontSize: 12, fontWeight: 900, fontVariantNumeric: 'tabular-nums', color: newSel.length ? GOLD_HI : FAINT, border: `1px solid ${newSel.length ? AMBER_BORDER : BORDER}`, borderRadius: 999, padding: '1px 8px' }}>
             {newSel.length} selected
           </span>
-          <span style={{ fontSize: 10.5, color: FAINT, flex: 1, textAlign: 'right' }}>You join automatically as dispatcher</span>
+          <span style={{ fontSize: 12, color: FAINT, flex: 1, textAlign: 'right' }}>You join automatically as dispatcher</span>
         </div>
         <input
           value={newQuery}
@@ -4743,8 +4743,8 @@ export default function RadioDispatchPage() {
         })}
         {newSel.length === 0 && (
           <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginTop: 12, padding: '8px 10px', borderRadius: 10, background: AMBER_SOFT, border: `1px solid ${AMBER_BORDER}` }}>
-            <Warning size={13} weight="fill" color={GOLD_HI} style={{ flexShrink: 0 }} />
-            <span style={{ fontSize: 11.5, color: GOLD_HI, fontWeight: 700, lineHeight: 1.45 }}>
+            <Warning size={13} weight="fill" color="var(--text-secondary)" style={{ flexShrink: 0 }} />
+            <span style={{ fontSize: 12, color: 'var(--text-primary)', fontWeight: 700, lineHeight: 1.45 }}>
               With nobody picked you will be the only member — transmissions on this channel will have no listeners.
             </span>
           </div>
@@ -4756,11 +4756,11 @@ export default function RadioDispatchPage() {
         open={directOpen}
         onClose={() => setDirectOpen(false)}
         title="Message Someone"
-        icon={<ChatCircleText size={15} weight="bold" color={GOLD_HI} />}
+        icon={<ChatCircleText size={15} weight="bold" color="var(--text-secondary)" />}
         width={460}
-        footer={<span style={{ fontSize: 10.5, color: FAINT }}>Direct channels are staff-to-staff. Reach subs through their project talkgroups.</span>}
+        footer={<span style={{ fontSize: 12, color: FAINT }}>Direct channels are staff-to-staff. Reach subs through their project talkgroups.</span>}
       >
-        <div style={{ fontSize: 11.5, color: MUTED, marginBottom: 12 }}>
+        <div style={{ fontSize: 12, color: MUTED, marginBottom: 12 }}>
           Pick a teammate — a private 1:1 channel opens (or re-opens) and the console tunes to it.
         </div>
         <input
@@ -4785,7 +4785,7 @@ export default function RadioDispatchPage() {
         open={!!lockConfirm}
         onClose={() => setLockConfirm(null)}
         title={lockConfirm?.locked ? 'Unlock Channel' : 'Lock Channel'}
-        icon={lockConfirm?.locked ? <LockOpen size={15} weight="bold" color={GOLD_HI} /> : <Lock size={15} weight="fill" color={GOLD_HI} />}
+        icon={lockConfirm?.locked ? <LockOpen size={15} weight="bold" color="var(--text-secondary)" /> : <Lock size={15} weight="fill" color="var(--text-secondary)" />}
         width={440}
         footer={
           <>
@@ -4793,7 +4793,7 @@ export default function RadioDispatchPage() {
               onClick={applyLock}
               disabled={lockBusy}
               className="pmBtn"
-              style={{ ...goldButtonStyle, padding: '10px 18px', fontSize: 12.5, opacity: lockBusy ? 0.6 : 1 }}
+              style={{ ...goldButtonStyle, padding: '10px 18px', fontSize: 13, opacity: lockBusy ? 0.6 : 1 }}
             >
               {lockConfirm?.locked ? <LockOpen size={13} weight="bold" /> : <Lock size={13} weight="fill" />}
               {lockBusy ? 'Working…' : lockConfirm?.locked ? 'Unlock channel' : 'Lock channel'}
@@ -4804,7 +4804,7 @@ export default function RadioDispatchPage() {
           </>
         }
       >
-        <div style={{ fontSize: 12.5, color: WHITE, lineHeight: 1.55 }}>
+        <div style={{ fontSize: 13, color: WHITE, lineHeight: 1.55 }}>
           {lockConfirm?.locked
             ? `Unlock "${lockConfirm?.name}"? It becomes visible to the whole team again and teammates join on their next visit.`
             : `Lock "${lockConfirm?.name}"? Only current members keep access — the channel disappears from everyone else's console until a dispatcher adds them from the roster.`}
@@ -4831,11 +4831,11 @@ export default function RadioDispatchPage() {
           >
             {canEditMsg(rowMenuMsg) && (
               <button role="menuitem" onClick={() => openEditMsg(rowMenuMsg)} style={{ ...menuItemStyle(true), height: 44 }}>
-                <PencilSimple size={14} weight="bold" color={GOLD_HI} /> Edit message
+                <PencilSimple size={14} weight="bold" color="var(--text-secondary)" /> Edit message
               </button>
             )}
             <button role="menuitem" onClick={() => openPromote(rowMenuMsg)} style={{ ...menuItemStyle(true), height: 44 }}>
-              <NotePencil size={14} weight="bold" color={GOLD_HI} /> Make a record
+              <NotePencil size={14} weight="bold" color="var(--text-secondary)" /> Make a record
             </button>
             <button
               role="menuitem"
@@ -4871,7 +4871,7 @@ export default function RadioDispatchPage() {
         open={!!editFor}
         onClose={() => { if (!editBusy) setEditFor(null); }}
         title="Edit Message"
-        icon={<PencilSimple size={15} weight="bold" color={GOLD_HI} />}
+        icon={<PencilSimple size={15} weight="bold" color="var(--text-secondary)" />}
         width={520}
         footer={editFor ? (
           <>
@@ -4879,7 +4879,7 @@ export default function RadioDispatchPage() {
               onClick={() => { void saveEditMsg(); }}
               disabled={editBusy || !editText.trim()}
               className="pmBtn"
-              style={{ ...goldButtonStyle, minHeight: 44, padding: '10px 18px', fontSize: 12.5, opacity: editBusy || !editText.trim() ? 0.55 : 1 }}
+              style={{ ...goldButtonStyle, minHeight: 44, padding: '10px 18px', fontSize: 13, opacity: editBusy || !editText.trim() ? 0.55 : 1 }}
             >
               <Check size={13} weight="bold" /> {editBusy ? 'Saving…' : 'Save'}
             </button>
@@ -4889,7 +4889,7 @@ export default function RadioDispatchPage() {
             >
               Cancel
             </button>
-            <span style={{ fontSize: 10.5, color: FAINT, lineHeight: 1.45, minWidth: 0 }}>
+            <span style={{ fontSize: 12, color: FAINT, lineHeight: 1.45, minWidth: 0 }}>
               Everyone on {active?.name || 'the channel'} sees the corrected text. Voice, photos and tones can’t be edited.
             </span>
           </>
@@ -4907,7 +4907,7 @@ export default function RadioDispatchPage() {
               autoFocus
               style={{ ...fieldStyle, fontSize: 16, resize: 'vertical', minHeight: 96, lineHeight: 1.5 }}
             />
-            {editError && <div role="alert" style={{ fontSize: 11.5, color: RED, marginTop: 8 }}>{editError}</div>}
+            {editError && <div role="alert" style={{ fontSize: 12, color: RED, marginTop: 8 }}>{editError}</div>}
           </>
         )}
       </Dialog>
@@ -4920,7 +4920,7 @@ export default function RadioDispatchPage() {
         open={!!promoteMsg}
         onClose={() => { if (!promoteBusy) setPromoteFor(null); }}
         title="Make a Record"
-        icon={<NotePencil size={15} weight="bold" color={GOLD_HI} />}
+        icon={<NotePencil size={15} weight="bold" color="var(--text-secondary)" />}
         width={640}
         footer={promoteMsg ? (
           <>
@@ -4929,7 +4929,7 @@ export default function RadioDispatchPage() {
               disabled={promoteBusy || !!promoteExisting}
               className="pmBtn"
               style={{
-                ...goldButtonStyle, padding: '10px 18px', fontSize: 12.5,
+                ...goldButtonStyle, padding: '10px 18px', fontSize: 13,
                 opacity: promoteBusy || promoteExisting ? 0.55 : 1,
                 cursor: promoteBusy || promoteExisting ? 'default' : 'pointer',
               }}
@@ -4944,12 +4944,12 @@ export default function RadioDispatchPage() {
               Cancel
             </button>
             {promoteExisting ? (
-              <span style={{ fontSize: 10.5, color: MUTED, lineHeight: 1.45, minWidth: 0 }}>
+              <span style={{ fontSize: 12, color: MUTED, lineHeight: 1.45, minWidth: 0 }}>
                 Already filed as <strong style={{ color: promoteAccent(promoteType).hex }}>{promoteExisting.recordLabel}</strong>
-                {promoteExisting.href ? <> — <a href={promoteExisting.href} style={{ color: GOLD_HI, fontWeight: 800 }}>open it</a>.</> : '.'} Pick another target to file it somewhere else too.
+                {promoteExisting.href ? <> — <a href={promoteExisting.href} style={{ color: 'var(--link)', fontWeight: 800 }}>open it</a>.</> : '.'} Pick another target to file it somewhere else too.
               </span>
             ) : (
-              <span style={{ fontSize: 10.5, color: FAINT, lineHeight: 1.45, minWidth: 0 }}>
+              <span style={{ fontSize: 12, color: FAINT, lineHeight: 1.45, minWidth: 0 }}>
                 {promoteMsg.kind === 'voice'
                   ? 'The clip stays in the private file store. The record carries its path and re-signs the audio each time someone opens it.'
                   : 'The record carries this transmission’s text, sender, channel and timestamp as its provenance.'}
@@ -4964,8 +4964,8 @@ export default function RadioDispatchPage() {
             <div style={{ borderRadius: 12, border: `1px solid ${AMBER_BORDER}`, background: NEST, padding: 12, marginBottom: 14 }}>
               <div style={{ display: 'flex', alignItems: 'baseline', gap: 8, flexWrap: 'wrap' }}>
                 <span style={eyebrowStyle}>Evidence</span>
-                <span style={{ fontSize: 12.5, fontWeight: 800, color: WHITE }}>{senderShort(promoteMsg.sender_name)}</span>
-                <span style={{ fontSize: 11, color: FAINT, fontVariantNumeric: 'tabular-nums' }}>
+                <span style={{ fontSize: 13, fontWeight: 800, color: WHITE }}>{senderShort(promoteMsg.sender_name)}</span>
+                <span style={{ fontSize: 12, color: FAINT, fontVariantNumeric: 'tabular-nums' }}>
                   {isToday(promoteMsg.created_at)
                     ? timeOf(promoteMsg.created_at)
                     : `${whenLabel(promoteMsg.created_at)} ${timeOf(promoteMsg.created_at)}`}
@@ -5001,7 +5001,7 @@ export default function RadioDispatchPage() {
                   }}
                 >
                   <WaveformSlash size={14} weight="bold" color={FAINT} style={{ flexShrink: 0, marginTop: 1 }} />
-                  <span style={{ fontSize: 11, color: MUTED, lineHeight: 1.45 }}>
+                  <span style={{ fontSize: 12, color: MUTED, lineHeight: 1.45 }}>
                     No transcript on file — nothing failed to read. {TRANSCRIPT_PENDING_NOTE} Play the clip and write the summary below; the audio goes on the record either way.
                   </span>
                 </div>
@@ -5014,7 +5014,7 @@ export default function RadioDispatchPage() {
                   rel="noreferrer"
                   style={{
                     display: 'inline-flex', alignItems: 'center', gap: 5, marginTop: 10,
-                    fontSize: 11, fontWeight: 800, color: GOLD_HI, textDecoration: 'none',
+                    fontSize: 12, fontWeight: 800, color: 'var(--link)', textDecoration: 'none',
                   }}
                 >
                   <MapPin size={12} weight="fill" /> GPS fix travels with the record
@@ -5024,8 +5024,8 @@ export default function RadioDispatchPage() {
 
             {!active?.project_id && (
               <div style={{ display: 'flex', gap: 8, marginBottom: 14, padding: '9px 11px', borderRadius: 10, background: AMBER_SOFT, border: `1px solid ${AMBER_BORDER}` }}>
-                <Warning size={14} weight="fill" color={GOLD_HI} style={{ flexShrink: 0, marginTop: 1 }} />
-                <span style={{ fontSize: 11.5, color: GOLD_HI, fontWeight: 700, lineHeight: 1.45 }}>
+                <Warning size={14} weight="fill" color="var(--text-secondary)" style={{ flexShrink: 0, marginTop: 1 }} />
+                <span style={{ fontSize: 12, color: 'var(--text-primary)', fontWeight: 700, lineHeight: 1.45 }}>
                   This talkgroup is not tied to a project. A transmission files into the job it was sent on — if this one carries no project, the server will say so and write nothing.
                 </span>
               </div>
@@ -5063,12 +5063,12 @@ export default function RadioDispatchPage() {
                       {meta.icon}
                     </span>
                     <span style={{ minWidth: 0 }}>
-                      <span style={{ display: 'block', fontSize: 12.5, fontWeight: 800, color: on ? WHITE : MUTED }}>
+                      <span style={{ display: 'block', fontSize: 13, fontWeight: 800, color: on ? WHITE : MUTED }}>
                         {meta.label}
                       </span>
                       <span
                         style={{
-                          display: 'block', fontSize: 10.5, fontWeight: 700, marginTop: 1,
+                          display: 'block', fontSize: 12, fontWeight: 700, marginTop: 1,
                           color: done ? a.hex : FAINT,
                           overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap',
                         }}
@@ -5084,7 +5084,7 @@ export default function RadioDispatchPage() {
             {promoteError && (
               <div style={{ display: 'flex', gap: 8, marginBottom: 14, padding: '9px 11px', borderRadius: 10, background: RED_SOFT, border: `1px solid ${RED_BORDER}` }}>
                 <Warning size={14} weight="fill" color={RED} style={{ flexShrink: 0, marginTop: 1 }} />
-                <span style={{ fontSize: 11.5, color: 'var(--danger)', fontWeight: 700, lineHeight: 1.45, overflowWrap: 'anywhere' }}>
+                <span style={{ fontSize: 12, color: 'var(--danger)', fontWeight: 700, lineHeight: 1.45, overflowWrap: 'anywhere' }}>
                   {promoteError}
                 </span>
               </div>
@@ -5228,7 +5228,7 @@ export default function RadioDispatchPage() {
                 background: 'rgba(24,24,27,0.98)',
                 border: `1px solid ${tst.tone === 'ok' ? GREEN_BORDER : RED_BORDER}`,
                 boxShadow: '0 14px 34px rgba(12,12,16,0.6)',
-                color: WHITE, fontSize: 12.5, fontWeight: 700, lineHeight: 1.45,
+                color: WHITE, fontSize: 13, fontWeight: 700, lineHeight: 1.45,
               }}
             >
               {tst.tone === 'ok'

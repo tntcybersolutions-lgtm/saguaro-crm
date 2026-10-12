@@ -40,7 +40,7 @@ const fmtDay = (d: string | null | undefined) =>
 function Badge({ label, color = 'var(--text-secondary)', bg = 'rgba(163,172,187,.12)' }: { label: string; color?: string; bg?: string }) {
   return (
     <span style={{
-      display: 'inline-flex', alignItems: 'center', fontSize: 11, fontWeight: 700, padding: '2px 9px',
+      display: 'inline-flex', alignItems: 'center', fontSize: 12, fontWeight: 700, padding: '2px 9px',
       borderRadius: 999, background: bg, color, border: `1px solid color-mix(in srgb, ${color} 50%, transparent)`, whiteSpace: 'nowrap',
     }}>{label ? String(label).replace(/_/g, ' ').replace(/\b[a-z]/g, c => c.toUpperCase()) : label}</span>
   );
@@ -478,22 +478,22 @@ export default function DocumentsPage() {
       {/* KPI stat row — live counts across the document library */}
       <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(200px, 1fr))', gap: 12, marginBottom: 26 }}>
         <StatCard
-          icon={<Receipt size={19} weight="duotone" color={GOLD} />}
+          icon={<Receipt size={19} weight="duotone" color="var(--text-secondary)" />}
           label="Pay Applications" value={statVal(loadingPayApps, errorPayApps, payApps.filter(pa => inJob(pa.project_id)).length)}
           sub={byJob && billedAll > 0 ? `${fmtMoneyShort(billedAll)} billed${jobId ? '' : ` across ${jobsWithPayApps} job${jobsWithPayApps === 1 ? '' : 's'}`}` : 'AIA G702 / G703'} accent={GOLD} delay={0.02}
          onClick={() => openTab('Pay Applications')}/>
         <StatCard
-          icon={<Shield size={19} weight="duotone" color={GOLD} />}
+          icon={<Shield size={19} weight="duotone" color="var(--text-secondary)" />}
           label="Lien Waivers" value={statVal(loadingLienWaivers, errorLienWaivers, lienWaivers.filter(lw => inJob(lw.project_id)).length)}
           sub={byJob ? `${signedAll} signed · ${waitingAll} waiting${noWaiverAll ? ` · ${noWaiverAll} paid with none` : ''}` : 'signed & pending'} delay={0.06}
          onClick={() => openTab('Lien Waivers')}/>
         <StatCard
-          icon={<NotePencil size={19} weight="duotone" color={GOLD} />}
+          icon={<NotePencil size={19} weight="duotone" color="var(--text-secondary)" />}
           label="Certified Payroll" value={statVal(loadingPayroll, errorPayroll, payroll.filter(pr => inJob(pr.project_id)).length)}
           sub="WH-347 weeks filed" delay={0.10}
          onClick={() => openTab('Payroll')}/>
         <StatCard
-          icon={<Clipboard size={19} weight="duotone" color={GOLD} />}
+          icon={<Clipboard size={19} weight="duotone" color="var(--text-secondary)" />}
           label="AIA Forms" value={String(BOND_CARDS.length)}
           sub="bond & closeout templates" delay={0.14}
          onClick={() => openTab('Bonds & Forms')}/>
@@ -542,7 +542,7 @@ export default function DocumentsPage() {
             value={query}
             onChange={e => setQuery(e.target.value)}
             placeholder="Search this tab…"
-            style={{ width: '100%', boxSizing: 'border-box', padding: '8px 12px 8px 30px', background: 'rgba(255,255,255,0.04)', border: '1px solid rgba(255,255,255,0.10)', borderRadius: 8, color: TEXT, fontSize: 12.5, outline: 'none' }}
+            style={{ width: '100%', boxSizing: 'border-box', padding: '8px 12px 8px 30px', background: 'rgba(255,255,255,0.04)', border: '1px solid rgba(255,255,255,0.10)', borderRadius: 8, color: TEXT, fontSize: 13, outline: 'none' }}
           />
         </div>}
       </div>
@@ -556,7 +556,7 @@ export default function DocumentsPage() {
         {activeTab === 'Pay Applications' && (
           <SectionCard
             flush
-            icon={<Receipt size={17} weight="duotone" color={GOLD} />}
+            icon={<Receipt size={17} weight="duotone" color="var(--text-secondary)" />}
             title="Pay Applications (AIA G702 / G703)"
             action={
               <Link href="/app/projects" style={goldButtonStyle} className="pmBtn">
@@ -585,7 +585,7 @@ export default function DocumentsPage() {
                     <tr><td colSpan={showJobCol ? 7 : 6} style={{ padding: 0 }}>
                       <PremiumEmpty
                         compact
-                        icon={<Receipt size={30} weight="duotone" color={GOLD} />}
+                        icon={<Receipt size={30} weight="duotone" color="var(--text-secondary)" />}
                         title={payApps.length > 0 ? (jobId && !q ? 'No Pay Applications on This Job' : 'No Pay Applications Match') : 'No Pay Applications Yet'}
                         description={payApps.length > 0 ? (jobId && !q ? 'Tap Show all jobs above to see every job.' : 'Clear the search above to see every record.') : 'Generated AIA G702 / G703 pay applications will appear here.'}
                         action={<Link href="/app/projects" style={goldButtonStyle} className="pmBtn"><Plus size={15} weight="bold" /> Generate New</Link>}
@@ -600,9 +600,9 @@ export default function DocumentsPage() {
                         {/* Real pay_applications columns (the list route returns raw rows):
                             app_number, period_from/period_to, current_payment_due — the old
                             appNo/period/amount keys never existed, so every row read #000 / $0.00. */}
-                        <td style={{ padding: '12px 16px', color: GOLD, fontWeight: 700 }}>#{String(pa.app_number ?? pa.application_number ?? '').padStart(3, '0')}</td>
+                        <td style={{ padding: '12px 16px', color: 'var(--text-primary)', fontWeight: 700 }}>#{String(pa.app_number ?? pa.application_number ?? '').padStart(3, '0')}</td>
                         <td style={{ padding: '12px 16px', color: DIM }}>{[fmtDay(pa.period_from), fmtDay(pa.period_to)].filter(Boolean).join(' – ') || '—'}</td>
-                        <td style={{ padding: '12px 16px', color: GOLD, fontWeight: 700 }}>{fmt(pa.current_payment_due ?? pa.net_payment_due)}</td>
+                        <td style={{ padding: '12px 16px', color: 'var(--text-primary)', fontWeight: 700 }}>{fmt(pa.current_payment_due ?? pa.net_payment_due)}</td>
                         <td style={{ padding: '12px 16px' }}><Badge label={pa.status} color={sc.color} bg={sc.bg} /></td>
                         <td style={{ padding: '12px 16px' }}>
                           {wv.label === '—' ? <span style={{ color: DIM }}>—</span> : <Badge label={wv.label} color={wv.color} bg={wv.bg} />}
@@ -617,10 +617,10 @@ export default function DocumentsPage() {
                             )}
                             style={{
                               background: 'none', border: `1px solid ${BORDER}`,
-                              borderRadius: 5, color: GOLD, fontSize: 11,
+                              borderRadius: 5, color: 'var(--text-primary)', fontSize: 12,
                               padding: '3px 10px', cursor: 'pointer',
                               opacity: busyKey === `payapp-${pa.id}` ? 0.5 : 1,
-                            }}>{busyKey === `payapp-${pa.id}` ? '…' : (<span style={{ display: 'inline-flex', alignItems: 'center', gap: 5 }}><FileText size={12} weight="regular" color={GOLD} /> G702 PDF</span>)}</button>
+                            }}>{busyKey === `payapp-${pa.id}` ? '…' : (<span style={{ display: 'inline-flex', alignItems: 'center', gap: 5 }}><FileText size={12} weight="regular" color="var(--text-secondary)" /> G702 PDF</span>)}</button>
                         </td>
                       </tr>
                     );
@@ -635,7 +635,7 @@ export default function DocumentsPage() {
         {activeTab === 'Lien Waivers' && (
           <SectionCard
             flush
-            icon={<Shield size={17} weight="duotone" color={GOLD} />}
+            icon={<Shield size={17} weight="duotone" color="var(--text-secondary)" />}
             title="Lien Waivers"
             action={
               <Link href="/app/projects" style={goldButtonStyle} className="pmBtn">
@@ -664,7 +664,7 @@ export default function DocumentsPage() {
                     <tr><td colSpan={showJobCol ? 8 : 7} style={{ padding: 0 }}>
                       <PremiumEmpty
                         compact
-                        icon={<Shield size={30} weight="duotone" color={GOLD} />}
+                        icon={<Shield size={30} weight="duotone" color="var(--text-secondary)" />}
                         title={lienWaivers.length > 0 ? 'No Lien Waivers Match' : 'No Lien Waivers Yet'}
                         description={lienWaivers.length > 0 ? 'Clear the search above to see every record.' : 'Conditional and unconditional lien waivers you generate will be listed here.'}
                         action={<Link href="/app/projects" style={goldButtonStyle} className="pmBtn"><Plus size={15} weight="bold" /> Generate New</Link>}
@@ -697,10 +697,10 @@ export default function DocumentsPage() {
                             )}
                             style={{
                               background: 'none', border: `1px solid ${BORDER}`,
-                              borderRadius: 5, color: GOLD, fontSize: 11,
+                              borderRadius: 5, color: 'var(--text-primary)', fontSize: 12,
                               padding: '3px 10px', cursor: 'pointer',
                               opacity: busyKey === `lw-${lw.id}` ? 0.5 : 1,
-                            }}>{busyKey === `lw-${lw.id}` ? '…' : (<span style={{ display: 'inline-flex', alignItems: 'center', gap: 5 }}><FileText size={12} weight="regular" color={GOLD} /> Download</span>)}</button>
+                            }}>{busyKey === `lw-${lw.id}` ? '…' : (<span style={{ display: 'inline-flex', alignItems: 'center', gap: 5 }}><FileText size={12} weight="regular" color="var(--text-secondary)" /> Download</span>)}</button>
                         </td>
                       </tr>
                     );
@@ -714,7 +714,7 @@ export default function DocumentsPage() {
         {/* ── Bonds & Forms ─────────────────────────────────────────── */}
         {activeTab === 'Bonds & Forms' && (
           <SectionCard
-            icon={<Buildings size={17} weight="duotone" color={GOLD} />}
+            icon={<Buildings size={17} weight="duotone" color="var(--text-secondary)" />}
             title="AIA Bonds & Standard Forms"
             action={
               <div style={{ display: 'flex', alignItems: 'center', gap: 10, flexWrap: 'wrap' }}>
@@ -751,10 +751,10 @@ export default function DocumentsPage() {
                   boxShadow: '0 10px 30px -20px rgba(0,0,0,0.6), inset 0 1px 0 rgba(255,255,255,0.04)',
                 }}>
                   <div style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
-                    <IconChip size={40}>{React.createElement(card.icon, { size: 22, weight: 'duotone', color: GOLD })}</IconChip>
+                    <IconChip size={40}>{React.createElement(card.icon, { size: 22, weight: 'duotone', color: 'var(--text-primary)' })}</IconChip>
                     <div>
                       <div style={{ fontWeight: 800, fontSize: 13, color: TEXT }}>{card.name}</div>
-                      <div style={{ fontSize: 11, color: GOLD, fontWeight: 700 }}>{card.code}</div>
+                      <div style={{ fontSize: 12, color: 'var(--text-primary)', fontWeight: 700 }}>{card.code}</div>
                     </div>
                   </div>
                   <div style={{ fontSize: 12, color: DIM, lineHeight: 1.5 }}>{card.desc}</div>
@@ -782,7 +782,7 @@ export default function DocumentsPage() {
         {activeTab === 'Payroll' && (
           <SectionCard
             flush
-            icon={<NotePencil size={17} weight="duotone" color={GOLD} />}
+            icon={<NotePencil size={17} weight="duotone" color="var(--text-secondary)" />}
             title="Certified Payroll (WH-347)"
             action={
               <Link href="/app/projects" style={goldButtonStyle} className="pmBtn">
@@ -811,7 +811,7 @@ export default function DocumentsPage() {
                     <tr><td colSpan={showJobCol ? 6 : 5} style={{ padding: 0 }}>
                       <PremiumEmpty
                         compact
-                        icon={<NotePencil size={30} weight="duotone" color={GOLD} />}
+                        icon={<NotePencil size={30} weight="duotone" color="var(--text-secondary)" />}
                         title={payroll.length > 0 ? 'No Payroll Records Match' : 'No Certified Payroll Records Yet'}
                         description={payroll.length > 0 ? 'Clear the search above to see every record.' : 'WH-347 certified payroll filings you generate will appear here.'}
                         action={<Link href="/app/projects" style={goldButtonStyle} className="pmBtn"><Plus size={15} weight="bold" /> Generate WH-347</Link>}
@@ -835,9 +835,9 @@ export default function DocumentsPage() {
                             )}
                             style={{
                               background: 'none', border: `1px solid ${BORDER}`,
-                              borderRadius: 5, color: GOLD, fontSize: 11,
+                              borderRadius: 5, color: 'var(--text-primary)', fontSize: 12,
                               padding: '3px 10px', cursor: 'pointer',
-                            }}><span style={{ display: 'inline-flex', alignItems: 'center', gap: 5 }}><FileText size={12} weight="regular" color={GOLD} /> WH-347</span></button>
+                            }}><span style={{ display: 'inline-flex', alignItems: 'center', gap: 5 }}><FileText size={12} weight="regular" color="var(--text-secondary)" /> WH-347</span></button>
                         </td>
                       </tr>
                     );
@@ -852,7 +852,7 @@ export default function DocumentsPage() {
         {activeTab === 'Closeout' && (
           <SectionCard
             flush
-            icon={<Clipboard size={17} weight="duotone" color={GOLD} />}
+            icon={<Clipboard size={17} weight="duotone" color="var(--text-secondary)" />}
             title="Closeout Checklist"
             action={
               <div style={{ display: 'flex', alignItems: 'center', gap: 10, flexWrap: 'wrap' }}>
@@ -887,7 +887,7 @@ export default function DocumentsPage() {
                 <div style={{ padding: '16px 20px', borderBottom: `1px solid rgba(255,255,255,0.06)` }}>
                   <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: 10 }}>
                     <span style={{ fontSize: 13, fontWeight: 700, color: TEXT }}>Closeout Progress</span>
-                    <span style={{ fontSize: 13, fontWeight: 700, color: GOLD }}>{done} / {closeoutItems.length} items ({pct}%)</span>
+                    <span style={{ fontSize: 13, fontWeight: 700, color: 'var(--text-primary)' }}>{done} / {closeoutItems.length} items ({pct}%)</span>
                   </div>
                   <div style={{ height: 8, background: 'rgba(255,255,255,0.1)', borderRadius: 4 }}>
                     <div style={{
@@ -919,14 +919,14 @@ export default function DocumentsPage() {
             ) : !selectedProject ? (
               <PremiumEmpty
                 compact
-                icon={<Clipboard size={30} weight="duotone" color={GOLD} />}
+                icon={<Clipboard size={30} weight="duotone" color="var(--text-secondary)" />}
                 title="Select a Project"
                 description="Choose a project above to view its closeout checklist."
               />
             ) : visCloseout.length === 0 ? (
               <PremiumEmpty
                 compact
-                icon={<Clipboard size={30} weight="duotone" color={GOLD} />}
+                icon={<Clipboard size={30} weight="duotone" color="var(--text-secondary)" />}
                 title={closeoutItems.length > 0 ? 'No Closeout Items Match' : 'No Closeout Items Yet'}
                 description={closeoutItems.length > 0 ? 'Clear the search above to see the full checklist.' : 'Closeout items (warranties, O&M manuals, as-builts, certificates) added to this project will appear here.'}
               />
@@ -958,7 +958,7 @@ export default function DocumentsPage() {
                     </button>
                     <div style={{ minWidth: 0, flex: 1 }}>
                       <div style={{ fontSize: 13, fontWeight: 600, color: done ? TEXT : DIM }}>{item.title}</div>
-                      <div style={{ fontSize: 11, color: DIM, marginTop: 2 }}>
+                      <div style={{ fontSize: 12, color: DIM, marginTop: 2 }}>
                         {[CLOSEOUT_TYPE_LABEL[item.item_type] ?? item.item_type, item.trade, item.responsible_party]
                           .filter(Boolean).join(' · ')}
                         {item.due_date ? ` · Due ${item.due_date}` : ''}

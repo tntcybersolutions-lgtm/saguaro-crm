@@ -179,7 +179,7 @@ export default function NetworkDashboard() {
       <PremiumSurface maxWidth={2200}>
         <ModuleHero
           eyebrow={ctx?.project?.name || 'Network Hub'}
-          eyebrowIcon={<Globe size={13} weight="fill" color={GOLD} />}
+          eyebrowIcon={<Globe size={13} weight="fill" color="var(--text-secondary)" />}
           title="Low-Voltage &"
           accent="IT Network"
           subtitle="Design, document, and certify this building's network."
@@ -197,7 +197,7 @@ export default function NetworkDashboard() {
         )}
         <div style={{ display: 'grid', gridTemplateColumns: 'minmax(0,1fr) 360px', gap: 22, alignItems: 'start', maxWidth: 2200 }}>
           <SectionCard
-            icon={<Globe size={18} weight="duotone" color={GOLD} />}
+            icon={<Globe size={18} weight="duotone" color="var(--text-secondary)" />}
             title="Set Up Network Module"
             subtitle={ctx?.project?.name ? `Configure the low voltage / IT network for ${ctx.project.name}.` : 'Configure your low voltage / IT network for this project.'}
           >
@@ -219,7 +219,7 @@ export default function NetworkDashboard() {
                   <option value="residential_mdu">Residential MDU</option>
                   <option value="mixed_use">Mixed Use</option>
                 </select>
-                <div style={{ fontSize: 11, color: 'var(--c-text-2)', marginTop: 5, lineHeight: 1.45 }}>Sets wizard defaults — VLAN plan, device density, and WiFi coverage targets.</div>
+                <div style={{ fontSize: 12, color: 'var(--c-text-2)', marginTop: 5, lineHeight: 1.45 }}>Sets wizard defaults — VLAN plan, device density, and WiFi coverage targets.</div>
               </div>
               <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 12 }}>
                 <div>
@@ -230,7 +230,7 @@ export default function NetworkDashboard() {
                     onChange={e => setSetupForm({ ...setupForm, total_sq_ft: +e.target.value })}
                     style={inputStyle}
                   />
-                  <div style={{ fontSize: 11, color: 'var(--c-text-2)', marginTop: 5, lineHeight: 1.45 }}>Drives AP counts and cable-run estimates.</div>
+                  <div style={{ fontSize: 12, color: 'var(--c-text-2)', marginTop: 5, lineHeight: 1.45 }}>Drives AP counts and cable-run estimates.</div>
                 </div>
                 <div>
                   <label style={{ color: MUTED, fontSize: 12, fontWeight: 600, display: 'block', marginBottom: 4 }}>Floor Count</label>
@@ -252,7 +252,7 @@ export default function NetworkDashboard() {
               </button>
             </div>
           </SectionCard>
-          <SectionCard flat icon={<Robot size={17} weight="duotone" color={GOLD} />} title="What You Get">
+          <SectionCard flat icon={<Robot size={17} weight="duotone" color="var(--text-secondary)" />} title="What You Get">
             <FlowSteps title="" steps={[
               { title: 'AI Network Wizard', desc: 'Describe the site — the wizard drafts the device list, VLAN plan, and IP scheme.' },
               { title: 'Device & VLAN Inventory', desc: 'Every switch, AP, and camera tracked with IP, MAC, VLAN, and location.' },
@@ -270,7 +270,7 @@ export default function NetworkDashboard() {
       {/* Header */}
       <ModuleHero
         eyebrow={ctx?.project?.name || 'Network Hub'}
-        eyebrowIcon={<Globe size={13} weight="fill" color={GOLD} />}
+        eyebrowIcon={<Globe size={13} weight="fill" color="var(--text-secondary)" />}
         title="Network"
         accent="Dashboard"
         subtitle={
@@ -291,10 +291,10 @@ export default function NetworkDashboard() {
 
       {/* Stats Row */}
       <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(190px, 1fr))', gap: 16, marginBottom: 28 }}>
-        <StatCard icon={<Devices size={19} weight="duotone" color={BLUE} />} label="Total Devices" value={String(devices.length)} accent={BLUE} delay={0.02}  href={`/app/projects/${projectId}/network/devices`}/>
+        <StatCard icon={<Devices size={19} weight="duotone" color="var(--text-secondary)" />} label="Total Devices" value={String(devices.length)} accent={BLUE} delay={0.02}  href={`/app/projects/${projectId}/network/devices`}/>
         <StatCard icon={<Circle size={19} weight="duotone" color={GREEN} />} label="Online" value={String(devices.filter(d => d.status === 'online').length)} accent={GREEN} sub={`Of ${devices.length} total`} delay={0.06}  href={`/app/projects/${projectId}/network`}/>
         <StatCard icon={<Shuffle size={19} weight="duotone" color="var(--warning)" />} label="VLANs" value={String(vlans.length)} accent="var(--warning)" delay={0.10}  href={`/app/projects/${projectId}/network/vlans`}/>
-        <StatCard icon={<Plug size={19} weight="duotone" color={GOLD} />} label="Cable Runs" value={`${testedCables}/${cables.length}`} accent={GOLD} sub="Tested" delay={0.14}  href={`/app/projects/${projectId}/network/cables`}/>
+        <StatCard icon={<Plug size={19} weight="duotone" color="var(--text-secondary)" />} label="Cable Runs" value={`${testedCables}/${cables.length}`} accent={GOLD} sub="Tested" delay={0.14}  href={`/app/projects/${projectId}/network/cables`}/>
         <StatCard icon={<CheckCircle size={19} weight="duotone" color={GREEN} />} label="Pass Rate" value={cables.length > 0 ? `${Math.round((passedCables / Math.max(testedCables, 1)) * 100)}%` : 'N/A'} accent={GREEN} delay={0.18}  href={`/app/projects/${projectId}/network`}/>
         <StatCard icon={<Warning size={19} weight="duotone" color={openAlerts > 0 ? RED : GREEN} />} label="Open Alerts" value={String(openAlerts)} accent={openAlerts > 0 ? RED : GREEN} delay={0.22}  href={`/app/projects/${projectId}/network`}/>
       </div>
@@ -304,7 +304,7 @@ export default function NetworkDashboard() {
       <div style={{ minWidth: 0 }}>
       {/* Quick Actions */}
       <SectionCard
-        icon={<Lightning size={17} weight="duotone" color={GOLD} />}
+        icon={<Lightning size={17} weight="duotone" color="var(--text-secondary)" />}
         title="Quick Actions"
         style={{ marginBottom: 24 }}
       >
@@ -326,11 +326,11 @@ export default function NetworkDashboard() {
               className="pmBtn"
               style={{
                 padding: '9px 16px', background: 'rgba(255,255,255,0.04)', border: `1px solid ${KIT_BORDER}`,
-                borderRadius: 10, color: 'var(--c-text-2)', fontSize: 12.5, fontWeight: 700, textDecoration: 'none',
+                borderRadius: 10, color: 'var(--c-text-2)', fontSize: 13, fontWeight: 700, textDecoration: 'none',
                 display: 'inline-flex', alignItems: 'center', gap: 7,
               }}
             >
-              <action.icon size={16} weight="bold" color={GOLD} /> {action.label}
+              <action.icon size={16} weight="bold" color="var(--text-secondary)" /> {action.label}
             </Link>
           ))}
         </div>
@@ -338,7 +338,7 @@ export default function NetworkDashboard() {
 
       {/* Navigation Grid */}
       <SectionCard
-        icon={<SquaresFour size={17} weight="duotone" color={GOLD} />}
+        icon={<SquaresFour size={17} weight="duotone" color="var(--text-secondary)" />}
         title="Network Modules"
         style={{ marginBottom: 32 }}
       >
@@ -355,9 +355,9 @@ export default function NetworkDashboard() {
                 boxShadow: '0 10px 30px -20px rgba(0,0,0,0.6), inset 0 1px 0 rgba(255,255,255,0.04)',
               }}
             >
-              <IconChip size={40}><item.icon size={20} weight="duotone" color={GOLD} /></IconChip>
+              <IconChip size={40}><item.icon size={20} weight="duotone" color="var(--text-secondary)" /></IconChip>
               <div style={{ color: WHITE, fontSize: 15, fontWeight: 800, marginTop: 12 }}>{item.label}</div>
-              <div style={{ color: MUTED, fontSize: 12.5, marginTop: 3 }}>{item.desc}</div>
+              <div style={{ color: MUTED, fontSize: 13, marginTop: 3 }}>{item.desc}</div>
             </Link>
           ))}
         </div>
@@ -366,7 +366,7 @@ export default function NetworkDashboard() {
 
       {/* Readiness rail — derived from the live inventory */}
       <div style={{ display: 'flex', flexDirection: 'column', gap: 16 }}>
-        <SectionCard flat icon={<CheckCircle size={17} weight="duotone" color={GOLD} />} title="Network Readiness">
+        <SectionCard flat icon={<CheckCircle size={17} weight="duotone" color="var(--text-secondary)" />} title="Network Readiness">
           <FlowSteps title="" steps={[
             { title: 'Module Configured', done: true, desc: `${(networkProject?.site_type || 'site').replace(/_/g, ' ')} · ${(networkProject?.total_sq_ft || 0).toLocaleString()} SF · ${networkProject?.floor_count || 1} floor${(networkProject?.floor_count || 1) > 1 ? 's' : ''}.` },
             { title: 'Device Inventory', done: devices.length > 0, desc: devices.length > 0 ? `${devices.length} device${devices.length === 1 ? '' : 's'} — ${devices.filter(d => d.status === 'online').length} online.` : 'Add devices by hand, or let the AI wizard draft the design.' },
@@ -375,7 +375,7 @@ export default function NetworkDashboard() {
             { title: 'Alerts Clear', done: openAlerts === 0, desc: openAlerts > 0 ? `${openAlerts} open alert${openAlerts === 1 ? '' : 's'} below need attention.` : 'No open alerts on this network.' },
           ]} />
         </SectionCard>
-        <SectionCard flat icon={<Globe size={17} weight="duotone" color={GOLD} />} title="Site Profile">
+        <SectionCard flat icon={<Globe size={17} weight="duotone" color="var(--text-secondary)" />} title="Site Profile">
           <InsightRow label="Site Type" value={(networkProject?.site_type || '—').replace(/_/g, ' ')} />
           <InsightRow label="Square Footage" value={`${(networkProject?.total_sq_ft || 0).toLocaleString()} SF`} />
           <InsightRow label="Floors" value={String(networkProject?.floor_count || 1)} />
@@ -387,13 +387,13 @@ export default function NetworkDashboard() {
 
       {/* Devices by Type */}
       <SectionCard
-        icon={<Devices size={17} weight="duotone" color={GOLD} />}
+        icon={<Devices size={17} weight="duotone" color="var(--text-secondary)" />}
         title="Devices by Type"
         style={{ marginBottom: 24 }}
       >
         {Object.keys(devicesByType).length === 0 ? (
           <PremiumEmpty
-            icon={<Devices size={30} weight="duotone" color={GOLD} />}
+            icon={<Devices size={30} weight="duotone" color="var(--text-secondary)" />}
             title="No devices added yet"
             description={`This ${(networkProject?.site_type || 'site').replace(/_/g, ' ')} covers ${(networkProject?.total_sq_ft || 0).toLocaleString()} SF — add devices by hand, or let the AI wizard draft the full design in one pass.`}
             action={<Link href={`/app/projects/${projectId}/network/devices`} className="pmBtn" style={goldButtonStyle}><Plus size={15} weight="bold" color="var(--on-brand)" /> Add Your First Device</Link>}
@@ -403,10 +403,10 @@ export default function NetworkDashboard() {
           Object.entries(devicesByType).map(([type, devs]) => (
             <div key={type} style={{ marginBottom: 16 }}>
               <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 8 }}>
-                <span style={{ display: 'inline-flex', alignItems: 'center' }}>{(() => { const Icon = DEVICE_TYPE_ICONS[type] || Package; return <Icon size={18} weight="duotone" color={GOLD} />; })()}</span>
+                <span style={{ display: 'inline-flex', alignItems: 'center' }}>{(() => { const Icon = DEVICE_TYPE_ICONS[type] || Package; return <Icon size={18} weight="duotone" color="var(--text-secondary)" />; })()}</span>
                 <span style={{ color: TEXT, fontSize: 13, fontWeight: 700, textTransform: 'capitalize' }}>{type.replace(/_/g, ' ')}</span>
                 <span style={{
-                  background: 'rgba(255,255,255,0.08)', color: MUTED, fontSize: 11, padding: '2px 8px',
+                  background: 'rgba(255,255,255,0.08)', color: MUTED, fontSize: 12, padding: '2px 8px',
                   borderRadius: 10, fontWeight: 700,
                 }}>{devs.length}</span>
               </div>
@@ -430,10 +430,10 @@ export default function NetworkDashboard() {
                     }} />
                     <div style={{ flex: 1, minWidth: 0 }}>
                       <div style={{ color: TEXT, fontSize: 13, fontWeight: 600, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{dev.hostname}</div>
-                      <div style={{ color: MUTED, fontSize: 11 }}>{dev.ip_address || 'No IP'} &middot; {dev.location || 'No location'}</div>
+                      <div style={{ color: MUTED, fontSize: 12 }}>{dev.ip_address || 'No IP'} &middot; {dev.location || 'No location'}</div>
                     </div>
                     <span style={{
-                      fontSize: 10, padding: '2px 8px', borderRadius: 10, fontWeight: 600,
+                      fontSize: 12, padding: '2px 8px', borderRadius: 10, fontWeight: 600,
                       background: `color-mix(in srgb, ${STATUS_COLORS[dev.status] || 'var(--status-closed)'} 13%, transparent)`,
                       color: STATUS_COLORS[dev.status] || 'var(--status-closed)',
                       textTransform: 'capitalize',
@@ -460,10 +460,10 @@ export default function NetworkDashboard() {
               borderRadius: 10, border: `1px solid ${alert.severity === 'critical' ? `${RED}44` : KIT_BORDER}`,
               marginBottom: 6,
             }}>
-              <span style={{ display: 'inline-flex', alignItems: 'center' }}>{alert.severity === 'critical' ? <WarningCircle size={16} weight="fill" color={RED} /> : alert.severity === 'warning' ? <Warning size={16} weight="fill" color={GOLD} /> : <Info size={16} weight="fill" color={BLUE} />}</span>
+              <span style={{ display: 'inline-flex', alignItems: 'center' }}>{alert.severity === 'critical' ? <WarningCircle size={16} weight="fill" color={RED} /> : alert.severity === 'warning' ? <Warning size={16} weight="fill" color="var(--text-secondary)" /> : <Info size={16} weight="fill" color="var(--text-secondary)" />}</span>
               <div style={{ flex: 1 }}>
                 <div style={{ color: TEXT, fontSize: 13 }}>{alert.message}</div>
-                <div style={{ color: MUTED, fontSize: 11 }}>{new Date(alert.created_at).toLocaleString()}</div>
+                <div style={{ color: MUTED, fontSize: 12 }}>{new Date(alert.created_at).toLocaleString()}</div>
               </div>
             </div>
           ))}

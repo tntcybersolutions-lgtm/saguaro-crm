@@ -213,7 +213,7 @@ export default function AuditTimeline({ entityType, entityId }: AuditTimelinePro
                 </span>
                 <span
                   style={{
-                    fontSize: 11,
+                    fontSize: 12,
                     fontWeight: 600,
                     color: color,
                     background: `color-mix(in srgb, ${color} 9%, transparent)`,
@@ -233,7 +233,7 @@ export default function AuditTimeline({ entityType, entityId }: AuditTimelinePro
 
               {/* Timestamp */}
               <div
-                style={{ color: DIM, fontSize: 11, marginTop: 2 }}
+                style={{ color: DIM, fontSize: 12, marginTop: 2 }}
                 title={formatFullDate(entry.created_at)}
               >
                 {formatTimestamp(entry.created_at)}
@@ -293,7 +293,7 @@ export default function AuditTimeline({ entityType, entityId }: AuditTimelinePro
             style={{
               background: 'none',
               border: 'none',
-              color: GOLD,
+              color: 'var(--text-primary)',
               fontSize: 12,
               fontWeight: 600,
               cursor: 'pointer',

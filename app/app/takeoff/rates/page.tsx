@@ -45,7 +45,7 @@ export default function CostCatalogPage() {
       {/* Header */}
       <ModuleHero
         eyebrow="Learning Cost Database"
-        eyebrowIcon={<Sparkle size={13} weight="fill" color={GOLD} />}
+        eyebrowIcon={<Sparkle size={13} weight="fill" color="var(--text-secondary)" />}
         title="Your Cost"
         accent="Catalog"
         subtitle={<>Your rates override the book everywhere the takeoff prices — so every estimate reflects <b style={{ color: TEXT }}>your</b> real numbers.</>}
@@ -73,20 +73,20 @@ export default function CostCatalogPage() {
       {/* Source breakdown */}
       <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(180px, 1fr))', gap: 12, marginBottom: 24 }}>
         <StatCard icon={<Sparkle size={19} weight="duotone" color={GREEN} />} label="Learned" value={String(learnedCount)} accent={GREEN} sub="Computed from your jobs" delay={0.02}  href="/app/takeoff/rates"/>
-        <StatCard icon={<PencilSimple size={19} weight="duotone" color={BLUE} />} label="Manual" value={String(manualCount)} accent={BLUE} sub="Rates you set" delay={0.06}  href="/app/takeoff/rates"/>
-        <StatCard icon={<BookOpen size={19} weight="duotone" color={GOLD} />} label="On Book" value={String(bookCount)} sub="Default book rates" delay={0.10}  href="/app/takeoff/rates"/>
+        <StatCard icon={<PencilSimple size={19} weight="duotone" color="var(--text-secondary)" />} label="Manual" value={String(manualCount)} accent={BLUE} sub="Rates you set" delay={0.06}  href="/app/takeoff/rates"/>
+        <StatCard icon={<BookOpen size={19} weight="duotone" color="var(--text-secondary)" />} label="On Book" value={String(bookCount)} sub="Default book rates" delay={0.10}  href="/app/takeoff/rates"/>
       </div>
 
       {/* Rates table */}
-      <SectionCard title="Cost Rates" subtitle="Effective unit cost applied by the takeoff engine" icon={<Coins size={17} weight="duotone" color={GOLD} />} flush>
+      <SectionCard title="Cost Rates" subtitle="Effective unit cost applied by the takeoff engine" icon={<Coins size={17} weight="duotone" color="var(--text-secondary)" />} flush>
         {/* Column header */}
-        <div style={{ display: 'grid', gridTemplateColumns: '2fr 1fr 1.4fr 1fr', background: PANEL, padding: '10px 20px', fontSize: 11, color: DIM, fontWeight: 700}}>
+        <div style={{ display: 'grid', gridTemplateColumns: '2fr 1fr 1.4fr 1fr', background: PANEL, padding: '10px 20px', fontSize: 12, color: DIM, fontWeight: 700}}>
           <span>Item</span><span>Book</span><span>Your Rate</span><span>Source</span>
         </div>
         {list.length === 0 ? (
           <PremiumEmpty
             compact
-            icon={<Coins size={30} weight="duotone" color={GOLD} />}
+            icon={<Coins size={30} weight="duotone" color="var(--text-secondary)" />}
             title="No cost rates yet"
             description="Press “Learn from My Jobs” to compute quantity-weighted rates from your past takeoffs, or edit any rate manually."
           />
@@ -94,7 +94,7 @@ export default function CostCatalogPage() {
           const eff = r.ownCents ?? r.bookCents;
           const editing = edit[r.cost_key] != null;
           return (
-            <div key={r.cost_key} style={{ display: 'grid', gridTemplateColumns: '2fr 1fr 1.4fr 1fr', padding: '10px 20px', borderTop: `1px solid ${LINE}`, alignItems: 'center', fontSize: 13.5 }}>
+            <div key={r.cost_key} style={{ display: 'grid', gridTemplateColumns: '2fr 1fr 1.4fr 1fr', padding: '10px 20px', borderTop: `1px solid ${LINE}`, alignItems: 'center', fontSize: 14 }}>
               <span><b style={{ fontWeight: 600, color: TEXT }}>{r.cost_key}</b> <span style={{ color: DIM, fontSize: 12 }}>/{r.unit} {r.note ? `· ${r.note}` : ''}</span></span>
               <span style={{ color: DIM }}>{money(r.bookCents)}</span>
               <span style={{ display: 'flex', gap: 6, alignItems: 'center' }}>
@@ -106,12 +106,12 @@ export default function CostCatalogPage() {
                 ) : (
                   <>
                     <span style={{ color: r.ownCents != null ? (r.source === 'learned' ? GREEN : BLUE) : TEXT, fontWeight: r.ownCents != null ? 700 : 400 }}>{money(eff)}</span>
-                    <button onClick={() => setEdit((x) => ({ ...x, [r.cost_key]: (eff / 100).toFixed(2) }))} style={{ background: 'transparent', color: DIM, border: `1px solid ${LINE}`, borderRadius: 6, padding: '4px 8px', cursor: 'pointer', fontSize: 11 }}>Edit</button>
-                    {r.ownCents != null && <button onClick={() => revert(r.cost_key)} style={{ background: 'transparent', color: DIM, border: 'none', cursor: 'pointer', fontSize: 11 }}>Revert</button>}
+                    <button onClick={() => setEdit((x) => ({ ...x, [r.cost_key]: (eff / 100).toFixed(2) }))} style={{ background: 'transparent', color: DIM, border: `1px solid ${LINE}`, borderRadius: 6, padding: '4px 8px', cursor: 'pointer', fontSize: 12 }}>Edit</button>
+                    {r.ownCents != null && <button onClick={() => revert(r.cost_key)} style={{ background: 'transparent', color: DIM, border: 'none', cursor: 'pointer', fontSize: 12 }}>Revert</button>}
                   </>
                 )}
               </span>
-              <span>{r.source === 'learned' ? <span style={{ color: GREEN, fontSize: 12, display: 'inline-flex', alignItems: 'center', gap: 4 }}><Sparkle size={12} weight="fill" color={GREEN} /> Learned ({r.samples})</span> : r.source === 'manual' ? <span style={{ color: BLUE, fontSize: 12, display: 'inline-flex', alignItems: 'center', gap: 4 }}><PencilSimple size={12} weight="fill" color={BLUE} /> Manual</span> : <span style={{ color: DIM, fontSize: 12 }}>Book</span>}</span>
+              <span>{r.source === 'learned' ? <span style={{ color: GREEN, fontSize: 12, display: 'inline-flex', alignItems: 'center', gap: 4 }}><Sparkle size={12} weight="fill" color={GREEN} /> Learned ({r.samples})</span> : r.source === 'manual' ? <span style={{ color: 'var(--text-primary)', fontSize: 12, display: 'inline-flex', alignItems: 'center', gap: 4 }}><PencilSimple size={12} weight="fill" color="var(--text-secondary)" /> Manual</span> : <span style={{ color: DIM, fontSize: 12 }}>Book</span>}</span>
             </div>
           );
         })}

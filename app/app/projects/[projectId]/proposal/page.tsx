@@ -3,7 +3,7 @@ import React, { useState, useEffect, useCallback } from 'react';
 import { useProjectContext } from '@/lib/hooks/useProjectContext';
 import { useParams } from 'next/navigation';
 import MarkOutcomeModal from '@/components/bids/MarkOutcomeModal';
-import { PremiumSurface, ModuleHero, SectionCard, StatCard, PremiumEmpty, StatStrip, FlowSteps, InsightRow, AutoChip, goldButtonStyle, ghostButtonStyle } from '@/components/ui/premium';
+import { PremiumSurface, ModuleHero, SectionCard, PremiumEmpty, StatStrip, FlowSteps, InsightRow, AutoChip, goldButtonStyle, ghostButtonStyle, secondaryButtonStyle } from '@/components/ui/premium';
 import { FileText, FilePlus, ClockCounterClockwise, SealCheck, Plus } from '@phosphor-icons/react';
 import { useUnsavedGuard, useComposerDirty } from '@/lib/useUnsavedGuard';
 import UnsavedGuardModal from '@/components/UnsavedGuardModal';
@@ -32,7 +32,7 @@ interface Proposal {
 
 const STATUS_MAP: Record<string, { bg: string; color: string }> = {
   Draft: { bg: 'rgba(163,172,187,.2)', color: DIM },
-  Sent: { bg: 'color-mix(in srgb, var(--brand-primary) 20%, transparent)', color: 'var(--brand-primary-strong)' },
+  Sent: { bg: 'color-mix(in srgb, var(--brand-primary) 20%, transparent)', color: 'var(--text-primary)' },
   Under_Review: { bg: 'color-mix(in srgb, var(--warning) 20%, transparent)', color: 'var(--warning)' },
   Accepted: { bg: 'rgba(74,222,128,.2)', color: GREEN },
   Superseded: { bg: 'rgba(163,172,187,.2)', color: DIM },
@@ -242,7 +242,7 @@ export default function ProposalPage() {
       {/* Header */}
       <ModuleHero
         eyebrow={ctx?.project?.name || 'Proposal'}
-        eyebrowIcon={<FileText size={13} weight="fill" style={{ color: 'var(--brand-primary)' }} />}
+        eyebrowIcon={<FileText size={13} weight="fill" style={{ color: 'var(--text-primary)' }} />}
         title="Proposals &"
         accent="Contract Amounts"
         subtitle="Versions, contract amounts, and win/loss outcomes."
@@ -253,45 +253,33 @@ export default function ProposalPage() {
         }
       />
 
-      {/* Contract intelligence strip — what the system already knows */}
-      {ctx && (
-        <StatStrip items={[
-          {href: `/app/projects/${projectId}/contracts`,  label: 'Original Contract', value: fmt(original), sub: 'Base agreement' },
-          {href: `/app/projects/${projectId}/change-orders`,  label: 'Approved COs', value: (coTotal >= 0 ? '+' : '') + fmt(coTotal), accent: coTotal > 0 ? GREEN : undefined, sub: `${Number(money?.approvedCoCount) || 0} approved${Number(money?.pendingCoCount) ? ` · ${money.pendingCoCount} pending` : ''}` },
+      {/* One summary: contract money, proposal versions, the accepted proposal (the headline) and billing */}
+      <StatStrip items={[
+        ...(ctx ? [
+          {href: `/app/projects/${projectId}/change-orders`,  label: 'Approved COs', value: (coTotal >= 0 ? '+' : '') + fmt(coTotal), sub: `${Number(money?.approvedCoCount) || 0} approved${Number(money?.pendingCoCount) ? ` · ${money.pendingCoCount} pending` : ''}` },
           {href: `/app/projects/${projectId}/contracts`,  label: 'Contract to Date', value: fmt(revised), sub: 'Original + approved COs' },
-          {href: `/app/projects/${projectId}/proposal`,  label: 'Versions', value: String(proposals.length), sub: lastProposal ? `Latest ${lastProposal.version} — ${statusLabel(lastProposal.status)}` : 'None yet' },
-          {href: `/app/projects/${projectId}/proposal`,  label: 'Accepted', value: accepted ? fmt(Number(accepted.amount) || 0) : '—', accent: accepted ? GREEN : undefined, sub: accepted ? accepted.version : 'No accepted version yet' },
+        ] : []),
+        {href: `/app/projects/${projectId}/proposal`,  label: 'Versions', value: String(proposals.length), sub: lastProposal ? `Latest ${lastProposal.version} — ${statusLabel(lastProposal.status)}` : 'None yet' },
+        {href: `/app/projects/${projectId}/proposal`,  label: 'Accepted', value: accepted ? fmt(Number(accepted.amount) || 0) : '—', accent: accepted ? GREEN : undefined, sub: accepted ? (() => { const d = revised > 0 ? (Number(accepted.amount) || 0) - revised : 0; const base = accepted.notes ? `${accepted.version} — ${accepted.notes}` : accepted.version; return d !== 0 ? `${base} · ${d > 0 ? '+' : '-'}${fmt(Math.abs(d))} vs contract to date` : base; })() : 'No accepted version yet' },
+        ...(ctx ? [
           {href: `/app/projects/${projectId}/proposal`,  label: 'Billed to Date', value: fmt(Number(money?.billedToDate) || 0), sub: `${Number(money?.billedPct) || 0}% of contract` },
-        ]} />
-      )}
-
-      {/* Accepted proposal callout — the headline KPI */}
-      {accepted && (
-        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(180px, 1fr))', gap: 12, marginBottom: 24 }}>
-          <StatCard
-            icon={<SealCheck size={19} weight="duotone" style={{ color: GREEN }} />}
-            label="Accepted Proposal"
-            value={`$${accepted.amount.toLocaleString()}`}
-            accent={GREEN}
-            sub={(() => { const d = revised > 0 ? (Number(accepted.amount) || 0) - revised : 0; const base = accepted.notes ? `${accepted.version} — ${accepted.notes}` : accepted.version; return d !== 0 ? `${base} · ${d > 0 ? '+' : '-'}${fmt(Math.abs(d))} vs contract to date` : base; })()}
-           href={`/app/projects/${projectId}/proposal`}/>
-        </div>
-      )}
+        ] : []),
+      ]} />
 
       {successMsg && <div style={{ marginBottom: 16, padding: '10px 14px', background: 'rgba(74,222,128,.15)', border: '1px solid rgba(74,222,128,.4)', borderRadius: 10, color: GREEN, fontSize: 13 }}>{successMsg}</div>}
       {errorMsg && <div style={{ marginBottom: 16, padding: '10px 14px', background: 'rgba(248,113,113,.15)', border: '1px solid rgba(248,113,113,.4)', borderRadius: 10, color: RED, fontSize: 13 }}>{errorMsg}</div>}
 
       {showForm && (
         <div style={{ display: 'grid', gridTemplateColumns: ctx ? 'minmax(0, 1fr) 320px' : '1fr', gap: 18, alignItems: 'start', marginBottom: 24 }}>
-          <SectionCard title={`New Proposal Version (${latestVersion})`} icon={<FilePlus size={17} weight="duotone" style={{ color: GOLD }} />} subtitle={lastProposal ? `Supersedes ${lastProposal.version} — prior versions stay in the history below.` : 'First version on this project.'}>
+          <SectionCard title={`New Proposal Version (${latestVersion})`} icon={<FilePlus size={17} weight="duotone" style={{ color: 'var(--text-primary)' }} />} subtitle={lastProposal ? `Supersedes ${lastProposal.version} — prior versions stay in the history below.` : 'First version on this project.'}>
             <div style={{ display: 'grid', gridTemplateColumns: '1fr 2fr', gap: 14 }}>
               <div>
                 <label style={label}>Amount ($) *{auto.amt && <AutoChip />}</label>
                 <input type="number" value={form.amount} onChange={e => { setForm(p => ({ ...p, amount: Number(e.target.value) })); setAuto({}); }} style={inp} />
-                <div style={{ fontSize: 11, color: 'var(--c-text-2)', marginTop: 5, lineHeight: 1.45 }}>
+                <div style={{ fontSize: 12, color: 'var(--c-text-2)', marginTop: 5, lineHeight: 1.45 }}>
                   {seed
                     ? <>Seeded from {seed.source} ({fmt(seed.amount)}).{seedOptions.filter(o => o.amount > 0 && o.amount !== seed.amount && o.amount !== Number(form.amount)).slice(0, 2).map(o => (
-                        <span key={o.source}> Use {o.source}: <span onClick={() => { setForm(p => ({ ...p, amount: o.amount })); setAuto({ amt: true }); }} style={{ color: 'var(--brand-primary-strong)', fontWeight: 700, cursor: 'pointer' }}>{fmt(o.amount)}</span>.</span>
+                        <span key={o.source}> Use {o.source}: <span onClick={() => { setForm(p => ({ ...p, amount: o.amount })); setAuto({ amt: true }); }} style={{ color: 'var(--text-primary)', fontWeight: 700, cursor: 'pointer' }}>{fmt(o.amount)}</span>.</span>
                       ))}</>
                     : <>No contract amount or takeoff on file yet — enter the proposed sum.</>}
                 </div>
@@ -299,7 +287,7 @@ export default function ProposalPage() {
               <div>
                 <label style={label}>Notes</label>
                 <input type="text" value={form.notes} onChange={e => setForm(p => ({ ...p, notes: e.target.value }))} placeholder="e.g. Revised after value engineering" style={inp} />
-                <div style={{ fontSize: 11, color: 'var(--c-text-2)', marginTop: 5, lineHeight: 1.45 }}>What changed in this version — shows in the history table.</div>
+                <div style={{ fontSize: 12, color: 'var(--c-text-2)', marginTop: 5, lineHeight: 1.45 }}>What changed in this version — shows in the history table.</div>
               </div>
             </div>
             <div style={{ display: 'flex', gap: 10, marginTop: 16 }}>
@@ -311,7 +299,7 @@ export default function ProposalPage() {
           </SectionCard>
           {ctx && (
             <div style={{ display: 'flex', flexDirection: 'column', gap: 16 }}>
-              <SectionCard flat title="What Saguaro Knows" icon={<ClockCounterClockwise size={17} weight="duotone" style={{ color: GOLD }} />}>
+              <SectionCard flat title="What Saguaro Knows" icon={<ClockCounterClockwise size={17} weight="duotone" style={{ color: 'var(--text-primary)' }} />}>
                 <InsightRow label="Original Contract" value={fmt(original)} />
                 {coTotal !== 0 && <InsightRow label="Approved COs" value={(coTotal > 0 ? '+' : '') + fmt(coTotal)} accent={GREEN} />}
                 <InsightRow label="Contract to Date" value={fmt(revised)} strong />
@@ -326,7 +314,7 @@ export default function ProposalPage() {
                   </>
                 )}
               </SectionCard>
-              <SectionCard flat title="After You Create" icon={<SealCheck size={17} weight="duotone" style={{ color: GOLD }} />}>
+              <SectionCard flat title="After You Create" icon={<SealCheck size={17} weight="duotone" style={{ color: 'var(--text-primary)' }} />}>
                 <FlowSteps title="" steps={[
                   { title: 'Draft Is Versioned', desc: 'Prior versions mark themselves Superseded — the history stays intact.' },
                   { title: 'Send to Client', desc: 'Your client gets a link to read and e-sign it. You see when they open it.' },
@@ -342,7 +330,7 @@ export default function ProposalPage() {
       {signing && (
         <SectionCard
           title={signing.signed_at ? `${signing.version} — Signed` : signing.decline_reason || statusKey(signing.status) === 'declined' ? `${signing.version} — Declined` : statusKey(signing.status) === 'draft' ? `Send ${signing.version} to Your Client` : `${signing.version} — Waiting on Your Client`}
-          icon={<SealCheck size={17} weight="duotone" style={{ color: GOLD }} />}
+          icon={<SealCheck size={17} weight="duotone" style={{ color: 'var(--text-primary)' }} />}
           subtitle={signing.signed_at
             ? `${fmt(signing.amount)} — signed by ${signing.signed_by || 'your client'}. This is the contract.`
             : `${fmt(signing.amount)} — they read the terms and sign online. Signing makes it the contract.`}
@@ -366,18 +354,18 @@ export default function ProposalPage() {
       )}
 
       {/* Version history */}
-      <SectionCard title="Proposal Versions" icon={<ClockCounterClockwise size={17} weight="duotone" style={{ color: GOLD }} />} flush>
+      <SectionCard title="Proposal Versions" icon={<ClockCounterClockwise size={17} weight="duotone" style={{ color: 'var(--text-primary)' }} />} flush>
         {loading && proposals.length === 0 ? (
           <div style={{ textAlign: 'center', padding: 40, color: DIM }}>Loading…</div>
         ) : proposals.length === 0 ? (
           <PremiumEmpty
-            icon={<FileText size={30} weight="duotone" style={{ color: GOLD }} />}
+            icon={<FileText size={30} weight="duotone" style={{ color: 'var(--text-primary)' }} />}
             title="No Proposals Yet"
             description={revised > 0
               ? `The contract sum to date is ${fmt(revised)} — start v1.0 prefilled at that amount, then version every revision and capture the win or loss.`
               : 'Create your first proposal version to start tracking contract amounts and outcomes.'}
             action={
-              <button onClick={openCreate} style={goldButtonStyle} className="pmBtn">
+              <button onClick={openCreate} style={secondaryButtonStyle} className="pmBtn">
                 <Plus size={15} weight="bold" /> {revised > 0 ? `Start v1.0 at ${fmt(revised)}` : 'New Version'}
               </button>
             }
@@ -388,7 +376,7 @@ export default function ProposalPage() {
               <thead>
                 <tr style={{ background: 'rgba(255,255,255,0.03)' }}>
                   {['Version','Created','Amount','Status','Notes','Actions'].map(h => (
-                    <th key={h} style={{ padding: '10px 16px', textAlign: 'left', fontSize: 11, fontWeight: 700, color: DIM, borderBottom: '1px solid rgba(255,255,255,0.08)', whiteSpace: 'nowrap' }}>{h}</th>
+                    <th key={h} style={{ padding: '10px 16px', textAlign: 'left', fontSize: 12, fontWeight: 700, color: DIM, borderBottom: '1px solid rgba(255,255,255,0.08)', whiteSpace: 'nowrap' }}>{h}</th>
                   ))}
                 </tr>
               </thead>
@@ -399,13 +387,13 @@ export default function ProposalPage() {
                   const outcomeSet = s === 'accepted' || s === 'declined' || s === 'rejected';
                   return (
                     <tr key={p.id} style={{ borderBottom: '1px solid rgba(255,255,255,0.06)', background: s === 'accepted' ? 'rgba(74,222,128,.06)' : 'transparent' }}>
-                      <td style={{ padding: '10px 16px', color: GOLD, fontWeight: 700 }}>{p.version}</td>
+                      <td style={{ padding: '10px 16px', color: 'var(--text-primary)', fontWeight: 700 }}>{p.version}</td>
                       <td style={{ padding: '10px 16px', color: DIM }}>{p.created_date}</td>
                       <td style={{ padding: '10px 16px', color: TEXT, fontWeight: 800, fontSize: 14 }}>${p.amount?.toLocaleString()}</td>
                       <td style={{ padding: '10px 16px' }}>
-                        <span style={{ padding: '3px 10px', borderRadius: 20, background: sc.bg, color: sc.color, fontSize: 11, fontWeight: 700 }}>{statusLabel(p.status)}</span>
+                        <span style={{ padding: '3px 10px', borderRadius: 20, background: sc.bg, color: sc.color, fontSize: 12, fontWeight: 700 }}>{statusLabel(p.status)}</span>
                         {(p.viewed_at || p.signed_at || p.decline_reason) && (
-                          <div style={{ fontSize: 11, color: DIM, marginTop: 5, lineHeight: 1.45 }}>
+                          <div style={{ fontSize: 12, color: DIM, marginTop: 5, lineHeight: 1.45 }}>
                             {p.signed_at
                               ? <span style={{ color: GREEN }}>Signed by {p.signed_by || 'client'} · {fmtWhen(p.signed_at)}</span>
                               : p.viewed_at && <span>Opened {fmtWhen(p.viewed_at)}</span>}
@@ -417,7 +405,7 @@ export default function ProposalPage() {
                       <td style={{ padding: '10px 16px', whiteSpace: 'nowrap', display: 'flex', gap: 6, alignItems: 'center' }}>
                         {p.pdf_url && <button onClick={() => openPdf({ url: p.pdf_url! })} style={{ padding: '4px 10px', background: RAISED, border: '1px solid ' + BORDER, borderRadius: 5, color: DIM, fontSize: 12, cursor: 'pointer' }}>View PDF</button>}
                         {(!outcomeSet || p.signed_at || p.decline_reason) && s !== 'superseded' && (
-                          <button onClick={() => setSigningId(signingId === p.id ? null : p.id)} style={{ padding: '4px 10px', background: 'color-mix(in srgb, var(--brand-primary) 20%, transparent)', border: '1px solid color-mix(in srgb, var(--brand-primary) 40%, transparent)', borderRadius: 5, color: 'var(--brand-primary-strong)', fontSize: 12, fontWeight: 700, cursor: 'pointer' }}>
+                          <button onClick={() => setSigningId(signingId === p.id ? null : p.id)} style={{ padding: '4px 10px', background: 'color-mix(in srgb, var(--brand-primary) 20%, transparent)', border: '1px solid color-mix(in srgb, var(--brand-primary) 40%, transparent)', borderRadius: 5, color: 'var(--text-primary)', fontSize: 12, fontWeight: 700, cursor: 'pointer' }}>
                             {s === 'draft' ? 'Send to Client' : 'E-Sign Status'}
                           </button>
                         )}

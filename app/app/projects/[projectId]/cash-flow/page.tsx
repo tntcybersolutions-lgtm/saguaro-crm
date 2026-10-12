@@ -3,12 +3,12 @@ import React, { useState, useEffect, Suspense } from 'react';
 import { useProjectContext } from '@/lib/hooks/useProjectContext';
 import { useParams } from 'next/navigation';
 import {
-  PremiumSurface, ModuleHero, StatCard, SectionCard, PremiumEmpty, StatStrip, InsightRow,
+  PremiumSurface, ModuleHero, SectionCard, PremiumEmpty, StatStrip, InsightRow,
   goldButtonStyle, goldOutlineButtonStyle,
 } from '@/components/ui/premium';
 import { ModuleSkeleton } from '@/components/ui/PageSkeleton';
 import {
-  ChartLineUp, TrendUp, TrendDown, Scales, Vault, ChartBar, Wallet,
+  ChartLineUp, ChartBar, Wallet,
   Table as TableIcon, Buildings, WarningCircle, CaretDown, ArrowsClockwise,
 } from '@phosphor-icons/react';
 
@@ -178,11 +178,14 @@ function CashFlowContent() {
     1
   );
 
+  // The page's one summary row: the forecast. The live contract money
+  // (contract, billed, collected, AR, committed, cost) is not repeated here —
+  // it sits in the Budget & Collections and Contract Position panels below.
   const kpis = [
-    { label: 'Expected Receivables (30d)', value: fmt(Number(periods[0]?.receivables) || 0), sub: periods[0]?.month, color: GREEN, icon: <TrendUp size={19} weight="duotone" color={GREEN} /> },
-    { label: 'Scheduled Payables (30d)', value: fmt(Number(periods[0]?.payables) || 0), sub: periods[0]?.month, color: RED, icon: <TrendDown size={19} weight="duotone" color={RED} /> },
-    { label: 'Net Cash Flow (6mo)', value: fmt(summary.net_cash_flow), sub: summary.danger_zone ? 'Goes negative — review' : 'Incl. retainage release', color: summary.net_cash_flow >= 0 ? GREEN : RED, icon: <Scales size={19} weight="duotone" color={summary.net_cash_flow >= 0 ? GREEN : RED} /> },
-    { label: 'Retainage Due', value: fmt(summary.retainage_due), sub: 'Held at ' + (Number(project.retainage_pct) || 0) + '%', color: GOLD, icon: <Vault size={19} weight="duotone" color={GOLD} /> },
+    { label: 'Net Cash Flow (6mo)', value: fmt(summary.net_cash_flow), sub: summary.danger_zone ? 'Goes negative — review' : 'Incl. retainage release', accent: summary.net_cash_flow >= 0 ? GREEN : RED, href: `/app/projects/${projectId}/cash-flow` },
+    { label: 'Expected Receivables (30d)', value: fmt(Number(periods[0]?.receivables) || 0), sub: periods[0]?.month, href: `/app/projects/${projectId}/cash-flow` },
+    { label: 'Scheduled Payables (30d)', value: fmt(Number(periods[0]?.payables) || 0), sub: periods[0]?.month, href: `/app/projects/${projectId}/cash-flow` },
+    { label: 'Retainage Due', value: fmt(summary.retainage_due), sub: 'Held at ' + (Number(project.retainage_pct) || 0) + '%', href: `/app/projects/${projectId}/cash-flow` },
   ];
 
   return (
@@ -213,7 +216,7 @@ function CashFlowContent() {
       {/* Header */}
       <ModuleHero
         eyebrow="Financial"
-        eyebrowIcon={<ChartLineUp size={13} weight="fill" color={GOLD} />}
+        eyebrowIcon={<ChartLineUp size={13} weight="fill" color="var(--text-secondary)" />}
         title="Cash Flow"
         accent="Forecast"
         subtitle={<>{project.name} &middot; Contract: {fmt(adjContract)}{ctxCoTotal !== 0 ? <> &middot; {Number(money?.approvedCoCount) || 0} approved COs</> : null}</>}
@@ -230,17 +233,7 @@ function CashFlowContent() {
         }
       />
 
-      {/* Live money strip — what the system already knows about this project */}
-      {ctx && (
-        <StatStrip items={[
-          {href: `/app/projects/${projectId}/contracts`,  label: 'Revised Contract', value: fmt0(ctxRevised), sub: `${Number(money?.approvedCoCount) || 0} approved CO${(Number(money?.approvedCoCount) || 0) === 1 ? '' : 's'}` },
-          {href: `/app/projects/${projectId}/cash-flow`,  label: 'Billed to Date', value: fmt0(ctxBilled), sub: `${Number(money?.billedPct) || 0}% of revised` },
-          {href: `/app/projects/${projectId}/cash-flow`,  label: 'Collected', value: fmt0(ctxPaid), accent: GREEN, sub: `${Number(money?.payAppCount) || 0} pay app${(Number(money?.payAppCount) || 0) === 1 ? '' : 's'}` },
-          {href: `/app/projects/${projectId}/cash-flow`,  label: 'Outstanding AR', value: fmt0(ctxOutstanding), accent: ctxOutstanding > 0 ? GOLD : GREEN, sub: 'Billed, not yet collected' },
-          {href: `/app/projects/${projectId}/cash-flow`,  label: 'Committed', value: fmt0(budgetCommitted), sub: budgetOriginal > 0 ? `Of ${fmt0(budgetOriginal)} budget` : 'No budget lines yet' },
-          {href: `/app/projects/${projectId}/cash-flow`,  label: 'Cost to Date', value: fmt0(budgetActual), accent: budgetCommitted > 0 && budgetActual > budgetCommitted ? RED : undefined, sub: budgetCommitted > 0 ? `${Math.round((budgetActual / budgetCommitted) * 100)}% of committed` : 'From approved bills' },
-        ]} />
-      )}
+      <StatStrip items={kpis} />
 
       {/* Danger Zone Banner */}
       {summary.danger_zone && (
@@ -257,29 +250,14 @@ function CashFlowContent() {
         </div>
       )}
 
-      {/* KPI Row */}
-      <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(180px, 1fr))', gap: 12, marginBottom: 24 }}>
-        {kpis.map((kpi, i) => (
-          <StatCard
-            key={i}
-            icon={kpi.icon}
-            label={kpi.label}
-            value={kpi.value}
-            sub={kpi.sub}
-            accent={kpi.color}
-            delay={0.04 * i}
-           href={`/app/projects/${projectId}/cash-flow`}/>
-        ))}
-      </div>
-
       {/* Cash Flow Chart */}
       <SectionCard flat
         title="6-Month Cash Flow Projection"
-        icon={<ChartBar size={17} weight="duotone" color={GOLD} />}
+        icon={<ChartBar size={17} weight="duotone" color="var(--text-secondary)" />}
         style={{ marginBottom: 24 }}
       >
         {/* Chart legend */}
-        <div style={{ display: 'flex', gap: 20, marginBottom: 16, fontSize: 11, color: DIM }}>
+        <div style={{ display: 'flex', gap: 20, marginBottom: 16, fontSize: 12, color: DIM }}>
           <span><span style={{ display: 'inline-block', width: 10, height: 10, borderRadius: 2, background: GREEN, marginRight: 6, verticalAlign: 'middle' }} />Receivables</span>
           <span><span style={{ display: 'inline-block', width: 10, height: 10, borderRadius: 2, background: RED, marginRight: 6, verticalAlign: 'middle' }} />Payables</span>
           <span><span style={{ display: 'inline-block', width: 10, height: 10, borderRadius: 2, background: GOLD, marginRight: 6, verticalAlign: 'middle' }} />Net</span>
@@ -327,14 +305,14 @@ function CashFlowContent() {
 
                 {/* Month label */}
                 <div style={{
-                  fontSize: 10, color: isDanger ? 'var(--danger)' : DIM, fontWeight: isDanger ? 700 : 500,
+                  fontSize: 12, color: isDanger ? 'var(--danger)' : DIM, fontWeight: isDanger ? 700 : 500,
                   marginTop: 6, textAlign: 'center' as const,
                 }}>
                   {period.month}
                 </div>
 
                 {/* Amount labels */}
-                <div style={{ fontSize: 9, color: DIM, textAlign: 'center' as const, marginTop: 2 }}>
+                <div style={{ fontSize: 12, color: DIM, textAlign: 'center' as const, marginTop: 2 }}>
                   {fmtK(period.net)}
                 </div>
               </div>
@@ -346,7 +324,7 @@ function CashFlowContent() {
       {/* Detail Table */}
       <SectionCard
         title="Period Detail"
-        icon={<TableIcon size={17} weight="duotone" color={GOLD} />}
+        icon={<TableIcon size={17} weight="duotone" color="var(--text-secondary)" />}
         flush
         style={{ marginBottom: 24 }}
       >
@@ -354,7 +332,7 @@ function CashFlowContent() {
         <div style={{
           display: 'grid', gridTemplateColumns: '160px 1fr 1fr 1fr 1fr 40px',
           padding: '10px 20px', borderBottom: `1px solid ${BORDER}`,
-          fontSize: 11, fontWeight: 700, color: DIM,
+          fontSize: 12, fontWeight: 700, color: DIM,
         }}>
           <div>Period</div>
           <div style={{ textAlign: 'right' as const }}>Receivables</div>
@@ -435,9 +413,9 @@ function CashFlowContent() {
                   )}
                   {period.retainage_release > 0 && (
                     <div style={{
-                      marginTop: 8, padding: '8px 12px', background: 'var(--brand-primary-08)',
+                      marginTop: 8, padding: '8px 12px', background: 'var(--bg-surface-2)',
                       borderRadius: 6, border: `1px solid color-mix(in srgb, var(--brand-primary) 30%, transparent)`,
-                      fontSize: 11, color: GOLD,
+                      fontSize: 12, color: 'var(--text-primary)',
                     }}>
                       Retainage release scheduled: {fmt(period.retainage_release)}
                     </div>
@@ -451,11 +429,11 @@ function CashFlowContent() {
         {/* Summary footer */}
         <div style={{
           display: 'grid', gridTemplateColumns: '160px 1fr 1fr 1fr 1fr 40px',
-          padding: '14px 20px', background: 'var(--brand-primary-08)',
+          padding: '14px 20px', background: 'var(--bg-surface-2)',
           borderTop: `2px solid ${GOLD}`,
           fontSize: 13, fontWeight: 800,
         }}>
-          <div style={{ color: GOLD }}>Total</div>
+          <div style={{ color: 'var(--text-primary)' }}>Total</div>
           <div style={{ textAlign: 'right' as const, color: GREEN }}>{fmt(summary.total_receivables)}</div>
           <div style={{ textAlign: 'right' as const, color: RED }}>{fmt(summary.total_payables)}</div>
           <div style={{ textAlign: 'right' as const, color: summary.net_cash_flow >= 0 ? GREEN : RED }}>
@@ -468,7 +446,7 @@ function CashFlowContent() {
 
       {/* Live budget + collections — committed vs actual from the project snapshot */}
       {ctx && (
-        <SectionCard flat title="Budget & Collections" icon={<Wallet size={17} weight="duotone" color={GOLD} />} subtitle={`${Number(budget?.lineCount) || 0} budget lines — committed vs actual, plus what the owner still owes`} style={{ marginBottom: 24 }}>
+        <SectionCard flat title="Budget & Collections" icon={<Wallet size={17} weight="duotone" color="var(--text-secondary)" />} subtitle={`${Number(budget?.lineCount) || 0} budget lines — committed vs actual, plus what the owner still owes`} style={{ marginBottom: 24 }}>
           <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(230px, 1fr))', gap: '0 40px' }}>
             <div>
               <InsightRow label="Budget (Original)" value={fmt0(budgetOriginal)} />
@@ -487,23 +465,23 @@ function CashFlowContent() {
       )}
 
       {/* Project context card */}
-      <SectionCard flat title="Contract Position" icon={<Buildings size={17} weight="duotone" color={GOLD} />}>
+      <SectionCard flat title="Contract Position" icon={<Buildings size={17} weight="duotone" color="var(--text-secondary)" />}>
         <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(160px, 1fr))', gap: 20 }}>
           <div>
-            <div style={{ fontSize: 11, color: DIM, fontWeight: 600, marginBottom: 4 }}>Adjusted Contract</div>
+            <div style={{ fontSize: 12, color: DIM, fontWeight: 600, marginBottom: 4 }}>Adjusted Contract</div>
             <div style={{ fontSize: 16, fontWeight: 700, color: TEXT }}>{fmt(adjContract)}</div>
           </div>
           <div>
-            <div style={{ fontSize: 11, color: DIM, fontWeight: 600, marginBottom: 4 }}>Billed to Date</div>
+            <div style={{ fontSize: 12, color: DIM, fontWeight: 600, marginBottom: 4 }}>Billed to Date</div>
             <div style={{ fontSize: 16, fontWeight: 700, color: TEXT }}>{fmt(billedToDate)}</div>
           </div>
           <div>
-            <div style={{ fontSize: 11, color: DIM, fontWeight: 600, marginBottom: 4 }}>Remaining to Bill</div>
-            <div style={{ fontSize: 16, fontWeight: 700, color: GOLD }}>{fmt(remainingToBill)}</div>
+            <div style={{ fontSize: 12, color: DIM, fontWeight: 600, marginBottom: 4 }}>Remaining to Bill</div>
+            <div style={{ fontSize: 16, fontWeight: 700, color: 'var(--text-primary)' }}>{fmt(remainingToBill)}</div>
           </div>
           <div>
-            <div style={{ fontSize: 11, color: DIM, fontWeight: 600, marginBottom: 4 }}>Retainage Held ({project.retainage_pct}%)</div>
-            <div style={{ fontSize: 16, fontWeight: 700, color: GOLD }}>{fmt(project.total_retainage_held)}</div>
+            <div style={{ fontSize: 12, color: DIM, fontWeight: 600, marginBottom: 4 }}>Retainage Held ({project.retainage_pct}%)</div>
+            <div style={{ fontSize: 16, fontWeight: 700, color: 'var(--text-primary)' }}>{fmt(project.total_retainage_held)}</div>
           </div>
         </div>
       </SectionCard>

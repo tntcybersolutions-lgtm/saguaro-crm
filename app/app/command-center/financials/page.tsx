@@ -32,7 +32,7 @@ export default function FinancialsPage() {
       <div style={{ fontFamily: font, color: C.text }}>
       <ModuleHero
         eyebrow="Portfolio Money"
-        eyebrowIcon={<Bank size={13} weight="fill" color={C.gold} />}
+        eyebrowIcon={<Bank size={13} weight="fill" color="var(--text-secondary)" />}
         title="Financial"
         accent="Controls"
         subtitle="Retainage, lien releases, and TI readiness per location."
@@ -49,7 +49,7 @@ export default function FinancialsPage() {
       {loading ? <><FlatStyles /><RowSkeleton rows={6} /></>
       : (financials as any[]).length === 0 ? (
         <PremiumEmpty
-          icon={<FileText size={34} weight="duotone" color={C.gold} />}
+          icon={<FileText size={34} weight="duotone" color="var(--text-secondary)" />}
           title="No financial data yet"
           description="This screen fills itself: bill work through pay applications and retainage accrues here automatically; lien waivers count up as subs sign; TI readiness flips green when the closeout package is complete. Nothing to type — just run the jobs."
         />
@@ -60,13 +60,13 @@ export default function FinancialsPage() {
             <div key={f.project_id} style={{ background: C.card, border: `1px solid ${C.border}`, borderRadius: 14, padding: '16px 18px', boxShadow: 'inset 0 1px 0 rgba(255,255,255,0.04)' }}>
               <Link href={`/app/projects/${f.project_id}`} style={{ fontSize: 15, fontWeight: 800, color: C.text, textDecoration: 'none' }}>{f.project_name}</Link>
               <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 12, marginTop: 14 }}>
-                <Metric label="Retainage Held" value={fmtMoney(f.retainageHeld)} color={C.gold} />
+                <Metric label="Retainage Held" value={fmtMoney(f.retainageHeld)} color="var(--text-secondary)" />
                 <Metric label="Work in Place" value={fmtMoneyShort(f.actual)} />
                 <Metric label="Lien Releases" value={`${f.lienCollected}/${f.lienTotal}`} color={f.lienTotal && f.lienCollected < f.lienTotal ? C.yellow : C.text} />
                 <Metric label="TI Reimbursement" value={f.tiTotal ? `${f.tiPct}%` : '—'} color={f.tiReady ? C.green : f.tiPct > 0 ? C.yellow : C.dim} />
               </div>
               <div style={{ marginTop: 12 }}>
-                <div style={{ fontSize: 11, color: C.dim, marginBottom: 4 }}>Closeout / TI Package Readiness</div>
+                <div style={{ fontSize: 12, color: C.dim, marginBottom: 4 }}>Closeout / TI Package Readiness</div>
                 <div style={{ height: 6, borderRadius: 3, background: 'rgba(255,255,255,0.08)', overflow: 'hidden' }}>
                   <div style={{ height: '100%', width: `${f.tiPct}%`, background: f.tiReady ? C.green : C.gold }} />
                 </div>
@@ -83,7 +83,7 @@ export default function FinancialsPage() {
 
 function Metric({ label, value, color }: { label: string; value: React.ReactNode; color?: string }) {
   return <div>
-    <div style={{ fontSize: 10, fontWeight: 700, color: C.faint }}>{label}</div>
+    <div style={{ fontSize: 12, fontWeight: 700, color: C.faint }}>{label}</div>
     <div style={{ fontSize: 16, fontWeight: 800, color: color || C.text, marginTop: 1, fontVariantNumeric: 'tabular-nums' }}>{value}</div>
   </div>;
 }

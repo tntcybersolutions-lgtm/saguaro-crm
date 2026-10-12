@@ -7,7 +7,6 @@ import { Badge, Table, T } from '@/components/ui/shell';
 import {
   PremiumSurface,
   ModuleHero,
-  StatCard,
   SectionCard,
   PremiumEmpty,
   StatStrip,
@@ -16,9 +15,9 @@ import {
   InsightRow,
   AutoChip,
   goldButtonStyle,
-  ghostButtonStyle,
+  ghostButtonStyle, secondaryButtonStyle
 } from '@/components/ui/premium';
-import { FileText, Clock, Hourglass, CheckCircle, Plus } from '@phosphor-icons/react';
+import { Clock, Plus } from '@phosphor-icons/react';
 import { CSI_DIVISIONS } from '@/lib/construction-intelligence';
 import { moduleAccent } from '@/lib/module-identity';
 import { useUnsavedGuard, useComposerDirty } from '@/lib/useUnsavedGuard';
@@ -48,17 +47,16 @@ interface TimeEntry {
 type WeekFilter = 'current' | 'last' | 'all';
 
 // Cinematic-kit accent palette (matches the dashboard) ------------------------
-const GOLD = 'var(--brand-primary)';
 const GREEN = 'var(--success)';
 const ORANGE = 'var(--warning)';
 
 const inp: React.CSSProperties = { width: '100%', padding: '9px 12px', background: 'rgba(255,255,255,0.04)', border: '1px solid rgba(255,255,255,0.10)', borderRadius: 10, color: 'var(--text-primary)', fontSize: 13, outline: 'none', boxSizing: 'border-box' };
-const lbl: React.CSSProperties = { display: 'block', fontSize: 11, fontWeight: 700, color: 'var(--c-text-2)', marginBottom: 6 };
+const lbl: React.CSSProperties = { display: 'block', fontSize: 12, fontWeight: 700, color: 'var(--c-text-2)', marginBottom: 6 };
 
 // Compact button + filter-chip presets derived from the kit --------------------
 const goldBtnSm: React.CSSProperties = { ...goldButtonStyle, padding: '6px 14px', fontSize: 12, borderRadius: 9 };
 const dangerBtnSm: React.CSSProperties = { display: 'inline-flex', alignItems: 'center', justifyContent: 'center', gap: 6, padding: '6px 14px', borderRadius: 9, cursor: 'pointer', background: 'rgba(248,113,113,0.12)', color: 'var(--danger)', border: '1px solid rgba(248,113,113,0.35)', fontWeight: 700, fontSize: 12 };
-const chipBase: React.CSSProperties = { display: 'inline-flex', alignItems: 'center', justifyContent: 'center', padding: '7px 16px', borderRadius: 999, fontSize: 12.5, fontWeight: 700, cursor: 'pointer', border: '1px solid', transition: 'all .16s ease' };
+const chipBase: React.CSSProperties = { display: 'inline-flex', alignItems: 'center', justifyContent: 'center', padding: '7px 16px', borderRadius: 999, fontSize: 13, fontWeight: 700, cursor: 'pointer', border: '1px solid', transition: 'all .16s ease' };
 const chipActive: React.CSSProperties = { ...chipBase, background: 'linear-gradient(135deg, var(--brand-primary), var(--brand-primary-strong))', color: 'var(--on-brand)', borderColor: 'transparent', boxShadow: '0 8px 20px -10px color-mix(in srgb, var(--brand-primary) 60%, transparent)' };
 const chipInactive: React.CSSProperties = { ...chipBase, background: 'rgba(255,255,255,0.04)', color: 'var(--c-text-2)', borderColor: 'rgba(255,255,255,0.10)' };
 
@@ -222,31 +220,22 @@ export default function TimesheetsPage() {
         accent="Timesheets"
         subtitle="Weekly crew timesheets and labor tracking."
         actions={
-          <button style={goldButtonStyle} className="pmBtn" onClick={() => setShowForm(p => !p)}>
+          <button style={showForm ? ghostButtonStyle : goldButtonStyle} className="pmBtn" onClick={() => setShowForm(p => !p)}>
             <Plus size={15} weight="bold" /> Add Entry
           </button>
         }
       />
 
-      {/* What the system already knows about this job */}
-      {ctx && (
-        <StatStrip items={[
-          {href: `/app/projects/${projectId}/crews`,  label: 'Crew Roster', value: String(roster.length), sub: roster.length ? 'Names on file — type-ahead below' : 'Builds as you log time' },
-          {href: `/app/projects/${projectId}/budget`,  label: 'Budget Actuals', value: fmt(Number(ctx.budget?.actual) || 0), sub: 'Approved labor posts here' },
-          {href: `/app/projects/${projectId}/timesheets`,  label: 'Cost Codes', value: String(ctx.costCodes?.length || Object.keys(CSI_DIVISIONS).length), sub: ctx.costCodes?.length ? 'From the project budget' : 'CSI divisions (no budget yet)' },
-          {href: `/app/projects/${projectId}/schedule`,  label: 'Schedule Tasks', value: String(ctx.counts?.scheduleTasks ?? 0), sub: ctx.schedule?.criticalCount ? `${ctx.schedule.criticalCount} critical open` : 'On the schedule' },
-          {href: `/app/projects/${projectId}/rfis`,  label: 'Open RFIs', value: String(ctx.counts?.openRfis ?? 0), accent: (Number(ctx.counts?.openRfis) || 0) > 0 ? 'var(--warning)' : undefined, sub: 'Awaiting answers' },
-          {href: `/app/projects/${projectId}/punch-list`,  label: 'Open Punch', value: String(ctx.counts?.openPunch ?? 0), accent: (Number(ctx.counts?.openPunch) || 0) > 0 ? 'var(--danger)' : undefined, sub: 'Items to close' },
-        ]} />
-      )}
-
-      {/* Stats */}
-      <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(190px, 1fr))', gap: 16, marginBottom: 28 }}>
-        <StatCard icon={<FileText size={19} weight="duotone" color={moduleAccent('time').hex} />} label="Total Entries" value={String(totalEntries)} accent={GOLD} sub="Logged this period" delay={0.02}  href={`/app/projects/${projectId}/timesheets`}/>
-        <StatCard icon={<Clock size={19} weight="duotone" color={moduleAccent('time').hex} />} label="Total Hours" value={`${totalHours.toFixed(1)}h`} accent={GOLD} sub="Regular + overtime" delay={0.06}  href={`/app/projects/${projectId}/timesheets`}/>
-        <StatCard icon={<Hourglass size={19} weight="duotone" style={{ color: ORANGE }} />} label="Pending Approval" value={String(pendingCount)} accent={pendingCount > 0 ? ORANGE : undefined} sub="Awaiting review" delay={0.10}  href={`/app/projects/${projectId}/timesheets`}/>
-        <StatCard icon={<CheckCircle size={19} weight="duotone" style={{ color: GREEN }} />} label="Approved" value={String(approvedCount)} accent={approvedCount > 0 ? GREEN : undefined} sub="This period" delay={0.14}  href={`/app/projects/${projectId}/timesheets`}/>
-      </div>
+      {/* One summary: this period's entries, plus where approved labor posts once the project context is in */}
+      <StatStrip items={[
+        { href: `/app/projects/${projectId}/timesheets`, label: 'Total Entries', value: String(totalEntries), sub: 'Logged this period' },
+        { href: `/app/projects/${projectId}/timesheets`, label: 'Total Hours', value: `${totalHours.toFixed(1)}h`, sub: 'Regular + overtime' },
+        { href: `/app/projects/${projectId}/timesheets`, label: 'Pending Approval', value: String(pendingCount), accent: pendingCount > 0 ? ORANGE : undefined, sub: 'Awaiting review' },
+        { href: `/app/projects/${projectId}/timesheets`, label: 'Approved', value: String(approvedCount), accent: approvedCount > 0 ? GREEN : undefined, sub: 'This period' },
+        ...(ctx ? [
+          { href: `/app/projects/${projectId}/budget`, label: 'Budget Actuals', value: fmt(Number(ctx.budget?.actual) || 0), sub: 'Approved labor posts here' },
+        ] : []),
+      ]} />
 
       {/* Week filter */}
       <div style={{ display: 'flex', gap: 8, marginBottom: 20, flexWrap: 'wrap' }}>
@@ -264,19 +253,19 @@ export default function TimesheetsPage() {
       {/* Create Form */}
       {showForm && (
         <div style={{ marginBottom: 24 }}>
-          <SectionCard title="Add Timesheet Entry" icon={<Plus size={17} weight="bold" style={{ color: GOLD }} />}>
+          <SectionCard title="Add Timesheet Entry" icon={<Plus size={17} weight="bold" style={{ color: 'var(--text-primary)' }} />}>
             <div style={{ display: 'grid', gridTemplateColumns: 'minmax(0,1fr) 280px', gap: 22, alignItems: 'start' }}>
             <div>
             <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(180px, 1fr))', gap: 14 }}>
               <div>
                 <label style={lbl}>Employee *</label>
                 <Suggest type="text" value={form.employee} onChange={e => setForm(p => ({ ...p, employee: e.target.value }))} style={inp} placeholder="Crew member name" options={roster} />
-                {roster.length > 0 && <div style={{ fontSize: 11, color: 'var(--c-text-2)', marginTop: 4, lineHeight: 1.45 }}>{roster.length} crew name{roster.length === 1 ? '' : 's'} on file — start typing to pick.</div>}
+                {roster.length > 0 && <div style={{ fontSize: 12, color: 'var(--c-text-2)', marginTop: 4, lineHeight: 1.45 }}>{roster.length} crew name{roster.length === 1 ? '' : 's'} on file — start typing to pick.</div>}
               </div>
               <div>
                 <label style={lbl}>Date<AutoChip /></label>
                 <SaguaroDatePicker value={form.date} onChange={v => setForm(p => ({ ...p, date: v }))} style={inp} />
-                <div style={{ fontSize: 11, color: 'var(--c-text-2)', marginTop: 4, lineHeight: 1.45 }}>Defaulted to today — edit to backfill.</div>
+                <div style={{ fontSize: 12, color: 'var(--c-text-2)', marginTop: 4, lineHeight: 1.45 }}>Defaulted to today — edit to backfill.</div>
               </div>
               <div>
                 <label style={lbl}>Classification</label>
@@ -290,20 +279,20 @@ export default function TimesheetsPage() {
                   <option value="">Unassigned</option>
                   {codeOptions.map(c => <option key={c.value} value={c.value}>{c.label}</option>)}
                 </select>
-                <div style={{ fontSize: 11, color: 'var(--c-text-2)', marginTop: 4, lineHeight: 1.45 }}>{ctx?.costCodes?.length ? 'Pulled from the project budget lines.' : 'Full CSI division list — budget lines give project-specific codes.'}</div>
+                <div style={{ fontSize: 12, color: 'var(--c-text-2)', marginTop: 4, lineHeight: 1.45 }}>{ctx?.costCodes?.length ? 'Pulled from the project budget lines.' : 'Full CSI division list — budget lines give project-specific codes.'}</div>
               </div>
               <div>
                 <label style={lbl}>Regular Hours{form.regular_hrs === 8 && <AutoChip />}</label>
                 <input type="number" min={0} max={24} value={form.regular_hrs} onChange={e => setForm(p => ({ ...p, regular_hrs: Number(e.target.value) }))} style={inp} />
-                <div style={{ fontSize: 11, color: 'var(--c-text-2)', marginTop: 4, lineHeight: 1.45 }}>Standard 8h day — hours past 8 belong in OT.</div>
+                <div style={{ fontSize: 12, color: 'var(--c-text-2)', marginTop: 4, lineHeight: 1.45 }}>Standard 8h day — hours past 8 belong in OT.</div>
               </div>
               <div>
                 <label style={lbl}>OT Hours</label>
                 <input type="number" min={0} max={24} value={form.ot_hrs} onChange={e => setForm(p => ({ ...p, ot_hrs: Number(e.target.value) }))} style={inp} />
               </div>
               <div style={{ display: 'flex', flexDirection: 'column', justifyContent: 'flex-end', paddingBottom: 2 }}>
-                <span style={{ fontSize: 14, fontWeight: 700, color: GOLD }}>Total: {(Number(form.regular_hrs) || 0) + (Number(form.ot_hrs) || 0)}h</span>
-                {(Number(form.ot_hrs) || 0) > 0 && <span style={{ fontSize: 11, color: ORANGE, marginTop: 2 }}>{Number(form.ot_hrs) || 0}h overtime flagged</span>}
+                <span style={{ fontSize: 14, fontWeight: 700, color: 'var(--text-primary)' }}>Total: {(Number(form.regular_hrs) || 0) + (Number(form.ot_hrs) || 0)}h</span>
+                {(Number(form.ot_hrs) || 0) > 0 && <span style={{ fontSize: 12, color: ORANGE, marginTop: 2 }}>{Number(form.ot_hrs) || 0}h overtime flagged</span>}
               </div>
             </div>
             <div style={{ display: 'flex', gap: 10, marginTop: 16 }}>
@@ -338,8 +327,8 @@ export default function TimesheetsPage() {
         ) : filtered.length === 0 ? (
           <div style={{ padding: 20 }}>
             <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 12, flexWrap: 'wrap', marginBottom: 12 }}>
-              <div style={{ fontSize: 13.5, fontWeight: 800, color: 'var(--text-primary)' }}>
-                <Clock size={16} weight="duotone" style={{ color: GOLD, marginRight: 7, verticalAlign: 'text-bottom' }} />
+              <div style={{ fontSize: 14, fontWeight: 800, color: 'var(--text-primary)' }}>
+                <Clock size={16} weight="duotone" style={{ color: 'var(--text-primary)', marginRight: 7, verticalAlign: 'text-bottom' }} />
                 {entries.length === 0 ? 'No time entries yet' : 'No entries in this period'}
                 <span style={{ fontWeight: 400, color: 'var(--c-text-2)' }}>
                   {entries.length === 0
@@ -348,7 +337,7 @@ export default function TimesheetsPage() {
                 </span>
               </div>
               {!showForm && (
-                <button style={goldButtonStyle} className="pmBtn" onClick={() => setShowForm(true)}><Plus size={15} weight="bold" /> Add Entry</button>
+                <button style={secondaryButtonStyle} className="pmBtn" onClick={() => setShowForm(true)}><Plus size={15} weight="bold" /> Add Entry</button>
               )}
             </div>
             <FlowStrip steps={[
@@ -377,7 +366,7 @@ export default function TimesheetsPage() {
               ] : [
                 <span key="rh" style={{ color: T.white }}>{e.regular_hrs}</span>,
                 <span key="oh" style={{ color: e.ot_hrs > 0 ? T.amber : T.muted }}>{e.ot_hrs}</span>,
-                <span key="th" style={{ fontWeight: 700, color: T.gold }}>{(e.regular_hrs + e.ot_hrs).toFixed(1)}h</span>,
+                <span key="th" style={{ fontWeight: 700, color: 'var(--text-primary)' }}>{(e.regular_hrs + e.ot_hrs).toFixed(1)}h</span>,
                 <span key="cl" style={{ color: T.muted }}>{e.classification}</span>,
               ]),
               <StatusPill key="st" module="timesheets" status={e.status} size="sm" />,

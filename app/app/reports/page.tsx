@@ -194,7 +194,7 @@ const CSS = `
 .rpRail { position: sticky; top: 16px; }
 .rpAsk { display: flex; gap: 10px; align-items: center; flex-wrap: wrap; }
 .rpAsk .rpQ { flex: 1 1 280px; min-width: 0; }
-.rpSage { width: 36px; height: 36px; border-radius: 10px; flex-shrink: 0; display: grid; place-items: center; background: var(--brand-primary-12); border: 1px solid var(--brand-primary-35); color: var(--brand-primary); }
+.rpSage { width: 36px; height: 36px; border-radius: 10px; flex-shrink: 0; display: grid; place-items: center; background: var(--bg-surface-2); border: 1px solid var(--border-default); color: var(--text-secondary); }
 .rpChips { display: flex; align-items: center; flex-wrap: wrap; gap: 6px; margin-top: 12px; }
 .rpChipLabel { display: inline-flex; align-items: center; gap: 5px; font-size: var(--fs-xs); font-weight: 700; color: var(--text-tertiary); margin-right: 2px; }
 .rpChip { all: unset; box-sizing: border-box; display: inline-flex; align-items: center; min-height: 28px; padding: 3px 12px; border-radius: 999px; font-size: var(--fs-xs); font-weight: 600; color: var(--text-secondary); background: var(--bg-surface-2); border: 1px solid var(--glass-border); cursor: pointer; }
@@ -221,10 +221,10 @@ const CSS = `
 .rpCard { all: unset; box-sizing: border-box; display: flex; align-items: flex-start; gap: 12px; padding: 12px 4px; min-height: 58px; border-bottom: 1px solid var(--sg-border); cursor: pointer; min-width: 0; -webkit-tap-highlight-color: transparent; }
 .rpCard:hover, .rpCard:active { background: rgba(255,255,255,0.03); }
 .rpCard:focus-visible { outline: 2px solid var(--brand-primary); }
-.rpCardIcon { width: 24px; height: 24px; flex-shrink: 0; display: grid; place-items: center; margin-top: 1px; color: var(--brand-primary); }
+.rpCardIcon { width: 24px; height: 24px; flex-shrink: 0; display: grid; place-items: center; margin-top: 1px; color: var(--text-secondary); }
 .rpCardTitle { font-weight: 700; font-size: var(--fs-md); color: var(--text-primary); margin-bottom: 3px; }
 .rpCardDesc { font-size: var(--fs-xs); color: var(--text-tertiary); line-height: 1.5; }
-.rpCardAsk { font-size: var(--fs-xs); color: var(--brand-primary); line-height: 1.45; margin-top: 5px; }
+.rpCardAsk { font-size: var(--fs-xs); color: var(--text-secondary); line-height: 1.45; margin-top: 5px; }
 .rpHist { all: unset; box-sizing: border-box; display: block; width: 100%; padding: 10px 4px; border-bottom: 1px solid var(--sg-border); cursor: pointer; min-height: 44px; }
 .rpHist:hover { background: rgba(255,255,255,0.03); }
 .rpHist:focus-visible { outline: 2px solid var(--brand-primary); }

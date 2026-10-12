@@ -134,7 +134,7 @@ const CSS = `
 .dvDoc > b { color: var(--text-primary); font-weight: 700; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
 .dvDocMeta { display: flex; gap: 6px; flex-wrap: wrap; align-items: center; font-size: var(--fs-xs); color: var(--text-tertiary); }
 .dvDocNote { font-size: var(--fs-xs); color: var(--text-tertiary); overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
-.dvMono { font-family: ui-monospace, monospace; font-size: var(--fs-sm); color: var(--brand-primary); font-weight: 700; }
+.dvMono { font-family: ui-monospace, monospace; font-size: var(--fs-sm); color: var(--text-secondary); font-weight: 700; }
 .dvMuted { color: var(--text-tertiary); }
 .dvWs .k-table tbody tr[data-locked="true"] td:first-child { box-shadow: inset 3px 0 0 var(--status-overdue); }
 .dvFile { display: flex; gap: 8px; align-items: center; }
@@ -179,7 +179,7 @@ const CSS = `
 .dvSection { font-size: var(--fs-xs); font-weight: 700; color: var(--text-tertiary); margin-bottom: 8px; }
 .dvOverlay { position: fixed; inset: 0; z-index: 1100; background: var(--bg-base); display: flex; flex-direction: column; }
 .dvOverlayBar { display: flex; align-items: center; gap: 14px; padding: 10px 16px; background: var(--bg-solid); border-bottom: 1px solid var(--border-default); flex-wrap: wrap; }
-.dvOverlayTitle { font-size: var(--fs-md); font-weight: 700; color: var(--brand-primary); display: flex; align-items: center; gap: 8px; }
+.dvOverlayTitle { font-size: var(--fs-md); font-weight: 700; color: var(--text-primary); display: flex; align-items: center; gap: 8px; }
 .dvOverlaySub { font-size: var(--fs-xs); color: var(--text-tertiary); overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
 .dvOverlayCtl { display: flex; align-items: center; gap: 8px; margin-left: auto; flex-wrap: wrap; }
 .dvOverlayCtl select.k-select { width: auto; min-width: 190px; }
@@ -870,7 +870,7 @@ export default function DocumentVersionsPage() {
           <Field label="Revision Notes" hint="What changed in this revision — shown in the history and the compare view."><Textarea rows={2} placeholder="Describe what changed…" value={uploadNotes} onChange={(e) => setUploadNotes(e.target.value)} /></Field>
         </div>
         {selectedDoc && (
-          <div className="dvNext" style={{ marginTop: 12 }}>Current: <b style={{ color: 'var(--brand-primary)' }}>{selectedDoc.currentVersion}</b> · Next version: <b>v{selectedDoc.currentVersionNumber + 1}</b> (REV-{String(selectedDoc.currentVersionNumber + 1).padStart(3, '0')})</div>
+          <div className="dvNext" style={{ marginTop: 12 }}>Current: <b style={{ color: 'var(--text-primary)' }}>{selectedDoc.currentVersion}</b> · Next version: <b>v{selectedDoc.currentVersionNumber + 1}</b> (REV-{String(selectedDoc.currentVersionNumber + 1).padStart(3, '0')})</div>
         )}
       </FormModal>
 
@@ -987,7 +987,7 @@ export default function DocumentVersionsPage() {
           <div style={{ marginBottom: 8 }}>
             {bulkFiles.map((f, idx) => (
               <div key={idx} className="dvBulk">
-                <span><FileText size={14} style={{ color: 'var(--brand-primary)', flexShrink: 0 }} /><span>{f.name}</span><span className="dvMuted" style={{ flexShrink: 0 }}>· {fmtBytes(f.size)}</span></span>
+                <span><FileText size={14} style={{ color: 'var(--text-primary)', flexShrink: 0 }} /><span>{f.name}</span><span className="dvMuted" style={{ flexShrink: 0 }}>· {fmtBytes(f.size)}</span></span>
                 <Button size="sm" variant="ghost" icon={<Trash size={12} weight="bold" />} aria-label={`Remove ${f.name}`} onClick={() => setBulkFiles((prev) => prev.filter((_, i) => i !== idx))} />
               </div>
             ))}

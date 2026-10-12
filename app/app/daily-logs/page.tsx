@@ -645,7 +645,7 @@ export default function DailyLogsPage() {
             hint={
               projectsState === 'loading' && projects.length === 0 ? 'Loading your jobs…'
               : projectsState === 'error' && projects.length === 0 ? "Couldn't load your jobs. Close this and try again."
-              : projects.length === 0 ? <>No jobs yet — <a href="/app/projects/new" style={{ color: 'var(--brand-primary)' }}>create a project</a> first.</>
+              : projects.length === 0 ? <>No jobs yet — <a href="/app/projects/new" style={{ color: 'var(--link)' }}>create a project</a> first.</>
               : lastApplied.projectId && form.projectId === lastApplied.projectId ? 'Remembered from your last log.' : undefined
             }
           >
@@ -717,7 +717,7 @@ export default function DailyLogsPage() {
           </Field>
         </FormGrid>
         <div className="dlNote" style={{ marginTop: 16 }}>
-          <CloudSun size={18} weight="fill" style={{ flexShrink: 0, color: 'var(--brand-primary)' }} />
+          <CloudSun size={18} weight="fill" style={{ flexShrink: 0, color: 'var(--text-primary)' }} />
           <div>Leave the weather fields blank and conditions, temps, wind and precipitation stamp themselves from the National Weather Service when you save.</div>
         </div>
       </FormModal>

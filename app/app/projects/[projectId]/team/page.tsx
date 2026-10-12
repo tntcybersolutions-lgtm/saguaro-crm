@@ -8,7 +8,7 @@ import Link from 'next/link';
 import { useParams } from 'next/navigation';
 import { useToast } from '@/components/Toast';
 import { UsersThree, UserPlus, HardHat, EnvelopeSimple, Phone, IdentificationBadge, ClockCounterClockwise, Briefcase, X } from '@phosphor-icons/react';
-import { PremiumSurface, ModuleHero, SectionCard, StatCard, PremiumEmpty, StatStrip, FlowSteps, AutoChip, goldButtonStyle, ghostButtonStyle } from '@/components/ui/premium';
+import { PremiumSurface, ModuleHero, SectionCard, PremiumEmpty, StatStrip, FlowSteps, AutoChip, goldButtonStyle, ghostButtonStyle, secondaryButtonStyle } from '@/components/ui/premium';
 import { ListToolbar } from '@/components/ui/ListToolbar';
 import { moduleAccent } from '@/lib/module-identity';
 import { Button, Input, FormModal, FormGrid, Field, Select } from '@/components/ui/kit';
@@ -16,7 +16,7 @@ import ProjectOwnershipCard from '@/components/projects/ProjectOwnershipCard';
 import { createPortal } from 'react-dom';
 import { confirmDialog } from '@/lib/ui/async-dialog';
 
-const GOLD='var(--brand-primary)',DARK='var(--bg-base)',RAISED='var(--bg-surface)',BORDER='rgba(255,255,255,0.12)',DIM='var(--text-secondary)',TEXT='var(--text-primary)',GREEN='var(--success)',RED='var(--danger)',BLUE='var(--warning)';
+const DARK='var(--bg-base)',RAISED='var(--bg-surface)',BORDER='rgba(255,255,255,0.12)',DIM='var(--text-secondary)',TEXT='var(--text-primary)',GREEN='var(--success)',RED='var(--danger)';
 const fmt = (n:number) => '$'+n.toLocaleString('en-US',{minimumFractionDigits:2,maximumFractionDigits:2});
 const EMAIL_RE = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
 /* The invite form was a fixed `1fr 320px` grid with three fields abreast: on a
@@ -34,7 +34,7 @@ const TEAM_CSS = `
 .tmRecActs .k-btn { min-height: 44px; }
 `;
 function Badge({label,color='var(--text-secondary)',bg='rgba(163,172,187,.12)'}:{label:string,color?:string,bg?:string}){
-  return <span style={{fontSize:10,fontWeight:700,padding:'2px 8px',borderRadius:4,background:bg,color}}>{label}</span>;
+  return <span style={{fontSize:12,fontWeight:700,padding:'2px 8px',borderRadius:4,background:bg,color}}>{label}</span>;
 }
 
 export default function TeamPage(){
@@ -290,7 +290,7 @@ export default function TeamPage(){
   }
 
   const inputStyle = {width:'100%',padding:'8px 12px',background:'var(--bg-surface-2)',border:`1px solid ${BORDER}`,borderRadius:7,color:TEXT,fontSize:13,outline:'none',boxSizing:'border-box' as const};
-  const hintStyle: React.CSSProperties = {fontSize:11,color:'var(--c-text-2)',marginTop:5,lineHeight:1.45};
+  const hintStyle: React.CSSProperties = {fontSize:12,color:'var(--c-text-2)',marginTop:5,lineHeight:1.45};
 
   // Field leadership straight off the project record — PM, super, and foreman,
   // plus the owner and architect of record, each with live contact links.
@@ -371,7 +371,7 @@ export default function TeamPage(){
     { key: 'assignments', header: 'Work Assignments', sortable: false, phone: 'show', render: m => (
       <span style={{display:'inline-flex',alignItems:'center',gap:6,flexWrap:'wrap'}} onClick={e=>e.stopPropagation()}>
         {assignmentsFor(m.userId).map(a=>(
-          <span key={a.id} style={{display:'inline-flex',alignItems:'center',gap:5,padding:'3px 6px 3px 9px',borderRadius:999,background:WORK.soft,border:`1px solid ${WORK.ring}`,color:WORK.hex,fontSize:10.5,fontWeight:800,letterSpacing:.3,whiteSpace:'nowrap' as const}}>
+          <span key={a.id} style={{display:'inline-flex',alignItems:'center',gap:5,padding:'3px 6px 3px 9px',borderRadius:999,background:WORK.soft,border:`1px solid ${WORK.ring}`,color:WORK.hex,fontSize:12,fontWeight:800,letterSpacing:.3,whiteSpace:'nowrap' as const}}>
             {assignRoleLabel(a.role)}
             <button onClick={()=>endAssignment(a)} title="End this assignment" aria-label={`End ${assignRoleLabel(a.role)} assignment`} style={{display:'inline-flex',alignItems:'center',justifyContent:'center',width:18,height:18,padding:0,borderRadius:999,background:WORK.soft,border:'none',color:WORK.hex,cursor:'pointer'}}><X size={9} weight="bold"/></button>
           </span>
@@ -382,7 +382,7 @@ export default function TeamPage(){
             {ASSIGN_ROLES.map(r=><option key={r.value} value={r.value}>{r.label}</option>)}
           </select>
         ) : (
-          <span title="They can be assigned work once they accept their invite" style={{fontSize:11,color:DIM,fontStyle:'italic' as const,whiteSpace:'nowrap' as const}}>Invite Pending</span>
+          <span title="They can be assigned work once they accept their invite" style={{fontSize:12,color:DIM,fontStyle:'italic' as const,whiteSpace:'nowrap' as const}}>Invite Pending</span>
         )}
       </span>
     ) },
@@ -468,7 +468,7 @@ export default function TeamPage(){
     <div className="tmScope">
     <ModuleHero
       eyebrow={ctx?.project?.name || 'Project Team'}
-      eyebrowIcon={<UsersThree size={13} weight="fill" color={GOLD} />}
+      eyebrowIcon={<UsersThree size={13} weight="fill" color="var(--text-secondary)" />}
       title="Project"
       accent="Team"
       subtitle="Manage project team members and access"
@@ -476,44 +476,37 @@ export default function TeamPage(){
     />
 
     {!loading && (
-      <>
-        {ctx && (
-          <StatStrip items={[
-            /* These tiles linked back to this same page, so a tap only reloaded it.
-               Each now goes where its number lives. */
-            {href: `/app/projects/${projectId}/overview`, label:'Project', value: ctx.project?.name || '—', sub: ctx.project?.projectNumber ? `#${ctx.project.projectNumber}` : (ctx.project?.status || 'active')},
-            {href: proj?.customer_id ? `/app/customers?customer=${encodeURIComponent(proj.customer_id)}` : '#project-directory', label:'Owner', value: ctx.defaults?.ownerName || '—', sub: ctx.defaults?.ownerEmail || 'No email on file'},
-            {href: '#project-directory', label:'Architect', value: ctx.defaults?.architectName || '—', sub: 'Design contact'},
-            {href: '#project-directory', label:'Leadership', value: `${leadersAssigned}/5`, accent: leadersAssigned>=3?'var(--success)':GOLD, sub: leadersAssigned>0?'Directory roles assigned':'Set them in the directory below'},
-            {href: `/app/projects/${projectId}/subs`, label:'Trades on the Job', value: String(subTrades.length), sub: ctxSubs.length?`Across ${ctxSubs.length} sub${ctxSubs.length===1?'':'s'}`:'No subs yet'},
-          ]}/>
-        )}
-        <div style={{display:'grid',gridTemplateColumns:'repeat(auto-fit,minmax(180px,1fr))',gap:12,marginBottom:24}}>
-          <StatCard icon={<UsersThree size={19} weight="duotone" color={GOLD} />} label="Team Members" value={String(members.length)} accent={GOLD} sub={(() => { const inv = members.filter(m=>m.inviteId).length; const acc = members.length - inv; return `${acc} with access${inv ? ` · ${inv} invited` : ''}`; })()}  href="#internal-team"/>
-          <StatCard icon={<HardHat size={19} weight="duotone" color={BLUE} />} label="Subcontractors" value={String(subs.length)} accent={subs.length?BLUE:undefined} sub={subTrades.length?`${subTrades.length} trade${subTrades.length===1?'':'s'} — portal access`:'Portal access'}  href={`/app/projects/${projectId}/subs`}/>
-          <StatCard icon={<IdentificationBadge size={19} weight="duotone" color={leadersAssigned>=3?'var(--success)':GOLD} />} label="Field Leadership" value={`${leadersAssigned}/5`} accent={leadersAssigned>=3?'var(--success)':GOLD} sub="PM · super · foreman · owner · architect"  href="#project-directory"/>
-        </div>
-      </>
+      <StatStrip items={[
+        /* These tiles linked back to this same page, so a tap only reloaded it.
+           Each now goes where its number lives. */
+        {href: '#internal-team', label:'Team Members', value: String(members.length), sub: (() => { const inv = members.filter(m=>m.inviteId).length; const acc = members.length - inv; return `${acc} with access${inv ? ` · ${inv} invited` : ''}`; })()},
+        {href: `/app/projects/${projectId}/subs`, label:'Subcontractors', value: String(subs.length), sub: subTrades.length?`${subTrades.length} trade${subTrades.length===1?'':'s'} — portal access`:'Portal access'},
+        {href: '#project-directory', label:'Leadership', value: `${leadersAssigned}/5`, accent: leadersAssigned>=3?'var(--success)':undefined, sub: leadersAssigned>0?'Directory roles assigned':'Set them in the directory below'},
+        ...(ctx ? [
+          {href: proj?.customer_id ? `/app/customers?customer=${encodeURIComponent(proj.customer_id)}` : '#project-directory', label:'Owner', value: ctx.defaults?.ownerName || '—', sub: ctx.defaults?.ownerEmail || 'No email on file'},
+          {href: '#project-directory', label:'Architect', value: ctx.defaults?.architectName || '—', sub: 'Design contact'},
+        ] : []),
+      ]}/>
     )}
 
     {showInvite && <div ref={inviteFormRef} style={{marginBottom:24}}>
       <div className="tmInviteGrid">
-      <SectionCard title="Invite Team Member" icon={<UserPlus size={17} weight="duotone" color={GOLD} />} subtitle={ctx?.project?.name ? `Grants access to ${ctx.project.name}` : 'Send a role-scoped invitation to this project.'}>
+      <SectionCard title="Invite Team Member" icon={<UserPlus size={17} weight="duotone" color="var(--text-secondary)" />} subtitle={ctx?.project?.name ? `Grants access to ${ctx.project.name}` : 'Send a role-scoped invitation to this project.'}>
         {/* A real form: the keyboard's Go/Enter sends, the same as the button. */}
         <form noValidate aria-label="Invite team member" onSubmit={(e) => { e.preventDefault(); void handleInvite(); }}>
         <div className="tmInviteFields">
           <div>
-            <label htmlFor="tm-invite-email" style={{display:'block',fontSize:11,fontWeight:700,color:DIM,marginBottom:5}}>Email *{inviteAuto.email && <AutoChip/>}</label>
+            <label htmlFor="tm-invite-email" style={{display:'block',fontSize:12,fontWeight:700,color:DIM,marginBottom:5}}>Email *{inviteAuto.email && <AutoChip/>}</label>
             <input id="tm-invite-email" type="email" inputMode="email" autoComplete="email" value={inviteEmail} onChange={e=>{setInviteEmail(e.target.value);setInviteAuto(a=>({...a,email:false}));if(inviteMsg&&inviteMsg!=='Invitation sent.')setInviteMsg('');}} placeholder="email@company.com" style={inputStyle} aria-required="true" aria-invalid={!!inviteMsg && inviteMsg!=='Invitation sent.' ? true : undefined}/>
             <div style={hintStyle}>They get a secure accept link by email — it expires after 7 days.</div>
           </div>
           <div>
-            <label htmlFor="tm-invite-name" style={{display:'block',fontSize:11,fontWeight:700,color:DIM,marginBottom:5}}>Name{inviteAuto.name && <AutoChip/>}</label>
+            <label htmlFor="tm-invite-name" style={{display:'block',fontSize:12,fontWeight:700,color:DIM,marginBottom:5}}>Name{inviteAuto.name && <AutoChip/>}</label>
             <input id="tm-invite-name" type="text" value={inviteName} onChange={e=>{setInviteName(e.target.value);setInviteAuto(a=>({...a,name:false}));}} placeholder="Full name" style={inputStyle}/>
             <div style={hintStyle}>Shown on the roster and in notifications.</div>
           </div>
           <div>
-            <label htmlFor="tm-invite-role" style={{display:'block',fontSize:11,fontWeight:700,color:DIM,marginBottom:5}}>Role{inviteAuto.role && <AutoChip/>}</label>
+            <label htmlFor="tm-invite-role" style={{display:'block',fontSize:12,fontWeight:700,color:DIM,marginBottom:5}}>Role{inviteAuto.role && <AutoChip/>}</label>
             <select id="tm-invite-role" value={inviteRole} onChange={e=>{setInviteRole(e.target.value);setInviteAuto(a=>({...a,role:false}));}} style={{...inputStyle,cursor:'pointer'}}>
               {['Admin','Manager','Member','Guest','Client','Sub'].map(r=><option key={r}>{r}</option>)}
             </select>
@@ -527,7 +520,7 @@ export default function TeamPage(){
         </div>
         </form>
       </SectionCard>
-      <SectionCard flat title="After You Send" icon={<ClockCounterClockwise size={17} weight="duotone" color={GOLD} />}>
+      <SectionCard flat title="After You Send" icon={<ClockCounterClockwise size={17} weight="duotone" color="var(--text-secondary)" />}>
         <FlowSteps title="" steps={[
           {title:'Invitation Email Goes Out', desc:'A secure accept link is emailed — it expires after 7 days.'},
           {title:'They Create Their Login', desc:'One click sets up their account under your company.'},
@@ -554,11 +547,11 @@ export default function TeamPage(){
     <div style={{display:'flex',flexDirection:'column',gap:20}}>
       {proj && <ProjectOwnershipCard projectId={projectId} project={proj} onSaved={(p)=>{ if (p && (p as any).id) setProj(p); }}/>}
       <div id="project-directory" style={{ scrollMarginTop: 76 }} />
-      <SectionCard title="Project Directory" subtitle="Field leadership and parties of record — set or edit any slot right here" icon={<IdentificationBadge size={17} weight="duotone" color={GOLD} />}>
+      <SectionCard title="Project Directory" subtitle="Field leadership and parties of record — set or edit any slot right here" icon={<IdentificationBadge size={17} weight="duotone" color="var(--text-secondary)" />}>
         <div style={{display:'grid',gridTemplateColumns:'repeat(auto-fit,minmax(210px,1fr))',gap:12}}>
           {leadership.map(l=>(
             <div key={l.role} style={{padding:'12px 14px',borderRadius:12,border:`1px solid ${l.name?'var(--brand-primary-25)':'rgba(255,255,255,0.08)'}`,background:l.name?'color-mix(in srgb, var(--brand-primary) 5%, transparent)':'rgba(255,255,255,0.02)'}}>
-              <div style={{fontSize:10,fontWeight:800,color:DIM,marginBottom:6}}>{l.role}</div>
+              <div style={{fontSize:12,fontWeight:800,color:DIM,marginBottom:6}}>{l.role}</div>
               {editRole === l.role ? (
                 <div style={{display:'flex',flexDirection:'column' as const,gap:6}}>
                   <Input aria-label={`${l.role} name`} value={editName} onChange={e=>setEditName(e.target.value)} placeholder="Name" autoFocus/>
@@ -569,15 +562,15 @@ export default function TeamPage(){
                   </div>
                 </div>
               ) : (<>
-              <div style={{fontSize:13.5,fontWeight:700,color:l.name?TEXT:'rgba(255,255,255,0.35)',marginBottom:6}}>{l.name||'Not assigned'}</div>
+              <div style={{fontSize:14,fontWeight:700,color:l.name?TEXT:'rgba(255,255,255,0.35)',marginBottom:6}}>{l.name||'Not assigned'}</div>
               {l.name ? (
                 <div style={{display:'flex',flexDirection:'column' as const,gap:3}}>
-                  {l.email&&<a href={`mailto:${l.email}`} style={{display:'inline-flex',alignItems:'center',gap:6,fontSize:11.5,color:'var(--brand-primary-strong)',textDecoration:'none'}}><EnvelopeSimple size={12} weight="bold" color="var(--brand-primary-strong)"/>{l.email}</a>}
-                  {l.phone&&<a href={`tel:${l.phone}`} style={{display:'inline-flex',alignItems:'center',gap:6,fontSize:11.5,color:DIM,textDecoration:'none'}}><Phone size={12} weight="bold" color={DIM}/>{l.phone}</a>}
-                  {!l.email&&!l.phone&&<span style={{fontSize:11,color:'var(--c-text-2)'}}>No contact on file</span>}
+                  {l.email&&<a href={`mailto:${l.email}`} style={{display:'inline-flex',alignItems:'center',gap:6,fontSize:12,color: 'var(--link)',textDecoration:'none'}}><EnvelopeSimple size={12} weight="bold" color="var(--text-secondary)"/>{l.email}</a>}
+                  {l.phone&&<a href={`tel:${l.phone}`} style={{display:'inline-flex',alignItems:'center',gap:6,fontSize:12,color:DIM,textDecoration:'none'}}><Phone size={12} weight="bold" color={DIM}/>{l.phone}</a>}
+                  {!l.email&&!l.phone&&<span style={{fontSize:12,color:'var(--c-text-2)'}}>No contact on file</span>}
                   {l.email && !memberEmails.has(l.email.toLowerCase()) && (
-                    <button onClick={()=>inviteFromDirectory(l)} className="pmBtn" style={{marginTop:6,alignSelf:'flex-start',display:'inline-flex',alignItems:'center',gap:5,padding:'4px 10px',background:'var(--brand-primary-12)',border:'1px solid var(--brand-primary-35)',borderRadius:7,color:'var(--brand-primary-strong)',fontSize:11,fontWeight:800,cursor:'pointer'}}>
-                      <UserPlus size={12} weight="bold" color="var(--brand-primary-strong)" /> Invite to Project
+                    <button onClick={()=>inviteFromDirectory(l)} className="pmBtn" style={{marginTop:6,alignSelf:'flex-start',display:'inline-flex',alignItems:'center',gap:5,padding:'4px 10px',background:'var(--bg-surface-2)',border:'1px solid var(--border-default)',borderRadius:7,color: 'var(--text-primary)',fontSize:12,fontWeight:800,cursor:'pointer'}}>
+                      <UserPlus size={12} weight="bold" color="var(--text-secondary)" /> Invite to Project
                     </button>
                   )}
                 </div>
@@ -592,7 +585,7 @@ export default function TeamPage(){
       </SectionCard>
       <div id="internal-team" style={{ scrollMarginTop: 76 }} />
       {(showGroup === 'all' || showGroup === 'team') && (
-      <SectionCard title="Internal Team" icon={<UsersThree size={17} weight="duotone" color={GOLD} />}>
+      <SectionCard title="Internal Team" icon={<UsersThree size={17} weight="duotone" color="var(--text-secondary)" />}>
         {loading ? (
           <div style={{padding:'28px 12px',textAlign:'center',color:DIM,fontSize:13}}>Loading team members…</div>
         ) : loadError ? (
@@ -601,15 +594,15 @@ export default function TeamPage(){
             title="Couldn’t load this job’s team"
             description={loadError}
             tone="error"
-            action={<button type="button" onClick={() => setReloadKey(k => k + 1)} style={goldButtonStyle} className="pmBtn">Try Again</button>}
+            action={<button type="button" onClick={() => setReloadKey(k => k + 1)} style={secondaryButtonStyle} className="pmBtn">Try Again</button>}
             compact
           />
         ) : members.length === 0 ? (
           <PremiumEmpty
-            icon={<UsersThree size={30} weight="duotone" color={GOLD} />}
+            icon={<UsersThree size={30} weight="duotone" color="var(--text-secondary)" />}
             title="No team members yet"
             description={leadersAssigned>0 ? `The directory above lists ${leadersAssigned} leadership role${leadersAssigned===1?'':'s'} — invite them so they can log in, post daily logs, and run the schedule.` : 'Invite your PM, superintendent, and office staff — each gets role-scoped access to this project.'}
-            action={<button onClick={openInvite} style={goldButtonStyle} className="pmBtn"><UserPlus size={15} weight="bold" /> Invite Member</button>}
+            action={<button onClick={openInvite} style={secondaryButtonStyle} className="pmBtn"><UserPlus size={15} weight="bold" /> Invite Member</button>}
             compact
           />
         ) : (
@@ -639,7 +632,7 @@ export default function TeamPage(){
         {members.some(m=>m.userId) ? (
           <div style={{display:'flex',gap:12,alignItems:'flex-end',flexWrap:'wrap' as const}}>
             <div style={{flex:'1 1 220px',minWidth:200}}>
-              <label style={{display:'block',fontSize:11,fontWeight:700,color:DIM,marginBottom:5}}>Team Member</label>
+              <label style={{display:'block',fontSize:12,fontWeight:700,color:DIM,marginBottom:5}}>Team Member</label>
               <select value={composerUser} onChange={e=>setComposerUser(e.target.value)} style={{...inputStyle,cursor:'pointer'}}>
                 <option value="">Choose a member…</option>
                 {members.filter(m=>m.userId).map(m=><option key={m.userId!} value={m.userId!}>{m.name}</option>)}
@@ -647,7 +640,7 @@ export default function TeamPage(){
               <div style={hintStyle}>Only accepted invites appear — pending members show on the roster as Invite Pending.</div>
             </div>
             <div style={{flex:'0 1 210px',minWidth:180}}>
-              <label style={{display:'block',fontSize:11,fontWeight:700,color:DIM,marginBottom:5}}>Assignment Role</label>
+              <label style={{display:'block',fontSize:12,fontWeight:700,color:DIM,marginBottom:5}}>Assignment Role</label>
               <select value={composerRole} onChange={e=>setComposerRole(e.target.value)} style={{...inputStyle,cursor:'pointer'}}>
                 {ASSIGN_ROLES.map(r=><option key={r.value} value={r.value}>{r.label}</option>)}
               </select>
@@ -661,7 +654,7 @@ export default function TeamPage(){
             ><Briefcase size={15} weight="bold" /> Assign Work</button>
           </div>
         ) : (
-          <div style={{fontSize:12.5,color:'var(--c-text-2)',lineHeight:1.55}}>
+          <div style={{fontSize:13,color:'var(--c-text-2)',lineHeight:1.55}}>
             Invite team members above — once someone accepts their invite they can be assigned work here, and it lands on their My Work hub immediately.
           </div>
         )}
@@ -669,10 +662,10 @@ export default function TeamPage(){
       )}
 
       {(showGroup === 'all' || showGroup === 'subs') && (
-      <SectionCard title="Subcontractors (Portal Access)" icon={<HardHat size={17} weight="duotone" color={GOLD} />}>
+      <SectionCard title="Subcontractors (Portal Access)" icon={<HardHat size={17} weight="duotone" color="var(--text-secondary)" />}>
         {subs.length === 0 ? (
           <PremiumEmpty
-            icon={<HardHat size={30} weight="duotone" color={GOLD} />}
+            icon={<HardHat size={30} weight="duotone" color="var(--text-secondary)" />}
             title="No subcontractors yet"
             description={(ctx?.bidPackages || []).length > 0 ? `${ctx.bidPackages.length} bid package${ctx.bidPackages.length===1?'':'s'} exist on this project — award one, or add subs in the Subs module, and they land here with portal access, waivers, and pay items wired up.` : 'Add subs in the Subs module or award a bid package — each lands here with portal access, lien waivers, and pay items wired up.'}
             compact
@@ -730,12 +723,12 @@ export default function TeamPage(){
           )}
         >
           <div className="tmRec">
-            <div><div style={{fontSize:11,fontWeight:700,color:DIM}}>Email</div><div style={{fontSize:14,color:TEXT,fontWeight:600,overflowWrap:'anywhere'}}>{openRec.email || '—'}</div></div>
-            <div><div style={{fontSize:11,fontWeight:700,color:DIM}}>{openRec.inviteId ? 'Role When They Accept' : 'Role'}</div><div style={{fontSize:14,color:TEXT,fontWeight:600}}>{openRec.role || 'Member'}</div></div>
-            {!openRec.inviteId && <div><div style={{fontSize:11,fontWeight:700,color:DIM}}>Company</div><div style={{fontSize:14,color:TEXT,fontWeight:600}}>{openRec.company || '—'}</div></div>}
-            {!openRec.inviteId && <div><div style={{fontSize:11,fontWeight:700,color:DIM}}>Phone</div><div style={{fontSize:14,color:TEXT,fontWeight:600}}>{openRec.phone || '—'}</div></div>}
-            {!openRec.inviteId && <div><div style={{fontSize:11,fontWeight:700,color:DIM}}>Work Assignments</div><div style={{fontSize:14,color:TEXT,fontWeight:600}}>{assignmentsFor(openRec.userId).map(a => assignRoleLabel(a.role)).join(', ') || 'None yet'}</div></div>}
-            <div><div style={{fontSize:11,fontWeight:700,color:DIM}}>Status</div><div style={{fontSize:14,color:openRec.inviteId?'var(--warning)':'var(--success)',fontWeight:700}}>{openRec.last}</div></div>
+            <div><div style={{fontSize:12,fontWeight:700,color:DIM}}>Email</div><div style={{fontSize:14,color:TEXT,fontWeight:600,overflowWrap:'anywhere'}}>{openRec.email || '—'}</div></div>
+            <div><div style={{fontSize:12,fontWeight:700,color:DIM}}>{openRec.inviteId ? 'Role When They Accept' : 'Role'}</div><div style={{fontSize:14,color:TEXT,fontWeight:600}}>{openRec.role || 'Member'}</div></div>
+            {!openRec.inviteId && <div><div style={{fontSize:12,fontWeight:700,color:DIM}}>Company</div><div style={{fontSize:14,color:TEXT,fontWeight:600}}>{openRec.company || '—'}</div></div>}
+            {!openRec.inviteId && <div><div style={{fontSize:12,fontWeight:700,color:DIM}}>Phone</div><div style={{fontSize:14,color:TEXT,fontWeight:600}}>{openRec.phone || '—'}</div></div>}
+            {!openRec.inviteId && <div><div style={{fontSize:12,fontWeight:700,color:DIM}}>Work Assignments</div><div style={{fontSize:14,color:TEXT,fontWeight:600}}>{assignmentsFor(openRec.userId).map(a => assignRoleLabel(a.role)).join(', ') || 'None yet'}</div></div>}
+            <div><div style={{fontSize:12,fontWeight:700,color:DIM}}>Status</div><div style={{fontSize:14,color:openRec.inviteId?'var(--warning)':'var(--success)',fontWeight:700}}>{openRec.last}</div></div>
           </div>
         </FormModal>
       ),

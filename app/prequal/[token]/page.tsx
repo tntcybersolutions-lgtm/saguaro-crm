@@ -113,7 +113,7 @@ export default function PrequalPortal() {
         return (
           <div>
             <input value={v} onChange={e => setAnswer(q.id, e.target.value)} style={inputStyle} placeholder="Paste a link to the document (Google Drive, Dropbox, etc.) or note how you'll provide it" />
-            <div style={{ fontSize: 11, color: DIM, marginTop: 4 }}>Provide a shareable link, or describe how you will submit this document.</div>
+            <div style={{ fontSize: 12, color: DIM, marginTop: 4 }}>Provide a shareable link, or describe how you will submit this document.</div>
           </div>
         );
       default:
@@ -152,13 +152,13 @@ export default function PrequalPortal() {
   return (
     <div style={{ minHeight: '100vh', background: DARK, fontFamily: 'system-ui,sans-serif', color: TEXT }}>
       <div style={{ background: 'rgba(20,20,22,.96)', borderBottom: `1px solid ${BORDER}`, padding: '16px 24px', display: 'flex', alignItems: 'center', gap: 12 }}>
-        <span style={{ fontWeight: 800, fontSize: 16, color: GOLD, letterSpacing: '-0.01em' }}>Saguaro</span>
-        <span style={{ fontSize: 11, color: DIM, marginLeft: 8 }}>Subcontractor Prequalification Portal</span>
+        <span style={{ fontWeight: 800, fontSize: 16, color: 'var(--text-primary)', letterSpacing: '-0.01em' }}>Saguaro</span>
+        <span style={{ fontSize: 12, color: DIM, marginLeft: 8 }}>Subcontractor Prequalification Portal</span>
       </div>
 
       <div style={{ maxWidth: 720, margin: '0 auto', padding: '32px 24px' }}>
-        <div style={{ background: 'color-mix(in srgb, var(--brand-primary) 6%, transparent)', border: '1px solid var(--brand-primary-18)', borderRadius: 10, padding: '16px 20px', marginBottom: 28 }}>
-          <div style={{ fontWeight: 800, fontSize: 18, color: GOLD, marginBottom: 4 }}>{template?.name || 'Prequalification Questionnaire'}</div>
+        <div style={{ background: 'var(--bg-surface-2)', border: '1px solid var(--border-default)', borderRadius: 10, padding: '16px 20px', marginBottom: 28 }}>
+          <div style={{ fontWeight: 800, fontSize: 18, color: 'var(--text-primary)', marginBottom: 4 }}>{template?.name || 'Prequalification Questionnaire'}</div>
           <div style={{ fontSize: 13, color: DIM, lineHeight: 1.6 }}>
             <strong style={{ color: TEXT }}>{info.companyName}</strong> has invited{info.subName ? <> <strong style={{ color: TEXT }}>{info.subName}</strong></> : ' you'} to complete this prequalification. All information is transmitted securely.
             {template?.description ? <><br />{template.description}</> : null}
@@ -179,7 +179,7 @@ export default function PrequalPortal() {
                     <label style={labelStyle}>
                       {q.label}
                       {q.required ? <span style={{ color: RED, marginLeft: 6 }}>*</span> : null}
-                      {q.category ? <span style={{ marginLeft: 8, fontSize: 11, color: DIM, fontWeight: 500 }}>({q.category})</span> : null}
+                      {q.category ? <span style={{ marginLeft: 8, fontSize: 12, color: DIM, fontWeight: 500 }}>({q.category})</span> : null}
                     </label>
                     {renderQuestion(q)}
                   </div>
@@ -195,7 +195,7 @@ export default function PrequalPortal() {
               {saving ? 'Submitting…' : 'Submit Prequalification →'}
             </button>
 
-            <div style={{ textAlign: 'center', marginTop: 16, fontSize: 11, color: DIM }}>
+            <div style={{ textAlign: 'center', marginTop: 16, fontSize: 12, color: DIM }}>
               <Lock size={12} weight="fill" style={{ verticalAlign: 'middle' }} /> Your information is transmitted securely · Powered by Saguaro Control Systems
             </div>
           </form>

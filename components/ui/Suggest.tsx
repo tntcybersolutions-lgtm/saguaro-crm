@@ -180,7 +180,7 @@ export default function Suggest({
                 padding: '8px 10px',
                 borderRadius: 7,
                 cursor: 'pointer',
-                fontSize: 13.5,
+                fontSize: 14,
                 color: i === active ? 'var(--on-brand)' : TEXT,
                 background: i === active ? GOLD : 'transparent',
               }}
@@ -196,7 +196,7 @@ export default function Suggest({
           style={{
             position: 'absolute', zIndex: 60, top: 'calc(100% + 4px)', left: 0, right: 0,
             background: PANEL, border: `1px solid ${BORDER}`, borderRadius: 10,
-            padding: '9px 11px', fontSize: 12.5, color: DIM,
+            padding: '9px 11px', fontSize: 13, color: DIM,
           }}
         >
           No match — what you typed will be used as-is.

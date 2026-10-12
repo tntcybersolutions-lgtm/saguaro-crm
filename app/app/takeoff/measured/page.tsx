@@ -442,12 +442,12 @@ function MeasuredTakeoffInner() {
 h1{font-size:26px;margin:0 0 2px;letter-spacing:-.02em}.sub{color:#666;font-size:12px;text-transform:uppercase;letter-spacing:1.5px;font-weight:700}
 .brand{color:#B8860B;font-weight:800}.meta{margin:22px 0;border:1px solid #e5e5e5;border-radius:10px;padding:14px 16px;display:grid;grid-template-columns:1fr 1fr;gap:8px 22px;font-size:13px}
 .meta b{color:#444;font-weight:600}table{width:100%;border-collapse:collapse;margin-top:10px;font-size:13px}
-th{text-align:left;padding:8px 10px;background:#f6f6f4;border-bottom:2px solid #e5e5e5;font-size:11px;text-transform:uppercase;letter-spacing:.5px;color:#666}
+th{text-align:left;padding:8px 10px;background:#f6f6f4;border-bottom:2px solid #e5e5e5;font-size:12px;text-transform:uppercase;letter-spacing:.5px;color:#666}
 td{padding:8px 10px;border-bottom:1px solid #eee}td.v{font-weight:700;color:#444;white-space:nowrap}td.q{color:#555;white-space:nowrap}td.d{text-align:right;font-weight:700;font-variant-numeric:tabular-nums;white-space:nowrap}
 .net{margin-top:18px;display:flex;justify-content:space-between;align-items:center;border:2px solid #111;border-radius:12px;padding:16px 18px}
 .net .lbl{font-size:12px;text-transform:uppercase;letter-spacing:1.5px;color:#666;font-weight:700}
 .net .amt{font-size:30px;font-weight:800;font-variant-numeric:tabular-nums;color:${net >= 0 ? 'var(--success)' : 'var(--danger)'}}
-.net .was{font-size:12px;color:#666;text-align:right;margin-top:2px}.foot{margin-top:26px;font-size:11px;color:#999;border-top:1px solid #eee;padding-top:12px}</style></head>
+.net .was{font-size:12px;color:#666;text-align:right;margin-top:2px}.foot{margin-top:26px;font-size:12px;color:#999;border-top:1px solid #eee;padding-top:12px}</style></head>
 <body><div class="sub"><span class="brand">Saguaro Control Systems</span> · Control Every Project. Deliver Every Promise.</div>
 <h1>Change Order</h1>
 <div class="meta"><div><b>Project:</b> ${escapeHtml(name || proj?.name || 'Measured Takeoff')}</div><div><b>Date:</b> ${today}</div>
@@ -757,12 +757,12 @@ td{padding:8px 10px;border-bottom:1px solid #eee}td.v{font-weight:700;color:#444
       <div ref={pageRef} style={{ color: TEXT, fontFamily: 'system-ui,Segoe UI,sans-serif', paddingBottom: conditions.length ? 72 : 0 }}>
         <ModuleHero
           eyebrow="Measurement-driven · deterministic"
-          eyebrowIcon={<Ruler size={13} weight="fill" color={GOLD} />}
+          eyebrowIcon={<Ruler size={13} weight="fill" color="var(--text-secondary)" />}
           title="Measured"
           accent="Takeoff"
           subtitle="Add conditions; each explodes into a priced bill and rolls up live."
           actions={<>
-            <button onClick={openWizard} title="First-Takeoff Guide" style={ghostButtonStyle} className="pmBtn"><Question size={16} weight="bold" color={GOLD} />Guide</button>
+            <button onClick={openWizard} title="First-Takeoff Guide" style={ghostButtonStyle} className="pmBtn"><Question size={16} weight="bold" color="var(--text-secondary)" />Guide</button>
             <a href="/app/takeoff/rates" style={{ ...ghostButtonStyle, color: tenantRateCount ? GREEN : 'rgba(255,255,255,0.82)' }} className="pmBtn"><Ic name="costBook" s={18} k="hdr" />Cost catalog{tenantRateCount ? ` · ${tenantRateCount} your rates` : ''}</a>
             <select value={projectId} onChange={(e) => setProjectId(e.target.value)} style={{ ...inp, width: 'auto' }}>
               {projects.map((p) => <option key={p.id} value={p.id}>{p.name}</option>)}
@@ -790,7 +790,7 @@ td{padding:8px 10px;border-bottom:1px solid #eee}td.v{font-weight:700;color:#444
         })()}
 
         {/* building-type templates — the 60-second cold start */}
-        <SectionCard title="Start from a Building Type" subtitle="Drops a curated condition set — trace each to price it live" icon={<Stack size={17} weight="duotone" color={GOLD} />} style={{ marginTop: 8 }}>
+        <SectionCard title="Start from a Building Type" subtitle="Drops a curated condition set — trace each to price it live" icon={<Stack size={17} weight="duotone" color="var(--text-secondary)" />} style={{ marginTop: 8 }}>
           <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit,minmax(188px,1fr))', gap: 10 }}>
             {BUILDING_TEMPLATES.map((t) => {
               const IconC = TPL_ICON[t.id] || Buildings;
@@ -798,11 +798,11 @@ td{padding:8px 10px;border-bottom:1px solid #eee}td.v{font-weight:700;color:#444
               return (
                 <button key={t.id} onClick={() => dropTemplate(t.id)} style={{ textAlign: 'left', display: 'flex', flexDirection: 'column', gap: 6, border: `1px solid ${active ? GOLD : LINE}`, background: active ? 'var(--brand-primary-12)' : PANEL, borderRadius: 14, padding: '13px 14px', cursor: 'pointer' }}>
                   <div style={{ display: 'flex', alignItems: 'center', gap: 9 }}>
-                    <span style={{ width: 34, height: 34, borderRadius: 9, display: 'inline-flex', alignItems: 'center', justifyContent: 'center', background: 'var(--brand-primary-12)', flexShrink: 0 }}><IconC size={21} weight="duotone" color={GOLD} /></span>
+                    <span style={{ width: 34, height: 34, borderRadius: 9, display: 'inline-flex', alignItems: 'center', justifyContent: 'center', background: 'var(--bg-surface-2)', flexShrink: 0 }}><IconC size={21} weight="duotone" color="var(--text-secondary)" /></span>
                     <div style={{ fontWeight: 800, fontSize: 14.5, color: TEXT }}>{t.name}</div>
                   </div>
                   <div style={{ fontSize: 12, color: DIM, lineHeight: 1.4 }}>{t.blurb}</div>
-                  <div style={{ marginTop: 'auto', display: 'inline-flex', alignItems: 'center', gap: 5, fontSize: 11.5, fontWeight: 700, color: active ? GOLD : DIM }}><Stack size={13} weight="bold" />{t.conditions.length} conditions{active ? ' · added' : ''}</div>
+                  <div style={{ marginTop: 'auto', display: 'inline-flex', alignItems: 'center', gap: 5, fontSize: 12, fontWeight: 700, color: active ? GOLD : DIM }}><Stack size={13} weight="bold" />{t.conditions.length} conditions{active ? ' · added' : ''}</div>
                 </button>
               );
             })}
@@ -817,13 +817,13 @@ td{padding:8px 10px;border-bottom:1px solid #eee}td.v{font-weight:700;color:#444
         </SectionCard>
 
         {/* AI plan-reading — two crisp entry points */}
-        <SectionCard title="AI Plan Reading" subtitle="Extract conditions, count symbols, or compare revisions." icon={<Sparkle size={17} weight="duotone" color={GOLD} />} style={{ marginTop: 16 }}>
+        <SectionCard title="AI Plan Reading" subtitle="Extract conditions, count symbols, or compare revisions." icon={<Sparkle size={17} weight="duotone" color="var(--text-secondary)" />} style={{ marginTop: 16 }}>
           <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit,minmax(250px,1fr))', gap: 12 }}>
           <label style={{ display: 'flex', gap: 13, alignItems: 'flex-start', border: `1.5px solid color-mix(in srgb, var(--brand-primary) 55%, transparent)`, background: 'linear-gradient(180deg,var(--brand-primary-12),color-mix(in srgb, var(--brand-primary) 3%, transparent))', borderRadius: 14, padding: '15px 16px', cursor: reading ? 'wait' : 'pointer' }}>
             <Ic name="drawings" s={34} k="hero1" />
             <div style={{ flex: 1 }}>
               <div style={{ fontWeight: 800, fontSize: 15, color: TEXT }}>{reading ? 'Reading every sheet…' : 'Read Full Blueprint'}</div>
-              <div style={{ fontSize: 12.5, color: DIM, marginTop: 3, lineHeight: 1.4 }}>Upload the whole plan-set PDF — AI reads every sheet, extracts all conditions, the engine prices them.</div>
+              <div style={{ fontSize: 13, color: DIM, marginTop: 3, lineHeight: 1.4 }}>Upload the whole plan-set PDF — AI reads every sheet, extracts all conditions, the engine prices them.</div>
             </div>
             <input ref={blueprintInputRef} type="file" accept="application/pdf,.pdf" disabled={reading} style={{ display: 'none' }} onChange={(e) => { readBlueprint(e.target.files?.[0]); (e.target as HTMLInputElement).value = ''; }} />
           </label>
@@ -831,7 +831,7 @@ td{padding:8px 10px;border-bottom:1px solid #eee}td.v{font-weight:700;color:#444
             <Ic name="aiCount" s={34} k="hero2" />
             <div style={{ flex: 1 }}>
               <div style={{ fontWeight: 800, fontSize: 15, color: TEXT }}>{counting ? 'Counting symbols…' : 'Count Symbols + Auto-Scale'}</div>
-              <div style={{ fontSize: 12.5, color: DIM, marginTop: 3, lineHeight: 1.4 }}>Upload one sheet — AI counts doors, fixtures &amp; receptacles, reads the scale, and auto-calibrates the tracer.</div>
+              <div style={{ fontSize: 13, color: DIM, marginTop: 3, lineHeight: 1.4 }}>Upload one sheet — AI counts doors, fixtures &amp; receptacles, reads the scale, and auto-calibrates the tracer.</div>
             </div>
             <input type="file" accept="image/*" disabled={counting} style={{ display: 'none' }} onChange={(e) => { countSymbols(e.target.files?.[0]); (e.target as HTMLInputElement).value = ''; }} />
           </label>
@@ -839,61 +839,61 @@ td{padding:8px 10px;border-bottom:1px solid #eee}td.v{font-weight:700;color:#444
             <Ic name="compareRevs" s={34} k="hero3" />
             <div style={{ flex: 1 }}>
               <div style={{ fontWeight: 800, fontSize: 15, color: TEXT }}>Compare Revisions</div>
-              <div style={{ fontSize: 12.5, color: DIM, marginTop: 3, lineHeight: 1.4 }}>Upload old + new sheet — AI reports exactly what changed and the cost direction, so nothing slips through.</div>
+              <div style={{ fontSize: 13, color: DIM, marginTop: 3, lineHeight: 1.4 }}>Upload old + new sheet — AI reports exactly what changed and the cost direction, so nothing slips through.</div>
             </div>
           </button>
           </div>
         </SectionCard>
 
         {/* Import an existing takeoff — CSV/Excel quantities + DXF CAD (the migration wedge) */}
-        <SectionCard title="Bring an Existing Takeoff" subtitle="CSV/Excel quantities or AutoCAD DXF — mapped to assemblies & priced live" icon={<FileArrowUp size={17} weight="duotone" color={GOLD} />} style={{ marginTop: 16 }}>
+        <SectionCard title="Bring an Existing Takeoff" subtitle="CSV/Excel quantities or AutoCAD DXF — mapped to assemblies & priced live" icon={<FileArrowUp size={17} weight="duotone" color="var(--text-secondary)" />} style={{ marginTop: 16 }}>
           <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit,minmax(250px,1fr))', gap: 12 }}>
             <label style={{ display: 'flex', gap: 13, alignItems: 'flex-start', border: `1.5px solid rgba(52,211,153,0.5)`, background: 'linear-gradient(180deg,rgba(52,211,153,0.10),rgba(52,211,153,0.03))', borderRadius: 14, padding: '15px 16px', cursor: importing ? 'wait' : 'pointer' }}>
               <FileCsv size={34} weight="duotone" color={GREEN} />
               <div style={{ flex: 1 }}>
                 <div style={{ fontWeight: 800, fontSize: 15, color: TEXT }}>Import CSV / Excel</div>
-                <div style={{ fontSize: 12.5, color: DIM, marginTop: 3, lineHeight: 1.4 }}>Bring a PlanSwift / STACK / Excel quantity takeoff — each row auto-maps to an assembly and prices through the same engine. Review before it lands.</div>
+                <div style={{ fontSize: 13, color: DIM, marginTop: 3, lineHeight: 1.4 }}>Bring a PlanSwift / STACK / Excel quantity takeoff — each row auto-maps to an assembly and prices through the same engine. Review before it lands.</div>
               </div>
               <input type="file" accept=".csv,.tsv,.txt,.xlsx,.xls,.xlsm" disabled={!!importing} style={{ display: 'none' }} onChange={(e) => { importQuantities(e.target.files?.[0]); (e.target as HTMLInputElement).value = ''; }} />
             </label>
             <label style={{ display: 'flex', gap: 13, alignItems: 'flex-start', border: `1.5px solid color-mix(in srgb, var(--brand-primary) 50%, transparent)`, background: 'linear-gradient(180deg,var(--brand-primary-12),color-mix(in srgb, var(--brand-primary) 3%, transparent))', borderRadius: 14, padding: '15px 16px', cursor: importing ? 'wait' : 'pointer' }}>
-              <Cube size={34} weight="duotone" color={GOLD} />
+              <Cube size={34} weight="duotone" color="var(--text-secondary)" />
               <div style={{ flex: 1 }}>
                 <div style={{ fontWeight: 800, fontSize: 15, color: TEXT }}>Import CAD (DXF)</div>
-                <div style={{ fontSize: 12.5, color: DIM, marginTop: 3, lineHeight: 1.4 }}>Drop an AutoCAD DXF — closed shapes become areas, line work becomes linear runs. Exact quantities, zero tracing.</div>
+                <div style={{ fontSize: 13, color: DIM, marginTop: 3, lineHeight: 1.4 }}>Drop an AutoCAD DXF — closed shapes become areas, line work becomes linear runs. Exact quantities, zero tracing.</div>
               </div>
               <input type="file" accept=".dxf" disabled={!!importing} style={{ display: 'none' }} onChange={(e) => { importDxf(e.target.files?.[0]); (e.target as HTMLInputElement).value = ''; }} />
             </label>
           </div>
-          {importing && <div style={{ marginTop: 8, fontSize: 13, color: GOLD, fontWeight: 600, display: 'flex', alignItems: 'center', gap: 8 }}><span style={{ width: 13, height: 13, borderRadius: 7, border: `2px solid ${GOLD}`, borderTopColor: 'transparent', display: 'inline-block', animation: 'spin 0.7s linear infinite' }} />{importing}</div>}
+          {importing && <div style={{ marginTop: 8, fontSize: 13, color: 'var(--text-primary)', fontWeight: 600, display: 'flex', alignItems: 'center', gap: 8 }}><span style={{ width: 13, height: 13, borderRadius: 7, border: `2px solid ${GOLD}`, borderTopColor: 'transparent', display: 'inline-block', animation: 'spin 0.7s linear infinite' }} />{importing}</div>}
         </SectionCard>
 
         {/* live estimate — the fixed bottom bar keeps sell + Save in view; position:sticky here was
             dead (killed by PremiumSurface's overflow:hidden ancestor) */}
-        <div style={{ background: 'color-mix(in srgb, var(--brand-primary) 6%, transparent)', border: `1px solid var(--brand-primary-25)`, borderRadius: 14, padding: 20, marginTop: 20 }}>
+        <div style={{ background: 'var(--bg-surface-2)', border: `1px solid var(--brand-primary-25)`, borderRadius: 14, padding: 20, marginTop: 20 }}>
           <div style={{ display: 'flex', alignItems: 'flex-start', gap: 16, flexWrap: 'wrap' }}>
             <div style={{ flex: 1, minWidth: 180 }}>
-              <div style={{ fontSize: 11, color: DIM, fontWeight: 700 }}>Estimate — Computed Live</div>
-              <div style={{ fontSize: 44, fontWeight: 800, color: GOLD, letterSpacing: '-0.02em', fontVariantNumeric: 'tabular-nums' }}>{usd(r.sellCents)}</div>
+              <div style={{ fontSize: 12, color: DIM, fontWeight: 700 }}>Estimate — Computed Live</div>
+              <div style={{ fontSize: 44, fontWeight: 800, color: 'var(--text-primary)', letterSpacing: '-0.02em', fontVariantNumeric: 'tabular-nums' }}>{usd(r.sellCents)}</div>
               {(() => { const band = ({ 1: [-3, 8], 2: [-5, 12], 3: [-10, 15], 4: [-20, 30], 5: [-30, 50] } as Record<number, number[]>)[aaceClass]; const lo = Math.round(r.sellCents * (1 + band[0] / 100)); const hi = Math.round(r.sellCents * (1 + band[1] / 100)); return (
-                <div style={{ fontSize: 12, color: GOLD, fontWeight: 600, marginTop: 2 }}>Range {usd(lo)} – {usd(hi)} · AACE Class {aaceClass}</div>
+                <div style={{ fontSize: 12, color: 'var(--text-primary)', fontWeight: 600, marginTop: 2 }}>Range {usd(lo)} – {usd(hi)} · AACE Class {aaceClass}</div>
               ); })()}
             </div>
             <div style={{ display: 'flex', alignItems: 'center', gap: 11 }}>
               <ConfidenceRing score={confidence.score} />
               <div style={{ maxWidth: 168 }}>
-                <div style={{ fontSize: 10.5, color: DIM, fontWeight: 700 }}>Estimate Confidence</div>
+                <div style={{ fontSize: 12, color: DIM, fontWeight: 700 }}>Estimate Confidence</div>
                 <div style={{ fontSize: 16, fontWeight: 800, color: TEXT }}>{confidence.score}%</div>
-                <div style={{ fontSize: 11.5, color: DIM, lineHeight: 1.35, marginTop: 2 }}>{confidence.reasons[0]}</div>
+                <div style={{ fontSize: 12, color: DIM, lineHeight: 1.35, marginTop: 2 }}>{confidence.reasons[0]}</div>
               </div>
             </div>
           </div>
           <div style={{ display: 'flex', flexWrap: 'wrap', gap: 22, marginTop: 10 }}>
             {[['Material', usd(r.materialCents)], ['Labor', `${usd(r.laborCents)} · ${r.laborHrs}h`], ['Line items', `${r.lines.length}`], ...(r.costPerSf ? [['$/SF', `$${r.costPerSf}`]] : [])].map(([k, v]) => (
-              <div key={k}><div style={{ fontSize: 11, color: DIM, fontWeight: 700 }}>{k}</div><div style={{ fontSize: 16, fontWeight: 800 }}>{v}</div></div>
+              <div key={k}><div style={{ fontSize: 12, color: DIM, fontWeight: 700 }}>{k}</div><div style={{ fontSize: 16, fontWeight: 800 }}>{v}</div></div>
             ))}
           </div>
-          <div style={{ color: DIM, fontSize: 12.5, marginTop: 10 }}>{conditions.length} conditions → {r.lines.length} priced components · no AI round-trip</div>
+          <div style={{ color: DIM, fontSize: 13, marginTop: 10 }}>{conditions.length} conditions → {r.lines.length} priced components · no AI round-trip</div>
 
           {/* Price build-up waterfall (v2) — the full defensible stack, live */}
           {r.lines.length > 0 && (
@@ -915,7 +915,7 @@ td{padding:8px 10px;border-bottom:1px solid #eee}td.v{font-weight:700;color:#444
                   ...(r.bondCents ? [['P&P bond', r.bondCents, false] as [string, number, boolean]] : []),
                 ];
                 return rows.map(([lbl, val, strong]) => (
-                  <div key={lbl} style={{ display: 'flex', justifyContent: 'space-between', padding: '6px 12px', fontSize: 12.5, background: strong ? 'rgba(255,255,255,0.04)' : 'transparent', fontWeight: strong ? 800 : 500, color: strong ? TEXT : DIM, borderTop: strong ? `1px solid ${LINE}` : 'none' }}>
+                  <div key={lbl} style={{ display: 'flex', justifyContent: 'space-between', padding: '6px 12px', fontSize: 13, background: strong ? 'rgba(255,255,255,0.04)' : 'transparent', fontWeight: strong ? 800 : 500, color: strong ? TEXT : DIM, borderTop: strong ? `1px solid ${LINE}` : 'none' }}>
                     <span>{lbl}</span><span style={{ fontVariantNumeric: 'tabular-nums', color: strong ? TEXT : 'inherit' }}>{usd(val)}</span>
                   </div>
                 ));
@@ -929,9 +929,9 @@ td{padding:8px 10px;border-bottom:1px solid #eee}td.v{font-weight:700;color:#444
           {/* Location breakdown (#11) + alternates (#4) — surfaced from the engine rollups */}
           {r.byLocation.length > 0 && (
             <div style={{ marginTop: 10 }}>
-              <div style={{ fontSize: 10.5, color: DIM, fontWeight: 700, marginBottom: 5 }}>Cost by Location</div>
+              <div style={{ fontSize: 12, color: DIM, fontWeight: 700, marginBottom: 5 }}>Cost by Location</div>
               {r.byLocation.map((l) => (
-                <div key={l.key} style={{ display: 'flex', justifyContent: 'space-between', fontSize: 12.5, padding: '3px 0', color: TEXT }}>
+                <div key={l.key} style={{ display: 'flex', justifyContent: 'space-between', fontSize: 13, padding: '3px 0', color: TEXT }}>
                   <span style={{ color: DIM }}>{[l.building && `Bldg ${l.building}`, l.level && `Lvl ${l.level}`, l.zone && `Zone ${l.zone}`].filter(Boolean).join(' · ') || 'Unassigned'}</span>
                   <span style={{ fontWeight: 700, fontVariantNumeric: 'tabular-nums' }}>{usd(l.totalCents)}</span>
                 </div>
@@ -940,9 +940,9 @@ td{padding:8px 10px;border-bottom:1px solid #eee}td.v{font-weight:700;color:#444
           )}
           {r.alternates.length > 0 && (
             <div style={{ marginTop: 10 }}>
-              <div style={{ fontSize: 10.5, color: DIM, fontWeight: 700, marginBottom: 5 }}>Alternates</div>
+              <div style={{ fontSize: 12, color: DIM, fontWeight: 700, marginBottom: 5 }}>Alternates</div>
               {r.alternates.map((a) => (
-                <div key={a.label} style={{ display: 'flex', justifyContent: 'space-between', fontSize: 12.5, padding: '3px 0' }}>
+                <div key={a.label} style={{ display: 'flex', justifyContent: 'space-between', fontSize: 13, padding: '3px 0' }}>
                   <span style={{ color: DIM }}>{a.label}</span>
                   <span style={{ fontWeight: 700, fontVariantNumeric: 'tabular-nums', color: a.type === 'deduct' ? 'var(--danger)' : 'var(--success)' }}>{a.type === 'deduct' ? '−' : '+'}{usd(Math.abs(a.deltaCents))}</span>
                 </div>
@@ -959,7 +959,7 @@ td{padding:8px 10px;border-bottom:1px solid #eee}td.v{font-weight:700;color:#444
           <button onClick={exportExcel} disabled={!conditions.length} title="4-sheet workbook — Line Items (re-importable), Conditions, By Division, Summary. Edit in Excel and bring it back."
             style={{ marginTop: 9, width: '100%', display: 'inline-flex', alignItems: 'center', justifyContent: 'center', gap: 9, borderRadius: 10, padding: '11px', cursor: conditions.length ? 'pointer' : 'not-allowed', opacity: conditions.length ? 1 : 0.5, fontWeight: 700, fontSize: 14, color: TEXT, background: 'transparent', border: `1px solid ${LINE}` }}>
             <Table size={18} weight="bold" color={TEXT} />Export to Excel
-            <span style={{ fontWeight: 600, fontSize: 11.5, color: DIM }}>· round-trip editable</span>
+            <span style={{ fontWeight: 600, fontSize: 12, color: DIM }}>· round-trip editable</span>
           </button>
 
           <div style={{ display: 'flex', gap: 8, marginTop: 9 }}>
@@ -974,18 +974,18 @@ td{padding:8px 10px;border-bottom:1px solid #eee}td.v{font-weight:700;color:#444
           </div>
 
           {/* One-tap downstream chain — takeoff → bid packages + pay app (SOV), same estimate, zero re-keying */}
-          <div style={{ marginTop: 12, borderTop: '1px solid color-mix(in srgb, var(--brand-primary) 22%, transparent)', paddingTop: 12 }}>
+          <div style={{ marginTop: 12, borderTop: '1px solid var(--border-default)', paddingTop: 12 }}>
             <div style={{ display: 'flex', alignItems: 'center', gap: 7, marginBottom: 9 }}>
-              <Path size={16} weight="duotone" color={GOLD} />
-              <span style={{ fontSize: 10.5, color: DIM, fontWeight: 700 }}>Estimate → bid packages → pay app · one tap</span>
-              {savedTakeoffId ? <span style={{ marginLeft: 'auto', display: 'inline-flex', alignItems: 'center', gap: 4, fontSize: 11, fontWeight: 700, color: GREEN }}><CheckCircle size={13} weight="fill" />saved</span> : null}
+              <Path size={16} weight="duotone" color="var(--text-secondary)" />
+              <span style={{ fontSize: 12, color: DIM, fontWeight: 700 }}>Estimate → bid packages → pay app · one tap</span>
+              {savedTakeoffId ? <span style={{ marginLeft: 'auto', display: 'inline-flex', alignItems: 'center', gap: 4, fontSize: 12, fontWeight: 700, color: GREEN }}><CheckCircle size={13} weight="fill" />saved</span> : null}
             </div>
             <button onClick={runChain} disabled={chainBusy || (!conditions.length && !savedTakeoffId)}
               title="Sage writes a bid package per CSI division (scope, insurance, due dates) + a Schedule of Values tied to a new pay application"
               style={{ width: '100%', display: 'inline-flex', alignItems: 'center', justifyContent: 'center', gap: 10, border: '1px solid color-mix(in srgb, var(--brand-primary) 50%, transparent)', borderRadius: 10, padding: '12px', cursor: (chainBusy || (!conditions.length && !savedTakeoffId)) ? 'not-allowed' : 'pointer', opacity: (chainBusy || (!conditions.length && !savedTakeoffId)) ? 0.55 : 1, fontWeight: 800, fontSize: 14.5, color: TEXT, background: 'linear-gradient(135deg,#1b2230,#232c3d)' }}>
               {chainBusy
-                ? <><CircleNotch size={18} weight="bold" color={GOLD} style={{ animation: 'spin 0.7s linear infinite' }} />Generating bid + billing docs…</>
-                : <><Package size={19} weight="duotone" color={GOLD} />Generate Bid Packages + Pay App<Lightning size={15} weight="fill" color={GOLD} /></>}
+                ? <><CircleNotch size={18} weight="bold" color="var(--text-secondary)" style={{ animation: 'spin 0.7s linear infinite' }} />Generating bid + billing docs…</>
+                : <><Package size={19} weight="duotone" color="var(--text-secondary)" />Generate Bid Packages + Pay App<Lightning size={15} weight="fill" color="var(--text-secondary)" /></>}
             </button>
             {chainBusy && (
               <div style={{ marginTop: 9 }}>
@@ -993,43 +993,43 @@ td{padding:8px 10px;border-bottom:1px solid #eee}td.v{font-weight:700;color:#444
                 {chainMsg && <div style={{ fontSize: 12, color: DIM, marginTop: 5 }}>{chainMsg}</div>}
               </div>
             )}
-            {!chainBusy && chainMsg && <div style={{ marginTop: 8, fontSize: 12.5, color: (chainMsg.startsWith('Sage:') || chainMsg.startsWith("Couldn't")) ? RED : DIM }}>{chainMsg}</div>}
+            {!chainBusy && chainMsg && <div style={{ marginTop: 8, fontSize: 13, color: (chainMsg.startsWith('Sage:') || chainMsg.startsWith("Couldn't")) ? RED : DIM }}>{chainMsg}</div>}
             {chainResult && (
               <div style={{ marginTop: 10, border: '1px solid rgba(52,211,153,0.4)', background: 'rgba(52,211,153,0.06)', borderRadius: 10, padding: '12px 13px' }}>
                 <div style={{ display: 'flex', alignItems: 'center', gap: 8, fontWeight: 800, fontSize: 14, color: TEXT }}><CheckCircle size={18} weight="fill" color={GREEN} />Documents Generated</div>
-                <div style={{ fontSize: 12.5, color: DIM, marginTop: 3 }}>{chainResult.packagesCreated} bid package{chainResult.packagesCreated === 1 ? '' : 's'} · {chainResult.jacketsGenerated} jacket PDF{chainResult.jacketsGenerated === 1 ? '' : 's'}{chainResult.sovCreated ? ' · Schedule of Values + pay application' : ''}</div>
+                <div style={{ fontSize: 13, color: DIM, marginTop: 3 }}>{chainResult.packagesCreated} bid package{chainResult.packagesCreated === 1 ? '' : 's'} · {chainResult.jacketsGenerated} jacket PDF{chainResult.jacketsGenerated === 1 ? '' : 's'}{chainResult.sovCreated ? ' · Schedule of Values + pay application' : ''}</div>
                 <div style={{ display: 'flex', gap: 8, marginTop: 10, flexWrap: 'wrap' }}>
-                  <a href={`/app/projects/${chainResult.projectId}/bid-packages`} style={{ display: 'inline-flex', alignItems: 'center', gap: 6, fontSize: 12.5, fontWeight: 700, color: 'var(--on-brand)', background: GOLD, borderRadius: 8, padding: '8px 12px', textDecoration: 'none' }}><Package size={15} weight="bold" />View Bid Packages<ArrowRight size={14} weight="bold" /></a>
-                  {chainResult.sovCreated && <a href={`/app/projects/${chainResult.projectId}/pay-apps`} style={{ display: 'inline-flex', alignItems: 'center', gap: 6, fontSize: 12.5, fontWeight: 700, color: TEXT, border: `1px solid ${LINE}`, borderRadius: 8, padding: '8px 12px', textDecoration: 'none' }}><Receipt size={15} weight="bold" color={GOLD} />View Pay App (SOV)<ArrowRight size={14} weight="bold" /></a>}
+                  <a href={`/app/projects/${chainResult.projectId}/bid-packages`} style={{ display: 'inline-flex', alignItems: 'center', gap: 6, fontSize: 13, fontWeight: 700, color: 'var(--on-brand)', background: GOLD, borderRadius: 8, padding: '8px 12px', textDecoration: 'none' }}><Package size={15} weight="bold" />View Bid Packages<ArrowRight size={14} weight="bold" /></a>
+                  {chainResult.sovCreated && <a href={`/app/projects/${chainResult.projectId}/pay-apps`} style={{ display: 'inline-flex', alignItems: 'center', gap: 6, fontSize: 13, fontWeight: 700, color: TEXT, border: `1px solid ${LINE}`, borderRadius: 8, padding: '8px 12px', textDecoration: 'none' }}><Receipt size={15} weight="bold" color="var(--text-secondary)" />View Pay App (SOV)<ArrowRight size={14} weight="bold" /></a>}
                 </div>
               </div>
             )}
           </div>
 
           {/* Read-only estimate share link — send a client a live, token-gated, revocable estimate URL */}
-          <div style={{ marginTop: 12, borderTop: '1px solid color-mix(in srgb, var(--brand-primary) 22%, transparent)', paddingTop: 12 }}>
+          <div style={{ marginTop: 12, borderTop: '1px solid var(--border-default)', paddingTop: 12 }}>
             <div style={{ display: 'flex', alignItems: 'center', gap: 7, marginBottom: 9 }}>
-              <ArrowSquareOut size={16} weight="duotone" color={GOLD} />
-              <span style={{ fontSize: 10.5, color: DIM, fontWeight: 700 }}>Send the Client a Read-Only Estimate Link</span>
+              <ArrowSquareOut size={16} weight="duotone" color="var(--text-secondary)" />
+              <span style={{ fontSize: 12, color: DIM, fontWeight: 700 }}>Send the Client a Read-Only Estimate Link</span>
             </div>
             <button onClick={shareEstimate} disabled={shareBusy || !conditions.length}
               title="Mint a token-gated, read-only URL of this estimate deliverable — no login for the client, expires in 30 days, revocable any time"
               style={{ width: '100%', display: 'inline-flex', alignItems: 'center', justifyContent: 'center', gap: 10, border: `1px solid ${LINE}`, borderRadius: 10, padding: '12px', cursor: (shareBusy || !conditions.length) ? 'not-allowed' : 'pointer', opacity: (shareBusy || !conditions.length) ? 0.55 : 1, fontWeight: 800, fontSize: 14.5, color: TEXT, background: 'transparent' }}>
               {shareBusy
-                ? <><CircleNotch size={18} weight="bold" color={GOLD} style={{ animation: 'spin 0.7s linear infinite' }} />Preparing link…</>
-                : <><ArrowSquareOut size={18} weight="duotone" color={GOLD} />{shareUrl ? 'Copy Estimate Link Again' : 'Create Shareable Estimate Link'}</>}
+                ? <><CircleNotch size={18} weight="bold" color="var(--text-secondary)" style={{ animation: 'spin 0.7s linear infinite' }} />Preparing link…</>
+                : <><ArrowSquareOut size={18} weight="duotone" color="var(--text-secondary)" />{shareUrl ? 'Copy Estimate Link Again' : 'Create Shareable Estimate Link'}</>}
             </button>
             {shareUrl && (
-              <div style={{ marginTop: 10, border: '1px solid var(--brand-primary-35)', background: 'color-mix(in srgb, var(--brand-primary) 6%, transparent)', borderRadius: 10, padding: '11px 12px' }}>
+              <div style={{ marginTop: 10, border: '1px solid var(--border-default)', background: 'var(--bg-surface-2)', borderRadius: 10, padding: '11px 12px' }}>
                 <div style={{ display: 'flex', alignItems: 'center', gap: 8, flexWrap: 'wrap' }}>
                   <input readOnly value={shareUrl} onFocus={(ev) => ev.currentTarget.select()}
                     style={{ flex: 1, minWidth: 180, background: 'var(--bg-base)', border: `1px solid ${LINE}`, borderRadius: 8, color: TEXT, padding: '8px 10px', fontSize: 12, fontFamily: 'ui-monospace,monospace' }} />
-                  <a href={shareUrl} target="_blank" rel="noopener noreferrer" style={{ display: 'inline-flex', alignItems: 'center', gap: 5, fontSize: 12.5, fontWeight: 700, color: 'var(--on-brand)', background: GOLD, borderRadius: 8, padding: '8px 12px', textDecoration: 'none' }}><ArrowSquareOut size={14} weight="bold" />Preview</a>
+                  <a href={shareUrl} target="_blank" rel="noopener noreferrer" style={{ display: 'inline-flex', alignItems: 'center', gap: 5, fontSize: 13, fontWeight: 700, color: 'var(--on-brand)', background: GOLD, borderRadius: 8, padding: '8px 12px', textDecoration: 'none' }}><ArrowSquareOut size={14} weight="bold" />Preview</a>
                 </div>
                 <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginTop: 8, flexWrap: 'wrap' }}>
-                  <span style={{ display: 'inline-flex', alignItems: 'center', gap: 5, fontSize: 11.5, color: GREEN, fontWeight: 700 }}>{shareCopied ? <><CheckCircle size={13} weight="fill" />Copied</> : <>Link Ready</>}</span>
-                  {shareExp && <span style={{ fontSize: 11.5, color: DIM }}>· valid to {new Date(shareExp).toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' })}</span>}
-                  <button onClick={revokeShare} disabled={shareBusy} style={{ marginLeft: 'auto', display: 'inline-flex', alignItems: 'center', gap: 5, fontSize: 11.5, fontWeight: 700, color: RED, background: 'transparent', border: `1px solid color-mix(in srgb, ${RED} 33%, transparent)`, borderRadius: 8, padding: '6px 11px', cursor: shareBusy ? 'not-allowed' : 'pointer' }}><XCircle size={13} weight="bold" />Revoke</button>
+                  <span style={{ display: 'inline-flex', alignItems: 'center', gap: 5, fontSize: 12, color: GREEN, fontWeight: 700 }}>{shareCopied ? <><CheckCircle size={13} weight="fill" />Copied</> : <>Link Ready</>}</span>
+                  {shareExp && <span style={{ fontSize: 12, color: DIM }}>· valid to {new Date(shareExp).toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' })}</span>}
+                  <button onClick={revokeShare} disabled={shareBusy} style={{ marginLeft: 'auto', display: 'inline-flex', alignItems: 'center', gap: 5, fontSize: 12, fontWeight: 700, color: RED, background: 'transparent', border: `1px solid color-mix(in srgb, ${RED} 33%, transparent)`, borderRadius: 8, padding: '6px 11px', cursor: shareBusy ? 'not-allowed' : 'pointer' }}><XCircle size={13} weight="bold" />Revoke</button>
                 </div>
               </div>
             )}
@@ -1039,10 +1039,10 @@ td{padding:8px 10px;border-bottom:1px solid #eee}td.v{font-weight:700;color:#444
         {/* ── ASSEMBLY (SYMBOL) LIBRARY — browse the full priced catalog and one-click add a condition ── */}
         <SectionCard style={{ marginTop: 14 }} bodyStyle={{ padding: 18 }}>
           <button onClick={() => setLibOpen((o) => !o)} style={{ width: '100%', display: 'flex', alignItems: 'center', gap: 12, background: 'transparent', border: 'none', cursor: 'pointer', padding: 0, textAlign: 'left' }}>
-            <span style={{ width: 40, height: 40, borderRadius: 10, background: 'color-mix(in srgb, var(--brand-primary) 14%, transparent)', display: 'inline-flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}><Stack size={22} weight="duotone" color={GOLD} /></span>
+            <span style={{ width: 40, height: 40, borderRadius: 10, background: 'var(--bg-surface-2)', display: 'inline-flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}><Stack size={22} weight="duotone" color="var(--text-secondary)" /></span>
             <span style={{ flex: 1, minWidth: 0 }}>
               <span style={{ display: 'block', fontWeight: 800, fontSize: 15.5, color: TEXT }}>Assembly Library</span>
-              <span style={{ display: 'block', fontSize: 12.5, color: DIM, marginTop: 2 }}>{LIBRARY.length} priced assemblies across {LIBRARY_TRADES.length} trades — browse & drop, each explodes into real line items</span>
+              <span style={{ display: 'block', fontSize: 13, color: DIM, marginTop: 2 }}>{LIBRARY.length} priced assemblies across {LIBRARY_TRADES.length} trades — browse & drop, each explodes into real line items</span>
             </span>
             {libOpen ? <ArrowLeft size={18} weight="bold" color={DIM} style={{ transform: 'rotate(90deg)' }} /> : <ArrowRight size={18} weight="bold" color={DIM} style={{ transform: 'rotate(90deg)' }} />}
           </button>
@@ -1063,22 +1063,22 @@ td{padding:8px 10px;border-bottom:1px solid #eee}td.v{font-weight:700;color:#444
                 const q = libQ.trim().toLowerCase();
                 const rows = LIBRARY.filter((l) => (libKind === 'all' || l.kind === libKind) && (!q || (`${l.name} ${l.trade} ${l.div}`).toLowerCase().includes(q)));
                 const byTrade = LIBRARY_TRADES.map((t) => ({ trade: t, items: rows.filter((l) => l.trade === t) })).filter((g) => g.items.length);
-                if (!rows.length) return <div style={{ marginTop: 12, fontSize: 12.5, color: DIM }}>No assemblies match “{libQ}”.</div>;
+                if (!rows.length) return <div style={{ marginTop: 12, fontSize: 13, color: DIM }}>No assemblies match “{libQ}”.</div>;
                 return (
                   <div style={{ marginTop: 12, maxHeight: 380, overflowY: 'auto', paddingRight: 4 }}>
                     {byTrade.map((g) => (
                       <div key={g.trade} style={{ marginBottom: 14 }}>
-                        <div style={{ fontSize: 10.5, color: DIM, fontWeight: 700, marginBottom: 7 }}>{g.trade} · {g.items.length}</div>
+                        <div style={{ fontSize: 12, color: DIM, fontWeight: 700, marginBottom: 7 }}>{g.trade} · {g.items.length}</div>
                         <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill,minmax(230px,1fr))', gap: 8 }}>
                           {g.items.map((l) => (
                             <button key={l.id} onClick={() => addFromLibrary(l.id)} title={`Add ${l.name} — ${l.parts} priced components`}
                               style={{ display: 'flex', alignItems: 'center', gap: 9, textAlign: 'left', border: `1px solid ${LINE}`, borderRadius: 10, padding: '9px 11px', cursor: 'pointer', background: 'var(--bg-base)', color: TEXT }}>
-                              <span style={{ width: 34, height: 34, borderRadius: 8, flexShrink: 0, display: 'inline-flex', alignItems: 'center', justifyContent: 'center', background: 'var(--brand-primary-12)', color: GOLD, fontWeight: 800, fontSize: 11 }}>{l.unit}</span>
+                              <span style={{ width: 34, height: 34, borderRadius: 8, flexShrink: 0, display: 'inline-flex', alignItems: 'center', justifyContent: 'center', background: 'var(--bg-surface-2)', color: 'var(--text-primary)', fontWeight: 800, fontSize: 12 }}>{l.unit}</span>
                               <span style={{ flex: 1, minWidth: 0 }}>
                                 <span style={{ display: 'block', fontSize: 13, fontWeight: 700, whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>{l.name}</span>
-                                <span style={{ display: 'block', fontSize: 11, color: DIM }}>{l.parts} components{l.div ? ` · CSI ${l.div}` : ''}</span>
+                                <span style={{ display: 'block', fontSize: 12, color: DIM }}>{l.parts} components{l.div ? ` · CSI ${l.div}` : ''}</span>
                               </span>
-                              <span style={{ flexShrink: 0, color: GOLD, fontWeight: 900, fontSize: 17, lineHeight: 1 }}>+</span>
+                              <span style={{ flexShrink: 0, color: 'var(--text-primary)', fontWeight: 900, fontSize: 17, lineHeight: 1 }}>+</span>
                             </button>
                           ))}
                         </div>
@@ -1095,9 +1095,9 @@ td{padding:8px 10px;border-bottom:1px solid #eee}td.v{font-weight:700;color:#444
         <SectionCard icon={<GitDiff size={20} weight="duotone" color="var(--warning)" />} title="Compare to a Prior Revision" subtitle="Price only what changed against a saved baseline." accent="var(--warning)" style={{ marginTop: 14 }}>
 
           {!projectId ? (
-            <div style={{ marginTop: 12, fontSize: 12.5, color: DIM }}>Open from a project to compare against its prior takeoffs.</div>
+            <div style={{ marginTop: 12, fontSize: 13, color: DIM }}>Open from a project to compare against its prior takeoffs.</div>
           ) : !priorList.length ? (
-            <div style={{ marginTop: 12, fontSize: 12.5, color: DIM }}>No prior saved takeoffs for this project yet — save this one, revise it, then compare.</div>
+            <div style={{ marginTop: 12, fontSize: 13, color: DIM }}>No prior saved takeoffs for this project yet — save this one, revise it, then compare.</div>
           ) : (
             <div style={{ display: 'flex', gap: 10, flexWrap: 'wrap', alignItems: 'center', marginTop: 12 }}>
               <Stack size={16} weight="duotone" color="var(--warning)" style={{ flexShrink: 0 }} />
@@ -1108,7 +1108,7 @@ td{padding:8px 10px;border-bottom:1px solid #eee}td.v{font-weight:700;color:#444
             </div>
           )}
 
-          {priorId && !conditions.length && <div style={{ marginTop: 10, fontSize: 12.5, color: GOLD, display: 'inline-flex', alignItems: 'center', gap: 6 }}><WarningCircle size={15} weight="bold" />Add or load the current revision&apos;s conditions to see the priced delta.</div>}
+          {priorId && !conditions.length && <div style={{ marginTop: 10, fontSize: 13, color: 'var(--text-primary)', display: 'inline-flex', alignItems: 'center', gap: 6 }}><WarningCircle size={15} weight="bold" />Add or load the current revision&apos;s conditions to see the priced delta.</div>}
 
           {revDiff && (() => {
             const groups = [
@@ -1124,15 +1124,15 @@ td{padding:8px 10px;border-bottom:1px solid #eee}td.v{font-weight:700;color:#444
                   <div key={g.key} style={{ marginBottom: 12 }}>
                     <div style={{ display: 'flex', alignItems: 'center', gap: 7, marginBottom: 6 }}>
                       <span style={{ width: 8, height: 8, borderRadius: 4, background: g.tone }} />
-                      <span style={{ fontSize: 11, fontWeight: 800, color: g.tone }}>{g.label}</span>
-                      <span style={{ fontSize: 11.5, color: DIM }}>{g.rows.length} item{g.rows.length === 1 ? '' : 's'}</span>
+                      <span style={{ fontSize: 12, fontWeight: 800, color: g.tone }}>{g.label}</span>
+                      <span style={{ fontSize: 12, color: DIM }}>{g.rows.length} item{g.rows.length === 1 ? '' : 's'}</span>
                     </div>
                     {g.rows.map((l) => {
                       const u = unitFromAsm(l.assemblyId);
                       return (
                         <div key={l.key} style={{ display: 'flex', alignItems: 'center', gap: 10, padding: '8px 11px', borderRadius: 9, border: `1px solid ${LINE}`, borderLeft: `3px solid ${g.tone}`, background: BG, marginBottom: 6 }}>
                           <div style={{ flex: 1, minWidth: 0 }}>
-                            <div style={{ fontWeight: 700, fontSize: 13.5, color: TEXT, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{l.name}</div>
+                            <div style={{ fontWeight: 700, fontSize: 14, color: TEXT, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{l.name}</div>
                             <div style={{ fontSize: 12, color: DIM, marginTop: 1, display: 'inline-flex', alignItems: 'center', gap: 5 }}>
                               {l.status === 'changed' ? <>{l.oldValue} <ArrowRight size={11} weight="bold" /> {l.newValue} {u}</> : l.status === 'added' ? <>{l.newValue} {u} new</> : <>{l.oldValue} {u} removed</>}
                             </div>
@@ -1149,25 +1149,25 @@ td{padding:8px 10px;border-bottom:1px solid #eee}td.v{font-weight:700;color:#444
                   <div style={{ display: 'inline-flex', alignItems: 'center', gap: 8 }}>
                     {revDiff.netDeltaCents >= 0 ? <TrendUp size={22} weight="duotone" color={GREEN} /> : <TrendDown size={22} weight="duotone" color={RED} />}
                     <div>
-                      <div style={{ fontSize: 10.5, color: DIM, fontWeight: 700 }}>Net Change</div>
+                      <div style={{ fontSize: 12, color: DIM, fontWeight: 700 }}>Net Change</div>
                       <div style={{ fontSize: 30, fontWeight: 800, letterSpacing: '-0.02em', fontVariantNumeric: 'tabular-nums', color: deltaColor(revDiff.netDeltaCents) }}>{netStr(revDiff.netDeltaCents)}</div>
                     </div>
                   </div>
-                  <div style={{ marginLeft: 'auto', textAlign: 'right', fontSize: 12.5, color: DIM }}>
+                  <div style={{ marginLeft: 'auto', textAlign: 'right', fontSize: 13, color: DIM }}>
                     <div>was <b style={{ color: TEXT }}>{usd(revDiff.oldSellCents)}</b></div>
-                    <div style={{ display: 'inline-flex', alignItems: 'center', gap: 5, marginTop: 2 }}>now <ArrowRight size={12} weight="bold" /> <b style={{ color: GOLD }}>{usd(revDiff.newSellCents)}</b></div>
+                    <div style={{ display: 'inline-flex', alignItems: 'center', gap: 5, marginTop: 2 }}>now <ArrowRight size={12} weight="bold" /> <b style={{ color: 'var(--text-primary)' }}>{usd(revDiff.newSellCents)}</b></div>
                   </div>
                 </div>
 
                 {/* Draft change order (real route) + printable fallback */}
                 <div style={{ display: 'flex', gap: 10, alignItems: 'center', marginTop: 12, flexWrap: 'wrap' }}>
                   <button onClick={draftChangeOrder} disabled={coBusy || !projectId}
-                    style={{ display: 'inline-flex', alignItems: 'center', gap: 8, border: 'none', borderRadius: 9, padding: '11px 16px', cursor: (coBusy || !projectId) ? 'not-allowed' : 'pointer', opacity: (coBusy || !projectId) ? 0.55 : 1, fontWeight: 800, fontSize: 13.5, color: 'var(--on-brand)', background: 'linear-gradient(135deg,#FBBF24,#FBBF24)' }}>
+                    style={{ display: 'inline-flex', alignItems: 'center', gap: 8, border: 'none', borderRadius: 9, padding: '11px 16px', cursor: (coBusy || !projectId) ? 'not-allowed' : 'pointer', opacity: (coBusy || !projectId) ? 0.55 : 1, fontWeight: 800, fontSize: 14, color: 'var(--on-brand)', background: 'linear-gradient(135deg,#FBBF24,#FBBF24)' }}>
                     {coBusy ? <><CircleNotch size={16} weight="bold" color="var(--on-brand)" style={{ animation: 'spin 0.7s linear infinite' }} />Filing…</> : <><Note size={17} weight="bold" color="var(--on-brand)" />Draft Change Order</>}
                   </button>
                   <button onClick={printChangeOrder} style={{ display: 'inline-flex', alignItems: 'center', gap: 7, background: 'transparent', color: TEXT, border: `1px solid ${LINE}`, borderRadius: 9, padding: '11px 14px', cursor: 'pointer', fontWeight: 700, fontSize: 13 }}><Printer size={16} weight="duotone" color="var(--warning)" />Print CO</button>
                   {coResult && <span style={{ display: 'inline-flex', alignItems: 'center', gap: 6, fontSize: 13, fontWeight: 700, color: GREEN }}><CheckCircle size={16} weight="fill" />CO{coResult.coNumber != null ? ` #${coResult.coNumber}` : ''} filed{projectId ? <a href={`/app/projects/${projectId}/change-orders`} style={{ display: 'inline-flex', alignItems: 'center', gap: 3, color: 'var(--warning)', textDecoration: 'none', marginLeft: 2 }}>· view<ArrowRight size={13} weight="bold" /></a> : null}</span>}
-                  {coMsg && <span style={{ fontSize: 12.5, color: coMsg.startsWith('Couldn') ? RED : DIM }}>{coMsg}</span>}
+                  {coMsg && <span style={{ fontSize: 13, color: coMsg.startsWith('Couldn') ? RED : DIM }}>{coMsg}</span>}
                 </div>
               </div>
             );
@@ -1175,19 +1175,19 @@ td{padding:8px 10px;border-bottom:1px solid #eee}td.v{font-weight:700;color:#444
         </SectionCard>
 
         {/* SPEC-AWARE CROSS-CHECK — your counted quantities vs the scheduled quantities on file (the edge nobody has) */}
-        <SectionCard icon={<ClipboardText size={20} weight="duotone" color="var(--brand-primary-strong)" />} title="Check Against Schedules" subtitle="Cross-check counted quantities against the schedules on file." accent="var(--brand-primary-strong)" style={{ marginTop: 14 }} action={
+        <SectionCard icon={<ClipboardText size={20} weight="duotone" color="var(--text-secondary)" />} title="Check Against Schedules" subtitle="Cross-check counted quantities against the schedules on file." accent="var(--brand-primary-strong)" style={{ marginTop: 14 }} action={
           <button onClick={runSpecCheck} disabled={specBusy || !projectId || !specItems.length} title={!projectId ? 'Open from a project to cross-check' : !specItems.length ? 'Add a counted condition first' : ''}
-              style={{ display: 'inline-flex', alignItems: 'center', gap: 8, border: 'none', borderRadius: 9, padding: '10px 16px', cursor: (specBusy || !projectId || !specItems.length) ? 'not-allowed' : 'pointer', opacity: (specBusy || !projectId || !specItems.length) ? 0.5 : 1, fontWeight: 800, fontSize: 13.5, color: 'var(--on-brand)', background: 'linear-gradient(135deg,#FBBF24,var(--brand-primary-strong))', flexShrink: 0 }}>
+              style={{ display: 'inline-flex', alignItems: 'center', gap: 8, border: 'none', borderRadius: 9, padding: '10px 16px', cursor: (specBusy || !projectId || !specItems.length) ? 'not-allowed' : 'pointer', opacity: (specBusy || !projectId || !specItems.length) ? 0.5 : 1, fontWeight: 800, fontSize: 14, color: 'var(--on-brand)', background: 'linear-gradient(135deg,#FBBF24,var(--brand-primary-strong))', flexShrink: 0 }}>
               {specBusy ? <><span style={{ width: 13, height: 13, borderRadius: 7, border: '2px solid #101722', borderTopColor: 'transparent', display: 'inline-block', animation: 'spin 0.7s linear infinite' }} />Checking…</> : <><SealCheck size={17} weight="bold" color="var(--on-brand)" />Cross-check{specItems.length ? ` ${specItems.length} item${specItems.length === 1 ? '' : 's'}` : ''}</>}
             </button>
         }>
-          {!projectId && <div style={{ marginTop: 10, fontSize: 12.5, color: DIM }}>Open from a project to cross-check.</div>}
+          {!projectId && <div style={{ marginTop: 10, fontSize: 13, color: DIM }}>Open from a project to cross-check.</div>}
 
           {specResult && (
             <div style={{ marginTop: 14 }}>
               {specResult.note ? (
                 <div style={{ display: 'flex', alignItems: 'flex-start', gap: 9, fontSize: 13, color: DIM, background: BG, border: `1px solid ${LINE}`, borderRadius: 10, padding: '11px 13px', lineHeight: 1.45 }}>
-                  <WarningCircle size={17} weight="duotone" color={GOLD} style={{ flexShrink: 0, marginTop: 1 }} />{specResult.note}
+                  <WarningCircle size={17} weight="duotone" color="var(--text-secondary)" style={{ flexShrink: 0, marginTop: 1 }} />{specResult.note}
                 </div>
               ) : (
                 <>
@@ -1197,7 +1197,7 @@ td{padding:8px 10px;border-bottom:1px solid #eee}td.v{font-weight:700;color:#444
                     const mm = rs.filter((x) => x.status === 'mismatch').length;
                     return (
                       <div style={{ display: 'flex', alignItems: 'center', gap: 10, flexWrap: 'wrap', marginBottom: 10 }}>
-                        <span style={{ fontSize: 13.5, fontWeight: 700, color: TEXT }}>{m} of {rs.length} item{rs.length === 1 ? '' : 's'} match your schedules</span>
+                        <span style={{ fontSize: 14, fontWeight: 700, color: TEXT }}>{m} of {rs.length} item{rs.length === 1 ? '' : 's'} match your schedules</span>
                         {mm > 0 && <span style={{ display: 'inline-flex', alignItems: 'center', gap: 5, fontSize: 12, fontWeight: 800, color: RED, background: 'rgba(248,113,113,0.12)', border: `1px solid rgba(248,113,113,0.4)`, borderRadius: 20, padding: '3px 10px' }}><WarningCircle size={13} weight="bold" />{mm} mismatch{mm === 1 ? '' : 'es'} to reconcile</span>}
                       </div>
                     );
@@ -1211,19 +1211,19 @@ td{padding:8px 10px;border-bottom:1px solid #eee}td.v{font-weight:700;color:#444
                         {ok ? <CheckCircle size={20} weight="fill" color={GREEN} style={{ flexShrink: 0, marginTop: 1 }} /> : bad ? <WarningCircle size={20} weight="fill" color={RED} style={{ flexShrink: 0, marginTop: 1 }} /> : <XCircle size={20} weight="duotone" color={DIM} style={{ flexShrink: 0, marginTop: 1 }} />}
                         <div style={{ flex: 1, minWidth: 0 }}>
                           <div style={{ fontWeight: 700, fontSize: 14, color: TEXT }}>{row.label}</div>
-                          <div style={{ fontSize: 12.5, color: DIM, marginTop: 2, display: 'flex', alignItems: 'center', gap: 8, flexWrap: 'wrap' }}>
+                          <div style={{ fontSize: 13, color: DIM, marginTop: 2, display: 'flex', alignItems: 'center', gap: 8, flexWrap: 'wrap' }}>
                             {ok && <span>Counted <b style={{ color: TEXT }}>{row.counted}</b> · matches schedule</span>}
                             {bad && <span style={{ color: RED, fontWeight: 700 }}>Counted {row.counted} vs scheduled {row.scheduled ?? '—'}</span>}
                             {row.status === 'not_found' && <span>Counted {row.counted} · not on any schedule found</span>}
                             {row.note && <span style={{ color: DIM }}>· {row.note}</span>}
                           </div>
                           {row.source?.route && (
-                            <a href={row.source.route} style={{ display: 'inline-flex', alignItems: 'center', gap: 5, marginTop: 6, fontSize: 12, fontWeight: 700, color: 'var(--brand-primary-strong)', textDecoration: 'none' }}>
+                            <a href={row.source.route} style={{ display: 'inline-flex', alignItems: 'center', gap: 5, marginTop: 6, fontSize: 12, fontWeight: 700, color: 'var(--link)', textDecoration: 'none' }}>
                               <ArrowSquareOut size={13} weight="bold" />{row.source.source || 'View source'}
                             </a>
                           )}
                         </div>
-                        <span style={{ fontSize: 11, fontWeight: 800, color: col, flexShrink: 0 }}>{ok ? 'Match' : bad ? 'Mismatch' : 'Not Found'}</span>
+                        <span style={{ fontSize: 12, fontWeight: 800, color: col, flexShrink: 0 }}>{ok ? 'Match' : bad ? 'Mismatch' : 'Not Found'}</span>
                       </div>
                     );
                   })}
@@ -1234,7 +1234,7 @@ td{padding:8px 10px;border-bottom:1px solid #eee}td.v{font-weight:700;color:#444
         </SectionCard>
 
         {/* markup — full defensible stack */}
-        <SectionCard title="Markup & Basis of Estimate" subtitle="Overhead, profit, contingency, tax, burden, bond, and region index." icon={<Receipt size={17} weight="duotone" color={GOLD} />} style={{ marginTop: 14 }}>
+        <SectionCard title="Markup & Basis of Estimate" subtitle="Overhead, profit, contingency, tax, burden, bond, and region index." icon={<Receipt size={17} weight="duotone" color="var(--text-secondary)" />} style={{ marginTop: 14 }}>
         <div style={{ display: 'flex', gap: 10, flexWrap: 'wrap' }}>
           {[['OH %', oh, setOh], ['Profit %', pr, setPr], ['Cont %', cont, setCont], ['Tax %', taxP, setTaxP], ['Burden %', burdenP, setBurdenP], ['Gen Cond %', gcP, setGcP], ['Bond %', bondP, setBondP], ['Bldg SF', bsf, setBsf]].map(([lbl, val, set]: any) => (
             <label key={lbl} style={{ flex: 1, minWidth: 84 }}><span style={{ fontSize: 12, color: DIM }}>{lbl}</span><input value={val} onChange={(e) => set(e.target.value)} style={{ ...inp, marginTop: 4 }} /></label>
@@ -1252,10 +1252,10 @@ td{padding:8px 10px;border-bottom:1px solid #eee}td.v{font-weight:700;color:#444
 
         {/* editable proposal fine print (one item per line) — the GC submits THEIR qualifications */}
         <details style={{ marginTop: 10 }}>
-          <summary style={{ cursor: 'pointer', fontSize: 12.5, color: DIM, fontWeight: 700 }}>Proposal Fine Print — Allowances · Clarifications · Exclusions</summary>
+          <summary style={{ cursor: 'pointer', fontSize: 13, color: DIM, fontWeight: 700 }}>Proposal Fine Print — Allowances · Clarifications · Exclusions</summary>
           <div style={{ display: 'flex', gap: 10, marginTop: 8, flexWrap: 'wrap' }}>
             {[['Allowances', allowancesTxt, setAllowancesTxt, '$25,000 owner-selected fixtures'], ['Clarifications', clarifTxt, setClarifTxt, 'Normal hours, unrestricted access'], ['Exclusions', exclusionsTxt, setExclusionsTxt, 'Permits & impact fees']].map(([lbl, val, set, ph]: any) => (
-              <label key={lbl} style={{ flex: 1, minWidth: 180 }}><span style={{ fontSize: 11.5, color: DIM, fontWeight: 700 }}>{lbl} (one per line)</span>
+              <label key={lbl} style={{ flex: 1, minWidth: 180 }}><span style={{ fontSize: 12, color: DIM, fontWeight: 700 }}>{lbl} (one per line)</span>
                 <textarea value={val} onChange={(e) => set(e.target.value)} placeholder={ph} rows={3} style={{ ...inp, marginTop: 4, resize: 'vertical', fontFamily: 'inherit' }} /></label>
             ))}
           </div>
@@ -1267,13 +1267,13 @@ td{padding:8px 10px;border-bottom:1px solid #eee}td.v{font-weight:700;color:#444
 
         {/* divisions */}
         {r.byDivision.length > 0 && (
-          <SectionCard flat title="By Division" icon={<Stack size={17} weight="duotone" color={GOLD} />} style={{ marginTop: 14 }}>
+          <SectionCard flat title="By Division" icon={<Stack size={17} weight="duotone" color="var(--text-secondary)" />} style={{ marginTop: 14 }}>
             {r.byDivision.map((d) => <div key={d.trade} style={{ display: 'flex', padding: '6px 0', borderBottom: `1px solid ${LINE}` }}><span style={{ flex: 1 }}>{d.trade}</span><span style={{ color: DIM, marginRight: 14, fontSize: 13 }}>{d.lines} lines</span><span style={{ fontWeight: 700 }}>{usd(d.totalCents)}</span></div>)}
           </SectionCard>
         )}
 
         {/* add condition */}
-        <SectionCard title="Add Condition" icon={<Ruler size={17} weight="duotone" color={GOLD} />} style={{ marginTop: 18 }}>
+        <SectionCard title="Add Condition" icon={<Ruler size={17} weight="duotone" color="var(--text-secondary)" />} style={{ marginTop: 18 }}>
           <div style={{ display: 'flex', gap: 8, marginBottom: 10, flexWrap: 'wrap' }}>
             {KINDS.map((k) => <button key={k.k} onClick={() => { setCKind(k.k); setCAsm(asmList(k.k)[0]?.id || ''); setCPts(null); }} style={{ display: 'inline-flex', alignItems: 'center', gap: 7, padding: '8px 14px', borderRadius: 8, border: `1px solid ${cKind === k.k ? GOLD : LINE}`, background: cKind === k.k ? 'color-mix(in srgb, var(--brand-primary) 14%, transparent)' : 'transparent', color: cKind === k.k ? GOLD : TEXT, cursor: 'pointer', fontWeight: 700, fontSize: 13 }}><Ic name={k.k === 'area' ? 'areaPoly' : k.k === 'linear' ? 'ruler' : 'aiCount'} s={17} k={`kind${k.k}`} />{k.label} · {k.unit}</button>)}
           </div>
@@ -1295,9 +1295,9 @@ td{padding:8px 10px;border-bottom:1px solid #eee}td.v{font-weight:700;color:#444
           {advOpen && (
             <div style={{ marginTop: 8, border: `1px dashed ${LINE}`, borderRadius: 10, padding: 11, display: 'flex', flexDirection: 'column', gap: 8 }}>
               <div style={{ display: 'flex', gap: 8, flexWrap: 'wrap', alignItems: 'center' }}>
-                <span style={{ fontSize: 11.5, color: DIM, fontWeight: 700, minWidth: 66 }}>Typical ×</span>
+                <span style={{ fontSize: 12, color: DIM, fontWeight: 700, minWidth: 66 }}>Typical ×</span>
                 <input placeholder="1" value={cInst} onChange={(e) => setCInst(e.target.value)} title="Measure one, apply to N identical — multiplies qty + labor" style={{ ...inp, width: 70 }} />
-                <span style={{ fontSize: 11.5, color: DIM }}>Identical Instances</span>
+                <span style={{ fontSize: 12, color: DIM }}>Identical Instances</span>
               </div>
               <div style={{ display: 'flex', gap: 8, flexWrap: 'wrap' }}>
                 <input placeholder="Building" value={cBldg} onChange={(e) => setCBldg(e.target.value)} style={{ ...inp, flex: 1, minWidth: 80 }} />
@@ -1314,7 +1314,7 @@ td{padding:8px 10px;border-bottom:1px solid #eee}td.v{font-weight:700;color:#444
             </div>
           )}
 
-          <button onClick={openTracer} style={{ marginTop: 8, width: '100%', display: 'inline-flex', alignItems: 'center', justifyContent: 'center', gap: 8, border: `1px solid var(--brand-primary-35)`, background: 'var(--brand-primary-08)', color: GOLD, borderRadius: 8, padding: '10px', cursor: 'pointer', fontWeight: 700, fontSize: 14 }}><Ic name="penTrace" s={18} k="tracebtn" />Open Plan Tracer → zoom, snap, measure &amp; price on the drawing</button>
+          <button onClick={openTracer} style={{ marginTop: 8, width: '100%', display: 'inline-flex', alignItems: 'center', justifyContent: 'center', gap: 8, border: `1px solid var(--brand-primary-35)`, background: 'var(--bg-surface-2)', color: 'var(--text-primary)', borderRadius: 8, padding: '10px', cursor: 'pointer', fontWeight: 700, fontSize: 14 }}><Ic name="penTrace" s={18} k="tracebtn" />Open Plan Tracer → zoom, snap, measure &amp; price on the drawing</button>
           {cPts && cPts.length ? <div style={{ color: DIM, fontSize: 12, marginTop: 4 }}><Check size={12} weight="bold" style={{ verticalAlign: '-1px', marginRight: 4 }} />Traced from plan ({cPts.length} points) — value + geometry saved</div> : null}
           <button onClick={addCond} style={{ ...btn, marginTop: 10 }}>+ Add Condition Manually</button>
         </SectionCard>
@@ -1322,7 +1322,7 @@ td{padding:8px 10px;border-bottom:1px solid #eee}td.v{font-weight:700;color:#444
         {/* conditions list */}
         {conditions.length > 0 && (
           <div ref={promotedCardRef}>
-          <SectionCard title="Conditions" icon={<Stack size={17} weight="duotone" color={GOLD} />} style={{ marginTop: 18 }}>
+          <SectionCard title="Conditions" icon={<Stack size={17} weight="duotone" color="var(--text-secondary)" />} style={{ marginTop: 18 }}>
             {conditions.map((c) => {
               const lines = r.lines.filter((l) => l.conditionId === c.id);
               const tot = lines.reduce((x, l) => x + l.totalCents, 0);
@@ -1331,13 +1331,13 @@ td{padding:8px 10px;border-bottom:1px solid #eee}td.v{font-weight:700;color:#444
                 <div key={c.id} style={{ background: PANEL, border: `1px solid ${LINE}`, borderRadius: 12, padding: 14, marginBottom: 10 }}>
                   <div style={{ display: 'flex', alignItems: 'center', cursor: 'pointer' }} onClick={() => setExpanded(expanded === c.id ? null : c.id)}>
                     <div style={{ flex: 1 }}><b>{c.name}</b>
-                      {c.instanceCount && c.instanceCount > 1 ? <span style={{ marginLeft: 7, fontSize: 10.5, fontWeight: 800, color: '#16794a', background: '#eef7ee', borderRadius: 5, padding: '1px 6px' }}>×{c.instanceCount}</span> : null}
-                      {(c.building || c.level || c.zone) ? <span style={{ marginLeft: 6, fontSize: 10.5, fontWeight: 700, color: DIM, border: `1px solid ${LINE}`, borderRadius: 5, padding: '1px 6px' }}>{[c.building, c.level && `L${c.level}`, c.zone].filter(Boolean).join('·')}</span> : null}
-                      {c.alternate ? <span style={{ marginLeft: 6, fontSize: 10.5, fontWeight: 800, color: c.alternateType === 'deduct' ? 'var(--danger)' : 'var(--warning)', background: c.alternateType === 'deduct' ? 'rgba(192,57,43,0.12)' : 'rgba(47,107,255,0.12)', borderRadius: 5, padding: '1px 6px' }}>ALT {c.alternateType === 'deduct' ? '−' : '+'}</span> : null}
-                      {c.note ? <span title={c.note} style={{ marginLeft: 6, fontSize: 10.5, fontWeight: 700, color: GOLD, border: `1px solid var(--brand-primary-35)`, borderRadius: 5, padding: '1px 6px' }}>note</span> : null}
+                      {c.instanceCount && c.instanceCount > 1 ? <span style={{ marginLeft: 7, fontSize: 12, fontWeight: 800, color: '#16794a', background: '#eef7ee', borderRadius: 5, padding: '1px 6px' }}>×{c.instanceCount}</span> : null}
+                      {(c.building || c.level || c.zone) ? <span style={{ marginLeft: 6, fontSize: 12, fontWeight: 700, color: DIM, border: `1px solid ${LINE}`, borderRadius: 5, padding: '1px 6px' }}>{[c.building, c.level && `L${c.level}`, c.zone].filter(Boolean).join('·')}</span> : null}
+                      {c.alternate ? <span style={{ marginLeft: 6, fontSize: 12, fontWeight: 800, color: c.alternateType === 'deduct' ? 'var(--danger)' : 'var(--warning)', background: c.alternateType === 'deduct' ? 'rgba(192,57,43,0.12)' : 'rgba(47,107,255,0.12)', borderRadius: 5, padding: '1px 6px' }}>ALT {c.alternateType === 'deduct' ? '−' : '+'}</span> : null}
+                      {c.note ? <span title={c.note} style={{ marginLeft: 6, fontSize: 12, fontWeight: 700, color: 'var(--text-primary)', border: `1px solid var(--brand-primary-35)`, borderRadius: 5, padding: '1px 6px' }}>note</span> : null}
                       <div style={{ color: DIM, fontSize: 13, marginTop: 2, display: 'flex', alignItems: 'center', gap: 7, flexWrap: 'wrap' }}>{c.value > 0
                       ? <span>{c.value} {unit}{c.heightFt ? ` · ${c.heightFt}′` : ''}{c.thicknessIn ? ` · ${c.thicknessIn}″` : ''} → {lines.length} items</span>
-                      : <><span style={{ display: 'inline-flex', alignItems: 'center', gap: 4, fontSize: 11, fontWeight: 700, color: GOLD, background: 'var(--brand-primary-12)', border: `1px solid var(--brand-primary-35)`, borderRadius: 20, padding: '2px 8px' }}><Ruler size={12} weight="bold" />needs measurement</span><span>{ASSEMBLIES[c.assemblyId]?.name}</span></>}</div></div>
+                      : <><span style={{ display: 'inline-flex', alignItems: 'center', gap: 4, fontSize: 12, fontWeight: 700, color: 'var(--text-primary)', background: 'var(--brand-primary-12)', border: `1px solid var(--brand-primary-35)`, borderRadius: 20, padding: '2px 8px' }}><Ruler size={12} weight="bold" />needs measurement</span><span>{ASSEMBLIES[c.assemblyId]?.name}</span></>}</div></div>
                     {/* inline qty editor + targeted Trace — a template/library condition is never a dead end */}
                     <div onClick={(e) => e.stopPropagation()} style={{ display: 'flex', alignItems: 'center', gap: 6, marginRight: 12, flexShrink: 0 }}>
                       {/* Unassigned row (e.g. promoted from Drawings without an assembly) — pick one to
@@ -1345,7 +1345,7 @@ td{padding:8px 10px;border-bottom:1px solid #eee}td.v{font-weight:700;color:#444
                       {!ASSEMBLIES[c.assemblyId] && (
                         <select value="" title="No assembly yet — pick one to price this measurement"
                           onChange={(e) => { const v = e.target.value; if (!v) return; setConditions((cs) => cs.map((x) => (x.id === c.id ? { ...x, assemblyId: v } : x))); }}
-                          style={{ ...inp, width: 168, padding: '7px 9px', fontSize: 12, fontWeight: 700, color: GOLD, border: '1px solid color-mix(in srgb, var(--brand-primary) 50%, transparent)' }}>
+                          style={{ ...inp, width: 168, padding: '7px 9px', fontSize: 12, fontWeight: 700, color: 'var(--text-primary)', border: '1px solid var(--border-default)' }}>
                           <option value="">Assembly…</option>
                           {asmList(c.kind).map((a) => <option key={a.id} value={a.id}>{a.name}</option>)}
                         </select>
@@ -1353,13 +1353,13 @@ td{padding:8px 10px;border-bottom:1px solid #eee}td.v{font-weight:700;color:#444
                       <input inputMode="decimal" placeholder="qty" value={qtyDraft[c.id] ?? (c.value > 0 ? String(c.value) : '')} onChange={(e) => setCondQty(c.id, e.target.value)} onBlur={() => commitQtyDraft(c.id)}
                         title={`Quantity in ${unit} — type it, or hit Trace to measure it on the plan`}
                         style={{ ...inp, width: 84, padding: '7px 9px', fontSize: 13, textAlign: 'right', fontVariantNumeric: 'tabular-nums' }} />
-                      <span style={{ fontSize: 11, color: DIM, fontWeight: 700, minWidth: 18 }}>{unit}</span>
+                      <span style={{ fontSize: 12, color: DIM, fontWeight: 700, minWidth: 18 }}>{unit}</span>
                       <button onClick={() => traceCondition(c.id)} title="Open the tracer targeted at this condition — the next finished trace sets its quantity"
-                        style={{ display: 'inline-flex', alignItems: 'center', gap: 5, border: '1px solid var(--brand-primary-35)', background: 'var(--brand-primary-08)', color: GOLD, borderRadius: 8, padding: '6px 10px', cursor: 'pointer', fontWeight: 700, fontSize: 12 }}>
+                        style={{ display: 'inline-flex', alignItems: 'center', gap: 5, border: '1px solid var(--border-default)', background: 'var(--bg-surface-2)', color: 'var(--text-primary)', borderRadius: 8, padding: '6px 10px', cursor: 'pointer', fontWeight: 700, fontSize: 12 }}>
                         <Ic name="penTrace" s={14} k={`tr_${c.id}`} />Trace
                       </button>
                     </div>
-                    <b style={{ color: GOLD, marginRight: 14 }}>{usd(tot)}</b>
+                    <b style={{ color: 'var(--text-primary)', marginRight: 14 }}>{usd(tot)}</b>
                     <button onClick={(e) => { e.stopPropagation(); setConditions((cs) => cs.filter((x) => x.id !== c.id)); }} style={{ background: 'none', border: 'none', color: RED, fontSize: 20, cursor: 'pointer' }}>×</button>
                   </div>
                   {expanded === c.id && <div style={{ marginTop: 10, borderTop: `1px solid ${LINE}`, paddingTop: 8 }}>{lines.map((l, i) => <div key={i} style={{ display: 'flex', padding: '4px 0', fontSize: 13 }}><span style={{ flex: 1 }}>{l.name}</span><span style={{ color: DIM, marginRight: 12 }}>{l.qty} {l.unit}</span><span style={{ fontWeight: 600 }}>{usd(l.totalCents)}</span></div>)}</div>}
@@ -1381,7 +1381,7 @@ td{padding:8px 10px;border-bottom:1px solid #eee}td.v{font-weight:700;color:#444
           <div style={{ width: '100%', maxWidth: 720, maxHeight: '92vh', overflowY: 'auto', background: PANEL, border: `1px solid ${LINE}`, borderRadius: 18, boxShadow: '0 24px 70px rgba(0,0,0,0.6)' }}>
             {/* step rail */}
             <div style={{ display: 'flex', alignItems: 'center', gap: 12, padding: '16px 20px', borderBottom: `1px solid ${LINE}`, position: 'sticky', top: 0, background: PANEL, borderTopLeftRadius: 18, borderTopRightRadius: 18 }}>
-              <div style={{ fontSize: 11, color: GOLD, fontWeight: 800 }}>First Takeoff · 60-Second Start</div>
+              <div style={{ fontSize: 12, color: 'var(--text-primary)', fontWeight: 800 }}>First Takeoff · 60-Second Start</div>
               <div style={{ marginLeft: 'auto', display: 'flex', gap: 6, alignItems: 'center' }}>
                 {WIZ_STEPS.map((s, i) => <span key={s} title={s} style={{ width: i === wizStep ? 22 : 8, height: 8, borderRadius: 4, background: i === wizStep ? GOLD : i < wizStep ? GREEN : 'rgba(255,255,255,0.15)', transition: 'all .2s' }} />)}
               </div>
@@ -1392,17 +1392,17 @@ td{padding:8px 10px;border-bottom:1px solid #eee}td.v{font-weight:700;color:#444
               {wizStep === 0 && (
                 <div>
                   <div style={{ fontSize: 20, fontWeight: 800, color: TEXT }}>Pick a Starting Point</div>
-                  <div style={{ fontSize: 13.5, color: DIM, marginTop: 4, lineHeight: 1.5 }}>Choose the building type — we drop the conditions that type almost always needs (value 0, ready to measure). Or start blank.</div>
+                  <div style={{ fontSize: 14, color: DIM, marginTop: 4, lineHeight: 1.5 }}>Choose the building type — we drop the conditions that type almost always needs (value 0, ready to measure). Or start blank.</div>
                   <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit,minmax(200px,1fr))', gap: 9, marginTop: 14 }}>
                     {BUILDING_TEMPLATES.map((t) => { const IconC = TPL_ICON[t.id] || Buildings; const active = activeTemplate === t.id; return (
                       <button key={t.id} onClick={() => { dropTemplate(t.id); setWizStep(1); }} style={{ textAlign: 'left', display: 'flex', gap: 10, alignItems: 'center', border: `1px solid ${active ? GOLD : LINE}`, background: active ? 'var(--brand-primary-12)' : BG, borderRadius: 12, padding: '11px 12px', cursor: 'pointer' }}>
-                        <IconC size={22} weight="duotone" color={GOLD} />
-                        <div style={{ minWidth: 0 }}><div style={{ fontWeight: 800, fontSize: 13.5, color: TEXT }}>{t.name}</div><div style={{ fontSize: 11, color: DIM }}>{t.conditions.length} conditions</div></div>
+                        <IconC size={22} weight="duotone" color="var(--text-secondary)" />
+                        <div style={{ minWidth: 0 }}><div style={{ fontWeight: 800, fontSize: 14, color: TEXT }}>{t.name}</div><div style={{ fontSize: 12, color: DIM }}>{t.conditions.length} conditions</div></div>
                       </button>
                     ); })}
                     <button onClick={() => { chooseBlank(); setWizStep(1); }} style={{ textAlign: 'left', display: 'flex', gap: 10, alignItems: 'center', border: `1px dashed ${LINE}`, background: 'transparent', borderRadius: 12, padding: '11px 12px', cursor: 'pointer' }}>
                       <FileDashed size={22} weight="duotone" color={DIM} />
-                      <div><div style={{ fontWeight: 800, fontSize: 13.5, color: TEXT }}>Blank</div><div style={{ fontSize: 11, color: DIM }}>Start Empty</div></div>
+                      <div><div style={{ fontWeight: 800, fontSize: 14, color: TEXT }}>Blank</div><div style={{ fontSize: 12, color: DIM }}>Start Empty</div></div>
                     </button>
                   </div>
                 </div>
@@ -1411,20 +1411,20 @@ td{padding:8px 10px;border-bottom:1px solid #eee}td.v{font-weight:700;color:#444
               {wizStep === 1 && (
                 <div>
                   <div style={{ fontSize: 20, fontWeight: 800, color: TEXT }}>Bring Your Plans</div>
-                  <div style={{ fontSize: 13.5, color: DIM, marginTop: 4, lineHeight: 1.5 }}>Get the drawing in three ways — or skip and key quantities in by hand.</div>
+                  <div style={{ fontSize: 14, color: DIM, marginTop: 4, lineHeight: 1.5 }}>Get the drawing in three ways — or skip and key quantities in by hand.</div>
                   <div style={{ display: 'flex', flexDirection: 'column', gap: 10, marginTop: 14 }}>
                     <button onClick={() => blueprintInputRef.current?.click()} style={wizRow}>
-                      <FilePdf size={26} weight="duotone" color={GOLD} />
+                      <FilePdf size={26} weight="duotone" color="var(--text-secondary)" />
                       <div style={{ flex: 1 }}><div style={wizRowT}>Read the Full Blueprint (AI)</div><div style={wizRowD}>Upload the whole plan-set PDF — every sheet read, all conditions extracted &amp; priced.</div></div>
                       <ArrowRight size={16} color={DIM} />
                     </button>
                     <button onClick={() => { closeWizard(); openTracer(); }} style={wizRow}>
-                      <PencilSimpleLine size={26} weight="duotone" color={GOLD} />
+                      <PencilSimpleLine size={26} weight="duotone" color="var(--text-secondary)" />
                       <div style={{ flex: 1 }}><div style={wizRowT}>Open the Plan Tracer</div><div style={wizRowD}>Drop a PDF or image and measure right on the drawing — zoom, snap, auto-count &amp; fill.</div></div>
                       <ArrowRight size={16} color={DIM} />
                     </button>
                     <button onClick={() => setWizStep(3)} style={wizRow}>
-                      <Stack size={26} weight="duotone" color={GOLD} />
+                      <Stack size={26} weight="duotone" color="var(--text-secondary)" />
                       <div style={{ flex: 1 }}><div style={wizRowT}>Enter Quantities Manually</div><div style={wizRowD}>Already have your numbers? Skip ahead and type them into the add-condition form.</div></div>
                       <ArrowRight size={16} color={DIM} />
                     </button>
@@ -1435,15 +1435,15 @@ td{padding:8px 10px;border-bottom:1px solid #eee}td.v{font-weight:700;color:#444
               {wizStep === 2 && (
                 <div>
                   <div style={{ fontSize: 20, fontWeight: 800, color: TEXT }}>Set the Scale</div>
-                  <div style={{ fontSize: 13.5, color: DIM, marginTop: 4, lineHeight: 1.5 }}>Two clicks a known distance apart calibrate the drawing so every trace prices in real feet.</div>
+                  <div style={{ fontSize: 14, color: DIM, marginTop: 4, lineHeight: 1.5 }}>Two clicks a known distance apart calibrate the drawing so every trace prices in real feet.</div>
                   {ppf > 0 ? (
                     <div style={{ display: 'flex', alignItems: 'center', gap: 11, marginTop: 14, padding: 14, borderRadius: 12, border: `1px solid rgba(52,211,153,0.4)`, background: 'rgba(52,211,153,0.06)' }}>
                       <CheckCircle size={24} weight="fill" color={GREEN} />
-                      <div><div style={{ fontWeight: 800, color: TEXT }}>Scale is set — {ppf.toFixed(2)} px/ft</div><div style={{ fontSize: 12.5, color: DIM }}>You&apos;re calibrated. Trace conditions and they price live.</div></div>
+                      <div><div style={{ fontWeight: 800, color: TEXT }}>Scale is set — {ppf.toFixed(2)} px/ft</div><div style={{ fontSize: 13, color: DIM }}>You&apos;re calibrated. Trace conditions and they price live.</div></div>
                     </div>
                   ) : (
                     <button onClick={() => { closeWizard(); openTracer(); }} style={{ ...wizRow, marginTop: 14 }}>
-                      <Ruler size={26} weight="duotone" color={GOLD} />
+                      <Ruler size={26} weight="duotone" color="var(--text-secondary)" />
                       <div style={{ flex: 1 }}><div style={wizRowT}>Open the Plan Tracer on the Scale Tool</div><div style={wizRowD}>Click two points a known distance apart, type the feet — a sanity check catches a fat-fingered scale.</div></div>
                       <ArrowRight size={16} color={DIM} />
                     </button>
@@ -1454,12 +1454,12 @@ td{padding:8px 10px;border-bottom:1px solid #eee}td.v{font-weight:700;color:#444
               {wizStep === 3 && (
                 <div>
                   <div style={{ fontSize: 20, fontWeight: 800, color: TEXT }}>Your Live Estimate</div>
-                  <div style={{ fontSize: 13.5, color: DIM, marginTop: 4, lineHeight: 1.5 }}>Every measured condition rolls up here instantly. Hand a client-ready proposal PDF in one tap.</div>
-                  <div style={{ display: 'flex', alignItems: 'center', gap: 16, marginTop: 14, padding: 16, borderRadius: 12, border: `1px solid var(--brand-primary-25)`, background: 'color-mix(in srgb, var(--brand-primary) 6%, transparent)' }}>
+                  <div style={{ fontSize: 14, color: DIM, marginTop: 4, lineHeight: 1.5 }}>Every measured condition rolls up here instantly. Hand a client-ready proposal PDF in one tap.</div>
+                  <div style={{ display: 'flex', alignItems: 'center', gap: 16, marginTop: 14, padding: 16, borderRadius: 12, border: `1px solid var(--brand-primary-25)`, background: 'var(--bg-surface-2)' }}>
                     <ConfidenceRing score={confidence.score} />
                     <div style={{ flex: 1, minWidth: 0 }}>
-                      <div style={{ fontSize: 30, fontWeight: 800, color: GOLD, fontVariantNumeric: 'tabular-nums' }}>{usd(r.sellCents)}</div>
-                      <div style={{ fontSize: 12.5, color: DIM }}>{conditions.length} conditions · {r.lines.length} priced components · confidence {confidence.score}%</div>
+                      <div style={{ fontSize: 30, fontWeight: 800, color: 'var(--text-primary)', fontVariantNumeric: 'tabular-nums' }}>{usd(r.sellCents)}</div>
+                      <div style={{ fontSize: 13, color: DIM }}>{conditions.length} conditions · {r.lines.length} priced components · confidence {confidence.score}%</div>
                       <div style={{ fontSize: 12, color: DIM, marginTop: 2 }}>{confidence.reasons[0]}</div>
                     </div>
                   </div>
@@ -1473,7 +1473,7 @@ td{padding:8px 10px;border-bottom:1px solid #eee}td.v{font-weight:700;color:#444
             {/* footer nav */}
             <div style={{ display: 'flex', alignItems: 'center', gap: 10, padding: '14px 20px', borderTop: `1px solid ${LINE}`, position: 'sticky', bottom: 0, background: PANEL, borderBottomLeftRadius: 18, borderBottomRightRadius: 18 }}>
               <button onClick={() => (wizStep === 0 ? closeWizard() : setWizStep((s) => s - 1))} style={{ display: 'inline-flex', alignItems: 'center', gap: 6, background: 'transparent', color: TEXT, border: `1px solid ${LINE}`, borderRadius: 8, padding: '9px 14px', cursor: 'pointer', fontWeight: 600, fontSize: 13 }}>{wizStep === 0 ? 'Skip' : <><ArrowLeft size={15} weight="bold" />Back</>}</button>
-              <span style={{ marginLeft: 'auto', fontSize: 12.5, color: DIM }}>Step {wizStep + 1} of {WIZ_STEPS.length} · {WIZ_STEPS[wizStep]}</span>
+              <span style={{ marginLeft: 'auto', fontSize: 13, color: DIM }}>Step {wizStep + 1} of {WIZ_STEPS.length} · {WIZ_STEPS[wizStep]}</span>
               {wizStep < 3
                 ? <button onClick={() => setWizStep((s) => s + 1)} style={{ ...btn, display: 'inline-flex', alignItems: 'center', gap: 6 }}>Next<ArrowRight size={15} weight="bold" color="var(--on-brand)" /></button>
                 : <button onClick={closeWizard} style={{ ...btn, display: 'inline-flex', alignItems: 'center', gap: 6 }}><CheckCircle size={16} weight="bold" color="var(--on-brand)" />Start Estimating</button>}
@@ -1495,7 +1495,7 @@ td{padding:8px 10px;border-bottom:1px solid #eee}td.v{font-weight:700;color:#444
                 const url = w === 'A' ? revA : revB;
                 return (
                   <label key={w} style={{ border: `1.5px dashed ${url ? GOLD : LINE}`, borderRadius: 12, minHeight: 170, display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', cursor: 'pointer', overflow: 'hidden', background: PANEL, padding: 8 }}>
-                    <div style={{ fontSize: 11, fontWeight: 800, color: url ? GOLD : DIM, marginBottom: 6 }}>{w === 'A' ? 'Old Revision' : 'New Revision'}</div>
+                    <div style={{ fontSize: 12, fontWeight: 800, color: url ? GOLD : DIM, marginBottom: 6 }}>{w === 'A' ? 'Old Revision' : 'New Revision'}</div>
                     {url ? <img src={url} alt={w} style={{ maxWidth: '100%', maxHeight: 230, display: 'block', borderRadius: 6 }} /> : <span style={{ color: DIM, fontSize: 13 }}>Click to upload a sheet image</span>}
                     <input type="file" accept="image/*" style={{ display: 'none' }} onChange={(e) => { pickRev(w, e.target.files?.[0]); (e.target as HTMLInputElement).value = ''; }} />
                   </label>
@@ -1512,11 +1512,11 @@ td{padding:8px 10px;border-bottom:1px solid #eee}td.v{font-weight:700;color:#444
                 {revResult.changes.map((c, i) => (
                   <div key={i} style={{ background: PANEL, border: `1px solid ${LINE}`, borderLeft: `3px solid ${impactColor(c.costImpact)}`, borderRadius: 8, padding: 12, marginBottom: 8 }}>
                     <div style={{ display: 'flex', alignItems: 'center', gap: 8, flexWrap: 'wrap' }}>
-                      <span style={{ fontSize: 11, fontWeight: 800, color: c.type === 'added' ? GREEN : c.type === 'removed' ? RED : GOLD }}>{c.type}</span>
+                      <span style={{ fontSize: 12, fontWeight: 800, color: c.type === 'added' ? GREEN : c.type === 'removed' ? RED : GOLD }}>{c.type}</span>
                       {c.trade ? <span style={{ color: DIM, fontSize: 12 }}>{c.trade}</span> : null}
-                      <span style={{ marginLeft: 'auto', fontSize: 11, fontWeight: 700, color: impactColor(c.costImpact) }}>{c.costImpact === 'increase' ? 'adds cost' : c.costImpact === 'decrease' ? 'saves cost' : 'neutral'}{c.confidence != null ? ` · ${c.confidence}%` : ''}</span>
+                      <span style={{ marginLeft: 'auto', fontSize: 12, fontWeight: 700, color: impactColor(c.costImpact) }}>{c.costImpact === 'increase' ? 'adds cost' : c.costImpact === 'decrease' ? 'saves cost' : 'neutral'}{c.confidence != null ? ` · ${c.confidence}%` : ''}</span>
                     </div>
-                    <div style={{ color: TEXT, fontSize: 13.5, marginTop: 4 }}>{c.description}</div>
+                    <div style={{ color: TEXT, fontSize: 14, marginTop: 4 }}>{c.description}</div>
                     {c.location ? <div style={{ color: DIM, fontSize: 12, marginTop: 2 }}>{c.location}</div> : null}
                   </div>
                 ))}
@@ -1534,20 +1534,20 @@ td{padding:8px 10px;border-bottom:1px solid #eee}td.v{font-weight:700;color:#444
               <Table size={22} weight="duotone" color={GREEN} />
               <div style={{ flex: 1, minWidth: 0 }}>
                 <div style={{ fontWeight: 800, fontSize: 16, color: TEXT, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>Review import · {qtyReview.fileName}</div>
-                <div style={{ fontSize: 12.5, color: DIM }}>{qtyReview.rows.length} rows parsed · {qtyAddable} mapped to an assembly · edit any mapping below</div>
+                <div style={{ fontSize: 13, color: DIM }}>{qtyReview.rows.length} rows parsed · {qtyAddable} mapped to an assembly · edit any mapping below</div>
               </div>
               <button onClick={() => setQtyReview(null)} title="Close" style={{ background: 'none', border: 'none', color: DIM, cursor: 'pointer', display: 'inline-flex' }}><IconX size={20} /></button>
             </div>
             {qtyReview.warnings.length > 0 && (
-              <div style={{ padding: '10px 20px', borderBottom: `1px solid ${LINE}`, background: 'color-mix(in srgb, var(--brand-primary) 6%, transparent)', maxHeight: 96, overflowY: 'auto', display: 'flex', flexDirection: 'column', gap: 4 }}>
-                {qtyReview.warnings.map((w, i) => <div key={i} style={{ display: 'flex', alignItems: 'flex-start', gap: 7, fontSize: 12, color: GOLD, lineHeight: 1.4 }}><WarningCircle size={15} weight="bold" style={{ flexShrink: 0, marginTop: 1 }} />{w}</div>)}
+              <div style={{ padding: '10px 20px', borderBottom: `1px solid ${LINE}`, background: 'var(--bg-surface-2)', maxHeight: 96, overflowY: 'auto', display: 'flex', flexDirection: 'column', gap: 4 }}>
+                {qtyReview.warnings.map((w, i) => <div key={i} style={{ display: 'flex', alignItems: 'flex-start', gap: 7, fontSize: 12, color: 'var(--text-primary)', lineHeight: 1.4 }}><WarningCircle size={15} weight="bold" style={{ flexShrink: 0, marginTop: 1 }} />{w}</div>)}
               </div>
             )}
             <div style={{ overflow: 'auto', flex: 1 }}>
               <table className="k-table" style={{ width: '100%', borderCollapse: 'collapse' }}>
                 <thead>
                   <tr>
-                    {['Description', 'Qty', 'Unit', 'CSI', 'Assembly (prices live)'].map((h) => <th key={h} style={{ position: 'sticky', top: 0, background: PANEL, textAlign: 'left', padding: '9px 12px', fontSize: 11, color: DIM, fontWeight: 700, borderBottom: `1px solid ${LINE}`, zIndex: 1 }}>{h}</th>)}
+                    {['Description', 'Qty', 'Unit', 'CSI', 'Assembly (prices live)'].map((h) => <th key={h} style={{ position: 'sticky', top: 0, background: PANEL, textAlign: 'left', padding: '9px 12px', fontSize: 12, color: DIM, fontWeight: 700, borderBottom: `1px solid ${LINE}`, zIndex: 1 }}>{h}</th>)}
                   </tr>
                 </thead>
                 <tbody>
@@ -1555,7 +1555,7 @@ td{padding:8px 10px;border-bottom:1px solid #eee}td.v{font-weight:700;color:#444
                     const unmatched = !row.assemblyId;
                     return (
                       <tr key={i} style={{ background: unmatched ? 'rgba(248,113,113,0.07)' : 'transparent', borderBottom: `1px solid ${LINE}` }}>
-                        <td style={{ padding: '7px 12px', color: TEXT, maxWidth: 280 }}>{row.description}{row.unitCostCents ? <span style={{ color: DIM, fontSize: 11 }}> · ${(row.unitCostCents / 100).toFixed(2)}/{row.unit}</span> : null}</td>
+                        <td style={{ padding: '7px 12px', color: TEXT, maxWidth: 280 }}>{row.description}{row.unitCostCents ? <span style={{ color: DIM, fontSize: 12 }}> · ${(row.unitCostCents / 100).toFixed(2)}/{row.unit}</span> : null}</td>
                         <td style={{ padding: '7px 12px', fontVariantNumeric: 'tabular-nums', fontWeight: 600, whiteSpace: 'nowrap' }}>{row.qty.toLocaleString()}</td>
                         <td style={{ padding: '7px 12px', color: DIM }}>{row.unit}</td>
                         <td style={{ padding: '7px 12px', color: DIM, whiteSpace: 'nowrap' }}>{row.csi || '—'}</td>
@@ -1572,7 +1572,7 @@ td{padding:8px 10px;border-bottom:1px solid #eee}td.v{font-weight:700;color:#444
               </table>
             </div>
             <div style={{ display: 'flex', alignItems: 'center', gap: 10, padding: '14px 20px', borderTop: `1px solid ${LINE}`, flexWrap: 'wrap' }}>
-              <div style={{ fontSize: 12.5, color: DIM }}>Unmatched rows are highlighted — pick an assembly to include them.</div>
+              <div style={{ fontSize: 13, color: DIM }}>Unmatched rows are highlighted — pick an assembly to include them.</div>
               <button onClick={() => setQtyReview(null)} style={{ marginLeft: 'auto', background: 'transparent', color: TEXT, border: `1px solid ${LINE}`, borderRadius: 8, padding: '9px 14px', cursor: 'pointer', fontWeight: 600, fontSize: 13 }}>Cancel</button>
               <button onClick={addQtyConditions} disabled={!qtyAddable} style={{ ...btn, opacity: qtyAddable ? 1 : 0.5, cursor: qtyAddable ? 'pointer' : 'not-allowed', display: 'inline-flex', alignItems: 'center', gap: 7 }}><CheckCircle size={17} weight="bold" color="var(--on-brand)" />Add {qtyAddable} condition{qtyAddable === 1 ? '' : 's'}</button>
             </div>
@@ -1585,21 +1585,21 @@ td{padding:8px 10px;border-bottom:1px solid #eee}td.v{font-weight:700;color:#444
         <div style={{ position: 'fixed', inset: 0, background: 'rgba(3,5,8,0.86)', zIndex: 78, display: 'flex', alignItems: 'center', justifyContent: 'center', padding: 16 }}>
           <div style={{ width: '100%', maxWidth: 640, maxHeight: '92vh', overflowY: 'auto', background: PANEL, border: `1px solid ${LINE}`, borderRadius: 16, boxShadow: '0 24px 70px rgba(0,0,0,0.6)' }}>
             <div style={{ display: 'flex', alignItems: 'center', gap: 12, padding: '16px 20px', borderBottom: `1px solid ${LINE}`, position: 'sticky', top: 0, background: PANEL, borderTopLeftRadius: 16, borderTopRightRadius: 16 }}>
-              <Cube size={22} weight="duotone" color={GOLD} />
+              <Cube size={22} weight="duotone" color="var(--text-secondary)" />
               <div style={{ flex: 1, minWidth: 0 }}>
                 <div style={{ fontWeight: 800, fontSize: 16, color: TEXT, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>Import CAD · {dxfReview.fileName}</div>
-                <div style={{ fontSize: 12.5, color: DIM }}>Units: <b style={{ color: TEXT }}>{DXF_UNIT_LABEL[dxfReview.insUnits ?? 0] || 'unitless (assumed feet)'}</b> · {dxfReview.entityCount} entities · exact quantities, no tracing</div>
+                <div style={{ fontSize: 13, color: DIM }}>Units: <b style={{ color: TEXT }}>{DXF_UNIT_LABEL[dxfReview.insUnits ?? 0] || 'unitless (assumed feet)'}</b> · {dxfReview.entityCount} entities · exact quantities, no tracing</div>
               </div>
               <button onClick={() => setDxfReview(null)} title="Close" style={{ background: 'none', border: 'none', color: DIM, cursor: 'pointer', display: 'inline-flex' }}><IconX size={20} /></button>
             </div>
             <div style={{ padding: 20, display: 'flex', flexDirection: 'column', gap: 12 }}>
-              {dxfReview.warnings.map((w, i) => <div key={i} style={{ display: 'flex', alignItems: 'flex-start', gap: 7, fontSize: 12.5, color: GOLD, background: 'color-mix(in srgb, var(--brand-primary) 6%, transparent)', border: `1px solid var(--brand-primary-25)`, borderRadius: 8, padding: '8px 10px', lineHeight: 1.4 }}><WarningCircle size={16} weight="bold" style={{ flexShrink: 0, marginTop: 1 }} />{w}</div>)}
+              {dxfReview.warnings.map((w, i) => <div key={i} style={{ display: 'flex', alignItems: 'flex-start', gap: 7, fontSize: 13, color: 'var(--text-primary)', background: 'var(--bg-surface-2)', border: `1px solid var(--brand-primary-25)`, borderRadius: 8, padding: '8px 10px', lineHeight: 1.4 }}><WarningCircle size={16} weight="bold" style={{ flexShrink: 0, marginTop: 1 }} />{w}</div>)}
 
               {/* Areas bucket */}
               <div style={{ border: `1px solid ${dxfInc.area && dxfReview.areas.length ? GOLD : LINE}`, borderRadius: 12, padding: 14, background: dxfInc.area && dxfReview.areas.length ? 'color-mix(in srgb, var(--brand-primary) 6%, transparent)' : 'transparent', opacity: dxfReview.areas.length ? 1 : 0.5 }}>
                 <label style={{ display: 'flex', alignItems: 'center', gap: 10, cursor: dxfReview.areas.length ? 'pointer' : 'not-allowed' }}>
                   <input type="checkbox" checked={dxfInc.area && dxfReview.areas.length > 0} disabled={!dxfReview.areas.length} onChange={(e) => setDxfInc((s) => ({ ...s, area: e.target.checked }))} style={{ accentColor: GOLD, width: 16, height: 16, flexShrink: 0 }} />
-                  <Polygon size={20} weight="duotone" color={GOLD} />
+                  <Polygon size={20} weight="duotone" color="var(--text-secondary)" />
                   <div style={{ flex: 1 }}>
                     <div style={{ fontWeight: 700, fontSize: 14, color: TEXT }}>Areas · {dxfReview.areas.length} closed shape{dxfReview.areas.length === 1 ? '' : 's'}</div>
                     <div style={{ fontSize: 12, color: DIM }}>{dxfReview.totalAreaSF.toLocaleString()} SF total → one Area condition per shape</div>
@@ -1616,7 +1616,7 @@ td{padding:8px 10px;border-bottom:1px solid #eee}td.v{font-weight:700;color:#444
               <div style={{ border: `1px solid ${dxfInc.linear && dxfReview.linearLF > 0 ? GOLD : LINE}`, borderRadius: 12, padding: 14, background: dxfInc.linear && dxfReview.linearLF > 0 ? 'color-mix(in srgb, var(--brand-primary) 6%, transparent)' : 'transparent', opacity: dxfReview.linearLF > 0 ? 1 : 0.5 }}>
                 <label style={{ display: 'flex', alignItems: 'center', gap: 10, cursor: dxfReview.linearLF > 0 ? 'pointer' : 'not-allowed' }}>
                   <input type="checkbox" checked={dxfInc.linear && dxfReview.linearLF > 0} disabled={dxfReview.linearLF <= 0} onChange={(e) => setDxfInc((s) => ({ ...s, linear: e.target.checked }))} style={{ accentColor: GOLD, width: 16, height: 16, flexShrink: 0 }} />
-                  <Ruler size={20} weight="duotone" color={GOLD} />
+                  <Ruler size={20} weight="duotone" color="var(--text-secondary)" />
                   <div style={{ flex: 1 }}>
                     <div style={{ fontWeight: 700, fontSize: 14, color: TEXT }}>Linear · {dxfReview.linearLF.toLocaleString()} LF</div>
                     <div style={{ fontSize: 12, color: DIM }}>All lines + polyline edges → one Linear condition</div>
@@ -1634,7 +1634,7 @@ td{padding:8px 10px;border-bottom:1px solid #eee}td.v{font-weight:700;color:#444
                 <div style={{ border: `1px solid ${dxfInc.count ? GOLD : LINE}`, borderRadius: 12, padding: 14, background: dxfInc.count ? 'color-mix(in srgb, var(--brand-primary) 6%, transparent)' : 'transparent' }}>
                   <label style={{ display: 'flex', alignItems: 'center', gap: 10, cursor: 'pointer' }}>
                     <input type="checkbox" checked={dxfInc.count} onChange={(e) => setDxfInc((s) => ({ ...s, count: e.target.checked }))} style={{ accentColor: GOLD, width: 16, height: 16, flexShrink: 0 }} />
-                    <Stack size={20} weight="duotone" color={GOLD} />
+                    <Stack size={20} weight="duotone" color="var(--text-secondary)" />
                     <div style={{ flex: 1 }}>
                       <div style={{ fontWeight: 700, fontSize: 14, color: TEXT }}>Symbols · {dxfReview.circleCount} circles + {dxfReview.arcCount} arcs</div>
                       <div style={{ fontSize: 12, color: DIM }}>Optional — one Count condition of {dxfReview.circleCount + dxfReview.arcCount} EA</div>
@@ -1649,7 +1649,7 @@ td{padding:8px 10px;border-bottom:1px solid #eee}td.v{font-weight:700;color:#444
               )}
             </div>
             <div style={{ display: 'flex', alignItems: 'center', gap: 10, padding: '14px 20px', borderTop: `1px solid ${LINE}`, position: 'sticky', bottom: 0, background: PANEL, borderBottomLeftRadius: 16, borderBottomRightRadius: 16, flexWrap: 'wrap' }}>
-              <div style={{ fontSize: 12, color: DIM, display: 'inline-flex', alignItems: 'center', gap: 6, maxWidth: 320 }}><MagicWand size={15} weight="duotone" color={GOLD} />DXF gives exact quantities — no scale or tracing needed.</div>
+              <div style={{ fontSize: 12, color: DIM, display: 'inline-flex', alignItems: 'center', gap: 6, maxWidth: 320 }}><MagicWand size={15} weight="duotone" color="var(--text-secondary)" />DXF gives exact quantities — no scale or tracing needed.</div>
               <button onClick={() => setDxfReview(null)} style={{ marginLeft: 'auto', background: 'transparent', color: TEXT, border: `1px solid ${LINE}`, borderRadius: 8, padding: '9px 14px', cursor: 'pointer', fontWeight: 600, fontSize: 13 }}>Cancel</button>
               <button onClick={addDxfConditions} style={{ ...btn, display: 'inline-flex', alignItems: 'center', gap: 7 }}><CheckCircle size={17} weight="bold" color="var(--on-brand)" />Add Conditions</button>
             </div>
@@ -1662,17 +1662,17 @@ td{padding:8px 10px;border-bottom:1px solid #eee}td.v{font-weight:700;color:#444
         <div style={{ position: 'fixed', inset: 0, background: 'rgba(3,5,8,0.86)', zIndex: 79, display: 'flex', alignItems: 'center', justifyContent: 'center', padding: 16 }}>
           <div style={{ width: '100%', maxWidth: 820, maxHeight: '92vh', display: 'flex', flexDirection: 'column', background: PANEL, border: `1px solid ${LINE}`, borderRadius: 16, boxShadow: '0 24px 70px rgba(0,0,0,0.6)' }}>
             <div style={{ display: 'flex', alignItems: 'center', gap: 12, padding: '16px 20px', borderBottom: `1px solid ${LINE}` }}>
-              <span style={{ width: 38, height: 38, borderRadius: 10, background: 'rgba(56,189,248,0.12)', display: 'inline-flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}><Sparkle size={21} weight="duotone" color="var(--brand-primary-strong)" /></span>
+              <span style={{ width: 38, height: 38, borderRadius: 10, background: 'rgba(56,189,248,0.12)', display: 'inline-flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}><Sparkle size={21} weight="duotone" color="var(--text-secondary)" /></span>
               <div style={{ flex: 1, minWidth: 0 }}>
                 <div style={{ fontWeight: 800, fontSize: 16, color: TEXT, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>Review AI counts · {reviewQueue.source}</div>
-                <div style={{ fontSize: 12.5, color: DIM }}>AI proposed {reviewQueue.items.length} count{reviewQueue.items.length === 1 ? '' : 's'} — confirm, remap, or reject. Only accepted, mapped rows are added.</div>
+                <div style={{ fontSize: 13, color: DIM }}>AI proposed {reviewQueue.items.length} count{reviewQueue.items.length === 1 ? '' : 's'} — confirm, remap, or reject. Only accepted, mapped rows are added.</div>
               </div>
               <button onClick={() => setReviewQueue(null)} title="Close" style={{ background: 'none', border: 'none', color: DIM, cursor: 'pointer', display: 'inline-flex' }}><IconX size={20} /></button>
             </div>
             <div style={{ padding: '10px 14px', borderBottom: `1px solid ${LINE}`, display: 'flex', gap: 8, flexWrap: 'wrap', alignItems: 'center' }}>
               <button onClick={() => setReviewQueue((q) => q ? { ...q, items: q.items.map((it) => ({ ...it, accept: !!(it.assemblyId && ASSEMBLIES[it.assemblyId] && it.count > 0) })) } : q)} style={pillBtn}>Accept All Mappable</button>
               <button onClick={() => setReviewQueue((q) => q ? { ...q, items: q.items.map((it) => ({ ...it, accept: false })) } : q)} style={pillBtn}>Reject All</button>
-              <span style={{ marginLeft: 'auto', fontSize: 11.5, color: DIM }}>Confidence: AI-reported where available, else estimated from assembly match + qty.</span>
+              <span style={{ marginLeft: 'auto', fontSize: 12, color: DIM }}>Confidence: AI-reported where available, else estimated from assembly match + qty.</span>
             </div>
             <div style={{ overflow: 'auto', flex: 1, padding: 14, display: 'flex', flexDirection: 'column', gap: 8 }}>
               {reviewQueue.items.map((it) => {
@@ -1681,14 +1681,14 @@ td{padding:8px 10px;border-bottom:1px solid #eee}td.v{font-weight:700;color:#444
                   <div key={it.id} style={{ border: `1px solid ${it.accept ? 'rgba(52,211,153,0.4)' : LINE}`, background: it.accept ? 'rgba(52,211,153,0.05)' : BG, borderRadius: 12, padding: '11px 13px' }}>
                     <div style={{ display: 'flex', alignItems: 'center', gap: 10, flexWrap: 'wrap' }}>
                       <button onClick={() => patchReview(it.id, { accept: !it.accept })} title={it.accept ? 'Accepted — click to reject' : 'Rejected — click to accept'}
-                        style={{ display: 'inline-flex', alignItems: 'center', gap: 6, border: `1px solid ${it.accept ? GREEN : LINE}`, background: it.accept ? 'rgba(52,211,153,0.14)' : 'transparent', color: it.accept ? GREEN : DIM, borderRadius: 8, padding: '6px 10px', cursor: 'pointer', fontWeight: 800, fontSize: 12.5, flexShrink: 0 }}>
+                        style={{ display: 'inline-flex', alignItems: 'center', gap: 6, border: `1px solid ${it.accept ? GREEN : LINE}`, background: it.accept ? 'rgba(52,211,153,0.14)' : 'transparent', color: it.accept ? GREEN : DIM, borderRadius: 8, padding: '6px 10px', cursor: 'pointer', fontWeight: 800, fontSize: 13, flexShrink: 0 }}>
                         {it.accept ? <CheckCircle size={15} weight="fill" color={GREEN} /> : <XCircle size={15} weight="bold" />}{it.accept ? 'Accept' : 'Reject'}
                       </button>
                       <div style={{ flex: 1, minWidth: 140 }}>
                         <div style={{ fontWeight: 700, fontSize: 14, color: TEXT }}>{it.label}</div>
                         <div style={{ fontSize: 12, color: DIM }}>{it.count} EA{it.csi ? ` · CSI ${it.csi}` : ''}</div>
                       </div>
-                      <span style={{ display: 'inline-flex', alignItems: 'center', gap: 5, fontSize: 11.5, fontWeight: 800, color: confColor(it.confidence), background: 'rgba(255,255,255,0.04)', border: `1px solid color-mix(in srgb, ${confColor(it.confidence)} 33%, transparent)`, borderRadius: 20, padding: '3px 9px', flexShrink: 0 }}>
+                      <span style={{ display: 'inline-flex', alignItems: 'center', gap: 5, fontSize: 12, fontWeight: 800, color: confColor(it.confidence), background: 'rgba(255,255,255,0.04)', border: `1px solid color-mix(in srgb, ${confColor(it.confidence)} 33%, transparent)`, borderRadius: 20, padding: '3px 9px', flexShrink: 0 }}>
                         {it.confidence < 45 && <WarningCircle size={12} weight="bold" />}{it.aiConf ? 'AI' : 'est.'} {it.confidence}%
                       </span>
                     </div>
@@ -1696,14 +1696,14 @@ td{padding:8px 10px;border-bottom:1px solid #eee}td.v{font-weight:700;color:#444
                       <option value="">— pick an assembly (required to add) —</option>
                       {asmList('count').map((a) => <option key={a.id} value={a.id}>{a.name} ({a.components.length} components)</option>)}
                     </select>
-                    {it.accept && !mapped && <div style={{ marginTop: 6, fontSize: 11.5, color: RED, display: 'inline-flex', alignItems: 'center', gap: 5 }}><WarningCircle size={13} weight="bold" />Accepted but unmapped — pick an assembly or it won&apos;t be added.</div>}
-                    {!it.accept && mapped && it.confidence < 70 && <div style={{ marginTop: 6, fontSize: 11.5, color: GOLD, display: 'inline-flex', alignItems: 'center', gap: 5 }}><WarningCircle size={13} weight="bold" />Low confidence — verify the count on the sheet before accepting.</div>}
+                    {it.accept && !mapped && <div style={{ marginTop: 6, fontSize: 12, color: RED, display: 'inline-flex', alignItems: 'center', gap: 5 }}><WarningCircle size={13} weight="bold" />Accepted but unmapped — pick an assembly or it won&apos;t be added.</div>}
+                    {!it.accept && mapped && it.confidence < 70 && <div style={{ marginTop: 6, fontSize: 12, color: 'var(--text-primary)', display: 'inline-flex', alignItems: 'center', gap: 5 }}><WarningCircle size={13} weight="bold" />Low confidence — verify the count on the sheet before accepting.</div>}
                   </div>
                 );
               })}
             </div>
             <div style={{ display: 'flex', alignItems: 'center', gap: 10, padding: '14px 20px', borderTop: `1px solid ${LINE}`, flexWrap: 'wrap' }}>
-              <div style={{ fontSize: 12.5, color: DIM }}>{reviewAddable} of {reviewQueue.items.length} ready to add.</div>
+              <div style={{ fontSize: 13, color: DIM }}>{reviewAddable} of {reviewQueue.items.length} ready to add.</div>
               <button onClick={() => setReviewQueue(null)} style={{ marginLeft: 'auto', background: 'transparent', color: TEXT, border: `1px solid ${LINE}`, borderRadius: 8, padding: '9px 14px', cursor: 'pointer', fontWeight: 600, fontSize: 13 }}>Cancel</button>
               <button onClick={commitReview} disabled={!reviewAddable} style={{ ...btn, opacity: reviewAddable ? 1 : 0.5, cursor: reviewAddable ? 'pointer' : 'not-allowed', display: 'inline-flex', alignItems: 'center', gap: 7 }}><CheckCircle size={17} weight="bold" color="var(--on-brand)" />Add {reviewAddable} accepted</button>
             </div>
@@ -1715,11 +1715,11 @@ td{padding:8px 10px;border-bottom:1px solid #eee}td.v{font-weight:700;color:#444
       {conditions.length > 0 && (
         <div style={{ position: 'fixed', bottom: 0, left: barRect.left, ...(barRect.width ? { width: barRect.width } : { right: 0 }), zIndex: 40, background: 'rgba(13,17,23,0.94)', backdropFilter: 'blur(8px)', borderTop: '1px solid var(--brand-primary-35)', boxShadow: '0 -10px 30px rgba(0,0,0,0.45)', padding: '10px 16px', display: 'flex', alignItems: 'center', gap: 14, flexWrap: 'wrap' }}>
           <div style={{ minWidth: 0 }}>
-            <div style={{ fontSize: 10, color: DIM, fontWeight: 700 }}>Sell Price · Live</div>
-            <div style={{ fontSize: 22, fontWeight: 800, color: GOLD, letterSpacing: '-0.02em', fontVariantNumeric: 'tabular-nums', lineHeight: 1.1 }}>{usd(r.sellCents)}</div>
+            <div style={{ fontSize: 12, color: DIM, fontWeight: 700 }}>Sell Price · Live</div>
+            <div style={{ fontSize: 22, fontWeight: 800, color: 'var(--text-primary)', letterSpacing: '-0.02em', fontVariantNumeric: 'tabular-nums', lineHeight: 1.1 }}>{usd(r.sellCents)}</div>
           </div>
-          <div style={{ fontSize: 11.5, color: DIM }}>{conditions.length} condition{conditions.length === 1 ? '' : 's'} · {r.lines.length} items</div>
-          {savedTakeoffId ? <span style={{ display: 'inline-flex', alignItems: 'center', gap: 4, fontSize: 11, fontWeight: 700, color: GREEN }}><CheckCircle size={13} weight="fill" />saved</span> : null}
+          <div style={{ fontSize: 12, color: DIM }}>{conditions.length} condition{conditions.length === 1 ? '' : 's'} · {r.lines.length} items</div>
+          {savedTakeoffId ? <span style={{ display: 'inline-flex', alignItems: 'center', gap: 4, fontSize: 12, fontWeight: 700, color: GREEN }}><CheckCircle size={13} weight="fill" />saved</span> : null}
           <button onClick={save} disabled={saving} style={{ ...btn, marginLeft: 'auto', padding: '10px 16px', opacity: saving ? 0.6 : 1 }}>{saving ? 'Saving…' : 'Save Takeoff'}</button>
         </div>
       )}

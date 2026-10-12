@@ -11,7 +11,7 @@ import { loadPushConfig, pushState, sendTestPush, turnOffPush, turnOnPush, type 
 const CSS = `
 .pac { display: flex; gap: 14px; align-items: flex-start; padding: 16px; margin-bottom: 18px; border-radius: 16px; border: 1px solid var(--border-subtle); background: linear-gradient(180deg, var(--c-raised), var(--c-card)); }
 .pac[data-state="on"] { border-color: color-mix(in srgb, var(--c-green) 40%, transparent); }
-.pacIcon { flex: 0 0 auto; width: 42px; height: 42px; border-radius: 12px; display: flex; align-items: center; justify-content: center; background: var(--brand-primary-08, rgba(255,224,0,0.08)); color: var(--brand-primary); }
+.pacIcon { flex: 0 0 auto; width: 42px; height: 42px; border-radius: 12px; display: flex; align-items: center; justify-content: center; background: var(--bg-surface-2); color: var(--text-secondary); }
 .pac[data-state="on"] .pacIcon { background: color-mix(in srgb, var(--c-green) 14%, transparent); color: var(--c-green); }
 .pac[data-state="blocked"] .pacIcon { background: color-mix(in srgb, var(--c-red) 14%, transparent); color: var(--c-red); }
 .pacBody { flex: 1; min-width: 0; }

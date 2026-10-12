@@ -35,7 +35,7 @@ import {
   PageShell, Card, StatRow, Badge, Button, Toolbar, EmptyState, RowActions, Select, Toast, useToast,
   type BadgeTone, type StatItem,
 } from '@/components/ui/kit';
-import { FlowSteps, InsightRow } from '@/components/ui/premium';
+import { FlowStrip } from '@/components/ui/premium';
 import { LifecycleRail } from '@/components/ui/Status';
 import { useLiveStatus } from '@/lib/hooks/useLiveStatus';
 import NudgeRing from '@/components/intelligence/NudgeRing';
@@ -84,11 +84,7 @@ const CSS = `
 .paWaivers { font-size: var(--fs-xs); font-weight: 700; color: var(--status-under-contract); white-space: nowrap; margin-top: 3px; }
 .paWaivers[data-ok="true"] { color: var(--status-ongoing); }
 .paCheck { accent-color: var(--brand-primary); cursor: pointer; width: 16px; height: 16px; }
-.paEmptyGrid { display: grid; grid-template-columns: minmax(0, 1fr); }
-@container paws (min-width: 900px) { .paEmptyGrid[data-ctx="true"] { grid-template-columns: minmax(0, 1fr) 380px; } .paEmptyRail { border-left: 1px solid var(--border-subtle); } }
 .paCq { container: paws / inline-size; min-width: 0; }
-.paEmptyRail { padding: 22px 24px; border-top: 1px solid var(--border-subtle); }
-.paRule { height: 1px; background: var(--border-subtle); margin: 14px 0 8px; }
 .paInlineErr { display: flex; align-items: center; gap: 8px; flex-wrap: wrap; font-size: var(--fs-sm); color: var(--status-overdue); padding: 10px 14px; border: 1px solid rgba(255,77,94,.35); border-radius: var(--radius-sm); background: rgba(255,77,94,.08); }
 .paSkel { height: 14px; border-radius: 4px; background: var(--border-subtle); }
 @media (max-width: 640px) {
@@ -111,10 +107,10 @@ const CSS = `
   .paTable td:nth-child(4) { grid-column: 2; grid-row: 2; }
   .paTable td:nth-child(5) { grid-column: 2 / 4; grid-row: 3; }
   .paTable td:nth-child(6) { grid-column: 2; grid-row: 4; display: flex; flex-direction: column; }
-  .paTable td:nth-child(6)::before { content: 'Completed to date'; font-size: 11px; color: var(--text-tertiary); text-transform: uppercase; letter-spacing: .04em; }
+  .paTable td:nth-child(6)::before { content: 'Completed to date'; font-size: 12px; color: var(--text-tertiary); text-transform: uppercase; letter-spacing: .04em; }
   .paTable td:nth-child(7), .paTable td:nth-child(8) { display: none; }
   .paTable td:nth-child(9) { grid-column: 3; grid-row: 1; text-align: right; display: flex; flex-direction: column; align-items: flex-end; }
-  .paTable td:nth-child(9)::before { content: 'Payment due'; font-size: 11px; color: var(--text-tertiary); text-transform: uppercase; letter-spacing: .04em; }
+  .paTable td:nth-child(9)::before { content: 'Payment due'; font-size: 12px; color: var(--text-tertiary); text-transform: uppercase; letter-spacing: .04em; }
   .paTable td:nth-child(10) { grid-column: 3; grid-row: 2 / 5; align-self: end; justify-self: end; }
 }
 `;
@@ -376,7 +372,7 @@ export default function PayAppsPage() {
   } else if (payApps.length===0) {
     listBody = (
       <div className="paCq">
-        <div className="paEmptyGrid" data-ctx={ctx ? 'true' : 'false'}>
+        <div>
           <EmptyState
             icon={<Clipboard size={22}/>}
             title={revised>0?`${fmt(revised)} under contract — nothing billed yet`:'No pay applications yet'}
@@ -386,17 +382,13 @@ export default function PayAppsPage() {
             action={<Button icon={<Plus size={15} weight="bold"/>} href={`/app/projects/${projectId}/pay-apps/new`}>Create Application #1</Button>}
           />
           {ctx && (
-            <div className="paEmptyRail">
-              <FlowSteps title="How G702 Billing Works" steps={[
-                {title:'Build the SOV & Bill the Period',desc:'Scheduled values, work completed, stored materials — retainage and payment due compute themselves.'},
-                {title:'Submit to the Owner',desc:'The G702/G703 packet goes out with a one-click owner approval link.'},
-                {title:'Approval Generates Lien Waivers',desc: subCount>0?`Conditional waivers for your ${subCount} sub${subCount===1?'':'s'}, each sized to their share of the period.`:'Conditional waivers for every sub on the job, sized to their share of the period.'},
-                {title:'Payment Is Waiver-Gated',desc:'Mark Paid is blocked until required waivers are signed — then paid-to-date and retainage update the ledger.'},
+            <div style={{ padding: '0 20px 16px' }}>
+              <FlowStrip steps={[
+                { title: 'Build the SOV', desc: 'Scheduled values and work completed' },
+                { title: 'Submit to the Owner', desc: 'One-click approval link' },
+                { title: 'Waivers Generate', desc: subCount > 0 ? `Conditional, for your ${subCount} sub${subCount === 1 ? '' : 's'}` : 'Conditional, for every sub' },
+                { title: 'Payment Is Waiver-Gated', desc: 'Mark Paid waits for signed waivers' },
               ]}/>
-              <div className="paRule"/>
-              <InsightRow label="Revised Contract" value={fmt(revised)} strong/>
-              <InsightRow label="Retainage Rate" value={`${Number(money?.retainagePct)||10}%`}/>
-              <InsightRow label="Subs on the Job" value={String(subCount)}/>
             </div>
           )}
         </div>

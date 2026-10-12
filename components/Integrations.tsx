@@ -43,7 +43,7 @@ export function IntegrationStrip({
           an implementation partner. That is the bill they have actually been
           handed before, so it is the one worth naming. */}
       <div style={{ display: 'flex', justifyContent: 'center', marginBottom: 6 }}>
-        <ScribbleNote size={15} rotate={-4} color="var(--brand-primary-strong)">No implementation fee</ScribbleNote>
+        <ScribbleNote size={15} rotate={-4} color="var(--text-secondary)">No implementation fee</ScribbleNote>
       </div>
       <div style={{ textAlign: 'center', color: 'var(--text-secondary)', fontSize: 12, marginBottom: 28, fontWeight: 600 }}>
         {heading}

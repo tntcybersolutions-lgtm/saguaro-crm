@@ -1744,8 +1744,8 @@ export default function Designer({ projectId }: { projectId: string | null }) {
         const cab = rec.dataCable ? rec.dataCable.name : (rec.powerCable ? rec.powerCable.name : '—');
         return `<tr><td><b>${d.label || defOf(d.typeId).short}</b></td><td>${len} ft</td><td>${cab}</td><td style="color:#555;font-size:12px">${rec.termination}</td></tr>`;
       }).join('')}</tbody></table>
-      <p style="font-size:12.5px;margin-top:8px"><b>Cable materials:</b> ${cs.byCable.map((c) => `${c.cable.name} ${c.feet.toLocaleString()} ft ($${c.cost.toLocaleString()})`).join(' · ')} &nbsp;—&nbsp; <b>~$${cs.totalCost.toLocaleString()}</b> est. ${cs.totalFeet.toLocaleString()} ft total (incl. 35% routing/drop allowance).</p>
-      <p style="font-size:12.5px;margin-top:4px"><b>Order footage:</b> ${cs.byCable.map((c) => `${c.cable.name} ${(Math.ceil(c.feet / 1000) * 1000).toLocaleString()} ft`).join(' · ')} — next full 1,000 ft box per cable type. ${idfDev ? 'Runs measured on the plan to the placed IDF.' : 'Runs measured to the assumed head-end — place an IDF on the plan to pin them.'}</p></div>` : '';
+      <p style="font-size:13px;margin-top:8px"><b>Cable materials:</b> ${cs.byCable.map((c) => `${c.cable.name} ${c.feet.toLocaleString()} ft ($${c.cost.toLocaleString()})`).join(' · ')} &nbsp;—&nbsp; <b>~$${cs.totalCost.toLocaleString()}</b> est. ${cs.totalFeet.toLocaleString()} ft total (incl. 35% routing/drop allowance).</p>
+      <p style="font-size:13px;margin-top:4px"><b>Order footage:</b> ${cs.byCable.map((c) => `${c.cable.name} ${(Math.ceil(c.feet / 1000) * 1000).toLocaleString()} ft`).join(' · ')} — next full 1,000 ft box per cable type. ${idfDev ? 'Runs measured on the plan to the placed IDF.' : 'Runs measured to the assumed head-end — place an IDF on the plan to pin them.'}</p></div>` : '';
 
     // ── cinematic hero image(s): one per floor (best-server field), active floor first ──
     const planFloors = floors.filter((f) => f.proj);
@@ -1786,7 +1786,7 @@ export default function Designer({ projectId }: { projectId: string | null }) {
       return Math.round(cells * cellFt * cellFt);
     };
     const densityHtml = dflag.areaFt2 > 0 && aps.length
-      ? `<p style="font-size:12.5px;margin:0 2px 16px;color:#333"><b>Density check:</b> ${aps.length} AP${aps.length === 1 ? '' : 's'} on ${dflag.areaFt2.toLocaleString()} ft² = 1 AP per ${Math.round(dflag.areaFt2 / aps.length).toLocaleString()} ft² — engineering ceiling 1 AP / 1,500 ft² (max ${dflag.capAps} for this floor)${dflag.flagged ? ' — <b style="color:#b42318">over the cap, re-design recommended</b>' : ' — within the cap'}.</p>`
+      ? `<p style="font-size:13px;margin:0 2px 16px;color:#333"><b>Density check:</b> ${aps.length} AP${aps.length === 1 ? '' : 's'} on ${dflag.areaFt2.toLocaleString()} ft² = 1 AP per ${Math.round(dflag.areaFt2 / aps.length).toLocaleString()} ft² — engineering ceiling 1 AP / 1,500 ft² (max ${dflag.capAps} for this floor)${dflag.flagged ? ' — <b style="color:#b42318">over the cap, re-design recommended</b>' : ' — within the cap'}.</p>`
       : '';
     const apJustHtml = aps.length ? `<div class="sect"><h2>Access points — why each one is there</h2>
       <table><thead><tr><th>AP</th><th class="r">Area Served</th><th class="r">Spacing</th><th class="c">Band</th><th class="r">Tx Power</th></tr></thead>
@@ -1827,8 +1827,8 @@ export default function Designer({ projectId }: { projectId: string | null }) {
       .band{background:linear-gradient(100deg,#0a0a0a,#161b22);color:#fff;padding:20px 26px;display:flex;align-items:center;gap:16px;border-radius:0 0 4px 4px}
       .mark{width:38px;height:38px;flex:0 0 38px}
       .band h1{font-size:19px;margin:0;font-weight:800;letter-spacing:.2px}
-      .band .tag{color:#FFE000;font-size:11px;font-weight:700}
-      .meta{color:#555;font-size:12.5px;margin:14px 2px 12px;display:flex;flex-wrap:wrap;gap:4px 18px}
+      .band .tag{color:#FFE000;font-size:12px;font-weight:700}
+      .meta{color:#555;font-size:13px;margin:14px 2px 12px;display:flex;flex-wrap:wrap;gap:4px 18px}
       .meta b{color:#111}
       .verdict{font-size:15px;line-height:1.5;color:#1a2232;background:#f7f9fc;border:1px solid #E4E4E7;border-left:4px solid #FFE000;border-radius:10px;padding:13px 16px;margin:0 2px 16px}
       .verdict b{color:#0a0a0a}
@@ -1836,17 +1836,17 @@ export default function Designer({ projectId }: { projectId: string | null }) {
       .floorblock{page-break-inside:avoid;margin-top:12px}
       .floortitle{font-size:13px;font-weight:800;color:#0a0a0a;margin:0 0 4px}.floortitle span{font-weight:600;color:#6b7688}
       h2{font-size:12px;margin:26px 0 8px;color:#0a0a0a;border-bottom:2px solid #FFE000;padding-bottom:5px;display:inline-block}
-      table{width:100%;border-collapse:collapse;font-size:12.5px;margin-top:2px} td,th{border-bottom:1px solid #e7e9ec;padding:7px 9px}
-      th{text-align:left;background:#f4f5f7;font-size:11px;color:#555}
+      table{width:100%;border-collapse:collapse;font-size:13px;margin-top:2px} td,th{border-bottom:1px solid #e7e9ec;padding:7px 9px}
+      th{text-align:left;background:#f4f5f7;font-size:12px;color:#555}
       .c{text-align:center}.r{text-align:right;font-variant-numeric:tabular-nums}
       tfoot td{font-weight:800;border-top:2px solid #0a0a0a;background:#fafbfc}
       .cards{display:flex;flex-wrap:wrap;gap:10px;margin-top:4px}
       .card{flex:1;min-width:120px;border:1px solid #e7e9ec;border-radius:8px;padding:11px 13px;background:#fafbfc}
-      .card .k{font-size:10.5px;color:#777}
+      .card .k{font-size:12px;color:#777}
       .card .v{font-size:22px;font-weight:800;color:#0a0a0a;margin-top:3px}
       .sect{page-break-inside:avoid}
-      .note{color:#888;font-size:10.5px;margin-top:22px;border-top:1px solid #e7e9ec;padding-top:10px}
-      .foot{color:#aab;font-size:10px;text-align:center;margin:14px 0 24px}
+      .note{color:#888;font-size:12px;margin-top:22px;border-top:1px solid #e7e9ec;padding-top:10px}
+      .foot{color:#aab;font-size:12px;text-align:center;margin:14px 0 24px}
     </style></head><body><div class="wrap">
       <div class="band">
         <svg class="mark" viewBox="0 0 24 24" fill="none" stroke="#FFE000" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 2v20M12 9c0-2 -1.6-3.5 -3.5-3.5S5 7 5 9v3c0 1.4 1.1 2.5 2.5 2.5S10 13.4 10 12M12 12c0-2 1.6-3.5 3.5-3.5S19 10 19 12v2c0 1.4-1.1 2.5-2.5 2.5S14 15.4 14 14"/></svg>
@@ -2077,7 +2077,7 @@ export default function Designer({ projectId }: { projectId: string | null }) {
         <div className="hm-hero-id">
           <span className="hm-hero-ic" aria-hidden dangerouslySetInnerHTML={{ __html: HERO_ICON_SVG }} />
           <div style={{ minWidth: 0 }}>
-            <div className="hm-hero-eyebrow"><Lightning size={11} weight="fill" color={GOLD} /> Signal Studio</div>
+            <div className="hm-hero-eyebrow"><Lightning size={11} weight="fill" color="var(--text-secondary)" /> Signal Studio</div>
             <div className="hm-hero-title">
               <span className="hm-hero-name">{project ? project.name : 'Wi-Fi, camera & cabling design'}</span>
               {project && <span className="hm-hero-cal" data-ok={!!project.scale}>{project.scale ? 'Calibrated' : 'Not Calibrated'}</span>}
@@ -2099,15 +2099,15 @@ export default function Designer({ projectId }: { projectId: string | null }) {
 
       {(fieldMode ? floors.length > 1 : (project || floors.length > 1)) && (
         <div style={{ display: 'flex', alignItems: 'center', gap: 8, flexWrap: 'wrap', padding: '10px 16px', borderBottom: `1px solid ${BORDER}`, background: RAISED }}>
-          <span style={{ fontSize: 11, color: MUTED, marginRight: 2 }}>Building Floors</span>
+          <span style={{ fontSize: 12, color: MUTED, marginRight: 2 }}>Building Floors</span>
           {floors.map((f) => (
             <div key={f.id} onClick={() => switchFloor(f.id)} onDoubleClick={() => renameFloor(f.id)}
               title="Click to switch · double-click to rename"
               style={{ display: 'inline-flex', alignItems: 'center', gap: 7, padding: '6px 11px', borderRadius: 8, cursor: 'pointer',
                 background: f.id === activeFloor ? 'var(--brand-primary-18)' : DARK, color: f.id === activeFloor ? GOLD : DIM,
-                border: `1px solid ${f.id === activeFloor ? 'var(--brand-primary-35)' : BORDER}`, fontWeight: 700, fontSize: 12.5 }}>
+                border: `1px solid ${f.id === activeFloor ? 'var(--brand-primary-35)' : BORDER}`, fontWeight: 700, fontSize: 13 }}>
               {f.name}
-              <span style={{ fontSize: 10.5, color: MUTED, fontWeight: 600 }}>{f.proj ? `${f.proj.devices.length} dev` : 'empty'}</span>
+              <span style={{ fontSize: 12, color: MUTED, fontWeight: 600 }}>{f.proj ? `${f.proj.devices.length} dev` : 'empty'}</span>
               {floors.length > 1 && <span onClick={(e) => { e.stopPropagation(); removeFloor(f.id); }} style={{ color: MUTED, marginLeft: 1, fontWeight: 800, fontSize: 14 }} title="Remove floor">×</span>}
             </div>
           ))}
@@ -2118,7 +2118,7 @@ export default function Designer({ projectId }: { projectId: string | null }) {
       {/* ── system layer-chip row (the 6 approved systems) — click a chip to show / hide that system ── */}
       {project && !fieldMode && (
         <div className="hm-chiprow">
-          <span style={{ fontSize: 10.5, color: MUTED, marginRight: 2 }}>Systems</span>
+          <span style={{ fontSize: 12, color: MUTED, marginRight: 2 }}>Systems</span>
           {SYSTEM_CHIPS.map((c) => {
             const on = c.cabling ? showCabling : layerVis[c.key] !== false;
             return (
@@ -2139,7 +2139,7 @@ export default function Designer({ projectId }: { projectId: string | null }) {
           <div onDragOver={onDragOverFiles} onDragLeave={onDragLeaveFiles} onDrop={onDropFiles}
             style={{ display: 'flex', gap: 26, alignItems: 'center', flexWrap: 'wrap', background: dragOver ? 'var(--brand-primary-08)' : RAISED, border: `1px solid ${dragOver ? GOLD : BORDER}`, borderRadius: 20, padding: 26, transition: 'border-color .15s, background .15s' }}>
             <div style={{ flex: '1 1 300px', minWidth: 280 }}>
-              <div style={{ fontSize: 11, fontWeight: 800, color: GOLD, marginBottom: 12 }}>Signal Studio — Wi-Fi, camera &amp; cabling design</div>
+              <div style={{ fontSize: 12, fontWeight: 800, color: 'var(--text-primary)', marginBottom: 12 }}>Signal Studio — Wi-Fi, camera &amp; cabling design</div>
               <h2 style={{ fontSize: 'clamp(24px,3.2vw,38px)', fontWeight: 900, lineHeight: 1.06, margin: '0 0 14px', color: '#fff', letterSpacing: -1 }}>Design the whole low-voltage system.</h2>
               <p style={{ color: DIM, fontSize: 14.5, lineHeight: 1.55, margin: '0 0 18px', maxWidth: 470 }}>Drop a blueprint. Devices place themselves, dead zones surface, and the bill of materials writes itself.</p>
               {/* The six-bullet feature grid that sat here was marketing copy
@@ -2157,23 +2157,23 @@ export default function Designer({ projectId }: { projectId: string | null }) {
                   <Sparkle size={15} weight="fill" /> See a live example
                 </button>
               </div>
-              <div style={{ fontSize: 11.5, color: MUTED, marginTop: 12 }}>Drag &amp; drop a PDF, PNG or JPG anywhere · CAD PDFs import exact walls &amp; scale automatically · or tap a template below.</div>
+              <div style={{ fontSize: 12, color: MUTED, marginTop: 12 }}>Drag &amp; drop a PDF, PNG or JPG anywhere · CAD PDFs import exact walls &amp; scale automatically · or tap a template below.</div>
               {aiNotes.length > 0 && <div style={{ marginTop: 14, fontSize: 12, color: '#FCA5A5', background: 'rgba(248,113,113,0.08)', border: '1px solid rgba(248,113,113,0.25)', borderRadius: 8, padding: '9px 11px', lineHeight: 1.5 }}>{aiNotes.map((n, i) => <div key={i}>{n}</div>)}</div>}
             </div>
             {/* eslint-disable-next-line @next/next/no-img-element */}
             <div style={{ flex: '1 1 400px', minWidth: 300, borderRadius: 14, overflow: 'hidden', border: `1px solid ${BORDER}`, boxShadow: '0 16px 50px rgba(0,0,0,0.45)', position: 'relative' }}>
               <img src="/heatmap-hero.png" alt="Example coverage heatmap — green = strong Wi-Fi, red = dead zone" style={{ display: 'block', width: '100%', height: 'auto' }} />
-              <div style={{ position: 'absolute', bottom: 10, left: 10, background: 'rgba(13,17,23,0.82)', color: '#fff', fontSize: 11, fontWeight: 700, padding: '5px 10px', borderRadius: 7 }}>Example output — your plan renders like this</div>
+              <div style={{ position: 'absolute', bottom: 10, left: 10, background: 'rgba(13,17,23,0.82)', color: '#fff', fontSize: 12, fontWeight: 700, padding: '5px 10px', borderRadius: 7 }}>Example output — your plan renders like this</div>
             </div>
           </div>
           <div style={{ marginTop: 22, textAlign: 'left' }}>
-            <div style={{ fontSize: 11, fontWeight: 700, color: 'rgba(255,255,255,0.6)', marginBottom: 12, textAlign: 'center' }}>Or open a finished example to see how one is put together</div>
+            <div style={{ fontSize: 12, fontWeight: 700, color: 'rgba(255,255,255,0.6)', marginBottom: 12, textAlign: 'center' }}>Or open a finished example to see how one is put together</div>
             <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3,1fr)', gap: 12 }}>
               {TEMPLATES.map((t) => (
                 <button key={t.id} className="hm-tmpl" onClick={() => buildTemplate(t)}>
                   <span className="hm-tmpl-ic" dangerouslySetInnerHTML={{ __html: t.icon }} />
                   <span style={{ fontWeight: 700, fontSize: 13, color: TEXT }}>{t.name}</span>
-                  <span style={{ fontSize: 11, color: DIM, marginTop: 3, lineHeight: 1.35 }}>{t.desc}</span>
+                  <span style={{ fontSize: 12, color: DIM, marginTop: 3, lineHeight: 1.35 }}>{t.desc}</span>
                 </button>
               ))}
             </div>
@@ -2261,7 +2261,7 @@ export default function Designer({ projectId }: { projectId: string | null }) {
                 <button className="hm-big" onClick={() => openStep('bid')}>Looks Good → Bid</button>
               </>}
               {fieldStep === 'bid' && <>
-                <span className="hm-fieldstat" style={{ color: GOLD }}>{bom ? `$${bom.turnkey.toLocaleString()}` : '—'} <small>turnkey install</small></span>
+                <span className="hm-fieldstat" style={{ color: 'var(--text-primary)' }}>{bom ? `$${bom.turnkey.toLocaleString()}` : '—'} <small>turnkey install</small></span>
                 <button className="hm-big" onClick={sendToBidJacket}>→ Bid Jacket</button>
                 <button className="hm-big" data-alt="true" onClick={exportReport}>Client Report</button>
                 <button className="hm-big" data-alt="true" onClick={openSaveModal}>Save Design</button>
@@ -2307,7 +2307,7 @@ export default function Designer({ projectId }: { projectId: string | null }) {
             <button className="hm-tool" title="Redo (Ctrl+Y)" onClick={redo} disabled={!future.length}><ArrowClockwise size={15} weight="regular" style={{ verticalAlign: 'middle' }} /></button>
             {tool === 'scale' && <span className="hm-hint">Click two points a known distance apart</span>}
             {tool === 'wall' && <span className="hm-hint">Click to trace · Enter/Esc to finish</span>}
-            {busy && <span className="hm-hint" style={{ color: GOLD }}>{busy}</span>}
+            {busy && <span className="hm-hint" style={{ color: 'var(--text-primary)' }}>{busy}</span>}
             <div style={{ flex: 1 }} />
             <button className="hm-tool" onClick={() => flipFieldMode(true)} title="Back to the simple guided flow — same as the mobile app"><Lightning size={13} weight="fill" style={{ verticalAlign: 'middle', marginRight: 5 }} />Simple</button>
           </div>
@@ -2331,7 +2331,7 @@ export default function Designer({ projectId }: { projectId: string | null }) {
           {/* multi-sheet PDF picker */}
           {pdfDoc && pdfDoc.pages > 1 && (
             <div style={{ display: 'flex', alignItems: 'center', gap: 6, padding: '7px 12px', borderBottom: `1px solid ${BORDER}`, flexWrap: 'wrap', background: RAISED }}>
-              <span style={{ fontSize: 11, color: MUTED, marginRight: 2 }}>{pdfDoc.name} · {pdfDoc.pages} sheets</span>
+              <span style={{ fontSize: 12, color: MUTED, marginRight: 2 }}>{pdfDoc.name} · {pdfDoc.pages} sheets</span>
               {Array.from({ length: pdfDoc.pages }, (_, i) => i + 1).map((n) => (
                 <button key={n} className="hm-sheet" data-on={project.name === `${pdfDoc.name} — Sheet ${n}`} disabled={!!busy}
                   onClick={() => renderPdfPage(pdfDoc.pdf, n, pdfDoc.name)}>Sheet {n}</button>
@@ -2353,7 +2353,7 @@ export default function Designer({ projectId }: { projectId: string | null }) {
               {view3d && (
                 <div style={{ position: 'absolute', inset: 0, zIndex: 6, background: DARK }} onMouseDown={(e) => e.stopPropagation()} onMouseMove={(e) => e.stopPropagation()} onMouseUp={(e) => e.stopPropagation()}>
                   <Building3D floors={floors} activeFloorId={activeFloor} heightFt={10} />
-                  <div style={{ position: 'absolute', left: 12, top: 12, padding: '5px 10px', borderRadius: 8, background: 'rgba(13,17,23,0.72)', color: DIM, fontSize: 11, pointerEvents: 'none', letterSpacing: 0.3 }}>
+                  <div style={{ position: 'absolute', left: 12, top: 12, padding: '5px 10px', borderRadius: 8, background: 'rgba(13,17,23,0.72)', color: DIM, fontSize: 12, pointerEvents: 'none', letterSpacing: 0.3 }}>
                     3D · drag to orbit · scroll to zoom · right-drag to pan
                   </div>
                 </div>
@@ -2405,7 +2405,7 @@ export default function Designer({ projectId }: { projectId: string | null }) {
                           <div key={r.id} className="hm-advrow">
                             <span style={{ flex: 1, minWidth: 0 }}>
                               <b>{r.label}</b>
-                              <span style={{ display: 'block', color: MUTED, fontSize: 10.5 }}>{r.nnFt != null ? `${Math.round(r.nnFt)} ft to nearest` : 'only AP'}{r.areaFt2 != null ? ` · serves ${r.areaFt2.toLocaleString()} ft²` : ''} · {r.band} GHz · {r.txDbm} dBm</span>
+                              <span style={{ display: 'block', color: MUTED, fontSize: 12 }}>{r.nnFt != null ? `${Math.round(r.nnFt)} ft to nearest` : 'only AP'}{r.areaFt2 != null ? ` · serves ${r.areaFt2.toLocaleString()} ft²` : ''} · {r.band} GHz · {r.txDbm} dBm</span>
                             </span>
                             <span className="hm-advchip" data-kind={r.status}>{r.status}</span>
                           </div>
@@ -2416,7 +2416,7 @@ export default function Designer({ projectId }: { projectId: string | null }) {
                         <div key={c.label} className="hm-advrow">
                           <span style={{ flex: 1, minWidth: 0 }}>
                             <b>{c.label}</b>
-                            <span style={{ display: 'block', color: MUTED, fontSize: 10.5 }}>{c.detail}</span>
+                            <span style={{ display: 'block', color: MUTED, fontSize: 12 }}>{c.detail}</span>
                           </span>
                           <span className="hm-advchip" data-kind={c.status === 'warn' ? 'warn' : 'ok'}>{c.status}</span>
                         </div>
@@ -2426,13 +2426,13 @@ export default function Designer({ projectId }: { projectId: string | null }) {
                         <div className="hm-advrow">
                           <span style={{ flex: 1 }}>
                             <b>{cableRuns.totalFt.toLocaleString()} ft total</b>
-                            <span style={{ display: 'block', color: MUTED, fontSize: 10.5 }}>{cableRuns.runs.length} run{cableRuns.runs.length === 1 ? '' : 's'} from plan geometry · order {cableRuns.orderFt.toLocaleString()} ft (1,000 ft boxes)</span>
+                            <span style={{ display: 'block', color: MUTED, fontSize: 12 }}>{cableRuns.runs.length} run{cableRuns.runs.length === 1 ? '' : 's'} from plan geometry · order {cableRuns.orderFt.toLocaleString()} ft (1,000 ft boxes)</span>
                           </span>
                           {cableRuns.overCount > 0 && <span className="hm-advchip" data-kind="over">{cableRuns.overCount} &gt;328 ft</span>}
                         </div>
                         <div style={{ maxHeight: 110, overflowY: 'auto', display: 'flex', flexDirection: 'column', gap: 3 }}>
                           {cableRuns.runs.map((r) => (
-                            <div key={r.id} className="hm-advrow" style={{ fontSize: 10.5 }}>
+                            <div key={r.id} className="hm-advrow" style={{ fontSize: 12 }}>
                               <span style={{ flex: 1, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{r.label}</span>
                               <span style={{ color: r.overLimit ? '#F87171' : DIM, fontVariantNumeric: 'tabular-nums', fontWeight: 700 }}>{r.lengthFt} ft</span>
                               <span style={{ color: MUTED, minWidth: 74, textAlign: 'right', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{r.cable}</span>
@@ -2441,7 +2441,7 @@ export default function Designer({ projectId }: { projectId: string | null }) {
                         </div>
                         <div style={{ fontSize: 9.5, color: MUTED, lineHeight: 1.4 }}>Run ft = straight plan distance × 1.35 routing + 18 ft drop, rounded up to 5 ft. Runs over 328 ft (100 m copper limit) show red — fiber or a second IDF.</div>
                       </> : (
-                        <div style={{ fontSize: 10.5, color: MUTED, lineHeight: 1.5 }}>Place an IDF (Devices step) to get the cable schedule — run footage measured from plan geometry.</div>
+                        <div style={{ fontSize: 12, color: MUTED, lineHeight: 1.5 }}>Place an IDF (Devices step) to get the cable schedule — run footage measured from plan geometry.</div>
                       )}
                     </div>
                   )}
@@ -2480,19 +2480,19 @@ export default function Designer({ projectId }: { projectId: string | null }) {
                   {COVERAGE_LAYERS.map((t) => <option key={t} value={t}>{DEVICE_REGISTRY[t].label}</option>)}
                 </select>
                 <div style={{ display: 'flex', gap: 8, marginTop: 8 }}>
-                  <label style={{ flex: 1, fontSize: 11, color: DIM }}>Environment
+                  <label style={{ flex: 1, fontSize: 12, color: DIM }}>Environment
                     <select className="hm-sel" style={{ width: '100%' }} value={project.env} onChange={(e) => patch({ env: e.target.value as Env })}>
                       <option value="open">Open / Warehouse</option><option value="office">Office</option><option value="dense">Dense Walls</option>
                     </select>
                   </label>
-                  {project.activeType === 'wifi_ap' && <label style={{ flex: 1, fontSize: 11, color: DIM }}>Target
+                  {project.activeType === 'wifi_ap' && <label style={{ flex: 1, fontSize: 12, color: DIM }}>Target
                     <select className="hm-sel" style={{ width: '100%' }} value={project.rssiTargetDbm} onChange={(e) => patch({ rssiTargetDbm: +e.target.value })}>
                       <option value={-67}>-67 (voice)</option><option value={-72}>-72 (data)</option><option value={-80}>-80 (IoT)</option>
                     </select>
                   </label>}
                 </div>
                 {project.activeType === 'wifi_ap' && <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginTop: 10 }}>
-                  <span style={{ fontSize: 11, color: DIM }}>Band (all APs)</span>
+                  <span style={{ fontSize: 12, color: DIM }}>Band (all APs)</span>
                   <div className="hm-seg" role="group" aria-label="Wi-Fi Band" style={{ flex: 1 }}>
                     {(['2.4', '5', '6'] as Band[]).map((b) => (
                       <button key={b} type="button" className="hm-seg-btn" data-on={apBand === b} style={{ flex: 1 }}
@@ -2503,11 +2503,11 @@ export default function Designer({ projectId }: { projectId: string | null }) {
                 {coverage && <div style={{ marginTop: 10 }}>
                   {activeDef?.modelType === 'rf' && <>
                     <div style={{ height: 12, borderRadius: 4, background: 'linear-gradient(90deg,#2a3340,#F87171,#f8c22a,#7ac943,#1cb052)' }} />
-                    <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: 10, color: MUTED, marginTop: 3 }}><span>−90</span><span style={{ color: GOLD }}>−{Math.abs(project.rssiTargetDbm)} target</span><span>−45 dBm</span></div>
+                    <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: 12, color: MUTED, marginTop: 3 }}><span>−90</span><span style={{ color: 'var(--text-primary)' }}>−{Math.abs(project.rssiTargetDbm)} target</span><span>−45 dBm</span></div>
                   </>}
                   {activeDef?.modelType === 'camera' && <>
                     <div style={{ height: 12, borderRadius: 4, background: 'linear-gradient(90deg,#f8781c,#f8c428,#96d63e,#28c864)' }} />
-                    <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: 10, color: MUTED, marginTop: 3 }}><span>Detect</span><span>Recognize</span><span>Identify</span></div>
+                    <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: 12, color: MUTED, marginTop: 3 }}><span>Detect</span><span>Recognize</span><span>Identify</span></div>
                   </>}
                   <div className="hm-legend">{coverage.bandLabels.map((b) => <span key={b.label}><i style={{ background: b.color }} />{b.label}</span>)}</div>
                 </div>}
@@ -2524,7 +2524,7 @@ export default function Designer({ projectId }: { projectId: string | null }) {
                   {project.activeType === 'wifi_ap' && stats.roamReadyPct != null && <Metric label="Roam-ready" val={`${stats.roamReadyPct.toFixed(0)}%`} color={stats.roamReadyPct > 80 ? '#4ADE80' : stats.roamReadyPct > 50 ? GOLD : '#F87171'} />}
                   {project.activeType === 'wifi_ap' && stats.avgConfidence != null && <Metric label="Confidence" val={`${Math.round(stats.avgConfidence * 100)}%`} color={stats.avgConfidence > 0.7 ? '#4ADE80' : stats.avgConfidence > 0.45 ? GOLD : '#F87171'} />}
                 </div>
-                {project.activeType === 'wifi_ap' && stats.roamReadyPct != null && stats.avgConfidence == null && <div style={{ marginTop: 8, fontSize: 10.5, color: MUTED, lineHeight: 1.5 }}>Roam-ready = share of covered floor that can also reach a 2nd AP. Import a survey to add a validated <b>Confidence</b> layer.</div>}
+                {project.activeType === 'wifi_ap' && stats.roamReadyPct != null && stats.avgConfidence == null && <div style={{ marginTop: 8, fontSize: 12, color: MUTED, lineHeight: 1.5 }}>Roam-ready = share of covered floor that can also reach a 2nd AP. Import a survey to add a validated <b>Confidence</b> layer.</div>}
               </PanelSection>}
 
               {coverage && coverage.gaps.length > 0 && <PanelSection title={`Issue navigator · ${coverage.gaps.length}`}>
@@ -2533,11 +2533,11 @@ export default function Designer({ projectId }: { projectId: string | null }) {
                     <button key={i} className="hm-row" onClick={() => zoomToBox(g.bbox)} style={{ width: '100%' }} title="Zoom to this dead zone">
                       <i style={{ background: '#F87171' }} />
                       <span style={{ flex: 1, fontSize: 12, textAlign: 'left' }}>Dead zone {i + 1} · {Math.round(g.area)} ft²</span>
-                      <ArrowUpRight size={13} weight="bold" style={{ color: GOLD }} />
+                      <ArrowUpRight size={13} weight="bold" style={{ color: 'var(--text-primary)' }} />
                     </button>
                   ))}
                 </div>
-                <div style={{ marginTop: 6, fontSize: 10, color: MUTED }}>Tap a dead zone to zoom the plan to it.</div>
+                <div style={{ marginTop: 6, fontSize: 12, color: MUTED }}>Tap a dead zone to zoom the plan to it.</div>
               </PanelSection>}
               </>}
 
@@ -2547,7 +2547,7 @@ export default function Designer({ projectId }: { projectId: string | null }) {
                 <div className="hm-list">
                   <button className="hm-row" data-on={showHeat} onClick={() => setShowHeat((v) => !v)} style={{ width: '100%' }}>
                     <i style={{ background: '#1cb052' }} /><span style={{ flex: 1 }}>Coverage Heatmap</span>
-                    <span style={{ fontSize: 10.5, color: showHeat ? '#4ADE80' : MUTED, fontWeight: 700 }}>{showHeat ? 'ON' : 'OFF'}</span>
+                    <span style={{ fontSize: 12, color: showHeat ? '#4ADE80' : MUTED, fontWeight: 700 }}>{showHeat ? 'ON' : 'OFF'}</span>
                   </button>
                   <div className="hm-row" style={{ width: '100%', cursor: 'default' }}>
                     <i style={{ background: 'transparent' }} /><span style={{ flex: 1 }}>Heatmap Opacity</span>
@@ -2556,40 +2556,40 @@ export default function Designer({ projectId }: { projectId: string | null }) {
                   {project.activeType === 'wifi_ap' && (
                     <button className="hm-row" data-on={showContours} onClick={() => setShowContours((v) => !v)} style={{ width: '100%', opacity: showContours ? 1 : 0.6 }} title="RSSI iso-contour lines">
                       <i style={{ background: '#7ac943' }} /><span style={{ flex: 1 }}>RSSI contours</span>
-                      <span style={{ fontSize: 10.5, color: showContours ? '#4ADE80' : MUTED, fontWeight: 700 }}>{showContours ? 'ON' : 'OFF'}</span>
+                      <span style={{ fontSize: 12, color: showContours ? '#4ADE80' : MUTED, fontWeight: 700 }}>{showContours ? 'ON' : 'OFF'}</span>
                     </button>
                   )}
                   {project.activeType === 'wifi_ap' && (
                     <button className="hm-row" data-on={showInterference} onClick={() => setShowInterference((v) => !v)} style={{ width: '100%', opacity: showInterference ? 1 : 0.6 }} title="Co-channel interference (low SIR)">
                       <i style={{ background: '#F87171' }} /><span style={{ flex: 1 }}>Co-channel interference</span>
-                      <span style={{ fontSize: 10.5, color: showInterference ? '#4ADE80' : MUTED, fontWeight: 700 }}>{showInterference ? 'ON' : 'OFF'}</span>
+                      <span style={{ fontSize: 12, color: showInterference ? '#4ADE80' : MUTED, fontWeight: 700 }}>{showInterference ? 'ON' : 'OFF'}</span>
                     </button>
                   )}
                   <button className="hm-row" data-on={showDori} onClick={() => setShowDori((v) => !v)} style={{ width: '100%', opacity: showDori ? 1 : 0.6 }} title="Camera DORI zones (EN 62676-4)">
                     <i style={{ background: SYSTEM_COLORS.camera }} /><span style={{ flex: 1 }}>Camera DORI Cones</span>
-                    <span style={{ fontSize: 10.5, color: showDori ? '#4ADE80' : MUTED, fontWeight: 700 }}>{showDori ? 'ON' : 'OFF'}</span>
+                    <span style={{ fontSize: 12, color: showDori ? '#4ADE80' : MUTED, fontWeight: 700 }}>{showDori ? 'ON' : 'OFF'}</span>
                   </button>
                   <button className="hm-row" data-on={showCabling} onClick={() => setShowCabling((v) => !v)} style={{ width: '100%', opacity: showCabling ? 1 : 0.6 }} title="Structured cabling home-run lines to the rack/MDF">
                     <i style={{ background: SYSTEM_COLORS.cabling }} /><span style={{ flex: 1 }}>Cabling Runs</span>
-                    <span style={{ fontSize: 10.5, color: showCabling ? '#4ADE80' : MUTED, fontWeight: 700 }}>{showCabling ? 'ON' : 'OFF'}</span>
+                    <span style={{ fontSize: 12, color: showCabling ? '#4ADE80' : MUTED, fontWeight: 700 }}>{showCabling ? 'ON' : 'OFF'}</span>
                   </button>
                   {project.activeType === 'wifi_ap' && measured.length > 0 && (
                     <button className="hm-row" data-on={showMeasured} onClick={() => setShowMeasured((v) => !v)} style={{ width: '100%', opacity: showMeasured ? 1 : 0.6 }}>
                       <i style={{ background: 'var(--brand-primary)' }} /><span style={{ flex: 1 }}>Measured Survey</span>
-                      <span style={{ fontSize: 11, color: MUTED, marginRight: 8, fontVariantNumeric: 'tabular-nums' }}>{measured.length}</span>
-                      <span style={{ fontSize: 10.5, color: showMeasured ? '#4ADE80' : MUTED, fontWeight: 700 }}>{showMeasured ? 'ON' : 'OFF'}</span>
+                      <span style={{ fontSize: 12, color: MUTED, marginRight: 8, fontVariantNumeric: 'tabular-nums' }}>{measured.length}</span>
+                      <span style={{ fontSize: 12, color: showMeasured ? '#4ADE80' : MUTED, fontWeight: 700 }}>{showMeasured ? 'ON' : 'OFF'}</span>
                     </button>
                   )}
                   {project.activeType === 'wifi_ap' && (
                     <button className="hm-row" data-on={showRoam} onClick={() => setShowRoam((v) => !v)} style={{ width: '100%', opacity: showRoam ? 1 : 0.6 }} title="Covered cells that can't reach a 2nd AP — a roaming risk">
                       <i style={{ background: '#FFE000' }} /><span style={{ flex: 1 }}>Roaming Risk</span>
-                      <span style={{ fontSize: 10.5, color: showRoam ? '#4ADE80' : MUTED, fontWeight: 700 }}>{showRoam ? 'ON' : 'OFF'}</span>
+                      <span style={{ fontSize: 12, color: showRoam ? '#4ADE80' : MUTED, fontWeight: 700 }}>{showRoam ? 'ON' : 'OFF'}</span>
                     </button>
                   )}
                   {project.activeType === 'wifi_ap' && (
                     <button className="hm-row" data-on={showConfidence} onClick={() => setShowConfidence((v) => !v)} style={{ width: '100%', opacity: showConfidence ? 1 : 0.6 }} title="Veils areas the prediction is least sure about — import a survey to light it up">
                       <i style={{ background: '#3f3f46' }} /><span style={{ flex: 1 }}>Confidence Veil</span>
-                      <span style={{ fontSize: 10.5, color: showConfidence ? '#4ADE80' : MUTED, fontWeight: 700 }}>{showConfidence ? 'ON' : 'OFF'}</span>
+                      <span style={{ fontSize: 12, color: showConfidence ? '#4ADE80' : MUTED, fontWeight: 700 }}>{showConfidence ? 'ON' : 'OFF'}</span>
                     </button>
                   )}
                 </div>
@@ -2603,8 +2603,8 @@ export default function Designer({ projectId }: { projectId: string | null }) {
                     return (
                       <button key={l.key} className="hm-row" data-on={on} onClick={() => setLayerVis((v) => ({ ...v, [l.key]: !on }))} style={{ width: '100%', opacity: on ? 1 : 0.55 }}>
                         <i style={{ background: l.color }} /><span style={{ flex: 1 }}>{l.name}</span>
-                        <span style={{ fontSize: 11, color: MUTED, marginRight: 8, fontVariantNumeric: 'tabular-nums' }}>{count}</span>
-                        <span style={{ fontSize: 10.5, color: on ? '#4ADE80' : MUTED, fontWeight: 700 }}>{on ? 'ON' : 'OFF'}</span>
+                        <span style={{ fontSize: 12, color: MUTED, marginRight: 8, fontVariantNumeric: 'tabular-nums' }}>{count}</span>
+                        <span style={{ fontSize: 12, color: on ? '#4ADE80' : MUTED, fontWeight: 700 }}>{on ? 'ON' : 'OFF'}</span>
                       </button>
                     );
                   })}
@@ -2615,41 +2615,41 @@ export default function Designer({ projectId }: { projectId: string | null }) {
               {/* ═══ BOM ═══ capacity · materials · network schedule ═══ */}
               {tab === 'bom' && project.activeType === 'wifi_ap' && capAps.length > 0 && bom && <PanelSection title="Network Capacity">
                 <div className="hm-metrics">
-                  <Metric label={`Mbps / client${apBand ? ` · ${apBand}GHz` : ' · mixed'}`} val={`${tpLow}–${tpHigh}`} big color={GOLD} />
+                  <Metric label={`Mbps / client${apBand ? ` · ${apBand}GHz` : ' · mixed'}`} val={`${tpLow}–${tpHigh}`} big color="var(--text-secondary)" />
                   <Metric label={`Clients (${capAps.length} AP × ${clientsPerAp})`} val={`${capTotal}`} big color={capTotal ? TEXT : DIM} />
                 </div>
-                <label style={{ display: 'flex', alignItems: 'center', gap: 8, marginTop: 8, fontSize: 11, color: DIM }}>
+                <label style={{ display: 'flex', alignItems: 'center', gap: 8, marginTop: 8, fontSize: 12, color: DIM }}>
                   <span style={{ flex: 1 }}>Devices per AP (capacity model)</span>
                   <input type="number" min={1} max={500} value={clientsPerAp}
                     onChange={(e) => setClientsPerAp(Math.max(1, Math.min(500, Math.round(+e.target.value) || 1)))}
                     className="hm-sel" style={{ width: 64, textAlign: 'right' }} />
                 </label>
                 <div style={{ marginTop: 12 }}>
-                  <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: 10.5, color: MUTED, marginBottom: 4 }}>
+                  <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: 12, color: MUTED, marginBottom: 4 }}>
                     <span>PoE draw vs switch budget</span>
                     <span style={{ color: poeColor, fontWeight: 700, fontVariantNumeric: 'tabular-nums' }}>{poeWatts} / {poeBudget || '—'} W</span>
                   </div>
                   <div style={{ height: 8, borderRadius: 5, background: DARK, border: `1px solid ${BORDER}`, overflow: 'hidden' }}>
                     <div style={{ height: '100%', width: `${Math.min(100, Math.round(poeUtil * 100))}%`, background: poeColor, borderRadius: 5, transition: 'width .2s' }} />
                   </div>
-                  <div style={{ fontSize: 10.5, color: MUTED, marginTop: 4, lineHeight: 1.4 }}>
+                  <div style={{ fontSize: 12, color: MUTED, marginTop: 4, lineHeight: 1.4 }}>
                     {poeBudget ? `${Math.round(poeUtil * 100)}% of ${bom.recSwitch?.model || 'switch'} budget${poeUtil > 0.9 ? ' — add a switch' : poeUtil > 0.7 ? ' — near limit' : ''}` : 'No PoE-powered devices placed yet.'}
                   </div>
                 </div>
               </PanelSection>}
 
               {tab === 'design' && <PanelSection title="Smart Tools">
-                {project.planDataUrl && <button className="hm-smart" style={{ background: `linear-gradient(135deg, ${GOLD}, var(--brand-primary-strong))`, color: '#101722', border: 'none', fontWeight: 800, fontSize: 13.5, marginBottom: 8, textAlign: 'center' }} onClick={autopilot}><Sparkle size={15} weight="fill" style={{ verticalAlign: 'middle', marginRight: 6 }} />Design my building — AI reads the plan, designs &amp; prices it</button>}
+                {project.planDataUrl && <button className="hm-smart" style={{ background: `linear-gradient(135deg, ${GOLD}, var(--brand-primary-strong))`, color: '#101722', border: 'none', fontWeight: 800, fontSize: 14, marginBottom: 8, textAlign: 'center' }} onClick={autopilot}><Sparkle size={15} weight="fill" style={{ verticalAlign: 'middle', marginRight: 6 }} />Design my building — AI reads the plan, designs &amp; prices it</button>}
                 {project.scale && <button className="hm-smart" style={{ background: `linear-gradient(135deg, ${GOLD}, var(--brand-primary-strong))`, color: '#101722', border: 'none', fontWeight: 800, fontSize: 13, marginBottom: 10, textAlign: 'center' }} onClick={autoDesign}><Sparkle size={15} weight="fill" style={{ verticalAlign: 'middle', marginRight: 6 }} />Auto-design coverage — place · close dead zones · price it</button>}
                 <button className="hm-smart" onClick={doAiScan}><Sparkle size={14} weight="fill" style={{ verticalAlign: 'middle', marginRight: 6 }} />AI scan blueprint → read walls + place devices</button>
-                <div style={{ border: `1px solid var(--brand-primary-25)`, borderRadius: 8, padding: 9, marginBottom: 7, background: 'color-mix(in srgb, var(--brand-primary) 5%, transparent)' }}>
+                <div style={{ border: `1px solid var(--brand-primary-25)`, borderRadius: 8, padding: 9, marginBottom: 7, background: 'var(--bg-surface-2)' }}>
                   <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 6, marginBottom: 7 }}>
-                    <label style={{ fontSize: 10.5, color: MUTED }}>Vendor
+                    <label style={{ fontSize: 12, color: MUTED }}>Vendor
                       <select className="hm-sel-full" value={apVendor} onChange={(e) => { const v = e.target.value; setApVendor(v); const first = apModelsByVendor(v)[0]; if (first) setApCatId(first.id); }}>
                         {VENDORS.map((v) => <option key={v} value={v}>{v}</option>)}
                       </select>
                     </label>
-                    <label style={{ fontSize: 10.5, color: MUTED }}>Band
+                    <label style={{ fontSize: 12, color: MUTED }}>Band
                       <select className="hm-sel-full" value={autoBand} onChange={(e) => setAutoBand(e.target.value as Band)}>
                         <option value="2.4">2.4 GHz (range)</option>
                         <option value="5">5 GHz (balanced)</option>
@@ -2657,36 +2657,36 @@ export default function Designer({ projectId }: { projectId: string | null }) {
                       </select>
                     </label>
                   </div>
-                  <label style={{ fontSize: 10.5, color: MUTED, display: 'block', marginBottom: 7 }}>AP Model
+                  <label style={{ fontSize: 12, color: MUTED, display: 'block', marginBottom: 7 }}>AP Model
                     <select className="hm-sel-full" value={apCatId} onChange={(e) => setApCatId(e.target.value)}>
                       {apModelsByVendor(apVendor).map((m) => <option key={m.id} value={m.id}>{m.model}</option>)}
                     </select>
                   </label>
-                  {apCat && <div style={{ fontSize: 10.5, color: DIM, marginBottom: 7, display: 'flex', justifyContent: 'space-between', gap: 8, fontVariantNumeric: 'tabular-nums' }}>
+                  {apCat && <div style={{ fontSize: 12, color: DIM, marginBottom: 7, display: 'flex', justifyContent: 'space-between', gap: 8, fontVariantNumeric: 'tabular-nums' }}>
                     <span>{apCat.wifiGen.replace('wifi', 'Wi-Fi ')} · {(apCat.maxTxPowerDbm[toDeviceRadio(apCat, autoBand).band] ?? 0)} dBm · {apCat.antennaGainDbi} dBi · {apCat.poeWatts} W PoE</span>
-                    <span style={{ color: GOLD, fontWeight: 700 }}>{apCat.listPriceUsd ? '$' + apCat.listPriceUsd.toLocaleString() : '—'}</span>
+                    <span style={{ color: 'var(--text-primary)', fontWeight: 700 }}>{apCat.listPriceUsd ? '$' + apCat.listPriceUsd.toLocaleString() : '—'}</span>
                   </div>}
-                  <label style={{ fontSize: 10.5, color: MUTED, display: 'block' }}>Coverage Target: <span style={{ color: GOLD, fontWeight: 700 }}>{Math.round(autoTarget * 100)}%</span> at {project.rssiTargetDbm} dBm
+                  <label style={{ fontSize: 12, color: MUTED, display: 'block' }}>Coverage Target: <span style={{ color: 'var(--text-primary)', fontWeight: 700 }}>{Math.round(autoTarget * 100)}%</span> at {project.rssiTargetDbm} dBm
                     <input type="range" min={70} max={99} step={1} value={Math.round(autoTarget * 100)} onChange={(e) => setAutoTarget(Number(e.target.value) / 100)} style={{ width: '100%', accentColor: GOLD, marginTop: 4 }} />
                   </label>
                   <button className="hm-smart" style={{ marginBottom: 0, marginTop: 4 }} onClick={doAutoPlace}><Sparkle size={14} weight="fill" style={{ verticalAlign: 'middle', marginRight: 6 }} />Auto-place {apCat ? apCat.model : apModel.replace('UniFi ', '')} → {Math.round(autoTarget * 100)}%</button>
                 </div>
                 {fixableGaps.length > 0 && <button className="hm-smart" style={{ borderColor: 'rgba(34,211,165,0.55)', color: '#4ADE80' }} onClick={doFixDeadZones}><Sparkle size={14} weight="fill" style={{ verticalAlign: 'middle', marginRight: 6 }} />Fix {fixableGaps.length} Dead Zone{fixableGaps.length === 1 ? '' : 's'} → place {fixableGaps.length} AP{fixableGaps.length === 1 ? '' : 's'}</button>}
-                {fixableGaps.length === 0 && (coverage?.gaps?.length ?? 0) > 0 && <div style={{ fontSize: 11.5, color: DIM, background: DARK, border: `1px solid ${BORDER}`, borderRadius: 8, padding: '8px 10px', lineHeight: 1.5 }}>Remaining dead pockets are too small to justify more hardware — drag an existing AP a few feet toward the worst one.</div>}
+                {fixableGaps.length === 0 && (coverage?.gaps?.length ?? 0) > 0 && <div style={{ fontSize: 12, color: DIM, background: DARK, border: `1px solid ${BORDER}`, borderRadius: 8, padding: '8px 10px', lineHeight: 1.5 }}>Remaining dead pockets are too small to justify more hardware — drag an existing AP a few feet toward the worst one.</div>}
                 <button className="hm-smart" onClick={doChannels}><Sparkle size={14} weight="fill" style={{ verticalAlign: 'middle', marginRight: 6 }} />Plan WiFi channels (1/6/11)</button>
                 <button className="hm-smart" onClick={compute}><ArrowsClockwise size={14} weight="regular" style={{ verticalAlign: 'middle', marginRight: 6 }} />Recompute Heatmap</button>
-                {aiNotes.length > 0 && <div style={{ marginTop: 6, fontSize: 11.5, color: DIM, background: DARK, border: `1px solid ${BORDER}`, borderRadius: 8, padding: '8px 10px', lineHeight: 1.55 }}>{aiNotes.map((n, i) => <div key={i}>{n}</div>)}</div>}
+                {aiNotes.length > 0 && <div style={{ marginTop: 6, fontSize: 12, color: DIM, background: DARK, border: `1px solid ${BORDER}`, borderRadius: 8, padding: '8px 10px', lineHeight: 1.55 }}>{aiNotes.map((n, i) => <div key={i}>{n}</div>)}</div>}
               </PanelSection>}
 
               {/* ═══ SURVEY ═══ calibration · channel + inter-floor RF analysis ═══ */}
               {tab === 'survey' && floors.length > 1 && interFloor && (bleedDevices.length > 0 || interFloorHits.length > 0) && <PanelSection title="Inter-floor RF">
-                <div style={{ fontSize: 11.5, color: DIM, lineHeight: 1.55, marginBottom: interFloorHits.length ? 8 : 0 }}>
+                <div style={{ fontSize: 12, color: DIM, lineHeight: 1.55, marginBottom: interFloorHits.length ? 8 : 0 }}>
                   {bleedDevices.length
                     ? <>Vertical signal bleed from other floors is folded into this floor&apos;s heatmap: <b style={{ color: TEXT }}>{bleedDevices.length}</b> virtual AP{bleedDevices.length === 1 ? '' : 's'} through the slab ({interFloor.params.slab.replace('_', ' ')}, {interFloor.params.slabLossPerFloorDb} dB/floor).</>
                     : <>No usable signal bleeds onto this floor — the slab isolates it well.</>}
                 </div>
                 {interFloorHits.length > 0 && <>
-                  <div style={{ fontSize: 10.5, color: MUTED, marginBottom: 4 }}>Same-channel vertical interference</div>
+                  <div style={{ fontSize: 12, color: MUTED, marginBottom: 4 }}>Same-channel vertical interference</div>
                   <div className="hm-bom" style={{ maxHeight: 150, overflowY: 'auto' }}>
                     {interFloorHits.slice(0, 8).map((it, i) => (
                       <div key={i} className="hm-bom-row" style={{ gap: 8 }}>
@@ -2695,28 +2695,28 @@ export default function Designer({ projectId }: { projectId: string | null }) {
                       </div>
                     ))}
                   </div>
-                  <div style={{ fontSize: 10.5, color: MUTED, marginTop: 6, lineHeight: 1.5 }}>Stack APs on different channels floor-to-floor to cut co-channel bleed through the deck.</div>
+                  <div style={{ fontSize: 12, color: MUTED, marginTop: 6, lineHeight: 1.5 }}>Stack APs on different channels floor-to-floor to cut co-channel bleed through the deck.</div>
                 </>}
               </PanelSection>}
 
               {tab === 'survey' && chanInterference && <PanelSection title="Self-Interference (Your Placed APs)">
-                <div style={{ fontSize: 10.5, color: MUTED, marginBottom: 8, lineHeight: 1.5 }}>Modeled from <b style={{ color: DIM }}>this design&apos;s own APs</b> and their planned channels — not a live neighbor scan. Run <b style={{ color: DIM }}>Plan WiFi Channels</b> first if AP channels are unset.</div>
+                <div style={{ fontSize: 12, color: MUTED, marginBottom: 8, lineHeight: 1.5 }}>Modeled from <b style={{ color: DIM }}>this design&apos;s own APs</b> and their planned channels — not a live neighbor scan. Run <b style={{ color: DIM }}>Plan WiFi Channels</b> first if AP channels are unset.</div>
                 {chanInterference.worstChannels.length > 0 ? <>
-                  <div style={{ fontSize: 10.5, color: MUTED, marginBottom: 4 }}>Most-loaded channels (modeled)</div>
+                  <div style={{ fontSize: 12, color: MUTED, marginBottom: 4 }}>Most-loaded channels (modeled)</div>
                   <div className="hm-bom" style={{ maxHeight: 160, overflowY: 'auto', marginBottom: 10 }}>
                     {chanInterference.worstChannels.map((c, i) => (
                       <div key={i} className="hm-bom-row" style={{ gap: 8 }}>
                         <span style={{ flex: 1 }}>{c.band} GHz · ch {c.channel}</span>
-                        <span style={{ color: MUTED, fontSize: 11, fontVariantNumeric: 'tabular-nums' }}>{c.coChannel}co/{c.adjChannel}adj</span>
+                        <span style={{ color: MUTED, fontSize: 12, fontVariantNumeric: 'tabular-nums' }}>{c.coChannel}co/{c.adjChannel}adj</span>
                         <span style={{ color: c.congestion > 66 ? '#F87171' : c.congestion > 33 ? GOLD : '#4ADE80', fontWeight: 700, fontVariantNumeric: 'tabular-nums', minWidth: 60, textAlign: 'right' }}>{c.congestion}% · {c.airtimePct}%air</span>
                       </div>
                     ))}
                   </div>
-                </> : <div style={{ fontSize: 11.5, color: DIM, marginBottom: 10 }}>No channel congestion detected across your placed APs.</div>}
-                <div style={{ fontSize: 10.5, color: MUTED, marginBottom: 4 }}>Recommended (cleanest first)</div>
+                </> : <div style={{ fontSize: 12, color: DIM, marginBottom: 10 }}>No channel congestion detected across your placed APs.</div>}
+                <div style={{ fontSize: 12, color: MUTED, marginBottom: 4 }}>Recommended (cleanest first)</div>
                 <div style={{ display: 'flex', flexDirection: 'column', gap: 4 }}>
                   {(['2.4', '5', '6'] as Band[]).map((b) => (
-                    <div key={b} style={{ display: 'flex', gap: 8, fontSize: 11.5, color: DIM, alignItems: 'baseline' }}>
+                    <div key={b} style={{ display: 'flex', gap: 8, fontSize: 12, color: DIM, alignItems: 'baseline' }}>
                       <span style={{ color: MUTED, minWidth: 42 }}>{b} GHz</span>
                       <span style={{ fontVariantNumeric: 'tabular-nums', color: TEXT }}>{chanInterference.recommend[b].slice(0, 6).join(' · ') || '—'}</span>
                     </div>
@@ -2725,11 +2725,11 @@ export default function Designer({ projectId }: { projectId: string | null }) {
               </PanelSection>}
 
               {tab === 'survey' && project.activeType === 'wifi_ap' && <PanelSection title="Survey Calibration">
-                <div style={{ fontSize: 10.5, color: MUTED, marginBottom: 8, lineHeight: 1.5 }}>Fit the RF model to real measured readings — add a survey-meter dBm at a plan location (image px), or bulk-import a walk-test CSV.</div>
+                <div style={{ fontSize: 12, color: MUTED, marginBottom: 8, lineHeight: 1.5 }}>Fit the RF model to real measured readings — add a survey-meter dBm at a plan location (image px), or bulk-import a walk-test CSV.</div>
                 <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr 1fr auto', gap: 5, alignItems: 'end' }}>
-                  <label style={{ fontSize: 10, color: MUTED }}>X px<input className="hm-sel" style={{ width: '100%' }} inputMode="numeric" value={calM.x} onChange={(e) => setCalM((m) => ({ ...m, x: e.target.value }))} placeholder={project ? String(Math.round(project.imgW / 2)) : '0'} /></label>
-                  <label style={{ fontSize: 10, color: MUTED }}>Y px<input className="hm-sel" style={{ width: '100%' }} inputMode="numeric" value={calM.y} onChange={(e) => setCalM((m) => ({ ...m, y: e.target.value }))} placeholder={project ? String(Math.round(project.imgH / 2)) : '0'} /></label>
-                  <label style={{ fontSize: 10, color: MUTED }}>dBm<input className="hm-sel" style={{ width: '100%' }} inputMode="numeric" value={calM.dbm} onChange={(e) => setCalM((m) => ({ ...m, dbm: e.target.value }))} placeholder="-65" /></label>
+                  <label style={{ fontSize: 12, color: MUTED }}>X px<input className="hm-sel" style={{ width: '100%' }} inputMode="numeric" value={calM.x} onChange={(e) => setCalM((m) => ({ ...m, x: e.target.value }))} placeholder={project ? String(Math.round(project.imgW / 2)) : '0'} /></label>
+                  <label style={{ fontSize: 12, color: MUTED }}>Y px<input className="hm-sel" style={{ width: '100%' }} inputMode="numeric" value={calM.y} onChange={(e) => setCalM((m) => ({ ...m, y: e.target.value }))} placeholder={project ? String(Math.round(project.imgH / 2)) : '0'} /></label>
+                  <label style={{ fontSize: 12, color: MUTED }}>dBm<input className="hm-sel" style={{ width: '100%' }} inputMode="numeric" value={calM.dbm} onChange={(e) => setCalM((m) => ({ ...m, dbm: e.target.value }))} placeholder="-65" /></label>
                   <button className="hm-tool" onClick={addMeasured} style={{ padding: '6px 10px' }}>Add</button>
                 </div>
                 <div style={{ display: 'flex', gap: 6, marginTop: 6 }}>
@@ -2747,12 +2747,12 @@ export default function Designer({ projectId }: { projectId: string | null }) {
                     </div>
                   ))}
                 </div>}
-                {accuracy && <div style={{ marginTop: 9, padding: '8px 10px', borderRadius: 8, background: 'var(--brand-primary-08)', border: '1px solid var(--brand-primary-25)', fontSize: 11, color: DIM, lineHeight: 1.55 }}>
+                {accuracy && <div style={{ marginTop: 9, padding: '8px 10px', borderRadius: 8, background: 'var(--bg-surface-2)', border: '1px solid var(--border-default)', fontSize: 12, color: DIM, lineHeight: 1.55 }}>
                   <div style={{ fontWeight: 700, color: TEXT, marginBottom: 2 }}>Model accuracy — validated vs {accuracy.n} reading{accuracy.n === 1 ? '' : 's'}</div>
                   <div>Mean abs. error <b style={{ color: accuracy.mae <= 3 ? '#4ADE80' : accuracy.mae <= 6 ? GOLD : '#F87171', fontVariantNumeric: 'tabular-nums' }}>{accuracy.mae.toFixed(1)} dB</b> · worst <b style={{ fontVariantNumeric: 'tabular-nums' }}>{accuracy.worst.delta > 0 ? '+' : ''}{accuracy.worst.delta.toFixed(0)} dB</b> @ ({Math.round(accuracy.worst.mp.x)}, {Math.round(accuracy.worst.mp.y)})</div>
                   {calResult && <div style={{ marginTop: 1 }}>Calibration RMSE <b style={{ fontVariantNumeric: 'tabular-nums' }}>{calResult.rmseBefore.toFixed(1)} → {calResult.rmseAfter.toFixed(1)} dB</b></div>}
                 </div>}
-                <div style={{ marginTop: 8, fontSize: 10, color: MUTED, lineHeight: 1.5 }}>Map dots + delta badges come from these survey readings (toggle “Measured survey” under Layers). Live auto Wi-Fi scan is Android-only — Apple blocks RSSI reads on iOS.</div>
+                <div style={{ marginTop: 8, fontSize: 12, color: MUTED, lineHeight: 1.5 }}>Map dots + delta badges come from these survey readings (toggle “Measured survey” under Layers). Live auto Wi-Fi scan is Android-only — Apple blocks RSSI reads on iOS.</div>
                 <button className="hm-smart" style={{ marginTop: 10, marginBottom: 0, opacity: measured.length ? 1 : 0.5 }} disabled={!measured.length} onClick={runCalibrate}><Sparkle size={14} weight="fill" style={{ verticalAlign: 'middle', marginRight: 6 }} />Calibrate from {measured.length} reading{measured.length === 1 ? '' : 's'}</button>
                 {calResult && <div style={{ marginTop: 10 }}>
                   <div className="hm-metrics">
@@ -2773,33 +2773,33 @@ export default function Designer({ projectId }: { projectId: string | null }) {
                   <div className="hm-bom-row" style={{ color: MUTED }}><span>Overhead + profit</span><span /><span>${(bom.overhead + bom.profit).toLocaleString()}</span></div>
                 </div>
                 {/* TURNKEY INSTALL PRICE — the number a GC bids. No competitor emits this. */}
-                <div style={{ marginTop: 10, background: 'var(--brand-primary-12)', border: `1px solid ${GOLD}`, borderRadius: 12, padding: 14, display: 'flex', alignItems: 'center', gap: 10 }}>
+                <div style={{ marginTop: 10, background: 'var(--bg-surface-2)', border: `1px solid ${GOLD}`, borderRadius: 12, padding: 14, display: 'flex', alignItems: 'center', gap: 10 }}>
                   <div style={{ flex: 1 }}>
-                    <div style={{ color: GOLD, fontWeight: 800, fontSize: 11, letterSpacing: 0.5 }}>Turnkey Install Price</div>
-                    <div style={{ color: MUTED, fontSize: 11, marginTop: 2 }}>Hardware + labor + O&amp;P — the number you bid</div>
+                    <div style={{ color: 'var(--text-primary)', fontWeight: 800, fontSize: 12, letterSpacing: 0.5 }}>Turnkey Install Price</div>
+                    <div style={{ color: MUTED, fontSize: 12, marginTop: 2 }}>Hardware + labor + O&amp;P — the number you bid</div>
                   </div>
-                  <div style={{ color: GOLD, fontWeight: 900, fontSize: 23, fontVariantNumeric: 'tabular-nums' }}>${bom.turnkey.toLocaleString()}</div>
+                  <div style={{ color: 'var(--text-primary)', fontWeight: 900, fontSize: 23, fontVariantNumeric: 'tabular-nums' }}>${bom.turnkey.toLocaleString()}</div>
                 </div>
-                <div style={{ marginTop: 8, fontSize: 11, color: MUTED, lineHeight: 1.5 }}>PoE ≈ {bom.poeWatts} W · {bom.cat6Runs} Cat6 runs{bom.recSwitch ? ` · ${bom.recSwitch.model}` : ''}{bom.recNvr ? ` · ${bom.recNvr.model}` : ''}{cableRuns ? <> · cable <b style={{ color: DIM }}>{cableRuns.totalFt.toLocaleString()} ft</b> from plan geometry (order {cableRuns.orderFt.toLocaleString()} ft)</> : null}</div>
+                <div style={{ marginTop: 8, fontSize: 12, color: MUTED, lineHeight: 1.5 }}>PoE ≈ {bom.poeWatts} W · {bom.cat6Runs} Cat6 runs{bom.recSwitch ? ` · ${bom.recSwitch.model}` : ''}{bom.recNvr ? ` · ${bom.recNvr.model}` : ''}{cableRuns ? <> · cable <b style={{ color: DIM }}>{cableRuns.totalFt.toLocaleString()} ft</b> from plan geometry (order {cableRuns.orderFt.toLocaleString()} ft)</> : null}</div>
                 <button className="hm-smart" style={{ marginTop: 10 }} onClick={exportReport}><DownloadSimple size={14} weight="regular" style={{ verticalAlign: 'middle', marginRight: 6 }} />Export GC report (plan + BOM)</button>
               </PanelSection>}
 
               {tab === 'bom' && sched && project.devices.length > 0 && <PanelSection title="Network Schedule (IP · VLAN · PoE)">
                 <div style={{ display: 'flex', flexWrap: 'wrap', gap: '4px 6px', marginBottom: 8 }}>
-                  {sched.vlans.map((v) => <span key={v.id} style={{ fontSize: 10.5, color: DIM, background: DARK, border: `1px solid ${BORDER}`, borderRadius: 6, padding: '2px 7px', fontVariantNumeric: 'tabular-nums' }}>VLAN {v.id} · {v.name} · {v.subnet}.0/24</span>)}
+                  {sched.vlans.map((v) => <span key={v.id} style={{ fontSize: 12, color: DIM, background: DARK, border: `1px solid ${BORDER}`, borderRadius: 6, padding: '2px 7px', fontVariantNumeric: 'tabular-nums' }}>VLAN {v.id} · {v.name} · {v.subnet}.0/24</span>)}
                 </div>
                 <div className="hm-bom" style={{ maxHeight: 200, overflowY: 'auto' }}>
                   {sched.rows.map((r) => (
                     <div key={r.id} className="hm-bom-row" style={{ gap: 8 }}>
                       <span style={{ flex: 1, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{r.label}</span>
-                      <span style={{ color: MUTED, fontVariantNumeric: 'tabular-nums', fontSize: 11 }}>{r.ip}</span>
-                      <span style={{ color: r.port === '—' ? MUTED : GOLD, fontSize: 10, fontVariantNumeric: 'tabular-nums', minWidth: 54, textAlign: 'right' }}>{r.port}</span>
+                      <span style={{ color: MUTED, fontVariantNumeric: 'tabular-nums', fontSize: 12 }}>{r.ip}</span>
+                      <span style={{ color: r.port === '—' ? MUTED : GOLD, fontSize: 12, fontVariantNumeric: 'tabular-nums', minWidth: 54, textAlign: 'right' }}>{r.port}</span>
                     </div>
                   ))}
                 </div>
-                <div style={{ marginTop: 8, fontSize: 11, color: MUTED }}>{sched.poePorts} PoE ports · {sched.poeTotal} W · {sched.vlans.length} VLANs</div>
+                <div style={{ marginTop: 8, fontSize: 12, color: MUTED }}>{sched.poePorts} PoE ports · {sched.poeTotal} W · {sched.vlans.length} VLANs</div>
                 <button className="hm-smart" style={{ marginTop: 10 }} onClick={pullUnifi}><Sparkle size={14} weight="fill" style={{ verticalAlign: 'middle', marginRight: 6 }} />Pull live devices from UniFi controller</button>
-                {unifiMsg && <div style={{ marginTop: 6, fontSize: 11, color: unifiMsg.startsWith('✓') ? '#4ADE80' : DIM, lineHeight: 1.5 }}>{unifiMsg}</div>}
+                {unifiMsg && <div style={{ marginTop: 6, fontSize: 12, color: unifiMsg.startsWith('✓') ? '#4ADE80' : DIM, lineHeight: 1.5 }}>{unifiMsg}</div>}
               </PanelSection>}
 
               {tab === 'bom' && <PanelSection title="Wi-Fi Networks (SSIDs)">
@@ -2811,10 +2811,10 @@ export default function Designer({ projectId }: { projectId: string | null }) {
                   {project.devices.length === 0 && <span style={{ color: MUTED, fontSize: 12 }}>None yet — use Place, or Auto-place.</span>}
                   {project.devices.length > 0 && (
                     <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 4 }}>
-                      <span style={{ color: DIM, fontSize: 11 }}>Click to select · drag on the plan to move</span>
+                      <span style={{ color: DIM, fontSize: 12 }}>Click to select · drag on the plan to move</span>
                       <button
                         className="hm-tool"
-                        style={{ color: '#F87171', borderColor: 'rgba(248,113,113,0.3)', fontSize: 11, padding: '3px 8px' }}
+                        style={{ color: '#F87171', borderColor: 'rgba(248,113,113,0.3)', fontSize: 12, padding: '3px 8px' }}
                         onClick={async () => { if ((await confirmDialog({ title: 'Please confirm', message: `Remove all ${project.devices.length} devices from this plan? Walls & scale stay.`, danger: true }))) { snapshot(); patch({ devices: [] }); setSelId(null); } }}
                       >
                         <Trash size={12} weight="regular" style={{ verticalAlign: 'middle', marginRight: 4 }} />Clear all
@@ -2825,7 +2825,7 @@ export default function Designer({ projectId }: { projectId: string | null }) {
                     <div key={d.id} className="hm-row" data-on={d.id === selId} onClick={() => setSelId(d.id)} style={{ cursor: 'pointer' }}>
                       <i style={{ background: defOf(d.typeId).color }} />
                       <span style={{ flex: 1 }}>{d.label}{d.channel != null ? ` · ch${d.channel}` : ''}</span>
-                      <span style={{ color: MUTED, fontSize: 10, marginRight: 8 }}>{defOf(d.typeId).short}</span>
+                      <span style={{ color: MUTED, fontSize: 12, marginRight: 8 }}>{defOf(d.typeId).short}</span>
                       <button
                         title="Remove device"
                         onClick={(e) => { e.stopPropagation(); snapshot(); patch({ devices: project.devices.filter((x) => x.id !== d.id) }); if (selId === d.id) setSelId(null); }}
@@ -2843,8 +2843,8 @@ export default function Designer({ projectId }: { projectId: string | null }) {
       )}
 
       {hover && <div style={{ position: 'fixed', left: hover.x + 14, top: hover.y + 14, background: 'rgba(13,17,23,0.96)', border: `1px solid ${BORDER}`, padding: '5px 9px', borderRadius: 7, pointerEvents: 'none', zIndex: 100, boxShadow: '0 6px 20px rgba(0,0,0,0.5)' }}>
-        <div style={{ color: hover.dim ? MUTED : GOLD, fontSize: 12.5, fontWeight: 800, fontVariantNumeric: 'tabular-nums', lineHeight: 1.2 }}>{hover.txt}</div>
-        {hover.sub && <div style={{ color: DIM, fontSize: 10.5, marginTop: 1 }}>{hover.sub}</div>}
+        <div style={{ color: hover.dim ? MUTED : GOLD, fontSize: 13, fontWeight: 800, fontVariantNumeric: 'tabular-nums', lineHeight: 1.2 }}>{hover.txt}</div>
+        {hover.sub && <div style={{ color: DIM, fontSize: 12, marginTop: 1 }}>{hover.sub}</div>}
       </div>}
 
       {modal !== 'none' && (
@@ -2852,8 +2852,8 @@ export default function Designer({ projectId }: { projectId: string | null }) {
           <div onClick={(e) => e.stopPropagation()} style={{ background: RAISED, border: `1px solid ${BORDER}`, borderRadius: 14, width: '100%', maxWidth: 440, padding: 22, boxShadow: '0 24px 60px rgba(0,0,0,0.6)' }}>
             {modal === 'save' ? <>
               <h3 style={{ margin: '0 0 14px', fontSize: 16, fontWeight: 700 }}>Save Coverage Design</h3>
-              <label style={{ fontSize: 11, color: DIM }}>Design Name<input className="hm-sel" style={{ width: '100%', marginTop: 4 }} value={saveName} onChange={(e) => setSaveName(e.target.value)} placeholder="Coverage design" /></label>
-              <label style={{ fontSize: 11, color: DIM, display: 'block', marginTop: 12 }}>Save to Project
+              <label style={{ fontSize: 12, color: DIM }}>Design Name<input className="hm-sel" style={{ width: '100%', marginTop: 4 }} value={saveName} onChange={(e) => setSaveName(e.target.value)} placeholder="Coverage design" /></label>
+              <label style={{ fontSize: 12, color: DIM, display: 'block', marginTop: 12 }}>Save to Project
                 <select className="hm-sel" style={{ width: '100%', marginTop: 4 }} value={saveProj} onChange={(e) => setSaveProj(e.target.value)}>
                   <option value="">— Unassigned —</option>
                   {projList.map((p) => <option key={p.id} value={p.id}>{p.name}</option>)}
@@ -2867,12 +2867,12 @@ export default function Designer({ projectId }: { projectId: string | null }) {
             </> : modal === 'share' ? <>
               <h3 style={{ margin: '0 0 8px', fontSize: 16, fontWeight: 700 }}>Share Read-Only Design</h3>
               <p style={{ fontSize: 12, color: DIM, margin: '0 0 14px', lineHeight: 1.5 }}>Anyone with this link can view the marked-up plan, coverage metrics, BOM &amp; network schedule — no login, no editing.</p>
-              {busy ? <p style={{ color: GOLD, fontSize: 13 }}>{busy}</p> : shareUrl ? <>
+              {busy ? <p style={{ color: 'var(--text-primary)', fontSize: 13 }}>{busy}</p> : shareUrl ? <>
                 <div style={{ display: 'flex', gap: 8 }}>
                   <input className="hm-sel" readOnly value={shareUrl} onFocus={(e) => e.currentTarget.select()} style={{ flex: 1, fontSize: 12 }} />
                   <button className="hm-btn" onClick={copyShare}>{shareCopied ? <span style={{ display: 'inline-flex', alignItems: 'center', gap: 4 }}>Copied <CheckCircle size={13} weight="fill" /></span> : 'Copy'}</button>
                 </div>
-                <p style={{ fontSize: 11, color: DIM, margin: '10px 0 0' }}>Link expires in 30 days. Revoke any time to kill every copy instantly.</p>
+                <p style={{ fontSize: 12, color: DIM, margin: '10px 0 0' }}>Link expires in 30 days. Revoke any time to kill every copy instantly.</p>
                 <div style={{ display: 'flex', gap: 8, marginTop: 14 }}>
                   <a className="hm-btn" href={shareUrl} target="_blank" rel="noreferrer" style={{ textDecoration: 'none', display: 'inline-flex', alignItems: 'center', gap: 4 }}>Open Preview <ArrowUpRight size={13} weight="bold" /></a>
                   <button className="hm-tool" onClick={revokeShare} style={{ color: '#F87171' }}>Revoke Link</button>
@@ -2887,7 +2887,7 @@ export default function Designer({ projectId }: { projectId: string | null }) {
                 {designList.map((d) => (
                   <button key={d.id} className="hm-row" onClick={() => loadDesign(d.id)}>
                     <span style={{ flex: 1 }}>{d.name}</span>
-                    <span style={{ color: MUTED, fontSize: 11 }}>{d.device_count} dev · {d.coverage_percent != null ? `${Math.round(d.coverage_percent)}%` : '—'}</span>
+                    <span style={{ color: MUTED, fontSize: 12 }}>{d.device_count} dev · {d.coverage_percent != null ? `${Math.round(d.coverage_percent)}%` : '—'}</span>
                   </button>
                 ))}
               </div>
@@ -2906,17 +2906,17 @@ export default function Designer({ projectId }: { projectId: string | null }) {
         .hm-hero-id { display: flex; align-items: center; gap: 12px; min-width: 0; }
         .hm-hero-ic { width: 42px; height: 42px; border-radius: 12px; display: flex; align-items: center; justify-content: center; background: linear-gradient(160deg,#18181B,#141b26); border: 1px solid rgba(255,255,255,0.08); flex-shrink: 0; box-shadow: 0 1px 0 rgba(255,255,255,0.05) inset, 0 6px 14px rgba(0,0,0,0.4); }
         .hm-hero-ic svg { display: block; }
-        .hm-hero-eyebrow { display: inline-flex; align-items: center; gap: 5px; font-size: 10px; font-weight: 800; color: ${GOLD}; }
+        .hm-hero-eyebrow { display: inline-flex; align-items: center; gap: 5px; font-size: 12px; font-weight: 800; color: ${GOLD}; }
         .hm-hero-title { display: flex; align-items: center; gap: 10px; min-width: 0; margin-top: 2px; }
         .hm-hero-name { font-size: 19px; font-weight: 700; letter-spacing: -0.02em; color: ${TEXT}; line-height: 1.15; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
-        .hm-hero-cal { flex-shrink: 0; font-size: 10px; font-weight: 800; padding: 3px 9px; border-radius: 999px; background: var(--brand-primary-12); color: ${GOLD}; border: 1px solid var(--brand-primary-35); }
+        .hm-hero-cal { flex-shrink: 0; font-size: 12px; font-weight: 800; padding: 3px 9px; border-radius: 999px; background: var(--brand-primary-12); color: ${GOLD}; border: 1px solid var(--brand-primary-35); }
         .hm-hero-cal[data-ok="true"] { background: rgba(74,222,128,0.14); color: #4ADE80; border-color: rgba(74,222,128,0.4); }
         .hm-hero-actions { display: flex; align-items: center; gap: 8px; flex-wrap: wrap; }
         @media (min-width: 1000px) { .hm-hero { padding: 16px 24px 12px; } }
         /* ── compact essential chips (coverage target / band) on the simple flow ── */
         .hm-chipset { display: inline-flex; align-items: center; gap: 5px; }
-        .hm-chipset > span { font-size: 10px; font-weight: 800; color: ${MUTED}; margin-right: 2px; }
-        .hm-minichip { background: rgba(255,255,255,0.04); border: 1px solid ${BORDER}; color: ${DIM}; border-radius: 999px; padding: 5px 11px; font-size: 11.5px; font-weight: 700; cursor: pointer; font-variant-numeric: tabular-nums; transition: background .12s, border-color .12s, color .12s; }
+        .hm-chipset > span { font-size: 12px; font-weight: 800; color: ${MUTED}; margin-right: 2px; }
+        .hm-minichip { background: rgba(255,255,255,0.04); border: 1px solid ${BORDER}; color: ${DIM}; border-radius: 999px; padding: 5px 11px; font-size: 12px; font-weight: 700; cursor: pointer; font-variant-numeric: tabular-nums; transition: background .12s, border-color .12s, color .12s; }
         .hm-minichip:hover { background: rgba(255,255,255,0.08); color: ${TEXT}; }
         .hm-minichip[data-on="true"] { background: var(--brand-primary-18); border-color: color-mix(in srgb, var(--brand-primary) 50%, transparent); color: ${GOLD}; }
         .hm-cta { display: inline-block; background: linear-gradient(180deg, var(--brand-primary-strong), var(--brand-primary) 60%, var(--brand-primary-hover)); color: #101722; font-weight: 800; font-size: 14px; padding: 11px 22px; border-radius: 12px; cursor: pointer; box-shadow: 0 4px 16px var(--brand-primary-25), inset 0 1px 0 rgba(255,255,255,0.35); transition: transform .12s, box-shadow .12s, filter .12s; }
@@ -2949,7 +2949,7 @@ export default function Designer({ projectId }: { projectId: string | null }) {
         select.hm-sel, select.hm-sel-full { -webkit-appearance: none; appearance: none; background-image: url('data:image/svg+xml;utf8,<svg xmlns="http://www.w3.org/2000/svg" width="10" height="6"><path d="M1 1l4 4 4-4" fill="none" stroke="%23F59E0B" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"/></svg>'), linear-gradient(180deg, #1a1b1f, #101114); background-repeat: no-repeat; background-position: right 9px center, 0 0; background-size: 10px 6px, 100% 100%; padding-right: 26px; cursor: pointer; }
         .hm-sel:focus, .hm-sel-full:focus { outline: none; border-color: color-mix(in srgb, var(--brand-primary) 55%, transparent); box-shadow: 0 0 0 3px var(--brand-primary-12), inset 0 1px 0 rgba(255,255,255,0.05); }
         .hm-chk { display: flex; align-items: center; gap: 5px; font-size: 12px; color: ${DIM}; }
-        .hm-hint { font-size: 11px; color: ${MUTED}; }
+        .hm-hint { font-size: 12px; color: ${MUTED}; }
         .hm-btn { background: linear-gradient(180deg, var(--brand-primary-strong), var(--brand-primary) 60%, var(--brand-primary-hover)); color: #101722; border: none; border-radius: 7px; padding: 6px 12px; font-size: 12px; font-weight: 800; cursor: pointer; box-shadow: 0 2px 8px rgba(0,0,0,0.35), inset 0 1px 0 rgba(255,255,255,0.28); transition: filter .12s; }
         .hm-btn:hover { filter: brightness(1.07); }
         .hm-body { flex: 1; display: flex; min-height: 0; }
@@ -2958,7 +2958,7 @@ export default function Designer({ projectId }: { projectId: string | null }) {
         .hm-tool:disabled { opacity: 0.35; cursor: default; }
         .hm-panel { width: 344px; border-left: 1px solid rgba(0,0,0,0.55); background: linear-gradient(180deg, #16171a, #121316); overflow-y: auto; padding-bottom: 48px; flex-shrink: 0; position: relative; z-index: 2; box-shadow: -18px 0 40px rgba(0,0,0,0.45), inset 1px 0 0 rgba(255,255,255,0.05); }
         .hm-chiprow { display: flex; align-items: center; gap: 7px; flex-wrap: wrap; padding: 9px 16px; border-bottom: 1px solid ${BORDER}; background: ${DARK}; }
-        .hm-chip { display: inline-flex; align-items: center; gap: 6px; padding: 5px 11px; border-radius: 999px; border: 1px solid ${BORDER}; background: ${RAISED}; color: ${DIM}; font-size: 11.5px; font-weight: 700; cursor: pointer; transition: border-color .12s, background .12s, color .12s, opacity .12s; }
+        .hm-chip { display: inline-flex; align-items: center; gap: 6px; padding: 5px 11px; border-radius: 999px; border: 1px solid ${BORDER}; background: ${RAISED}; color: ${DIM}; font-size: 12px; font-weight: 700; cursor: pointer; transition: border-color .12s, background .12s, color .12s, opacity .12s; }
         .hm-chip i { width: 9px; height: 9px; border-radius: 50%; display: inline-block; transition: opacity .12s; }
         .hm-chip:hover { background: rgba(255,255,255,0.05); }
         .hm-chip[data-on="true"] { color: ${TEXT}; border-color: color-mix(in srgb, var(--chip) 60%, transparent); background: color-mix(in srgb, var(--chip) 12%, ${RAISED}); }
@@ -2970,19 +2970,19 @@ export default function Designer({ projectId }: { projectId: string | null }) {
         .hm-tabbtn:hover { background: rgba(255,255,255,0.05); color: ${TEXT}; }
         .hm-tabbtn[data-on="true"] { background: var(--brand-primary-18); color: ${GOLD}; box-shadow: inset 0 0 0 1px var(--brand-primary-35); }
         .hm-legend { display: flex; flex-wrap: wrap; gap: 6px 10px; margin-top: 10px; }
-        .hm-legend span { display: flex; align-items: center; gap: 5px; font-size: 11px; color: ${DIM}; }
+        .hm-legend span { display: flex; align-items: center; gap: 5px; font-size: 12px; color: ${DIM}; }
         .hm-legend i { width: 11px; height: 11px; border-radius: 3px; display: inline-block; }
         .hm-metrics { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; }
-        .hm-smart { width: 100%; text-align: left; background: var(--brand-primary-08); border: 1px solid var(--brand-primary-25); color: ${GOLD}; border-radius: 8px; padding: 9px 11px; font-size: 12.5px; font-weight: 600; cursor: pointer; margin-bottom: 7px; transition: background .12s, border-color .12s, box-shadow .12s; }
+        .hm-smart { width: 100%; text-align: left; background: var(--brand-primary-08); border: 1px solid var(--brand-primary-25); color: ${GOLD}; border-radius: 8px; padding: 9px 11px; font-size: 13px; font-weight: 600; cursor: pointer; margin-bottom: 7px; transition: background .12s, border-color .12s, box-shadow .12s; }
         .hm-smart:hover:not(:disabled) { background: var(--brand-primary-18); border-color: var(--brand-primary-35); box-shadow: 0 2px 12px var(--brand-primary-12); }
         .hm-smart:active:not(:disabled) { background: var(--brand-primary-25); }
         .hm-smart:disabled { cursor: default; }
-        .hm-sel-full { width: 100%; margin-top: 3px; background: ${DARK}; color: ${TEXT}; border: 1px solid ${BORDER}; border-radius: 6px; padding: 5px 6px; font-size: 11.5px; cursor: pointer; }
-        .hm-sheet { background: ${DARK}; color: ${DIM}; border: 1px solid ${BORDER}; border-radius: 6px; padding: 4px 9px; font-size: 11px; cursor: pointer; font-variant-numeric: tabular-nums; }
+        .hm-sel-full { width: 100%; margin-top: 3px; background: ${DARK}; color: ${TEXT}; border: 1px solid ${BORDER}; border-radius: 6px; padding: 5px 6px; font-size: 12px; cursor: pointer; }
+        .hm-sheet { background: ${DARK}; color: ${DIM}; border: 1px solid ${BORDER}; border-radius: 6px; padding: 4px 9px; font-size: 12px; cursor: pointer; font-variant-numeric: tabular-nums; }
         .hm-sheet[data-on="true"] { background: var(--brand-primary-18); color: ${GOLD}; border-color: var(--brand-primary-35); font-weight: 700; }
         .hm-drop { position: absolute; inset: 0; z-index: 40; display: flex; align-items: center; justify-content: center; background: rgba(13,17,23,0.86); border: 2px dashed ${GOLD}; border-radius: 12px; color: ${GOLD}; font-weight: 700; font-size: 15px; pointer-events: none; }
         .hm-list { display: flex; flex-direction: column; gap: 3px; max-height: 220px; overflow-y: auto; }
-        .hm-row { display: flex; align-items: center; gap: 8px; background: none; border: none; color: ${TEXT}; border-radius: 7px; padding: 7px 9px; font-size: 12.5px; cursor: pointer; text-align: left; }
+        .hm-row { display: flex; align-items: center; gap: 8px; background: none; border: none; color: ${TEXT}; border-radius: 7px; padding: 7px 9px; font-size: 13px; cursor: pointer; text-align: left; }
         .hm-row:hover { background: rgba(255,255,255,0.04); }
         .hm-row[data-on="true"] { background: var(--brand-primary-12); }
         .hm-row i { width: 10px; height: 10px; border-radius: 50%; flex-shrink: 0; }
@@ -2991,29 +2991,29 @@ export default function Designer({ projectId }: { projectId: string | null }) {
         .hm-bom-row span:first-child { flex: 1; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
         /* ── Field mode (guided jobsite flow — identical to the mobile app) ── */
         .hm-rail { display: flex; align-items: center; gap: 7px; padding: 11px 16px; border-top: 1px solid ${BORDER}; border-bottom: 1px solid rgba(0,0,0,0.55); background: linear-gradient(180deg, #17181b, #101114); flex-wrap: wrap; position: relative; z-index: 4; box-shadow: 0 6px 18px rgba(0,0,0,0.35), inset 0 1px 0 rgba(255,255,255,0.05); }
-        .hm-step { display: inline-flex; align-items: center; gap: 8px; padding: 8px 15px 8px 9px; border-radius: 999px; border: 1px solid ${BORDER}; background: rgba(255,255,255,0.03); color: ${DIM}; font-size: 11px; font-weight: 700; cursor: pointer; transition: border-color .15s, background .15s, color .15s, box-shadow .15s; }
+        .hm-step { display: inline-flex; align-items: center; gap: 8px; padding: 8px 15px 8px 9px; border-radius: 999px; border: 1px solid ${BORDER}; background: rgba(255,255,255,0.03); color: ${DIM}; font-size: 12px; font-weight: 700; cursor: pointer; transition: border-color .15s, background .15s, color .15s, box-shadow .15s; }
         .hm-step:hover { background: rgba(255,255,255,0.06); }
         .hm-step[data-on="true"] { background: linear-gradient(180deg, var(--brand-primary-25), var(--brand-primary-12)); color: #FFD98A; border-color: color-mix(in srgb, var(--brand-primary) 55%, transparent); box-shadow: 0 0 0 3px var(--brand-primary-12), 0 4px 14px var(--brand-primary-12); }
         .hm-step[data-done="true"] .hm-step-num { background: rgba(74,222,128,0.22); color: #4ADE80; box-shadow: inset 0 0 0 1px rgba(74,222,128,0.35); }
-        .hm-step-num { width: 20px; height: 20px; border-radius: 50%; display: inline-flex; align-items: center; justify-content: center; background: rgba(255,255,255,0.09); font-size: 10.5px; font-variant-numeric: tabular-nums; box-shadow: inset 0 0 0 1px rgba(255,255,255,0.08); transition: background .25s, color .25s, box-shadow .25s; }
+        .hm-step-num { width: 20px; height: 20px; border-radius: 50%; display: inline-flex; align-items: center; justify-content: center; background: rgba(255,255,255,0.09); font-size: 12px; font-variant-numeric: tabular-nums; box-shadow: inset 0 0 0 1px rgba(255,255,255,0.08); transition: background .25s, color .25s, box-shadow .25s; }
         .hm-fieldbar { display: flex; align-items: center; gap: 10px; padding: 13px 16px; border-bottom: 1px solid rgba(0,0,0,0.6); background: linear-gradient(180deg, #0d0e11, #0a0b0d); flex-wrap: wrap; position: relative; z-index: 3; box-shadow: 0 10px 26px rgba(0,0,0,0.45), inset 0 1px 0 rgba(255,255,255,0.04); }
         .hm-big { display: inline-flex; align-items: center; gap: 8px; background: linear-gradient(180deg, var(--brand-primary-strong), var(--brand-primary) 60%, var(--brand-primary-hover)); color: #101722; font-weight: 800; font-size: 14.5px; padding: 12px 21px; border-radius: 12px; border: none; cursor: pointer; box-shadow: 0 4px 14px var(--brand-primary-25), inset 0 1px 0 rgba(255,255,255,0.35); transition: transform .12s, box-shadow .12s, filter .12s; }
         .hm-big:hover { transform: translateY(-1px); box-shadow: 0 8px 22px var(--brand-primary-35), inset 0 1px 0 rgba(255,255,255,0.35); filter: brightness(1.04); }
         .hm-big:active { transform: translateY(0); box-shadow: 0 2px 8px var(--brand-primary-25), inset 0 1px 3px rgba(0,0,0,0.2); }
         .hm-big[data-alt="true"] { background: linear-gradient(180deg, rgba(255,255,255,0.09), rgba(255,255,255,0.05)); color: ${TEXT}; border: 1px solid rgba(255,255,255,0.14); box-shadow: 0 2px 10px rgba(0,0,0,0.3), inset 0 1px 0 rgba(255,255,255,0.07); }
         .hm-big[data-on="true"] { outline: 2px solid ${GOLD}; outline-offset: 1px; }
-        .hm-fieldmsg { font-size: 13.5px; color: #E2E8F0; font-weight: 600; line-height: 1.5; max-width: 560px; }
+        .hm-fieldmsg { font-size: 14px; color: #E2E8F0; font-weight: 600; line-height: 1.5; max-width: 560px; }
         .hm-fieldstat { font-size: 27px; font-weight: 900; letter-spacing: -0.5px; color: ${TEXT}; font-variant-numeric: tabular-nums; display: inline-flex; align-items: baseline; gap: 8px; padding: 8px 16px; border-radius: 12px; background: linear-gradient(180deg, rgba(255,255,255,0.06), rgba(255,255,255,0.03)); box-shadow: inset 0 1px 0 rgba(255,255,255,0.09), inset 0 0 0 1px rgba(255,255,255,0.07); }
-        .hm-fieldstat small { font-size: 10px; font-weight: 800; color: rgba(255,255,255,0.62); }
-        .hm-fieldbusy { display: flex; align-items: center; gap: 9px; padding: 8px 16px; color: #FFE000; font-size: 12.5px; font-weight: 700; background: linear-gradient(90deg, var(--brand-primary-12), color-mix(in srgb, var(--brand-primary) 3%, transparent) 55%, ${DARK}); border-bottom: 1px solid var(--brand-primary-25); }
+        .hm-fieldstat small { font-size: 12px; font-weight: 800; color: rgba(255,255,255,0.62); }
+        .hm-fieldbusy { display: flex; align-items: center; gap: 9px; padding: 8px 16px; color: #FFE000; font-size: 13px; font-weight: 700; background: linear-gradient(90deg, var(--brand-primary-12), color-mix(in srgb, var(--brand-primary) 3%, transparent) 55%, ${DARK}); border-bottom: 1px solid var(--brand-primary-25); }
         .hm-fieldbusy::before { content: ''; width: 8px; height: 8px; border-radius: 50%; background: ${GOLD}; box-shadow: 0 0 10px color-mix(in srgb, var(--brand-primary) 90%, transparent); animation: hm-pulse 1.1s ease-in-out infinite; flex-shrink: 0; }
         @keyframes hm-pulse { 0%, 100% { opacity: 1; transform: scale(1); } 50% { opacity: 0.35; transform: scale(0.7); } }
-        .hm-fieldnote { display: flex; align-items: flex-start; gap: 10px; padding: 9px 16px 9px 14px; color: #FFE000; font-size: 12.5px; font-weight: 600; line-height: 1.5; background: linear-gradient(180deg, var(--brand-primary-12), color-mix(in srgb, var(--brand-primary) 5%, transparent)); border-bottom: 1px solid var(--brand-primary-25); box-shadow: inset 3px 0 0 ${GOLD}; }
+        .hm-fieldnote { display: flex; align-items: flex-start; gap: 10px; padding: 9px 16px 9px 14px; color: #FFE000; font-size: 13px; font-weight: 600; line-height: 1.5; background: linear-gradient(180deg, var(--brand-primary-12), color-mix(in srgb, var(--brand-primary) 5%, transparent)); border-bottom: 1px solid var(--brand-primary-25); box-shadow: inset 3px 0 0 ${GOLD}; }
         .hm-fieldnote-x { background: none; border: none; color: ${MUTED}; font-size: 16px; font-weight: 800; cursor: pointer; line-height: 1; padding: 0 2px; }
         .hm-selcard { position: absolute; right: 14px; bottom: 14px; z-index: 7; background: rgba(13,17,23,0.88); border: 1px solid rgba(255,255,255,0.14); border-radius: 14px; padding: 11px 14px; display: flex; align-items: center; gap: 11px; backdrop-filter: blur(10px); box-shadow: 0 14px 40px rgba(0,0,0,0.5), inset 0 1px 0 rgba(255,255,255,0.08); }
         /* ── Advisor right-rail card + legacy density guard band ── */
         .hm-advisor { position: absolute; right: 14px; top: 14px; z-index: 7; width: min(320px, calc(100% - 28px)); max-height: calc(100% - 96px); display: flex; flex-direction: column; background: rgba(13,17,23,0.90); border: 1px solid rgba(255,255,255,0.14); border-radius: 14px; backdrop-filter: blur(10px); box-shadow: 0 14px 40px rgba(0,0,0,0.5), inset 0 1px 0 rgba(255,255,255,0.08); overflow: hidden; }
-        .hm-advisor-head { display: flex; align-items: center; justify-content: space-between; gap: 8px; background: none; border: none; color: ${TEXT}; cursor: pointer; padding: 10px 13px; font-size: 11px; font-weight: 800; }
+        .hm-advisor-head { display: flex; align-items: center; justify-content: space-between; gap: 8px; background: none; border: none; color: ${TEXT}; cursor: pointer; padding: 10px 13px; font-size: 12px; font-weight: 800; }
         .hm-advisor-head:hover { background: rgba(255,255,255,0.04); }
         .hm-advdot { width: 8px; height: 8px; border-radius: 50%; background: ${GOLD}; box-shadow: 0 0 8px color-mix(in srgb, var(--brand-primary) 80%, transparent); display: inline-block; }
         .hm-advdot[data-bad="true"] { background: #F87171; box-shadow: 0 0 8px rgba(248,113,113,0.8); }
@@ -3021,7 +3021,7 @@ export default function Designer({ projectId }: { projectId: string | null }) {
         .hm-advdict { font-size: 12px; font-weight: 700; line-height: 1.5; border-radius: 9px; padding: 9px 11px; background: rgba(74,222,128,0.10); border: 1px solid rgba(74,222,128,0.35); color: #8CE7A5; font-variant-numeric: tabular-nums; }
         .hm-advdict[data-bad="true"] { background: rgba(248,113,113,0.10); border-color: rgba(248,113,113,0.4); color: #FCA5A5; }
         .hm-advlabel { font-size: 9.5px; font-weight: 800; color: ${MUTED}; margin-top: 2px; }
-        .hm-advrow { display: flex; align-items: center; gap: 8px; font-size: 11.5px; color: ${DIM}; }
+        .hm-advrow { display: flex; align-items: center; gap: 8px; font-size: 12px; color: ${DIM}; }
         .hm-advrow b { color: ${TEXT}; font-weight: 700; }
         .hm-advchip { flex-shrink: 0; font-size: 9.5px; font-weight: 800; padding: 2px 8px; border-radius: 999px; }
         .hm-advchip[data-kind="ok"] { background: rgba(74,222,128,0.14); color: #4ADE80; box-shadow: inset 0 0 0 1px rgba(74,222,128,0.35); }
@@ -3160,10 +3160,10 @@ const SSID_SECS: SsidSecurity[] = ['wpa3', 'wpa2/3', 'wpa2', 'open'];
 function SsidsPanel({ ssids, onCommit }: { ssids: Ssid[]; onCommit: (next: Ssid[]) => void }) {
   const vlanKeys = Object.keys(VLANS) as (keyof typeof VLANS)[];
   const set = (i: number, u: Partial<Ssid>) => onCommit(ssids.map((s, j) => (j === i ? { ...s, ...u } : s)));
-  const selStyle: React.CSSProperties = { fontSize: 10.5, padding: '2px 4px', flex: 1, minWidth: 0 };
+  const selStyle: React.CSSProperties = { fontSize: 12, padding: '2px 4px', flex: 1, minWidth: 0 };
   return (
     <div>
-      <div style={{ fontSize: 11, color: MUTED, marginBottom: 8, lineHeight: 1.5 }}>Networks broadcast across every AP in this design. Real configuration — carried into the AP inspector and the GC report.</div>
+      <div style={{ fontSize: 12, color: MUTED, marginBottom: 8, lineHeight: 1.5 }}>Networks broadcast across every AP in this design. Real configuration — carried into the AP inspector and the GC report.</div>
       {ssids.map((s, i) => {
         const v = vlanFor(s.vlanKey);
         return (
@@ -3185,7 +3185,7 @@ function SsidsPanel({ ssids, onCommit }: { ssids: Ssid[]; onCommit: (next: Ssid[
                 {SSID_SECS.map((sec) => <option key={sec} value={sec}>{SSID_SEC_LABEL[sec]}</option>)}
               </select>
             </div>
-            <div style={{ fontSize: 10, color: MUTED, marginTop: 5, fontVariantNumeric: 'tabular-nums' }}>{v ? `${v.subnet}.0/24` : '—'}{s.hidden ? ' · hidden' : ''}</div>
+            <div style={{ fontSize: 12, color: MUTED, marginTop: 5, fontVariantNumeric: 'tabular-nums' }}>{v ? `${v.subnet}.0/24` : '—'}{s.hidden ? ' · hidden' : ''}</div>
           </div>
         );
       })}
@@ -3198,10 +3198,10 @@ function SsidsPanel({ ssids, onCommit }: { ssids: Ssid[]; onCommit: (next: Ssid[
 function InspRow({ label, value, mono, onClick }: { label: string; value: React.ReactNode; mono?: boolean; onClick?: () => void }) {
   const inner = (
     <>
-      <span style={{ fontSize: 11, color: MUTED, flexShrink: 0 }}>{label}</span>
+      <span style={{ fontSize: 12, color: MUTED, flexShrink: 0 }}>{label}</span>
       <span style={{ flex: 1 }} />
-      <span style={{ fontSize: 11.5, color: TEXT, textAlign: 'right', fontVariantNumeric: 'tabular-nums', fontFamily: mono ? 'ui-monospace, SFMono-Regular, Menlo, monospace' : undefined }}>{value}</span>
-      {onClick && <span style={{ color: GOLD, fontSize: 15, marginLeft: 8, fontWeight: 700 }}>{'›'}</span>}
+      <span style={{ fontSize: 12, color: TEXT, textAlign: 'right', fontVariantNumeric: 'tabular-nums', fontFamily: mono ? 'ui-monospace, SFMono-Regular, Menlo, monospace' : undefined }}>{value}</span>
+      {onClick && <span style={{ color: 'var(--text-primary)', fontSize: 15, marginLeft: 8, fontWeight: 700 }}>{'›'}</span>}
     </>
   );
   if (onClick) return <button type="button" className="hm-row" onClick={onClick} style={{ width: '100%', display: 'flex', alignItems: 'center' }} title="View details">{inner}</button>;
@@ -3210,16 +3210,16 @@ function InspRow({ label, value, mono, onClick }: { label: string; value: React.
 function InspInput({ label, value, placeholder, onChange, type = 'text', suffix }: { label: string; value: string; placeholder?: string; onChange: (v: string) => void; type?: string; suffix?: string }) {
   return (
     <label style={{ display: 'flex', alignItems: 'center', gap: 8, padding: '4px 2px' }}>
-      <span style={{ fontSize: 11, color: MUTED, width: 96, flexShrink: 0 }}>{label}</span>
+      <span style={{ fontSize: 12, color: MUTED, width: 96, flexShrink: 0 }}>{label}</span>
       <input className="hm-sel" type={type} value={value} placeholder={placeholder} onChange={(e) => onChange(e.target.value)} style={{ flex: 1, minWidth: 0 }} />
-      {suffix && <span style={{ fontSize: 11, color: MUTED }}>{suffix}</span>}
+      {suffix && <span style={{ fontSize: 12, color: MUTED }}>{suffix}</span>}
     </label>
   );
 }
 function InspGroup({ title, children }: { title: string; children: React.ReactNode }) {
   return (
     <div style={{ marginBottom: 12 }}>
-      <div style={{ fontSize: 10, fontWeight: 700, color: GOLD, marginBottom: 5, opacity: 0.85 }}>{title}</div>
+      <div style={{ fontSize: 12, fontWeight: 700, color: 'var(--text-primary)', marginBottom: 5, opacity: 0.85 }}>{title}</div>
       {children}
     </div>
   );
@@ -3228,7 +3228,7 @@ function SimpleLine({ color, children }: { color: string; children: React.ReactN
   return (
     <div style={{ display: 'flex', alignItems: 'flex-start', gap: 9, padding: '6px 0', borderBottom: `1px solid ${BORDER}` }}>
       <span style={{ width: 8, height: 8, borderRadius: 4, background: color, marginTop: 5, flexShrink: 0 }} />
-      <span style={{ fontSize: 12.5, color: TEXT, lineHeight: 1.45 }}>{children}</span>
+      <span style={{ fontSize: 13, color: TEXT, lineHeight: 1.45 }}>{children}</span>
     </div>
   );
 }
@@ -3294,7 +3294,7 @@ function DeviceInspector({ d, project, sched, bom, clientsPerAp, onChange, onDel
     if (project.scale) simple.push(<SimpleLine key="s1" color="#4ADE80">Signal at this point: <b>{apSignalDbm} dBm</b> ({rssiVerdict(apSignalDbm)}) — strongest spot.</SimpleLine>);
     if (project.scale) simple.push(<SimpleLine key="s2" color={SYSTEM_COLORS.wifi}>Coverage radius: <b>{apRadiusFt} ft</b> (at the {project.rssiTargetDbm} dBm target){roomsCovered.length ? <> — reaches <b>{roomsCovered.join(' + ')}</b></> : ''}.</SimpleLine>);
     if (hasPort) simple.push(<SimpleLine key="s3" color={SYSTEM_COLORS.power}>Plugs into: <b>PoE switch, port {netRow!.port.split('/').pop()}</b> (one cable does data + power).</SimpleLine>);
-    simple.push(<SimpleLine key="s4" color={GOLD}>Capacity: <b>{clientsPerAp} client devices</b> (phones, laptops).</SimpleLine>);
+    simple.push(<SimpleLine key="s4" color="var(--text-secondary)">Capacity: <b>{clientsPerAp} client devices</b> (phones, laptops).</SimpleLine>);
   } else if (isCam) {
     if (project.scale) { simple.push(<SimpleLine key="c1" color="#4ADE80">Observation range: <b>{doriFt(62)} ft</b> (sees clearly).</SimpleLine>); simple.push(<SimpleLine key="c2" color={SYSTEM_COLORS.camera}>Recognition range: <b>{doriFt(125)} ft</b> (identifies faces).</SimpleLine>); }
     simple.push(<SimpleLine key="c3" color={SYSTEM_COLORS.wifi}>Points: <b>{aimDir(d.aimDeg ?? 0)}</b> ({(d.aimDeg ?? 0).toFixed(0)}°){nearestRoom ? <> near <b>{nearestRoom}</b></> : ''}.</SimpleLine>);
@@ -3313,7 +3313,7 @@ function DeviceInspector({ d, project, sched, bom, clientsPerAp, onChange, onDel
   // ── DRILL sub-details ──
   const swNum = netRow?.port && netRow.port !== '—' ? netRow.port.split('/')[0] : 'SW1';
   const backBar = (
-    <button type="button" className="hm-row" onClick={() => setDrill(null)} style={{ width: '100%', color: GOLD, fontWeight: 600, marginBottom: 8 }}>
+    <button type="button" className="hm-row" onClick={() => setDrill(null)} style={{ width: '100%', color: 'var(--text-primary)', fontWeight: 600, marginBottom: 8 }}>
       {'‹'} back to {d.label || def.label}
     </button>
   );
@@ -3324,8 +3324,8 @@ function DeviceInspector({ d, project, sched, bom, clientsPerAp, onChange, onDel
       <div style={{ display: 'flex', alignItems: 'center', gap: 10, marginBottom: 10 }}>
         <DeviceThumb typeId={d.typeId} size={40} />
         <div style={{ minWidth: 0, flex: 1 }}>
-          <div style={{ fontSize: 13.5, fontWeight: 800, color: TEXT, whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>{d.label || def.label}</div>
-          <div style={{ fontSize: 10.5, color: MUTED }}>{def.label}{ident.manufacturer !== '—' ? ` · ${ident.manufacturer}` : ''}</div>
+          <div style={{ fontSize: 14, fontWeight: 800, color: TEXT, whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>{d.label || def.label}</div>
+          <div style={{ fontSize: 12, color: MUTED }}>{def.label}{ident.manufacturer !== '—' ? ` · ${ident.manufacturer}` : ''}</div>
         </div>
       </div>
       <div className="hm-seg" role="group" aria-label="Detail level" style={{ marginBottom: 12 }}>
@@ -3352,7 +3352,7 @@ function DeviceInspector({ d, project, sched, bom, clientsPerAp, onChange, onDel
           <InspRow label="Room / Nearest" value={nearestRoom || '—'} />
           <InspInput label="Mount Height" type="number" value={d.mountHeightFt != null ? String(d.mountHeightFt) : ''} placeholder="9" suffix="ft" onChange={(v) => onChange({ mountHeightFt: v === '' ? undefined : Math.max(0, +v) })} />
           {(def.modelType === 'camera' || def.modelType === 'fov') && (
-            <label style={{ display: 'block', fontSize: 11, color: DIM, padding: '4px 2px' }}>Aim {(d.aimDeg ?? 0).toFixed(0)}° ({aimDir(d.aimDeg ?? 0)})
+            <label style={{ display: 'block', fontSize: 12, color: DIM, padding: '4px 2px' }}>Aim {(d.aimDeg ?? 0).toFixed(0)}° ({aimDir(d.aimDeg ?? 0)})
               <input type="range" min={0} max={360} value={d.aimDeg ?? 0} onChange={(e) => onChange({ aimDeg: +e.target.value })} style={{ width: '100%', accentColor: GOLD }} />
             </label>
           )}
@@ -3377,13 +3377,13 @@ function DeviceInspector({ d, project, sched, bom, clientsPerAp, onChange, onDel
         {/* AP-only */}
         {isAp && <InspGroup title="Wi-Fi Radio">
           <div style={{ display: 'flex', alignItems: 'center', gap: 8, padding: '4px 2px' }}>
-            <span style={{ fontSize: 11, color: MUTED, width: 96 }}>Band</span>
+            <span style={{ fontSize: 12, color: MUTED, width: 96 }}>Band</span>
             <div className="hm-seg" role="group" aria-label="Band" style={{ flex: 1 }}>
               {(['2.4', '5', '6'] as Band[]).map((b) => <button key={b} type="button" className="hm-seg-btn" data-on={band === b} style={{ flex: 1 }} onClick={() => onChange({ band: b })}>{b}</button>)}
             </div>
           </div>
           <div style={{ display: 'flex', alignItems: 'center', gap: 8, padding: '4px 2px' }}>
-            <span style={{ fontSize: 11, color: MUTED, width: 96 }}>Tx Power</span>
+            <span style={{ fontSize: 12, color: MUTED, width: 96 }}>Tx Power</span>
             <div className="hm-seg" role="group" aria-label="Tx Power" style={{ flex: 1 }}>
               <button type="button" className="hm-seg-btn" data-on={!isHalf} style={{ flex: 1 }} onClick={() => onChange({ txPowerDbm: fullTx })}>Full</button>
               <button type="button" className="hm-seg-btn" data-on={isHalf} style={{ flex: 1 }} onClick={() => onChange({ txPowerDbm: halfTx })}>Half</button>
@@ -3419,7 +3419,7 @@ function DeviceInspector({ d, project, sched, bom, clientsPerAp, onChange, onDel
           <InspRow label="Cable" value={cab.dataCable?.name || cab.powerCable?.name || '—'} />
         </InspGroup>}
 
-        <div style={{ fontSize: 10, color: MUTED, lineHeight: 1.5, marginBottom: 8 }}>Values are from the <b>design</b> (plan model), not a live device. Verify against the installed hardware.</div>
+        <div style={{ fontSize: 12, color: MUTED, lineHeight: 1.5, marginBottom: 8 }}>Values are from the <b>design</b> (plan model), not a live device. Verify against the installed hardware.</div>
         <button className="hm-tool" style={{ color: '#F87171', borderColor: 'rgba(248,113,113,0.3)', width: '100%' }} onClick={onDelete}>Delete Device</button>
       </div>}
 
@@ -3428,13 +3428,13 @@ function DeviceInspector({ d, project, sched, bom, clientsPerAp, onChange, onDel
         {backBar}
         <div style={{ display: 'flex', alignItems: 'center', gap: 9, marginBottom: 10 }}>
           <DeviceThumb typeId="iot_gateway" size={32} />
-          <div><div style={{ fontSize: 13, fontWeight: 800, color: TEXT }}>{bom?.recSwitch?.model || 'PoE switch'}</div><div style={{ fontSize: 10.5, color: MUTED }}>Switch {swNum} · serves {d.label || def.label}</div></div>
+          <div><div style={{ fontSize: 13, fontWeight: 800, color: TEXT }}>{bom?.recSwitch?.model || 'PoE switch'}</div><div style={{ fontSize: 12, color: MUTED }}>Switch {swNum} · serves {d.label || def.label}</div></div>
         </div>
         <InspRow label="This Device Port" value={netRow?.port || '—'} mono />
         <InspRow label="VLAN" value={netRow ? `${netRow.vlan.id} · ${netRow.vlan.name}` : '—'} />
         <InspRow label="PoE Ports Used" value={sched ? `${sched.poePorts}` : '—'} />
         <InspRow label="PoE Budget" value={bom?.recSwitch ? `${sched?.poeTotal ?? 0} / ${bom.recSwitch.poeBudgetW} W` : '—'} />
-        <div style={{ fontSize: 10, color: MUTED, marginTop: 8, lineHeight: 1.5 }}>Planned switch + port assignment from the network schedule (design, not a live switch).</div>
+        <div style={{ fontSize: 12, color: MUTED, marginTop: 8, lineHeight: 1.5 }}>Planned switch + port assignment from the network schedule (design, not a live switch).</div>
       </div>}
 
       {/* ── DRILL: gateway ── */}
@@ -3442,13 +3442,13 @@ function DeviceInspector({ d, project, sched, bom, clientsPerAp, onChange, onDel
         {backBar}
         <div style={{ display: 'flex', alignItems: 'center', gap: 9, marginBottom: 10 }}>
           <DeviceThumb typeId="iot_gateway" size={32} />
-          <div><div style={{ fontSize: 13, fontWeight: 800, color: TEXT }}>Core Gateway</div><div style={{ fontSize: 10.5, color: MUTED }}>Upstream of {d.label || def.label}</div></div>
+          <div><div style={{ fontSize: 13, fontWeight: 800, color: TEXT }}>Core Gateway</div><div style={{ fontSize: 12, color: MUTED }}>Upstream of {d.label || def.label}</div></div>
         </div>
         <InspRow label="Role" value="Router / firewall / DHCP" />
         <InspRow label="Mgmt IP" value={`${VLANS.mgmt.subnet}.1`} mono />
         <InspRow label="VLANs Routed" value={sched ? `${sched.vlans.length}` : '—'} />
         <InspRow label="Path" value={`${d.label || def.label} → ${swNum} → gateway`} />
-        <div style={{ fontSize: 10, color: MUTED, marginTop: 8, lineHeight: 1.5 }}>Modeled upstream path from the design. Place an IoT gateway / switch to pin the physical rack location.</div>
+        <div style={{ fontSize: 12, color: MUTED, marginTop: 8, lineHeight: 1.5 }}>Modeled upstream path from the design. Place an IoT gateway / switch to pin the physical rack location.</div>
       </div>}
 
       {/* ── DRILL: this AP's networks + the real devices in the design ── */}
@@ -3458,7 +3458,7 @@ function DeviceInspector({ d, project, sched, bom, clientsPerAp, onChange, onDel
         {project.scale && <InspRow label="Coverage Radius" value={`${apRadiusFt} ft`} />}
 
         {/* SSIDs this AP broadcasts — each with its VLAN / band / security + DHCP scope */}
-        <div style={{ fontSize: 10, fontWeight: 700, color: GOLD, margin: '12px 0 5px', opacity: 0.85 }}>Broadcasts ({ssids.length} SSID{ssids.length === 1 ? '' : 's'})</div>
+        <div style={{ fontSize: 12, fontWeight: 700, color: 'var(--text-primary)', margin: '12px 0 5px', opacity: 0.85 }}>Broadcasts ({ssids.length} SSID{ssids.length === 1 ? '' : 's'})</div>
         {ssids.map((s, i) => {
           const v = vlanFor(s.vlanKey);
           return (
@@ -3467,9 +3467,9 @@ function DeviceInspector({ d, project, sched, bom, clientsPerAp, onChange, onDel
                 <span style={{ fontSize: 12, fontWeight: 700, color: TEXT }}>{s.name}</span>
                 {s.hidden && <span style={{ fontSize: 9.5, color: MUTED, border: `1px solid ${BORDER}`, borderRadius: 5, padding: '0 5px' }}>hidden</span>}
                 <span style={{ flex: 1 }} />
-                <span style={{ fontSize: 10.5, color: DIM }}>{SSID_BAND_LABEL[s.band]} · {SSID_SEC_LABEL[s.security]}</span>
+                <span style={{ fontSize: 12, color: DIM }}>{SSID_BAND_LABEL[s.band]} · {SSID_SEC_LABEL[s.security]}</span>
               </div>
-              <div style={{ fontSize: 10.5, color: MUTED, marginTop: 2, fontVariantNumeric: 'tabular-nums' }}>
+              <div style={{ fontSize: 12, color: MUTED, marginTop: 2, fontVariantNumeric: 'tabular-nums' }}>
                 {v ? `${v.subnet}.0/24 · VLAN ${v.id} (${v.name})` : `VLAN ${s.vlanKey}`}
               </div>
             </div>
@@ -3477,10 +3477,10 @@ function DeviceInspector({ d, project, sched, bom, clientsPerAp, onChange, onDel
         })}
 
         {/* the ACTUAL placed devices in this design that are on the network */}
-        <div style={{ fontSize: 10, fontWeight: 700, color: GOLD, margin: '12px 0 5px', opacity: 0.85 }}>Devices on this network (from your design)</div>
+        <div style={{ fontSize: 12, fontWeight: 700, color: 'var(--text-primary)', margin: '12px 0 5px', opacity: 0.85 }}>Devices on this network (from your design)</div>
         {sched && sched.rows.length > 0 ? (
           <div style={{ maxHeight: 240, overflowY: 'auto', border: `1px solid ${BORDER}`, borderRadius: 8 }}>
-            <table style={{ width: '100%', borderCollapse: 'collapse', fontSize: 10.5, fontFamily: 'ui-monospace, SFMono-Regular, Menlo, monospace' }}>
+            <table style={{ width: '100%', borderCollapse: 'collapse', fontSize: 12, fontFamily: 'ui-monospace, SFMono-Regular, Menlo, monospace' }}>
               <thead><tr style={{ position: 'sticky', top: 0, background: RAISED }}>
                 {['Device', 'IP', 'VLAN', 'Port'].map((h) => <th key={h} style={{ textAlign: 'left', padding: '6px 8px', color: MUTED, fontWeight: 700, borderBottom: `1px solid ${BORDER}` }}>{h}</th>)}
               </tr></thead>
@@ -3496,8 +3496,8 @@ function DeviceInspector({ d, project, sched, bom, clientsPerAp, onChange, onDel
               </tbody>
             </table>
           </div>
-        ) : <div style={{ fontSize: 11, color: MUTED }}>No network devices placed yet.</div>}
-        <div style={{ fontSize: 10, color: MUTED, marginTop: 8, lineHeight: 1.5 }}>Every row is a real device in this design with its assigned IP · VLAN · switch-port. MACs/serials are filled in by the installer at commissioning — never fabricated.</div>
+        ) : <div style={{ fontSize: 12, color: MUTED }}>No network devices placed yet.</div>}
+        <div style={{ fontSize: 12, color: MUTED, marginTop: 8, lineHeight: 1.5 }}>Every row is a real device in this design with its assigned IP · VLAN · switch-port. MACs/serials are filled in by the installer at commissioning — never fabricated.</div>
       </div>}
 
       {/* ── DRILL: NVR ── */}
@@ -3505,7 +3505,7 @@ function DeviceInspector({ d, project, sched, bom, clientsPerAp, onChange, onDel
         {backBar}
         <div style={{ display: 'flex', alignItems: 'center', gap: 9, marginBottom: 10 }}>
           <DeviceThumb typeId="camera" size={32} />
-          <div><div style={{ fontSize: 13, fontWeight: 800, color: TEXT }}>{bom?.recNvr?.model || 'Network video recorder'}</div><div style={{ fontSize: 10.5, color: MUTED }}>Records {d.label || def.label}</div></div>
+          <div><div style={{ fontSize: 13, fontWeight: 800, color: TEXT }}>{bom?.recNvr?.model || 'Network video recorder'}</div><div style={{ fontSize: 12, color: MUTED }}>Records {d.label || def.label}</div></div>
         </div>
         {(() => {
           const brMbps = Math.max(2, Math.min(12, Math.round(camMp * 1.1)));
@@ -3517,7 +3517,7 @@ function DeviceInspector({ d, project, sched, bom, clientsPerAp, onChange, onDel
             <InspRow label="14-Day Retention" value={`${Math.round(gbDay * 14 / 1000 * 10) / 10} TB`} />
           </>;
         })()}
-        <div style={{ fontSize: 10, color: MUTED, marginTop: 8, lineHeight: 1.5 }}>Storage is a design estimate (H.265, continuous). Real usage depends on motion, scene and codec.</div>
+        <div style={{ fontSize: 12, color: MUTED, marginTop: 8, lineHeight: 1.5 }}>Storage is a design estimate (H.265, continuous). Real usage depends on motion, scene and codec.</div>
       </div>}
     </PanelSection>
   );
@@ -3526,7 +3526,7 @@ function DeviceInspector({ d, project, sched, bom, clientsPerAp, onChange, onDel
 function PanelSection({ title, children }: { title: string; children: React.ReactNode }) {
   return (
     <div style={{ padding: '14px 14px', borderBottom: `1px solid ${BORDER}` }}>
-      <div style={{ fontSize: 10.5, fontWeight: 700, color: MUTED, marginBottom: 10 }}>{title}</div>
+      <div style={{ fontSize: 12, fontWeight: 700, color: MUTED, marginBottom: 10 }}>{title}</div>
       {children}
     </div>
   );
@@ -3534,7 +3534,7 @@ function PanelSection({ title, children }: { title: string; children: React.Reac
 function Metric({ label, val, big, color }: { label: string; val: string; big?: boolean; color?: string }) {
   return (
     <div style={{ background: DARK, border: `1px solid ${BORDER}`, borderRadius: 8, padding: '8px 10px' }}>
-      <div style={{ fontSize: 10, color: MUTED }}>{label}</div>
+      <div style={{ fontSize: 12, color: MUTED }}>{label}</div>
       <div style={{ fontSize: big ? 20 : 14, fontWeight: 800, color: color || TEXT, fontVariantNumeric: 'tabular-nums' }}>{val}</div>
     </div>
   );
@@ -3544,10 +3544,10 @@ function DeviceEditor({ d, onChange, onDelete }: { d: Device; onChange: (u: Part
   return (
     <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
       <input className="hm-sel" value={d.label || ''} onChange={(e) => onChange({ label: e.target.value })} placeholder="Label" />
-      {(def.modelType === 'camera' || def.modelType === 'fov') && <label style={{ fontSize: 11, color: DIM }}>Aim {(d.aimDeg ?? 0).toFixed(0)}°<input type="range" min={0} max={360} value={d.aimDeg ?? 0} onChange={(e) => onChange({ aimDeg: +e.target.value })} style={{ width: '100%' }} /></label>}
-      {def.modelType === 'camera' && <label style={{ fontSize: 11, color: DIM }}>HFOV {(d.hfovDeg ?? 68).toFixed(0)}°<input type="range" min={20} max={130} value={d.hfovDeg ?? 68} onChange={(e) => onChange({ hfovDeg: +e.target.value })} style={{ width: '100%' }} /></label>}
-      {def.modelType === 'rf' && d.typeId === 'wifi_ap' && <label style={{ fontSize: 11, color: DIM }}>Tx {(d.txPowerDbm ?? 15)} dBm<input type="range" min={3} max={26} value={d.txPowerDbm ?? 15} onChange={(e) => onChange({ txPowerDbm: +e.target.value })} style={{ width: '100%' }} /></label>}
-      {(def.modelType === 'radius' || def.modelType === 'spl' || def.modelType === 'fov') && <label style={{ fontSize: 11, color: DIM }}>Range {(d.rangeFt ?? (def.defaults.rangeFt as number))} ft<input type="range" min={4} max={120} value={d.rangeFt ?? (def.defaults.rangeFt as number)} onChange={(e) => onChange({ rangeFt: +e.target.value })} style={{ width: '100%' }} /></label>}
+      {(def.modelType === 'camera' || def.modelType === 'fov') && <label style={{ fontSize: 12, color: DIM }}>Aim {(d.aimDeg ?? 0).toFixed(0)}°<input type="range" min={0} max={360} value={d.aimDeg ?? 0} onChange={(e) => onChange({ aimDeg: +e.target.value })} style={{ width: '100%' }} /></label>}
+      {def.modelType === 'camera' && <label style={{ fontSize: 12, color: DIM }}>HFOV {(d.hfovDeg ?? 68).toFixed(0)}°<input type="range" min={20} max={130} value={d.hfovDeg ?? 68} onChange={(e) => onChange({ hfovDeg: +e.target.value })} style={{ width: '100%' }} /></label>}
+      {def.modelType === 'rf' && d.typeId === 'wifi_ap' && <label style={{ fontSize: 12, color: DIM }}>Tx {(d.txPowerDbm ?? 15)} dBm<input type="range" min={3} max={26} value={d.txPowerDbm ?? 15} onChange={(e) => onChange({ txPowerDbm: +e.target.value })} style={{ width: '100%' }} /></label>}
+      {(def.modelType === 'radius' || def.modelType === 'spl' || def.modelType === 'fov') && <label style={{ fontSize: 12, color: DIM }}>Range {(d.rangeFt ?? (def.defaults.rangeFt as number))} ft<input type="range" min={4} max={120} value={d.rangeFt ?? (def.defaults.rangeFt as number)} onChange={(e) => onChange({ rangeFt: +e.target.value })} style={{ width: '100%' }} /></label>}
       <button className="hm-tool" style={{ color: '#F87171', borderColor: 'rgba(248,113,113,0.3)' }} onClick={onDelete}>Delete Device</button>
     </div>
   );

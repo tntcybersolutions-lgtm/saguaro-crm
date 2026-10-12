@@ -103,7 +103,7 @@ export default function NewContractFromTemplate() {
       <main style={{ background: BASE, minHeight: '100vh', padding: '28px max(20px, 4vw)' }}>
         <p style={{ color: TEXT, fontSize: 15 }}>
           There is no contract template called “{String(params['kind'])}”.{' '}
-          <Link href={base} style={{ color: GOLD }}>Back to Contracts</Link>
+          <Link href={base} style={{ color: 'var(--link)' }}>Back to Contracts</Link>
         </p>
       </main>
     );
@@ -128,12 +128,12 @@ export default function NewContractFromTemplate() {
   return (
     <main style={{ background: BASE, minHeight: '100vh', padding: '24px max(20px, 4vw) 64px' }}>
       <div style={{ maxWidth: 1080, margin: '0 auto' }}>
-        <Link href={base} style={{ display: 'inline-flex', alignItems: 'center', gap: 7, minHeight: 44, color: DIM, fontSize: 13.5, textDecoration: 'none' }}>
+        <Link href={base} style={{ display: 'inline-flex', alignItems: 'center', gap: 7, minHeight: 44, color: DIM, fontSize: 14, textDecoration: 'none' }}>
           <ArrowLeft size={15} weight="bold" color={DIM} /> Contracts
         </Link>
 
         <div style={{ display: 'flex', alignItems: 'center', gap: 10, margin: '6px 0 22px' }}>
-          <FileText size={20} weight="duotone" color={GOLD} />
+          <FileText size={20} weight="duotone" color="var(--text-secondary)" />
           <h1 style={{ margin: 0, color: TEXT, fontSize: 24, fontWeight: 800, letterSpacing: '-0.01em' }}>
             New {spec.title}
           </h1>
@@ -160,15 +160,15 @@ export default function NewContractFromTemplate() {
                 <DownloadSimple size={16} weight="bold" color="var(--on-brand)" /> Open the PDF
               </button>
               <button onClick={() => setSigning((v) => !v)}
-                style={{ minHeight: 44, padding: '0 22px', borderRadius: 9, background: 'transparent', border: `1px solid ${GOLD}`, color: GOLD, fontSize: 13.5, fontWeight: 700, cursor: 'pointer' }}>
+                style={{ minHeight: 44, padding: '0 22px', borderRadius: 9, background: 'transparent', border: `1px solid ${GOLD}`, color: 'var(--text-primary)', fontSize: 14, fontWeight: 700, cursor: 'pointer' }}>
                 {signing ? 'Hide Signing' : 'Send for Signature'}
               </button>
               <button onClick={() => setPdfUrl('')}
-                style={{ minHeight: 44, padding: '0 20px', borderRadius: 9, background: 'transparent', border: `1px solid ${BORDER}`, color: DIM, fontSize: 13.5, fontWeight: 600, cursor: 'pointer' }}>
+                style={{ minHeight: 44, padding: '0 20px', borderRadius: 9, background: 'transparent', border: `1px solid ${BORDER}`, color: DIM, fontSize: 14, fontWeight: 600, cursor: 'pointer' }}>
                 Change Something and Regenerate
               </button>
               <button onClick={() => router.push(base)}
-                style={{ minHeight: 44, padding: '0 20px', borderRadius: 9, background: 'transparent', border: `1px solid ${BORDER}`, color: DIM, fontSize: 13.5, fontWeight: 600, cursor: 'pointer' }}>
+                style={{ minHeight: 44, padding: '0 20px', borderRadius: 9, background: 'transparent', border: `1px solid ${BORDER}`, color: DIM, fontSize: 14, fontWeight: 600, cursor: 'pointer' }}>
                 Done
               </button>
             </div>
@@ -198,7 +198,7 @@ export default function NewContractFromTemplate() {
           </div>
         ) : (
           <>
-            {error && <p style={{ color: 'var(--danger)', fontSize: 13.5 }}>{error}</p>}
+            {error && <p style={{ color: 'var(--danger)', fontSize: 14 }}>{error}</p>}
             <ContractForm
               kind={kind}
               projectId={projectId}

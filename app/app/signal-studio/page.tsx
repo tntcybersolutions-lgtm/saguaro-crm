@@ -26,10 +26,10 @@ const CSS = `
 .ssRow:last-child { border-bottom: 0; }
 .ssRow:hover { background: rgba(255,255,255,0.03); }
 .ssRow:focus-visible { outline: 2px solid var(--brand-primary); outline-offset: -2px; }
-.ssIcon { width: 38px; height: 38px; border-radius: 10px; flex-shrink: 0; display: grid; place-items: center; background: var(--brand-primary-12); border: 1px solid var(--brand-primary-35); color: var(--brand-primary); }
+.ssIcon { width: 38px; height: 38px; border-radius: 10px; flex-shrink: 0; display: grid; place-items: center; background: var(--bg-surface-2); border: 1px solid var(--border-default); color: var(--text-secondary); }
 .ssName { display: block; font-size: var(--fs-md); font-weight: 700; color: var(--text-primary); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
 .ssSub { display: block; font-size: var(--fs-xs); color: var(--text-tertiary); margin-top: 2px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
-.ssRow > svg:last-child { color: var(--brand-primary); flex-shrink: 0; }
+.ssRow > svg:last-child { color: var(--text-tertiary); flex-shrink: 0; }
 .ssSkel { height: 60px; border-bottom: 1px solid var(--border-subtle); background: rgba(255,255,255,0.03); }
 .ssWarn { display: flex; gap: 10px; align-items: flex-start; font-size: var(--fs-sm); color: var(--text-primary); line-height: 1.55; padding: 10px 14px; border-radius: var(--radius-sm); border: 1px solid rgba(255,197,61,.35); background: rgba(255,197,61,.08); }
 .ssWarn > svg { color: var(--status-under-contract); flex-shrink: 0; margin-top: 2px; }

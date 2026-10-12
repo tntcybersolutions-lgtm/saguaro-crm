@@ -74,7 +74,7 @@ export default function VendorsPage() {
         ) : rows.length === 0 ? (
           <SectionCard flat>
             <PremiumEmpty
-              icon={<Truck size={32} weight="duotone" color={C.gold} />}
+              icon={<Truck size={32} weight="duotone" color="var(--text-secondary)" />}
               title="No vendor deliveries scheduled"
               description="Long-lead procurement and equipment installs (Full-Swing, AV, switchgear) appear here as a coordinated cross-site timeline."
             />

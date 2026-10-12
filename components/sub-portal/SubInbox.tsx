@@ -29,9 +29,9 @@ const CSS = `
 .sbx-kpi { text-align: left; min-height: 76px; padding: 12px 14px; border-radius: 14px; border: 1px solid var(--border-default); background: var(--bg-surface); color: var(--text-primary); cursor: pointer; display: grid; gap: 2px; align-content: start; }
 .sbx-kpi[aria-pressed="true"] { border-color: var(--brand-primary); box-shadow: 0 0 0 2px var(--brand-primary-25); }
 .sbx-kpi b { font-size: 24px; line-height: 1.1; }
-.sbx-kpi span { font-size: 12.5px; color: var(--text-secondary); font-weight: 600; }
+.sbx-kpi span { font-size: 13px; color: var(--text-secondary); font-weight: 600; }
 .sbx-kpi small { font-size: 12px; color: var(--text-tertiary); }
-.sbx-kpi[data-hot="true"] b { color: var(--brand-primary); }
+.sbx-kpi[data-hot="true"] b { color: var(--warning); }
 .sbx-bar { display: flex; flex-wrap: wrap; gap: 8px; align-items: center; }
 .sbx-bar select, .sbx-bar input { min-height: 44px; font-size: 16px; padding: 0 12px; border-radius: 10px; border: 1px solid var(--border-default); background: var(--bg-surface-2); color: var(--text-primary); min-width: 0; }
 .sbx-list { display: grid; gap: 10px; }
@@ -42,7 +42,7 @@ const CSS = `
 .sbx-sub { font-size: 13px; color: var(--text-secondary); overflow-wrap: anywhere; }
 .sbx-money { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 8px; }
 .sbx-money div { background: var(--bg-surface-2); border-radius: 10px; padding: 8px 10px; }
-.sbx-money small { display: block; font-size: 11.5px; color: var(--text-tertiary); font-weight: 700; }
+.sbx-money small { display: block; font-size: 12px; color: var(--text-tertiary); font-weight: 700; }
 .sbx-money b { font-size: 15px; }
 .sbx-actions { display: flex; flex-wrap: wrap; gap: 8px; }
 .sbx-btn { min-height: 44px; padding: 0 16px; border-radius: 10px; font-weight: 800; font-size: 14px; cursor: pointer; border: 1px solid var(--border-default); background: var(--bg-surface-2); color: var(--text-primary); display: inline-flex; align-items: center; gap: 6px; }
@@ -53,7 +53,7 @@ const CSS = `
 .sbx-err { color: var(--c-red); font-size: 13px; font-weight: 700; }
 .sbx-lines { overflow-x: auto; }
 .sbx-lines table { width: 100%; border-collapse: collapse; min-width: 520px; font-size: 13px; }
-.sbx-lines th { text-align: left; font-size: 11.5px; color: var(--text-tertiary); padding: 6px 8px; border-bottom: 1px solid var(--border-default); }
+.sbx-lines th { text-align: left; font-size: 12px; color: var(--text-tertiary); padding: 6px 8px; border-bottom: 1px solid var(--border-default); }
 .sbx-lines td { padding: 7px 8px; border-bottom: 1px solid var(--border-subtle); }
 .sbx-answer { background: color-mix(in srgb, var(--success) 8%, transparent); border: 1px solid color-mix(in srgb, var(--success) 30%, transparent); border-radius: 10px; padding: 10px 12px; font-size: 14px; white-space: pre-wrap; }
 .sbx-q { white-space: pre-wrap; font-size: 14px; color: var(--text-primary); }
@@ -62,14 +62,14 @@ const CSS = `
 .sbx-titem { text-align: left; border: 1px solid var(--border-default); background: var(--bg-surface); border-radius: 12px; padding: 10px 12px; cursor: pointer; color: var(--text-primary); min-height: 64px; display: grid; gap: 2px; }
 .sbx-titem[aria-current="true"] { border-color: var(--brand-primary); }
 .sbx-titem .sbx-snip { font-size: 13px; color: var(--text-secondary); overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
-.sbx-dot { display: inline-grid; place-items: center; min-width: 20px; height: 20px; padding: 0 6px; border-radius: 999px; background: var(--brand-primary); color: var(--on-brand); font-size: 11.5px; font-weight: 800; margin-left: 6px; }
+.sbx-dot { display: inline-grid; place-items: center; min-width: 20px; height: 20px; padding: 0 6px; border-radius: 999px; background: var(--brand-primary); color: var(--on-brand); font-size: 12px; font-weight: 800; margin-left: 6px; }
 .sbx-chat { border: 1px solid var(--border-default); background: var(--bg-surface); border-radius: 14px; display: grid; grid-template-rows: auto minmax(0, 1fr) auto; min-height: 420px; max-height: 70vh; min-width: 0; }
 .sbx-chat-head { padding: 12px 14px; border-bottom: 1px solid var(--border-default); display: flex; gap: 8px; align-items: center; }
 .sbx-chat-body { overflow-y: auto; padding: 12px 14px; display: grid; gap: 8px; align-content: start; }
 .sbx-bubble { max-width: 82%; padding: 9px 12px; border-radius: 14px; font-size: 14px; white-space: pre-wrap; overflow-wrap: anywhere; }
 .sbx-bubble[data-me="true"] { justify-self: end; background: color-mix(in srgb, var(--brand-primary) 18%, transparent); border: 1px solid color-mix(in srgb, var(--brand-primary) 35%, transparent); }
 .sbx-bubble[data-me="false"] { justify-self: start; background: var(--bg-surface-2); border: 1px solid var(--border-default); }
-.sbx-bubble small { display: block; font-size: 11.5px; color: var(--text-tertiary); margin-top: 3px; }
+.sbx-bubble small { display: block; font-size: 12px; color: var(--text-tertiary); margin-top: 3px; }
 .sbx-compose { display: flex; gap: 8px; padding: 10px; border-top: 1px solid var(--border-default); }
 .sbx-compose textarea { min-height: 44px; height: 44px; }
 .sbx-back { display: none; }

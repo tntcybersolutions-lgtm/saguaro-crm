@@ -15,7 +15,7 @@ const CSS = `
   display: flex; align-items: center; gap: 10px; width: max-content; max-width: min(620px, calc(100vw - 24px)); padding: 10px 16px; border-radius: 14px;
   font-size: 14px; font-weight: 700; line-height: 1.3; box-shadow: 0 14px 34px -12px rgba(0,0,0,0.75); pointer-events: none; }
 .offb svg { flex: 0 0 auto; }
-.offb small { display: block; font-size: 12.5px; font-weight: 600; opacity: .85; }
+.offb small { display: block; font-size: 13px; font-weight: 600; opacity: .85; }
 .offb[data-tone="off"] { background: var(--c-orange); color: var(--on-brand); }
 .offb[data-tone="sync"] { background: var(--bg-solid-2); color: var(--text-primary); border: 1px solid var(--border-default); }
 .offb[data-tone="on"] { background: var(--c-green); color: var(--on-brand); }

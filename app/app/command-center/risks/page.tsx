@@ -54,7 +54,7 @@ export default function RisksPage() {
       <div style={{ fontFamily: font, color: C.text }}>
       <ModuleHero
         eyebrow="Portfolio Exposure"
-        eyebrowIcon={<ShieldWarning size={13} weight="fill" color={C.gold} />}
+        eyebrowIcon={<ShieldWarning size={13} weight="fill" color="var(--text-secondary)" />}
         title="Risk"
         accent="Register"
         subtitle="Every risk across all sites, ranked by exposure."
@@ -94,7 +94,7 @@ export default function RisksPage() {
         <div style={{ color: C.dim, padding: 40, textAlign: 'center' }}>Loading risks…</div>
       ) : filtered.length === 0 ? (
         rows.length === 0 ? (
-          <PremiumEmpty icon={<ShieldWarning size={34} weight="duotone" color={C.gold} />} title="No risks logged yet"
+          <PremiumEmpty icon={<ShieldWarning size={34} weight="duotone" color="var(--text-secondary)" />} title="No risks logged yet"
             description="Capture what could derail each site — permitting delays, weather, long-lead gaps, design churn. The register scores every risk by likelihood × impact, ranks the portfolio worst-first, and rolls the counts up to the Command Center and KPI dashboard automatically."
             action={<button onClick={() => setAdding(true)} className="pmBtn" style={goldButtonStyle}><Plus size={15} weight="bold" /> Log Your First Risk</button>} />
         ) : (
@@ -148,7 +148,7 @@ function AddRiskForm({ projects, onDone }: { projects: any[]; onDone: () => void
   const [err, setErr] = useState('');
   const set = (k: string, v: any) => setF((p) => ({ ...p, [k]: v }));
   const inp: React.CSSProperties = { padding: '8px 10px', borderRadius: 8, border: `1px solid ${C.border}`, fontSize: 13, outline: 'none', background: 'var(--bg-surface-2)', width: '100%' };
-  const lbl: React.CSSProperties = { fontSize: 11, fontWeight: 700, color: C.dim, marginBottom: 4, display: 'block' };
+  const lbl: React.CSSProperties = { fontSize: 12, fontWeight: 700, color: C.dim, marginBottom: 4, display: 'block' };
 
   async function submit() {
     if (!f.project_id || !f.risk_title) { setErr('Site and risk title are required.'); return; }

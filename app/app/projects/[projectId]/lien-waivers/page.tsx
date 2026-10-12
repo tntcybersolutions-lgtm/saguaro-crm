@@ -5,7 +5,7 @@ import { humanError } from '@/lib/errors';
 import { useParams } from 'next/navigation';
 import { CheckCircle, Hourglass, Lightning, FileText, DownloadSimple, Receipt } from '@phosphor-icons/react';
 import SaguaroDatePicker from '../../../../../components/SaguaroDatePicker';
-import { PremiumSurface, ModuleHero, SectionCard, PremiumEmpty, StatStrip, FlowSteps, InsightRow, AutoChip, goldButtonStyle, ghostButtonStyle, goldOutlineButtonStyle } from '@/components/ui/premium';
+import { PremiumSurface, ModuleHero, SectionCard, PremiumEmpty, StatStrip, FlowSteps, InsightRow, AutoChip, goldButtonStyle, ghostButtonStyle, goldOutlineButtonStyle, secondaryButtonStyle } from '@/components/ui/premium';
 import { ListToolbar } from '@/components/ui/ListToolbar';
 import { SortableTh, usePersistedSort, useSortedRows } from '@/app/app/_shared/table-sort';
 import { StatusPill } from '@/components/ui/Status';
@@ -35,8 +35,8 @@ const normalizeType = (t:string)=>TYPE_ALIAS[t]||t;
 const typeLabel = (t:string)=>WAIVER_TYPES.find(x=>x.key===normalizeType(t))?.label||t;
 
 const INP:React.CSSProperties = {padding:'8px 12px',background:'var(--bg-surface-2)',border:`1px solid ${BORDER}`,borderRadius:7,color:TEXT,fontSize:13,outline:'none',width:'100%',boxSizing:'border-box'};
-const LBL:React.CSSProperties = {display:'block',fontSize:11,fontWeight:700,color:DIM,marginBottom:6};
-const HINT:React.CSSProperties = {fontSize:11,color:'var(--c-text-2)',marginTop:5,lineHeight:1.45};
+const LBL:React.CSSProperties = {display:'block',fontSize:12,fontWeight:700,color:DIM,marginBottom:6};
+const HINT:React.CSSProperties = {fontSize:12,color:'var(--c-text-2)',marginTop:5,lineHeight:1.45};
 const fmtDate = (d?:string|null) => d ? new Date(d+'T00:00:00').toLocaleDateString('en-US',{month:'short',day:'numeric',year:'numeric'}) : '—';
 
 type WaiverStatus = 'signed'|'pending'|null;
@@ -75,7 +75,7 @@ function CellIcon({status,pdfUrl,onGenerate}:{status:string|undefined|null,pdfUr
         <span style={{display:'inline-flex',color:'var(--success)'}}><CheckCircle size={16} weight="fill" color="var(--success)" /></span>
         {pdfUrl && (
           <button type="button" onClick={() => openPdf({ url: pdfUrl, title: 'Lien Waiver' })}
-            style={{fontSize:10,color:GOLD,textDecoration:'none',padding:'2px 7px',border:'1px solid var(--brand-primary-25)',borderRadius:4}}>
+            style={{fontSize:12,color: 'var(--text-primary)',textDecoration:'none',padding:'2px 7px',border:'1px solid var(--border-default)',borderRadius:4}}>
             PDF
           </button>
         )}
@@ -283,7 +283,7 @@ export default function LienWaiversPage() {
       {/* Header */}
       <ModuleHero
         eyebrow="Lien Waivers"
-        eyebrowIcon={<FileText size={13} weight="fill" color={GOLD} />}
+        eyebrowIcon={<FileText size={13} weight="fill" color="var(--text-secondary)" />}
         title="Lien"
         accent="Waivers"
         subtitle={loading
@@ -316,7 +316,7 @@ export default function LienWaiversPage() {
       {/* Form */}
       {showForm && (
         <div style={{marginBottom:24,display:'grid',gridTemplateColumns:ctx?'minmax(0,1fr) 330px':'1fr',gap:18,alignItems:'start'}}>
-          <SectionCard title="Generate Lien Waiver" icon={<FileText size={17} weight="duotone" color={GOLD} />}>
+          <SectionCard title="Generate Lien Waiver" icon={<FileText size={17} weight="duotone" color="var(--text-secondary)" />}>
             {error && (
               <div style={{background:'rgba(192,48,48,.12)',border:`1px solid rgba(192,48,48,.3)`,borderRadius:8,padding:'10px 14px',marginBottom:16,color:RED,fontSize:13}}>{error}</div>
             )}
@@ -358,7 +358,7 @@ export default function LienWaiversPage() {
                 <label style={LBL}>Amount ($) *{autoAmt && <AutoChip/>}</label>
                 <input type="number" value={fAmount} onChange={e=>{setFAmount(e.target.value);setAutoAmt(false);}} placeholder="45000" min="0" style={INP}/>
                 {selSub && suggestedShare>0
-                  ? <div style={HINT}>App #{selPa.app_number} certified {fmt(Number(selPa.current_payment_due)||0)} — {selSub.companyName}&apos;s pro-rata share is <span onClick={()=>{setFAmount(String(suggestedShare));setAutoAmt(true);}} style={{color:'var(--brand-primary-strong)',fontWeight:700,cursor:'pointer'}}>{fmt(suggestedShare)} — use it</span></div>
+                  ? <div style={HINT}>App #{selPa.app_number} certified {fmt(Number(selPa.current_payment_due)||0)} — {selSub.companyName}&apos;s pro-rata share is <span onClick={()=>{setFAmount(String(suggestedShare));setAutoAmt(true);}} style={{color: 'var(--text-primary)',fontWeight:700,cursor:'pointer'}}>{fmt(suggestedShare)} — use it</span></div>
                   : selSub && Number(selSub.contractAmount)>0
                     ? <div style={HINT}>{selSub.companyName} contract: <b style={{color:TEXT}}>{fmt(Number(selSub.contractAmount)||0)}</b>. Link a pay app below to compute their pro-rata share.</div>
                     : <div style={HINT}>Dollars released through the date below.</div>}
@@ -389,7 +389,7 @@ export default function LienWaiversPage() {
           </SectionCard>
           {ctx && (
             <div style={{display:'flex',flexDirection:'column',gap:16}}>
-              <SectionCard flat title="How Waivers Flow" icon={<Lightning size={17} weight="duotone" color={GOLD} />}>
+              <SectionCard flat title="How Waivers Flow" icon={<Lightning size={17} weight="duotone" color="var(--text-secondary)" />}>
                 <FlowSteps title="" steps={[
                   {title:'Pay App Approved', desc:subs.length>0?`Conditional waivers auto-generate for all ${subs.length} sub${subs.length===1?'':'s'}, each sized to their share of the certified amount.`:'Conditional waivers auto-generate for every sub on the roster, sized to their share.'},
                   {title:'Subs Sign via Portal', desc:'Each sub gets a secure signing link by email — status flips to signed here.'},
@@ -398,7 +398,7 @@ export default function LienWaiversPage() {
                 ]}/>
               </SectionCard>
               {lastApp && (
-                <SectionCard flat title={`Pay App #${lastApp.appNumber}`} icon={<Receipt size={17} weight="duotone" color={GOLD} />}>
+                <SectionCard flat title={`Pay App #${lastApp.appNumber}`} icon={<Receipt size={17} weight="duotone" color="var(--text-secondary)" />}>
                   <InsightRow label="Status" value={String(lastApp.status||'—').replace(/_/g,' ')}/>
                   <InsightRow label="Certified" value={fmt(Number(lastApp.currentPaymentDue)||0)} accent="var(--success)" strong/>
                   <InsightRow label="Period To" value={fmtDate(lastApp.periodTo)}/>
@@ -428,12 +428,12 @@ export default function LienWaiversPage() {
         <SectionCard flush>
           <div style={{display:'grid',gridTemplateColumns:ctx?'minmax(0,1fr) 360px':'1fr',alignItems:'stretch'}}>
             <PremiumEmpty
-              icon={<FileText size={30} weight="duotone" color={GOLD} />}
+              icon={<FileText size={30} weight="duotone" color="var(--text-secondary)" />}
               title="No lien waivers yet — they mostly write themselves"
               description={subs.length>0
                 ? `When a pay application is approved, conditional waivers auto-generate for all ${subs.length} sub${subs.length===1?'':'s'} on the roster — each sized to their share of the certified amount — and mark-paid is gated until they are signed. AZ, CA, and TX statutory forms included.`
                 : 'When a pay application is approved, conditional waivers auto-generate for every sub on the roster and gate mark-paid until signed. AZ (ARS §33-1008), CA (Civil Code §8132), TX (Prop. Code Ch. 53) statutory forms included.'}
-              action={<button onClick={()=>setShowForm(true)} style={goldButtonStyle} className="pmBtn">+ Generate a Waiver Manually</button>}
+              action={<button onClick={()=>setShowForm(true)} style={secondaryButtonStyle} className="pmBtn">+ Generate a Waiver Manually</button>}
             />
             {ctx && (
               <div style={{borderLeft:'1px solid rgba(255,255,255,0.08)',padding:'22px 24px'}}>
@@ -453,22 +453,22 @@ export default function LienWaiversPage() {
       {!loading && matrix.length>0 && (
         <>
           <div style={{marginBottom:20}}>
-            <SectionCard title="Waiver Matrix" subtitle="Coverage by subcontractor & waiver type" icon={<CheckCircle size={17} weight="duotone" color={GOLD} />} flush>
+            <SectionCard title="Waiver Matrix" subtitle="Coverage by subcontractor & waiver type" icon={<CheckCircle size={17} weight="duotone" color="var(--text-secondary)" />} flush>
               <div style={{padding:'14px 20px',fontSize:13,color:DIM,borderBottom:`1px solid rgba(255,255,255,0.06)`,display:'flex',flexWrap:'wrap' as const,gap:16,alignItems:'center'}}>
                 <span><span style={{display:'inline-flex',verticalAlign:'middle',color:'var(--success)'}}><CheckCircle size={14} weight="fill" color="var(--success)" /></span> Signed</span>
                 <span><span style={{display:'inline-flex',verticalAlign:'middle',color:'var(--warning)'}}><Hourglass size={14} weight="fill" color="var(--warning)" /></span> Pending</span>
                 <span><span style={{color:BORDER}}>—</span> Not generated</span>
-                <span style={{marginLeft:'auto',fontSize:11.5,color:'var(--c-text-2)'}}>Conditional waivers auto-generate on pay-app approval and gate mark-paid until signed</span>
+                <span style={{marginLeft:'auto',fontSize:12,color:'var(--c-text-2)'}}>Conditional waivers auto-generate on pay-app approval and gate mark-paid until signed</span>
               </div>
               <div style={{overflowX:'auto'}}>
                 <table className="k-table" style={{ width:'100%',borderCollapse:'collapse' as const }}>
                   <thead>
                     <tr style={{background:'var(--bg-surface-2)'}}>
-                      <th style={{padding:'10px 16px',textAlign:'left' as const,fontSize:11,fontWeight:700,color:DIM,borderBottom:`1px solid ${BORDER}`,minWidth:180}}>
+                      <th style={{padding:'10px 16px',textAlign:'left' as const,fontSize:12,fontWeight:700,color:DIM,borderBottom:`1px solid ${BORDER}`,minWidth:180}}>
                         Subcontractor
                       </th>
                       {WAIVER_TYPES.map(t=>(
-                        <th key={t.key} style={{padding:'10px 16px',textAlign:'center' as const,fontSize:11,fontWeight:700,color:DIM,borderBottom:`1px solid ${BORDER}`,minWidth:140}}>
+                        <th key={t.key} style={{padding:'10px 16px',textAlign:'center' as const,fontSize:12,fontWeight:700,color:DIM,borderBottom:`1px solid ${BORDER}`,minWidth:140}}>
                           {t.label}
                         </th>
                       ))}
@@ -514,7 +514,7 @@ export default function LienWaiversPage() {
               count={{ shown: filteredWaivers.length, total: waivers.length }}
               style={{ marginBottom: 16 }}
             />
-            <SectionCard title="All Waivers" icon={<FileText size={17} weight="duotone" color={GOLD} />} flush>
+            <SectionCard title="All Waivers" icon={<FileText size={17} weight="duotone" color="var(--text-secondary)" />} flush>
               <div style={{overflowX:'auto'}}>
                 <table className="k-table" style={{ width:'100%',borderCollapse:'collapse' as const }}>
                   <thead>
@@ -534,8 +534,8 @@ export default function LienWaiversPage() {
                       return (
                         <tr key={w.id} style={{borderBottom:`1px solid rgba(255,255,255,0.12)`,background:wBlocks?'rgba(192,48,48,.05)':'transparent'}}>
                           <td style={{padding:'10px 14px',color:TEXT,fontWeight:600}}>{w.claimant_name||(w.subcontractors as any)?.company_name||(w.subcontractors as any)?.name||'—'}</td>
-                          <td style={{padding:'10px 14px',color:DIM,whiteSpace:'nowrap' as const}}>{typeLabel(w.waiver_type)}{w.converted_from_id?<span style={{marginLeft:6,fontSize:9,fontWeight:800,color:'var(--success)'}}>Auto</span>:null}</td>
-                          <td style={{padding:'10px 14px',color:DIM,whiteSpace:'nowrap' as const}}>{appNo?`App #${appNo}`:'—'}{wBlocks?<span style={{marginLeft:6,fontSize:9,fontWeight:800,color:'var(--danger)'}}>Gates Paid</span>:null}</td>
+                          <td style={{padding:'10px 14px',color:DIM,whiteSpace:'nowrap' as const}}>{typeLabel(w.waiver_type)}{w.converted_from_id?<span style={{marginLeft:6,fontSize:12,fontWeight:800,color:'var(--success)'}}>Auto</span>:null}</td>
+                          <td style={{padding:'10px 14px',color:DIM,whiteSpace:'nowrap' as const}}>{appNo?`App #${appNo}`:'—'}{wBlocks?<span style={{marginLeft:6,fontSize:12,fontWeight:800,color:'var(--danger)'}}>Gates Paid</span>:null}</td>
                           <td style={{padding:'10px 14px',color:DIM}}>{w.state||'—'}</td>
                           <td style={{padding:'10px 14px',color:TEXT}}>{fmt(Number(w.amount)||0)}</td>
                           <td style={{padding:'10px 14px',color:DIM}}>{fmtDate(w.through_date?String(w.through_date).slice(0,10):null)}</td>
@@ -546,8 +546,8 @@ export default function LienWaiversPage() {
                             {w.pdf_url && (
                               <a href={`/api/files/open?u=${encodeURIComponent(w.pdf_url || '')}`} target="_blank" rel="noreferrer"
                                 onClick={inAppFileClick(`/api/files/open?u=${encodeURIComponent(w.pdf_url || '')}`, 'Lien waiver', (m) => showToast(m, 'error'))}
-                                style={{background:'none',border:`1px solid ${BORDER}`,borderRadius:5,color:GOLD,fontSize:11,padding:'3px 9px',textDecoration:'none',cursor:'pointer'}}>
-                                <span style={{display:'inline-flex',alignItems:'center',gap:5,verticalAlign:'middle'}}><DownloadSimple size={12} weight="regular" color={GOLD} /> Download</span>
+                                style={{background:'none',border:`1px solid ${BORDER}`,borderRadius:5,color: 'var(--link)',fontSize:12,padding:'3px 9px',textDecoration:'none',cursor:'pointer'}}>
+                                <span style={{display:'inline-flex',alignItems:'center',gap:5,verticalAlign:'middle'}}><DownloadSimple size={12} weight="regular" color="var(--text-secondary)" /> Download</span>
                               </a>
                             )}
                           </td>

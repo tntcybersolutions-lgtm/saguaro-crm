@@ -322,16 +322,16 @@ const CSS = `
 .dl-row:first-child { border-top: 0; }
 .dl-row:not(.dl-hrow):hover { background: rgba(255,255,255,0.03); }
 .dl-row.sel { background: var(--brand-primary-08); }
-.dl-hrow { min-height: 42px; background: rgba(255,255,255,0.04); font-size: 12.5px; font-weight: 700; color: var(--text-secondary); position: sticky; top: 0; z-index: 1; }
+.dl-hrow { min-height: 42px; background: rgba(255,255,255,0.04); font-size: 13px; font-weight: 700; color: var(--text-secondary); position: sticky; top: 0; z-index: 1; }
 .dl-check input { width: 18px; height: 18px; accent-color: var(--brand-primary); cursor: pointer; }
 .dl-doc { display: flex; align-items: center; gap: 12px; min-width: 0; }
 .dl-docText { display: flex; flex-direction: column; min-width: 0; }
 .dl-title { all: unset; cursor: pointer; font-size: 14.5px; font-weight: 750; line-height: 1.3; color: var(--title-color, #FFE000); display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden; overflow-wrap: anywhere; }
 .dl-title:hover { text-decoration: underline; }
 .dl-title:focus-visible, .dl-btn:focus-visible, .dl-chips button:focus-visible, .dl-viewtoggle button:focus-visible, .dl-ghead:focus-visible { outline: 2px solid var(--brand-primary); outline-offset: 2px; }
-.dl-meta { display: flex; gap: 10px; font-size: 12.5px; color: var(--text-tertiary); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.dl-meta { display: flex; gap: 10px; font-size: 13px; color: var(--text-tertiary); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
 .dl-cat { font-weight: 700; }
-.dl-job { font-size: 13.5px; color: var(--text-primary); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.dl-job { font-size: 14px; color: var(--text-primary); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
 .dl-date { font-size: 13px; color: var(--text-secondary); white-space: nowrap; }
 .dl-badge { display: inline-block; font-size: 12px; font-weight: 700; padding: 3px 9px; border-radius: 999px; background: rgba(74,222,128,0.10); color: #4ADE80; border: 1px solid rgba(74,222,128,0.32); }
 .dl-actions { display: flex; justify-content: flex-end; gap: 6px; }
@@ -340,7 +340,7 @@ const CSS = `
 .dl-btn:disabled { opacity: .6; cursor: wait; }
 .dl-icon { width: 36px; padding: 0; }
 .dl-primary { display: inline-flex; align-items: center; gap: 6px; min-height: 36px; padding: 0 14px; border: 0; border-radius: 9px; background: var(--brand-primary); color: var(--on-brand); font-weight: 800; font-size: 13px; cursor: pointer; }
-.dl-link { background: none; border: 0; color: var(--brand-primary); font-weight: 700; cursor: pointer; font-size: 13px; }
+.dl-link { background: none; border: 0; color: var(--link); font-weight: 700; cursor: pointer; font-size: 13px; }
 .dl-state { padding: 28px 16px; text-align: center; color: var(--text-secondary); font-size: 14px; }
 .dl-err { color: #F87171; display: flex; align-items: center; justify-content: center; gap: 8px; flex-wrap: wrap; }
 .dl-skel span { height: 14px; border-radius: 6px; background: linear-gradient(90deg, rgba(255,255,255,0.04), rgba(255,255,255,0.08), rgba(255,255,255,0.04)); background-size: 200% 100%; animation: dlsk 1.4s ease infinite; }
@@ -349,7 +349,7 @@ const CSS = `
 .dl-group + .dl-group { border-top: 1px solid var(--glass-border); }
 .dl-ghead { display: flex; align-items: center; gap: 8px; width: 100%; min-height: 44px; padding: 0 14px; border: 0; background: rgba(255,224,0,0.05); color: var(--text-primary); cursor: pointer; font-size: 14px; font-weight: 800; text-align: left; }
 .dl-gname { color: var(--title-color, #FFE000); }
-.dl-gcount { margin-left: auto; font-size: 12.5px; color: var(--text-tertiary); font-variant-numeric: tabular-nums; }
+.dl-gcount { margin-left: auto; font-size: 13px; color: var(--text-tertiary); font-variant-numeric: tabular-nums; }
 .dl-more { display: flex; align-items: center; justify-content: space-between; gap: 12px; padding-top: 12px; font-size: 13px; color: var(--text-tertiary); }
 .dl-metaJob { display: none; }
 @media (max-width: 1100px) { .dl-row { grid-template-columns: 36px minmax(0, 1fr) 110px 150px; } .dl-job, .dl-status { display: none; } .dl-metaJob { display: inline; color: var(--text-secondary); overflow: hidden; text-overflow: ellipsis; } }

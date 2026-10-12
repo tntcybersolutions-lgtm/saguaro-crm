@@ -51,7 +51,7 @@ const CSI_DIVISIONS = Object.entries(CSI_TAXONOMY).map(([code, d]) => ({
 
 function Label({ children }: { children: React.ReactNode }) {
   return (
-    <label style={{ display: 'block', fontSize: 11, fontWeight: 700, color: DIM, marginBottom: 5 }}>
+    <label style={{ display: 'block', fontSize: 12, fontWeight: 700, color: DIM, marginBottom: 5 }}>
       {children}
     </label>
   );
@@ -136,7 +136,7 @@ function ProgressBar({ step }: { step: number }) {
                 }}>
                   {done ? '✓' : i + 1}
                 </div>
-                <div style={{ fontSize: 10, fontWeight: active ? 700 : 500, color, marginTop: 5, whiteSpace: 'nowrap' }}>
+                <div style={{ fontSize: 12, fontWeight: active ? 700 : 500, color, marginTop: 5, whiteSpace: 'nowrap' }}>
                   {label}
                 </div>
               </div>
@@ -171,7 +171,7 @@ function Step1({ data, onChange, onNext }: {
 }) {
   return (
     <div>
-      <h3 style={{ margin: '0 0 4px', color: GOLD, fontSize: 17, fontWeight: 800 }}>Trade & Scope</h3>
+      <h3 style={{ margin: '0 0 4px', color: 'var(--text-primary)', fontSize: 17, fontWeight: 800 }}>Trade & Scope</h3>
       <p style={{ margin: '0 0 22px', color: DIM, fontSize: 13 }}>Select the CSI division and describe the scope of work.</p>
 
       <div style={{ marginBottom: 18 }}>
@@ -288,7 +288,7 @@ function Step2({ projectId, lineItems, onLineItemsChange, onNext, onBack }: {
   }
 
   const thStyle: React.CSSProperties = {
-    padding: '8px 10px', textAlign: 'left', fontSize: 10, fontWeight: 700,
+    padding: '8px 10px', textAlign: 'left', fontSize: 12, fontWeight: 700,
     color: DIM,
     borderBottom: `1px solid ${BORDER}`,
   };
@@ -301,7 +301,7 @@ function Step2({ projectId, lineItems, onLineItemsChange, onNext, onBack }: {
 
   return (
     <div>
-      <h3 style={{ margin: '0 0 4px', color: GOLD, fontSize: 17, fontWeight: 800 }}>AI Pre-fill from Takeoff</h3>
+      <h3 style={{ margin: '0 0 4px', color: 'var(--text-primary)', fontSize: 17, fontWeight: 800 }}>AI Pre-fill from Takeoff</h3>
       <p style={{ margin: '0 0 16px', color: DIM, fontSize: 13 }}>
         {loading ? 'Loading takeoff data…' : hasData
           ? 'Takeoff found — select which line items to include in this bid package.'
@@ -318,8 +318,8 @@ function Step2({ projectId, lineItems, onLineItemsChange, onNext, onBack }: {
       {!loading && (
         <>
           <div style={{ display: 'flex', gap: 8, marginBottom: 10 }}>
-            <button onClick={() => toggleAll(true)} style={{ fontSize: 11, padding: '4px 10px', background: 'none', border: `1px solid ${BORDER}`, borderRadius: 5, color: DIM, cursor: 'pointer' }}>Select All</button>
-            <button onClick={() => toggleAll(false)} style={{ fontSize: 11, padding: '4px 10px', background: 'none', border: `1px solid ${BORDER}`, borderRadius: 5, color: DIM, cursor: 'pointer' }}>Deselect All</button>
+            <button onClick={() => toggleAll(true)} style={{ fontSize: 12, padding: '4px 10px', background: 'none', border: `1px solid ${BORDER}`, borderRadius: 5, color: DIM, cursor: 'pointer' }}>Select All</button>
+            <button onClick={() => toggleAll(false)} style={{ fontSize: 12, padding: '4px 10px', background: 'none', border: `1px solid ${BORDER}`, borderRadius: 5, color: DIM, cursor: 'pointer' }}>Deselect All</button>
           </div>
 
           <div style={{ border: `1px solid ${BORDER}`, borderRadius: 8, overflow: 'hidden', marginBottom: 12 }}>
@@ -374,11 +374,11 @@ function Step2({ projectId, lineItems, onLineItemsChange, onNext, onBack }: {
           </div>
 
           <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 20 }}>
-            <button onClick={addRow} style={{ fontSize: 12, padding: '6px 14px', background: 'none', border: `1px solid ${BORDER}`, borderRadius: 6, color: GOLD, cursor: 'pointer' }}>
+            <button onClick={addRow} style={{ fontSize: 12, padding: '6px 14px', background: 'none', border: `1px solid ${BORDER}`, borderRadius: 6, color: 'var(--text-primary)', cursor: 'pointer' }}>
               + Add Row
             </button>
             <div style={{ fontSize: 14, fontWeight: 800, color: TEXT }}>
-              Total (selected): <span style={{ color: GOLD }}>${total.toLocaleString()}</span>
+              Total (selected): <span style={{ color: 'var(--text-primary)' }}>${total.toLocaleString()}</span>
             </div>
           </div>
         </>
@@ -434,7 +434,7 @@ function Step3({ trade, projectId, selectedSubs, onSelectedSubsChange, manualEma
 
   return (
     <div>
-      <h3 style={{ margin: '0 0 4px', color: GOLD, fontSize: 17, fontWeight: 800 }}>Select Subs</h3>
+      <h3 style={{ margin: '0 0 4px', color: 'var(--text-primary)', fontSize: 17, fontWeight: 800 }}>Select Subs</h3>
       <p style={{ margin: '0 0 16px', color: DIM, fontSize: 13 }}>Choose subs to invite based on trade history and performance.</p>
 
       {loading && (
@@ -459,17 +459,17 @@ function Step3({ trade, projectId, selectedSubs, onSelectedSubsChange, manualEma
             style={{ accentColor: GOLD, width: 16, height: 16 }} />
           <div style={{ flex: 1 }}>
             <div style={{ fontWeight: 700, color: TEXT, fontSize: 14 }}>{sub.name}</div>
-            <div style={{ fontSize: 11, color: DIM, marginTop: 2 }}>{sub.email} · Last: {sub.lastProject}</div>
+            <div style={{ fontSize: 12, color: DIM, marginTop: 2 }}>{sub.email} · Last: {sub.lastProject}</div>
           </div>
           <div style={{ display: 'flex', gap: 8, alignItems: 'center' }}>
             <span style={{
-              fontSize: 10, fontWeight: 700, padding: '2px 8px', borderRadius: 4,
+              fontSize: 12, fontWeight: 700, padding: '2px 8px', borderRadius: 4,
               background: sub.winRate >= 75 ? 'rgba(74,222,128,0.12)' : 'var(--brand-primary-12)',
               color: sub.winRate >= 75 ? GREEN : GOLD,
             }}>
               {sub.winRate}% Win
             </span>
-            <span style={{ fontSize: 11, color: DIM }}>★ {sub.rating}</span>
+            <span style={{ fontSize: 12, color: DIM }}>★ {sub.rating}</span>
           </div>
         </div>
       ))}
@@ -482,7 +482,7 @@ function Step3({ trade, projectId, selectedSubs, onSelectedSubsChange, manualEma
           placeholder="email@subcontractor.com, another@sub.com"
           style={inputStyle()}
         />
-        <div style={{ fontSize: 11, color: DIM, marginTop: 4 }}>Separate multiple addresses with commas.</div>
+        <div style={{ fontSize: 12, color: DIM, marginTop: 4 }}>Separate multiple addresses with commas.</div>
       </div>
 
       <div style={{ padding: '12px 16px', background: RAISED2, borderRadius: 8, marginBottom: 20 }}>
@@ -532,16 +532,16 @@ function Step4({ trade, scope, lineItems, selectedSubCount, packageName, onPacka
 
   return (
     <div>
-      <h3 style={{ margin: '0 0 4px', color: GOLD, fontSize: 17, fontWeight: 800 }}>Review & Create</h3>
+      <h3 style={{ margin: '0 0 4px', color: 'var(--text-primary)', fontSize: 17, fontWeight: 800 }}>Review & Create</h3>
       <p style={{ margin: '0 0 16px', color: DIM, fontSize: 13 }}>Confirm the details and create your bid package.</p>
 
       {/* Summary card */}
       <div style={{ background: DARK, border: `1px solid var(--brand-primary-25)`, borderRadius: 10, padding: '16px 20px', marginBottom: 20 }}>
-        <div style={{ fontSize: 11, fontWeight: 700, color: GOLD, marginBottom: 12 }}>Package Summary</div>
+        <div style={{ fontSize: 12, fontWeight: 700, color: 'var(--text-primary)', marginBottom: 12 }}>Package Summary</div>
         <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '10px 20px' }}>
           {summaryItems.map(item => (
             <div key={item.label}>
-              <div style={{ fontSize: 10, color: DIM, fontWeight: 600, marginBottom: 2 }}>{item.label}</div>
+              <div style={{ fontSize: 12, color: DIM, fontWeight: 600, marginBottom: 2 }}>{item.label}</div>
               <div style={{ fontSize: 13, color: TEXT, fontWeight: 700 }}>{item.value}</div>
             </div>
           ))}

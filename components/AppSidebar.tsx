@@ -874,7 +874,7 @@ export default function AppSidebar({
               ) : (
                 <div style={{ display: 'flex', alignItems: 'center', gap: 8, margin: '2px 8px 10px', padding: '0 8px 0 12px', minWidth: 0 }}>
                   <span style={{
-                    fontSize: 11, fontWeight: 700, letterSpacing: '0.08em', textTransform: 'uppercase',
+                    fontSize: 12, fontWeight: 700, letterSpacing: '0.08em', textTransform: 'uppercase',
                     color: zoneTone, whiteSpace: 'nowrap',
                   }}>{zoneLabel}</span>
                   <span aria-hidden style={{ flex: 1, height: 1, background: 'var(--border-subtle)' }} />
@@ -918,7 +918,7 @@ export default function AppSidebar({
                       background: 'var(--bg-surface-2)',
                       border: '1px solid var(--border-default)',
                       color: 'var(--text-secondary)',
-                      borderRadius: 999, padding: '1px 6px', fontSize: 10.5, lineHeight: 1.5,
+                      borderRadius: 999, padding: '1px 6px', fontSize: 12, lineHeight: 1.5,
                     }}>{visibleItems.length}</span>
                   )}
                   <CaretDown
@@ -1051,16 +1051,16 @@ export default function AppSidebar({
                 width: '100%', minHeight: 40, display: 'flex', alignItems: 'center',
                 justifyContent: 'space-between', gap: 8, padding: '0 10px',
                 background: 'transparent', border: `1px dashed ${colors.borderDim}`,
-                borderRadius: 8, color: colors.textMuted, fontSize: 11.5,
+                borderRadius: 8, color: colors.textMuted, fontSize: 12,
                 fontWeight: font.weight.semibold, cursor: 'pointer',
               }}
             >
               <span className="sg-nav-label">{showAllTools ? 'Show Fewer Tools' : 'All Tools'}</span>
               {!showAllTools && (
                 <span style={{
-                  fontVariantNumeric: 'tabular-nums', color: 'var(--brand-primary)', fontWeight: font.weight.bold,
-                  background: 'var(--brand-primary-12)', border: '1px solid var(--brand-primary-25)',
-                  borderRadius: 999, padding: '1px 7px', fontSize: 10.5,
+                  fontVariantNumeric: 'tabular-nums', color: 'var(--text-primary)', fontWeight: font.weight.bold,
+                  background: 'var(--bg-surface-2)', border: '1px solid var(--border-default)',
+                  borderRadius: 999, padding: '1px 7px', fontSize: 12,
                 }}>+{hiddenTools}</span>
               )}
             </button>

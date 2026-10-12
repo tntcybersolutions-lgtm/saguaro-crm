@@ -388,7 +388,7 @@ const EditableRow = memo(function EditableRow({ item, idx, sellMult, laborAlloc,
   return (
     <>
       <div style={{ display: 'grid', gridTemplateColumns: ROW_GRID, padding: '8px 16px', borderBottom: `1px solid rgba(255,255,255,0.04)`, fontSize: 13, alignItems: 'center', background: idx % 2 === 0 ? 'transparent' : 'rgba(255,255,255,0.015)' }}>
-        <div style={{ color: GOLD, fontFamily: 'monospace', fontSize: 12, display: 'flex', alignItems: 'center', gap: 4 }}>
+        <div style={{ color: 'var(--text-primary)', fontFamily: 'monospace', fontSize: 12, display: 'flex', alignItems: 'center', gap: 4 }}>
           {item.csiCode}
           {qtyCheck && (
             <span title={item.notes} aria-label="Quantity flagged for review" style={{ display: 'inline-flex', cursor: 'help' }}>
@@ -401,10 +401,10 @@ const EditableRow = memo(function EditableRow({ item, idx, sellMult, laborAlloc,
         <EditableCell rawValue={String(item.quantity)} display={fmtN(item.quantity)} align="right" numeric disabled={!editable}
           cellStyle={{ color: 'var(--c-text-2)' }} onCommit={commitNum('quantity')} />
         <EditableCell rawValue={item.unit} display={item.unit} align="right" disabled={!editable}
-          cellStyle={{ color: 'var(--c-text-2)', fontSize: 11 }} onCommit={commitText('unit')} />
+          cellStyle={{ color: 'var(--c-text-2)', fontSize: 12 }} onCommit={commitText('unit')} />
         <EditableCell rawValue={String(item.unitCost)} display={`$${item.unitCost.toFixed(2)}`} align="right" numeric disabled={!editable}
           cellStyle={{ color: 'var(--c-text-2)' }} onCommit={commitNum('unitCost')} />
-        <div style={{ textAlign: 'right', color: GOLD, fontWeight: 600 }}
+        <div style={{ textAlign: 'right', color: 'var(--text-primary)', fontWeight: 600 }}
           title={`Material ${fmt$(item.totalCost)} + labor ${fmt$(labor)}${item.laborHours ? ` (${fmtN(item.laborHours)} hrs)` : ''}`}>
           {fmt$(direct)}
         </div>
@@ -429,8 +429,8 @@ const EditableRow = memo(function EditableRow({ item, idx, sellMult, laborAlloc,
         </div>
       </div>
       {noteOpen && (
-        <div style={{ padding: '8px 16px 12px', borderBottom: `1px solid rgba(255,255,255,0.04)`, background: 'color-mix(in srgb, var(--brand-primary) 4%, transparent)', display: 'flex', gap: 8, alignItems: 'flex-start' }}>
-          <NotePencil size={15} weight="duotone" color={GOLD_HI} style={{ marginTop: 8, flexShrink: 0 }} />
+        <div style={{ padding: '8px 16px 12px', borderBottom: `1px solid rgba(255,255,255,0.04)`, background: 'var(--bg-surface-2)', display: 'flex', gap: 8, alignItems: 'flex-start' }}>
+          <NotePencil size={15} weight="duotone" color="var(--text-secondary)" style={{ marginTop: 8, flexShrink: 0 }} />
           <textarea
             className="tkCellInput"
             rows={2}
@@ -505,7 +505,7 @@ function DivisionComposer({ div, divName, onAdd, onClose }: {
           onChange={(e) => setNotes(e.target.value)} onKeyDown={(e) => { if (e.key === 'Enter') submit(); }} style={{ marginTop: 8, textAlign: 'left' }} />
         <div style={{ display: 'flex', alignItems: 'center', gap: 12, marginTop: 10, flexWrap: 'wrap' }}>
           <button onClick={submit} disabled={!valid || busy} className="tkBtn"
-            style={{ display: 'inline-flex', alignItems: 'center', gap: 7, padding: '9px 18px', borderRadius: 9, border: 'none', background: valid ? `linear-gradient(135deg, ${GOLD}, ${AMBER})` : 'rgba(255,255,255,0.06)', color: valid ? 'var(--on-brand)' : 'rgba(255,255,255,0.35)', fontWeight: 800, fontSize: 12.5, cursor: valid && !busy ? 'pointer' : 'not-allowed' }}>
+            style={{ display: 'inline-flex', alignItems: 'center', gap: 7, padding: '9px 18px', borderRadius: 9, border: 'none', background: valid ? `linear-gradient(135deg, ${GOLD}, ${AMBER})` : 'rgba(255,255,255,0.06)', color: valid ? 'var(--on-brand)' : 'rgba(255,255,255,0.35)', fontWeight: 800, fontSize: 13, cursor: valid && !busy ? 'pointer' : 'not-allowed' }}>
             {busy ? <CircleNotch size={14} weight="bold" style={{ animation: 'tkSpin .9s linear infinite' }} /> : <Plus size={14} weight="bold" />} Add Line
           </button>
           <span style={{ fontSize: 12, fontWeight: 700, color: valid ? GOLD : 'rgba(255,255,255,0.35)' }}>
@@ -567,14 +567,14 @@ const LineItemTable = memo(function LineItemTable({ groupedItems, sellMult, labo
               void onPaste(div, text);
             }}
           >
-            <div style={{ padding: '8px 16px', background: 'color-mix(in srgb, var(--brand-primary) 6%, transparent)', borderBottom: `1px solid ${BORDER}`, borderTop: `1px solid ${BORDER}`, display: 'flex', justifyContent: 'space-between', alignItems: 'center', fontSize: 11, fontWeight: 700, color: GOLD }}>
+            <div style={{ padding: '8px 16px', background: 'var(--bg-surface-2)', borderBottom: `1px solid ${BORDER}`, borderTop: `1px solid ${BORDER}`, display: 'flex', justifyContent: 'space-between', alignItems: 'center', fontSize: 12, fontWeight: 700, color: 'var(--text-primary)' }}>
               <span>Division {div} — {divName}</span>
               <span style={{ display: 'inline-flex', alignItems: 'center', gap: 12 }}>
                 <button
                   onClick={() => setComposerDiv((d) => (d === div ? null : div))}
                   title={`Add a line to Division ${div}`}
-                  style={{ display: 'inline-flex', alignItems: 'center', gap: 5, padding: '4px 10px', borderRadius: 7, border: '1px solid var(--brand-primary-35)', background: composerDiv === div ? 'color-mix(in srgb, var(--brand-primary) 16%, transparent)' : 'color-mix(in srgb, var(--brand-primary) 6%, transparent)', color: GOLD_HI, fontSize: 10.5, fontWeight: 800, cursor: 'pointer' }}>
-                  <Plus size={11} weight="bold" color={GOLD_HI} /> Add Line
+                  style={{ display: 'inline-flex', alignItems: 'center', gap: 5, padding: '4px 10px', borderRadius: 7, border: '1px solid var(--brand-primary-35)', background: composerDiv === div ? 'color-mix(in srgb, var(--brand-primary) 16%, transparent)' : 'color-mix(in srgb, var(--brand-primary) 6%, transparent)', color: 'var(--text-primary)', fontSize: 12, fontWeight: 800, cursor: 'pointer' }}>
+                  <Plus size={11} weight="bold" color="var(--text-secondary)" /> Add Line
                 </button>
                 {/* Estimators arrive with a block of cells already copied. Reading
                     it here is the difference between this grid being usable and
@@ -591,7 +591,7 @@ const LineItemTable = memo(function LineItemTable({ groupedItems, sellMult, labo
                     }
                   }}
                   title={`Paste rows from a spreadsheet into Division ${div} — description, quantity, unit, unit cost`}
-                  style={{ display: 'inline-flex', alignItems: 'center', gap: 5, padding: '4px 10px', borderRadius: 7, border: '1px solid rgba(255,255,255,0.18)', background: 'transparent', color: 'var(--c-text-2)', fontSize: 10.5, fontWeight: 800, cursor: 'pointer' }}>
+                  style={{ display: 'inline-flex', alignItems: 'center', gap: 5, padding: '4px 10px', borderRadius: 7, border: '1px solid rgba(255,255,255,0.18)', background: 'transparent', color: 'var(--c-text-2)', fontSize: 12, fontWeight: 800, cursor: 'pointer' }}>
                   Paste Rows
                 </button>
                 <span>{fmt$(divTotal)}</span>
@@ -609,7 +609,7 @@ const LineItemTable = memo(function LineItemTable({ groupedItems, sellMult, labo
       {capped && (
         <button
           onClick={() => setShowAll(true)}
-          style={{ width: '100%', padding: '12px', background: 'var(--brand-primary-08)', border: 'none', borderTop: `1px solid ${BORDER}`, color: GOLD, fontWeight: 700, fontSize: 13, cursor: 'pointer' }}
+          style={{ width: '100%', padding: '12px', background: 'var(--bg-surface-2)', border: 'none', borderTop: `1px solid ${BORDER}`, color: 'var(--text-primary)', fontWeight: 700, fontSize: 13, cursor: 'pointer' }}
         >
           Showing the first {fmtN(ROW_RENDER_CAP)} of {fmtN(totalRows)} lines — show all
         </button>
@@ -1665,11 +1665,11 @@ export default function TakeoffPage() {
         <Aurora />
         <div style={{ position: 'relative', zIndex: 1, padding: '64px 24px', maxWidth: 680, margin: '0 auto' }}>
           <div style={{ animation: 'tkRise .5s ease both', textAlign: 'center', marginBottom: 24 }}>
-            <div style={{ display: 'inline-flex', alignItems: 'center', gap: 8, padding: '7px 16px', borderRadius: 999, background: 'linear-gradient(90deg, var(--brand-primary-18), color-mix(in srgb, var(--brand-primary) 6%, transparent))', border: '1px solid color-mix(in srgb, var(--brand-primary) 45%, transparent)', color: GOLD_HI, fontSize: 11, fontWeight: 800 }}>
+            <div style={{ display: 'inline-flex', alignItems: 'center', gap: 8, padding: '7px 16px', borderRadius: 999, background: 'linear-gradient(90deg, var(--brand-primary-18), color-mix(in srgb, var(--brand-primary) 6%, transparent))', border: '1px solid var(--border-default)', color: 'var(--text-primary)', fontSize: 12, fontWeight: 800 }}>
               <Ruler size={13} weight="bold" /> Measured Takeoff
             </div>
           </div>
-          <div style={{ animation: 'tkRise .55s ease .05s both', borderRadius: 20, border: '1px solid color-mix(in srgb, var(--brand-primary) 30%, transparent)', background: SURFACE, padding: '36px 28px', textAlign: 'center' }}>
+          <div style={{ animation: 'tkRise .55s ease .05s both', borderRadius: 20, border: '1px solid var(--border-default)', background: SURFACE, padding: '36px 28px', textAlign: 'center' }}>
             <h1 style={{ color: 'var(--text-primary)', fontSize: 26, fontWeight: 800, margin: 0, lineHeight: 1.25 }}>{measuredHandoff.name}</h1>
             <p style={{ color: 'var(--c-text-2)', fontSize: 14.5, lineHeight: 1.6, margin: '14px auto 0', maxWidth: 460 }}>
               The latest takeoff on this project was traced and priced in Takeoff Studio.
@@ -1677,7 +1677,7 @@ export default function TakeoffPage() {
             </p>
             {measuredHandoff.total > 0 && (
               <div style={{ marginTop: 18 }}>
-                <div style={{ color: 'var(--c-text-2)', fontSize: 11, fontWeight: 700 }}>Sell Price</div>
+                <div style={{ color: 'var(--c-text-2)', fontSize: 12, fontWeight: 700 }}>Sell Price</div>
                 <div style={{ color: GREEN, fontSize: 32, fontWeight: 800, marginTop: 4 }}>{fmt$(measuredHandoff.total)}</div>
               </div>
             )}
@@ -1709,198 +1709,109 @@ export default function TakeoffPage() {
   }
 
   // ── STATE A: UPLOAD ──────────────────────────────────────────────────────────
+  // The standard page pattern (DESIGN_SYSTEM.md §4): title, one compact drop row,
+  // what the AI pulls out, one primary action. No hero type, glow or motion.
   if (state === 'upload') {
+    const lastRun = result?.elapsedSec
+      ? (result.elapsedSec < 90 ? `${Math.round(result.elapsedSec)}s` : `${(result.elapsedSec / 60).toFixed(1)} min`)
+      : null;
     return (
-      <div className="tkRoot" style={{ position: 'relative', overflow: 'hidden', minHeight: 'calc(100vh - 56px)' }}>
-        <style>{FX_KEYFRAMES}</style>
-        <Aurora />
-        <div style={{ position: 'relative', zIndex: 1, padding: '46px 24px 64px', maxWidth: 960, margin: '0 auto' }}>
-
-          {/* Cinematic hero */}
-          <div style={{ textAlign: 'center', marginBottom: 32 }}>
-            <div style={{ animation: 'tkRise .5s ease both', display: 'inline-flex', alignItems: 'center', gap: 8, padding: '7px 16px', borderRadius: 999, background: 'linear-gradient(90deg, var(--brand-primary-18), color-mix(in srgb, var(--brand-primary) 6%, transparent))', border: '1px solid color-mix(in srgb, var(--brand-primary) 45%, transparent)', color: GOLD_HI, fontSize: 11, fontWeight: 800, boxShadow: '0 0 34px -8px color-mix(in srgb, var(--brand-primary) 55%, transparent)' }}>
-              <Sparkle size={13} weight="fill" /> AI Blueprint Takeoff
-            </div>
-            <h1 className="tkH1" style={{ animation: 'tkRise .55s ease .05s both', color: 'var(--text-primary)', margin: '18px 0 0' }}>
-              Drop a plan.<br />
-              <span className="tkShine" style={{ background: `linear-gradient(100deg, ${GOLD} 8%, ${GOLD_HI} 40%, var(--brand-primary-hover) 58%, ${GOLD} 90%)`, WebkitBackgroundClip: 'text', backgroundClip: 'text', WebkitTextFillColor: 'transparent', color: 'transparent' }}>
-                Get a priced bid in minutes.
-              </span>
-            </h1>
-            <p style={{ animation: 'tkRise .6s ease .1s both', color: 'var(--c-text-2)', fontSize: 16, marginTop: 16, maxWidth: 610, marginInline: 'auto', lineHeight: 1.58 }}>
-              Claude reads every wall, footing, fixture and column — measures the quantities, and prices them by trade. No scale wheel. No manual counting.
-            </p>
-            {/* The estimate workspace door must exist in EVERY page state — the
-                results-only placement left it unreachable for any project that
-                hadn't finished an analysis (review finding). */}
-            <p style={{ marginTop: 14 }}>
-              <a href={`/app/projects/${projectId}/takeoff/estimate`} style={{ color: 'color-mix(in srgb, var(--brand-primary) 90%, transparent)', fontSize: 13.5, fontWeight: 600, textDecoration: 'none' }}>
-                Prefer to build it by hand? Open the estimate workspace →
-              </a>
+      <div className="tkRoot" style={{ padding: '24px clamp(16px, 2.4vw, 32px) 48px', maxWidth: 1080 }}>
+        <div style={{ display: 'flex', alignItems: 'flex-start', justifyContent: 'space-between', gap: 16, flexWrap: 'wrap', marginBottom: 20 }}>
+          <div style={{ minWidth: 0, flex: '1 1 420px' }}>
+            <h1 style={{ margin: 0, fontSize: 22, fontWeight: 700, color: 'var(--text-primary)', letterSpacing: '-0.01em' }}>AI Takeoff</h1>
+            <p style={{ margin: '6px 0 0', fontSize: 14, color: 'var(--text-secondary)', lineHeight: 1.5, maxWidth: 640 }}>
+              Upload a plan set. Claude measures every wall, footing, fixture and column, then prices the quantities by trade.
+              {lastRun ? ` Your last run took ${lastRun}.` : ''}
             </p>
           </div>
-
-          {/* Drop Zone — glowing gradient border, breathing, blueprint interior + scan beam */}
-          <div
-            data-tour="takeoff-dropzone"
-            onClick={() => fileInputRef.current?.click()}
-            onDragOver={(e) => { e.preventDefault(); setIsDragging(true); }}
-            onDragLeave={() => setIsDragging(false)}
-            onDrop={handleDrop}
-            style={{
-              position: 'relative', overflow: 'hidden',
-              borderRadius: 24,
-              padding: 2,
-              marginBottom: 24,
-              cursor: 'pointer',
-              animation: selectedFile ? 'none' : 'tkGlow 3.8s ease-in-out infinite',
-              transform: isDragging ? 'scale(1.012)' : 'none',
-              transition: 'transform .2s ease',
-              background: isDragging
-                ? `linear-gradient(135deg, ${GOLD}, ${GOLD_HI})`
-                : selectedFile
-                  ? 'linear-gradient(135deg, rgba(74,222,128,0.6), rgba(74,222,128,0.14))'
-                  : 'linear-gradient(135deg, color-mix(in srgb, var(--brand-primary) 50%, transparent), var(--brand-primary-12))',
-            }}
-          >
-            <div style={{
-              position: 'relative', overflow: 'hidden',
-              borderRadius: 22,
-              padding: '60px 32px',
-              textAlign: 'center',
-              background: isDragging
-                ? 'radial-gradient(circle at 50% 32%, color-mix(in srgb, var(--brand-primary) 22%, transparent), rgba(0,0,0,0.97))'
-                : 'radial-gradient(circle at 50% 26%, var(--brand-primary-08), rgba(0,0,0,0.97))',
-            }}>
-              {/* Blueprint grid interior */}
-              <div aria-hidden style={{ position: 'absolute', inset: 0, backgroundImage: 'linear-gradient(color-mix(in srgb, var(--brand-primary) 10%, transparent) 1px, transparent 1px), linear-gradient(90deg, color-mix(in srgb, var(--brand-primary) 10%, transparent) 1px, transparent 1px)', backgroundSize: '26px 26px', maskImage: 'radial-gradient(80% 72% at 50% 42%, #000, transparent 78%)', WebkitMaskImage: 'radial-gradient(80% 72% at 50% 42%, #000, transparent 78%)', opacity: isDragging ? 0.95 : 0.5 }} />
-              {/* CAD corner brackets */}
-              <div aria-hidden style={{ position: 'absolute', left: 14, top: 14, width: 22, height: 22, borderLeft: `2px solid ${GOLD}`, borderTop: `2px solid ${GOLD}`, borderRadius: 3, opacity: 0.7 }} />
-              <div aria-hidden style={{ position: 'absolute', right: 14, top: 14, width: 22, height: 22, borderRight: `2px solid ${GOLD}`, borderTop: `2px solid ${GOLD}`, borderRadius: 3, opacity: 0.7 }} />
-              <div aria-hidden style={{ position: 'absolute', left: 14, bottom: 14, width: 22, height: 22, borderLeft: `2px solid ${GOLD}`, borderBottom: `2px solid ${GOLD}`, borderRadius: 3, opacity: 0.7 }} />
-              <div aria-hidden style={{ position: 'absolute', right: 14, bottom: 14, width: 22, height: 22, borderRight: `2px solid ${GOLD}`, borderBottom: `2px solid ${GOLD}`, borderRadius: 3, opacity: 0.7 }} />
-              {/* Scan beam — soft glow band that sweeps the plan (never a hard line) */}
-              {!selectedFile && (
-                <div aria-hidden style={{ position: 'absolute', left: 20, right: 20, top: -40, height: 90, background: 'linear-gradient(180deg, transparent, color-mix(in srgb, var(--brand-primary) 16%, transparent) 45%, color-mix(in srgb, var(--brand-primary) 28%, transparent) 50%, color-mix(in srgb, var(--brand-primary) 16%, transparent) 55%, transparent)', filter: 'blur(1px)', animation: 'tkScanV 4s ease-in-out infinite', zIndex: 0 }} />
-              )}
-
-              <input
-                ref={fileInputRef}
-                type="file"
-                accept=".pdf,.png,.jpg,.jpeg,.tiff,.tif,.webp"
-                style={{ display: 'none' }}
-                onChange={(e) => {
-                  const f = e.target.files?.[0];
-                  if (f) handleFileSelect(f);
-                }}
-              />
-
-              {selectedFile ? (
-                <div style={{ position: 'relative', zIndex: 1 }}>
-                  <div style={{ display: 'inline-flex', width: 88, height: 88, borderRadius: '50%', alignItems: 'center', justifyContent: 'center', background: 'radial-gradient(circle, rgba(74,222,128,0.28), rgba(74,222,128,0.05))', border: '1px solid rgba(74,222,128,0.5)', marginBottom: 16, boxShadow: '0 0 44px -8px rgba(74,222,128,0.7)' }}>
-                    <CheckCircle size={46} weight="fill" color={GREEN} />
-                  </div>
-                  <div style={{ color: GREEN, fontWeight: 800, fontSize: 18, wordBreak: 'break-word' }}>{selectedFile.name}</div>
-                  <div style={{ color: 'var(--c-text-2)', fontSize: 13, marginTop: 6 }}>
-                    {fmtFileSize(selectedFile.size)} · ready to analyze — click to change
-                  </div>
-                </div>
-              ) : (
-                <div style={{ position: 'relative', zIndex: 1 }}>
-                  <div style={{ position: 'relative', display: 'inline-flex', width: 104, height: 104, borderRadius: '50%', alignItems: 'center', justifyContent: 'center', background: 'radial-gradient(circle, color-mix(in srgb, var(--brand-primary) 24%, transparent), color-mix(in srgb, var(--brand-primary) 4%, transparent))', border: '1px solid color-mix(in srgb, var(--brand-primary) 42%, transparent)', marginBottom: 20, animation: 'tkFloat 5s ease-in-out infinite' }}>
-                    <div aria-hidden style={{ position: 'absolute', inset: -1, borderRadius: '50%', border: `1px solid ${GOLD}`, animation: 'tkRing 3s ease-out infinite' }} />
-                    <Blueprint size={46} weight="duotone" color={GOLD_HI} />
-                  </div>
-                  <div style={{ color: 'var(--text-primary)', fontWeight: 800, fontSize: 24, marginBottom: 8, letterSpacing: '-0.02em' }}>
-                    {isDragging ? 'Release to Upload' : 'Drop Your Blueprint Here'}
-                  </div>
-                  <div style={{ color: 'var(--c-text-2)', fontSize: 14.5 }}>
-                    or <span style={{ color: GOLD_HI, fontWeight: 800 }}>click to browse</span>
-                  </div>
-                  <div style={{ display: 'inline-flex', gap: 7, flexWrap: 'wrap', justifyContent: 'center', marginTop: 18 }}>
-                    {['PDF', 'PNG', 'JPG', 'TIFF', 'WEBP'].map((x) => (
-                      <span key={x} style={{ fontSize: 11, fontWeight: 800, color: 'var(--c-text-2)', padding: '4px 11px', borderRadius: 7, background: 'rgba(255,255,255,0.06)', border: '1px solid color-mix(in srgb, var(--brand-primary) 22%, transparent)' }}>{x}</span>
-                    ))}
-                    <span style={{ fontSize: 11, fontWeight: 600, color: 'var(--c-text-2)', padding: '4px 6px' }}>Up to 200 MB</span>
-                  </div>
-                </div>
-              )}
-            </div>
-          </div>
-
-          {/* Trust stat strip */}
-          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit,minmax(150px,1fr))', gap: 12, marginBottom: 26 }}>
-            {[
-              // Honest by default; once a real run is measured this session, show the
-              // actual elapsed instead of a marketing promise.
-              result?.elapsedSec
-                ? { icon: <Timer size={18} weight="duotone" color={GOLD_HI} />, big: `${result.elapsedSec < 90 ? `${Math.round(result.elapsedSec)}s` : `${(result.elapsedSec / 60).toFixed(1)} min`}`, small: 'Your last run, measured' }
-                : { icon: <Timer size={18} weight="duotone" color={GOLD_HI} />, big: 'Minutes, Not Hours', small: 'Full plan set → priced bid' },
-              { icon: <Stack size={18} weight="duotone" color={GOLD_HI} />, big: '16 Divisions', small: 'CSI, ground to finish' },
-              { icon: <ShieldCheck size={18} weight="duotone" color={GOLD_HI} />, big: '100% Traceable', small: 'Every qty to the sheet' },
-            ].map((s, i) => (
-              <div key={s.big} className="tkHover" style={{ animation: `tkRise .5s ease ${(0.12 + i * 0.07).toFixed(2)}s both`, display: 'flex', alignItems: 'center', gap: 12, background: 'linear-gradient(160deg, rgba(255,255,255,0.05), rgba(255,255,255,0.015))', border: '1px solid var(--brand-primary-18)', borderRadius: 14, padding: '14px 16px' }}>
-                <div className="tkIcon" style={{ flex: '0 0 auto', display: 'inline-flex', width: 40, height: 40, borderRadius: 11, alignItems: 'center', justifyContent: 'center', background: 'var(--brand-primary-12)', border: '1px solid color-mix(in srgb, var(--brand-primary) 30%, transparent)', transition: 'box-shadow .2s' }}>{s.icon}</div>
-                <div style={{ minWidth: 0 }}>
-                  <div style={{ color: 'var(--text-primary)', fontWeight: 800, fontSize: 16, letterSpacing: '-0.01em' }}>{s.big}</div>
-                  <div style={{ color: 'var(--c-text-2)', fontSize: 12, marginTop: 1 }}>{s.small}</div>
-                </div>
-              </div>
-            ))}
-          </div>
-
-          {/* What AI extracts — premium cards */}
-          <div style={{ marginBottom: 30 }}>
-            <div style={{ textAlign: 'center', color: 'var(--c-text-2)', fontSize: 11, marginBottom: 16, fontWeight: 800 }}>
-              What the AI Extracts
-            </div>
-            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit,minmax(248px,1fr))', gap: 12 }}>
-              {[
-                { icon: <Blueprint size={20} weight="duotone" color={GOLD_HI} />, t: 'Every Material by CSI Division', s: '16 divisions, ground to finish' },
-                { icon: <Ruler size={20} weight="duotone" color={GOLD_HI} />, t: 'Quantities with Real Units', s: 'SF · LF · CY · EA, measured' },
-                { icon: <CurrencyDollar size={20} weight="duotone" color={GOLD_HI} />, t: 'Priced by Trade', s: 'Your rates override the book' },
-                { icon: <Lightning size={20} weight="duotone" color={GOLD_HI} />, t: 'Labor Hours + Burden', s: 'Crew productivity built in' },
-                { icon: <Buildings size={20} weight="duotone" color={GOLD_HI} />, t: 'Building Area & Floors', s: 'Auto scale + $/SF' },
-                { icon: <Package size={20} weight="duotone" color={GOLD_HI} />, t: 'Bid-Package Ready', s: 'One tap to a priced jacket' },
-              ].map((c, i) => (
-                <div key={c.t} className="tkHover" style={{ animation: `tkRise .5s ease ${(0.18 + i * 0.06).toFixed(2)}s both`, position: 'relative', overflow: 'hidden', display: 'flex', gap: 13, alignItems: 'flex-start', background: 'linear-gradient(160deg, rgba(255,255,255,0.045), rgba(255,255,255,0.012))', border: `1px solid ${BORDER}`, borderRadius: 14, padding: '16px 18px' }}>
-                  <div aria-hidden style={{ position: 'absolute', left: 0, top: 0, bottom: 0, width: 3, background: `linear-gradient(180deg, ${GOLD}, transparent)` }} />
-                  <div className="tkIcon" style={{ flex: '0 0 auto', display: 'inline-flex', width: 42, height: 42, borderRadius: 11, alignItems: 'center', justifyContent: 'center', background: 'linear-gradient(150deg, var(--brand-primary-18), color-mix(in srgb, var(--brand-primary) 5%, transparent))', border: '1px solid color-mix(in srgb, var(--brand-primary) 30%, transparent)', transition: 'box-shadow .2s' }}>{c.icon}</div>
-                  <div style={{ minWidth: 0 }}>
-                    <div style={{ color: 'var(--text-primary)', fontWeight: 700, fontSize: 14, lineHeight: 1.3 }}>{c.t}</div>
-                    <div style={{ color: 'var(--c-text-2)', fontSize: 12.5, marginTop: 3 }}>{c.s}</div>
-                  </div>
-                </div>
-              ))}
-            </div>
-          </div>
-
-          {/* Analyze button */}
-          <button data-tour="run-takeoff"
-            onClick={() => handleAnalyze()}
-            disabled={!selectedFile}
-            className={selectedFile ? 'tkBtn' : undefined}
-            style={{
-              position: 'relative', overflow: 'hidden',
-              width: '100%',
-              padding: '17px',
-              background: selectedFile ? `linear-gradient(135deg, ${GOLD}, ${AMBER})` : 'rgba(255,255,255,0.05)',
-              border: selectedFile ? 'none' : '1px solid rgba(255,255,255,0.08)',
-              borderRadius: 14,
-              color: selectedFile ? 'var(--on-brand)' : 'rgba(255,255,255,0.35)',
-              fontSize: 16,
-              fontWeight: 800,
-              cursor: selectedFile ? 'pointer' : 'not-allowed',
-              letterSpacing: '0.02em',
-              boxShadow: selectedFile ? '0 18px 46px -14px color-mix(in srgb, var(--brand-primary) 70%, transparent)' : 'none',
-            }}
-          >
-            {selectedFile && <span aria-hidden className="tkShine" style={{ position: 'absolute', inset: 0, background: 'linear-gradient(105deg, transparent 30%, rgba(255,255,255,0.45) 50%, transparent 70%)' }} />}
-            <span style={{ position: 'relative', display: 'inline-flex', alignItems: 'center', justifyContent: 'center', gap: 9 }}>
-              {selectedFile ? <><MagicWand size={19} weight="fill" color="var(--on-brand)" /> Start AI Analysis <ArrowRight size={18} weight="bold" color="var(--on-brand)" /></> : 'Select a Blueprint to Continue'}
-            </span>
-          </button>
+          {/* The estimate workspace door must exist in EVERY page state — the
+              results-only placement left it unreachable for any project that
+              hadn't finished an analysis (review finding). */}
+          <a href={`/app/projects/${projectId}/takeoff/estimate`} className="k-btn k-btn-secondary" style={{ textDecoration: 'none' }}>
+            Build it by hand
+          </a>
         </div>
+
+        <div
+          data-tour="takeoff-dropzone"
+          role="button"
+          tabIndex={0}
+          aria-label="Choose a plan set to upload"
+          onClick={() => fileInputRef.current?.click()}
+          onKeyDown={(e) => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); fileInputRef.current?.click(); } }}
+          onDragOver={(e) => { e.preventDefault(); setIsDragging(true); }}
+          onDragLeave={() => setIsDragging(false)}
+          onDrop={handleDrop}
+          style={{
+            display: 'flex', alignItems: 'center', gap: 14, flexWrap: 'wrap',
+            minHeight: 72, padding: '16px 18px', marginBottom: 20, cursor: 'pointer',
+            borderRadius: 12,
+            border: `1px dashed ${isDragging ? 'var(--link)' : selectedFile ? 'var(--success)' : 'var(--border-strong)'}`,
+            background: isDragging ? 'var(--bg-surface-2)' : 'var(--bg-surface)',
+            transition: 'border-color .15s ease, background-color .15s ease',
+          }}
+        >
+          <input
+            ref={fileInputRef}
+            type="file"
+            accept=".pdf,.png,.jpg,.jpeg,.tiff,.tif,.webp"
+            style={{ display: 'none' }}
+            onChange={(e) => {
+              const f = e.target.files?.[0];
+              if (f) handleFileSelect(f);
+            }}
+          />
+          {selectedFile ? (
+            <>
+              <CheckCircle size={26} weight="fill" color={GREEN} style={{ flex: 'none' }} />
+              <div style={{ minWidth: 0, flex: 1 }}>
+                <div style={{ color: 'var(--text-primary)', fontWeight: 700, fontSize: 15, wordBreak: 'break-word' }}>{selectedFile.name}</div>
+                <div style={{ color: 'var(--text-tertiary)', fontSize: 13, marginTop: 2 }}>{fmtFileSize(selectedFile.size)} · ready to analyze · click to change</div>
+              </div>
+            </>
+          ) : (
+            <>
+              <Blueprint size={26} weight="duotone" color="var(--text-secondary)" style={{ flex: 'none' }} />
+              <div style={{ minWidth: 0, flex: 1 }}>
+                <div style={{ color: 'var(--text-primary)', fontWeight: 700, fontSize: 15 }}>
+                  {isDragging ? 'Release to upload' : <>Drop a plan set here or <span style={{ color: 'var(--link)' }}>browse</span></>}
+                </div>
+                <div style={{ color: 'var(--text-tertiary)', fontSize: 13, marginTop: 2 }}>PDF, PNG, JPG, TIFF or WEBP · up to 200 MB</div>
+              </div>
+            </>
+          )}
+        </div>
+
+        <div style={{ fontSize: 16, fontWeight: 700, color: 'var(--text-primary)', margin: '4px 0 12px' }}>What the AI pulls out</div>
+        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(240px, 1fr))', gap: '14px 24px', marginBottom: 24 }}>
+          {[
+            { icon: <Blueprint size={18} weight="duotone" color="var(--text-secondary)" />, t: 'Every material by CSI division', s: '16 divisions, ground to finish' },
+            { icon: <Ruler size={18} weight="duotone" color="var(--text-secondary)" />, t: 'Quantities with real units', s: 'SF · LF · CY · EA, measured' },
+            { icon: <CurrencyDollar size={18} weight="duotone" color="var(--text-secondary)" />, t: 'Priced by trade', s: 'Your rates override the book' },
+            { icon: <Lightning size={18} weight="duotone" color="var(--text-secondary)" />, t: 'Labor hours and burden', s: 'Crew productivity built in' },
+            { icon: <Buildings size={18} weight="duotone" color="var(--text-secondary)" />, t: 'Building area and floors', s: 'Auto scale and $/SF' },
+            { icon: <Package size={18} weight="duotone" color="var(--text-secondary)" />, t: 'Bid-package ready', s: 'Every quantity traces to its sheet' },
+          ].map((c) => (
+            <div key={c.t} style={{ display: 'flex', gap: 10, alignItems: 'flex-start', minWidth: 0 }}>
+              <span style={{ flex: 'none', marginTop: 1 }}>{c.icon}</span>
+              <div style={{ minWidth: 0 }}>
+                <div style={{ color: 'var(--text-primary)', fontWeight: 600, fontSize: 14, lineHeight: 1.35 }}>{c.t}</div>
+                <div style={{ color: 'var(--text-tertiary)', fontSize: 13, marginTop: 2 }}>{c.s}</div>
+              </div>
+            </div>
+          ))}
+        </div>
+
+        <button data-tour="run-takeoff"
+          type="button"
+          onClick={() => handleAnalyze()}
+          disabled={!selectedFile}
+          className="k-btn k-btn-primary"
+          style={{ minWidth: 220 }}
+        >
+          <MagicWand size={17} weight="fill" /> {selectedFile ? 'Start AI Analysis' : 'Choose a Plan Set First'}
+        </button>
       </div>
     );
   }
@@ -1936,8 +1847,8 @@ export default function TakeoffPage() {
               {/* Horizontal scanning sweep */}
               <div aria-hidden style={{ position: 'absolute', left: 0, right: 0, top: 0, height: 64, background: 'linear-gradient(180deg, transparent, color-mix(in srgb, var(--brand-primary) 24%, transparent) 50%, transparent)', animation: 'tkSweep 1.9s linear infinite' }} />
               {/* Pulsing robot */}
-              <div style={{ position: 'relative', display: 'inline-flex', width: 94, height: 94, borderRadius: '50%', alignItems: 'center', justifyContent: 'center', background: 'radial-gradient(circle, color-mix(in srgb, var(--brand-primary) 24%, transparent), color-mix(in srgb, var(--brand-primary) 4%, transparent))', border: '1px solid color-mix(in srgb, var(--brand-primary) 42%, transparent)', animation: 'tkPulseA 1.9s ease-out infinite' }}>
-                <Robot size={46} weight="duotone" color={GOLD_HI} />
+              <div style={{ position: 'relative', display: 'inline-flex', width: 94, height: 94, borderRadius: '50%', alignItems: 'center', justifyContent: 'center', background: 'radial-gradient(circle, color-mix(in srgb, var(--brand-primary) 24%, transparent), color-mix(in srgb, var(--brand-primary) 4%, transparent))', border: '1px solid var(--border-default)', animation: 'tkPulseA 1.9s ease-out infinite' }}>
+                <Robot size={46} weight="duotone" color="var(--text-secondary)" />
               </div>
             </div>
           </div>
@@ -1959,7 +1870,7 @@ export default function TakeoffPage() {
             }}>
               {lane.fast
                 ? <MagicWand size={16} weight="fill" color={GREEN} />
-                : <Stack size={16} weight="duotone" color={GOLD_HI} />}
+                : <Stack size={16} weight="duotone" color="var(--text-secondary)" />}
               <span style={{ fontSize: 13, fontWeight: 700, color: lane.fast ? GREEN : GOLD_HI }}>
                 {lane.fast
                   ? `Fast lane${lane.image ? ' · single sheet' : lane.pages > 1 ? ` · ${lane.pages} sheets` : ''} · typically under 2 minutes`
@@ -1972,7 +1883,7 @@ export default function TakeoffPage() {
           <div style={{
             position: 'relative',
             background: 'rgba(255,255,255,0.07)',
-            border: '1px solid color-mix(in srgb, var(--brand-primary) 15%, transparent)',
+            border: '1px solid var(--border-default)',
             borderRadius: 999, height: 10, marginBottom: 10, overflow: 'hidden',
           }}>
             <div style={{
@@ -1984,7 +1895,7 @@ export default function TakeoffPage() {
               boxShadow: '0 0 16px color-mix(in srgb, var(--brand-primary) 60%, transparent)',
             }} />
           </div>
-          <div style={{ color: GOLD_HI, fontWeight: 800, fontSize: 22, marginBottom: 30, letterSpacing: '-0.02em' }}>
+          <div style={{ color: 'var(--text-primary)', fontWeight: 800, fontSize: 22, marginBottom: 30, letterSpacing: '-0.02em' }}>
             {progress.pct}%
           </div>
 
@@ -1998,7 +1909,7 @@ export default function TakeoffPage() {
                   display: 'flex', alignItems: 'center', gap: 12,
                   padding: '8px 0',
                   color: done ? 'rgba(255,255,255,0.9)' : active ? GOLD_HI : 'rgba(255,255,255,0.32)',
-                  fontSize: 13.5,
+                  fontSize: 14,
                   borderBottom: i < steps.length - 1 ? `1px solid ${BORDER}` : 'none',
                 }}>
                   <span style={{ width: 22, height: 22, display: 'inline-flex', justifyContent: 'center', alignItems: 'center', borderRadius: '50%', background: active ? 'color-mix(in srgb, var(--brand-primary) 14%, transparent)' : 'transparent', boxShadow: active ? '0 0 0 1px color-mix(in srgb, var(--brand-primary) 40%, transparent)' : 'none' }}>
@@ -2035,20 +1946,20 @@ export default function TakeoffPage() {
       }}>
         <div aria-hidden style={{ position: 'absolute', width: 260, height: 260, right: '18%', top: '-70%', borderRadius: '50%', background: 'radial-gradient(circle, color-mix(in srgb, var(--brand-primary) 22%, transparent), transparent 62%)', filter: 'blur(24px)', pointerEvents: 'none' }} />
         <div style={{ position: 'relative', minWidth: 200 }}>
-          <div style={{ display: 'inline-flex', alignItems: 'center', gap: 7, color: GOLD_HI, fontSize: 11, fontWeight: 800 }}>
+          <div style={{ display: 'inline-flex', alignItems: 'center', gap: 7, color: 'var(--text-primary)', fontSize: 12, fontWeight: 800 }}>
             <CheckCircle size={13} weight="fill" color={GREEN} /> Takeoff Complete
           </div>
           <div style={{ color: 'var(--text-primary)', fontWeight: 800, fontSize: 22, marginTop: 6, letterSpacing: '-0.02em' }}>
             {jobName || result?.projectName || 'Material Takeoff'}
           </div>
-          <div style={{ color: 'var(--c-text-2)', fontSize: 12.5, marginTop: 3 }}>
+          <div style={{ color: 'var(--c-text-2)', fontSize: 13, marginTop: 3 }}>
             {result?.buildingType || 'Building'} · {fmtN(result?.estimatedSF || 0)} SF
             {result?.projectName && jobName && result.projectName.trim().toLowerCase() !== jobName.trim().toLowerCase() && (
               <> · Drawings titled “{result.projectName}”</>
             )}
           </div>
           {result?.summary && (
-            <div style={{ color: 'var(--c-text-2)', fontSize: 12.5, marginTop: 8, maxWidth: 460, lineHeight: 1.5 }}>
+            <div style={{ color: 'var(--c-text-2)', fontSize: 13, marginTop: 8, maxWidth: 460, lineHeight: 1.5 }}>
               {result.summary}
             </div>
           )}
@@ -2056,19 +1967,19 @@ export default function TakeoffPage() {
           {(result?.sheetsAnalyzed || result?.elapsedSec) && (
             <div style={{ display: 'inline-flex', flexWrap: 'wrap', gap: 8, marginTop: 12 }}>
               {result?.sheetsAnalyzed != null && (
-                <span style={{ display: 'inline-flex', alignItems: 'center', gap: 5, fontSize: 11.5, fontWeight: 700, color: 'var(--c-text-2)', background: 'rgba(255,255,255,0.06)', border: '1px solid color-mix(in srgb, var(--brand-primary) 24%, transparent)', borderRadius: 8, padding: '4px 10px' }}>
-                  <Stack size={13} weight="duotone" color={GOLD_HI} />
+                <span style={{ display: 'inline-flex', alignItems: 'center', gap: 5, fontSize: 12, fontWeight: 700, color: 'var(--c-text-2)', background: 'rgba(255,255,255,0.06)', border: '1px solid var(--border-default)', borderRadius: 8, padding: '4px 10px' }}>
+                  <Stack size={13} weight="duotone" color="var(--text-secondary)" />
                   {result.sheetsAnalyzed}{result.sheetsTotal && result.sheetsTotal !== result.sheetsAnalyzed ? ` of ${result.sheetsTotal}` : ''} sheet{result.sheetsAnalyzed === 1 ? '' : 's'} analyzed
                 </span>
               )}
               {result?.elapsedSec != null && (
-                <span style={{ display: 'inline-flex', alignItems: 'center', gap: 5, fontSize: 11.5, fontWeight: 700, color: 'var(--c-text-2)', background: 'rgba(255,255,255,0.06)', border: '1px solid color-mix(in srgb, var(--brand-primary) 24%, transparent)', borderRadius: 8, padding: '4px 10px' }}>
-                  <Timer size={13} weight="duotone" color={GOLD_HI} />
+                <span style={{ display: 'inline-flex', alignItems: 'center', gap: 5, fontSize: 12, fontWeight: 700, color: 'var(--c-text-2)', background: 'rgba(255,255,255,0.06)', border: '1px solid var(--border-default)', borderRadius: 8, padding: '4px 10px' }}>
+                  <Timer size={13} weight="duotone" color="var(--text-secondary)" />
                   {result.elapsedSec < 90 ? `${Math.round(result.elapsedSec)}s` : `${(result.elapsedSec / 60).toFixed(1)} min`}
                 </span>
               )}
               {result?.disciplines && result.disciplines.length > 0 && (
-                <span style={{ display: 'inline-flex', alignItems: 'center', gap: 5, fontSize: 11.5, fontWeight: 700, color: 'var(--c-text-2)', background: 'rgba(255,255,255,0.06)', border: '1px solid color-mix(in srgb, var(--brand-primary) 24%, transparent)', borderRadius: 8, padding: '4px 10px' }}>
+                <span style={{ display: 'inline-flex', alignItems: 'center', gap: 5, fontSize: 12, fontWeight: 700, color: 'var(--c-text-2)', background: 'rgba(255,255,255,0.06)', border: '1px solid var(--border-default)', borderRadius: 8, padding: '4px 10px' }}>
                   {result.disciplines.join(' · ')}
                 </span>
               )}
@@ -2097,7 +2008,7 @@ export default function TakeoffPage() {
                 style={{
                   minHeight: 44, padding: '0 18px', borderRadius: 10, cursor: 'pointer',
                   background: 'transparent', border: '1px solid rgba(255,255,255,0.18)',
-                  color: 'var(--c-text-2)', fontSize: 13.5, fontWeight: 700,
+                  color: 'var(--c-text-2)', fontSize: 14, fontWeight: 700,
                 }}
               >
                 Let Me Pick
@@ -2111,19 +2022,19 @@ export default function TakeoffPage() {
           )}
 
           {result?.truncated && result?.truncationNote && (
-            <div style={{ display: 'flex', gap: 9, alignItems: 'flex-start', marginTop: 12, maxWidth: 500, background: 'color-mix(in srgb, var(--brand-primary) 10%, transparent)', border: '1px solid var(--brand-primary-35)', borderRadius: 10, padding: '10px 12px' }}>
-              <Warning size={16} weight="fill" color={GOLD_HI} style={{ flex: '0 0 auto', marginTop: 1 }} />
+            <div style={{ display: 'flex', gap: 9, alignItems: 'flex-start', marginTop: 12, maxWidth: 500, background: 'var(--bg-surface-2)', border: '1px solid var(--border-default)', borderRadius: 10, padding: '10px 12px' }}>
+              <Warning size={16} weight="fill" color="var(--text-secondary)" style={{ flex: '0 0 auto', marginTop: 1 }} />
               <div style={{ color: 'var(--c-text-2)', fontSize: 12, lineHeight: 1.5 }}>{result.truncationNote}</div>
             </div>
           )}
         </div>
         <div style={{ position: 'relative', textAlign: 'right', flex: '1 1 auto', minWidth: 220 }}>
-          <div style={{ color: 'var(--c-text-2)', fontSize: 11, fontWeight: 700 }}>Bid Price</div>
+          <div style={{ color: 'var(--c-text-2)', fontSize: 12, fontWeight: 700 }}>Bid Price</div>
           <div style={{ fontWeight: 900, fontSize: 'clamp(38px,5vw,56px)', lineHeight: 1.02, letterSpacing: '-0.03em', background: `linear-gradient(100deg, ${GOLD}, ${GOLD_HI} 55%, var(--brand-primary-hover))`, WebkitBackgroundClip: 'text', backgroundClip: 'text', WebkitTextFillColor: 'transparent', color: 'transparent', textShadow: '0 0 50px color-mix(in srgb, var(--brand-primary) 30%, transparent)', animation: 'tkPop .6s ease .1s both' }}>
             {fmt$(bidPrice)}
           </div>
           {computedCosts && (
-            <div style={{ color: 'var(--c-text-2)', fontSize: 11.5, marginTop: 4 }}>
+            <div style={{ color: 'var(--c-text-2)', fontSize: 12, marginTop: 4 }}>
               {fmt$(computedCosts.directCost)} direct cost + markups below
             </div>
           )}
@@ -2132,8 +2043,8 @@ export default function TakeoffPage() {
               <div style={{ color: GREEN, fontWeight: 800, fontSize: 16 }}>{result?.confidence ?? 0}%</div>
               <div style={{ color: 'var(--c-text-2)', fontSize: 9.5 }}>Confidence</div>
             </div>
-            <div style={{ background: 'color-mix(in srgb, var(--brand-primary) 10%, transparent)', border: '1px solid color-mix(in srgb, var(--brand-primary) 28%, transparent)', borderRadius: 9, padding: '6px 12px', textAlign: 'center' }}>
-              <div style={{ color: GOLD_HI, fontWeight: 800, fontSize: 16 }}>{result?.itemCount ?? 0}</div>
+            <div style={{ background: 'var(--bg-surface-2)', border: '1px solid var(--border-default)', borderRadius: 9, padding: '6px 12px', textAlign: 'center' }}>
+              <div style={{ color: 'var(--text-primary)', fontWeight: 800, fontSize: 16 }}>{result?.itemCount ?? 0}</div>
               <div style={{ color: 'var(--c-text-2)', fontSize: 9.5 }}>Line Items</div>
             </div>
           </div>
@@ -2146,8 +2057,8 @@ export default function TakeoffPage() {
           {/* Cost cards row */}
           <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit,minmax(150px,1fr))', gap: 12, marginBottom: 12 }}>
             {[
-              { label: 'Material Cost', value: computedCosts.matCost, color: GOLD, icon: <Package size={15} weight="duotone" color={GOLD} /> },
-              { label: 'Labor Cost', value: computedCosts.labCost, color: 'var(--brand-primary-strong)', icon: <Lightning size={15} weight="duotone" color="var(--brand-primary-strong)" /> },
+              { label: 'Material Cost', value: computedCosts.matCost, color: 'var(--text-primary)', icon: <Package size={15} weight="duotone" color="var(--text-secondary)" /> },
+              { label: 'Labor Cost', value: computedCosts.labCost, color: 'var(--text-primary)', icon: <Lightning size={15} weight="duotone" color="var(--text-secondary)" /> },
               /* Direct cost = material + labor = the Cost column's footer. Tax and
                  burden (when set) are markups below, not part of this number. */
               { label: 'Direct Cost', value: computedCosts.directCost, color: 'var(--text-primary)', icon: <Table size={15} weight="duotone" color="rgba(255,255,255,0.8)" /> },
@@ -2155,7 +2066,7 @@ export default function TakeoffPage() {
             ].map((card, ci) => (
               <div key={card.label} className="tkHover" style={{ position: 'relative', overflow: 'hidden', background: 'linear-gradient(160deg, rgba(255,255,255,0.05), rgba(255,255,255,0.014))', border: `1px solid ${BORDER}`, borderRadius: 12, padding: '15px 16px', animation: `tkPop .45s ease ${(0.05 * ci).toFixed(2)}s both` }}>
                 <div aria-hidden style={{ position: 'absolute', left: 0, top: 0, bottom: 0, width: 3, background: `linear-gradient(180deg, ${card.color}, transparent)` }} />
-                <div style={{ display: 'flex', alignItems: 'center', gap: 6, color: 'var(--c-text-2)', fontSize: 10.5, marginBottom: 8 }}>{card.icon}{card.label}</div>
+                <div style={{ display: 'flex', alignItems: 'center', gap: 6, color: 'var(--c-text-2)', fontSize: 12, marginBottom: 8 }}>{card.icon}{card.label}</div>
                 <div style={{ color: card.color, fontWeight: 800, fontSize: 22, letterSpacing: '-0.01em' }}>{fmt$(card.value)}</div>
               </div>
             ))}
@@ -2173,11 +2084,11 @@ export default function TakeoffPage() {
               { label: 'Overhead', pct: overheadPct, setPct: setOverheadPct, value: computedCosts.overhead, color: 'var(--warning)', max: 25 },
               { label: 'Contingency', pct: contingencyPct, setPct: setContingencyPct, value: computedCosts.contingency, color: 'var(--warning)', max: 25 },
               { label: 'Profit', pct: profitPct, setPct: setProfitPct, value: computedCosts.profit, color: 'var(--success)', max: 25 },
-              { label: 'Bond', pct: bondPct, setPct: setBondPct, value: computedCosts.bond, color: 'var(--brand-primary-strong)', max: 5 },
+              { label: 'Bond', pct: bondPct, setPct: setBondPct, value: computedCosts.bond, color: 'var(--text-primary)', max: 5 },
             ].map((ctrl) => (
               <div key={ctrl.label} style={{ background: 'linear-gradient(160deg, rgba(255,255,255,0.05), rgba(255,255,255,0.014))', border: `1px solid ${BORDER}`, borderRadius: 12, padding: '14px 16px' }}>
                 <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 10 }}>
-                  <span style={{ color: 'var(--c-text-2)', fontSize: 11, fontWeight: 600 }}>{ctrl.label}</span>
+                  <span style={{ color: 'var(--c-text-2)', fontSize: 12, fontWeight: 600 }}>{ctrl.label}</span>
                   <span style={{ color: ctrl.color, fontWeight: 800, fontSize: 17 }}>{ctrl.pct}%</span>
                 </div>
                 <input
@@ -2196,7 +2107,7 @@ export default function TakeoffPage() {
           {/* Cost per SF */}
           {computedCosts.costPerSF > 0 && (
             <div style={{ marginTop: 8, textAlign: 'right', color: 'var(--c-text-2)', fontSize: 12 }}>
-              Bid Price/SF: <span style={{ color: GOLD, fontWeight: 600 }}>${computedCosts.costPerSF.toFixed(2)}</span> · {fmtN(result?.estimatedSF || 0)} SF
+              Bid Price/SF: <span style={{ color: 'var(--text-primary)', fontWeight: 600 }}>${computedCosts.costPerSF.toFixed(2)}</span> · {fmtN(result?.estimatedSF || 0)} SF
             </div>
           )}
         </div>
@@ -2246,7 +2157,7 @@ export default function TakeoffPage() {
               background: 'linear-gradient(160deg, rgba(255,255,255,0.045), rgba(255,255,255,0.012))', border: `1px solid ${BORDER}`,
               borderRadius: 14, padding: '16px', display: 'flex', flexDirection: 'column', alignItems: 'center',
             }}>
-              <div style={{ color: 'var(--c-text-2)', fontSize: 10, marginBottom: 8, fontWeight: 700 }}>
+              <div style={{ color: 'var(--c-text-2)', fontSize: 12, marginBottom: 8, fontWeight: 700 }}>
                 Building Profile
               </div>
               <svg width={bldgW + padX * 2} height={svgH} viewBox={`0 0 ${bldgW + padX * 2} ${svgH}`}>
@@ -2288,7 +2199,7 @@ export default function TakeoffPage() {
                   {realFloors > displayFloors ? ' (top 12 shown)' : ''}
                 </text>
               </svg>
-              <div style={{ fontSize: 11, color: 'var(--c-text-2)', textAlign: 'center', marginTop: 4 }}>
+              <div style={{ fontSize: 12, color: 'var(--c-text-2)', textAlign: 'center', marginTop: 4 }}>
                 {result.buildingType || 'Commercial'} · {result.confidence}% confidence
               </div>
             </div>
@@ -2298,7 +2209,7 @@ export default function TakeoffPage() {
               background: 'linear-gradient(160deg, rgba(255,255,255,0.045), rgba(255,255,255,0.012))', border: `1px solid ${BORDER}`,
               borderRadius: 14, padding: '16px 20px',
             }}>
-              <div style={{ color: 'var(--c-text-2)', fontSize: 10, marginBottom: 14, fontWeight: 700 }}>
+              <div style={{ color: 'var(--c-text-2)', fontSize: 12, marginBottom: 14, fontWeight: 700 }}>
                 Cost by CSI Division
               </div>
               {divTotals.map(({ div, name, total }, bi) => {
@@ -2308,10 +2219,10 @@ export default function TakeoffPage() {
                   <div key={div} style={{ marginBottom: 11 }}>
                     <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: 4 }}>
                       <span style={{ color: 'var(--c-text-2)', fontSize: 12 }}>
-                        <span style={{ color: GOLD_HI, fontFamily: 'monospace', marginRight: 6, fontWeight: 700 }}>{div}</span>
+                        <span style={{ color: 'var(--text-primary)', fontFamily: 'monospace', marginRight: 6, fontWeight: 700 }}>{div}</span>
                         {name}
                       </span>
-                      <span style={{ color: 'var(--c-text-2)', fontSize: 11 }}>
+                      <span style={{ color: 'var(--c-text-2)', fontSize: 12 }}>
                         {fmt$(total)}
                         <span style={{ color: GREEN, marginLeft: 8, fontWeight: 600 }}>{fmt$(sellAmt)}</span>
                       </span>
@@ -2324,7 +2235,7 @@ export default function TakeoffPage() {
                   </div>
                 );
               })}
-              <div style={{ marginTop: 12, paddingTop: 10, borderTop: `1px solid ${BORDER}`, display: 'flex', justifyContent: 'space-between', fontSize: 11 }}>
+              <div style={{ marginTop: 12, paddingTop: 10, borderTop: `1px solid ${BORDER}`, display: 'flex', justifyContent: 'space-between', fontSize: 12 }}>
                 <span style={{ color: 'var(--c-text-2)' }}>Cost → Sell breakdown across {Object.keys(groupedItems).length} divisions</span>
                 <span style={{ color: 'var(--success)', fontWeight: 600 }}>Bid Price: {fmt$(totalSell)}</span>
               </div>
@@ -2335,8 +2246,8 @@ export default function TakeoffPage() {
 
       {/* Editable-takeoff ribbon — live client preview, server-confirmed after save */}
       <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 12, flexWrap: 'wrap', margin: '0 0 10px', padding: '10px 14px', borderRadius: 12, border: `1px solid ${BORDER}`, background: 'linear-gradient(160deg, rgba(255,255,255,0.04), rgba(255,255,255,0.012))' }}>
-        <div style={{ display: 'inline-flex', alignItems: 'center', gap: 8, color: 'var(--c-text-2)', fontSize: 12.5 }}>
-          <NotePencil size={15} weight="duotone" color={GOLD_HI} />
+        <div style={{ display: 'inline-flex', alignItems: 'center', gap: 8, color: 'var(--c-text-2)', fontSize: 13 }}>
+          <NotePencil size={15} weight="duotone" color="var(--text-secondary)" />
           Click any description, qty, unit or $/unit to edit. Every line takes a note; deletes hold 6s for undo.
         </div>
         <div style={{ display: 'inline-flex', alignItems: 'center', gap: 7, fontSize: 12, fontWeight: 700, color: saveState === 'saving' ? GOLD_HI : saveState === 'confirmed' ? GREEN : saveState === 'error' ? 'var(--danger)' : 'rgba(255,255,255,0.45)' }}>
@@ -2361,7 +2272,7 @@ export default function TakeoffPage() {
           padding: '11px 16px',
           background: 'rgba(0,0,0,0.34)',
           borderBottom: '2px solid color-mix(in srgb, var(--brand-primary) 20%, transparent)',
-          fontSize: 10.5, fontWeight: 700,
+          fontSize: 12, fontWeight: 700,
           color: 'var(--text-tertiary)',
         }}>
           <div>CSI Code</div>
@@ -2382,14 +2293,14 @@ export default function TakeoffPage() {
           display: 'grid',
           gridTemplateColumns: ROW_GRID,
           padding: '12px 16px',
-          background: 'var(--brand-primary-08)',
+          background: 'var(--bg-surface-2)',
           borderTop: `2px solid color-mix(in srgb, var(--brand-primary) 30%, transparent)`,
           fontSize: 14, fontWeight: 700,
         }}>
-          <div style={{ gridColumn: '1 / 6', color: GOLD }}>
+          <div style={{ gridColumn: '1 / 6', color: 'var(--text-primary)' }}>
             Total — {result?.itemCount ?? 0} Line Items
           </div>
-          <div style={{ textAlign: 'right', color: GOLD, fontSize: 16 }} title="Direct cost — material + labor">
+          <div style={{ textAlign: 'right', color: 'var(--text-primary)', fontSize: 16 }} title="Direct cost — material + labor">
             {fmt$(computedCosts?.directCost ?? 0)}
           </div>
           <div style={{ textAlign: 'right', color: 'var(--success)', fontSize: 16 }} title="Bid price — direct cost with every markup above">
@@ -2403,12 +2314,12 @@ export default function TakeoffPage() {
 
       {/* Delete undo bar — the DELETE only fires after this 6s window passes */}
       {undoDelete && (
-        <div style={{ position: 'fixed', left: '50%', bottom: 26, transform: 'translateX(-50%)', zIndex: 60, display: 'flex', alignItems: 'center', gap: 14, padding: '12px 18px', borderRadius: 14, background: 'rgba(0,0,0,0.94)', border: '1px solid color-mix(in srgb, var(--brand-primary) 45%, transparent)', boxShadow: '0 18px 50px -12px var(--brand-primary-35)', animation: 'tkUndoIn .25s ease both', maxWidth: 'min(92vw, 560px)' }}>
+        <div style={{ position: 'fixed', left: '50%', bottom: 26, transform: 'translateX(-50%)', zIndex: 60, display: 'flex', alignItems: 'center', gap: 14, padding: '12px 18px', borderRadius: 14, background: 'rgba(0,0,0,0.94)', border: '1px solid var(--border-default)', boxShadow: '0 18px 50px -12px var(--brand-primary-35)', animation: 'tkUndoIn .25s ease both', maxWidth: 'min(92vw, 560px)' }}>
           <Trash size={16} weight="duotone" color="var(--danger)" style={{ flexShrink: 0 }} />
           <span style={{ color: 'var(--c-text-2)', fontSize: 13, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
             Deleted “{undoDelete.item.description}” — {fmt$(Number(undoDelete.item.totalCost) || 0)}
           </span>
-          <button onClick={undoPendingDelete} className="tkBtn" style={{ flexShrink: 0, padding: '8px 16px', borderRadius: 9, border: 'none', background: `linear-gradient(135deg, ${GOLD}, ${AMBER})`, color: 'var(--on-brand)', fontWeight: 800, fontSize: 12.5, cursor: 'pointer' }}>
+          <button onClick={undoPendingDelete} className="tkBtn" style={{ flexShrink: 0, padding: '8px 16px', borderRadius: 9, border: 'none', background: `linear-gradient(135deg, ${GOLD}, ${AMBER})`, color: 'var(--on-brand)', fontWeight: 800, fontSize: 13, cursor: 'pointer' }}>
             Undo
           </button>
         </div>
@@ -2418,18 +2329,18 @@ export default function TakeoffPage() {
       {(result?.recommendations?.length ?? 0) > 0 && (
         <div style={{
           borderLeft: `3px solid ${GOLD}`,
-          background: 'color-mix(in srgb, var(--brand-primary) 5%, transparent)',
+          background: 'var(--bg-surface-2)',
           borderRadius: '0 12px 12px 0',
           padding: '16px 20px',
           marginBottom: 20,
           boxShadow: 'var(--shadow-sm)',
         }}>
-          <div style={{ display: 'flex', alignItems: 'center', gap: 7, color: GOLD, fontWeight: 800, fontSize: 11, marginBottom: 10 }}>
-            <Sparkle size={13} weight="fill" color={GOLD} /> Estimator Recommendations
+          <div style={{ display: 'flex', alignItems: 'center', gap: 7, color: 'var(--text-primary)', fontWeight: 800, fontSize: 12, marginBottom: 10 }}>
+            <Sparkle size={13} weight="fill" color="var(--text-secondary)" /> Estimator Recommendations
           </div>
           {result!.recommendations.map((rec, i) => (
             <div key={i} style={{ display: 'flex', gap: 8, alignItems: 'flex-start', color: 'var(--c-text-2)', fontSize: 13, lineHeight: 1.55, marginBottom: 6 }}>
-              <CheckCircle size={14} weight="fill" color={GOLD} style={{ flexShrink: 0, marginTop: 2 }} /> {rec}
+              <CheckCircle size={14} weight="fill" color="var(--text-secondary)" style={{ flexShrink: 0, marginTop: 2 }} /> {rec}
             </div>
           ))}
         </div>
@@ -2445,7 +2356,7 @@ export default function TakeoffPage() {
               <SealCheck size={30} weight="fill" color={GREEN} />
             </div>
             <div style={{ minWidth: 0 }}>
-              <div style={{ color: GREEN, fontSize: 11, fontWeight: 800 }}>Package Complete</div>
+              <div style={{ color: GREEN, fontSize: 12, fontWeight: 800 }}>Package Complete</div>
               <div style={{ color: 'var(--text-primary)', fontWeight: 800, fontSize: 20, letterSpacing: '-0.01em', marginTop: 2 }}>Sage Built Your Full Bid + Compliance Package</div>
             </div>
           </div>
@@ -2460,20 +2371,20 @@ export default function TakeoffPage() {
                 Each tile now carries the reason when its count is zero, so the
                 number stops being an accusation. */}
             {[
-              { icon: <Package size={16} weight="duotone" color={GOLD_HI} />, big: autoSummary.jackets || autoSummary.packages, label: 'Bid Jackets',
+              { icon: <Package size={16} weight="duotone" color="var(--text-secondary)" />, big: autoSummary.jackets || autoSummary.packages, label: 'Bid Jackets',
                 zeroNote: 'No packages to jacket yet.' },
-              { icon: <Scroll size={16} weight="duotone" color={GOLD_HI} />, big: autoSummary.lienWaivers, label: 'Lien Waivers',
+              { icon: <Scroll size={16} weight="duotone" color="var(--text-secondary)" />, big: autoSummary.lienWaivers, label: 'Lien Waivers',
                 zeroNote: 'Filed once a package is awarded.' },
-              { icon: <FileText size={16} weight="duotone" color={GOLD_HI} />, big: autoSummary.w9s, label: 'W-9 Requests',
+              { icon: <FileText size={16} weight="duotone" color="var(--text-secondary)" />, big: autoSummary.w9s, label: 'W-9 Requests',
                 zeroNote: 'None to send — add subcontractors first.' },
-              { icon: <FolderSimple size={16} weight="duotone" color={GOLD_HI} />, big: autoSummary.filed, label: 'Filed to Compliance',
+              { icon: <FolderSimple size={16} weight="duotone" color="var(--text-secondary)" />, big: autoSummary.filed, label: 'Filed to Compliance',
                 zeroNote: 'Nothing needed filing.' },
             ].map((s) => (
               <div key={s.label} style={{ background: 'linear-gradient(160deg, rgba(255,255,255,0.05), rgba(255,255,255,0.014))', border: `1px solid ${BORDER}`, borderRadius: 12, padding: '14px 16px' }}>
-                <div style={{ display: 'flex', alignItems: 'center', gap: 7, color: 'var(--c-text-2)', fontSize: 10.5, marginBottom: 8, fontWeight: 700 }}>{s.icon}{s.label}</div>
+                <div style={{ display: 'flex', alignItems: 'center', gap: 7, color: 'var(--c-text-2)', fontSize: 12, marginBottom: 8, fontWeight: 700 }}>{s.icon}{s.label}</div>
                 <div style={{ color: s.big ? 'var(--text-primary)' : 'rgba(255,255,255,0.45)', fontWeight: 800, fontSize: 26, letterSpacing: '-0.02em' }}>{fmtN(s.big)}</div>
                 {!s.big && (
-                  <div style={{ color: 'var(--c-text-2)', fontSize: 11, lineHeight: 1.35, marginTop: 4 }}>{s.zeroNote}</div>
+                  <div style={{ color: 'var(--c-text-2)', fontSize: 12, lineHeight: 1.35, marginTop: 4 }}>{s.zeroNote}</div>
                 )}
               </div>
             ))}
@@ -2492,7 +2403,7 @@ export default function TakeoffPage() {
             <button onClick={() => { setAutoSummary(null); setPickMode(true); }} style={{ padding: '11px 18px', background: 'transparent', border: '1px solid rgba(255,255,255,0.14)', borderRadius: 10, color: 'var(--c-text-2)', fontWeight: 600, fontSize: 13, cursor: 'pointer' }}>
               Add More Manually
             </button>
-            <button onClick={() => addSheetsRef.current?.click()} style={{ padding: '11px 18px', background: 'transparent', border: '1px solid color-mix(in srgb, var(--brand-primary) 50%, transparent)', borderRadius: 10, color: GOLD, fontSize: 13, fontWeight: 700, cursor: 'pointer' }}>
+            <button onClick={() => addSheetsRef.current?.click()} style={{ padding: '11px 18px', background: 'transparent', border: '1px solid color-mix(in srgb, var(--brand-primary) 50%, transparent)', borderRadius: 10, color: 'var(--text-primary)', fontSize: 13, fontWeight: 700, cursor: 'pointer' }}>
               + Add Sheets to This Set
             </button>
             <input
@@ -2513,16 +2424,16 @@ export default function TakeoffPage() {
           <div style={{ position: 'relative', overflow: 'hidden', borderRadius: 16, padding: '24px 26px', background: 'radial-gradient(120% 130% at 50% -10%, var(--brand-primary-12), rgba(0,0,0,0.97))' }}>
             <div aria-hidden style={{ position: 'absolute', inset: 0, backgroundImage: 'linear-gradient(color-mix(in srgb, var(--brand-primary) 6%, transparent) 1px, transparent 1px), linear-gradient(90deg, color-mix(in srgb, var(--brand-primary) 6%, transparent) 1px, transparent 1px)', backgroundSize: '26px 26px', maskImage: 'radial-gradient(80% 80% at 50% 30%, #000, transparent 78%)', WebkitMaskImage: 'radial-gradient(80% 80% at 50% 30%, #000, transparent 78%)' }} />
             <div style={{ position: 'relative', display: 'flex', alignItems: 'center', gap: 16, marginBottom: 16 }}>
-              <div style={{ flex: '0 0 auto', width: 56, height: 56, borderRadius: 16, display: 'inline-flex', alignItems: 'center', justifyContent: 'center', background: 'radial-gradient(circle, color-mix(in srgb, var(--brand-primary) 24%, transparent), color-mix(in srgb, var(--brand-primary) 4%, transparent))', border: '1px solid color-mix(in srgb, var(--brand-primary) 42%, transparent)', animation: 'tkPulseA 1.9s ease-out infinite' }}>
-                <Robot size={30} weight="duotone" color={GOLD_HI} />
+              <div style={{ flex: '0 0 auto', width: 56, height: 56, borderRadius: 16, display: 'inline-flex', alignItems: 'center', justifyContent: 'center', background: 'radial-gradient(circle, color-mix(in srgb, var(--brand-primary) 24%, transparent), color-mix(in srgb, var(--brand-primary) 4%, transparent))', border: '1px solid var(--border-default)', animation: 'tkPulseA 1.9s ease-out infinite' }}>
+                <Robot size={30} weight="duotone" color="var(--text-secondary)" />
               </div>
               <div style={{ flex: 1, minWidth: 0 }}>
                 <div style={{ color: 'var(--text-primary)', fontWeight: 800, fontSize: 17, letterSpacing: '-0.01em' }}>Sage is building your full package…</div>
-                <div style={{ color: 'var(--c-text-2)', fontSize: 13.5, marginTop: 3 }}>{progress.message || 'Working…'}</div>
+                <div style={{ color: 'var(--c-text-2)', fontSize: 14, marginTop: 3 }}>{progress.message || 'Working…'}</div>
               </div>
-              <div style={{ color: GOLD_HI, fontWeight: 900, fontSize: 26, letterSpacing: '-0.02em' }}>{progress.pct}%</div>
+              <div style={{ color: 'var(--text-primary)', fontWeight: 900, fontSize: 26, letterSpacing: '-0.02em' }}>{progress.pct}%</div>
             </div>
-            <div style={{ position: 'relative', height: 10, background: 'rgba(255,255,255,0.07)', border: '1px solid color-mix(in srgb, var(--brand-primary) 15%, transparent)', borderRadius: 999, overflow: 'hidden' }}>
+            <div style={{ position: 'relative', height: 10, background: 'rgba(255,255,255,0.07)', border: '1px solid var(--border-default)', borderRadius: 999, overflow: 'hidden' }}>
               <div style={{ position: 'relative', height: '100%', width: `${progress.pct}%`, background: `linear-gradient(90deg, ${AMBER}, ${GOLD}, ${GOLD_HI})`, borderRadius: 999, transition: 'width .5s ease', boxShadow: '0 0 16px color-mix(in srgb, var(--brand-primary) 60%, transparent)' }}>
                 <div aria-hidden style={{ position: 'absolute', inset: 0, background: 'linear-gradient(105deg, transparent 40%, rgba(255,255,255,0.5) 50%, transparent 60%)', backgroundSize: '200% 100%', animation: 'tkBarShine 2.4s ease-in-out infinite' }} />
               </div>
@@ -2532,7 +2443,7 @@ export default function TakeoffPage() {
                 const done = progress.pct >= (phase === 0 ? 50 : 100);
                 const active = phase === 0 ? progress.pct < 50 : (progress.pct >= 50 && progress.pct < 100);
                 return (
-                  <div key={label} style={{ display: 'inline-flex', alignItems: 'center', gap: 8, padding: '8px 14px', borderRadius: 10, fontSize: 12.5, fontWeight: 700, color: done ? GREEN : active ? GOLD_HI : 'rgba(255,255,255,0.4)', background: active ? 'color-mix(in srgb, var(--brand-primary) 10%, transparent)' : 'rgba(255,255,255,0.03)', border: `1px solid ${active ? 'color-mix(in srgb, var(--brand-primary) 30%, transparent)' : BORDER}` }}>
+                  <div key={label} style={{ display: 'inline-flex', alignItems: 'center', gap: 8, padding: '8px 14px', borderRadius: 10, fontSize: 13, fontWeight: 700, color: done ? GREEN : active ? GOLD_HI : 'rgba(255,255,255,0.4)', background: active ? 'color-mix(in srgb, var(--brand-primary) 10%, transparent)' : 'rgba(255,255,255,0.03)', border: `1px solid ${active ? 'color-mix(in srgb, var(--brand-primary) 30%, transparent)' : BORDER}` }}>
                     {done ? <CheckCircle size={15} weight="fill" color={GREEN} /> : active ? <CircleNotch size={15} weight="bold" style={{ animation: 'tkSpin .9s linear infinite' }} /> : <Circle size={12} weight="regular" />}
                     {label}
                   </div>
@@ -2544,8 +2455,8 @@ export default function TakeoffPage() {
       ) : pickMode ? (
         /* ── MANUAL PICKER: the individual document actions ── */
         <div style={{ display: 'flex', flexDirection: 'column', gap: 12 }}>
-          <button onClick={() => setPickMode(false)} style={{ alignSelf: 'flex-start', display: 'inline-flex', alignItems: 'center', gap: 6, background: 'transparent', border: 'none', color: GOLD_HI, fontWeight: 700, fontSize: 12.5, cursor: 'pointer', padding: 0 }}>
-            <ArrowRight size={14} weight="bold" color={GOLD_HI} style={{ transform: 'rotate(180deg)' }} /> Back to Sage
+          <button onClick={() => setPickMode(false)} style={{ alignSelf: 'flex-start', display: 'inline-flex', alignItems: 'center', gap: 6, background: 'transparent', border: 'none', color: 'var(--text-primary)', fontWeight: 700, fontSize: 13, cursor: 'pointer', padding: 0 }}>
+            <ArrowRight size={14} weight="bold" color="var(--text-secondary)" style={{ transform: 'rotate(180deg)' }} /> Back to Sage
           </button>
 
 
@@ -2569,8 +2480,8 @@ export default function TakeoffPage() {
           <a href={generating ? undefined : `/app/projects/${projectId}/takeoff/estimate`}
             aria-disabled={!!generating}
             onClick={(e) => { if (generating) e.preventDefault(); }}
-            style={{ padding: '11px 22px', background: 'color-mix(in srgb, var(--brand-primary) 10%, transparent)', border: '1px solid color-mix(in srgb, var(--brand-primary) 32%, transparent)', borderRadius: 8, color: GOLD, fontWeight: 600, fontSize: 13, textDecoration: 'none', display: 'inline-flex', alignItems: 'center', opacity: generating ? 0.5 : 1, cursor: generating ? 'wait' : 'pointer' }}>
-            <Calculator size={16} weight="duotone" color={GOLD} style={{marginRight:4, verticalAlign:'middle'}} /> Estimate Workspace
+            style={{ padding: '11px 22px', background: 'color-mix(in srgb, var(--brand-primary) 10%, transparent)', border: '1px solid color-mix(in srgb, var(--brand-primary) 32%, transparent)', borderRadius: 8, color: 'var(--link)', fontWeight: 600, fontSize: 13, textDecoration: 'none', display: 'inline-flex', alignItems: 'center', opacity: generating ? 0.5 : 1, cursor: generating ? 'wait' : 'pointer' }}>
+            <Calculator size={16} weight="duotone" color="var(--text-secondary)" style={{marginRight:4, verticalAlign:'middle'}} /> Estimate Workspace
           </a>
         </div>
         {/* Secondary actions */}

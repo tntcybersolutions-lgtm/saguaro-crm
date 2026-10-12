@@ -98,7 +98,7 @@ export function CardBody({ children, style }: { children: React.ReactNode; style
 type BadgeColor = 'gold' | 'green' | 'red' | 'amber' | 'blue' | 'muted';
 
 const badgeStyles: Record<BadgeColor, { bg: string; color: string; border: string }> = {
-  gold:  { bg: T.goldDim,  color: T.gold,  border: T.borderGold },
+  gold:  { bg: T.goldDim,  color: 'var(--text-primary)',  border: T.borderGold },
   green: { bg: T.greenDim, color: T.green, border: 'rgba(74,222,128,0.50)' },
   red:   { bg: T.redDim,   color: T.red,   border: 'rgba(248,113,113,0.50)' },
   amber: { bg: T.amberDim, color: T.amber, border: 'rgba(255,224,0,0.50)' },

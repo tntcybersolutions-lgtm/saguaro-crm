@@ -59,7 +59,7 @@ export default function AskDocsPage() {
       <div style={{ position: 'relative', zIndex: 1, maxWidth: 900, margin: '0 auto', padding: '34px 22px 40px', display: 'flex', flexDirection: 'column', minHeight: '100vh' }}>
         <ModuleHero
           eyebrow="Sage Intelligence"
-          eyebrowIcon={<Sparkle size={13} weight="fill" color={GOLD} />}
+          eyebrowIcon={<Sparkle size={13} weight="fill" color="var(--text-secondary)" />}
           title="Ask Your"
           accent="Project Docs"
           subtitle="Answers from this project's records, with every source cited."
@@ -72,7 +72,7 @@ export default function AskDocsPage() {
               <button
                 onClick={() => setShowSettings(true)}
                 title="Sage settings — style profile, automation rules, activity trail, bid brain"
-                style={{ display: 'inline-flex', alignItems: 'center', gap: 6, background: 'var(--brand-primary-08)', border: '1px solid color-mix(in srgb, var(--brand-primary) 30%, transparent)', borderRadius: 10, color: GOLD, padding: '9px 12px', fontSize: 13, fontWeight: 700, cursor: 'pointer' }}
+                style={{ display: 'inline-flex', alignItems: 'center', gap: 6, background: 'var(--bg-surface-2)', border: '1px solid var(--border-default)', borderRadius: 10, color: 'var(--text-primary)', padding: '9px 12px', fontSize: 13, fontWeight: 700, cursor: 'pointer' }}
               >
                 <GearSix size={15} weight="bold" /> Sage Settings
               </button>
@@ -94,35 +94,35 @@ export default function AskDocsPage() {
 
         <div style={{ flex: 1, marginTop: 20, display: 'flex', flexDirection: 'column', gap: 16 }}>
           {turns.length === 0 && !busy && (
-            <SectionCard title="Try Asking" subtitle="One tap runs the question against this project's records" icon={<Question size={17} weight="duotone" color={GOLD} />}>
-              <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>{EXAMPLES.map((ex) => <button key={ex} onClick={() => ask(ex)} className="pmBtn" style={{ display: 'flex', alignItems: 'center', gap: 10, textAlign: 'left', background: DARK, border: `1px solid ${BORDER}`, borderRadius: 10, padding: '10px 12px', color: TEXT, cursor: 'pointer', fontSize: 14 }}><Question size={16} color={GOLD} />{ex}</button>)}</div>
+            <SectionCard title="Try Asking" subtitle="One tap runs the question against this project's records" icon={<Question size={17} weight="duotone" color="var(--text-secondary)" />}>
+              <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>{EXAMPLES.map((ex) => <button key={ex} onClick={() => ask(ex)} className="pmBtn" style={{ display: 'flex', alignItems: 'center', gap: 10, textAlign: 'left', background: DARK, border: `1px solid ${BORDER}`, borderRadius: 10, padding: '10px 12px', color: TEXT, cursor: 'pointer', fontSize: 14 }}><Question size={16} color="var(--text-secondary)" />{ex}</button>)}</div>
               <div style={{ marginTop: 14, paddingTop: 12, borderTop: '1px solid rgba(255,255,255,0.08)' }}>
-                <div style={{ fontSize: 10.5, color: 'var(--text-tertiary)', fontWeight: 700, marginBottom: 8 }}>Sage Reads</div>
+                <div style={{ fontSize: 12, color: 'var(--text-tertiary)', fontWeight: 700, marginBottom: 8 }}>Sage Reads</div>
                 <div style={{ display: 'flex', flexWrap: 'wrap', gap: 6 }}>
-                  {Object.values(TYPE_LABEL).map((t) => <span key={t} style={{ padding: '3px 10px', borderRadius: 999, background: 'var(--brand-primary-08)', border: '1px solid var(--brand-primary-25)', color: DIM, fontSize: 11.5 }}>{t}</span>)}
+                  {Object.values(TYPE_LABEL).map((t) => <span key={t} style={{ padding: '3px 10px', borderRadius: 999, background: 'var(--bg-surface-2)', border: '1px solid var(--border-default)', color: DIM, fontSize: 12 }}>{t}</span>)}
                 </div>
-                <div style={{ color: DIM, fontSize: 11.5, marginTop: 10, lineHeight: 1.5 }}>Answers cite the exact records they came from — click a citation to open it. If the records do not contain the answer, Sage says so instead of guessing.</div>
+                <div style={{ color: DIM, fontSize: 12, marginTop: 10, lineHeight: 1.5 }}>Answers cite the exact records they came from — click a citation to open it. If the records do not contain the answer, Sage says so instead of guessing.</div>
               </div>
             </SectionCard>
           )}
           {turns.map((t, i) => (
             <div key={i}>
-              <div style={{ display: 'flex', justifyContent: 'flex-end', marginBottom: 8 }}><div style={{ background: 'var(--brand-primary-12)', color: TEXT, borderRadius: '14px 14px 4px 14px', padding: '10px 14px', maxWidth: '80%', fontSize: 15 }}>{t.q}</div></div>
+              <div style={{ display: 'flex', justifyContent: 'flex-end', marginBottom: 8 }}><div style={{ background: 'var(--bg-surface-2)', color: TEXT, borderRadius: '14px 14px 4px 14px', padding: '10px 14px', maxWidth: '80%', fontSize: 15 }}>{t.q}</div></div>
               <div style={{ display: 'flex', gap: 10 }}>
-                <div style={{ width: 30, height: 30, borderRadius: 9, background: 'var(--brand-primary-12)', display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}><Sparkle size={16} weight="fill" color={GOLD} /></div>
+                <div style={{ width: 30, height: 30, borderRadius: 9, background: 'var(--bg-surface-2)', display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}><Sparkle size={16} weight="fill" color="var(--text-secondary)" /></div>
                 <div style={{ flex: 1 }}>
                   <div style={{ background: RAISED, border: `1px solid ${BORDER}`, borderRadius: '14px 14px 14px 4px', padding: '12px 14px', fontSize: 15, lineHeight: 1.6, whiteSpace: 'pre-wrap' }}>{t.answer}</div>
                   {t.citations.length > 0 && (
                     <div style={{ marginTop: 8, display: 'flex', flexWrap: 'wrap', gap: 8 }}>
-                      {t.citations.map((c) => <a key={c.n} href={c.route || '#'} style={{ display: 'inline-flex', alignItems: 'center', gap: 7, background: DARK, border: `1px solid ${BORDER}`, borderRadius: 8, padding: '6px 10px', color: DIM, textDecoration: 'none', fontSize: 12.5 }}><span style={{ color: GOLD, fontWeight: 800 }}>{c.n}</span><FileText size={13} color={BLUE} /><span style={{ color: TEXT }}>{c.source}</span><span style={{ color: DIM }}>· {TYPE_LABEL[c.sourceType] || c.sourceType}</span><CaretRight size={11} /></a>)}
+                      {t.citations.map((c) => <a key={c.n} href={c.route || '#'} style={{ display: 'inline-flex', alignItems: 'center', gap: 7, background: DARK, border: `1px solid ${BORDER}`, borderRadius: 8, padding: '6px 10px', color: DIM, textDecoration: 'none', fontSize: 13 }}><span style={{ color: 'var(--text-primary)', fontWeight: 800 }}>{c.n}</span><FileText size={13} color="var(--text-secondary)" /><span style={{ color: TEXT }}>{c.source}</span><span style={{ color: DIM }}>· {TYPE_LABEL[c.sourceType] || c.sourceType}</span><CaretRight size={11} /></a>)}
                     </div>
                   )}
-                  <div style={{ color: DIM, fontSize: 11.5, marginTop: 6 }}>Searched {t.searched} matching record{t.searched === 1 ? '' : 's'} in this project.</div>
+                  <div style={{ color: DIM, fontSize: 12, marginTop: 6 }}>Searched {t.searched} matching record{t.searched === 1 ? '' : 's'} in this project.</div>
                 </div>
               </div>
             </div>
           ))}
-          {busy && <div style={{ display: 'flex', gap: 10, alignItems: 'center', color: DIM, fontSize: 14 }}><div style={{ width: 30, height: 30, borderRadius: 9, background: 'var(--brand-primary-12)', display: 'flex', alignItems: 'center', justifyContent: 'center' }}><Sparkle size={16} weight="fill" color={GOLD} /></div>Reading the project records…</div>}
+          {busy && <div style={{ display: 'flex', gap: 10, alignItems: 'center', color: DIM, fontSize: 14 }}><div style={{ width: 30, height: 30, borderRadius: 9, background: 'var(--bg-surface-2)', display: 'flex', alignItems: 'center', justifyContent: 'center' }}><Sparkle size={16} weight="fill" color="var(--text-secondary)" /></div>Reading the project records…</div>}
           <div ref={endRef} />
         </div>
 
@@ -132,7 +132,7 @@ export default function AskDocsPage() {
             <input value={q} onChange={(e) => setQ(e.target.value)} onKeyDown={(e) => e.key === 'Enter' && !busy && ask()} placeholder="Ask anything about this project…" style={inp} />
             <button onClick={() => ask()} disabled={busy || !q.trim()} className="pmBtn" style={{ ...goldButtonStyle, padding: '0 18px', cursor: busy ? 'default' : 'pointer', opacity: busy || !q.trim() ? 0.6 : 1 }}><PaperPlaneRight size={20} weight="fill" /></button>
           </div>
-          <div style={{ color: DIM, fontSize: 11, marginTop: 6, textAlign: 'center' }}>Grounded in your records only — Sage cites its sources and won’t invent answers.</div>
+          <div style={{ color: DIM, fontSize: 12, marginTop: 6, textAlign: 'center' }}>Grounded in your records only — Sage cites its sources and won’t invent answers.</div>
         </div>
       </div>
     </div>

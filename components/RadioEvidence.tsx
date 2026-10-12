@@ -263,7 +263,7 @@ export function clipLength(secs: number | null | undefined): string | null {
 }
 
 const label: React.CSSProperties = {
-  fontSize: 10, fontWeight: 700, color: T.faint,
+  fontSize: 12, fontWeight: 700, color: T.faint,
 };
 
 /**
@@ -292,7 +292,7 @@ export function RadioEvidenceChip({
     padding: '2px 8px', borderRadius: 20,
     background: active ? ACCENT.ring : ACCENT.soft,
     border: `1px solid ${active ? ACCENT.hex : ACCENT.ring}`,
-    color: ACCENT.hex, fontSize: 10.5, fontWeight: 700,
+    color: ACCENT.hex, fontSize: 12, fontWeight: 700,
     letterSpacing: 0.2, lineHeight: 1.6, whiteSpace: 'nowrap',
   };
   if (!onClick) return <span style={base}>{inner}</span>;
@@ -301,7 +301,7 @@ export function RadioEvidenceChip({
       type="button"
       onClick={(e) => { e.stopPropagation(); onClick(); }}
       title={active ? 'Hide the radio evidence' : 'Play the radio transmission behind this record'}
-      style={{ ...base, cursor: 'pointer', font: 'inherit', fontSize: 10.5, fontWeight: 700 }}
+      style={{ ...base, cursor: 'pointer', font: 'inherit', fontSize: 12, fontWeight: 700 }}
     >
       {inner}
     </button>
@@ -433,24 +433,24 @@ export default function RadioEvidence({
             display: 'inline-flex', alignItems: 'center', gap: 6,
             padding: '4px 10px', borderRadius: 20,
             background: ACCENT.soft, border: `1px solid ${ACCENT.ring}`,
-            color: ACCENT.hex, fontSize: 11, fontWeight: 800, letterSpacing: 0.3, whiteSpace: 'nowrap',
+            color: ACCENT.hex, fontSize: 12, fontWeight: 800, letterSpacing: 0.3, whiteSpace: 'nowrap',
           }}
         >
           <Broadcast size={13} weight="fill" color={ACCENT.hex} />
           {RADIO_HEADLINE_MARK}
         </span>
         <div style={{ flex: 1, minWidth: 180 }}>
-          <div style={{ fontSize: 13.5, fontWeight: 700, color: T.white }}>
+          <div style={{ fontSize: 14, fontWeight: 700, color: T.white }}>
             {p.sender_name || 'Unknown sender'}
           </div>
-          <div style={{ fontSize: 11.5, color: T.muted, marginTop: 2 }}>
+          <div style={{ fontSize: 12, color: T.muted, marginTop: 2 }}>
             {[when, p.channel_name ? `Channel: ${p.channel_name}` : null].filter(Boolean).join(' · ') || 'Time not recorded'}
           </div>
         </div>
         {len && (
           <span
             style={{
-              fontSize: 11, fontWeight: 700, color: T.muted,
+              fontSize: 12, fontWeight: 700, color: T.muted,
               fontVariantNumeric: 'tabular-nums', padding: '4px 9px',
               borderRadius: 20, background: T.goldDim, border: `1px solid ${T.borderGold}`, whiteSpace: 'nowrap',
             }}
@@ -464,7 +464,7 @@ export default function RadioEvidence({
       <div>
         <div style={{ ...label, marginBottom: 6 }}>{title}</div>
         {!hasClip ? (
-          <div style={{ fontSize: 12.5, color: T.muted, lineHeight: 1.55 }}>
+          <div style={{ fontSize: 13, color: T.muted, lineHeight: 1.55 }}>
             This transmission was text on the channel — there is no audio clip behind this record.
           </div>
         ) : audio.phase === 'ready' && !playerFailed ? (
@@ -480,7 +480,7 @@ export default function RadioEvidence({
         ) : (audio.phase === 'loading' || audio.phase === 'idle') && !playerFailed ? (
           // 'idle' is the frame before the effect fires — still "on its way",
           // never an error.
-          <div style={{ fontSize: 12.5, color: T.faint, lineHeight: 1.55 }}>
+          <div style={{ fontSize: 13, color: T.faint, lineHeight: 1.55 }}>
             Signing the clip for playback…
           </div>
         ) : (
@@ -493,7 +493,7 @@ export default function RadioEvidence({
           >
             <Warning size={15} weight="fill" color={T.red} style={{ flexShrink: 0, marginTop: 1 }} />
             <div style={{ flex: 1, minWidth: 0 }}>
-              <div style={{ fontSize: 12.5, color: T.white, lineHeight: 1.55 }}>
+              <div style={{ fontSize: 13, color: T.white, lineHeight: 1.55 }}>
                 {playerFailed
                   ? 'The signed link expired or the clip would not play. Reload it to try again.'
                   : audio.phase === 'unavailable'
@@ -507,7 +507,7 @@ export default function RadioEvidence({
                   marginTop: 7, display: 'inline-flex', alignItems: 'center', gap: 5,
                   padding: '5px 10px', borderRadius: 6, cursor: 'pointer',
                   background: 'transparent', border: `1px solid ${T.border}`,
-                  color: T.muted, fontSize: 11.5, fontWeight: 700,
+                  color: T.muted, fontSize: 12, fontWeight: 700,
                 }}
               >
                 <ArrowClockwise size={12} weight="bold" color={T.muted} /> Reload the Clip
@@ -523,7 +523,7 @@ export default function RadioEvidence({
         {p.transcript ? (
           <div
             style={{
-              fontSize: 12.5, color: T.white, lineHeight: 1.6,
+              fontSize: 13, color: T.white, lineHeight: 1.6,
               whiteSpace: 'pre-wrap', ...cell,
             }}
           >
@@ -540,7 +540,7 @@ export default function RadioEvidence({
       {(p.latitude !== null || p.audio_path || messageId) && (
         <div style={{ display: 'flex', flexDirection: 'column', gap: 6, paddingTop: 2 }}>
           {p.latitude !== null && p.longitude !== null && (
-            <div style={{ display: 'inline-flex', alignItems: 'center', gap: 5, fontSize: 11.5, color: T.muted }}>
+            <div style={{ display: 'inline-flex', alignItems: 'center', gap: 5, fontSize: 12, color: T.muted }}>
               <MapPin size={12} weight="fill" color={T.faint} />
               <span style={{ fontVariantNumeric: 'tabular-nums' }}>
                 {p.latitude.toFixed(6)}, {p.longitude.toFixed(6)}
@@ -549,12 +549,12 @@ export default function RadioEvidence({
             </div>
           )}
           {p.audio_path && (
-            <div style={{ fontSize: 10.5, color: T.faint, wordBreak: 'break-all', lineHeight: 1.5 }}>
+            <div style={{ fontSize: 12, color: T.faint, wordBreak: 'break-all', lineHeight: 1.5 }}>
               Stored at {p.audio_bucket || 'project-files'}/{p.audio_path}
             </div>
           )}
           {messageId && (
-            <div style={{ fontSize: 10.5, color: T.faint, wordBreak: 'break-all', lineHeight: 1.5 }}>
+            <div style={{ fontSize: 12, color: T.faint, wordBreak: 'break-all', lineHeight: 1.5 }}>
               Radio message {messageId}
             </div>
           )}

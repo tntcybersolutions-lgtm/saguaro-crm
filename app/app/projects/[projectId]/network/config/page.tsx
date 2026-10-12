@@ -166,7 +166,7 @@ export default function ConfigGeneratorPage() {
       {/* Header */}
       <ModuleHero
         eyebrow="Network"
-        eyebrowIcon={<Gear size={13} weight="fill" color={GOLD} />}
+        eyebrowIcon={<Gear size={13} weight="fill" color="var(--text-secondary)" />}
         title="Config"
         accent="Generator"
         subtitle="Device-ready config from manufacturer templates."
@@ -184,7 +184,7 @@ export default function ConfigGeneratorPage() {
 
       <div style={{ display: 'grid', gridTemplateColumns: '320px 1fr', gap: 20, minHeight: '60vh' }}>
         {/* Left Panel - Template Library */}
-        <SectionCard title="Template Library" icon={<Stack size={17} weight="duotone" color={GOLD} />}>
+        <SectionCard title="Template Library" icon={<Stack size={17} weight="duotone" color="var(--text-secondary)" />}>
           {/* Manufacturer Tabs */}
           <div style={{ display: 'flex', gap: 4, flexWrap: 'wrap', marginBottom: 14 }}>
             {MANUFACTURER_TABS.map(tab => (
@@ -194,7 +194,7 @@ export default function ConfigGeneratorPage() {
                 style={{
                   padding: '4px 10px', border: `1px solid ${activeTab === tab ? GOLD : BORDER}`,
                   borderRadius: 6, background: activeTab === tab ? 'var(--brand-primary-08)' : 'transparent',
-                  color: activeTab === tab ? GOLD : DIM, fontSize: 11, fontWeight: 600, cursor: 'pointer',
+                  color: activeTab === tab ? GOLD : DIM, fontSize: 12, fontWeight: 600, cursor: 'pointer',
                 }}
               >{tab}</button>
             ))}
@@ -204,7 +204,7 @@ export default function ConfigGeneratorPage() {
           <div style={{ display: 'flex', flexDirection: 'column', gap: 6 }}>
             {filteredTemplates.length === 0 ? (
               <PremiumEmpty
-                icon={<Stack size={30} weight="duotone" color={GOLD} />}
+                icon={<Stack size={30} weight="duotone" color="var(--text-secondary)" />}
                 title="No templates found"
                 description="No configuration templates match this manufacturer."
                 compact
@@ -221,10 +221,10 @@ export default function ConfigGeneratorPage() {
                   }}
                 >
                   <div style={{ color: TEXT, fontSize: 13, fontWeight: 600 }}>{tmpl.name}</div>
-                  <div style={{ color: DIM, fontSize: 11, marginTop: 2 }}>
+                  <div style={{ color: DIM, fontSize: 12, marginTop: 2 }}>
                     {tmpl.manufacturer} &middot; {tmpl.device_type?.replace(/_/g, ' ')}
                   </div>
-                  {tmpl.description && <div style={{ color: DIM, fontSize: 11, marginTop: 4, lineHeight: 1.4 }}>{tmpl.description}</div>}
+                  {tmpl.description && <div style={{ color: DIM, fontSize: 12, marginTop: 4, lineHeight: 1.4 }}>{tmpl.description}</div>}
                 </button>
               ))
             )}
@@ -235,11 +235,11 @@ export default function ConfigGeneratorPage() {
         <SectionCard
           title={selectedTemplate ? selectedTemplate.name : 'Configuration Generator'}
           subtitle={selectedTemplate ? selectedTemplate.description : undefined}
-          icon={<Terminal size={17} weight="duotone" color={GOLD} />}
+          icon={<Terminal size={17} weight="duotone" color="var(--text-secondary)" />}
         >
           {!selectedTemplate ? (
             <PremiumEmpty
-              icon={<Gear size={34} weight="duotone" color={GOLD} />}
+              icon={<Gear size={34} weight="duotone" color="var(--text-secondary)" />}
               title="Select a template to begin"
               description="Choose a configuration template from the library on the left to start generating device-ready config."
             />

@@ -216,7 +216,7 @@ export default function BidJacketView({
         >
           <div style={{ display: 'flex', flexWrap: 'wrap', gap: 20, alignItems: 'flex-start', justifyContent: 'space-between' }}>
             <div style={{ minWidth: 0, flex: '1 1 300px' }}>
-              <div style={{ fontSize: 10.5, fontWeight: 800, color: GOLD, marginBottom: 8 }}>
+              <div style={{ fontSize: 12, fontWeight: 800, color: 'var(--text-primary)', marginBottom: 8 }}>
                 Bid Jacket{pkg.number ? ` · ${pkg.number}` : ''}{pkg.csiDivision ? ` · Div ${pkg.csiDivision}` : ''}
               </div>
               <h1 style={{ fontSize: 'clamp(23px, 3.2vw, 31px)', fontWeight: 700, letterSpacing: '-0.02em', margin: '0 0 8px', lineHeight: 1.2, overflowWrap: 'anywhere' }}>
@@ -260,7 +260,7 @@ export default function BidJacketView({
               opens its divider. */}
           {contents.length > 0 && (
             <div className="bjv-contents" style={{ marginTop: 18, paddingTop: 14, borderTop: `1px solid ${HAIR}` }}>
-              <div style={{ fontSize: 10.5, fontWeight: 800, color: DIM, marginBottom: 6 }}>In This Jacket</div>
+              <div style={{ fontSize: 12, fontWeight: 800, color: DIM, marginBottom: 6 }}>In This Jacket</div>
               <div style={{ display: 'grid', gridTemplateColumns: 'minmax(0, 1fr)', gap: 2 }}>
                 {contents.map((s) => (
                   <button
@@ -274,11 +274,11 @@ export default function BidJacketView({
                       textAlign: 'left', color: TEXT,
                     }}
                   >
-                    <span style={{ color: GOLD, display: 'flex', flexShrink: 0 }}>{ICON[s.key]}</span>
+                    <span style={{ color: 'var(--text-primary)', display: 'flex', flexShrink: 0 }}>{ICON[s.key]}</span>
                     <span style={{ fontSize: 13, fontWeight: 700, flexShrink: 0 }}>
                       {s.label} <span style={{ color: DIM, fontVariantNumeric: 'tabular-nums' }}>{s.docs.length}</span>
                     </span>
-                    <span style={{ flex: 1, minWidth: 0, fontSize: 12.5, color: DIM, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
+                    <span style={{ flex: 1, minWidth: 0, fontSize: 13, color: DIM, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
                       {s.docs.map((d) => d.name).join(' · ')}
                     </span>
                     <CaretRight size={13} weight="bold" color={DIM} style={{ flexShrink: 0 }} />
@@ -305,7 +305,7 @@ export default function BidJacketView({
               <WarningCircle size={20} weight="fill" color={AMBER} />
             )}
             <div style={{ flex: '1 1 240px', minWidth: 0 }}>
-              <div style={{ fontSize: 13.5, fontWeight: 700, color: ready ? GREEN : AMBER, marginBottom: 4 }}>
+              <div style={{ fontSize: 14, fontWeight: 700, color: ready ? GREEN : AMBER, marginBottom: 4 }}>
                 {ready
                   ? 'Complete — ready to send'
                   : `Incomplete — ${completeness.missing.join(', ')} ${completeness.missing.length === 1 ? 'is' : 'are'} empty`}
@@ -407,7 +407,7 @@ export default function BidJacketView({
                   </span>
                   <span
                     style={{
-                      fontSize: 11, fontWeight: 700, fontVariantNumeric: 'tabular-nums',
+                      fontSize: 12, fontWeight: 700, fontVariantNumeric: 'tabular-nums',
                       color: flag ? AMBER : DIM,
                     }}
                   >
@@ -429,13 +429,13 @@ export default function BidJacketView({
             )}
 
             {active && active.count > 0 && active.key === 'bidform' && (
-              <SectionCard flat title={`Bid Form · ${lineItems.length} line${lineItems.length === 1 ? '' : 's'}`} icon={<FileText size={17} weight="duotone" color={GOLD} />} flush>
+              <SectionCard flat title={`Bid Form · ${lineItems.length} line${lineItems.length === 1 ? '' : 's'}`} icon={<FileText size={17} weight="duotone" color="var(--text-secondary)" />} flush>
                 <div style={{ overflowX: 'auto' }}>
                   <table className="bjv-bf" style={{ width: '100%', borderCollapse: 'collapse', fontSize: 13 }}>
                     <thead>
                       <tr>
                         {['#', 'Code', 'Description', 'Qty', 'Unit'].map((h) => (
-                          <th key={h} style={{ textAlign: 'left', padding: '9px 14px', fontSize: 10.5, color: DIM, borderBottom: `1px solid ${HAIR}`, fontWeight: 700 }}>
+                          <th key={h} style={{ textAlign: 'left', padding: '9px 14px', fontSize: 12, color: DIM, borderBottom: `1px solid ${HAIR}`, fontWeight: 700 }}>
                             {h}
                           </th>
                         ))}
@@ -458,7 +458,7 @@ export default function BidJacketView({
             )}
 
             {active && active.count > 0 && active.key === 'requirements' && (
-              <SectionCard flat title="Insurance & Bonding" icon={<ShieldCheck size={17} weight="duotone" color={GOLD} />}>
+              <SectionCard flat title="Insurance & Bonding" icon={<ShieldCheck size={17} weight="duotone" color="var(--text-secondary)" />}>
                 <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(min(190px, 100%), 1fr))', gap: 12, marginBottom: active.pages.length ? 16 : 0 }}>
                   {/* Only the limits the GC actually set. A wall of "Not set"
                       tiles under a written requirement reads as a contradiction. */}
@@ -482,14 +482,14 @@ export default function BidJacketView({
 
             {/* Written pages — scope, instructions. Read, not downloaded. */}
             {active && active.count > 0 && active.pages.length > 0 && active.key !== 'requirements' && (
-              <SectionCard flat title={active.label} icon={<span style={{ color: GOLD, display: 'flex' }}>{ICON[active.key]}</span>}>
+              <SectionCard flat title={active.label} icon={<span style={{ color: 'var(--text-primary)', display: 'flex' }}>{ICON[active.key]}</span>}>
                 {active.pages.map((pg) => <Written key={pg.id} page={pg} />)}
               </SectionCard>
             )}
 
             {/* Documents — the actual contents of the divider. */}
             {active && active.docs.length > 0 && (
-              <SectionCard flat title={`${active.label} · ${active.docs.length}`} icon={<span style={{ color: GOLD, display: 'flex' }}>{ICON[active.key]}</span>} flush>
+              <SectionCard flat title={`${active.label} · ${active.docs.length}`} icon={<span style={{ color: 'var(--text-primary)', display: 'flex' }}>{ICON[active.key]}</span>} flush>
                 <div style={{ display: 'grid', gridTemplateColumns: 'minmax(0, 1fr)', gap: 1, background: HAIR }}>
                   {active.docs.map((d) => (
                     <button
@@ -504,16 +504,16 @@ export default function BidJacketView({
                     >
                       <FileText size={18} weight="duotone" color={d.url ? GOLD : DIM} style={{ flexShrink: 0 }} />
                       <span style={{ flex: 1, minWidth: 0 }}>
-                        <span style={{ display: 'block', fontSize: 13.5, fontWeight: 600, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
+                        <span style={{ display: 'block', fontSize: 14, fontWeight: 600, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
                           {d.name}
                         </span>
                         {(d.sub || d.meta) && (
-                          <span style={{ display: 'block', fontSize: 11.5, color: DIM, marginTop: 2, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
+                          <span style={{ display: 'block', fontSize: 12, color: DIM, marginTop: 2, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
                             {[d.sub, d.meta].filter(Boolean).join(' · ')}
                           </span>
                         )}
                       </span>
-                      <span style={{ fontSize: 11.5, fontWeight: 700, color: d.url ? GOLD : DIM, flexShrink: 0 }}>
+                      <span style={{ fontSize: 12, fontWeight: 700, color: d.url ? GOLD : DIM, flexShrink: 0 }}>
                         {d.url ? 'Open' : 'No file'}
                       </span>
                     </button>
@@ -523,7 +523,7 @@ export default function BidJacketView({
             )}
 
             {active && active.key === 'correspondence' && active.count > 0 && 'correspondence' in jacket && (
-              <SectionCard flat title="Correspondence" icon={<ChatsCircle size={17} weight="duotone" color={GOLD} />}>
+              <SectionCard flat title="Correspondence" icon={<ChatsCircle size={17} weight="duotone" color="var(--text-secondary)" />}>
                 <JacketCorrespondence items={jacket.correspondence || []} />
               </SectionCard>
             )}
@@ -594,9 +594,9 @@ function Stat({ label, value, note, tone }: { label: string; value: string; note
   const c = tone === 'green' ? GREEN : tone === 'amber' ? AMBER : tone === 'red' ? 'var(--danger)' : DIM;
   return (
     <div>
-      <div style={{ fontSize: 10, fontWeight: 800, color: DIM, marginBottom: 5 }}>{label}</div>
+      <div style={{ fontSize: 12, fontWeight: 800, color: DIM, marginBottom: 5 }}>{label}</div>
       <div style={{ fontSize: 16, fontWeight: 700, color: TEXT, fontVariantNumeric: 'tabular-nums' }}>{value}</div>
-      {note && <div style={{ fontSize: 11.5, color: c, marginTop: 3, fontWeight: 600 }}>{note}</div>}
+      {note && <div style={{ fontSize: 12, color: c, marginTop: 3, fontWeight: 600 }}>{note}</div>}
     </div>
   );
 }
@@ -605,7 +605,7 @@ function Req({ label, value }: { label: string; value: string | null }) {
   const missing = !value;
   return (
     <div style={{ border: `1px solid ${HAIR}`, borderRadius: 10, padding: '11px 13px', minWidth: 0 }}>
-      <div style={{ fontSize: 10, fontWeight: 800, color: DIM, marginBottom: 5 }}>{label}</div>
+      <div style={{ fontSize: 12, fontWeight: 800, color: DIM, marginBottom: 5 }}>{label}</div>
       <div style={{ fontSize: 14.5, fontWeight: 700, color: missing ? AMBER : TEXT, fontVariantNumeric: 'tabular-nums', overflowWrap: 'anywhere' }}>
         {value || 'Not set'}
       </div>
@@ -616,7 +616,7 @@ function Req({ label, value }: { label: string; value: string | null }) {
 function Written({ page }: { page: Page }) {
   return (
     <div style={{ marginBottom: 16 }}>
-      <div style={{ fontSize: 11, fontWeight: 800, color: GOLD, marginBottom: 7 }}>
+      <div style={{ fontSize: 12, fontWeight: 800, color: 'var(--text-primary)', marginBottom: 7 }}>
         {page.title}
       </div>
       {page.bullets && page.bullets.length > 0 ? (
