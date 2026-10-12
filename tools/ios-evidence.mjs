@@ -105,12 +105,22 @@ try {
   await go(`${SITE}/login`); await settle(3000);
   result.screens['/login'] = await run(MEASURE); shot('login');
 
-  const email = await find('input[name="email"]');
-  await wd('POST', `/session/${S}/element/${email}/value`, { text: process.env.E2E_EMAIL.trim() });
-  const pw = await find('input[name="password"]');
-  await wd('POST', `/session/${S}/element/${pw}/value`, { text: process.env.E2E_PASSWORD });
-  const submit = await find('button[type="submit"]');
-  await wd('POST', `/session/${S}/element/${submit}/click`, {});
+  // Typed WebDriver keys don't always reach React's controlled inputs on iOS
+  // Safari, so set the values through the native setter (which React listens
+  // to) and submit the form itself. Credentials go in as script arguments.
+  await run(`
+    const set = (sel, v) => {
+      const el = document.querySelector(sel);
+      Object.getOwnPropertyDescriptor(HTMLInputElement.prototype, 'value').set.call(el, v);
+      el.dispatchEvent(new Event('input', { bubbles: true }));
+      el.dispatchEvent(new Event('change', { bubbles: true }));
+    };
+    set('input[name="email"]', arguments[0]);
+    set('input[name="password"]', arguments[1]);
+    const btn = document.querySelector('button[type="submit"]');
+    const form = btn && btn.form;
+    if (form && form.requestSubmit) form.requestSubmit(btn); else if (btn) btn.click();
+  `, [process.env.E2E_EMAIL.trim(), process.env.E2E_PASSWORD]);
   for (let i = 0; i < 60; i++) {
     const p = await run('return location.pathname').catch(() => '/login');
     if (!p.startsWith('/login')) break;
