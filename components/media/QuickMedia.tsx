@@ -30,6 +30,7 @@ import MediaUploadPanel from '@/components/media/MediaUploadPanel';
 import { useUploadQueue } from '@/lib/useUploadQueue';
 import { uploadPhoto, uploadVideo, mediaKindOf } from '@/lib/media-upload';
 import { addToOutbox, isOffline, looksLikeNetworkError } from '@/lib/offline/outbox';
+import { photoFix } from '@/lib/photo-gps';
 import { useToast } from '@/components/Toast';
 
 export const QUICK_MEDIA_EVENT = 'saguaro:quick-media';
@@ -109,7 +110,7 @@ export default function QuickMedia() {
     const projectId = fileJob.current.get(file) || jobRef.current;
     if (!projectId) throw new Error('Pick a job first.');
     const keep = async () => {
-      await addToOutbox({ projectId, kind, album: kind === 'video' ? null : 'General', name: file.name || (kind === 'video' ? 'video.mov' : 'photo.jpg'), type: file.type, size: file.size, file });
+      await addToOutbox({ projectId, kind, album: kind === 'video' ? null : 'General', name: file.name || (kind === 'video' ? 'video.mov' : 'photo.jpg'), type: file.type, size: file.size, file, location: kind === 'image' ? await photoFix() : null });
       return { doneLabel: "Saved on this phone — sends when you're back online" };
     };
     if (isOffline()) return keep();

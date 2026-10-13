@@ -62,7 +62,7 @@ export default function SelectionOptions({ selectionId, projectId, allowance, pe
     try {
       let imageUrl: string | null = null;
       if (file) {
-        const photo = await uploadPhoto(file, { projectId, album: 'Other', title: `Selection option — ${form.name.trim()}` });
+        const photo = await uploadPhoto(file, { projectId, album: 'Other', title: `Selection option — ${form.name.trim()}`, location: null });
         imageUrl = typeof photo.url === 'string' ? photo.url : null;
       }
       const r = await fetch(`/api/selections/${selectionId}/options`, {

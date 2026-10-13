@@ -5,6 +5,7 @@ import { UnsupportedImageError } from '@/lib/image-thumb';
 import { apiError } from '@/lib/api-error';
 import { signFields } from '@/lib/storage-signing';
 import { storePhoto, downloadStaged, removeQuietly, PhotoStoreError } from '@/lib/photo-store';
+import { readFix } from '@/lib/photo-gps';
 
 // sharp re-encode of a big original; the bytes come from storage, not the request.
 export const runtime = 'nodejs';
@@ -14,7 +15,7 @@ const ALBUMS = new Set(['General', 'Progress', 'Inspections', 'Closeout', 'Issue
 
 /**
  * POST /api/photos/ingest
- *   { projectId, path, fileName, contentType?, album?, title?, description?, takenAt? }
+ *   { projectId, path, fileName, contentType?, album?, title?, description?, takenAt?, location?: { lat, lng } }
  *
  * Step 2 of a direct upload (step 1: /api/photos/upload-url). The original is
  * already in storage at `path`; read it, render the display copy + thumbnail
@@ -55,6 +56,9 @@ export async function POST(req: NextRequest) {
     const title = str('title').slice(0, 200);
     const takenAtRaw = str('takenAt');
     const takenAt = takenAtRaw && !Number.isNaN(Date.parse(takenAtRaw)) ? new Date(takenAtRaw).toISOString() : undefined;
+    // GPS stamp from the phone (lib/photo-gps.ts); anything not a real coordinate is dropped.
+    const loc = body.location && typeof body.location === 'object' ? (body.location as Record<string, unknown>) : null;
+    const location = loc ? readFix(loc.lat, loc.lng) : null;
 
     const original = await downloadStaged(db, path);
     let stored;
@@ -69,6 +73,7 @@ export async function POST(req: NextRequest) {
         caption: title,
         takenBy: user.email || '',
         takenAt,
+        location,
         extra: {
           ...(title ? { title } : {}),
           album,

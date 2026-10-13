@@ -13,6 +13,7 @@
 import { getAuthHeaders, getSupabaseBrowser } from '@/lib/supabase-browser';
 import { classifyKind } from '@/lib/filekind';
 import { shrinkForUpload } from '@/lib/image-shrink';
+import { photoFix, type PhotoFix } from '@/lib/photo-gps';
 
 export type MediaKind = 'image' | 'video';
 
@@ -174,11 +175,16 @@ export interface PhotoUploadOpts {
   album?: string;
   title?: string;
   description?: string;
+  /** GPS stamp. Left out: where the phone is now (lib/photo-gps.ts). null: none —
+   *  a photo kept offline brings the fix from when it was taken. */
+  location?: PhotoFix | null;
   onProgress?: (fraction: number) => void;
 }
 
 /** One photo, any size, into the project's gallery. Returns the signed photos row. */
 export async function uploadPhoto(original: File, o: PhotoUploadOpts): Promise<Record<string, unknown>> {
+  // The GPS fix runs alongside the upload, so it adds no wait of its own.
+  const fixing = o.location !== undefined ? Promise.resolve(o.location) : photoFix();
   // Send ~a fifth of the bytes: the server only keeps a 2000 px copy anyway.
   const file = await shrinkForUpload(original);
   const h = await getAuthHeaders();
@@ -191,6 +197,7 @@ export async function uploadPhoto(original: File, o: PhotoUploadOpts): Promise<R
     "Couldn't start the upload.",
   );
   await putSigned(start as unknown as SignedUpload, file, (f) => o.onProgress?.(f * 0.9));
+  const location = await fixing;
   const done = await jsonOrThrow(
     await fetch('/api/photos/ingest', {
       method: 'POST',
@@ -204,6 +211,7 @@ export async function uploadPhoto(original: File, o: PhotoUploadOpts): Promise<R
         title: o.title ?? titleFromFileName(original.name || 'Photo'),
         description: o.description,
         takenAt: original.lastModified ? new Date(original.lastModified).toISOString() : undefined,
+        ...(location ? { location } : {}),
       }),
     }),
     "The photo didn't save.",
