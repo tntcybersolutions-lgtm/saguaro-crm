@@ -162,7 +162,7 @@ function Modal({ open, onClose, title, width, children }: {
     <div style={{ position: 'fixed', inset: 0, background: 'rgba(0,0,0,0.7)', display: 'flex', alignItems: 'center', justifyContent: 'center', zIndex: 9999 }} onClick={onClose}>
       <div style={{ background: RAISED, border: `1px solid ${BORDER}`, borderRadius: 12, width: width || 560, maxHeight: '85vh', overflow: 'auto', padding: 28 }} onClick={e => e.stopPropagation()}>
         <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 20 }}>
-          <h3 style={{ color: TEXT, margin: 0, fontSize: 18 }}>{title}</h3>
+          <h3 className="k-dialog-title" style={{ margin: 0 }}>{title}</h3>
           <button onClick={onClose} style={{ background: 'none', border: 'none', color: DIM, fontSize: 22, cursor: 'pointer' }}>x</button>
         </div>
         {children}

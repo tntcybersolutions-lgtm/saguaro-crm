@@ -453,7 +453,7 @@ export default function HeaderProjectPicker() {
             onTouchCancel={sheetTouchEnd}
           >
             <div className="jp-grab" aria-hidden />
-            <div className="jp-sheet-title">{currentName ? 'Switch job' : 'Choose a job'}</div>
+            <div className="k-dialog-title jp-sheet-title">{currentName ? 'Switch job' : 'Choose a job'}</div>
             {body}
           </div>
         </div>,
@@ -527,7 +527,7 @@ const CSS = `
 .jp-scrim { transition: opacity .24s ease; }
 @media (prefers-reduced-motion: reduce) { .jp-panel.jp-sheet, .jp-scrim { transition: none; } }
 .jp-grab { width: 40px; height: 5px; border-radius: 99px; background: rgba(255,255,255,0.22); margin: 10px auto 4px; flex-shrink: 0; }
-.jp-sheet-title { padding: 6px 16px 10px; font-size: var(--fs-dialog); font-weight: 700; color: var(--title-page); }
+.jp-sheet-title { padding: 6px 16px 10px; }
 .jp-sheet .jp-search { border-top: 1px solid var(--border-subtle); }
 .jp-sheet .jp-opt { min-height: 56px; }
 .jp-sheet .jp-name { font-size: 15px; }

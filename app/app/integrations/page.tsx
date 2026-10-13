@@ -556,7 +556,7 @@ export default function IntegrationsPage() {
               padding: 32, width: 460, maxWidth: '90vw',
             }}
           >
-            <h2 style={{ margin: '0 0 6px', fontSize: 20, fontWeight: 800 }}>Connect Sage 300</h2>
+            <h2 className="k-dialog-title" style={{ margin: '0 0 6px' }}>Connect Sage 300</h2>
             <p style={{ margin: '0 0 24px', fontSize: 13, color: DIM }}>Enter your Sage 300 API endpoint and credentials.</p>
 
             <label style={{ display: 'block', marginBottom: 14 }}>

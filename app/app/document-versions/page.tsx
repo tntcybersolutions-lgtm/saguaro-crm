@@ -179,7 +179,7 @@ const CSS = `
 .dvSection { font-size: var(--fs-xs); font-weight: 700; color: var(--text-tertiary); margin-bottom: 8px; }
 .dvOverlay { position: fixed; inset: 0; z-index: 1100; background: var(--bg-base); display: flex; flex-direction: column; }
 .dvOverlayBar { display: flex; align-items: center; gap: 14px; padding: 10px 16px; background: var(--bg-solid); border-bottom: 1px solid var(--border-default); flex-wrap: wrap; }
-.dvOverlayTitle { font-size: var(--fs-md); font-weight: 700; color: var(--text-primary); display: flex; align-items: center; gap: 8px; }
+.dvOverlayTitle { display: flex; align-items: center; gap: 8px; }
 .dvOverlaySub { font-size: var(--fs-xs); color: var(--text-tertiary); overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
 .dvOverlayCtl { display: flex; align-items: center; gap: 8px; margin-left: auto; flex-wrap: wrap; }
 .dvOverlayCtl select.k-select { width: auto; min-width: 190px; }
@@ -1008,7 +1008,7 @@ export default function DocumentVersionsPage() {
           <div className="dvOverlay" role="dialog" aria-label="Revision overlay">
             <div className="dvOverlayBar">
               <div style={{ minWidth: 0 }}>
-                <div className="dvOverlayTitle"><ArrowsLeftRight size={16} weight="bold" /> Revision Overlay</div>
+                <div className="k-dialog-title dvOverlayTitle"><ArrowsLeftRight size={16} weight="bold" /> Revision Overlay</div>
                 <div className="dvOverlaySub">{overlay.doc.title}</div>
               </div>
               <div className="dvOverlayCtl">

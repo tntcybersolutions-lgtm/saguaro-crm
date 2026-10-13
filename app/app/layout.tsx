@@ -647,7 +647,7 @@ export default function AppLayout({ children }: { children: React.ReactNode }) {
           <div style={{ background: colors.surface, border: `1px solid ${colors.border}`, borderRadius: 14, width: '100%', maxWidth: 520, boxShadow: '0 30px 80px color-mix(in srgb, var(--bg-base) 60%, transparent)', overflow: 'hidden' }}>
             <div style={{ padding: '16px 20px', borderBottom: `1px solid ${colors.border}`, display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
               <div>
-                <div style={{ fontWeight: 800, fontSize: 16, color: colors.text, display: 'flex', alignItems: 'center', gap: 8 }}>
+                <div className="k-dialog-title" style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
                   <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={2} strokeLinecap="round" strokeLinejoin="round" width={16} height={16} style={{ color: 'var(--text-primary)' }}><circle cx={12} cy={12} r={10}/><circle cx={12} cy={12} r={6}/><circle cx={12} cy={12} r={2}/></svg>
                   Score a Bid
                 </div>

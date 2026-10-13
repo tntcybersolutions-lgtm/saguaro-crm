@@ -55,7 +55,7 @@ export function FileCropper({ fileId, url, name, onDone, onClose }: {
       <div ref={dialogRef} role="dialog" aria-modal="true" aria-labelledby={titleId} onClick={(e) => e.stopPropagation()} style={{ background: 'var(--bg-surface)', border: '1px solid rgba(255,255,255,0.12)', borderRadius: 14, padding: 16, width: 'min(720px,100%)', maxHeight: '92vh', overflow: 'auto' }}>
         <div style={{ display: 'flex', alignItems: 'center', marginBottom: 12 }}>
           <Crop size={18} color="var(--text-secondary)" weight="fill" />
-          <div id={titleId} style={{ fontWeight: 800, fontSize: 16, marginLeft: 8, flex: 1, color: 'var(--text-primary)' }}>Edit Image</div>
+          <div id={titleId} className="k-dialog-title" style={{ marginLeft: 8, flex: 1 }}>Edit Image</div>
           <button onClick={onClose} aria-label="Close" style={closeBtn}><X size={20} color="var(--text-secondary)" /></button>
         </div>
         {/* Pointer events, not mouse events: on an iPhone a finger drag never

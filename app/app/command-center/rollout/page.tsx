@@ -171,7 +171,7 @@ function LaunchModal({ onClose }: { onClose: () => void }) {
       <div onClick={(e) => e.stopPropagation()} style={{ background: C.card, border: `1px solid ${C.border}`, borderRadius: 16, padding: 24, width: 'min(560px, 100%)', boxShadow: '0 24px 80px rgba(2,4,8,0.55)', fontFamily: font, color: C.text }}>
         {done ? (
           <div>
-            <div style={{ fontSize: 20, fontWeight: 900, marginBottom: 6 }}><Cactus size={22} weight="fill" color="var(--text-secondary)" style={{ verticalAlign: 'middle', marginRight: 6 }} />{f.name} launched</div>
+            <div className="k-dialog-title" style={{ marginBottom: 6 }}><Cactus size={22} weight="fill" color="var(--text-secondary)" style={{ verticalAlign: 'middle', marginRight: 6 }} />{f.name} launched</div>
             <p style={{ fontSize: 14, color: C.dim, lineHeight: 1.6, margin: '0 0 16px' }}>
               Created from the <b>{GOLF_TEMPLATE.name}</b> playbook and pre-loaded with{' '}
               <b>{done.seeded?.phases ?? 0}</b> phases, <b>{done.seeded?.milestones ?? 0}</b> milestones,{' '}
@@ -188,7 +188,7 @@ function LaunchModal({ onClose }: { onClose: () => void }) {
           </div>
         ) : (
           <>
-            <div style={{ fontSize: 19, fontWeight: 900, marginBottom: 4 }}>Launch New Site</div>
+            <div className="k-dialog-title" style={{ marginBottom: 4 }}>Launch New Site</div>
             <p style={{ fontSize: 13, color: C.dim, margin: '0 0 16px', lineHeight: 1.5 }}>
               Spins up a new location and pre-loads the standardized golf-franchise playbook — phases, milestones, long-lead procurement, and the standard risk register.
             </p>

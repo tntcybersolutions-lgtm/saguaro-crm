@@ -1391,7 +1391,7 @@ td{padding:8px 10px;border-bottom:1px solid #eee}td.v{font-weight:700;color:#444
             <div style={{ padding: 20 }}>
               {wizStep === 0 && (
                 <div>
-                  <div style={{ fontSize: 20, fontWeight: 800, color: TEXT }}>Pick a Starting Point</div>
+                  <div className="k-dialog-title">Pick a Starting Point</div>
                   <div style={{ fontSize: 14, color: DIM, marginTop: 4, lineHeight: 1.5 }}>Choose the building type — we drop the conditions that type almost always needs (value 0, ready to measure). Or start blank.</div>
                   <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit,minmax(200px,1fr))', gap: 9, marginTop: 14 }}>
                     {BUILDING_TEMPLATES.map((t) => { const IconC = TPL_ICON[t.id] || Buildings; const active = activeTemplate === t.id; return (
@@ -1533,7 +1533,7 @@ td{padding:8px 10px;border-bottom:1px solid #eee}td.v{font-weight:700;color:#444
             <div style={{ display: 'flex', alignItems: 'center', gap: 12, padding: '16px 20px', borderBottom: `1px solid ${LINE}` }}>
               <Table size={22} weight="duotone" color={GREEN} />
               <div style={{ flex: 1, minWidth: 0 }}>
-                <div style={{ fontWeight: 800, fontSize: 16, color: TEXT, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>Review import · {qtyReview.fileName}</div>
+                <div className="k-dialog-title" style={{ overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>Review import · {qtyReview.fileName}</div>
                 <div style={{ fontSize: 13, color: DIM }}>{qtyReview.rows.length} rows parsed · {qtyAddable} mapped to an assembly · edit any mapping below</div>
               </div>
               <button onClick={() => setQtyReview(null)} title="Close" style={{ background: 'none', border: 'none', color: DIM, cursor: 'pointer', display: 'inline-flex' }}><IconX size={20} /></button>
@@ -1587,7 +1587,7 @@ td{padding:8px 10px;border-bottom:1px solid #eee}td.v{font-weight:700;color:#444
             <div style={{ display: 'flex', alignItems: 'center', gap: 12, padding: '16px 20px', borderBottom: `1px solid ${LINE}`, position: 'sticky', top: 0, background: PANEL, borderTopLeftRadius: 16, borderTopRightRadius: 16 }}>
               <Cube size={22} weight="duotone" color="var(--text-secondary)" />
               <div style={{ flex: 1, minWidth: 0 }}>
-                <div style={{ fontWeight: 800, fontSize: 16, color: TEXT, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>Import CAD · {dxfReview.fileName}</div>
+                <div className="k-dialog-title" style={{ overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>Import CAD · {dxfReview.fileName}</div>
                 <div style={{ fontSize: 13, color: DIM }}>Units: <b style={{ color: TEXT }}>{DXF_UNIT_LABEL[dxfReview.insUnits ?? 0] || 'unitless (assumed feet)'}</b> · {dxfReview.entityCount} entities · exact quantities, no tracing</div>
               </div>
               <button onClick={() => setDxfReview(null)} title="Close" style={{ background: 'none', border: 'none', color: DIM, cursor: 'pointer', display: 'inline-flex' }}><IconX size={20} /></button>
@@ -1664,7 +1664,7 @@ td{padding:8px 10px;border-bottom:1px solid #eee}td.v{font-weight:700;color:#444
             <div style={{ display: 'flex', alignItems: 'center', gap: 12, padding: '16px 20px', borderBottom: `1px solid ${LINE}` }}>
               <span style={{ width: 38, height: 38, borderRadius: 10, background: 'rgba(56,189,248,0.12)', display: 'inline-flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}><Sparkle size={21} weight="duotone" color="var(--text-secondary)" /></span>
               <div style={{ flex: 1, minWidth: 0 }}>
-                <div style={{ fontWeight: 800, fontSize: 16, color: TEXT, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>Review AI counts · {reviewQueue.source}</div>
+                <div className="k-dialog-title" style={{ overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>Review AI counts · {reviewQueue.source}</div>
                 <div style={{ fontSize: 13, color: DIM }}>AI proposed {reviewQueue.items.length} count{reviewQueue.items.length === 1 ? '' : 's'} — confirm, remap, or reject. Only accepted, mapped rows are added.</div>
               </div>
               <button onClick={() => setReviewQueue(null)} title="Close" style={{ background: 'none', border: 'none', color: DIM, cursor: 'pointer', display: 'inline-flex' }}><IconX size={20} /></button>

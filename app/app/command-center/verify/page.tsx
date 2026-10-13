@@ -233,7 +233,7 @@ function LiveWalkthroughModal({ projects, onClose }: { projects: any[]; onClose:
   return (
     <div onClick={onClose} style={{ position: 'fixed', inset: 0, background: 'rgba(2,4,8,0.6)', zIndex: 1000, display: 'flex', alignItems: 'flex-start', justifyContent: 'center', padding: '8vh 16px', overflow: 'auto' }}>
       <div onClick={(e) => e.stopPropagation()} style={{ background: C.card, border: `1px solid ${C.border}`, borderRadius: 16, padding: 24, width: 'min(540px, 100%)', boxShadow: '0 24px 80px rgba(2,4,8,0.55)', fontFamily: font, color: C.text }}>
-        <div style={{ fontSize: 19, fontWeight: 900, marginBottom: 4 }}><span style={{ display: 'inline-flex', verticalAlign: 'middle' }}><VideoCamera size={20} weight="regular" color={C.text} /></span> Start Live Walkthrough</div>
+        <div className="k-dialog-title" style={{ marginBottom: 4 }}><span style={{ display: 'inline-flex', verticalAlign: 'middle' }}><VideoCamera size={20} weight="regular" color={C.text} /></span> Start Live Walkthrough</div>
         <p style={{ fontSize: 13, color: C.dim, margin: '0 0 16px', lineHeight: 1.5 }}>Launch a live video walkthrough with the field and log it against the site. The call opens in your video app; Saguaro records that the walkthrough happened so you can verify the milestone after.</p>
         <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 12 }}>
           <div><label style={lbl}>Site *</label><select style={inp} value={f.project_id || ''} onChange={(e) => set('project_id', e.target.value)}><option value="">Select site…</option>{projects.map((pr: any) => <option key={pr.id} value={pr.id}>{pr.name}</option>)}</select></div>
@@ -275,7 +275,7 @@ function RequestModal({ projects, initialMethod, onClose }: { projects: any[]; i
   return (
     <div onClick={onClose} style={{ position: 'fixed', inset: 0, background: 'rgba(2,4,8,0.6)', zIndex: 1000, display: 'flex', alignItems: 'flex-start', justifyContent: 'center', padding: '8vh 16px', overflow: 'auto' }}>
       <div onClick={(e) => e.stopPropagation()} style={{ background: C.card, border: `1px solid ${C.border}`, borderRadius: 16, padding: 24, width: 'min(540px, 100%)', boxShadow: '0 24px 80px rgba(2,4,8,0.55)', fontFamily: font, color: C.text }}>
-        <div style={{ fontSize: 19, fontWeight: 900, marginBottom: 4 }}>{isVisit ? 'Request On-Site Visit' : 'Request Verification'}</div>
+        <div className="k-dialog-title" style={{ marginBottom: 4 }}>{isVisit ? 'Request On-Site Visit' : 'Request Verification'}</div>
         <p style={{ fontSize: 13, color: C.dim, margin: '0 0 16px', lineHeight: 1.5 }}>{isVisit
           ? 'Flag a site where a physical on-site visit is required (additional fee). It lands as a pending item until the visit is completed and signed off.'
           : 'Flag a milestone for remote sign-off. Pick how it will be verified and attach the evidence link; you verify it before the site advances.'}</p>

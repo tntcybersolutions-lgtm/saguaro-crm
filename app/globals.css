@@ -1214,7 +1214,7 @@ select.k-select { padding-right: 36px; }
 /* Dialog and sheet titles share the heading system: the page-title cyan at
    the dialog size (FormModal, BottomSheet, the select sheet, the job picker,
    the unsaved-changes dialog). */
-.k-modal-title, .k-dialog-title { font-size: var(--fs-dialog); font-weight: 700; line-height: 1.3; letter-spacing: -0.01em; color: var(--title-page); }
+.k-modal-title, .k-dialog-title, .sag-app .k-dialog-title { font-size: var(--fs-dialog); font-weight: 700; line-height: 1.3; letter-spacing: -0.01em; color: var(--title-page); -webkit-text-fill-color: currentColor; }
 .k-modal-body { padding: var(--sp-6); overflow-y: auto; flex: 1 1 auto; }
 .k-modal-foot { display: flex; justify-content: flex-end; flex-wrap: wrap; gap: var(--sp-2); padding: var(--sp-3) var(--sp-6); border-top: 1px solid var(--border-subtle); background: var(--bg-surface); border-radius: 0 0 var(--radius-lg) var(--radius-lg); }
 
