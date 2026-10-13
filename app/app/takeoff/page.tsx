@@ -2,12 +2,15 @@
 /**
  * Takeoff Studio — AI blueprint takeoff, Pass 4 on the kit.
  *
- * Anatomy: title + one primary action (Upload Blueprint) → the studio's doors
- * (measured takeoff / assemblies / rates) → StatRow → workspace split: the
- * New Analysis card and Recent Analyses on the left, the opened estimate (or
- * the empty hero) on the right. The estimate is labeled as an AI estimate
- * everywhere its figures appear; nothing here invents a number — every cell
- * is what the analysis wrote.
+ * Anatomy (simplified 13 Oct 2026): title, one line, ONE primary action
+ * (Upload Blueprint) → a compact toolbar (Measured Takeoff · Assembly Library ·
+ * Cost Rates, with Summary and How it works behind toggles) → the takeoffs as
+ * one full-width list (project / drawing, status, updated, Open / Continue).
+ * Upload Blueprint reveals the drop zone; an account with no takeoffs gets the
+ * drop zone as its empty state. Opening a takeoff shows its estimate full
+ * width, with a way back to the list. The estimate is labeled as an AI
+ * estimate everywhere its figures appear; nothing here invents a number —
+ * every cell is what the analysis wrote.
  *
  * Every read / write is the one this screen already used:
  *   list      GET  /api/takeoff?limit=30&include=latestDetail
@@ -18,13 +21,12 @@
  */
 import React, { useState, useEffect, useRef, useCallback, useMemo } from 'react';
 import { useProjects } from '@/lib/hooks/useProjects';
-import Link from 'next/link';
 import {
-  Target, CurrencyDollar, Ruler, Stack, Check, Lightbulb,
-  Sparkle, CheckCircle, UploadSimple, DownloadSimple, ListChecks, CaretRight, Warning,
+  CurrencyDollar, Ruler, Stack, Check, Lightbulb, ChartBar, Question,
+  Sparkle, CheckCircle, UploadSimple, DownloadSimple, ListChecks, CaretRight, CaretLeft, Warning,
 } from '@phosphor-icons/react';
 import {
-  PageShell, Card, StatRow, Badge, Button, DataTable, EmptyState, Tabs, Select, Input, Field,
+  PageShell, Card, StatRow, Badge, Button, DataTable, EmptyState, Tabs, Select, Input, Field, Toolbar,
   type Column, type BadgeTone, type StatItem,
 } from '@/components/ui/kit';
 import { divColor, divName } from '@/lib/takeoff/divisions';
@@ -169,27 +171,16 @@ function ConfidenceRing({ value, size = 96, stroke = 9 }: { value: number; size?
 }
 
 const CSS = `
-.tkWs > .k-page { max-width: none; }
-.tkDoors { display: grid; grid-template-columns: repeat(auto-fit, minmax(210px, 1fr)); gap: 10px; }
-.tkDoor { display: flex; align-items: center; gap: 10px; padding: 10px 12px; border-radius: var(--radius-md); border: 1px solid var(--border-default); background: var(--bg-surface); text-decoration: none; min-height: 52px; }
-.tkDoor:hover { background: var(--bg-row-hover); border-color: var(--border-strong); }
-.tkDoor:focus-visible { outline: 2px solid var(--focus-ring); }
-.tkDoor > svg:first-child { color: var(--text-secondary); flex-shrink: 0; }
-.tkDoor > svg:last-child { color: var(--text-tertiary); margin-left: auto; flex-shrink: 0; }
-.tkDoorText { display: flex; flex-direction: column; min-width: 0; }
-.tkDoorText b { color: var(--text-primary); font-weight: 700; font-size: var(--fs-md); }
-.tkDoorText span { color: var(--text-secondary); font-size: var(--fs-sm); line-height: 1.3; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
-.tkCq { container: tkws / inline-size; min-width: 0; }
-.tkSplit { display: grid; grid-template-columns: minmax(0, 1fr); gap: 16px; align-items: start; min-width: 0; }
-.tkSplit > * { min-width: 0; }
-@container tkws (min-width: 960px) { .tkSplit { grid-template-columns: clamp(${layout.detailRailMin}px, 28%, 360px) minmax(0, 1fr); } }
-.tkLeft { display: flex; flex-direction: column; gap: 16px; }
-.tkDrop { border: 2px dashed var(--border-strong); border-radius: var(--radius-sm); padding: 28px 16px; text-align: center; cursor: pointer; background: var(--bg-surface-2); transition: border-color .15s, background .15s; }
+.tkDrop { display: flex; flex-direction: column; align-items: center; gap: 4px; border: 2px dashed var(--border-strong); border-radius: var(--radius-sm); padding: 28px 16px; text-align: center; cursor: pointer; background: var(--bg-surface-2); transition: border-color .15s, background .15s; }
 .tkDrop[data-over="true"] { border-color: var(--brand-primary); background: var(--brand-primary-08); }
 .tkDrop:focus-visible { outline: 2px solid var(--focus-ring); }
 .tkDrop > svg { color: var(--text-tertiary); margin-bottom: 8px; }
 .tkDropTitle { color: var(--text-primary); font-weight: 600; font-size: var(--fs-md); margin-bottom: 4px; }
 .tkDropSub { color: var(--text-tertiary); font-size: var(--fs-xs); }
+.tkDrop .k-btn { margin-top: 12px; }
+.tkPanelFoot { display: flex; justify-content: flex-end; margin-top: 12px; }
+.tkName { display: flex; flex-direction: column; min-width: 0; }
+.tkName span { font-size: var(--fs-xs); color: var(--text-tertiary); overflow: hidden; text-overflow: ellipsis; white-space: nowrap; font-weight: 400; }
 .tkStack { display: flex; flex-direction: column; gap: 12px; }
 .tkMuted { color: var(--text-tertiary); font-size: var(--fs-xs); }
 .tkFileName { color: var(--text-primary); font-weight: 600; word-break: break-all; }
@@ -211,21 +202,9 @@ const CSS = `
 .tkDoneIcon { width: 48px; height: 48px; border-radius: 50%; display: grid; place-items: center; background: rgba(74,222,128,.12); border: 2px solid rgba(74,222,128,.3); color: var(--status-ongoing); }
 .tkErr { display: flex; gap: 10px; align-items: flex-start; font-size: var(--fs-sm); color: var(--text-primary); padding: 10px 14px; border-radius: var(--radius-sm); border: 1px solid rgba(248,113,113,.35); background: rgba(248,113,113,.08); }
 .tkErr > svg { color: var(--status-overdue); flex-shrink: 0; margin-top: 2px; }
-.tkRecent { max-height: 460px; overflow-y: auto; }
-.tkRecentRow { all: unset; box-sizing: border-box; display: block; width: 100%; padding: 12px 16px; cursor: pointer; border-bottom: 1px solid var(--border-subtle); }
-.tkRecentRow:hover { background: rgba(255,255,255,0.03); }
-.tkRecentRow:focus-visible { outline: 2px solid var(--focus-ring); outline-offset: -2px; }
-.tkRecentRow[aria-current="true"] { background: var(--brand-primary-08); box-shadow: inset 3px 0 0 var(--brand-primary); }
-.tkRecentHead { display: flex; justify-content: space-between; align-items: flex-start; gap: 8px; }
-.tkRecentName { font-size: var(--fs-sm); font-weight: 600; color: var(--text-primary); overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
-.tkRecentSub { font-size: var(--fs-xs); color: var(--text-tertiary); margin-top: 2px; }
-.tkConf { margin-top: 8px; }
-.tkConf .tkBar { height: 3px; } .tkConf .tkBar > div { background: var(--status-ongoing); }
-.tkSkelRow { height: 64px; border-bottom: 1px solid var(--border-subtle); background: rgba(255,255,255,0.03); }
 .tkHero { display: flex; gap: 26px; align-items: center; flex-wrap: wrap; }
 .tkHeroCopy { flex: 1 1 300px; min-width: 260px; }
 .tkHeroEyebrow { font-size: var(--fs-xs); font-weight: 800; color: var(--text-tertiary); margin-bottom: 10px; }
-.tkHeroTitle { font-size: clamp(22px, 3vw, 32px); font-weight: 900; line-height: 1.08; margin: 0 0 12px; color: var(--text-primary); letter-spacing: -0.5px; }
 .tkHeroText { color: var(--text-secondary); font-size: var(--fs-md); line-height: 1.55; margin: 0 0 16px; max-width: ${layout.readingMaxWidth}; }
 .tkHeroList { display: grid; grid-template-columns: 1fr 1fr; gap: 9px 18px; margin: 0 0 20px; max-width: 480px; }
 .tkHeroList > div { display: flex; align-items: center; gap: 8px; font-size: var(--fs-xs); color: var(--text-secondary); }
@@ -302,10 +281,14 @@ export default function TakeoffPage() {
   const [errorMsg, setErrorMsg] = useState('');
   const [dragOver, setDragOver] = useState(false);
   const [activeTab, setActiveTab] = useState<'items' | 'summary' | 'recs'>('items');
+  /* The drop zone is shown on Upload Blueprint (or as the empty state); the
+     statistics and the how-it-works example sit behind the toolbar toggles. */
+  const [uploadOpen, setUploadOpen] = useState(false);
+  const [summaryOpen, setSummaryOpen] = useState(false);
+  const [howOpen, setHowOpen] = useState(false);
 
   const fileInputRef = useRef<HTMLInputElement>(null);
   const evtSourceRef = useRef<EventSource | null>(null); // live SSE, torn down on unmount
-  const resultRef = useRef<HTMLDivElement>(null);
   const [showAllRows, setShowAllRows] = useState(false);
 
   // Group the AI-extracted materials ONCE per takeoff and cap the rows we
@@ -381,11 +364,9 @@ export default function TakeoffPage() {
   // Tear down any live analysis stream if the user navigates away mid-analysis.
   useEffect(() => () => { evtSourceRef.current?.close(); evtSourceRef.current = null; }, []);
 
-  // Bring the opened estimate into view once it is in the DOM (stacked layouts).
+  // An opened estimate replaces the list, so start it at the top of the page.
   useEffect(() => {
-    if (!selectedTakeoff) return;
-    const el = resultRef.current;
-    if (el && el.getBoundingClientRect().top > window.innerHeight * 0.6) el.scrollIntoView({ behavior: 'smooth', block: 'start' });
+    if (selectedTakeoff && typeof window !== 'undefined') window.scrollTo({ top: 0, behavior: 'smooth' });
   }, [selectedTakeoff?.id]); // eslint-disable-line react-hooks/exhaustive-deps
 
   // ── File handling ─────────────────────────────────────────────────────────
@@ -415,6 +396,14 @@ export default function TakeoffPage() {
     if (typeof window !== 'undefined') window.scrollTo({ top: 0, behavior: 'smooth' });
     setProgress({ pct: 0, message: '', step: 0 });
     setErrorMsg('');
+    setUploadOpen(true);
+  }
+
+  /** Back from an opened estimate to the list. */
+  function closeResult() {
+    setSelectedTakeoff(null);
+    if (phase === 'done' || phase === 'error') { setPhase('idle'); setPendingFile(null); }
+    setUploadOpen(false);
   }
 
   // ── Upload + analyze flow ─────────────────────────────────────────────────
@@ -593,6 +582,10 @@ export default function TakeoffPage() {
         { label: 'Avg Processing', value: processingSecs.length ? `~${fmtSecs(avgProcessingSecs)}` : '—', sub: 'Per blueprint analysis' },
       ];
 
+  const isEmpty = !loadingList && takeoffs.length === 0;
+  const viewing = !!selectedTakeoff || loadingDetail;
+  const showUpload = !viewing && (isEmpty || uploadOpen || phase !== 'idle');
+
   // ── Line-item columns (per division) ──
   const itemColumns = (div: CsiDivision): Column<TakeoffMaterial>[] => [
     { key: 'csi_code', header: 'CSI Code', accessor: m => m.csi_code || '', render: m => <span className="tkMono">{m.csi_code}</span> },
@@ -610,21 +603,27 @@ export default function TakeoffPage() {
       <>
         <div
           data-tour="takeoff-dropzone"
-          role="button"
-          tabIndex={0}
           className="tkDrop"
           data-over={dragOver ? 'true' : undefined}
           onClick={() => fileInputRef.current?.click()}
-          onKeyDown={e => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); fileInputRef.current?.click(); } }}
           onDragOver={e => { e.preventDefault(); setDragOver(true); }}
           onDragLeave={() => setDragOver(false)}
           onDrop={e => { e.preventDefault(); setDragOver(false); const f = e.dataTransfer.files[0]; if (f) handleFile(f); }}
         >
           <Ruler size={30} />
-          <div className="tkDropTitle">Drop blueprints here</div>
-          <div className="tkDropSub">or click to browse files</div>
-          <div className="tkDropSub" style={{ marginTop: 12 }}>PDF, PNG, JPG, TIFF, WebP · max 200MB</div>
+          <div className="tkDropTitle">Drop a blueprint here</div>
+          <div className="tkDropSub">PDF, PNG, JPG, TIFF, WebP · max 200MB</div>
+          {/* The one way in on an empty account (yellow); a plain chooser when
+              the page header already carries Upload Blueprint. */}
+          <Button
+            variant={isEmpty ? 'primary' : 'secondary'}
+            icon={<UploadSimple size={15} weight="bold" />}
+            onClick={e => { e.stopPropagation(); fileInputRef.current?.click(); }}
+          >
+            {isEmpty ? 'Upload Blueprint' : 'Choose a file'}
+          </Button>
         </div>
+        {!isEmpty && <div className="tkPanelFoot"><Button variant="ghost" onClick={() => setUploadOpen(false)}>Cancel</Button></div>}
       </>
     );
     if (phase === 'project-select') return (
@@ -701,10 +700,10 @@ export default function TakeoffPage() {
     );
   })();
 
-  // ── Right panel ──
-  let rightPanel: React.ReactNode;
-  if ((loadingDetail || loadingList) && !selectedTakeoff) {
-    rightPanel = (
+  // ── The opened estimate (full width; the list comes back from "All takeoffs") ──
+  let resultView: React.ReactNode = null;
+  if (viewing && !selectedTakeoff) {
+    resultView = (
       <div className="tkSkelCard" aria-busy="true" aria-label="Loading estimate">
         <div style={{ display: 'flex', alignItems: 'center', gap: 20, marginBottom: 22, background: 'none' }}>
           <div style={{ width: 96, height: 96, borderRadius: '50%' }} />
@@ -713,47 +712,7 @@ export default function TakeoffPage() {
         {[0, 1, 2].map(i => <div key={i} style={{ height: 44, marginBottom: 8 }} />)}
       </div>
     );
-  } else if (!selectedTakeoff) {
-    rightPanel = (
-      <Card>
-        <div
-          className="tkHero"
-          onDragOver={e => { e.preventDefault(); setDragOver(true); }}
-          onDragLeave={() => setDragOver(false)}
-          onDrop={e => { e.preventDefault(); setDragOver(false); const f = e.dataTransfer.files[0]; if (f) handleFile(f); }}
-        >
-          <div className="tkHeroCopy">
-            <div className="tkHeroEyebrow">AI Blueprint Takeoff</div>
-            <h2 className="tkHeroTitle">Turn a blueprint into a priced estimate.</h2>
-            <p className="tkHeroText">Drop a drawing and get quantities read straight off the plan, CSI-coded line items with a material and labor split, cost per square foot, confidence scoring, and a client-ready estimate — in minutes. Every figure is the AI's reading of your plan; check it before it goes in a bid.</p>
-            <div className="tkHeroList">
-              {['Quantities from the drawing', 'CSI-coded line items', 'Material + labor split', 'Cost per square foot', 'Confidence scoring', 'Client-ready export'].map(f => (
-                <div key={f}><CheckCircle size={15} weight="fill" /> {f}</div>
-              ))}
-            </div>
-            <Button variant="primary" icon={<UploadSimple size={15} weight="bold" />} onClick={() => { if (phase !== 'idle') resetUpload(); fileInputRef.current?.click(); }}>Upload Blueprint</Button>
-            <div className="tkMuted" style={{ marginTop: 12 }}>Drag &amp; drop a PDF, PNG or JPG anywhere here.</div>
-          </div>
-          <div className="tkHeroImg">
-            {/* eslint-disable-next-line @next/next/no-img-element */}
-            <img src="/takeoff-hero.png" alt="Example priced estimate — CSI-coded line items with material and labor costs" onError={e => { const el = e.currentTarget; el.style.display = 'none'; const sib = el.nextElementSibling as HTMLElement | null; if (sib) sib.style.display = 'flex'; }} />
-            {/* Fallback deliverable preview when no screenshot is shipped — reads as the output. */}
-            <div className="tkFallback">
-              <div className="tkHeroEyebrow" style={{ marginBottom: 0 }}>AI Blueprint Estimate — example</div>
-              <div className="tkTotal" style={{ fontSize: 34 }}>$1,284,500.00</div>
-              <div className="tkTrade" style={{ height: 12 }}>
-                {['26', '23', '22', '09', '03', '08'].map((d, i) => <div key={d} style={{ flex: [3, 2.4, 1.8, 1.5, 1.2, 1][i], background: divColor(d) }} />)}
-              </div>
-              <div className="tkLegend">
-                {['26', '23', '22', '09'].map(d => <span key={d}><i style={{ background: divColor(d) }} /> Div {d} {divName(d)}</span>)}
-              </div>
-            </div>
-            <div className="tkHeroTag">Example output — your plan renders like this</div>
-          </div>
-        </div>
-      </Card>
-    );
-  } else {
+  } else if (selectedTakeoff) {
     const t = selectedTakeoff;
     const sf = t.building_area || 0;
     const costPerSf = sf > 0 ? (t.total_cost || 0) / sf : 0;
@@ -773,11 +732,12 @@ export default function TakeoffPage() {
       { label: 'Cost / SF', value: costPerSf > 0 ? fmt(costPerSf) : '—', sub: 'Cost subtotal ÷ area' },
       { label: 'Confidence', value: t.confidence > 0 ? `${t.confidence}%` : '—', tone: t.confidence > 0 ? (confidenceColor(t.confidence) === 'green' ? 'good' : confidenceColor(t.confidence) === 'amber' ? 'warn' : 'bad') : 'default', sub: "The AI's own score" },
     ];
-    rightPanel = (
-      <div className="tkResult" ref={resultRef}>
+    resultView = (
+      <div className="tkResult">
         {/* action row */}
         <div className="tkActionRow">
           <div>
+            <Button variant="ghost" size="sm" icon={<CaretLeft size={14} weight="bold" />} onClick={closeResult}>All takeoffs</Button>
             <Badge tone={sb.tone} dot>{sb.label}</Badge>
             <Badge tone="gold">AI estimate</Badge>
             {t.building_type && <Badge tone="neutral">{t.building_type}</Badge>}
@@ -884,6 +844,32 @@ export default function TakeoffPage() {
     );
   }
 
+  // ── The takeoffs: one full-width list, newest first ──
+  const updatedOf = (t: Takeoff) => t.analyzed_at || t.created_at || '';
+  const listColumns: Column<Takeoff>[] = [
+    {
+      key: 'name', header: 'Project / drawing', primary: true,
+      accessor: t => (t.project_name || t.name || '').toLowerCase(),
+      render: t => <span className="tkName"><b>{t.project_name || t.name || 'Untitled'}</b>{t.file_name && <span title={t.file_name}>{t.file_name}</span>}</span>,
+    },
+    { key: 'status', header: 'Status', phone: 'show', accessor: t => t.status, render: t => { const b = statusBadge(t.status); return <Badge tone={b.tone}>{b.label}</Badge>; } },
+    { key: 'updated', header: 'Updated', phone: 'show', accessor: t => new Date(updatedOf(t)).getTime() || 0, render: t => <span className="tkMuted">{fmtDate(updatedOf(t))}</span> },
+  ];
+
+  const tools = (
+    <>
+      <Button size="sm" href="/app/takeoff/measured" icon={<Ruler size={14} weight="bold" />}>Measured Takeoff</Button>
+      <Button size="sm" href="/app/takeoff/assemblies" icon={<Stack size={14} weight="bold" />}>Assembly Library</Button>
+      <Button size="sm" href="/app/takeoff/rates" icon={<CurrencyDollar size={14} weight="bold" />}>Cost Rates</Button>
+    </>
+  );
+  const toggles = (
+    <>
+      {takeoffs.length > 0 && <Button size="sm" variant="ghost" icon={<ChartBar size={14} weight="bold" />} aria-expanded={summaryOpen} onClick={() => setSummaryOpen(v => !v)}>Summary</Button>}
+      <Button size="sm" variant="ghost" icon={<Question size={14} weight="bold" />} aria-expanded={howOpen} onClick={() => setHowOpen(v => !v)}>How it works</Button>
+    </>
+  );
+
   return (
     <div className="tkWs">
       <style dangerouslySetInnerHTML={{ __html: CSS }} />
@@ -891,70 +877,72 @@ export default function TakeoffPage() {
       <PageShell
         crumbs={[{ label: 'Home', href: '/app' }, { label: 'Takeoff Studio' }]}
         title="Takeoff Studio"
-        subtitle="AI blueprint analysis, measured takeoff, assemblies, and rates — no spreadsheet."
-        actions={
-          <>
-            {!loadingList && <Badge tone="neutral">{takeoffs.length} total</Badge>}
-            {!loadingList && <Badge tone="ongoing">{completed.length} complete</Badge>}
-            <Button variant="primary" icon={<UploadSimple size={15} weight="bold" />} onClick={() => { if (phase !== 'idle') resetUpload(); fileInputRef.current?.click(); }}>Upload Blueprint</Button>
-          </>
-        }
+        subtitle="Upload a blueprint for an AI-priced takeoff, or open one to continue."
+        actions={!isEmpty && !viewing
+          ? <Button variant="primary" icon={<UploadSimple size={15} weight="bold" />} onClick={resetUpload}>Upload Blueprint</Button>
+          : undefined}
       >
-        {/* The Studio's doors — measured takeoff / assemblies / rates. One row, every tool. */}
-        <div className="tkDoors">
-          {[
-            { href: '/app/takeoff/measured', title: 'Measured Takeoff', sub: 'Trace & price the drawing live', icon: <Ruler size={16} weight="duotone" /> },
-            { href: '/app/takeoff/assemblies', title: 'Assembly Library', sub: 'Templates that explode into bills', icon: <Stack size={16} weight="duotone" /> },
-            { href: '/app/takeoff/rates', title: 'Cost Rates', sub: 'Your material & labor rates', icon: <CurrencyDollar size={16} weight="duotone" /> },
-          ].map(d => (
-            <Link key={d.href} href={d.href} className="tkDoor">
-              {d.icon}
-              <span className="tkDoorText"><b>{d.title}</b><span>{d.sub}</span></span>
-              <CaretRight size={14} weight="bold" />
-            </Link>
-          ))}
-        </div>
+        {viewing ? resultView : (
+          <>
+            <Toolbar filters={tools} actions={toggles} />
 
-        <StatRow items={stats} />
-
-        <div className="tkCq">
-          <div className="tkSplit">
-            {/* LEFT PANEL */}
-            <div className="tkLeft">
-              <Card title="New Analysis" subtitle={phase === 'idle' ? 'One blueprint at a time — the estimate attaches to a project.' : undefined}>
-                {uploadBody}
-              </Card>
-
-              <Card title="Recent Analyses" subtitle={!loadingList && takeoffs.length > 0 ? `${takeoffs.length} on file — tap one to open it.` : undefined} flush>
-                <div className="tkRecent">
-                  {loadingList && [0, 1, 2].map(i => <div key={i} className="tkSkelRow" style={{ opacity: 0.8 - i * 0.2 }} />)}
-                  {!loadingList && takeoffs.length === 0 && <EmptyState icon={<Target size={22} />} title="No takeoffs yet" text="Your first analysis lands here." />}
-                  {takeoffs.map(t => {
-                    const isSelected = selectedTakeoff?.id === t.id;
-                    const b = statusBadge(t.status);
-                    return (
-                      <button key={t.id} type="button" className="tkRecentRow" aria-current={isSelected ? 'true' : undefined} onClick={() => loadDetail(t.id)}>
-                        <div className="tkRecentHead">
-                          <div style={{ minWidth: 0 }}>
-                            <div className="tkRecentName">{t.project_name || t.name || 'Untitled'}</div>
-                            <div className="tkRecentSub">{fmtDate(t.created_at)} · #{t.id.slice(0, 8)}</div>
-                          </div>
-                          <Badge tone={b.tone}>{b.label}</Badge>
-                        </div>
-                        {t.status === 'complete' && t.confidence > 0 && (
-                          <div className="tkConf"><div className="tkBar"><div style={{ width: `${t.confidence}%` }} /></div><div className="tkRecentSub" style={{ marginTop: 3 }}>{t.confidence}% confidence</div></div>
-                        )}
-                      </button>
-                    );
-                  })}
+            {howOpen && (
+              <Card title="How it works" subtitle="An example of what an analysis returns. Every figure is the AI's reading of your plan; check it before it goes in a bid.">
+                <div className="tkHero">
+                  <div className="tkHeroCopy">
+                    <p className="tkHeroText">Upload a drawing and choose the project it belongs to. The AI reads quantities straight off the plan and returns CSI-coded line items with a material and labor split, cost per square foot and a confidence score. Open the result to export it or build the bid.</p>
+                    <div className="tkHeroList">
+                      {['Quantities from the drawing', 'CSI-coded line items', 'Material + labor split', 'Cost per square foot', 'Confidence scoring', 'Client-ready export'].map(f => (
+                        <div key={f}><CheckCircle size={15} weight="fill" /> {f}</div>
+                      ))}
+                    </div>
+                  </div>
+                  <div className="tkHeroImg">
+                    {/* eslint-disable-next-line @next/next/no-img-element */}
+                    <img src="/takeoff-hero.png" alt="Example priced estimate — CSI-coded line items with material and labor costs" onError={e => { const el = e.currentTarget; el.style.display = 'none'; const sib = el.nextElementSibling as HTMLElement | null; if (sib) sib.style.display = 'flex'; }} />
+                    {/* Fallback example when no screenshot is shipped — an example, never data. */}
+                    <div className="tkFallback">
+                      <div className="tkHeroEyebrow" style={{ marginBottom: 0 }}>AI Blueprint Estimate — example</div>
+                      <div className="tkTotal" style={{ fontSize: 34 }}>$1,284,500.00</div>
+                      <div className="tkTrade" style={{ height: 12 }}>
+                        {['26', '23', '22', '09', '03', '08'].map((d, i) => <div key={d} style={{ flex: [3, 2.4, 1.8, 1.5, 1.2, 1][i], background: divColor(d) }} />)}
+                      </div>
+                      <div className="tkLegend">
+                        {['26', '23', '22', '09'].map(d => <span key={d}><i style={{ background: divColor(d) }} /> Div {d} {divName(d)}</span>)}
+                      </div>
+                    </div>
+                    <div className="tkHeroTag">Example output</div>
+                  </div>
                 </div>
               </Card>
-            </div>
+            )}
 
-            {/* RIGHT DETAIL PANEL */}
-            <div>{rightPanel}</div>
-          </div>
-        </div>
+            {summaryOpen && takeoffs.length > 0 && <StatRow items={stats} />}
+
+            {showUpload && (
+              <Card
+                title={isEmpty && phase === 'idle' ? 'Start your first takeoff' : 'New takeoff'}
+                subtitle={phase === 'idle' ? 'One blueprint at a time — the estimate attaches to a project.' : undefined}
+              >
+                {uploadBody}
+              </Card>
+            )}
+
+            {!isEmpty && (
+              <Card title="Your takeoffs" subtitle={!loadingList ? `${takeoffs.length} on file, newest first. Open one to see its estimate.` : undefined} flush>
+                <DataTable
+                  columns={listColumns}
+                  rows={takeoffs}
+                  rowKey={t => t.id}
+                  loading={loadingList}
+                  defaultSort={{ key: 'updated', dir: 'desc' }}
+                  onRowClick={t => void loadDetail(t.id)}
+                  rowActions={t => [{ label: t.status === 'complete' ? 'Open' : 'Continue', inline: true, onClick: () => void loadDetail(t.id) }]}
+                />
+              </Card>
+            )}
+          </>
+        )}
       </PageShell>
     </div>
   );
