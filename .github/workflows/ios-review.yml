@@ -1,0 +1,92 @@
+name: iOS App Review check
+
+# What Apple's reviewer sees: the native shell of the build in App Review
+# (2.0 (1042), main c4af6584) built for the iPhone simulator, launched, and
+# driven by Appium XCUITest with real taps and the software keyboard — signed
+# in with the App Store review demo login read from App Store Connect.
+# Read-only (tools/ios-review-native.mjs). Results are encrypted to the repo key
+# and committed here; nothing readable lands in this public repo.
+on:
+  push:
+    branches: [ops/testflight]
+    paths: ['tools/ios-review*', 'tools/asc-review-login.mjs', '.github/workflows/ios-review.yml']
+
+permissions:
+  contents: write
+
+concurrency:
+  group: ios-review
+  cancel-in-progress: true
+
+jobs:
+  review:
+    runs-on: macos-14
+    timeout-minutes: 60
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/checkout@v4
+        with:
+          ref: c4af65844240aac5140afa80a68a0ab9bdb6e4b3  # source of build 1042 (the build in App Review)
+          path: app
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 20
+      - name: App Review sign-in (from App Store Connect, masked)
+        env:
+          ASC_KEY_ID: ${{ secrets.ASC_KEY_ID }}
+          ASC_ISSUER_ID: ${{ secrets.ASC_ISSUER_ID }}
+          ASC_KEY_P8_BASE64: ${{ secrets.ASC_KEY_P8_BASE64 }}
+        run: node tools/asc-review-login.mjs
+      - name: Build the app shell for the simulator
+        working-directory: app
+        run: |
+          set -o pipefail
+          npm ci --no-audit --no-fund > /dev/null
+          mkdir -p out && echo '<!doctype html><title>Saguaro Field</title>' > out/index.html
+          npx cap sync ios > /dev/null
+          xcodebuild -workspace ios/App/App.xcworkspace -scheme App -configuration Debug \
+            -sdk iphonesimulator -destination 'generic/platform=iOS Simulator' \
+            -derivedDataPath build/dd CODE_SIGNING_ALLOWED=NO build | tail -n 5
+      - name: Boot an iPhone simulator and install the app
+        run: |
+          UDID=$(xcrun simctl list devices available | grep -m1 -E 'iPhone 15 \(' | sed -E 's/.*\(([0-9A-F-]{36})\).*/\1/')
+          [ -n "$UDID" ] || UDID=$(xcrun simctl list devices available | grep -m1 -E 'iPhone 1[4-6]' | sed -E 's/.*\(([0-9A-F-]{36})\).*/\1/')
+          echo "SIM_UDID=$UDID" >> "$GITHUB_ENV"
+          xcrun simctl boot "$UDID"
+          xcrun simctl bootstatus "$UDID" -b
+          xcrun simctl ui "$UDID" appearance dark
+          APP=$(find app/build/dd/Build/Products -name 'App.app' -maxdepth 3 | head -1)
+          xcrun simctl install "$UDID" "$APP"
+          rm -rf tools/ios-review && mkdir -p tools/ios-review/shots
+      - name: Drive the app as App Review would (read-only)
+        run: |
+          npm i -g --no-audit --no-fund appium@2.11.5 > /dev/null 2>&1
+          appium driver install xcuitest@7.27.1 > /tmp/appium-install.txt 2>&1 || appium driver install xcuitest > /tmp/appium-install.txt 2>&1
+          appium --port 4723 --log /tmp/appium.log --log-level info > /dev/null 2>&1 &
+          for i in $(seq 1 30); do curl -sf http://127.0.0.1:4723/status > /dev/null && break; sleep 2; done
+          # The repo is public: nothing about the account goes to the log.
+          node tools/ios-review-native.mjs > /tmp/review-stdout.txt 2>&1 && echo "review check finished" || echo "review check exited non-zero (details are in the encrypted result)"
+          grep -E "error|Error|WebDriverAgent" /tmp/appium.log | tail -c 6000 > tools/ios-review/appium.txt 2>/dev/null || true
+      - name: "Encrypt the result (public repo: only the key holder can read it)"
+        if: always()
+        run: |
+          mkdir -p tools/ios-review && cp /tmp/review-stdout.txt tools/ios-review/stdout.txt 2>/dev/null || true
+          tar czf /tmp/rv.tgz -C tools ios-review
+          rm -rf tools/ios-review && mkdir -p tools/ios-review
+          openssl rand -hex 32 > /tmp/k
+          openssl enc -aes-256-cbc -pbkdf2 -salt -in /tmp/rv.tgz -out tools/ios-review/result.tgz.enc -pass file:/tmp/k
+          openssl pkeyutl -encrypt -pubin -inkey tools/probe-pubkey.pem -pkeyopt rsa_padding_mode:oaep -in /tmp/k -out tools/ios-review/key.enc
+          rm -f /tmp/k /tmp/rv.tgz
+      - name: Commit the result to this branch
+        if: always()
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add -A tools/ios-review || exit 0
+          git commit -m "iOS App Review check result from run ${{ github.run_id }}" || exit 0
+          for i in 1 2 3 4; do
+            git pull --rebase --autostash origin ${{ github.ref_name }} || true
+            git push origin HEAD:${{ github.ref_name }} && exit 0
+            sleep $((i * 10))
+          done
+          exit 1
