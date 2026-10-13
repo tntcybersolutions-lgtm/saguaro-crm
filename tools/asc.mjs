@@ -328,6 +328,12 @@ await tryStep('App Store versions', async () => {
 });
 
 // Where the app goes on sale once approved (no territories = approved but nowhere to download).
+await tryStep('availability, older record (v1)', async () => {
+  const r = await api('GET', `/v1/apps/${snap.app.id}/availableTerritories?limit=200`).catch((e) => ({ err: e.message }));
+  if (r.err) return `none (${r.err.slice(0, 120)})`;
+  const ids = (r.data || []).map((t) => t.id);
+  return `${ids.length} territories${ids.includes('USA') ? ', USA yes' : ', USA NO'}`;
+});
 await tryStep('availability (countries / regions)', async () => {
   const av = (await api('GET', `/v1/apps/${snap.app.id}/appAvailabilityV2`)).data;
   let total = 0, on = 0, usa = false;
