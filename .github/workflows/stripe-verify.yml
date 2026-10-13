@@ -25,7 +25,17 @@ jobs:
       - uses: actions/setup-node@v4
         with:
           node-version: 20
+      - name: Which key
+        id: key
+        env:
+          HAS_VERIFY_KEY: ${{ secrets.STRIPE_VERIFY_KEY != '' }}
+          HAS_VERCEL: ${{ secrets.VERCEL_TOKEN != '' }}
+        run: |
+          if [ "$HAS_VERIFY_KEY" = true ]; then echo "src=key" >> $GITHUB_OUTPUT
+          elif [ "$HAS_VERCEL" = true ]; then echo "src=vercel" >> $GITHUB_OUTPUT
+          else echo "src=none" >> $GITHUB_OUTPUT; echo "Neither STRIPE_VERIFY_KEY nor VERCEL_TOKEN is set; nothing to check."; fi
       - name: Production settings from Vercel (names listed, values never printed)
+        if: steps.key.outputs.src == 'vercel'
         env:
           VERCEL_TOKEN: ${{ secrets.VERCEL_TOKEN }}
           VERCEL_ORG_ID: team_ztEk3GVukQaYrxOKm5zOvUZi
@@ -45,18 +55,20 @@ jobs:
               if (v && !/^NEXT_PUBLIC_APP_URL$/.test(m[1])) for (const part of v.split("\n")) if (part.trim().length > 3) console.log("::add-mask::" + part.trim());
               if (/^(STRIPE_|NEXT_PUBLIC_STRIPE_|NEXT_PUBLIC_SUPABASE_URL$|SUPABASE_SERVICE_ROLE_KEY$|NEXT_PUBLIC_APP_URL$|RESEND_API_KEY$)/.test(m[1]) && !v.includes("\n")) out.push(m[1] + "=" + v);
             }
-            fs.appendFileSync(process.env.GITHUB_ENV, out.join("\n") + "\n");
+            fs.appendFileSync(process.env.GITHUB_ENV, out.join("\n") + "\nPROD_ENV_PULLED=1\n");
             console.log("pulled " + lines.filter((l) => /^[A-Z0-9_]+=/.test(l)).length + " production settings");
           '
           rm -f /tmp/sv/.env.production
       - name: Verify Stripe (read-only)
+        if: steps.key.outputs.src != 'none'
         env:
           OUT: tools/stripe-verify
+          STRIPE_VERIFY_KEY: ${{ secrets.STRIPE_VERIFY_KEY }}
         run: |
-          rm -rf tools/stripe-verify && mkdir -p tools/stripe-verify
+          mkdir -p /tmp/sv && rm -rf tools/stripe-verify && mkdir -p tools/stripe-verify
           node tools/stripe-verify.mjs > /tmp/sv/stdout.txt 2>&1 && echo "verify finished" || echo "verify exited non-zero (details are in the encrypted result)"
       - name: "Encrypt the result (public repo: only the key holder can read it)"
-        if: always()
+        if: always() && steps.key.outputs.src != 'none'
         run: |
           mkdir -p tools/stripe-verify && cp /tmp/sv/stdout.txt tools/stripe-verify/stdout.txt 2>/dev/null || true
           tar czf /tmp/sv.tgz -C tools stripe-verify
@@ -66,7 +78,7 @@ jobs:
           openssl pkeyutl -encrypt -pubin -inkey tools/probe-pubkey.pem -pkeyopt rsa_padding_mode:oaep -in /tmp/k -out tools/stripe-verify/key.enc
           rm -f /tmp/k /tmp/sv.tgz
       - name: Commit the result to this branch
-        if: always()
+        if: always() && steps.key.outputs.src != 'none'
         run: |
           git config user.name "github-actions[bot]"
           git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
