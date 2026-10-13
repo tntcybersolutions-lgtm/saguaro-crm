@@ -226,3 +226,12 @@ already tracked by the design-system baseline (hex literals, `td` density, Sales
 decision); DataTable menus opening upward near the bottom (that is the correct behaviour); the Vercel *preview*
 session timeout (preview deployments only). CLAUDE.md §7/§8 still name `app/field/` and `lib/field-tokens.ts`,
 which do not exist — Chad's standing orders, not edited here.
+
+## Path 1 code walk (daily log) — off-path, NOT fixed
+- `app/app/daily-logs/page.tsx:355` — a 409 (log already exists for that day) is thrown as the generic "Failed to create daily log"; the route's `existingLogId` message (`app/api/daily-logs/create/route.ts:155`) never reaches the user.
+- `app/app/daily-logs/page.tsx:700` — Work Performed is marked `required` but `submitCreate` never checks it; an empty narrative saves (2 of 22 live rows have none).
+- `app/api/daily-logs/create/route.ts:86` — `pick(...) || autoWx...` treats a 0° temperature as blank and overwrites it with the forecast.
+- `app/api/daily-logs/list/route.ts:12` and `app/api/daily-logs/[id]/route.ts:11` — neither filters `deleted_at IS NULL` (column exists; 0 soft-deleted rows today).
+- `app/api/daily-logs/list/route.ts:20`, `[id]/route.ts:19,54,74` — bare `catch {}` swallowing the real error; should use `apiError()`.
+- `app/api/daily-logs/list/route.ts:6` — 401 returns a `{ logs: [] }` body, and the 500 path returns `{ logs: [] }` too (masks error as empty).
+- `app/app/daily-logs/[id]/page.tsx:45` — types `high_temp`/`low_temp` as number but the DB columns are text; works only by coercion.

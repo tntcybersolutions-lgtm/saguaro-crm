@@ -44,7 +44,8 @@ to stop.
 - Reopen and confirm it persisted with today's practice date, not a UTC date
 - API: `app/api/daily-logs`
 - Taps at 390px: MEASURE
-- STATUS: NOT VERIFIED
+- Code walk (no runtime, 13 Oct 2026): page exists; client POSTs camelCase to `/api/daily-logs/create`, which reads camelCase and snake_case; every inserted column exists in `daily_logs` (checked against the live schema); tenant_id comes from the user and the project is tenant-asserted; auth via `requirePermission`; list route returns `{logs}` and the page reads `data.logs`; detail route returns `{log}` and the detail page reads `d.log`; Link hrefs resolve. Date is the device-local day. NEEDS-LIVE-RUN: save, reopen, persisted fields, tap count, offline save. No blocking defect found.
+- STATUS: CODE-VERIFIED — AWAITING LIVE RUN
 
 ### Path 2 — Clock in and clock out
 - Open `app/app/time/page.tsx` (474 lines), clock in, clock out
