@@ -33,6 +33,8 @@ export interface OutboxItem {
   createdAt: number;
   attempts: number;
   lastError?: string;
+  /** GPS stamp taken when the photo was kept on the phone (lib/photo-gps.ts). */
+  location?: { lat: number; lng: number } | null;
 }
 
 /** The waiting photo or video as a File again, whichever way it was kept. */
@@ -304,7 +306,7 @@ async function drainOnce(): Promise<{ done: number; failed: number }> {
     try {
       const file = outboxFile(item);
       if (item.kind === 'video') await uploadVideo(file, { projectId: item.projectId });
-      else await uploadPhoto(file, { projectId: item.projectId, album: item.album || undefined });
+      else await uploadPhoto(file, { projectId: item.projectId, album: item.album || undefined, location: item.location ?? null });
       // Off the phone the moment it is on the server, so a later run can't send it again.
       await tx('readwrite', (s) => s.delete(item.id));
       done++;

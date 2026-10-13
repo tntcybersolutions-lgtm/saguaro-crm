@@ -57,6 +57,7 @@ import { AutoChip } from '@/components/ui/premium';
 import { useUnsavedGuard, useComposerDirty } from '@/lib/useUnsavedGuard';
 import UnsavedGuardModal from '@/components/UnsavedGuardModal';
 import { layout } from '@/lib/design-tokens';
+import { photoFix, readFix, fixLabel, fixMapUrl } from '@/lib/photo-gps';
 
 const ALBUMS=['General','Progress','Inspections','Closeout','Issues','End of Day','Other'];
 /* Every project video, wherever it was uploaded (here, Files & Media, a sub's
@@ -300,7 +301,7 @@ export default function PhotosPage(){
     refreshWaiting();
   }
   const keepOnPhone=async(file:File,kind:'image'|'video')=>{
-    await addToOutbox({projectId,kind,album:kind==='video'?null:uploadAlbumRef.current,name:file.name||(kind==='video'?'video.mov':'photo.jpg'),type:file.type,size:file.size,file});
+    await addToOutbox({projectId,kind,album:kind==='video'?null:uploadAlbumRef.current,name:file.name||(kind==='video'?'video.mov':'photo.jpg'),type:file.type,size:file.size,file,location:kind==='image'?await photoFix():null});
     keptOffline.current++;
     refreshWaiting();
     return {doneLabel:'Saved on this phone — uploads when you\'re back online'};
@@ -794,6 +795,7 @@ export default function PhotosPage(){
               <DetailList items={[
                 ['Date Taken', fmtDate(selected.taken_at)],
                 ['Location', selected.location || ''],
+                ...((f => f ? [['GPS Location', <a key="gps" className="k-link" href={fixMapUrl(f)} target="_blank" rel="noopener noreferrer">{fixLabel(f)}</a>] as [string, React.ReactNode]] : [])(readFix(selected.location_lat, selected.location_lng))),
                 ['Taken By', selected.taken_by || ''],
                 ['Album', selected.album || 'General'],
                 ...(isVideo(selected) && selected.duration_seconds ? [['Length', fmtDuration(selected.duration_seconds)] as [string,string]] : []),
