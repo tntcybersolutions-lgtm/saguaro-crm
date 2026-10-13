@@ -19,6 +19,12 @@ const PUBLIC_PATHS = new Set([
 ]);
 const EXTRA_PUBLIC = ['/onboarding/'];
 
+// The iPhone app's WebView: the Capacitor shell appends "SaguaroField/" to its
+// user agent (capacitor.config.ts, ios.appendUserAgent).
+const IN_APP_UA = /\bSaguaroField\//;
+// Marketing pages that show plan prices or link straight to them.
+const PRICED_PAGES = /^\/(?:$|pricing|compare|features|get-the-app|how-it-works|how-to-get-started|roi-calculator|sandbox|switch-from-procore|design)(?:\/|$)/;
+
 function isPublic(p: string): boolean {
   return PUBLIC_PATHS.has(p) ||
     PUBLIC_PREFIXES.some(x => p.startsWith(x)) ||
@@ -92,6 +98,16 @@ export async function middleware(request: NextRequest) {
     process.env.NODE_ENV !== 'production'
   ) {
     return NextResponse.next();
+  }
+
+  // Inside the iPhone app the plans and their prices are never shown: the app
+  // is a free companion to the paid web platform, and App Store rule 3.1.1 /
+  // 3.1.3(b) bars pointing people to buy outside the app. The sign-in screen's
+  // logo links to "/", so a signed-out reviewer reached the plans in two taps.
+  // Those pages send the app to /app (sign-in when signed out); browsers are
+  // untouched. The in-app plan screens are gated the same way (lib/use-in-app.ts).
+  if (PRICED_PAGES.test(pathname) && IN_APP_UA.test(request.headers.get('user-agent') || '')) {
+    return NextResponse.redirect(new URL('/app', request.url));
   }
 
   // A signed-in user opening the ROOT should land in the app, not on the
