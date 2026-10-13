@@ -18,7 +18,7 @@ on:
         default: status
   push:
     branches: [ops/testflight]
-    paths: ['tools/asc.mjs', 'tools/asc-screens.mjs', 'tools/asc-mode.txt', 'tools/e2e-login.mjs', '.github/workflows/testflight-ops.yml']
+    paths: ['tools/asc.mjs', 'tools/asc-listing.mjs', 'tools/asc-screens.mjs', 'tools/asc-mode.txt', 'tools/e2e-login.mjs', '.github/workflows/testflight-ops.yml']
 
 # write: screens-capture commits the screenshots it takes back to this branch.
 permissions:

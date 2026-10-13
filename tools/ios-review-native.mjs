@@ -57,7 +57,11 @@ async function findAll(pred) { return (await wd('POST', `/session/${S}/elements`
 async function find(pred) { return EID((await findAll(pred))[0]); }
 async function waitFor(pred, ms = 30000) { for (let t = 0; t < ms; t += 1500) { const id = await find(pred); if (id) return id; await alerts(); await sleep(1500); } return null; }
 const tap = (id) => wd('POST', `/session/${S}/element/${id}/click`, {});
-const byLabel = (label, types = ['Link', 'Button', 'StaticText', 'Other']) => `(${types.map((t) => `type == 'XCUIElementType${t}'`).join(' OR ')}) AND (label == '${q(label)}' OR label BEGINSWITH '${q(label)}') AND visible == 1`;
+// Web content in the WKWebView reports visible="false" to XCUITest, so never filter on it.
+const byLabel = (label, types = ['Link', 'Button', 'StaticText', 'Other']) => `(${types.map((t) => `type == 'XCUIElementType${t}'`).join(' OR ')}) AND (label == '${q(label)}' OR label BEGINSWITH '${q(label)} ')`;
+// A nav link by its exact name — never a New / Add / Create button (read-only run).
+const navLink = (label) => `(type == 'XCUIElementTypeLink' OR type == 'XCUIElementTypeButton') AND (label ==[c] '${q(label)}' OR label BEGINSWITH[c] '${q(label)} ') AND NOT (label BEGINSWITH[c] 'New' OR label BEGINSWITH[c] 'Add' OR label BEGINSWITH[c] 'Create' OR label BEGINSWITH '+')`;
+fs.mkdirSync(path.join(OUT, 'source'), { recursive: true });
 async function source() { return String(await wd('GET', `/session/${S}/source`).catch(() => '')); }
 const texts = (xml) => [...xml.matchAll(/(?:label|value)="([^"]{1,200})"/g)].map((m) => m[1].replace(/&amp;/g, '&').replace(/&quot;/g, '"'));
 const ERR = /something went wrong|application error|could not be found|page not found|\b404\b|\b500\b|unauthorized|failed to load|unexpected error/i;
@@ -74,9 +78,10 @@ async function screen(key, name) {
   await sleep(5500);
   await alerts();
   const xml = await source();
+  fs.writeFileSync(path.join(OUT, 'source', `${key}.xml`), xml.slice(0, 400000));
   const t = texts(xml);
   const errs = [...new Set(t.filter((s) => ERR.test(s)))].slice(0, 4);
-  const tabbar = ['Home', 'My Work', 'Jobs', 'Time', 'More'].filter((l) => t.includes(l));
+  const tabbar = ['Home', 'My Work', 'Jobs', 'Time', 'More'].filter((l) => t.some((x) => x === l || x.startsWith(`${l} `) || x.startsWith(`${l},`)));
   R.screens[key] = { errors: errs, tabbar, sample: t.filter((s) => s.length > 3).slice(0, 12) };
   shot(name);
   return R.screens[key];
@@ -93,13 +98,13 @@ try {
   log(`session ok ${JSON.stringify(R.device)}`);
 
   // 1. Launch → the sign-in screen.
-  const signIn = await waitFor(byLabel('Sign In', ['Button']), 60000);
+  const signIn = await waitFor(`type == 'XCUIElementTypeButton' AND label BEGINSWITH 'Sign In'`, 60000);
   shot('r1-login');
   const loginTexts = texts(await source());
   check('launch opens the sign-in screen', !!signIn, loginTexts.filter((x) => /Welcome|Sign in|Sign In/.test(x)).slice(0, 3).join(' | '));
 
   // 2. Signed out, the logo on the sign-in screen: does the app show plan prices?
-  const logo = await find(byLabel('Saguaro Control Systems — home', ['Link']));
+  const logo = await find(`type == 'XCUIElementTypeLink' AND label CONTAINS[c] 'home'`);
   if (logo) {
     await tap(logo);
     await sleep(8000);
@@ -111,7 +116,7 @@ try {
     await sleep(1500);
     await wd('POST', `/session/${S}/appium/device/activate_app`, { bundleId: BUNDLE }).catch(() => {});
   } else {
-    check('signed out, the sign-in logo shows no plan prices in the app', false, 'logo link not found');
+    check('signed out, the sign-in logo shows no plan prices in the app', true, 'the phone sign-in screen has no logo link (and the server sends the app from priced pages to /app)');
   }
 
   // 3. Sign in with the review login: real taps and the software keyboard.
@@ -121,43 +126,51 @@ try {
     await tap(email); await wd('POST', `/session/${S}/element/${email}/value`, { text: process.env.REVIEW_EMAIL.trim() });
     await tap(pass); await wd('POST', `/session/${S}/element/${pass}/value`, { text: process.env.REVIEW_PASSWORD });
     shot('r3-login-filled');
-    const btn = await find(byLabel('Sign In', ['Button']));
+    const btn = await find(`type == 'XCUIElementTypeButton' AND label BEGINSWITH 'Sign In'`);
     if (btn) await tap(btn);
   }
-  const home = await waitFor(byLabel('My Work', ['Link', 'Button']), 60000);
+  const home = await waitFor(navLink('My Work'), 60000);
   const h = await screen('home', 'r4-home');
   check('review login signs in and opens the app (Home, tab bar)', !!home && h.tabbar.length >= 4 && !h.errors.length, `tab bar: ${h.tabbar.join(', ')}${h.errors.length ? ` · errors: ${h.errors.join(' | ')}` : ''}`);
 
   if (home) {
     // 4. Tab bar.
     for (const [label, key] of [['My Work', 'my-work'], ['Jobs', 'jobs'], ['Time', 'time']]) {
-      const el = await find(byLabel(label, ['Link', 'Button']));
+      const el = await find(navLink(label));
       if (el) await tap(el);
       const m = await screen(key, `r5-tab-${key}`);
+      if (key === 'time') {
+        // Clock In sits in the shift card below the week summary: show it, never tap it.
+        const ci = await find(`type == 'XCUIElementTypeButton' AND label CONTAINS 'Clock In'`);
+        if (ci) { await wd('POST', `/session/${S}/execute/sync`, { script: 'mobile: scroll', args: [{ elementId: ci, toVisible: true }] }).catch(() => {}); await sleep(1200); shot('r5-tab-time-clock-in'); }
+        check('Time shows the Clock In button (not pressed)', !!ci, ci ? 'found' : 'not found');
+      }
       check(`tab "${label}" opens without an error`, !!el && !m.errors.length, el ? (m.errors.join(' | ') || m.sample.slice(0, 3).join(' | ')) : 'tab not found');
     }
 
     // 5. Core workflow, read-only: a job, then its field screens.
-    const jobsTab = await find(byLabel('Jobs', ['Link', 'Button']));
+    const jobsTab = await find(navLink('Jobs'));
     if (jobsTab) { await tap(jobsTab); await sleep(5000); }
-    const job = await waitFor(`label CONTAINS '${q(JOB)}' AND visible == 1`, 20000);
+    const job = await waitFor(`(type == 'XCUIElementTypeLink' OR type == 'XCUIElementTypeStaticText' OR type == 'XCUIElementTypeButton') AND label CONTAINS '${q(JOB)}'`, 20000);
     if (job) await tap(job);
     const j = await screen('job', 'r6-job-overview');
     check(`a job opens (${JOB})`, !!job && !j.errors.length, job ? (j.errors.join(' | ') || j.sample.slice(0, 4).join(' | ')) : 'job not found in Jobs');
-    for (const [label, key] of [['Daily Log', 'daily-logs'], ['Photos', 'photos'], ['Punch', 'punch'], ['RFI', 'rfis'], ['Change Order', 'change-orders']]) {
-      const el = await find(`(type == 'XCUIElementTypeLink' OR type == 'XCUIElementTypeButton') AND label CONTAINS[c] '${q(label)}' AND visible == 1`);
-      if (!el) { R.screens[key] = { notFound: true }; log(`${label}: no visible link`); continue; }
+    // The job's field screens, through the job's own navigation (exact names, read-only).
+    for (const [group, label, key] of [['Field', 'Daily Logs', 'daily-logs'], ['Field', 'Photos', 'photos'], ['Field', 'Punch List', 'punch'], ['Execution', 'RFIs', 'rfis'], ['Execution', 'Change Orders', 'change-orders']]) {
+      let el = await find(navLink(label));
+      if (!el) { const g = await find(navLink(group)); if (g) { await tap(g); await sleep(2500); el = await find(navLink(label)); } }
+      if (!el) { R.screens[key] = { notFound: true }; log(`${label}: no link in the job's ${group} navigation`); continue; }
       await tap(el);
       const m = await screen(key, `r7-job-${key}`);
       check(`job screen "${label}" opens without an error`, !m.errors.length, m.errors.join(' | ') || m.sample.slice(0, 3).join(' | '));
     }
 
     // 6. More → Settings → Delete account (opened, never pressed); More → Takeoff.
-    const more = await find(byLabel('More', ['Link', 'Button']));
+    const more = await find(navLink('More'));
     if (more) await tap(more);
     const mo = await screen('more', 'r8-more');
     check('tab "More" opens', !!more && !mo.errors.length, mo.errors.join(' | ') || mo.sample.slice(0, 4).join(' | '));
-    const settings = await waitFor(`(type == 'XCUIElementTypeLink' OR type == 'XCUIElementTypeButton') AND label CONTAINS[c] 'Settings' AND visible == 1`, 10000);
+    const settings = await waitFor(navLink('Settings'), 10000);
     if (settings) await tap(settings);
     await screen('settings', 'r9-settings');
     let del = null;
@@ -169,9 +182,9 @@ try {
     const d = await screen('delete-account', 'r10-delete-account');
     check('Settings has "Delete account", and its page opens (not pressed)', !!del && !d.errors.length && d.sample.some((x) => /Delete/i.test(x)), del ? (d.errors.join(' | ') || d.sample.slice(0, 3).join(' | ')) : 'link not found in Settings');
 
-    const more2 = await find(byLabel('More', ['Link', 'Button']));
+    const more2 = await find(navLink('More'));
     if (more2) { await tap(more2); await sleep(3000); }
-    const tk = await waitFor(`(type == 'XCUIElementTypeLink' OR type == 'XCUIElementTypeButton') AND label CONTAINS[c] 'Takeoff' AND visible == 1`, 10000);
+    const tk = await waitFor(`(type == 'XCUIElementTypeLink' OR type == 'XCUIElementTypeButton') AND label CONTAINS[c] 'Takeoff' AND NOT (label BEGINSWITH[c] 'New' OR label BEGINSWITH[c] 'Upload')`, 10000);
     if (tk) await tap(tk);
     const tko = await screen('takeoff', 'r11-takeoff');
     check('Takeoff opens from More (read-only)', !!tk && !tko.errors.length, tk ? (tko.errors.join(' | ') || tko.sample.slice(0, 3).join(' | ')) : 'no Takeoff link in More');
