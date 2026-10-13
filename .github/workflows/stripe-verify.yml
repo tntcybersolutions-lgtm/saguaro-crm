@@ -1,0 +1,80 @@
+name: Stripe verify
+
+# Read-only check of production Stripe billing and Stripe Connect
+# (tools/stripe-verify.mjs). The production environment is pulled from Vercel
+# into this runner only; no key or secret is printed. The result is encrypted to
+# the repo key and committed here — nothing readable lands in this public repo.
+on:
+  push:
+    branches: [ops/testflight]
+    paths: ['tools/stripe-verify.mjs', '.github/workflows/stripe-verify.yml']
+
+permissions:
+  contents: write
+
+concurrency:
+  group: stripe-verify
+  cancel-in-progress: false
+
+jobs:
+  verify:
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 20
+      - name: Production settings from Vercel (names listed, values never printed)
+        env:
+          VERCEL_TOKEN: ${{ secrets.VERCEL_TOKEN }}
+          VERCEL_ORG_ID: team_ztEk3GVukQaYrxOKm5zOvUZi
+          VERCEL_PROJECT_ID: prj_Vz0NawniE1BqmQpsX9HxL5MqfYsb
+        run: |
+          npm i -g --no-audit --no-fund vercel@39.1.1 > /dev/null 2>&1
+          mkdir -p /tmp/sv
+          vercel env pull /tmp/sv/.env.production --environment=production --yes --token="$VERCEL_TOKEN" > /dev/null 2>&1 || { echo "vercel env pull failed"; exit 1; }
+          # Mask every pulled value before anything else can echo it, then hand them to the next step.
+          node -e '
+            const fs = require("fs");
+            const lines = fs.readFileSync("/tmp/sv/.env.production", "utf8").split("\n");
+            const out = [];
+            for (const l of lines) {
+              const m = l.match(/^([A-Z0-9_]+)=(.*)$/); if (!m) continue;
+              let v = m[2]; if (/^".*"$/.test(v)) v = v.slice(1, -1).replace(/\\n/g, "\n");
+              if (v && !/^NEXT_PUBLIC_APP_URL$/.test(m[1])) for (const part of v.split("\n")) if (part.trim().length > 3) console.log("::add-mask::" + part.trim());
+              if (/^(STRIPE_|NEXT_PUBLIC_STRIPE_|NEXT_PUBLIC_SUPABASE_URL$|SUPABASE_SERVICE_ROLE_KEY$|NEXT_PUBLIC_APP_URL$|RESEND_API_KEY$)/.test(m[1]) && !v.includes("\n")) out.push(m[1] + "=" + v);
+            }
+            fs.appendFileSync(process.env.GITHUB_ENV, out.join("\n") + "\n");
+            console.log("pulled " + lines.filter((l) => /^[A-Z0-9_]+=/.test(l)).length + " production settings");
+          '
+          rm -f /tmp/sv/.env.production
+      - name: Verify Stripe (read-only)
+        env:
+          OUT: tools/stripe-verify
+        run: |
+          rm -rf tools/stripe-verify && mkdir -p tools/stripe-verify
+          node tools/stripe-verify.mjs > /tmp/sv/stdout.txt 2>&1 && echo "verify finished" || echo "verify exited non-zero (details are in the encrypted result)"
+      - name: "Encrypt the result (public repo: only the key holder can read it)"
+        if: always()
+        run: |
+          mkdir -p tools/stripe-verify && cp /tmp/sv/stdout.txt tools/stripe-verify/stdout.txt 2>/dev/null || true
+          tar czf /tmp/sv.tgz -C tools stripe-verify
+          rm -rf tools/stripe-verify && mkdir -p tools/stripe-verify
+          openssl rand -hex 32 > /tmp/k
+          openssl enc -aes-256-cbc -pbkdf2 -salt -in /tmp/sv.tgz -out tools/stripe-verify/result.tgz.enc -pass file:/tmp/k
+          openssl pkeyutl -encrypt -pubin -inkey tools/probe-pubkey.pem -pkeyopt rsa_padding_mode:oaep -in /tmp/k -out tools/stripe-verify/key.enc
+          rm -f /tmp/k /tmp/sv.tgz
+      - name: Commit the result to this branch
+        if: always()
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add -A tools/stripe-verify || exit 0
+          git commit -m "Stripe verify result from run ${{ github.run_id }}" || exit 0
+          for i in 1 2 3 4; do
+            git pull --rebase --autostash origin ${{ github.ref_name }} || true
+            git push origin HEAD:${{ github.ref_name }} && exit 0
+            sleep $((i * 10))
+          done
+          exit 1
