@@ -274,6 +274,76 @@ If isolation cannot be confirmed, abort the run before acting.
 - Estimating accuracy of any generated estimate.
 - Native iOS and real-device safe areas. The 390 column is a mobile-width browser, not the iOS app.
 
+## App Store release — Saguaro Field 2.0 (build 1042), 13 Oct 2026
+
+**State (App Store Connect API readback, run 38341241771, 13 Oct 03:20 UTC).**
+Submitted, not approved, not on sale.
+
+| Item | Value |
+|---|---|
+| Version / build | 2.0 / 1042: `VALID`; uses non-exempt encryption: false |
+| Review | `WAITING_FOR_REVIEW` since 10 Oct 23:37 UTC (one open review submission) |
+| Release setting | `releaseType AFTER_APPROVAL`: Apple puts it on sale as soon as it is approved |
+| Availability | United States only (1 of 175 territories); new territories off. Set 13 Oct (run 38340474390): the app had no availability record before, so approval would have put it on sale nowhere |
+| Price | Free (USD base) |
+| Age rating | Declaration complete; 4+ |
+| Listing (en-US) | Description, keywords and support URL set; 10 iPhone 6.7" and 10 iPad 12.9" screenshots |
+| App Review details | Contact set; demo sign-in required and signs in (checked against the live site); notes current |
+| App Privacy, agreements | Not readable with the API key. App Store Connect accepted the submission, which requires published App Privacy answers |
+
+The submitted version and build were not withdrawn or replaced. Build 1051
+(12 Oct) differs from 1042 only in launch and splash colours, so it was not
+swapped in: a swap would restart the review queue.
+
+**Changes made while 2.0 waits for review.** None needed a new build: the app
+loads the live site, and listing text was edited in place.
+- #165 (`37d919a8`):
+  - inside the app (user agent `SaguaroField/`), pages that show plan prices redirect to `/app` (App Store rule 3.1.1);
+  - photos added on a phone are GPS-stamped (owner request).
+- Listing and review notes:
+  - removed features the app does not have (Face ID sign-in, haptics, local notifications);
+  - GPS claims cover photos and time clock punches, not video;
+  - the notes say where Clock In is.
+  - Runs 38334382070 and 38339980705.
+
+**Evidence.**
+
+| Run | Scope | Result |
+|---|---|---|
+| 38334936200 | Production after #165 (fixtures, isolation proven first) | 6/6. App user agent: `/pricing` and `/` → 307 to `/app`; a browser still gets `/pricing` 200. A phone upload sends its GPS location; a desktop upload sends none. The photo viewer shows "GPS Location" with an Apple Maps link. 0 rows written |
+| 38334145104 | Native: build 1042's shell (`c4af6584`) in the iPhone 15 simulator (iOS 17.0), driven by Appium XCUITest taps and the iOS keyboard, signed in with Apple's review login. Read-only | App defects: none found. Launch → sign-in screen; review login → Home of the demo company with the tab bar (screenshot); My Work, Jobs and Time opened with no error text. Checker errors, not app defects: tab labels read from the wrong attribute; job row not tapped (web elements report `visible=false` to XCUITest); no logo link on the phone sign-in screen. A loose "Punch" match opened an empty New Punch Item form; nothing was saved. Stopped at the 60-minute job cap |
+| 38339980707 | Same, checker fixed. Started 03:04 UTC. The drive step had run 44 minutes (each screen took 5–7 minutes to read) when it was cancelled at 03:52, and the partial result was kept | App defects: none found. Launch → sign-in screen (PASS). The signed-out logo shows no plan prices (PASS). Review login → Home of the demo company, loading at 03:27 and filled with data by 03:33 (screenshots). Jobs tab opens (PASS). Time tab opens and shows Clock In, not pressed (PASS). Checker failures, not app defects: the tab bar is visible in the Home screenshot but read as empty, and "My Work" was not found, so it was not tapped. The "job opens" PASS is false: the job name it matched was on the Time page's Recent Entries, so the job screen was not reached. The checker's scroll gesture selected text on the Time page (iOS Copy / Translate / Share menu). Last step reached: the job check. Not reached: none left after it. Not restarted |
+
+**Unverified.**
+- Apple's decision. Approval and timing are Apple's.
+- The public US App Store listing. The app is not on sale until approval.
+- Natively: opening a job's screen and the My Work tab (neither run reached them; both open on the live site at phone width). Also camera capture, the location prompt and a GPS punch, push notifications, offline mode, iPad layout, and real-device safe areas. The simulator has no camera, and no write was made.
+- App Privacy and agreements status: not readable with the API key.
+
+**Owner items.**
+- Approve or decline removing the 8 "ZZ AUDIT" test jobs (and their test takeoff) from the demo company Apple signs in to. Only 2 of its 10 jobs look real. This is a production write, so it waits for approval.
+- More countries than the United States: say which, and availability is extended.
+- The demo company's Time page shows a pending entry from Sat, Sep 26: 338.20 h, Desert Vista Medical Plaza (simulator screenshot). Apple will see it. Removing or closing it is a production write, so it waits for approval along with the ZZ AUDIT jobs.
+
+## Stripe billing and Stripe Connect — production readiness, 13 Oct 2026
+
+Kept apart from the App Store review. This is read-only: no charge, refund, transfer, payout, customer, Checkout Session or connected account was created.
+
+| Item | Status | Evidence |
+|---|---|---|
+| Live-mode secret key in production | INCOMPLETE | Probe run 38343284357, signed in on production: `/api/billing/status` → `checkoutEnabled: false`, so `STRIPE_SECRET_KEY` is not set |
+| Plans, prices, checkout, customer portal | INCOMPLETE | With no key, every billing POST returns 503 "Online checkout isn't switched on yet" (`app/api/billing/[...path]/route.ts`). The plans table has price IDs, but whether they are live-mode cannot be checked without a key |
+| Billing webhook and signature check | INCOMPLETE | Unsigned POST `/api/billing/webhook` → 503, not the 400 a signed-secret check returns. The signature check is in the code (`constructEvent` with `STRIPE_WEBHOOK_SECRET`) but has never run in production: no billing webhook events have been received |
+| Subscription access updates | UNVERIFIED | The code maps `customer.subscription.*` and `invoice.*` to `subscriptions` rows. The demo company's plan is set by hand (Professional, active, no Stripe customer), so no Stripe-driven change has happened |
+| Publishable key | Not needed | 0 live and 0 test publishable keys in the shipped JavaScript. Checkout is hosted by Stripe (redirect), so none is needed |
+| Connect switched on in production | INCOMPLETE | `/api/payments/status` → `configured: false, connected: false, ready: false`. Get Paid Online shows "Online payments aren't available yet". Unsigned POST `/api/payments/webhook` → 503 "Payments webhook is not configured." |
+| Connect platform activation | UNVERIFIED | Needs a key, or the Stripe dashboard |
+| Connected accounts "ready" | No account is described as ready | There are 0 connected accounts. #166 (`9aaf683c`): ready now needs `charges_enabled`, `payouts_enabled`, no `past_due` and no `disabled_reason` (before, `charges_enabled` alone) |
+| Money flow (code reading) | As designed | Express accounts. Invoice payments are direct charges on the contractor's account (`stripeAccount`), so the money and Stripe's fee are on that account. No application fee |
+
+`tools/stripe-verify.mjs` (on `ops/testflight`) re-checks all of this read-only once a restricted read-only key is saved as the `STRIPE_VERIFY_KEY` GitHub secret. Without that secret it does nothing.
+
+
 ## Customer portals (23 routes)
 
 Token routes need a live token per portal; the audit only mints a client-portal token
