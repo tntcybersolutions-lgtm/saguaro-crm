@@ -8,7 +8,7 @@ Saguaro Field puts the entire platform in your pocket: the same projects, the sa
 
 RUN THE FIELD
 • Daily logs with one-tap auto-fill for weather, crew and "same as yesterday"
-• Jobsite photos, GPS-stamped and filed to the right project automatically
+• Jobsite photos and video, filed to the right project
 • Punch lists with photos, assignees, due dates and close-out tracking
 • GPS time clock with cost codes, crew punches and timesheets
 • Inspections, safety, permits and T&M tickets
@@ -51,10 +51,10 @@ SAGE, YOUR AI PROJECT ASSISTANT
 Ask Sage anything about any job: budget versus actual, open RFIs, what is late, which subs are out of compliance and what needs your attention today.
 
 BUILT FOR THE JOBSITE
-• Face ID sign-in
-• Camera capture straight into logs, punch items and inspections
-• GPS stamping for time and photos
-• Notifications, haptics and the native share sheet
+• Camera and photo library capture for jobsite photos and video
+• GPS-stamped time clock punches
+• Push notifications and the native share sheet
+• Works offline: saved screens open with no signal, and photos wait on the phone until it is back
 • Works on iPhone and iPad
 • Dark, high-contrast design made for bright sun
 
@@ -72,15 +72,15 @@ SIGN IN with the demo account above (a contractor company account). You can crea
 
 WHAT TO TRY (about 5 minutes)
 1. Projects: open a project. Overview shows phase, contract, billed and paid, and the next required step.
-2. Daily Logs: tap Auto-fill (weather and crew), take a photo with the camera, save.
+2. Daily Logs: tap Auto-fill (weather and crew), add a photo from the camera or library, save.
 3. Time: Clock In. The punch is GPS-stamped with a cost code (location permission prompt).
 4. Punch List: add an item with a photo, assign it, close it.
 5. Change Orders or RFIs: create one and change its status.
-6. Takeoff: open the AI blueprint takeoff and estimate.
+6. Takeoff (More > Takeoff Studio): open a takeoff, or tap Upload Blueprint and choose any PDF drawing; the AI analysis returns quantities and a priced estimate in about a minute.
 
 MODULES: project overview and phase tracking; daily logs; jobsite photos; punch lists; RFIs; submittals; drawings and specs; inspections; safety; permits; schedule (Gantt and look-ahead); crews and timesheets; GPS time clock; T&M tickets; change orders; budget and cost codes; cash flow; contracts; purchase orders; bills and invoices; AIA G702/G703 pay applications; lien waivers; certified payroll (WH-347); subcontractor management, prequalification, insurance (COI) and W-9 compliance; bid packages, bid leveling and bid intelligence; AI blueprint takeoff and estimating; proposals and selections; closeout and warranty claims; CRM (leads, deals, customers); client and subcontractor portals; reports and report builder; documents with version control; roles and permissions; Sage AI assistant.
 
-NATIVE FEATURES: camera capture for daily logs, punch items and inspections; GPS location stamping for time clock punches and photos; Face ID sign-in; local notifications; haptics; native share sheet; network-aware offline handling.
+NATIVE FEATURES: camera and photo library capture for jobsite photos and video; GPS location stamping on time clock punches (Time > Clock In shows the location permission prompt); push notifications; the native share sheet for photos and PDFs; offline mode (saved screens open with no signal, and photos taken offline wait on the phone and upload when the connection returns).
 
 Accounts are created by each contractor's company administrator. The app sells no digital goods and has no in-app purchases.`;
 

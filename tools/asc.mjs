@@ -27,7 +27,7 @@ const WHATS_NEW =
   'Sign in with your Saguaro account. Daily logs, photos, time clock, punch list, change orders, takeoffs and more.';
 
 const MODE = process.argv[2] || 'status';
-if (!['status', 'distribute', 'appstore', 'appstore-submit', 'diagnose', 'demo-reset', 'privacy', 'internal-testers'].includes(MODE)) {
+if (!['status', 'distribute', 'appstore', 'appstore-submit', 'appstore-meta', 'diagnose', 'demo-reset', 'privacy', 'internal-testers'].includes(MODE)) {
   console.error(`Unknown mode "${MODE}" — use status, distribute, appstore or appstore-submit`);
   process.exit(2);
 }
@@ -328,6 +328,31 @@ await tryStep('App Store versions', async () => {
 });
 
 if (MODE === 'status') process.exit(0);
+
+// appstore-meta: correct the listing text and the App Review notes on the
+// version already in review, in place (no withdrawal). Apple refuses edits to
+// some fields while a version waits for review; each refusal is reported.
+if (MODE === 'appstore-meta') {
+  const ver = (await api('GET', `/v1/apps/${snap.app.id}/appStoreVersions?limit=20`)).data
+    .find((v) => v.attributes.platform === 'IOS' && !['READY_FOR_SALE', 'REPLACED_WITH_NEW_VERSION', 'REMOVED_FROM_SALE'].includes(v.attributes.appStoreState));
+  if (!ver) { console.log('  no open iOS version'); process.exit(0); }
+  console.log(`\nVersion ${ver.attributes.versionString} (${ver.attributes.appStoreState}) — correcting text in place`);
+  for (const loc of (await api('GET', `/v1/appStoreVersions/${ver.id}/appStoreVersionLocalizations?limit=50`)).data.filter((l) => l.attributes.locale?.startsWith('en'))) {
+    for (const [field, value] of [['promotionalText', PROMO], ['description', DESCRIPTION], ['keywords', KEYWORDS]]) {
+      if (loc.attributes[field] === value) { console.log(`  ✓ ${loc.attributes.locale} ${field} — already current`); continue; }
+      await tryStep(`${loc.attributes.locale} ${field}`, () => api('PATCH', `/v1/appStoreVersionLocalizations/${loc.id}`, { data: { type: 'appStoreVersionLocalizations', id: loc.id, attributes: { [field]: value } } }).then(() => 'saved'));
+    }
+  }
+  await tryStep('App Review notes', async () => {
+    const rd = (await api('GET', `/v1/appStoreVersions/${ver.id}/appStoreReviewDetail`)).data;
+    if (rd.attributes.notes === REVIEW_NOTES) return 'already current';
+    await api('PATCH', `/v1/appStoreReviewDetails/${rd.id}`, { data: { type: 'appStoreReviewDetails', id: rd.id, attributes: { notes: REVIEW_NOTES } } });
+    return 'saved';
+  });
+  await tryStep('TestFlight review notes', () =>
+    api('PATCH', `/v1/betaAppReviewDetails/${snap.app.id}`, { data: { type: 'betaAppReviewDetails', id: snap.app.id, attributes: { notes: REVIEW_NOTES } } }).then(() => 'saved'));
+  process.exit(0);
+}
 if (MODE === 'appstore' || MODE === 'appstore-submit') {
   await appStore(snap.app, target, MODE === 'appstore-submit');
   process.exit(0);
