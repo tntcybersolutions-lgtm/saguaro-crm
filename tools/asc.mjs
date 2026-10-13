@@ -348,6 +348,45 @@ await tryStep('release after approval', async () => {
   const v = (await api('GET', `/v1/apps/${snap.app.id}/appStoreVersions?limit=5`)).data.find((x) => x.attributes.platform === 'IOS');
   return v ? `${v.attributes.versionString}: ${v.attributes.appStoreState}, release ${v.attributes.releaseType}${v.attributes.earliestReleaseDate ? `, not before ${v.attributes.earliestReleaseDate}` : ''}` : 'no version';
 });
+// Readback of everything App Review and the release depend on, from the version itself.
+await tryStep('version in review: build, review submission, release setting', async () => {
+  const v = (await api('GET', `/v1/apps/${snap.app.id}/appStoreVersions?limit=5`)).data.find((x) => x.attributes.platform === 'IOS');
+  const b = (await api('GET', `/v1/appStoreVersions/${v.id}/build`)).data;
+  const subs = (await api('GET', `/v1/reviewSubmissions?filter[app]=${snap.app.id}&filter[platform]=IOS&limit=10`)).data;
+  const open = subs.filter((r) => !['COMPLETE', 'CANCELING'].includes(r.attributes.state)).map((r) => `${r.attributes.state}${r.attributes.submittedDate ? ` since ${String(r.attributes.submittedDate).slice(0, 16)}` : ''}`);
+  return `${v.attributes.versionString} ${v.attributes.appStoreState}; build ${b?.attributes?.version} (${b?.attributes?.processingState}, non-exempt encryption ${b?.attributes?.usesNonExemptEncryption}); review submissions: ${open.join(' | ') || 'none open'}; releaseType ${v.attributes.releaseType}${v.attributes.earliestReleaseDate ? ` earliest ${v.attributes.earliestReleaseDate}` : ''}; downloadable ${v.attributes.downloadable ?? '?'}`;
+});
+await tryStep('price', async () => {
+  const r = await api('GET', `/v1/appPriceSchedules/${snap.app.id}/manualPrices?include=appPricePoint&limit=5`);
+  const pt = (r.included || []).find((x) => x.type === 'appPricePoints');
+  const base = await api('GET', `/v1/appPriceSchedules/${snap.app.id}/baseTerritory`).then((x) => x.data?.id, () => '?');
+  return `${pt ? `${pt.attributes.customerPrice} (base territory ${base})` : 'NO MANUAL PRICE'}`;
+});
+await tryStep('age rating declaration', async () => {
+  const info = (await api('GET', `/v1/apps/${snap.app.id}/appInfos`)).data[0];
+  const d = (await api('GET', `/v1/appInfos/${info.id}/ageRatingDeclaration`)).data.attributes;
+  const OPTIONAL = new Set(['kidsAgeBand', 'ageRatingOverride', 'ageRatingOverrideV2', 'koreaAgeRatingOverride', 'developerAgeRatingInfoUrl', 'gracRatingClassificationNumber']);
+  const missing = Object.keys(d).filter((k) => d[k] === null && !OPTIONAL.has(k));
+  return `${missing.length ? `INCOMPLETE: ${missing.join(', ')}` : 'complete'}; app info state ${info.attributes.appStoreState || info.attributes.state}; age ${info.attributes.appStoreAgeRating || '?'}`;
+});
+await tryStep('App Privacy', async () => {
+  const st = await api('GET', `/v1/apps/${snap.app.id}/dataUsagePublishState`).then((r) => r.data?.attributes, (e) => ({ err: e.status }));
+  return st.err ? `not readable with this API key (${st.err}) — the submission was accepted, which requires published answers` : `published ${st.published}`;
+});
+await tryStep('App Store listing (en-US) for the version', async () => {
+  const v = (await api('GET', `/v1/apps/${snap.app.id}/appStoreVersions?limit=5`)).data.find((x) => x.attributes.platform === 'IOS');
+  const loc = (await api('GET', `/v1/appStoreVersions/${v.id}/appStoreVersionLocalizations?limit=10`)).data.find((l) => l.attributes.locale === 'en-US');
+  const sets = (await api('GET', `/v1/appStoreVersionLocalizations/${loc.id}/appScreenshotSets?limit=20`)).data;
+  const counts = [];
+  for (const set of sets) counts.push(`${set.attributes.screenshotDisplayType} ${(await api('GET', `/v1/appScreenshotSets/${set.id}/appScreenshots?limit=20`)).data.length}`);
+  return `description ${loc.attributes.description?.length || 0} chars, keywords ${loc.attributes.keywords ? 'set' : 'MISSING'}, support ${loc.attributes.supportUrl || 'MISSING'}; screenshots ${counts.join(', ') || 'NONE'}`;
+});
+await tryStep('App Review details on the version', async () => {
+  const v = (await api('GET', `/v1/apps/${snap.app.id}/appStoreVersions?limit=5`)).data.find((x) => x.attributes.platform === 'IOS');
+  const rd = (await api('GET', `/v1/appStoreVersions/${v.id}/appStoreReviewDetail`)).data.attributes;
+  const ok = rd.demoAccountName && rd.demoAccountPassword ? await siteSignIn(rd.demoAccountName, rd.demoAccountPassword) : null;
+  return `contact ${rd.contactEmail && rd.contactPhone ? 'set' : 'MISSING'}, demo required ${rd.demoAccountRequired}, demo login ${maskEmail(rd.demoAccountName)} → ${ok === 200 ? 'signs in' : `DOES NOT SIGN IN (${ok})`}, notes ${rd.notes ? `${rd.notes.length} chars, mentions GPS photos: ${/GPS location stamping on photos/.test(rd.notes)}` : 'MISSING'}`;
+});
 if (MODE === 'status') process.exit(0);
 
 // availability: put the app on sale in the territories listed in
