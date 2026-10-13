@@ -63,17 +63,32 @@ export function invoiceIsPayable(inv: Pick<PayableInvoice, 'direction' | 'status
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
 type Db = any;
 
+/**
+ * Ready means Stripe will take the owner's payment AND pay it out to the
+ * company's bank, with nothing overdue: charges_enabled alone let an account
+ * whose payouts were held (or with past-due requirements) show as ready.
+ * `due` lists what Stripe still needs, overdue items first.
+ */
+export function accountReadiness(acct: {
+  charges_enabled?: boolean | null; payouts_enabled?: boolean | null;
+  requirements?: { past_due?: string[] | null; currently_due?: string[] | null; disabled_reason?: string | null } | null;
+}): { ready: boolean; due: string[] } {
+  const pastDue = acct.requirements?.past_due ?? [];
+  const ready = !!acct.charges_enabled && !!acct.payouts_enabled && !pastDue.length && !acct.requirements?.disabled_reason;
+  return { ready, due: [...new Set([...pastDue, ...(acct.requirements?.currently_due ?? [])])] };
+}
+
 /** The company's connected account, refreshed from Stripe when asked. */
 export async function companyPaymentAccount(db: Db, tenantId: string, refresh = false): Promise<{ accountId: string | null; ready: boolean; due: string[] }> {
   const { data: t } = await db.from('tenants').select('stripe_connect_account_id, online_payments_ready').eq('id', tenantId).maybeSingle();
   const accountId: string | null = t?.stripe_connect_account_id ?? null;
   if (!accountId || !refresh || !onlinePaymentsConfigured()) return { accountId, ready: !!t?.online_payments_ready && onlinePaymentsConfigured(), due: [] };
   const acct = await stripeClient().accounts.retrieve(accountId);
-  const ready = !!acct.charges_enabled;
+  const { ready, due } = accountReadiness(acct);
   if (ready !== !!t?.online_payments_ready) {
     await db.from('tenants').update({ online_payments_ready: ready }).eq('id', tenantId);
   }
-  return { accountId, ready, due: acct.requirements?.currently_due ?? [] };
+  return { accountId, ready, due };
 }
 
 /** Start (or continue) Stripe onboarding for a company. Returns the URL to send the admin to. */

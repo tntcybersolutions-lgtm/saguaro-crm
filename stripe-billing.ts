@@ -68,8 +68,11 @@ function resend(): Resend | null {
   return new Resend(process.env.RESEND_API_KEY);
 }
 
-const FROM    = process.env.EMAIL_FROM    ?? 'Saguaro CRM <noreply@mail.saguarocrm.com>';
-const APP_URL = process.env.NEXT_PUBLIC_APP_URL ?? 'https://app.saguarocrm.com';
+// Fallbacks are the live, Resend-verified domain (lib/email.ts): the old
+// saguarocrm.com defaults put dead links and an unverified sender in every
+// billing email whenever these were unset.
+const FROM    = process.env.EMAIL_FROM    || 'Saguaro Control Systems <noreply@saguarocontrol.net>';
+const APP_URL = process.env.NEXT_PUBLIC_APP_URL || 'https://www.saguarocontrol.net';
 
 // ─────────────────────────────────────────────────────────────────────────────
 // Helper: CORS-OK JSON response

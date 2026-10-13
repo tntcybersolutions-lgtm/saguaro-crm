@@ -1,29 +1,25 @@
 /**
- * Online payments — what the owner may pay, and how much.
+ * When a company's Stripe account counts as ready to take online payments.
  * Run: npx -y tsx lib/online-payments.sanity.test.ts   (exit 0 = every assertion held)
  */
-import { invoiceBalanceCents, invoiceIsPayable } from './online-payments';
+import { accountReadiness } from './online-payments';
 
 let failed = 0;
 function check(name: string, cond: boolean, detail = '') {
   if (cond) console.log(`ok   ${name}`);
   else { failed++; console.error(`FAIL ${name}${detail ? ' — ' + detail : ''}`); }
 }
-const open = { direction: 'receivable', status: 'sent', amount: '1000', tax: '82.50', total: '1082.50', paid_amount: null };
 
-check('balance = total − paid, in cents', invoiceBalanceCents(open) === 108250);
-check('stale 0 total falls back to amount + tax', invoiceBalanceCents({ ...open, total: '0' }) === 108250);
-check('partly paid', invoiceBalanceCents({ ...open, paid_amount: '500' }) === 58250);
-check('overpaid never goes negative', invoiceBalanceCents({ ...open, paid_amount: '5000' }) === 0);
-check('open owner invoice is payable', invoiceIsPayable(open));
-check('a vendor / sub bill is NEVER payable by the owner', !invoiceIsPayable({ ...open, direction: 'payable' }));
-check('missing direction is not payable', !invoiceIsPayable({ ...open, direction: null }));
-check('draft is not payable', !invoiceIsPayable({ ...open, status: 'draft' }));
-check('paid is not payable', !invoiceIsPayable({ ...open, status: 'Paid' }));
-check('void is not payable', !invoiceIsPayable({ ...open, status: 'void' }));
-check('nothing owed is not payable', !invoiceIsPayable({ ...open, paid_amount: '1082.50' }));
-check('under Stripe\'s 50¢ minimum is not payable', !invoiceIsPayable({ ...open, total: '0.40', amount: '0.40', tax: '0' }));
-check('partially paid stays payable', invoiceIsPayable({ ...open, status: 'partially_paid', paid_amount: '82.50' }));
+const ok = { charges_enabled: true, payouts_enabled: true, requirements: { past_due: [], currently_due: [], disabled_reason: null } };
+check('charges + payouts on, nothing due → ready', accountReadiness(ok).ready === true);
+check('payouts held → not ready', accountReadiness({ ...ok, payouts_enabled: false }).ready === false);
+check('charges off → not ready', accountReadiness({ ...ok, charges_enabled: false }).ready === false);
+check('past-due requirement → not ready', accountReadiness({ ...ok, requirements: { past_due: ['external_account'], currently_due: [] } }).ready === false);
+check('disabled by Stripe → not ready', accountReadiness({ ...ok, requirements: { disabled_reason: 'requirements.past_due' } }).ready === false);
+check('currently due only (not yet overdue) → still ready', accountReadiness({ ...ok, requirements: { past_due: [], currently_due: ['individual.ssn_last_4'] } }).ready === true);
+const d = accountReadiness({ charges_enabled: false, payouts_enabled: false, requirements: { past_due: ['a', 'b'], currently_due: ['b', 'c'] } }).due;
+check('due lists overdue first, no repeats', JSON.stringify(d) === '["a","b","c"]', JSON.stringify(d));
+check('missing requirements → not ready, nothing due', JSON.stringify(accountReadiness({})) === '{"ready":false,"due":[]}');
 
-if (failed) { console.error(`\n${failed} failed`); process.exit(1); }
-console.log('\nall passed');
+if (failed) { console.error(`${failed} failed`); process.exit(1); }
+console.log('all passed');
