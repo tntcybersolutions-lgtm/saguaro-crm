@@ -8,6 +8,7 @@ on:
   push:
     branches: [ops/testflight]
     paths: ['tools/stripe-verify.mjs', '.github/workflows/stripe-verify.yml']
+  workflow_dispatch:
 
 permissions:
   contents: write
