@@ -392,7 +392,13 @@ export type Action = {
 /** The ⋯ overflow menu. Rendered in a portal with fixed positioning so a
  *  scrolling table or card can never clip it; flips upward near the bottom of
  *  the viewport. Closes on outside click, Escape, scroll and resize. */
-export function Menu({ actions, label = 'More actions' }: { actions: Action[]; label?: string }) {
+export function Menu({ actions, label = 'More actions', triggerLabel, triggerIcon }: {
+  actions: Action[];
+  label?: string;
+  /** A labelled trigger ("Tools & help") instead of the ⋯ icon. */
+  triggerLabel?: string;
+  triggerIcon?: React.ReactNode;
+}) {
   const [pos, setPos] = React.useState<{ top?: number; bottom?: number; right: number } | null>(null);
   const btnRef = React.useRef<HTMLDivElement>(null);
   const listRef = React.useRef<HTMLDivElement>(null);
@@ -433,7 +439,9 @@ export function Menu({ actions, label = 'More actions' }: { actions: Action[]; l
 
   return (
     <div className="k-menu" ref={btnRef} onClick={(e) => e.stopPropagation()}>
-      <Button variant="ghost" size="sm" icon={<DotsThree size={18} weight="bold" />} aria-label={label} title={label} aria-haspopup="menu" aria-expanded={open} onClick={toggle} />
+      {triggerLabel
+        ? <Button size="sm" icon={triggerIcon} aria-haspopup="menu" aria-expanded={open} onClick={toggle}>{triggerLabel}</Button>
+        : <Button variant="ghost" size="sm" icon={<DotsThree size={18} weight="bold" />} aria-label={label} title={label} aria-haspopup="menu" aria-expanded={open} onClick={toggle} />}
       {open && createPortal(
         <div className="k-menu-list" role="menu" ref={listRef} style={{ position: 'fixed', top: pos.top, bottom: pos.bottom, right: pos.right }} onClick={(e) => e.stopPropagation()}>
           {actions.map((a, i) => (

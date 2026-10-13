@@ -8,7 +8,13 @@
  * one full-width list (project / drawing, status, updated, Open / Continue).
  * Upload Blueprint reveals the drop zone; an account with no takeoffs gets the
  * drop zone as its empty state. Opening a takeoff shows its estimate full
- * width, with a way back to the list. The estimate is labeled as an AI
+ * width, with a way back to the list. On a phone the tools and help sit in
+ * one "Tools & help" menu beside Upload Blueprint.
+ *
+ * Only a complete takeoff has an estimate. One that was never analyzed is
+ * "Not analyzed" and its action is the step the API supports: Continue (or
+ * Retry after a failure) runs /api/takeoff/[id]/analyze on the stored
+ * drawing; without a stored drawing it is Re-upload, into the same record. The estimate is labeled as an AI
  * estimate everywhere its figures appear; nothing here invents a number —
  * every cell is what the analysis wrote.
  *
@@ -22,11 +28,11 @@
 import React, { useState, useEffect, useRef, useCallback, useMemo } from 'react';
 import { useProjects } from '@/lib/hooks/useProjects';
 import {
-  CurrencyDollar, Ruler, Stack, Check, Lightbulb, ChartBar, Question,
+  CurrencyDollar, Ruler, Stack, Check, Lightbulb, ChartBar, Question, Toolbox,
   Sparkle, CheckCircle, UploadSimple, DownloadSimple, ListChecks, CaretRight, CaretLeft, Warning,
 } from '@phosphor-icons/react';
 import {
-  PageShell, Card, StatRow, Badge, Button, DataTable, EmptyState, Tabs, Select, Input, Field, Toolbar,
+  PageShell, Card, StatRow, Badge, Button, DataTable, EmptyState, Tabs, Select, Input, Field, Toolbar, Menu,
   type Column, type BadgeTone, type StatItem,
 } from '@/components/ui/kit';
 import { divColor, divName } from '@/lib/takeoff/divisions';
@@ -53,6 +59,8 @@ interface Takeoff {
   building_type: string; summary: string; project_name_detected: string;
   contingency_pct: number; recommendations: string[];
   file_name: string; created_at: string; analyzed_at: string;
+  /* Where the drawing is stored — present once an upload finished. */
+  storage_path?: string | null; file_url?: string | null;
   materials?: TakeoffMaterial[];
 }
 
@@ -80,13 +88,28 @@ function confidenceColor(c: number): 'green' | 'amber' | 'red' {
 }
 const RING_CSS = { green: 'var(--status-ongoing)', amber: 'var(--status-under-contract)', red: 'var(--status-overdue)' } as const;
 
-/** Takeoff status → badge: complete green, analyzing blue, uploaded amber, failed red, pending grey. */
+/** Takeoff status → badge: complete green, analyzing blue, not analyzed amber, failed red. */
 function statusBadge(s: string): { label: string; tone: BadgeTone } {
   if (s === 'complete') return { label: 'Complete', tone: 'ongoing' };
   if (s === 'analyzing') return { label: 'Analyzing', tone: 'lead' };
-  if (s === 'uploaded') return { label: 'Uploaded', tone: 'under_contract' };
   if (s === 'failed') return { label: 'Failed', tone: 'overdue' };
-  return { label: 'Pending', tone: 'closed' };
+  return { label: 'Not analyzed', tone: 'under_contract' }; // uploaded / pending
+}
+
+type NextStep = 'open' | 'analyze' | 'reupload' | 'refresh';
+/** What a takeoff's one action does. Only a complete takeoff has results to
+ *  open; the rest get the step /api/takeoff/[id]/analyze supports. */
+function nextStep(t: Takeoff): { kind: NextStep; label: string } {
+  if (t.status === 'complete') return { kind: 'open', label: 'Open' };
+  if (t.status === 'analyzing') return { kind: 'refresh', label: 'Refresh' };
+  if (t.storage_path || t.file_url) return { kind: 'analyze', label: t.status === 'failed' ? 'Retry' : 'Continue' };
+  return { kind: 'reupload', label: 'Re-upload' };
+}
+/** The honest sentence for a takeoff with no results yet. */
+function notAnalyzedText(t: Takeoff): string {
+  if (t.status === 'analyzing') return 'The analysis is still running. Refresh in a minute to see the results.';
+  if (t.status === 'failed') return (t.storage_path || t.file_url) ? 'The last analysis did not finish. Retry runs it again on the stored drawing.' : 'The last analysis did not finish and no drawing is stored. Re-upload the drawing to analyze it.';
+  return (t.storage_path || t.file_url) ? 'The drawing is uploaded but has not been analyzed yet, so there is no estimate. Continue runs the analysis.' : 'No drawing finished uploading for this takeoff, so there is nothing to analyze. Re-upload the drawing.';
 }
 
 // Group materials by CSI division (first 2 chars of csi_code)
@@ -181,6 +204,12 @@ const CSS = `
 .tkPanelFoot { display: flex; justify-content: flex-end; margin-top: 12px; }
 .tkName { display: flex; flex-direction: column; min-width: 0; }
 .tkName span { font-size: var(--fs-xs); color: var(--text-tertiary); overflow: hidden; text-overflow: ellipsis; white-space: nowrap; font-weight: 400; }
+.tkName .tkPhoneMeta, .tkPhoneOnly { display: none; }
+@media (max-width: 767px) {
+  .tkPhoneOnly { display: inline-flex; }
+  .tkDeskOnly { display: none; }
+  .tkName .tkPhoneMeta { display: block; color: var(--text-secondary); }
+}
 .tkStack { display: flex; flex-direction: column; gap: 12px; }
 .tkMuted { color: var(--text-tertiary); font-size: var(--fs-xs); }
 .tkFileName { color: var(--text-primary); font-weight: 600; word-break: break-all; }
@@ -286,6 +315,8 @@ export default function TakeoffPage() {
   const [uploadOpen, setUploadOpen] = useState(false);
   const [summaryOpen, setSummaryOpen] = useState(false);
   const [howOpen, setHowOpen] = useState(false);
+  /** The record a Re-upload goes into (the next chosen file lands there). */
+  const [reuploadTarget, setReuploadTarget] = useState<Takeoff | null>(null);
 
   const fileInputRef = useRef<HTMLInputElement>(null);
   const evtSourceRef = useRef<EventSource | null>(null); // live SSE, torn down on unmount
@@ -382,6 +413,12 @@ export default function TakeoffPage() {
       setPhase('error');
       return;
     }
+    if (reuploadTarget) {
+      const t = reuploadTarget;
+      setReuploadTarget(null);
+      void startUpload(file, t.project_id, t.id);
+      return;
+    }
     setPendingFile(file);
     setPhase('project-select');
   }
@@ -396,6 +433,7 @@ export default function TakeoffPage() {
     if (typeof window !== 'undefined') window.scrollTo({ top: 0, behavior: 'smooth' });
     setProgress({ pct: 0, message: '', step: 0 });
     setErrorMsg('');
+    setReuploadTarget(null);
     setUploadOpen(true);
   }
 
@@ -434,21 +472,30 @@ export default function TakeoffPage() {
     }
   }
 
-  async function startUpload(file: File, projectId: string) {
+  /** Upload a drawing and analyze it. `existingId` uploads into that record
+   *  (Re-upload) instead of creating a new one. */
+  async function startUpload(file: File, projectId: string, existingId?: string) {
     setPhase('uploading');
-    setProgress({ pct: 5, message: 'Creating takeoff record…', step: 1 });
+    setProgress({ pct: 5, message: existingId ? 'Preparing the upload…' : 'Creating takeoff record…', step: 1 });
     setErrorMsg('');
+    setSelectedTakeoff(null);
+    if (typeof window !== 'undefined') window.scrollTo({ top: 0, behavior: 'smooth' });
 
     try {
-      // 1. Create takeoff record
-      const createRes = await fetch('/api/takeoff/create', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ projectId }),
-      });
-      const createJson = await createRes.json();
-      if (!createRes.ok) throw new Error(createJson.error || 'Failed to create takeoff');
-      const takeoffId: string = createJson.data.id;
+      // 1. Create takeoff record (unless re-uploading into one)
+      let takeoffId: string;
+      if (existingId) {
+        takeoffId = existingId;
+      } else {
+        const createRes = await fetch('/api/takeoff/create', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ projectId }),
+        });
+        const createJson = await createRes.json();
+        if (!createRes.ok) throw new Error(createJson.error || 'Failed to create takeoff');
+        takeoffId = createJson.data.id;
+      }
 
       /* 2. Upload the bytes straight to storage — a serverless function will
             not take a body over 4.5 MB, and a real drawing set is far bigger.
@@ -486,59 +533,89 @@ export default function TakeoffPage() {
       const uploadJson = await doneRes.json().catch(() => ({}));
       if (!doneRes.ok) throw new Error(uploadJson.error || 'Upload failed');
 
-      // 3. Analyze via SSE
-      setPhase('analyzing');
-      setProgress({ pct: 25, message: 'AI is reading your blueprint…', step: 3 });
-
-      await new Promise<void>((resolve, reject) => {
-        const evtSource = new EventSource(`/api/takeoff/${takeoffId}/analyze`);
-        evtSourceRef.current = evtSource;
-        let sseResolved = false;
-
-        // Watchdog: if the stream goes silent for 90s (server stall) tear it down and
-        // fail cleanly instead of leaving the UI stuck on "analyzing" forever.
-        let watchdog: ReturnType<typeof setTimeout>;
-        const finish = (fn: () => void) => { sseResolved = true; clearTimeout(watchdog); evtSource.close(); evtSourceRef.current = null; fn(); };
-        const armWatchdog = () => {
-          clearTimeout(watchdog);
-          watchdog = setTimeout(() => { if (!sseResolved) finish(() => reject(new Error('Analysis timed out. Please try again.'))); }, 90_000);
-        };
-        armWatchdog();
-
-        evtSource.onmessage = (e) => {
-          try {
-            const evt = JSON.parse(e.data);
-            if (evt.event === 'progress') {
-              armWatchdog();
-              setProgress({ pct: evt.pct, message: evt.message, step: evt.step });
-            } else if (evt.event === 'result' || evt.event === 'done') {
-              finish(resolve);
-            } else if (evt.event === 'error') {
-              finish(() => reject(new Error(evt.message)));
-            }
-          } catch {
-            // ignore parse errors
-          }
-        };
-
-        evtSource.onerror = () => {
-          // Natural SSE stream close fires onerror — only reject if we never got a result.
-          if (!sseResolved) finish(() => reject(new Error('Connection lost during analysis. Please try again.')));
-          else finish(() => {});
-        };
-      });
-
-      // 4. Reload list and select new takeoff
-      setPhase('done');
-      setProgress({ pct: 100, message: 'Complete', step: 8 });
-      await loadTakeoffs();
-      await loadDetail(takeoffId);
-
+      await runAnalysis(takeoffId);
     } catch (err: unknown) {
       console.error(err);
       setErrorMsg(humanError(err, 'Analysis failed. Please try again.'));
       setPhase('error');
     }
+  }
+
+  /** Continue / Retry: analyze a takeoff whose drawing is already stored. */
+  async function continueTakeoff(t: Takeoff) {
+    setReuploadTarget(null);
+    setPendingFile(null);
+    setSelectedTakeoff(null);
+    setErrorMsg('');
+    setUploadOpen(true);
+    if (typeof window !== 'undefined') window.scrollTo({ top: 0, behavior: 'smooth' });
+    try {
+      await runAnalysis(t.id);
+    } catch (err: unknown) {
+      console.error(err);
+      setErrorMsg(humanError(err, 'Analysis failed. Please try again.'));
+      setPhase('error');
+    }
+  }
+
+  /** The analysis stream (/api/takeoff/[id]/analyze), then the results. */
+  async function runAnalysis(takeoffId: string) {
+    // 3. Analyze via SSE
+    setPhase('analyzing');
+    setProgress({ pct: 25, message: 'AI is reading your blueprint…', step: 3 });
+
+    await new Promise<void>((resolve, reject) => {
+      const evtSource = new EventSource(`/api/takeoff/${takeoffId}/analyze`);
+      evtSourceRef.current = evtSource;
+      let sseResolved = false;
+
+      // Watchdog: if the stream goes silent for 90s (server stall) tear it down and
+      // fail cleanly instead of leaving the UI stuck on "analyzing" forever.
+      let watchdog: ReturnType<typeof setTimeout>;
+      const finish = (fn: () => void) => { sseResolved = true; clearTimeout(watchdog); evtSource.close(); evtSourceRef.current = null; fn(); };
+      const armWatchdog = () => {
+        clearTimeout(watchdog);
+        watchdog = setTimeout(() => { if (!sseResolved) finish(() => reject(new Error('Analysis timed out. Please try again.'))); }, 90_000);
+      };
+      armWatchdog();
+
+      evtSource.onmessage = (e) => {
+        try {
+          const evt = JSON.parse(e.data);
+          if (evt.event === 'progress') {
+            armWatchdog();
+            setProgress({ pct: evt.pct, message: evt.message, step: evt.step });
+          } else if (evt.event === 'result' || evt.event === 'done') {
+            finish(resolve);
+          } else if (evt.event === 'error') {
+            finish(() => reject(new Error(evt.message)));
+          }
+        } catch {
+          // ignore parse errors
+        }
+      };
+
+      evtSource.onerror = () => {
+        // Natural SSE stream close fires onerror — only reject if we never got a result.
+        if (!sseResolved) finish(() => reject(new Error('Connection lost during analysis. Please try again.')));
+        else finish(() => {});
+      };
+    });
+
+    // 4. Reload list and select new takeoff
+    setPhase('done');
+    setProgress({ pct: 100, message: 'Complete', step: 8 });
+    await loadTakeoffs();
+    await loadDetail(takeoffId);
+  }
+
+  /** A row's one action. */
+  function act(t: Takeoff) {
+    const step = nextStep(t);
+    if (step.kind === 'open') void loadDetail(t.id);
+    else if (step.kind === 'analyze') void continueTakeoff(t);
+    else if (step.kind === 'refresh') void loadTakeoffs();
+    else { setReuploadTarget(t); fileInputRef.current?.click(); }
   }
 
   // ── Stats (from list) ─────────────────────────────────────────────────────
@@ -605,7 +682,7 @@ export default function TakeoffPage() {
           data-tour="takeoff-dropzone"
           className="tkDrop"
           data-over={dragOver ? 'true' : undefined}
-          onClick={() => fileInputRef.current?.click()}
+          onClick={() => { setReuploadTarget(null); fileInputRef.current?.click(); }}
           onDragOver={e => { e.preventDefault(); setDragOver(true); }}
           onDragLeave={() => setDragOver(false)}
           onDrop={e => { e.preventDefault(); setDragOver(false); const f = e.dataTransfer.files[0]; if (f) handleFile(f); }}
@@ -618,7 +695,7 @@ export default function TakeoffPage() {
           <Button
             variant={isEmpty ? 'primary' : 'secondary'}
             icon={<UploadSimple size={15} weight="bold" />}
-            onClick={e => { e.stopPropagation(); fileInputRef.current?.click(); }}
+            onClick={e => { e.stopPropagation(); setReuploadTarget(null); fileInputRef.current?.click(); }}
           >
             {isEmpty ? 'Upload Blueprint' : 'Choose a file'}
           </Button>
@@ -710,6 +787,26 @@ export default function TakeoffPage() {
           <div style={{ flex: 1, background: 'none' }}><div style={{ width: '45%', height: 18, marginBottom: 10 }} /><div style={{ width: '65%', height: 12 }} /></div>
         </div>
         {[0, 1, 2].map(i => <div key={i} style={{ height: 44, marginBottom: 8 }} />)}
+      </div>
+    );
+  } else if (selectedTakeoff && selectedTakeoff.status !== 'complete') {
+    const t = selectedTakeoff;
+    const b = statusBadge(t.status);
+    const step = nextStep(t);
+    resultView = (
+      <div className="tkResult">
+        <div className="tkActionRow">
+          <div>
+            <Button variant="ghost" size="sm" icon={<CaretLeft size={14} weight="bold" />} onClick={closeResult}>All takeoffs</Button>
+            <Badge tone={b.tone} dot>{b.label}</Badge>
+          </div>
+        </div>
+        <Card title={t.project_name || t.name || 'Untitled'} subtitle={t.file_name || undefined}>
+          <p className="tkProse">{notAnalyzedText(t)}</p>
+          <div className="tkPanelFoot" style={{ justifyContent: 'flex-start' }}>
+            <Button variant="primary" onClick={() => act(t)}>{step.label}</Button>
+          </div>
+        </Card>
       </div>
     );
   } else if (selectedTakeoff) {
@@ -850,10 +947,18 @@ export default function TakeoffPage() {
     {
       key: 'name', header: 'Project / drawing', primary: true,
       accessor: t => (t.project_name || t.name || '').toLowerCase(),
-      render: t => <span className="tkName"><b>{t.project_name || t.name || 'Untitled'}</b>{t.file_name && <span title={t.file_name}>{t.file_name}</span>}</span>,
+      sortable: false,
+      render: t => (
+        <span className="tkName">
+          <b>{t.project_name || t.name || 'Untitled'}</b>
+          {t.file_name && <span title={t.file_name}>{t.file_name}</span>}
+          {/* On a phone the status and date ride here, so a record is two lines and its action. */}
+          <span className="tkPhoneMeta">{statusBadge(t.status).label} · {fmtDate(updatedOf(t))}</span>
+        </span>
+      ),
     },
-    { key: 'status', header: 'Status', phone: 'show', accessor: t => t.status, render: t => { const b = statusBadge(t.status); return <Badge tone={b.tone}>{b.label}</Badge>; } },
-    { key: 'updated', header: 'Updated', phone: 'show', accessor: t => new Date(updatedOf(t)).getTime() || 0, render: t => <span className="tkMuted">{fmtDate(updatedOf(t))}</span> },
+    { key: 'status', header: 'Status', phone: 'hide', sortable: false, accessor: t => t.status, render: t => { const b = statusBadge(t.status); return <Badge tone={b.tone}>{b.label}</Badge>; } },
+    { key: 'updated', header: 'Updated', phone: 'hide', sortable: false, accessor: t => new Date(updatedOf(t)).getTime() || 0, render: t => <span className="tkMuted">{fmtDate(updatedOf(t))}</span> },
   ];
 
   const tools = (
@@ -878,13 +983,30 @@ export default function TakeoffPage() {
         crumbs={[{ label: 'Home', href: '/app' }, { label: 'Takeoff Studio' }]}
         title="Takeoff Studio"
         subtitle="Upload a blueprint for an AI-priced takeoff, or open one to continue."
-        actions={!isEmpty && !viewing
-          ? <Button variant="primary" icon={<UploadSimple size={15} weight="bold" />} onClick={resetUpload}>Upload Blueprint</Button>
-          : undefined}
+        actions={viewing ? undefined : (
+          <>
+            {!isEmpty && <Button variant="primary" icon={<UploadSimple size={15} weight="bold" />} onClick={resetUpload}>Upload Blueprint</Button>}
+            {/* Phone: the tools and help in one menu, so the list starts high. */}
+            <span className="tkPhoneOnly">
+              <Menu
+                label="Tools & help"
+                triggerLabel="Tools & help"
+                triggerIcon={<Toolbox size={15} weight="bold" />}
+                actions={[
+                  { label: 'Measured Takeoff', href: '/app/takeoff/measured', icon: <Ruler size={15} /> },
+                  { label: 'Assembly Library', href: '/app/takeoff/assemblies', icon: <Stack size={15} /> },
+                  { label: 'Cost Rates', href: '/app/takeoff/rates', icon: <CurrencyDollar size={15} /> },
+                  ...(takeoffs.length > 0 ? [{ label: summaryOpen ? 'Hide summary' : 'Summary', icon: <ChartBar size={15} />, onClick: () => setSummaryOpen(v => !v) }] : []),
+                  { label: howOpen ? 'Hide how it works' : 'How it works', icon: <Question size={15} />, onClick: () => setHowOpen(v => !v) },
+                ]}
+              />
+            </span>
+          </>
+        )}
       >
         {viewing ? resultView : (
           <>
-            <Toolbar filters={tools} actions={toggles} />
+            <div className="tkDeskOnly"><Toolbar filters={tools} actions={toggles} /></div>
 
             {howOpen && (
               <Card title="How it works" subtitle="An example of what an analysis returns. Every figure is the AI's reading of your plan; check it before it goes in a bid.">
@@ -929,15 +1051,16 @@ export default function TakeoffPage() {
             )}
 
             {!isEmpty && (
-              <Card title="Your takeoffs" subtitle={!loadingList ? `${takeoffs.length} on file, newest first. Open one to see its estimate.` : undefined} flush>
+              <Card title="Your takeoffs" subtitle={!loadingList ? `${takeoffs.length} on file, newest first.` : undefined} flush>
                 <DataTable
                   columns={listColumns}
                   rows={takeoffs}
                   rowKey={t => t.id}
                   loading={loadingList}
                   defaultSort={{ key: 'updated', dir: 'desc' }}
-                  onRowClick={t => void loadDetail(t.id)}
-                  rowActions={t => [{ label: t.status === 'complete' ? 'Open' : 'Continue', inline: true, onClick: () => void loadDetail(t.id) }]}
+                  /* A tap on a complete row opens it; an analysis never starts from a stray tap. */
+                  onRowClick={t => { if (t.status === 'complete') void loadDetail(t.id); }}
+                  rowActions={t => [{ label: nextStep(t).label, inline: true, onClick: () => act(t) }]}
                 />
               </Card>
             )}

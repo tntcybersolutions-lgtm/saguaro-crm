@@ -1177,6 +1177,8 @@ button.k-stat[aria-pressed="true"] { box-shadow: inset 0 -2px 0 var(--brand-prim
 .k-menu { position: relative; display: inline-flex; }
 .k-menu-list { position: fixed; z-index: 10002; /* portal'd to body — above modals and the chat widget */ min-width: 180px; padding: 4px; background: var(--bg-elevated); border: 1px solid var(--border-default); border-radius: var(--radius-md); box-shadow: var(--shadow-lg); }
 .k-menu-item { all: unset; box-sizing: border-box; display: flex; align-items: center; gap: 8px; width: 100%; min-height: 36px; padding: 8px 10px; border-radius: 8px; font-size: var(--fs-md); color: var(--text-secondary); cursor: pointer; white-space: nowrap; }
+/* A finger needs 44px; the menu list is portaled outside the page, so it says so itself. */
+@media (pointer: coarse) { .k-menu-item { min-height: 44px; } }
 .k-menu-item:hover, .k-menu-item:focus-visible { background: rgba(148,163,184,0.14); color: var(--text-primary); }
 .k-menu-item[data-tone="danger"] { color: var(--danger); }
 .k-menu-item[data-tone="danger"]:hover { background: rgba(248,113,113,0.14); }
