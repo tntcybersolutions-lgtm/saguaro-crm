@@ -27,7 +27,7 @@ const WHATS_NEW =
   'Sign in with your Saguaro account. Daily logs, photos, time clock, punch list, change orders, takeoffs and more.';
 
 const MODE = process.argv[2] || 'status';
-if (!['status', 'distribute', 'appstore', 'appstore-submit', 'appstore-meta', 'diagnose', 'demo-reset', 'privacy', 'internal-testers'].includes(MODE)) {
+if (!['status', 'distribute', 'appstore', 'appstore-submit', 'appstore-meta', 'availability', 'diagnose', 'demo-reset', 'privacy', 'internal-testers'].includes(MODE)) {
   console.error(`Unknown mode "${MODE}" — use status, distribute, appstore or appstore-submit`);
   process.exit(2);
 }
@@ -349,6 +349,55 @@ await tryStep('release after approval', async () => {
   return v ? `${v.attributes.versionString}: ${v.attributes.appStoreState}, release ${v.attributes.releaseType}${v.attributes.earliestReleaseDate ? `, not before ${v.attributes.earliestReleaseDate}` : ''}` : 'no version';
 });
 if (MODE === 'status') process.exit(0);
+
+// availability: put the app on sale in the territories listed in
+// tools/asc-territories.txt (default USA) once Apple approves it. The app had
+// no availability record at all, so an approved build would be on sale nowhere.
+// Creates the record when missing; adds missing territories when it exists.
+if (MODE === 'availability') {
+  const want = (existsSync('tools/asc-territories.txt') ? readFileSync('tools/asc-territories.txt', 'utf8') : 'USA')
+    .split(/[\s,]+/).map((x) => x.trim().toUpperCase()).filter(Boolean);
+  const id = snap.app.id;
+  const current = await api('GET', `/v1/apps/${id}/appAvailabilityV2`).then((r) => r.data, (e) => (e.status === 404 ? null : Promise.reject(e)));
+  if (!current) {
+    await tryStep(`create availability: ${want.join(', ')} (new territories: no)`, async () => {
+      const r = await api('POST', '/v2/appAvailabilities', {
+        data: { type: 'appAvailabilities', attributes: { availableInNewTerritories: false },
+          relationships: { app: { data: { type: 'apps', id } },
+            territoryAvailabilities: { data: want.map((t) => ({ type: 'territoryAvailabilities', id: `\${${t}}` })) } } },
+        included: want.map((t) => ({ type: 'territoryAvailabilities', id: `\${${t}}`,
+          attributes: { available: true, preOrderEnabled: false },
+          relationships: { territory: { data: { type: 'territories', id: t } } } })),
+      });
+      return `created ${r.data?.id || ''}`.trim();
+    });
+  } else {
+    console.log(`  availability exists (${current.id}), new territories automatically: ${current.attributes.availableInNewTerritories}`);
+    const have = new Map();
+    for (let next = `/v2/appAvailabilities/${current.id}/territoryAvailabilities?limit=200&include=territory`; next;) {
+      const page = await api('GET', next);
+      for (const t of page.data) have.set(t.relationships?.territory?.data?.id, t);
+      next = page.links?.next?.replace('https://api.appstoreconnect.apple.com', '');
+    }
+    for (const t of want) {
+      const ta = have.get(t);
+      if (ta?.attributes?.available) { console.log(`  ✓ ${t} already available`); continue; }
+      if (ta) await tryStep(`make ${t} available`, () => api('PATCH', `/v1/territoryAvailabilities/${ta.id}`, { data: { type: 'territoryAvailabilities', id: ta.id, attributes: { available: true } } }).then(() => 'saved'));
+      else console.log(`  ✗ ${t}: not in this app's territory list — add it in App Store Connect`);
+    }
+  }
+  await tryStep('availability now', async () => {
+    const av = (await api('GET', `/v1/apps/${id}/appAvailabilityV2`)).data;
+    const on = [];
+    for (let next = `/v2/appAvailabilities/${av.id}/territoryAvailabilities?limit=200&include=territory`; next;) {
+      const page = await api('GET', next);
+      for (const t of page.data) if (t.attributes.available) on.push(t.relationships?.territory?.data?.id);
+      next = page.links?.next?.replace('https://api.appstoreconnect.apple.com', '');
+    }
+    return `${on.length} available: ${on.slice(0, 12).join(', ')}${on.length > 12 ? '…' : ''}`;
+  });
+  process.exit(0);
+}
 
 // appstore-meta: correct the listing text and the App Review notes on the
 // version already in review, in place (no withdrawal). Apple refuses edits to
