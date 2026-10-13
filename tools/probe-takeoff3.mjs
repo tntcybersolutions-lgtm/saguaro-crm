@@ -10,6 +10,11 @@
  * is written and no AI runs. Mobile and the completed-record check passed in
  * probe-takeoff2 and are not rerun.
  *
+ * Rule for every fixture probe: block service workers, confirm a fixture
+ * answers, deny unmocked analysis / upload / create requests, and abort before
+ * clicking anything if any of the three does not hold. (Added after run
+ * 38330279957; not yet run itself.)
+ *
  *   resumed record (real, read-only): ZZ AUDIT 913731 — analyzed for real by
  *   the probe-takeoff2 Continue — shows Complete + Open and opens its real
  *   estimate · Continue on a not-analyzed record calls the analyze route for
@@ -48,13 +53,28 @@ const swControlled = (page) => page.evaluate(() => !!navigator.serviceWorker?.co
 const desktop = await pw.chromium.launch();
 try {
   const desk = await desktop.newContext({ viewport: { width: 1440, height: 900 }, deviceScaleFactor: 1, colorScheme: 'dark', serviceWorkers: 'block' });
+  // Isolation: deny every paid or writing takeoff request unless a page-level
+  // fixture answers it first (page routes take precedence over context routes).
+  await desk.route(/\/api\/takeoff\/(create|[^/]+\/(analyze|upload-url|upload-complete))|\/storage\/v1\/object\//, (route) => {
+    const r = route.request();
+    if (r.method() === 'GET' && /\/storage\/v1\/object\//.test(r.url())) return route.continue(); // reading a stored file is free
+    return route.abort('blockedbyclient');
+  });
   const gc = await desk.newPage();
+  await gc.route(/\/__probe_mock_check$/, (route) => route.fulfill({ status: 200, contentType: 'text/plain', body: 'mocked' }));
   await login(gc);
 
-  // 0. The cause is fixed: no service worker controls the page.
+  // 0. Isolation holds, or the run stops before any action: no service worker,
+  //    a page fixture answers, and an unmocked analyze request is denied.
   await open(gc, '/app/takeoff');
   const sw = await swControlled(gc);
-  check('no service worker controls the page (route fixtures apply)', !sw, sw ? 'controlled' : 'not controlled');
+  const iso = await gc.evaluate(async () => {
+    const mocked = await fetch('/__probe_mock_check').then((r) => r.text()).catch(() => null);
+    const denied = await fetch('/api/takeoff/probe-isolation/analyze').then(() => false, () => true);
+    return { mocked: mocked === 'mocked', denied };
+  }).catch(() => ({ mocked: false, denied: false }));
+  check('isolation: no service worker, fixtures answer, unmocked analyze denied', !sw && iso.mocked && iso.denied, `sw ${sw ? 'controlled' : 'none'} · fixture ${iso.mocked} · deny ${iso.denied}`);
+  if (sw || !iso.mocked || !iso.denied) throw new Error('isolation not confirmed — aborted before any action');
 
   // 1. Read-only: the record probe-takeoff2 really analyzed now opens its real estimate.
   const resumed = gc.locator('.main-content-area .k-table tbody tr', { hasText: 'ZZ AUDIT 913731' }).first();
