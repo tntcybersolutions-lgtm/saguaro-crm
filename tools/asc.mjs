@@ -360,13 +360,22 @@ if (MODE === 'availability') {
   const id = snap.app.id;
   const current = await api('GET', `/v1/apps/${id}/appAvailabilityV2`).then((r) => r.data, (e) => (e.status === 404 ? null : Promise.reject(e)));
   if (!current) {
-    await tryStep(`create availability: ${want.join(', ')} (new territories: no)`, async () => {
+    // Apple wants every territory in the first record, each on or off.
+    const all = [];
+    for (let next = '/v1/territories?limit=200'; next;) {
+      const page = await api('GET', next);
+      all.push(...page.data.map((t) => t.id));
+      next = page.links?.next?.replace('https://api.appstoreconnect.apple.com', '');
+    }
+    const missing = want.filter((t) => !all.includes(t));
+    if (missing.length) console.log(`  ✗ not App Store territories: ${missing.join(', ')}`);
+    await tryStep(`create availability: on in ${want.filter((t) => all.includes(t)).join(', ')}, off in the other ${all.length - want.filter((t) => all.includes(t)).length} (new territories: no)`, async () => {
       const r = await api('POST', '/v2/appAvailabilities', {
         data: { type: 'appAvailabilities', attributes: { availableInNewTerritories: false },
           relationships: { app: { data: { type: 'apps', id } },
-            territoryAvailabilities: { data: want.map((t) => ({ type: 'territoryAvailabilities', id: `\${${t}}` })) } } },
-        included: want.map((t) => ({ type: 'territoryAvailabilities', id: `\${${t}}`,
-          attributes: { available: true, preOrderEnabled: false },
+            territoryAvailabilities: { data: all.map((t) => ({ type: 'territoryAvailabilities', id: `\${${t}}` })) } } },
+        included: all.map((t) => ({ type: 'territoryAvailabilities', id: `\${${t}}`,
+          attributes: { available: want.includes(t), ...(want.includes(t) ? { preOrderEnabled: false } : {}) },
           relationships: { territory: { data: { type: 'territories', id: t } } } })),
       });
       return `created ${r.data?.id || ''}`.trim();
