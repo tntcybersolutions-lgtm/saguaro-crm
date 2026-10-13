@@ -8,7 +8,8 @@
  *   point): a photo added through Add Photos & Video sends that location with
  *   the upload · desktop (1440, no touch): the same upload sends no location ·
  *   desktop viewer: a stamped photo (fixture list) shows "GPS Location" with
- *   the coordinates and a maps link.
+ *   the coordinates and a maps link · the in-app price rule (app user agent →
+ *   /app; a browser still gets /pricing), which also waits for the deploy.
  */
 import fs from 'node:fs';
 import path from 'node:path';
@@ -78,6 +79,20 @@ async function addOnePhoto(page, projectId) {
 
 const browser = await pw.chromium.launch();
 try {
+  // 0. Production serves #165, and the in-app price rule holds: the app's
+  //    WebView (user agent SaguaroField/) is sent from /pricing and / to /app;
+  //    a browser still gets the pricing page. Waits up to 8 min for the deploy.
+  const api = await pw.request.newContext();
+  const UA_APP = 'Mozilla/5.0 (iPhone; CPU iPhone OS 17_0 like Mac OS X) AppleWebKit/605.1.15 (KHTML, like Gecko) Mobile/15E148 SaguaroField/1.0';
+  const UA_WEB = 'Mozilla/5.0 (iPhone; CPU iPhone OS 17_0 like Mac OS X) AppleWebKit/605.1.15 (KHTML, like Gecko) Version/17.0 Mobile/15E148 Safari/604.1';
+  const hop = async (p, ua) => { const r = await api.get(`${SITE}${p}`, { headers: { 'user-agent': ua }, maxRedirects: 0 }).catch(() => null); return r ? { status: r.status(), to: (r.headers().location || '').replace(SITE, '') } : { status: 0, to: '' }; };
+  let live = null;
+  for (let i = 0; i < 24; i++) { live = await hop('/pricing', UA_APP); if (live.status >= 300 && live.status < 400) break; await new Promise((r) => setTimeout(r, 20000)); }
+  const root = await hop('/', UA_APP);
+  const web = await hop('/pricing', UA_WEB);
+  check('in the app, /pricing and / go to /app (no plan prices); a browser still gets /pricing', live.status >= 300 && live.status < 400 && /^\/app/.test(live.to) && root.status >= 300 && /^\/app/.test(root.to) && web.status === 200, `app /pricing ${live.status}→${live.to} · app / ${root.status}→${root.to} · browser /pricing ${web.status}`);
+  await api.dispose();
+
   const { defaultBrowserType: _d, ...iphone } = pw.devices['iPhone 15'];
   const phoneCtx = await browser.newContext({ ...iphone, colorScheme: 'dark', serviceWorkers: 'block', permissions: ['geolocation'], geolocation: AT });
   const deskCtx = await browser.newContext({ viewport: { width: 1440, height: 900 }, colorScheme: 'dark', serviceWorkers: 'block', permissions: ['geolocation'], geolocation: AT });
