@@ -230,6 +230,50 @@ drawing viewer's sheet labels, customer-facing portals, print/PDF, marketing.
 - Pages and dialogs outside the runs above were changed through the shared code but not each inspected; a dialog built without an overlay or dialog role could have been missed by the source search.
 - Only the listed screens were interacted with; this was not a full-site walkthrough.
 
+## Takeoff Studio (#162, #163), 13 Oct 2026
+
+Closed as a focused UI task. Keep the layout and the incomplete-record handling.
+
+**Final commit.** Production at main `70feb5ab` (#163).
+
+| PR | Commit | Change |
+|---|---|---|
+| #162 | `54724e63` | One primary Upload Blueprint; the takeoffs are the main full-width list; tools in a toolbar; example behind "How it works"; stats collapsible; no nested scroller |
+| #163 | `70feb5ab` | Phones: tools and help in one "Tools & help" menu, list moved up. Unfinished records say "Not analyzed" with a real next step: Continue/Retry runs the analyze route for that record; Re-upload goes into the same record when no drawing is stored; Refresh while analyzing. No $0 estimate for an unfinished record |
+
+**Evidence** (encrypted bundles on `ops/testflight`, `tools/probe/`; Chromium 1440, WebKit 390 with iPhone 15 metrics):
+
+| Run | Scope | Result |
+|---|---|---|
+| 38327988983 | #162: default view, upload entry, open an existing takeoff and back, 1440 + 390 | 23/23. Cancelled before any upload; no analysis ran |
+| 38329393901 | #163: phone layout and menu; open a completed record; Continue on a not-analyzed record; no-drawing and empty-account lists (fixtures) | 8/12. The 4 fails were test isolation, not the app: the app's service worker (`public/push-sw.js`) answered `/api/*`, so the route fixtures never applied |
+| 38330279957 | The 4 failed checks rerun with service workers blocked, plus opening the record from the first run | 6/6. The database shows it wrote nothing (651618 still `uploaded`) |
+
+The phone checks passed in run 38329393901 and were not rerun: Upload
+Blueprint visible, one 44px menu holding the five items (each 44px), first
+record's action above the tab bar at 44px, no sideways scroll.
+
+**Accidental paid analysis.** In run 38329393901 Continue reached the real
+analyze route for test record ZZ AUDIT 913731. That record's drawing was
+uploaded on 10 Oct by an earlier audit. The record went `uploaded` → `complete`
+($788,276.00, 54 line items), and run 38330279957 reopened it. This proves the
+analysis completed and reopened. It does not validate the quantities or the
+pricing. It cost one real AI analysis. No client data was touched.
+
+**Rule for fixture tests.** Before clicking any action, a fixture test must:
+- block service workers;
+- confirm the mocks are active;
+- deny any unmocked analysis, upload or create request.
+
+If isolation cannot be confirmed, abort the run before acting.
+
+**Not verified.**
+- A new upload followed by analysis. No file was uploaded in any run.
+- Re-upload past the file chooser opening. No file was chosen.
+- Refresh on a record stuck in "Analyzing".
+- Estimating accuracy of any generated estimate.
+- Native iOS and real-device safe areas. The 390 column is a mobile-width browser, not the iOS app.
+
 ## Customer portals (23 routes)
 
 Token routes need a live token per portal; the audit only mints a client-portal token
