@@ -193,6 +193,43 @@ The native app was driven with Appium 2.11.5 and the XCUITest driver 7.27.1, in 
 - The native iOS column, except where a row above says otherwise.
 - Screens outside this round's list keep their rows in the tables below.
 
+## Global theme, page layout and dialog titles (#156–#160), 12–13 Oct 2026
+
+Accepted as delivered within the scope below. Future changes use these tokens
+and components (DESIGN_SYSTEM.md §1, §2a): no page-specific colours, widths,
+spacing or title styles. New inconsistencies are fixed when there is a
+concrete example, not by another broad audit.
+
+**Final commit.** Production at main `8557f96d` (#160).
+
+| PR | Commit | Change |
+|---|---|---|
+| #156 | `8e35a0bf` | Global theme: tokens, module accents, title colours, document palette |
+| #157 | `aad4e6d7` | One page frame (`.k-frame`), layout tokens, every page on it |
+| #158 | `42842b72` | Form pages: summary strip two per row |
+| #159 | `99b1bede` | Dialog title rule; form figures wrap; invoice Edit copy |
+| #160 | `8557f96d` | Every dialog and sheet title on `.k-dialog-title` (45 titles, 28 files) |
+
+**Evidence** (encrypted bundles on `ops/testflight`, `tools/probe/`; Chromium 1440 and WebKit 390 with iPhone 15 metrics):
+
+| Run | Production | Scope | Result |
+|---|---|---|---|
+| 38313835636 | `8e35a0bf` (before) | Layout edges: Home, My Work, Jobs, job page, invoice, Settings | Mismatch measured: My Work 96px in, Jobs list 184px short of the right edge, Settings centred, phone gutters 12/16px |
+| 38322021333 | `aad4e6d7` (after) | Same screens, My Work and Jobs side by side | 116/118; the 2 fails were checker errors (form width, icon colour read from CSS instead of SVG fill), corrected in the probe |
+| 38324116343 | `99b1bede` | Settings 1440/390, invoice Edit dialog 1440/390, phone nav scrolled to the last row, More sheet | 20/21; the 1 fail was a checker error (a touch-hidden Snooze control), corrected afterwards — not a verified 21/21 rerun |
+| 38325822329 | `8557f96d` | One dialog of each type: page dialog (h2), select sheet, job picker sheet, Photos & video panel | 6/6 |
+
+**Exceptions** (deliberate): the sign-in card, dialogs and sheets (`--modal-w`),
+tool start screens, full-bleed canvases (drawing viewer, Signal Studio editor),
+the status box label (state colours), the photo/video viewer caption, the
+drawing viewer's sheet labels, customer-facing portals, print/PDF, marketing.
+
+**Known limitations.**
+- Native iOS is not verified. The 390 column is a mobile-width browser, not the iOS app.
+- Real-device safe areas are not verified: WebKit emulation has no home indicator, so the tab bar's safe-area padding was read from the CSS, not seen on a device.
+- Pages and dialogs outside the runs above were changed through the shared code but not each inspected; a dialog built without an overlay or dialog role could have been missed by the source search.
+- Only the listed screens were interacted with; this was not a full-site walkthrough.
+
 ## Customer portals (23 routes)
 
 Token routes need a live token per portal; the audit only mints a client-portal token
