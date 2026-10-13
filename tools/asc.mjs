@@ -327,6 +327,21 @@ await tryStep('App Store versions', async () => {
   return v.length ? v.map((x) => `${x.attributes.platform} ${x.attributes.versionString}: ${x.attributes.appStoreState}`).join('; ') : 'none — the app has never been submitted to the App Store';
 });
 
+// Where the app goes on sale once approved (no territories = approved but nowhere to download).
+await tryStep('availability (countries / regions)', async () => {
+  const av = (await api('GET', `/v1/apps/${snap.app.id}/appAvailabilityV2`)).data;
+  let total = 0, on = 0, usa = false;
+  for (let next = `/v2/appAvailabilities/${av.id}/territoryAvailabilities?limit=200&include=territory`; next;) {
+    const page = await api('GET', next);
+    for (const t of page.data) { total++; if (t.attributes.available) { on++; if (t.relationships?.territory?.data?.id === 'USA') usa = true; } }
+    next = page.links?.next?.replace('https://api.appstoreconnect.apple.com', '');
+  }
+  return `${on} of ${total} available, USA ${usa ? 'yes' : 'NO'}, new territories automatically: ${av.attributes.availableInNewTerritories}`;
+});
+await tryStep('release after approval', async () => {
+  const v = (await api('GET', `/v1/apps/${snap.app.id}/appStoreVersions?limit=5`)).data.find((x) => x.attributes.platform === 'IOS');
+  return v ? `${v.attributes.versionString}: ${v.attributes.appStoreState}, release ${v.attributes.releaseType}${v.attributes.earliestReleaseDate ? `, not before ${v.attributes.earliestReleaseDate}` : ''}` : 'no version';
+});
 if (MODE === 'status') process.exit(0);
 
 // appstore-meta: correct the listing text and the App Review notes on the
