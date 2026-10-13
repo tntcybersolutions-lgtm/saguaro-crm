@@ -274,6 +274,56 @@ If isolation cannot be confirmed, abort the run before acting.
 - Estimating accuracy of any generated estimate.
 - Native iOS and real-device safe areas. The 390 column is a mobile-width browser, not the iOS app.
 
+## App Store release — Saguaro Field 2.0 (build 1042), 13 Oct 2026
+
+**State (App Store Connect API readback, run 38341241771, 13 Oct 03:20 UTC).**
+Submitted, not approved, not on sale.
+
+| Item | Value |
+|---|---|
+| Version / build | 2.0 / 1042: `VALID`; uses non-exempt encryption: false |
+| Review | `WAITING_FOR_REVIEW` since 10 Oct 23:37 UTC (one open review submission) |
+| Release setting | `releaseType AFTER_APPROVAL`: Apple puts it on sale as soon as it is approved |
+| Availability | United States only (1 of 175 territories); new territories off. Set 13 Oct (run 38340474390): the app had no availability record before, so approval would have put it on sale nowhere |
+| Price | Free (USD base) |
+| Age rating | Declaration complete; 4+ |
+| Listing (en-US) | Description, keywords and support URL set; 10 iPhone 6.7" and 10 iPad 12.9" screenshots |
+| App Review details | Contact set; demo sign-in required and signs in (checked against the live site); notes current |
+| App Privacy, agreements | Not readable with the API key. App Store Connect accepted the submission, which requires published App Privacy answers |
+
+The submitted version and build were not withdrawn or replaced. Build 1051
+(12 Oct) differs from 1042 only in launch and splash colours, so it was not
+swapped in: a swap would restart the review queue.
+
+**Changes made while 2.0 waits for review.** None needed a new build: the app
+loads the live site, and listing text was edited in place.
+- #165 (`37d919a8`):
+  - inside the app (user agent `SaguaroField/`), pages that show plan prices redirect to `/app` (App Store rule 3.1.1);
+  - photos added on a phone are GPS-stamped (owner request).
+- Listing and review notes:
+  - removed features the app does not have (Face ID sign-in, haptics, local notifications);
+  - GPS claims cover photos and time clock punches, not video;
+  - the notes say where Clock In is.
+  - Runs 38334382070 and 38339980705.
+
+**Evidence.**
+
+| Run | Scope | Result |
+|---|---|---|
+| 38334936200 | Production after #165 (fixtures, isolation proven first) | 6/6. App user agent: `/pricing` and `/` → 307 to `/app`; a browser still gets `/pricing` 200. A phone upload sends its GPS location; a desktop upload sends none. The photo viewer shows "GPS Location" with an Apple Maps link. 0 rows written |
+| 38334145104 | Native: build 1042's shell (`c4af6584`) in the iPhone 15 simulator (iOS 17.0), driven by Appium XCUITest taps and the iOS keyboard, signed in with Apple's review login. Read-only | App defects: none found. Launch → sign-in screen; review login → Home of the demo company with the tab bar (screenshot); My Work, Jobs and Time opened with no error text. Checker errors, not app defects: tab labels read from the wrong attribute; job row not tapped (web elements report `visible=false` to XCUITest); no logo link on the phone sign-in screen. A loose "Punch" match opened an empty New Punch Item form; nothing was saved. Stopped at the 60-minute job cap |
+| 38339980707 | Same, checker fixed | RERUN_RESULT |
+
+**Unverified.**
+- Apple's decision. Approval and timing are Apple's.
+- The public US App Store listing. The app is not on sale until approval.
+- Natively: camera capture, the location prompt and a GPS punch, push notifications, offline mode, iPad layout, and real-device safe areas. The simulator has no camera, and no write was made.
+- App Privacy and agreements status: not readable with the API key.
+
+**Owner items.**
+- Approve or decline removing the 8 "ZZ AUDIT" test jobs (and their test takeoff) from the demo company Apple signs in to. Only 2 of its 10 jobs look real. This is a production write, so it waits for approval.
+- More countries than the United States: say which, and availability is extended.
+
 ## Customer portals (23 routes)
 
 Token routes need a live token per portal; the audit only mints a client-portal token
