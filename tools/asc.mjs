@@ -150,7 +150,7 @@ function report({ app, builds, groups }, target) {
   console.log('\nBeta groups:');
   for (const g of groups) {
     const has = target ? (g.buildIds.has(target.id) || (g.internal && g.allBuilds) ? 'YES' : 'no') : '-';
-    console.log(`  ${g.internal ? 'internal' : 'EXTERNAL'}  "${g.name}"  testers=${g.testers}  allBuilds=${g.allBuilds}  publicLink=${g.publicLink}  has ${target ? target.build : 'target'}: ${has}`);
+    console.log(`  ${g.internal ? 'internal' : 'EXTERNAL'}  "${String(g.name).includes('@') ? maskEmail(g.name) : g.name}"  testers=${g.testers}  allBuilds=${g.allBuilds}  publicLink=${g.publicLink}  has ${target ? target.build : 'target'}: ${has}`);
   }
 }
 
