@@ -197,7 +197,7 @@ function MarkOutcomeModal({
         {/* Header */}
         <div style={{ padding: '16px 20px', borderBottom: `1px solid ${BORDER}`, display: 'flex', justifyContent: 'space-between', alignItems: 'center', position: 'sticky', top: 0, background: RAISED, zIndex: 1 }}>
           <div>
-            <div style={{ fontWeight: 800, fontSize: 16, color: TEXT }}>Mark Outcome</div>
+            <div className="k-dialog-title">Mark Outcome</div>
             <div style={{ fontSize: 12, color: DIM, marginTop: 2 }}>
               {projectName ? projectName : 'Record whether you won or lost this bid'}
             </div>

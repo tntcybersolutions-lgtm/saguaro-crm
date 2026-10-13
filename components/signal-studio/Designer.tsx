@@ -2851,7 +2851,7 @@ export default function Designer({ projectId }: { projectId: string | null }) {
         <div onClick={() => setModal('none')} style={{ position: 'fixed', inset: 0, background: 'rgba(0,0,0,0.6)', zIndex: 300, display: 'flex', alignItems: 'center', justifyContent: 'center', padding: 20 }}>
           <div onClick={(e) => e.stopPropagation()} style={{ background: RAISED, border: `1px solid ${BORDER}`, borderRadius: 14, width: '100%', maxWidth: 440, padding: 22, boxShadow: '0 24px 60px rgba(0,0,0,0.6)' }}>
             {modal === 'save' ? <>
-              <h3 style={{ margin: '0 0 14px', fontSize: 16, fontWeight: 700 }}>Save Coverage Design</h3>
+              <h3 className="k-dialog-title" style={{ margin: '0 0 14px' }}>Save Coverage Design</h3>
               <label style={{ fontSize: 12, color: DIM }}>Design Name<input className="hm-sel" style={{ width: '100%', marginTop: 4 }} value={saveName} onChange={(e) => setSaveName(e.target.value)} placeholder="Coverage design" /></label>
               <label style={{ fontSize: 12, color: DIM, display: 'block', marginTop: 12 }}>Save to Project
                 <select className="hm-sel" style={{ width: '100%', marginTop: 4 }} value={saveProj} onChange={(e) => setSaveProj(e.target.value)}>

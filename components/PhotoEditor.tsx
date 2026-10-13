@@ -158,7 +158,7 @@ export default function PhotoEditor({ src, photoId, onSave, onDelete, onClose }:
     <div style={{ position: 'fixed', inset: 0, zIndex: 99999, background: 'rgba(0,0,0,0.92)', display: 'flex', flexDirection: 'column' }}>
       {/* Header */}
       <div style={{ padding: '12px 20px', display: 'flex', alignItems: 'center', justifyContent: 'space-between', borderBottom: `1px solid ${BORDER}` }}>
-        <div style={{ color: TEXT, fontWeight: 700, fontSize: 16 }}>Photo Editor</div>
+        <div className="k-dialog-title">Photo Editor</div>
         <div style={{ display: 'flex', gap: 8 }}>
           {onSave && (
             <button onClick={handleSave} disabled={saving} style={{ ...btnStyle(), background: `var(--brand-primary)`, color: '#101722', border: 'none' }}>

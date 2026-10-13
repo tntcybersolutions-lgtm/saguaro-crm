@@ -16,7 +16,7 @@ const CSS = `
 .stj { position: fixed; inset: 0; z-index: 10050; display: flex; align-items: center; justify-content: center; padding: 16px; background: rgba(4,5,7,0.72); }
 .stjBox { width: min(460px, 100%); border-radius: 16px; border: 1px solid var(--border-default); background: var(--bg-solid-2); color: var(--text-primary); padding: 18px; display: grid; gap: 14px; box-shadow: 0 30px 80px rgba(0,0,0,0.6); }
 .stjHead { display: flex; align-items: flex-start; gap: 12px; }
-.stjHead h2 { margin: 0; font-size: 18px; font-weight: 800; }
+.stjHead h2 { margin: 0; }
 .stjHead p { margin: 4px 0 0; font-size: 13px; color: var(--text-tertiary); }
 .stjX { margin-left: auto; width: 44px; height: 44px; flex: none; border-radius: 12px; border: 1px solid var(--border-default); background: rgba(255,255,255,0.04); color: var(--text-primary); display: inline-flex; align-items: center; justify-content: center; cursor: pointer; }
 .stj label { font-size: 13px; font-weight: 800; color: var(--text-secondary); }
@@ -89,7 +89,7 @@ export default function SendToJobDialog({ open, items, fromProjectId, what, onCl
       <div className="stjBox" role="dialog" aria-modal="true" aria-label="Send to another job" data-no-guard="">
         <div className="stjHead">
           <div>
-            <h2>Send to another job</h2>
+            <h2 className="k-dialog-title">Send to another job</h2>
             <p>Moves {what} to the job you pick. Nothing re-uploads.</p>
           </div>
           <button type="button" className="stjX" onClick={onClose} aria-label="Close" disabled={busy}><X size={18} weight="bold" /></button>

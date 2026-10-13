@@ -219,7 +219,7 @@ function LogMeetingModal({ projects, onClose }: { projects: any[]; onClose: () =
   return (
     <div onClick={onClose} style={{ position: 'fixed', inset: 0, background: 'rgba(2,4,8,0.55)', zIndex: 1000, display: 'flex', alignItems: 'flex-start', justifyContent: 'center', padding: '6vh 16px', overflow: 'auto' }}>
       <div onClick={(e) => e.stopPropagation()} style={{ background: C.card, border: `1px solid ${C.border}`, borderRadius: 16, padding: 24, width: 'min(640px, 100%)', boxShadow: '0 24px 80px rgba(2,4,8,0.5), inset 0 1px 0 rgba(255,255,255,0.06)', fontFamily: font }}>
-        <div style={{ fontSize: 19, fontWeight: 900, marginBottom: 14 }}>Log OAC Meeting</div>
+        <div className="k-dialog-title" style={{ marginBottom: 14 }}>Log OAC Meeting</div>
         <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 12 }}>
           <div style={{ gridColumn: '1 / -1' }}><label style={lbl}>Meeting Title *</label><input style={inp} placeholder="e.g. Back Nine Buckeye — OAC #3" value={f.title || ''} onChange={(e) => set('title', e.target.value)} /></div>
           <div><label style={lbl}>Site *</label><select style={inp} value={f.project_id || ''} onChange={(e) => set('project_id', e.target.value)}><option value="">Select site…</option>{projects.map((p: any) => <option key={p.id} value={p.id}>{p.name}</option>)}</select></div>

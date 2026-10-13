@@ -231,7 +231,7 @@ export default function MobileSelectSheet() {
       >
         <div className="ms-grab" aria-hidden />
         <div className="ms-head">
-          <div className="ms-title">{open.title}</div>
+          <div className="k-dialog-title ms-title">{open.title}</div>
           <button type="button" className="ms-x" onClick={close} aria-label="Close"><X size={18} weight="bold" /></button>
         </div>
         {searchable && (
@@ -286,7 +286,7 @@ const CSS = `
 @media (prefers-reduced-motion: reduce) { .ms-sheet, .ms-scrim { transition: none; animation: none; } }
 .ms-grab { width: 40px; height: 5px; border-radius: 99px; background: rgba(255,255,255,0.22); margin: 10px auto 2px; flex-shrink: 0; }
 .ms-head { display: flex; align-items: center; justify-content: space-between; gap: 12px; padding: 6px 10px 10px 18px; }
-.ms-title { font-size: var(--fs-dialog); font-weight: 700; color: var(--title-page); overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.ms-title { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
 .ms-x { display: inline-flex; align-items: center; justify-content: center; width: 44px; height: 44px; flex-shrink: 0; border: 0; border-radius: 12px; background: transparent; color: var(--c-text-2); cursor: pointer; }
 .ms-search { display: flex; align-items: center; gap: 10px; margin: 0 12px 6px; padding: 0 4px 0 14px; min-height: 48px; border-radius: 14px; background: rgba(255,255,255,0.05); border: 1px solid var(--border-subtle); color: var(--c-text-3); }
 .ms-search input { flex: 1; min-width: 0; height: 44px; border: 0 !important; outline: none !important; box-shadow: none !important; background: transparent !important; color: var(--c-text) !important; -webkit-text-fill-color: var(--c-text) !important; font: inherit; font-size: 16px !important; font-weight: 600; }

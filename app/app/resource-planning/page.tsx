@@ -566,7 +566,7 @@ export default function ResourcePlanningPage() {
 
       {/* ========== ASSIGNMENT FORM MODAL ========== */}
       {showForm && <ModalOverlay onClose={() => { setShowForm(false); setEditId(null); }}>
-        <div style={{ fontWeight: 700, fontSize: 18, marginBottom: 20, color: TEXT }}>{editId ? 'Edit Assignment' : 'New Assignment'}</div>
+        <div className="k-dialog-title" style={{ marginBottom: 20 }}>{editId ? 'Edit Assignment' : 'New Assignment'}</div>
         <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(200px, 1fr))', gap: 14, marginBottom: 14 }}>
           <div>
             <label htmlFor="rp-person" style={{ display: 'block', fontSize: 12, fontWeight: 700, color: DIM, marginBottom: 5 }}>Person Name *</label>
@@ -636,7 +636,7 @@ export default function ResourcePlanningPage() {
       {showDeleteConfirm && <ModalOverlay onClose={() => setShowDeleteConfirm(null)}>
         <div style={{ textAlign: 'center' }}>
           <div style={{ fontSize: 40, marginBottom: 12, color: RED, fontWeight: 900 }}>!</div>
-          <div style={{ fontWeight: 700, fontSize: 16, color: TEXT, marginBottom: 8 }}>Delete Assignment?</div>
+          <div className="k-dialog-title" style={{ marginBottom: 8 }}>Delete Assignment?</div>
           <div style={{ fontSize: 13, color: DIM, marginBottom: 24 }}>This action cannot be undone. The assignment will be permanently removed.</div>
           <div style={{ display: 'flex', gap: 10, justifyContent: 'center' }}>
             <button onClick={() => deleteAssignment(showDeleteConfirm)} disabled={saving} style={{ ...btn(), borderColor: RED, color: RED, opacity: saving ? 0.6 : 1 }}>{saving ? 'Deleting…' : 'Delete'}</button>
@@ -647,7 +647,7 @@ export default function ResourcePlanningPage() {
 
       {/* ========== REASSIGN MODAL ========== */}
       {reassignTarget?.show && <ModalOverlay onClose={() => setReassignTarget(null)}>
-        <div style={{ fontWeight: 700, fontSize: 16, color: TEXT, marginBottom: 8 }}>Reassign Resource</div>
+        <div className="k-dialog-title" style={{ marginBottom: 8 }}>Reassign Resource</div>
         <div style={{ fontSize: 13, color: DIM, marginBottom: 16 }}>
           Move <strong style={{ color: TEXT }}>{reassignTarget.assignment.person_name}</strong> from <strong style={{ color: AMBER }}>{projMap[reassignTarget.assignment.project_id] || '?'}</strong> to a different project.
         </div>

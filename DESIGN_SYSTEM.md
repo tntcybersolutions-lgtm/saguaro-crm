@@ -173,6 +173,26 @@ edge, and the header's primary action sits on that right edge.
 | `--fs-title` / `--fs-title-m` | 26px | 22px | Page title (`.k-title`, `.pmHead h1`) |
 | `--fs-dialog` | 18px | 18px | Dialog and sheet title (`.k-modal-title`, `.k-dialog-title`): `--title-page` colour |
 
+**Dialog and sheet titles — one class, everywhere.** Every dialog, sheet,
+drawer and panel title uses `.k-dialog-title` (or `.k-modal-title` inside
+`FormModal`); local CSS keeps only layout (margin, flex, truncation). Covered:
+FormModal, BottomSheet, the select sheet, the job picker, the unsaved-changes
+dialog, the media upload panel and Send to job, Help Mode, Photo editor, Edit
+image, Import from cloud storage, Mark outcome, New bid package, Signal Studio's
+save dialog, Access manager, and the page dialogs in prequalification, files,
+fleet, resource planning, takeoff (measured), integrations, storage, client and
+sub portal setup, command center (rollout, verify, OAC), document versions,
+classic and the shell's Score a Bid. A section heading inside a sheet uses the
+section tokens (`--title-section`, `--fs-section`).
+
+Deliberate exceptions (not dialog titles, or meaning carried by colour):
+the status box label (`StatusCenter .stc-title`: small caps in the state's
+green / amber / red); the photo/video viewer caption (`ZoomLightbox .zlTitle`:
+the file's name, white over the black media stage); the drawing viewer's sheet
+labels (`.dw-rail-title`, `.dw-bar-title`: tool chrome on a full-bleed canvas);
+customer-facing portal dialogs (`components/portal/*`, tenant-branded); and a
+destructive confirm's red warning glyph (its title still uses the class).
+
 **Who uses the frame:** `PageShell` (`.k-page` = the frame + a flex column),
 `PremiumSurface` (`.k-frame.pmPage`), the flat pages (Home `.fh-in`, My Work
 `.mw`, Jobs `.jl`, the job page `.jx`), the route skeletons

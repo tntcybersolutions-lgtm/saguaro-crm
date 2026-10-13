@@ -700,7 +700,7 @@ export default function BidPackageWizard({ projectId, onClose, onCreated }: Wiza
           background: DARK, flexShrink: 0,
         }}>
           <div>
-            <div style={{ fontSize: 18, fontWeight: 800, color: 'var(--title-section)' }}>New Bid Package</div>
+            <div className="k-dialog-title">New Bid Package</div>
             <div style={{ fontSize: 12, color: DIM, marginTop: 2 }}>AI-powered bid jacket generation</div>
           </div>
           <button

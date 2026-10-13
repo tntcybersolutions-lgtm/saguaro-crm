@@ -238,7 +238,7 @@ function StorageSettings() {
           <div onClick={(e) => e.stopPropagation()} style={{ background: 'var(--bg-surface)', border: `1px solid ${BORDER}`, borderRadius: 14, padding: 18, width: 'min(460px,100%)', maxHeight: '90vh', overflow: 'auto' }}>
             <div style={{ display: 'flex', alignItems: 'center', marginBottom: 14 }}>
               <IconChip size={32}><CloudArrowUp size={16} weight="fill" color="var(--text-secondary)" /></IconChip>
-              <div style={{ fontWeight: 800, fontSize: 16, flex: 1, color: WHITE, marginLeft: 10 }}>Connect {providers.find((p) => p.id === adding)?.label}</div>
+              <div className="k-dialog-title" style={{ flex: 1, marginLeft: 10 }}>Connect {providers.find((p) => p.id === adding)?.label}</div>
               <button onClick={() => setAdding(null)} style={{ background: 'none', border: 'none', cursor: 'pointer' }}><X size={19} color={MUTED} /></button>
             </div>
             {(FORM_FIELDS[adding] || []).map((f) => (

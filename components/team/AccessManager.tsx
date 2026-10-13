@@ -298,7 +298,7 @@ function Modal({ open, onClose, title, width, children }: {
       <div role="dialog" aria-modal="true" aria-labelledby={titleId} style={{ position: 'relative', background: 'var(--bg-solid-2)', border: `1px solid ${BORDER}`, borderRadius: 'var(--radius-lg, 12px)',
         width: `min(${width ?? 520}px, 100%)`, boxSizing: 'border-box', maxHeight: '85vh', overflowY: 'auto', padding: 'clamp(18px, 5vw, 28px)', zIndex: 1, boxShadow: 'var(--shadow-lg)' }}>
         <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 18, gap: 8 }}>
-          <h3 id={titleId} style={{ color: 'var(--text-primary)', margin: 0, fontSize: 18 }}>{title}</h3>
+          <h3 id={titleId} className="k-dialog-title" style={{ margin: 0 }}>{title}</h3>
           <button type="button" onClick={onClose} aria-label="Close" style={{ ...btn('transparent', DIM), fontSize: 20, padding: '2px 8px', lineHeight: 1, minWidth: 44, minHeight: 44 }}>×</button>
         </div>
         {children}

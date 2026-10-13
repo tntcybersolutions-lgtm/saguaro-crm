@@ -352,7 +352,7 @@ export default function FilesPage() {
           <div ref={previewRef} role="dialog" aria-modal="true" aria-label={sel.file_name || 'File'} onClick={(e) => e.stopPropagation()} style={{ background: 'var(--bg-elevated)', backdropFilter: 'var(--glass-blur)', WebkitBackdropFilter: 'var(--glass-blur)', border: `1px solid ${T.border}`, borderRadius: 14, padding: 16, width: 'min(820px,100%)', maxHeight: '92vh', overflow: 'auto' }}>
             <div style={{ display: 'flex', alignItems: 'center', marginBottom: 12 }}>
               <div style={{ flex: 1, minWidth: 0 }}>
-                <div style={{ fontWeight: 800, fontSize: 17, color: T.white, whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>{sel.file_name}</div>
+                <div className="k-dialog-title" style={{ whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>{sel.file_name}</div>
                 <div style={{ fontSize: 13, color: T.muted }}>{KIND_LABEL[kindOf(sel)]} · {fmtSize(sel.file_size)} · {fmtDate(sel.created_at)}{sel.uploaded_by_name ? ` · ${sel.uploaded_by_name}` : ''}</div>
               </div>
               <button onClick={closePreview} aria-label="Close" style={CLOSE_BTN}><X size={20} color={T.muted} /></button>
@@ -404,7 +404,7 @@ function ExportMenu({ file, onClose, onToast }: { file: any; onClose: () => void
   return (
     <div onClick={onClose} style={OVERLAY}>
       <div ref={ref} role="dialog" aria-modal="true" aria-label="Export to Cloud" onClick={(e) => e.stopPropagation()} style={{ background: 'var(--bg-elevated)', backdropFilter: 'var(--glass-blur)', WebkitBackdropFilter: 'var(--glass-blur)', border: `1px solid ${T.border}`, borderRadius: 14, padding: 18, width: 'min(360px,100%)' }}>
-        <div style={{ display: 'flex', alignItems: 'center', marginBottom: 12 }}><CloudArrowUp size={18} color="var(--text-secondary)" weight="fill" /><div style={{ fontWeight: 800, fontSize: 16, marginLeft: 8, flex: 1, color: T.white }}>Export to Cloud</div><button onClick={onClose} aria-label="Close" style={CLOSE_BTN}><X size={18} color={T.muted} /></button></div>
+        <div style={{ display: 'flex', alignItems: 'center', marginBottom: 12 }}><CloudArrowUp size={18} color="var(--text-secondary)" weight="fill" /><div className="k-dialog-title" style={{ marginLeft: 8, flex: 1 }}>Export to Cloud</div><button onClick={onClose} aria-label="Close" style={CLOSE_BTN}><X size={18} color={T.muted} /></button></div>
         {connectors.length === 0 ? <div style={{ color: T.muted, fontSize: 13 }}>No connected storage. Add one in <a href="/app/settings/storage" style={{ color: 'var(--link)' }}>Settings → External Storage</a>.</div>
           : <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>{connectors.map((c) => <button key={c.id} disabled={!!busy} onClick={() => exportTo(c)} style={{ display: 'flex', alignItems: 'center', gap: 10, background: T.bg, border: `1px solid ${T.border}`, borderRadius: 10, padding: '11px 14px', minHeight: 44, cursor: 'pointer', color: T.white, fontSize: 14, textAlign: 'left' }}><Folder size={16} color="var(--text-secondary)" />{busy === c.id ? 'Uploading…' : c.display_name}</button>)}</div>}
       </div>
@@ -443,7 +443,7 @@ function ShareMenu({ file, onClose, onToast }: { file: any; onClose: () => void;
   return (
     <div onClick={onClose} style={OVERLAY}>
       <div ref={ref} role="dialog" aria-modal="true" aria-label="Share File" onClick={(e) => e.stopPropagation()} style={{ background: 'var(--bg-elevated)', backdropFilter: 'var(--glass-blur)', WebkitBackdropFilter: 'var(--glass-blur)', border: `1px solid ${T.border}`, borderRadius: 14, padding: 18, width: 'min(360px,100%)' }}>
-        <div style={{ display: 'flex', alignItems: 'center', marginBottom: 12 }}><ShareNetwork size={18} color="var(--text-secondary)" weight="fill" /><div style={{ fontWeight: 800, fontSize: 16, marginLeft: 8, flex: 1, color: T.white }}>Share File</div><button onClick={onClose} aria-label="Close" style={CLOSE_BTN}><X size={18} color={T.muted} /></button></div>
+        <div style={{ display: 'flex', alignItems: 'center', marginBottom: 12 }}><ShareNetwork size={18} color="var(--text-secondary)" weight="fill" /><div className="k-dialog-title" style={{ marginLeft: 8, flex: 1 }}>Share File</div><button onClick={onClose} aria-label="Close" style={CLOSE_BTN}><X size={18} color={T.muted} /></button></div>
         <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
           {opts.map((o) => (
             <button key={o.c} disabled={!!busy} onClick={() => share(o.c)} style={{ display: 'flex', alignItems: 'center', gap: 11, background: T.bg, border: `1px solid ${T.border}`, borderRadius: 10, padding: '11px 14px', minHeight: 44, cursor: 'pointer', color: T.white, fontSize: 14, textAlign: 'left' }}>
