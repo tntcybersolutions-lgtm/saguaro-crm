@@ -21,6 +21,10 @@
 
 import { useCallback, useEffect, useRef } from 'react';
 import { usePathname, useRouter } from 'next/navigation';
+import { installApiSwr, warmRoute } from '@/lib/api-swr';
+
+// Installed when the app shell's code loads — before any page asks for data.
+if (typeof window !== 'undefined') installApiSwr();
 
 function internalHref(target: EventTarget | null): { a: HTMLAnchorElement; path: string } | null {
   const a = target instanceof Element ? (target.closest('a[href]') as HTMLAnchorElement | null) : null;
@@ -80,7 +84,10 @@ export default function NavAccelerator() {
     const prefetch = (e: Event) => {
       const hit = internalHref(e.target);
       if (!hit) return;
-      if (e.type === 'touchstart' || e.type === 'pointerdown') lastTap.current = { a: hit.a, at: Date.now() };
+      if (e.type === 'touchstart' || e.type === 'pointerdown') {
+        lastTap.current = { a: hit.a, at: Date.now() };
+        warmRoute(hit.path); // a finger is on it — start loading its data now
+      }
       if (prefetched.current.has(hit.path)) return;
       prefetched.current.add(hit.path);
       try { router.prefetch(hit.path); } catch (err) { console.warn('prefetch', err); }
