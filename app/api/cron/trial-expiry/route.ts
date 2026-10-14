@@ -3,6 +3,12 @@ import { createServerClient } from '@/lib/supabase-server';
 import { sendTrialExpiring } from '@/lib/email';
 
 export async function GET(req: NextRequest) {
+  // Same guard as every other cron: only Vercel Cron (Bearer CRON_SECRET) may run
+  // this in production. It was open, so anyone could trigger trial emails.
+  const auth = req.headers.get('authorization');
+  if (auth !== `Bearer ${process.env.CRON_SECRET}` && process.env.NODE_ENV === 'production') {
+    return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
+  }
   try {
     const db = createServerClient();
     const today = new Date();
@@ -23,13 +29,14 @@ export async function GET(req: NextRequest) {
         // Get user email
         const { data: profile } = await db.from('profiles').select('email, full_name').eq('tenant_id', tenant.id).limit(1).single();
         if (profile) {
-          await sendTrialExpiring(
+          const mail = await sendTrialExpiring(
             (profile as any).email,
             (profile as any).full_name || 'there',
             daysLeft,
             `${APP_URL}/pricing`
           );
-          sent++;
+          if (mail.sent) sent++;
+          else console.error('[cron/trial-expiry] email not sent', tenant.id, mail.error);
         }
       }
     }
