@@ -15,12 +15,11 @@
  *     the screen and the tapped item dims slightly, so the app visibly answers
  *     at once. Both clear the moment the new page is on screen (or after 12s).
  *
- * Links whose click a page cancels (an unsaved-changes guard, a menu) never
- * start the bar — it starts only once the click is still live after every
- * handler has run.
+ * A move an unsaved-changes guard cancels never reaches router.push, so it
+ * never starts the bar.
  */
 
-import { useEffect, useRef, useState } from 'react';
+import { useCallback, useEffect, useRef } from 'react';
 import { usePathname, useRouter } from 'next/navigation';
 
 function internalHref(target: EventTarget | null): { a: HTMLAnchorElement; path: string } | null {
@@ -37,19 +36,35 @@ function internalHref(target: EventTarget | null): { a: HTMLAnchorElement; path:
 export default function NavAccelerator() {
   const router = useRouter();
   const pathname = usePathname();
-  const [busy, setBusy] = useState(false);
+  // The bar is driven straight on the DOM, not through React state: Next runs
+  // every navigation inside startTransition, so a state update made there is
+  // held back and painted together with the new page — the feedback would
+  // only appear once it was no longer needed.
+  const bar = useRef<HTMLDivElement | null>(null);
   const pressed = useRef<HTMLElement | null>(null);
+  const lastTap = useRef<{ a: HTMLAnchorElement; at: number } | null>(null);
   const prefetched = useRef<Set<string>>(new Set());
   const safety = useRef<ReturnType<typeof setTimeout> | null>(null);
 
-  const clear = () => {
-    setBusy(false);
+  const clear = useCallback(() => {
+    bar.current?.setAttribute('data-on', '0');
     if (pressed.current) { pressed.current.removeAttribute('data-nav-pressed'); pressed.current = null; }
     if (safety.current) { clearTimeout(safety.current); safety.current = null; }
-  };
+  }, []);
+
+  const start = useCallback(() => {
+    clear();
+    bar.current?.setAttribute('data-on', '1');
+    const tap = lastTap.current;
+    if (tap && Date.now() - tap.at < 1000 && tap.a.isConnected) {
+      pressed.current = tap.a;
+      tap.a.setAttribute('data-nav-pressed', '');
+    }
+    safety.current = setTimeout(clear, 12_000);
+  }, [clear]);
 
   // New page on screen → done.
-  useEffect(() => { clear(); }, [pathname]);
+  useEffect(() => { clear(); }, [pathname, clear]);
 
   // A visitor who came in through a marketing page (ad tags loaded there) and
   // then signed in keeps those tags in memory; switch them off for the app so
@@ -64,61 +79,47 @@ export default function NavAccelerator() {
   useEffect(() => {
     const prefetch = (e: Event) => {
       const hit = internalHref(e.target);
-      if (!hit || prefetched.current.has(hit.path)) return;
+      if (!hit) return;
+      if (e.type === 'touchstart' || e.type === 'pointerdown') lastTap.current = { a: hit.a, at: Date.now() };
+      if (prefetched.current.has(hit.path)) return;
       prefetched.current.add(hit.path);
       try { router.prefetch(hit.path); } catch (err) { console.warn('prefetch', err); }
     };
 
-    const onClick = (e: MouseEvent) => {
-      if (e.defaultPrevented || e.button !== 0 || e.metaKey || e.ctrlKey || e.shiftKey || e.altKey) return;
-      const hit = internalHref(e.target);
-      if (!hit) return;
-      const here = window.location.pathname + window.location.search;
-      if (hit.path === here) return;
-      clear();
-      pressed.current = hit.a;
-      hit.a.setAttribute('data-nav-pressed', '');
-      setBusy(true);
-      safety.current = setTimeout(clear, 12_000);
-    };
-
-    // Rows, cards and buttons that move with router.push (not a link) get the
-    // same instant bar: the shell's router is the one object every page's
-    // useRouter() returns, so wrapping push here covers them all.
+    // Every in-app move goes through router.push — <Link> clicks included (Next
+    // calls the shell's router object), and rows, cards and buttons that
+    // navigate in code. Wrapping it here gives all of them the instant bar.
+    // A click an unsaved-changes guard cancels never reaches push, so a
+    // cancelled move never starts the bar.
     const r = router as unknown as { push: (href: string, o?: unknown) => void };
     const originalPush = r.push;
     r.push = function wrappedPush(href: string, o?: unknown) {
       try {
         const url = new URL(href, window.location.href);
         const here = window.location.pathname + window.location.search;
-        if (url.origin === window.location.origin && url.pathname + url.search !== here) {
-          clear();
-          setBusy(true);
-          safety.current = setTimeout(clear, 12_000);
-        }
-      } catch { /* not a URL we can read — navigate without the bar */ }
+        if (url.origin === window.location.origin && url.pathname + url.search !== here) start();
+      } catch (err) { console.warn('nav bar', err); }
       return originalPush.call(this, href, o);
     };
 
     document.addEventListener('touchstart', prefetch, { capture: true, passive: true });
+    document.addEventListener('pointerdown', prefetch, { capture: true, passive: true });
     document.addEventListener('pointerenter', prefetch, { capture: true, passive: true });
     document.addEventListener('focusin', prefetch, true);
-    // Bubble phase: runs after the page's own handlers, so a cancelled click is seen as cancelled.
-    document.addEventListener('click', onClick);
     return () => {
       document.removeEventListener('touchstart', prefetch, true);
+      document.removeEventListener('pointerdown', prefetch, true);
       document.removeEventListener('pointerenter', prefetch, true);
       document.removeEventListener('focusin', prefetch, true);
-      document.removeEventListener('click', onClick);
       r.push = originalPush;
       if (safety.current) clearTimeout(safety.current);
     };
-  }, [router]);
+  }, [router, start]);
 
   return (
     <>
       <style dangerouslySetInnerHTML={{ __html: CSS }} />
-      <div className="nav-accel" data-on={busy ? '1' : '0'} aria-hidden="true"><span /></div>
+      <div ref={bar} className="nav-accel" data-on="0" aria-hidden="true"><span /></div>
     </>
   );
 }
