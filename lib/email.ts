@@ -72,8 +72,8 @@ export type SendResult = { sent: boolean; error?: string };
  * when zero emails existed. That is worse than an error: the GC believes the
  * bids are coming and finds out at the deadline.
  *
- * Existing callers that `await send(...)` and ignore the value keep working
- * unchanged; callers that need to tell the user the truth can now read it.
+ * Every helper below returns this result, so a caller that tells the user an
+ * email went out can (and must) check it first.
  */
 async function send(to: string | string[], subject: string, html: string): Promise<SendResult> {
   const result = await deliver(to, subject, html);
@@ -132,7 +132,7 @@ export async function sendNotificationEmail(to: string, title: string, body: str
 }
 
 export async function sendWelcome(to: string, name: string, company: string) {
-  await send(to, `Welcome to Saguaro Control Systems, ${name}!`, layout(`
+  return send(to, `Welcome to Saguaro Control Systems, ${name}!`, layout(`
     ${h(`Welcome to Saguaro Control Systems, ${name}!`)}
     ${p(`Your account for <strong>${company}</strong> is ready. Here's what you can do right now:`)}
     <ul style="color:#374151;font-size:14px;line-height:2.2;margin:12px 0;">
@@ -146,7 +146,7 @@ export async function sendWelcome(to: string, name: string, company: string) {
 }
 
 export async function sendPayAppSubmitted(to: string, ownerName: string, projectName: string, appNumber: number, amount: number, pdfUrl: string) {
-  await send(to, `Pay Application #${appNumber} Submitted — ${projectName}`, layout(`
+  return send(to, `Pay Application #${appNumber} Submitted — ${projectName}`, layout(`
     ${h(`Pay Application #${appNumber} Submitted`)}
     ${p(`Dear ${ownerName},`)}
     ${p(`A new Pay Application has been submitted on <strong>${projectName}</strong> and requires your review.`)}
@@ -157,7 +157,7 @@ export async function sendPayAppSubmitted(to: string, ownerName: string, project
 }
 
 export async function sendPayAppApproved(to: string, gcName: string, projectName: string, appNumber: number, amount: number) {
-  await send(to, `Pay App #${appNumber} Approved — ${projectName}`, layout(`
+  return send(to, `Pay App #${appNumber} Approved — ${projectName}`, layout(`
     ${h(`Pay Application #${appNumber} Approved`)}
     ${p(`Your Pay Application has been approved by the owner.`)}
     ${table(row('Contractor', gcName) + row('Project', projectName) + row('App Number', `#${appNumber}`) + row('Certified Amount', fmt(amount)))}
@@ -167,7 +167,7 @@ export async function sendPayAppApproved(to: string, gcName: string, projectName
 }
 
 export async function sendPayAppCertified(to: string, gcName: string, projectName: string, amount: number, certDate: string) {
-  await send(to, `Payment Certified — ${projectName}`, layout(`
+  return send(to, `Payment Certified — ${projectName}`, layout(`
     ${h('Payment Certified')}
     ${p(`Dear ${gcName}, your payment has been certified by the architect.`)}
     ${table(row('Project', projectName) + row('Certified Amount', fmt(amount)) + row('Certification Date', certDate))}
@@ -176,7 +176,7 @@ export async function sendPayAppCertified(to: string, gcName: string, projectNam
 }
 
 export async function sendLienWaiverRequest(to: string, subName: string, projectName: string, amount: number, portalUrl: string) {
-  await send(to, `Lien Waiver Required — ${projectName}`, layout(`
+  return send(to, `Lien Waiver Required — ${projectName}`, layout(`
     ${h('Lien Waiver Signature Required')}
     ${p(`Hello <strong>${subName}</strong>, a lien waiver is required for your work on <strong>${projectName}</strong>.`)}
     ${table(row('Project', projectName) + row('Waiver Amount', fmt(amount)))}
@@ -187,7 +187,7 @@ export async function sendLienWaiverRequest(to: string, subName: string, project
 }
 
 export async function sendLienWaiverSigned(to: string, gcName: string, subName: string, projectName: string) {
-  await send(to, `Lien Waiver Signed — ${subName} on ${projectName}`, layout(`
+  return send(to, `Lien Waiver Signed — ${subName} on ${projectName}`, layout(`
     ${h('Lien Waiver Signed')}
     ${p(`<strong>${subName}</strong> has signed and returned their lien waiver for <strong>${projectName}</strong>.`)}
     ${table(row('GC', gcName) + row('Subcontractor', subName) + row('Project', projectName))}
@@ -196,7 +196,7 @@ export async function sendLienWaiverSigned(to: string, gcName: string, subName: 
 }
 
 export async function sendBidPackageCreated(to: string, gcName: string, projectName: string, tradeName: string, dueDate: string) {
-  await send(to, `Bid Package Created — ${tradeName} — ${projectName}`, layout(`
+  return send(to, `Bid Package Created — ${tradeName} — ${projectName}`, layout(`
     ${h('New Bid Package Created')}
     ${p(`A new bid package for <strong>${tradeName}</strong> has been created on <strong>${projectName}</strong>.`)}
     ${table(row('GC', gcName) + row('Project', projectName) + row('Trade', tradeName) + row('Due Date', dueDate))}
@@ -220,7 +220,7 @@ export async function sendSubInvitedToBid(to: string, subName: string, projectNa
 }
 
 export async function sendBidSubmitted(to: string, gcName: string, subName: string, projectName: string, bidAmount: number) {
-  await send(to, `New Bid Received — ${subName} — ${projectName}`, layout(`
+  return send(to, `New Bid Received — ${subName} — ${projectName}`, layout(`
     ${h('New Bid Submitted')}
     ${p(`<strong>${subName}</strong> has submitted a bid on <strong>${projectName}</strong>.`)}
     ${table(row('GC', gcName) + row('Subcontractor', subName) + row('Project', projectName) + row('Bid Amount', fmt(bidAmount)))}
@@ -248,7 +248,7 @@ export async function sendBidNotAwarded(to: string, subName: string, projectName
 }
 
 export async function sendRFISubmitted(to: string, projectName: string, rfiNumber: number, subject: string, submittedBy: string) {
-  await send(to, `RFI #${rfiNumber} Submitted — ${projectName}`, layout(`
+  return send(to, `RFI #${rfiNumber} Submitted — ${projectName}`, layout(`
     ${h(`RFI #${rfiNumber} Submitted`)}
     ${p(`A new Request for Information has been submitted and requires your response.`)}
     ${table(row('Project', projectName) + row('RFI Number', `#${rfiNumber}`) + row('Subject', subject) + row('Submitted By', submittedBy))}
@@ -257,7 +257,7 @@ export async function sendRFISubmitted(to: string, projectName: string, rfiNumbe
 }
 
 export async function sendRFIAnswered(to: string, submitterName: string, projectName: string, rfiNumber: number, answer: string) {
-  await send(to, `RFI #${rfiNumber} Answered — ${projectName}`, layout(`
+  return send(to, `RFI #${rfiNumber} Answered — ${projectName}`, layout(`
     ${h(`RFI #${rfiNumber} Answered`)}
     ${p(`Dear ${submitterName}, your RFI on <strong>${projectName}</strong> has been answered.`)}
     ${table(row('Project', projectName) + row('RFI Number', `#${rfiNumber}`) + row('Answer', answer.slice(0, 200)))}
@@ -266,7 +266,7 @@ export async function sendRFIAnswered(to: string, submitterName: string, project
 }
 
 export async function sendChangeOrderApproved(to: string, projectName: string, coNumber: number, amount: number) {
-  await send(to, `Change Order #${coNumber} Approved — ${projectName}`, layout(`
+  return send(to, `Change Order #${coNumber} Approved — ${projectName}`, layout(`
     ${h(`Change Order #${coNumber} Approved`)}
     ${p(`Change Order #${coNumber} has been approved. The contract sum has been updated accordingly.`)}
     ${table(row('Project', projectName) + row('CO Number', `#${coNumber}`) + row('Amount', fmt(amount)))}
@@ -276,7 +276,7 @@ export async function sendChangeOrderApproved(to: string, projectName: string, c
 
 export async function sendInsuranceExpiring(to: string, subName: string, projectName: string, policyType: string, expiryDate: string, daysLeft: number) {
   const urgent = daysLeft <= 7;
-  await send(to, `${urgent ? 'URGENT: ' : ''}Insurance Expiring in ${daysLeft} Days — ${subName}`, layout(`
+  return send(to, `${urgent ? 'URGENT: ' : ''}Insurance Expiring in ${daysLeft} Days — ${subName}`, layout(`
     ${h(`${urgent ? '⚠ URGENT: ' : ''}Insurance Certificate Expiring`)}
     <p style="margin:0 0 16px;padding:12px 16px;background:${urgent ? '#fef2f2' : '#fffbeb'};border-left:4px solid ${urgent ? '#FF3B30' : '#FFE600'};font-size:14px;color:#374151;">
       <strong>${subName}</strong>'s ${policyType} expires in <strong>${daysLeft} day${daysLeft !== 1 ? 's' : ''}</strong>.
@@ -304,7 +304,7 @@ export async function sendLienDeadlineReminder(
       ? dueDate
       : d.toLocaleDateString('en-US', { weekday: 'long', month: 'long', day: 'numeric', year: 'numeric' });
   })();
-  await send(to, `${urgent ? 'URGENT: ' : ''}Lien Deadline in ${daysLeft} Day${daysLeft !== 1 ? 's' : ''} — ${projectName}`, layout(`
+  return send(to, `${urgent ? 'URGENT: ' : ''}Lien Deadline in ${daysLeft} Day${daysLeft !== 1 ? 's' : ''} — ${projectName}`, layout(`
     ${h(`${urgent ? 'URGENT: ' : ''}Lien Deadline Approaching`)}
     ${p(`Dear ${recipientName},`)}
     <p style="margin:0 0 16px;padding:12px 16px;background:${urgent ? '#fef2f2' : '#fffbeb'};border-left:4px solid ${urgent ? '#FF3B30' : '#FFE600'};font-size:14px;color:#374151;">
@@ -319,8 +319,7 @@ export async function sendLienDeadlineReminder(
 /**
  * Email an invoice to its vendor.
  *
- * Unlike the fire-and-forget notification helpers above (which swallow a missing
- * RESEND_API_KEY and return void), this returns an HONEST result so the caller can
+ * Like every helper here, this returns an HONEST result so the caller can
  * tell the user the truth: if email isn't configured, or Resend rejects the send,
  * `sent` is false with a human-readable `error`. Never report a phantom success.
  */
@@ -540,7 +539,7 @@ export async function sendPrequalInvite(opts: {
 }
 
 export async function sendW9Request(to: string, vendorName: string, projectName: string, portalUrl: string) {
-  await send(to, `W-9 Form Required — ${projectName}`, layout(`
+  return send(to, `W-9 Form Required — ${projectName}`, layout(`
     ${h('W-9 Tax Form Required')}
     ${p(`Hello <strong>${vendorName}</strong>, we need a completed W-9 form before we can process payments.`)}
     ${table(row('Project', projectName) + row('Required Before', 'First payment'))}
@@ -562,7 +561,7 @@ export async function sendSignatureRequest(opts: {
   const note = opts.message
     ? p(`<em>&ldquo;${opts.message}&rdquo;</em>`)
     : '';
-  await send(opts.to, `Signature requested: ${opts.docTitle}`, layout(`
+  return send(opts.to, `Signature requested: ${opts.docTitle}`, layout(`
     ${h('A document is waiting for your signature')}
     ${p(`Hello <strong>${opts.signerName}</strong>, ${opts.senderName} has sent you <strong>${opts.docTitle}</strong> to review and sign.`)}
     ${table(row('Document', opts.docTitle) + row('Project', opts.projectName) + row('Sent by', opts.senderName))}
@@ -602,7 +601,7 @@ export async function sendOwnerUpdate(opts: {
 
 export async function sendTrialExpiring(to: string, userName: string, daysLeft: number, upgradeUrl: string) {
   const urgent = daysLeft <= 3;
-  await send(to, `Your Saguaro trial ends in ${daysLeft} day${daysLeft !== 1 ? 's' : ''}`, layout(`
+  return send(to, `Your Saguaro trial ends in ${daysLeft} day${daysLeft !== 1 ? 's' : ''}`, layout(`
     <h2 style="margin:0 0 16px;color:${urgent ? '#FF3B30' : '#FFE600'};font-size:20px;">
       Your trial ends in ${daysLeft} day${daysLeft !== 1 ? 's' : ''}
     </h2>

@@ -19,6 +19,7 @@ import {
 } from '@/lib/radio-promote';
 import { must, tryWrite } from '@/lib/db-write';
 import { requestDay } from '@/lib/time-zone';
+import { runInBackground } from '@/lib/background';
 
 /**
  * Saguaro Radio — ONE-TAP PROMOTE.
@@ -369,7 +370,7 @@ export async function POST(req: NextRequest) {
   // Same lifecycle a hand-made RFI fires (architect email + in-app notification
   // + webhook fan-out). Fired only after the link landed, so we never notify
   // about a record we rolled back. Non-blocking — never fails the promote.
-  if (recordType === 'rfi' && created) onRFICreated(recordId).catch(console.error);
+  if (recordType === 'rfi' && created) runInBackground(onRFICreated(recordId), 'onRFICreated');
 
   return NextResponse.json({
     ok: true,

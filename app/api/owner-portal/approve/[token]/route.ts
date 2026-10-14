@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { createServerClient } from '@/lib/supabase-server';
 import { onPayAppApproved } from '@/lib/triggers';
+import { runInBackground } from '@/lib/background';
 
 export async function GET(
   req: NextRequest,
@@ -85,7 +86,7 @@ export async function POST(
     // internal approve route does (lien waivers generated + sign links emailed).
     // Guarded against double-fire above by the approved_at check.
     if (action === 'approved' && (updated as { id?: string })?.id) {
-      onPayAppApproved((updated as { id: string }).id).catch(console.error);
+      runInBackground(onPayAppApproved((updated as { id: string }).id), 'onPayAppApproved');
     }
     return NextResponse.json({ success: true });
   } catch {

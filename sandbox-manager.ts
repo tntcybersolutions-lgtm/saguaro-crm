@@ -31,7 +31,7 @@
 import { supabaseAdmin } from './supabase/admin';
 import { EmailService } from './email-service';
 
-const APP_URL = process.env.NEXT_PUBLIC_APP_URL ?? 'https://app.saguarocrm.com';
+const APP_URL = process.env.NEXT_PUBLIC_APP_URL ?? 'https://saguarocontrol.net';
 const SANDBOX_URL = process.env.NEXT_PUBLIC_SANDBOX_URL ?? 'https://sandbox.saguarocrm.com';
 const UPGRADE_URL = `${SANDBOX_URL}/upgrade`;
 const DEMO_URL = `${SANDBOX_URL}/book-demo`;
@@ -650,7 +650,7 @@ async function sendEmail(to: string, subject: string, html: string): Promise<voi
   }
 
   await resend.emails.send({
-    from: process.env.EMAIL_FROM ?? 'Saguaro CRM <noreply@mail.saguarocrm.com>',
+    from: process.env.EMAIL_FROM ?? 'Saguaro Control Systems <noreply@saguarocontrol.net>',
     to,
     subject,
     html,

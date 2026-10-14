@@ -226,3 +226,18 @@ already tracked by the design-system baseline (hex literals, `td` density, Sales
 decision); DataTable menus opening upward near the bottom (that is the correct behaviour); the Vercel *preview*
 session timeout (preview deployments only). CLAUDE.md §7/§8 still name `app/field/` and `lib/field-tokens.ts`,
 which do not exist — Chad's standing orders, not edited here.
+
+## 2026-10-14 — found during the "no one gets emails" fix
+
+FIXED in PR #175 (Chad: "fix all then merge"):
+- Owner/architect names read `.name` off the TEXT `owner_entity` / `architect_entity` columns, so they came out blank on
+  pay apps, A310/A312, closeout and the project overview. All now go through `lib/project-parties.ts`.
+- Email helpers in `lib/email.ts` returned void; all now return the send result. Signature requests and W-9 requests
+  report a failed email instead of saying it was sent.
+- `files/share` and `radio/panic` now check Resend's answer. Panic emails read recipients from `profiles`, because
+  `public.users` is stale (16 rows, 5 match a profile).
+
+STILL OPEN:
+- White-label still defaults to `*.saguarocrm.com` subdomains / `tenants.saguarocrm.com` CNAME
+  (`white-label-provisioning.ts:36,38,259,306,457,572`) and `sandbox.saguarocrm.com` (`sandbox-manager*.ts`). That
+  domain is not ours. Fixing it needs a decision on the white-label domain plus wildcard DNS, so it is not a code-only change.

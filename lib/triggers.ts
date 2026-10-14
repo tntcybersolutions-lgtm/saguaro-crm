@@ -23,6 +23,7 @@ import { bidAmount } from '@/lib/bid-amount';
 import { bidDueDay } from '@/lib/bid-deadline';
 import { orValue } from '@/lib/pg-filter';
 import { coAmount } from '@/lib/change-order-amount';
+import { ownerContact, architectContact, gcContact } from '@/lib/project-parties';
 
 /* Fallback is the live domain. It used to be a Vercel preview URL that no
    longer resolves, so any email sent without NEXT_PUBLIC_APP_URL set carried
@@ -30,6 +31,7 @@ import { coAmount } from '@/lib/change-order-amount';
 const APP_URL = process.env.NEXT_PUBLIC_APP_URL || 'https://saguarocontrol.net';
 
 function adminClient() { return createServerClient(); }
+
 
 // ─── Project ──────────────────────────────────────────────────────────────────
 export async function onProjectCreated(projectId: string): Promise<void> {
@@ -105,11 +107,11 @@ export async function onPayAppSubmitted(payAppId: string): Promise<void> {
     const project = pa.projects;
     if (!project) return;
 
-    const ownerEmail = project.owner_entity?.email;
-    if (ownerEmail) {
+    const owner = ownerContact(project);
+    if (owner.email) {
       await sendPayAppSubmitted(
-        ownerEmail,
-        project.owner_entity?.name || 'Owner',
+        owner.email,
+        owner.name,
         project.name,
         pa.app_number,
         pa.current_payment_due || 0,
@@ -145,9 +147,9 @@ export async function onPayAppApproved(payAppId: string): Promise<void> {
     if (!project) return;
 
     // Email GC
-    const gcEmail = project.gc_email;
-    if (gcEmail) {
-      await sendPayAppApproved(gcEmail, project.gc_name || 'Contractor', project.name, pa.app_number, pa.current_payment_due || 0);
+    const gc = gcContact(project);
+    if (gc.email) {
+      await sendPayAppApproved(gc.email, gc.name, project.name, pa.app_number, pa.current_payment_due || 0);
     }
 
     // Auto-generate conditional lien waivers for the project's subs.
@@ -247,9 +249,9 @@ export async function onPayAppCertified(payAppId: string): Promise<void> {
     const project = pa.projects;
     if (!project) return;
 
-    const gcEmail = project.gc_email;
-    if (gcEmail) {
-      await sendPayAppCertified(gcEmail, project.gc_name || 'Contractor', project.name, pa.current_payment_due || 0, new Date().toLocaleDateString());
+    const gc = gcContact(project);
+    if (gc.email) {
+      await sendPayAppCertified(gc.email, gc.name, project.name, pa.current_payment_due || 0, new Date().toLocaleDateString());
     }
     await createNotification(
       project.tenant_id, null, 'pay_app_certified',
@@ -426,7 +428,7 @@ export async function onBidSubmitted(bidSubmissionId: string): Promise<void> {
     const amountBid = bidAmount(s);
     const bidder = s.company_name || s.sub_name || s.contact_email || 'A subcontractor';
 
-    const gcEmail = project.gc_email;
+    const gcEmail = gcContact(project).email;
     if (gcEmail) {
       await withComm(
         { tenantId: project.tenant_id, projectId: project.id, bidPackageId: pkg.id, subId: s.sub_id ?? null,
@@ -757,7 +759,7 @@ export async function onRFICreated(rfiId: string): Promise<void> {
     const project = r.projects;
     if (!project) return;
 
-    const architectEmail = project.architect_entity?.email;
+    const architectEmail = architectContact(project).email;
     if (architectEmail) {
       await sendRFISubmitted(architectEmail, project.name, r.rfi_number, r.subject, r.submitted_by_name || 'GC');
     }
@@ -791,7 +793,7 @@ export async function onRFIAnswered(rfiId: string): Promise<void> {
     const project = r.projects;
     if (!project) return;
 
-    const submitterEmail = project.gc_email;
+    const submitterEmail = gcContact(project).email;
     if (submitterEmail) {
       await sendRFIAnswered(submitterEmail, 'Project Team', project.name, r.rfi_number, r.answer || '');
     }
@@ -891,7 +893,7 @@ export async function onChangeOrderApproved(changeOrderId: string): Promise<void
       }
     }
 
-    const ownerEmail = project.owner_entity?.email;
+    const ownerEmail = ownerContact(project).email;
     if (ownerEmail) {
       await sendChangeOrderApproved(ownerEmail, project.name, c.co_number, impact);
     }

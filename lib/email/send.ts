@@ -310,6 +310,9 @@ export async function sendEmail(
         ? { attachments: opts.attachments.map((a) => ({ filename: a.filename, content: a.content })) }
         : {}),
     });
+    // Resend reports a rejected send in result.error (not a throw). Log it so a
+    // failed send is never silent; callers get null and must not claim success.
+    if (result.error) console.error('[Email] Resend rejected send:', opts.subject, result.error);
     return result.data;
   } catch (err) {
     console.error('[Email] Send failed:', err);

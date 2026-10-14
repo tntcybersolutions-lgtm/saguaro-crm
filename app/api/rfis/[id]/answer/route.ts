@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from 'next/server';
 import { createServerClient, getUser } from '@/lib/supabase-server';
 import { requirePermission } from '@/lib/permissions';
 import { onRFIAnswered } from '@/lib/triggers';
+import { runInBackground } from '@/lib/background';
 
 export async function POST(
   req: NextRequest,
@@ -49,7 +50,7 @@ export async function POST(
 
     if (error) throw error;
 
-    onRFIAnswered(id).catch(console.error);
+    runInBackground(onRFIAnswered(id), 'onRFIAnswered');
 
     return NextResponse.json({ success: true });
   } catch (err: unknown) {

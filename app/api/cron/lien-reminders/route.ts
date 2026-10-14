@@ -64,10 +64,11 @@ export async function GET(req: NextRequest) {
     if (projectIds.length > 0) {
       const { data: projs } = await db
         .from('projects')
-        .select('id, name, gc_email, gc_name')
+        .select('id, name, gc_email, pm_email, gc_name')
         .in('id', projectIds);
       for (const pr of (projs || []) as any[]) { // eslint-disable-line @typescript-eslint/no-explicit-any
-        projectMap.set(pr.id, { name: pr.name, gc_email: pr.gc_email, gc_name: pr.gc_name });
+        // gc_email is rarely filled in; the project PM stands in for the GC.
+        projectMap.set(pr.id, { name: pr.name, gc_email: (pr.gc_email || pr.pm_email || null), gc_name: pr.gc_name });
       }
     }
 

@@ -4,6 +4,7 @@ import { assertProjectInTenant } from '@/lib/assert-project';
 import { requirePermission } from '@/lib/permissions';
 import type { Database } from '@/lib/database.types';
 import { onRFICreated } from '@/lib/triggers';
+import { runInBackground } from '@/lib/background';
 
 export async function POST(req: NextRequest) {
   const g = await requirePermission(req, 'RFIs', 'Edit');
@@ -81,7 +82,7 @@ export async function POST(req: NextRequest) {
     // Fire the rfi.submitted lifecycle: architect email + in-app notification +
     // outbound webhook fan-out. Non-blocking — never fail the create on this.
     const rfiId = (data as { id?: string } | null)?.id;
-    if (rfiId) onRFICreated(rfiId).catch(console.error);
+    if (rfiId) runInBackground(onRFICreated(rfiId), 'onRFICreated');
 
     return NextResponse.json({ success: true, rfi: data });
   } catch (err: unknown) {

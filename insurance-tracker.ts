@@ -28,8 +28,8 @@ import { getProjectContext } from './project-context';
 import { getUser } from './lib/supabase-server';
 
 const client  = new Anthropic({ apiKey: process.env.ANTHROPIC_API_KEY });
-const FROM    = process.env.EMAIL_FROM    ?? 'Saguaro CRM <noreply@mail.saguarocrm.com>';
-const APP_URL = process.env.NEXT_PUBLIC_APP_URL ?? 'https://app.saguarocrm.com';
+const FROM    = process.env.EMAIL_FROM    ?? 'Saguaro Control Systems <noreply@saguarocontrol.net>';
+const APP_URL = process.env.NEXT_PUBLIC_APP_URL ?? 'https://saguarocontrol.net';
 
 function resend(): Resend | null {
   return process.env.RESEND_API_KEY ? new Resend(process.env.RESEND_API_KEY) : null;

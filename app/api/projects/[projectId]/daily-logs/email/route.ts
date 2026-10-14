@@ -86,11 +86,14 @@ export async function POST(req: NextRequest, { params }: { params: { projectId: 
       ${blocks || '<p style="color:#6b7280;font-size:14px;">No logs found for the selection.</p>'}
     `;
 
-    await sendEmail({
+    const sent = await sendEmail({
       to,
       subject: `Daily Log Summary — ${projectName}`,
       html,
     });
+    if (!sent) {
+      return NextResponse.json({ error: "The email didn't go out. Please try again in a minute." }, { status: 502 });
+    }
 
     return NextResponse.json({ success: true, sent: rows.length, to });
   } catch {

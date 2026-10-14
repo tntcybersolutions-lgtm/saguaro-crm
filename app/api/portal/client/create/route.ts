@@ -93,7 +93,7 @@ export async function POST(req: NextRequest) {
     let emailSent = false;
     if (process.env.RESEND_API_KEY) {
       try {
-        await sendClientPortalInvite({
+        const result = await sendClientPortalInvite({
           to: clientEmail.toLowerCase().trim(),
           clientName: clientName.trim(),
           gcCompanyName,
@@ -101,7 +101,9 @@ export async function POST(req: NextRequest) {
           portalUrl,
           expiresAt: expiresAt,
         });
-        emailSent = true;
+        // sendClientPortalInvite never throws; it reports failure as sent:false.
+        emailSent = result.sent === true;
+        if (!emailSent) console.warn('[portal/client/create] email not sent:', result.error);
       } catch (err) {
         console.warn('[portal/client/create] email send failed:', err);
         emailSent = false;

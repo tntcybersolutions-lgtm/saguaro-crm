@@ -4,6 +4,7 @@ import { requirePermission } from '@/lib/permissions';
 import { apiError } from '@/lib/api-error';
 import { onSubAddedToProject } from '@/lib/triggers';
 import { groupJobSubs, cleanText, parseAmount, COMPANY_FIELDS, companyUpdates, type JobLinkRow } from '@/lib/job-subs';
+import { runInBackground } from '@/lib/background';
 
 /**
  * The subcontractors on ONE job.
@@ -148,7 +149,7 @@ export async function POST(req: NextRequest, { params }: Ctx) {
     if (lErr) throw lErr;
 
     // W-9 request and preliminary-notice reminder (lib/triggers), as before.
-    onSubAddedToProject(projectId, subId).catch((err) => console.error('[projects/subs POST] onSubAddedToProject', err));
+    runInBackground(onSubAddedToProject(projectId, subId), 'onSubAddedToProject');
 
     return NextResponse.json({ sub, assignment: link }, { status: 201 });
   } catch (e) {

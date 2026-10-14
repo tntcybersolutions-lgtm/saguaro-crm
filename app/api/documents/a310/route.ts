@@ -3,6 +3,7 @@ import { apiError } from '@/lib/api-error';
 import { generateA310, saveDocument } from '@/lib/pdf-engine';
 import { createServerClient, getUser } from '@/lib/supabase-server';
 import { requirePermission } from '@/lib/permissions';
+import { ownerName } from '@/lib/project-parties';
 
 export async function POST(req: NextRequest) {
   const g = await requirePermission(req, 'Documents', 'Edit');
@@ -19,7 +20,7 @@ export async function POST(req: NextRequest) {
     const pdfBytes = await generateA310({
       projectName: p?.name || body.projectName,
       projectAddress: p?.address || '',
-      ownerName: p?.owner_entity?.name || body.ownerName || '',
+      ownerName: ownerName(p) || body.ownerName || '',
       gcName: body.gcName || '',
       gcAddress: body.gcAddress || p?.address || '',
       suretyName: body.suretyName || '',

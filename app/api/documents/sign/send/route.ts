@@ -65,12 +65,13 @@ export async function POST(req: NextRequest) {
         .not('status', 'ilike', 'accepted'), 'proposals write');
     }
 
+    let mail: { sent: boolean } | null = null;
     if (sig) {
       const [{ data: proj }, { data: ten }] = await Promise.all([
         db.from('projects').select('name').eq('id', (sig as any).project_id).eq('tenant_id', user.tenantId).single(),
         db.from('tenants').select('name').eq('id', user.tenantId).single(),
       ]);
-      await sendSignatureRequest({
+      mail = await sendSignatureRequest({
         to: (sig as any).signer_email,
         signerName: (sig as any).signer_name,
         senderName: (ten as any)?.name || 'Your general contractor',
@@ -80,7 +81,11 @@ export async function POST(req: NextRequest) {
       });
     }
 
-    return NextResponse.json({ success: true, resent: true });
+    // Tell the sender the truth: the link was renewed, but say so if the email failed.
+    if (mail && !mail.sent) {
+      return NextResponse.json({ success: true, resent: true, emailed: false, warning: "The link was renewed but the email didn't go out. Copy the link and send it yourself, or try again." });
+    }
+    return NextResponse.json({ success: true, resent: true, emailed: true });
   }
 
   // ─── Normal send flow ──────────────────────────────────────────────
@@ -145,6 +150,7 @@ export async function POST(req: NextRequest) {
   const appUrl = process.env.NEXT_PUBLIC_APP_URL || 'https://saguarocontrol.net';
 
   const created: any[] = [];
+  const emailFailed: string[] = [];
 
   for (const signer of signers) {
     // 1. Insert document_signatures
@@ -190,7 +196,7 @@ export async function POST(req: NextRequest) {
     /* Send the link. A failure here is logged inside sendSignatureRequest and
        does not roll back the request — the row exists, and Resend can be
        retried from the status list. */
-    await sendSignatureRequest({
+    const mail = await sendSignatureRequest({
       to: signer.email,
       signerName: signer.name,
       senderName,
@@ -200,7 +206,8 @@ export async function POST(req: NextRequest) {
       message: message || undefined,
     });
 
-    created.push({ ...sig, token });
+    if (!mail.sent) emailFailed.push(signer.email);
+    created.push({ ...sig, token, emailed: mail.sent });
   }
 
   /* A proposal sent for signature is Sent, to the first signer. */
@@ -212,5 +219,12 @@ export async function POST(req: NextRequest) {
       .eq('tenant_id', user.tenantId), 'proposals write');
   }
 
+  if (emailFailed.length) {
+    return NextResponse.json({
+      success: true,
+      signatures: created,
+      warning: `The request was created, but the email to ${emailFailed.join(', ')} didn't go out. Use Resend from the status list.`,
+    });
+  }
   return NextResponse.json({ success: true, signatures: created });
 }

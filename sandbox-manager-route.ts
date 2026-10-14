@@ -32,10 +32,10 @@ function resend(): Resend | null {
   return new Resend(process.env.RESEND_API_KEY);
 }
 
-const FROM    = process.env.EMAIL_FROM    ?? 'Saguaro CRM <noreply@mail.saguarocrm.com>';
-const SALES   = process.env.SALES_EMAIL  ?? 'sales@saguarocrm.com';
-const SUPPORT = process.env.SUPPORT_EMAIL ?? 'support@saguarocrm.com';
-const APP_URL = process.env.NEXT_PUBLIC_APP_URL ?? 'https://app.saguarocrm.com';
+const FROM    = process.env.EMAIL_FROM    ?? 'Saguaro Control Systems <noreply@saguarocontrol.net>';
+const SALES   = process.env.SALES_EMAIL  ?? 'sales@saguarocontrol.net';
+const SUPPORT = process.env.SUPPORT_EMAIL ?? 'support@saguarocontrol.net';
+const APP_URL = process.env.NEXT_PUBLIC_APP_URL ?? 'https://saguarocontrol.net';
 const SANDBOX_URL = process.env.NEXT_PUBLIC_SANDBOX_URL ?? 'https://sandbox.saguarocrm.com';
 
 // ─────────────────────────────────────────────────────────────────────────────
@@ -138,7 +138,7 @@ export async function sandboxSignupHandler(request: NextRequest) {
     }
 
     console.error('[SandboxSignup]', message);
-    return err('Something went wrong. Please try again or contact support@saguarocrm.com', 500);
+    return err('Something went wrong. Please try again or contact support@saguarocontrol.net', 500);
   }
 }
 

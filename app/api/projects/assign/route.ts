@@ -6,6 +6,7 @@ import { onProjectCreated } from '@/lib/triggers';
 import { logActivity } from '@/lib/activity';
 import { assignProjectToUser } from '@/lib/project-assignment';
 import type { Database } from '@/lib/database.types';
+import { runInBackground } from '@/lib/background';
 
 export const dynamic = 'force-dynamic';
 
@@ -147,7 +148,7 @@ export async function POST(req: NextRequest) {
         if (dirErr) console.error('[projects/assign] owner contact seed', dirErr);
       }
 
-      onProjectCreated(newId).catch(console.error);
+      runInBackground(onProjectCreated(newId), 'onProjectCreated');
 
       void logActivity({
         tenantId,

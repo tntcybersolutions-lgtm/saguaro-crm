@@ -90,10 +90,10 @@ export async function POST(req: NextRequest) {
     try {
       const key = process.env.RESEND_API_KEY;
       if (key && userIds.length) {
-        const { data: users } = await db.from('users').select('id, email').eq('tenant_id', t).in('id', userIds);
+        const { data: users } = await db.from('profiles').select('id, email').eq('tenant_id', t).in('id', userIds); // profiles holds every account; public.users is stale
         const emails = ((users || []) as any[]).map((u) => u.email).filter(Boolean);
         if (emails.length) {
-          await fetch('https://api.resend.com/emails', {
+          const sent = await fetch('https://api.resend.com/emails', {
             method: 'POST',
             headers: { Authorization: `Bearer ${key}`, 'Content-Type': 'application/json' },
             body: JSON.stringify({
@@ -103,9 +103,10 @@ export async function POST(req: NextRequest) {
               text: `${text}\n\n${loc ? `Map: https://maps.google.com/?q=${loc.lat},${loc.lng}\n\n` : ''}Open Saguaro Radio to respond.`,
             }),
           });
+          if (!sent.ok) console.error('[radio/panic] email rejected', sent.status, await sent.text().catch(() => ''));
         }
       }
-    } catch { /* email is best-effort */ }
+    } catch (err) { console.error('[radio/panic] email failed', err); }
 
     // 3) SMS blast — env-gated Twilio REST (no SDK needed).
     let smsSent = 0;

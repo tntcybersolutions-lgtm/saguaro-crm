@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { requirePermission } from '@/lib/permissions';
 import { onPayAppCertified } from '@/lib/triggers';
+import { runInBackground } from '@/lib/background';
 
 export async function POST(req: NextRequest, { params }: { params: Promise<{ id: string }> }) {
   const g = await requirePermission(req, 'Pay Apps', 'Full');
@@ -15,7 +16,7 @@ export async function POST(req: NextRequest, { params }: { params: Promise<{ id:
       .eq('id', id)
       .eq('tenant_id', user.tenantId);
     if (error) throw error;
-    onPayAppCertified(id).catch(console.error);
+    runInBackground(onPayAppCertified(id), 'onPayAppCertified');
     return NextResponse.json({ success: true });
   } catch {
     return NextResponse.json({ error: "Internal server error" }, { status: 500 });

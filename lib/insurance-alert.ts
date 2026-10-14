@@ -11,11 +11,12 @@
  *   subcontractors: company_name, contact_name, email, contact_email
  *   insurance_certificates: sub_id (FK → subcontractors), sub_name (NOT NULL),
  *     policy_type, expiry_date, project_id (FK → projects), last_checked_at
- *   projects: name, gc_email, tenant_id
+ *   projects: name, gc_email, pm_email, tenant_id (gc_email is rarely filled in;
+ *     the project PM stands in for the GC)
  */
 
 export const INSURANCE_ALERT_SELECT =
-  '*, subcontractors(company_name, email, contact_email), projects(name, gc_email, tenant_id)';
+  '*, subcontractors(company_name, email, contact_email), projects(name, gc_email, pm_email, tenant_id)';
 
 type Embedded<T> = T | T[] | null | undefined;
 const one = <T>(v: Embedded<T>): T | null => (Array.isArray(v) ? (v[0] ?? null) : (v ?? null));
@@ -40,7 +41,7 @@ export interface InsuranceAlertParties {
 export function insuranceAlertParties(cert: {
   sub_name?: unknown;
   subcontractors?: Embedded<{ company_name?: unknown; email?: unknown; contact_email?: unknown }>;
-  projects?: Embedded<{ name?: unknown; gc_email?: unknown; tenant_id?: unknown }>;
+  projects?: Embedded<{ name?: unknown; gc_email?: unknown; pm_email?: unknown; tenant_id?: unknown }>;
 }): InsuranceAlertParties | null {
   const project = one(cert.projects);
   if (!project) return null;
@@ -49,7 +50,7 @@ export function insuranceAlertParties(cert: {
     // The roster company name; otherwise the name typed on the certificate itself.
     subName: clean(sub?.company_name) || clean(cert.sub_name) || 'Subcontractor',
     subEmail: clean(sub?.email) || clean(sub?.contact_email),
-    gcEmail: clean(project.gc_email),
+    gcEmail: clean(project.gc_email) || clean(project.pm_email),
     projectName: clean(project.name),
     tenantId: clean(project.tenant_id),
   };

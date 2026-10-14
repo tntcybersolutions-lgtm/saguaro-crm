@@ -6,6 +6,7 @@ import { createServerClient } from './supabase-server';
 import { sendPushToTenant, type PushMessage } from './push';
 import { must } from '@/lib/db-write';
 import { sendNotificationEmail } from './email';
+import { runInBackground } from './background';
 
 const supabase = createServerClient();
 
@@ -21,9 +22,8 @@ function firePush(
   userId: string | null,
   msg: PushMessage,
 ): void {
-  sendPushToTenant(supabase, tenantId, msg, { userId }).catch((err) => {
-    console.error('[notifications] push dispatch failed', err);
-  });
+  // Kept alive past the response (waitUntil) so the push actually goes out.
+  runInBackground(sendPushToTenant(supabase, tenantId, msg, { userId }), 'push dispatch');
 }
 
 /**
@@ -35,7 +35,8 @@ function firePush(
  */
 async function emailRecipients(tenantId: string, userId: string | null): Promise<string[]> {
   let q = supabase.from('profiles').select('email, notifications_enabled').eq('tenant_id', tenantId);
-  q = userId ? q.eq('id', userId) : q.in('role', ['admin', 'owner']);
+  // Roles are stored in mixed case ('admin', 'Owner'), so match without case.
+  q = userId ? q.eq('id', userId) : q.or('role.ilike.admin,role.ilike.owner');
   const { data, error } = await q;
   if (error) throw error;
   const out = new Set<string>();
@@ -46,7 +47,13 @@ async function emailRecipients(tenantId: string, userId: string | null): Promise
   return [...out];
 }
 
-async function emailNotification(tenantId: string, userId: string | null, title: string, body: string, url: string): Promise<void> {
+/* Live radio traffic (every push-to-talk clip and shared photo) is a chat
+   stream: it goes to the phone by push, not to the inbox. A panic alarm sends
+   its own email (with the map link) from /api/radio/panic, so not twice. */
+const NO_EMAIL_TYPES = new Set(['radio_voice', 'radio_media', 'radio_panic']);
+
+async function emailNotification(tenantId: string, userId: string | null, type: string, title: string, body: string, url: string): Promise<void> {
+  if (NO_EMAIL_TYPES.has(type)) return;
   try {
     const to = await emailRecipients(tenantId, userId);
     if (!to.length) return;
@@ -113,7 +120,7 @@ export async function createNotification(
       tag: String(type),
     });
     // And by email, so people who are not in the app still hear about it.
-    await emailNotification(tenantId, userId, title, body, url);
+    await emailNotification(tenantId, userId, String(type), title, body, url);
   } catch (err) {
     console.error('[createNotification]', err);
   }

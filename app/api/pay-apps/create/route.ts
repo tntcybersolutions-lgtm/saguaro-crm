@@ -8,6 +8,8 @@ import { must } from '@/lib/db-write';
 import { logActivity, money } from '@/lib/activity';
 import { apiError, apiFail } from '@/lib/api-error';
 import { coTotal } from '@/lib/change-order-amount';
+import { runInBackground } from '@/lib/background';
+import { architectName, ownerAddress, ownerName } from '@/lib/project-parties';
 
 /** A real calendar date in YYYY-MM-DD — what a Postgres DATE column accepts. */
 function isIsoDate(v: unknown): boolean {
@@ -283,9 +285,9 @@ export async function POST(req: NextRequest) {
       less_previous_certificates: prevPaymentsDollars,
       current_payment_due: m.currentPaymentDue,
       net_payment_due: m.currentPaymentDue,
-      owner_name: p?.owner_entity?.name || body.ownerName,
-      owner_address: p?.owner_entity?.address || body.ownerAddress,
-      architect_name: p?.architect_entity?.name || body.architectName,
+      owner_name: ownerName(p) || body.ownerName,
+      owner_address: ownerAddress(p) || body.ownerAddress,
+      architect_name: architectName(p) || body.architectName,
       notes: body.notes,
     } as unknown as Database['public']['Tables']['pay_applications']['Insert']).select().single();
 
@@ -299,7 +301,7 @@ export async function POST(req: NextRequest) {
     }
 
     // Non-blocking trigger
-    onPayAppCreated((payApp as any).id).catch(console.error);
+    runInBackground(onPayAppCreated((payApp as any).id), 'onPayAppCreated');
 
     /* The money event a GC watches hardest — a pay application going out is
        the job asking to be paid. */

@@ -3,6 +3,7 @@ import { createServerClient } from '@/lib/supabase-server';
 import { requirePermission } from '@/lib/permissions';
 import { onSubAddedToProject } from '@/lib/triggers';
 import { apiError } from '@/lib/api-error';
+import { runInBackground } from '@/lib/background';
 
 export async function POST(req: NextRequest) {
   const g = await requirePermission(req, 'Projects', 'Edit');
@@ -63,7 +64,7 @@ export async function POST(req: NextRequest) {
       const { data: own, error: pErr } = await db.from('projects').select('id')
         .eq('id', String(body.projectId)).eq('tenant_id', tenantId).maybeSingle();
       if (pErr) throw pErr;
-      if (own) onSubAddedToProject(String(body.projectId), (sub as { id: string }).id).catch(console.error);
+      if (own) runInBackground(onSubAddedToProject(String(body.projectId), (sub as { id: string }).id), 'onSubAddedToProject');
     }
 
     return NextResponse.json({ sub, success: true });

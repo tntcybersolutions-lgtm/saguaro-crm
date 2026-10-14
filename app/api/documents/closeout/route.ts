@@ -3,6 +3,7 @@ import { generateCloseoutPackage, saveDocument } from '@/lib/pdf-engine';
 import { createServerClient } from '@/lib/supabase-server';
 import { requirePermission } from '@/lib/permissions';
 import { apiError } from '@/lib/api-error';
+import { ownerName } from '@/lib/project-parties';
 
 export async function POST(req: NextRequest) {
   const g = await requirePermission(req, 'Documents', 'Edit');
@@ -32,7 +33,7 @@ export async function POST(req: NextRequest) {
     const pdfBytes = await generateCloseoutPackage({
       projectName: p?.name || body.projectName,
       projectAddress: p?.address || '',
-      ownerName: p?.owner_entity?.name || '',
+      ownerName: ownerName(p) || '',
       gcName: body.gcName || '',
       completionDate: body.completionDate || new Date().toISOString().split('T')[0],
       contractAmount: p?.contract_amount || 0,

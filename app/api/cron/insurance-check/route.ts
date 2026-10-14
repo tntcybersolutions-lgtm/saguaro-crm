@@ -13,6 +13,7 @@ export async function GET(req: NextRequest) {
   }
 
   try {
+    const ALERT_DAYS = new Set([30, 14, 7, 3, 1, 0]);
     const db = createServerClient();
     const now = new Date();
     /* "Expires in N days" counts from each company's own day (tenants.time_zone;
@@ -38,7 +39,9 @@ export async function GET(req: NextRequest) {
     let processed = 0;
     for (const cert of (certs || []) as any[]) {
       const days = daysUntilDay(cert.expiry_date, todayFor(cert.tenant_id));
-      if (days === null || days < 0 || days > 30) continue;
+      // Alert on milestone days only. Running daily for every day inside 30
+      // would email the sub, the GC and the admins thirty days in a row.
+      if (days === null || !ALERT_DAYS.has(days)) continue;
       await onInsuranceExpiring(cert.id, days);
       processed++;
     }

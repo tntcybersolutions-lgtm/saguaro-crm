@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from 'next/server';
 import { createServerClient, getUser } from '@/lib/supabase-server';
 import { requirePermission } from '@/lib/permissions';
 import { onRFIAnswered } from '@/lib/triggers';
+import { runInBackground } from '@/lib/background';
 
 export const dynamic = 'force-dynamic';
 
@@ -103,7 +104,7 @@ export async function POST(
       throw writeErr;
     }
 
-    onRFIAnswered(id).catch(() => {});
+    runInBackground(onRFIAnswered(id), 'onRFIAnswered');
 
     return NextResponse.json({ success: true });
   } catch {

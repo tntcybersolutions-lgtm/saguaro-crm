@@ -1041,7 +1041,7 @@ async function sendWhiteLabelOnboardingEmail(email: string, tenantId: string) {
   await r.emails.send({
     from:    FROM,
     to:      email,
-    replyTo: process.env.SALES_EMAIL ?? 'sales@saguarocrm.com',
+    replyTo: process.env.SALES_EMAIL ?? 'sales@saguarocontrol.net',
     subject: 'Your Saguaro White-Label Platform — Next Steps',
     html: `
       <div style="font-family:-apple-system,sans-serif;max-width:560px;margin:0 auto">
