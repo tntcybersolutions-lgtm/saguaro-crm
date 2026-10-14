@@ -21,6 +21,7 @@ import { createServerClient } from '@/lib/supabase-server';
 
 import { apiError } from '@/lib/api-error';
 import { defaultRoleRows } from '@/lib/default-roles';
+import { sendWelcome } from '@/lib/email';
 function isConfigured() {
   const url = process.env.NEXT_PUBLIC_SUPABASE_URL;
   const key = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY;
@@ -134,6 +135,10 @@ export async function POST(req: NextRequest) {
         .from('role_definitions')
         .insert(defaultRoleRows(tenantId) as never);
       if (rolesErr) console.error('[signup] default roles seed error:', rolesErr.message);
+
+      // Welcome email (the template existed but nothing ever sent it).
+      const w = await sendWelcome(cleanEmail, fullName, company.trim()).then(() => null, (e) => e);
+      if (w) console.error('[signup] welcome email failed:', w);
     } catch (err) {
       console.error('[signup] provisioning exception:', err);
       return NextResponse.json({ error: 'Could not finish creating your company. Please contact support.' }, { status: 500 });

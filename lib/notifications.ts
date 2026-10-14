@@ -5,6 +5,7 @@
 import { createServerClient } from './supabase-server';
 import { sendPushToTenant, type PushMessage } from './push';
 import { must } from '@/lib/db-write';
+import { sendNotificationEmail } from './email';
 
 const supabase = createServerClient();
 
@@ -23,6 +24,37 @@ function firePush(
   sendPushToTenant(supabase, tenantId, msg, { userId }).catch((err) => {
     console.error('[notifications] push dispatch failed', err);
   });
+}
+
+/**
+ * Email the people a notification is for. A notification for one user goes to
+ * that user; a company-wide one (userId null) goes to the company's admins and
+ * owners. Anyone who turned notifications off (profiles.notifications_enabled
+ * = false) is skipped. Never throws and never blocks the in-app notification
+ * longer than 5 seconds.
+ */
+async function emailRecipients(tenantId: string, userId: string | null): Promise<string[]> {
+  let q = supabase.from('profiles').select('email, notifications_enabled').eq('tenant_id', tenantId);
+  q = userId ? q.eq('id', userId) : q.in('role', ['admin', 'owner']);
+  const { data, error } = await q;
+  if (error) throw error;
+  const out = new Set<string>();
+  for (const r of (data || []) as Array<{ email: string | null; notifications_enabled: boolean | null }>) {
+    const e = (r.email || '').trim().toLowerCase();
+    if (e && r.notifications_enabled !== false) out.add(e);
+  }
+  return [...out];
+}
+
+async function emailNotification(tenantId: string, userId: string | null, title: string, body: string, url: string): Promise<void> {
+  try {
+    const to = await emailRecipients(tenantId, userId);
+    if (!to.length) return;
+    const work = Promise.all(to.map((addr) => sendNotificationEmail(addr, title, body, url)));
+    await Promise.race([work, new Promise((r) => setTimeout(r, 5000))]);
+  } catch (err) {
+    console.error('[notifications] email dispatch failed', err);
+  }
 }
 
 export interface Notification {
@@ -72,13 +104,16 @@ export async function createNotification(
 
     // Fire a device/web push so the in-app notification also reaches the phone /
     // desktop. Fire-and-forget — never blocks or fails the notification write.
+    const url = link ? (link.startsWith('http') ? link : `${APP_URL}${link.startsWith('/') ? '' : '/'}${link}`) : `${APP_URL}/app`;
     firePush(tenantId, userId, {
       title,
       body,
-      url: link ? (link.startsWith('http') ? link : `${APP_URL}${link.startsWith('/') ? '' : '/'}${link}`) : `${APP_URL}/app`,
+      url,
       type: String(type),
       tag: String(type),
     });
+    // And by email, so people who are not in the app still hear about it.
+    await emailNotification(tenantId, userId, title, body, url);
   } catch (err) {
     console.error('[createNotification]', err);
   }

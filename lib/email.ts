@@ -117,6 +117,20 @@ async function deliver(to: string | string[], subject: string, html: string): Pr
 
 // ─── All Email Functions ──────────────────────────────────────────────────────
 
+/**
+ * The email copy of an in-app notification (RFI submitted, pay app approved,
+ * a teammate joined…). Before this, notifications only showed inside the app
+ * and as phone pushes, so a GC who was not signed in heard nothing at all.
+ */
+export async function sendNotificationEmail(to: string, title: string, body: string, url: string): Promise<SendResult> {
+  const safe = (t: string) => t.replace(/[&<>"]/g, (c) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' }[c] as string));
+  return send(to, title, layout(`
+    ${h(safe(title))}
+    ${body ? p(safe(body)) : ''}
+    ${btn('Open in Saguaro →', url)}
+  `));
+}
+
 export async function sendWelcome(to: string, name: string, company: string) {
   await send(to, `Welcome to Saguaro Control Systems, ${name}!`, layout(`
     ${h(`Welcome to Saguaro Control Systems, ${name}!`)}
