@@ -51,6 +51,7 @@ import {
 import JobColorPicker from '@/components/project/JobColorPicker';
 import ProjectOwnershipCard from '@/components/projects/ProjectOwnershipCard';
 import { coTotal } from '@/lib/change-order-amount';
+import { architectName, ownerName } from '@/lib/project-parties';
 
 /* ── Fetchers ─────────────────────────────────────────────────────────── */
 
@@ -323,8 +324,8 @@ export default function JobPage() {
   const details: [string, string][] = [
     ['Job number', pr.project_number || pr.number || '—'],
     ['Type', pr.project_type ? titleCase(String(pr.project_type)) : '—'],
-    ['Owner', pr.owner_entity?.name || pr.owner_name || '—'],
-    ['Architect', pr.architect_entity?.name || pr.architect_name || '—'],
+    ['Owner', ownerName(pr) || '—'],
+    ['Architect', architectName(pr) || '—'],
     ['Start', start ? fmtDay(start, today) + (start.slice(0, 4) !== today.slice(0, 4) ? `, ${start.slice(0, 4)}` : '') : '—'],
     ['Finish', end ? fmtDay(end, today) + (end.slice(0, 4) !== today.slice(0, 4) ? `, ${end.slice(0, 4)}` : '') : '—'],
     ['State', pr.state || '—'],
@@ -431,7 +432,7 @@ export default function JobPage() {
             )}
             {phaseErr && <p className="jx-note" role="alert">{phaseErr}</p>}
           </li>
-          <Disclosure id="jx-details" icon={<Info size={18} weight="bold" />} title="Details" meta={[pr.project_number || null, pr.owner_entity?.name || pr.owner_name || null].filter(Boolean).join(' · ') || 'Number, owner, dates, contract and billing'} open={!!open.details} onToggle={() => flip('details')}>
+          <Disclosure id="jx-details" icon={<Info size={18} weight="bold" />} title="Details" meta={[pr.project_number || null, ownerName(pr) || null].filter(Boolean).join(' · ') || 'Number, owner, dates, contract and billing'} open={!!open.details} onToggle={() => flip('details')}>
             {!data ? <p className="fl-empty">{aggError ? <>Couldn&apos;t load the details. <button type="button" className="jx-inline" onClick={() => { void reloadAgg(); }}>Retry</button></> : 'Loading…'}</p> : (
               <dl className="jx-dl">
                 {[...details, ...money].map(([k, v]) => <div key={k}><dt>{k}</dt><dd>{v}</dd></div>)}

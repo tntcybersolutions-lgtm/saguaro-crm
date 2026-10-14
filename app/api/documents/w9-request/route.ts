@@ -60,9 +60,13 @@ export async function POST(req: NextRequest) {
     if (error) throw error;
 
     const portalUrl = `${APP_URL}/portals/w9/${(w9 as any).token}`;
-    await sendW9Request(vendorEmail, vendorName, (project as any)?.name || '', portalUrl);
+    const mail = await sendW9Request(vendorEmail, vendorName, (project as any)?.name || '', portalUrl);
+    if (!mail.sent) {
+      // The request exists and the link works; say plainly that the email failed.
+      return NextResponse.json({ w9, portalUrl, success: true, emailed: false, warning: "The W-9 request was created, but the email didn't go out. Copy the link and send it to the vendor." });
+    }
 
-    return NextResponse.json({ w9, portalUrl, success: true });
+    return NextResponse.json({ w9, portalUrl, success: true, emailed: true });
   } catch {
     return NextResponse.json({ error: "Internal server error" }, { status: 500 });
   }

@@ -48,8 +48,9 @@ async function emailRecipients(tenantId: string, userId: string | null): Promise
 }
 
 /* Live radio traffic (every push-to-talk clip and shared photo) is a chat
-   stream: it goes to the phone by push, not to the inbox. */
-const NO_EMAIL_TYPES = new Set(['radio_voice', 'radio_media']);
+   stream: it goes to the phone by push, not to the inbox. A panic alarm sends
+   its own email (with the map link) from /api/radio/panic, so not twice. */
+const NO_EMAIL_TYPES = new Set(['radio_voice', 'radio_media', 'radio_panic']);
 
 async function emailNotification(tenantId: string, userId: string | null, type: string, title: string, body: string, url: string): Promise<void> {
   if (NO_EMAIL_TYPES.has(type)) return;

@@ -23,6 +23,7 @@ import { bidAmount } from '@/lib/bid-amount';
 import { bidDueDay } from '@/lib/bid-deadline';
 import { orValue } from '@/lib/pg-filter';
 import { coAmount } from '@/lib/change-order-amount';
+import { ownerContact, architectContact, gcContact } from '@/lib/project-parties';
 
 /* Fallback is the live domain. It used to be a Vercel preview URL that no
    longer resolves, so any email sent without NEXT_PUBLIC_APP_URL set carried
@@ -31,33 +32,6 @@ const APP_URL = process.env.NEXT_PUBLIC_APP_URL || 'https://saguarocontrol.net';
 
 function adminClient() { return createServerClient(); }
 
-/* Who to email on a project. projects.owner_entity / architect_entity are TEXT
-   (a name), not objects, so `owner_entity?.email` was always undefined and the
-   owner/architect emails never went out. The addresses live in owner_email /
-   architect_email; gc_email is rarely filled in, so the project PM stands in. */
-type Contact = { email: string | null; name: string };
-function clean(v: unknown): string { return typeof v === 'string' ? v.trim() : ''; }
-function entityField(e: unknown, key: 'email' | 'name'): string {
-  return e && typeof e === 'object' ? clean((e as Record<string, unknown>)[key]) : '';
-}
-function ownerContact(p: any): Contact { // eslint-disable-line @typescript-eslint/no-explicit-any
-  return {
-    email: clean(p?.owner_email) || entityField(p?.owner_entity, 'email') || null,
-    name: clean(p?.owner_name) || entityField(p?.owner_entity, 'name') || clean(p?.owner_entity) || 'Owner',
-  };
-}
-function architectContact(p: any): Contact { // eslint-disable-line @typescript-eslint/no-explicit-any
-  return {
-    email: clean(p?.architect_email) || entityField(p?.architect_entity, 'email') || null,
-    name: clean(p?.architect_name) || clean(p?.architect_contact) || clean(p?.architect_firm) || 'Architect',
-  };
-}
-function gcContact(p: any): Contact { // eslint-disable-line @typescript-eslint/no-explicit-any
-  return {
-    email: clean(p?.gc_email) || entityField(p?.gc_entity, 'email') || clean(p?.pm_email) || null,
-    name: clean(p?.gc_name) || 'Contractor',
-  };
-}
 
 // ─── Project ──────────────────────────────────────────────────────────────────
 export async function onProjectCreated(projectId: string): Promise<void> {

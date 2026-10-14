@@ -14,6 +14,7 @@ import {
 import { must } from '@/lib/db-write';
 import { apiError } from '@/lib/api-error';
 import { fmtDate } from '@/lib/format-date';
+import { architectName, ownerName } from '@/lib/project-parties';
 
 export async function POST(req: NextRequest) {
   const g = await requirePermission(req, 'Documents', 'Edit');
@@ -81,8 +82,8 @@ export async function POST(req: NextRequest) {
     const g702Bytes = await generateG702({
       projectName: project?.name || '',
       projectAddress: project?.address || '',
-      ownerName: pa.owner_name || project?.owner_entity?.name || '',
-      architectName: pa.architect_name || project?.architect_entity?.name || '',
+      ownerName: pa.owner_name || ownerName(project) || '',
+      architectName: pa.architect_name || architectName(project) || '',
       gcName: body.gcName || project?.gc_name || 'General Contractor',
       appNumber: pa.app_number,
       periodFrom: pa.period_from || '',

@@ -67,7 +67,11 @@ export async function POST(req: NextRequest) {
         ${attachments.length ? '<p style="color:#666;font-size:12px">The file is attached, and also available at the link above (valid 30 days).</p>' : '<p style="color:#666;font-size:12px">Link valid 30 days.</p>'}</div>`;
       if (!key) return NextResponse.json({ ok: true, url: shareUrl, warning: 'Email is not configured (no RESEND_API_KEY) — share link returned instead.' });
       const resend = new Resend(key);
-      await resend.emails.send({ from, to: [to], subject: `${user.email} shared "${name}"`, html, attachments: attachments.length ? attachments : undefined });
+      const { error: mailErr } = await resend.emails.send({ from, to: [to], subject: `${user.email} shared "${name}"`, html, attachments: attachments.length ? attachments : undefined });
+      if (mailErr) {
+        console.error('[files/share] email rejected', mailErr);
+        return NextResponse.json({ ok: true, url: shareUrl, emailed: null, warning: "The email didn't go out. Here is the share link to send yourself." });
+      }
       return NextResponse.json({ ok: true, url: shareUrl, emailed: to, attached: attachments.length > 0 });
     }
 
