@@ -96,7 +96,7 @@ Available Supabase tables and their queryable columns:
 - lien_waivers: id, project_id, subcontractor_id, claimant_name, waiver_type, amount, status('pending'|'signed'), through_date, signed_at, created_at
 - subcontractors: id, project_id, name, trade, contract_amount, status, created_at
 - insurance_certificates: id, project_id, subcontractor_id, policy_type, carrier, policy_number, expiry_date, coverage_amount, status('active'|'expired'), created_at
-- budget_lines: id, project_id, cost_code, description, original_budget, committed_cost, actual_cost, forecast_cost, created_at
+- budget_lines: id, project_id, cost_code, description, original_budget, approved_changes, revised_budget, committed, actual, projected, percent_complete, created_at
 - daily_logs: id, project_id, log_date, weather, crew_count, work_performed, delays, created_at
 - punch_list: id, project_id, location, description, trade, status('open'|'in_progress'|'complete'), priority('low'|'medium'|'high'), due_date, created_at
 - takeoffs: id, project_id, name, status, total_cost, material_cost, labor_cost, building_area, analyzed_at, created_at
