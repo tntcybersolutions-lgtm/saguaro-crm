@@ -711,19 +711,21 @@ export async function onSubAddedToProject(projectId: string, subId: string): Pro
     if (!sub || !project) return;
     const s = sub as any;
     const p = project as any;
+    // subcontractors rows carry company_name; older rows may only have name.
+    const subName: string = s.company_name || s.name || s.contact_name || 'this subcontractor';
 
     // Send W-9 request if contract > $600
     if ((s.contract_amount || 0) > 600 && s.email && s.w9_status !== 'submitted') {
       const { data: w9 } = await db.from('w9_requests').insert({
         tenant_id: p.tenant_id,
         project_id: projectId,
-        vendor_name: s.name,
+        vendor_name: subName,
         vendor_email: s.email,
         status: 'pending',
         token: crypto.randomUUID(), // NOT NULL, no DB default — must be set; drives the /portals/w9/<token> link
       }).select().single();
       if (w9) {
-        await sendW9Request(s.email, s.name, p.name, `${APP_URL}/portals/w9/${(w9 as any).token}`);
+        await sendW9Request(s.email, subName, p.name, `${APP_URL}/portals/w9/${(w9 as any).token}`);
       }
     }
 
@@ -731,8 +733,8 @@ export async function onSubAddedToProject(projectId: string, subId: string): Pro
     if (['AZ', 'CA', 'TX'].includes(p.state || '')) {
       await createNotification(
         p.tenant_id, null, 'sub_added',
-        `Preliminary notice required — ${s.name}`,
-        `${p.state} requires a preliminary notice for ${s.name} on ${p.name}. Serve within 20 days.`,
+        `Preliminary notice required — ${subName}`,
+        `${p.state} requires a preliminary notice for ${subName} on ${p.name}. Serve within 20 days.`,
         `${APP_URL}/app/projects/${projectId}/compliance`, projectId
       );
     }
@@ -741,7 +743,7 @@ export async function onSubAddedToProject(projectId: string, subId: string): Pro
       sub_id: subId,
       project_id: projectId,
       project_name: p.name,
-      sub_name: s.name,
+      sub_name: subName,
       sub_email: s.email ?? null,
     });
   } catch (err) {
