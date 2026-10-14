@@ -41,7 +41,7 @@ interface BidStats {
 }
 type Tab = 'active' | 'pipeline' | 'history';
 type HistoryFilter = 'all' | 'won' | 'lost' | 'pending';
-// Bid packages come back as loose rows enriched client-side (see enrichPackages).
+// Bid packages come back with leveling numbers from /api/bid-packages/list (see withLeveling).
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
 type Pkg = any;
 
@@ -323,9 +323,8 @@ function BidsPageInner() {
       const r = await fetch('/api/bid-packages/list');
       if (!r.ok) throw new Error('Failed to load bid packages');
       const d = await r.json();
-      const all: Pkg[] = (d.bidPackages || []).filter((bp: Pkg) => !bp.deleted_at);
+      const all: Pkg[] = (d.bidPackages || []).filter((bp: Pkg) => !bp.deleted_at).map(withLeveling);
       setPackages(all);
-      enrichPackages(all);
     } catch {
       setPkgError(true);
     } finally {
@@ -333,37 +332,22 @@ function BidsPageInner() {
     }
   }
 
-  // /api/bid-packages/list returns bare rows, so pull invites + submissions per
-  // live package (bounded to 24) and derive invited / responded / low bid /
-  // spread. A failed detail fetch just leaves that row bare.
-  async function enrichPackages(all: Pkg[]) {
-    const targets = all.filter((p) => !TERMINAL_STATUSES.includes(String(p.status || '').toLowerCase())).slice(0, 24);
-    if (targets.length === 0) return;
-    const results = await Promise.allSettled(targets.map(async (p) => {
-      const r = await fetch(`/api/bid-packages/${p.id}`);
-      if (!r.ok) throw new Error('detail failed');
-      const d = await r.json();
-      const subs: Pkg[] = (d.submissions || []).filter((s: Pkg) => String(s.status || '').toLowerCase() !== 'withdrawn');
-      const amts = subs
-        .map((s: Pkg) => ({ amt: Number(s.amount ?? s.base_amount ?? s.total_amount) || 0, who: s.company_name || s.sub_name || s.contact_name || '' }))
-        .filter((a) => a.amt > 0)
-        .sort((a, b) => a.amt - b.amt);
-      const low = amts[0];
-      const high = amts[amts.length - 1];
-      return {
-        id: p.id,
-        num_invited: (d.invites || []).length,
-        num_responded: subs.length,
-        bid_count: subs.length,
-        low_bid_amount: low ? low.amt : null,
-        low_bid_company: low ? low.who : null,
-        spread_pct: amts.length >= 2 && low.amt > 0 ? ((high.amt - low.amt) / low.amt) * 100 : null,
-      };
-    }));
-    const byId: Record<string, Pkg> = {};
-    for (const res of results) if (res.status === 'fulfilled') byId[res.value.id] = res.value;
-    if (Object.keys(byId).length === 0) return;
-    setPackages((prev) => prev.map((p) => (byId[p.id] ? { ...p, ...byId[p.id] } : p)));
+  // /api/bid-packages/list already carries each package's invited / responded /
+  // low bid / spread (two set-based reads on the server). The page used to fetch
+  // every package's detail one by one on top of that, so the Bid Board waited on
+  // up to 24 extra requests before its numbers settled.
+  function withLeveling(p: Pkg): Pkg {
+    const lv = (p as { leveling?: { invited?: number; responded?: number; low?: number | null; lowWho?: string | null; spread?: number | null } }).leveling;
+    if (!lv) return p;
+    return {
+      ...p,
+      num_invited: Number(lv.invited) || 0,
+      num_responded: Number(lv.responded) || 0,
+      bid_count: Number(lv.responded) || 0,
+      low_bid_amount: lv.low ?? null,
+      low_bid_company: lv.lowWho ?? null,
+      spread_pct: lv.spread ?? null,
+    };
   }
 
   useEffect(() => { fetchPackages(); }, []);

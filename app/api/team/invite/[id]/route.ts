@@ -3,6 +3,7 @@ import { createServerClient } from '@/lib/supabase-server';
 import { requirePermission } from '@/lib/permissions';
 import { sendInviteTeamMember } from '@/lib/email';
 import { apiError, apiFail } from '@/lib/api-error';
+import { companyDisplayName } from '@/lib/company-name';
 
 const APP_URL = process.env.NEXT_PUBLIC_APP_URL || 'https://saguarocontrol.net';
 
@@ -137,9 +138,12 @@ export async function POST(req: NextRequest, { params }: { params: Promise<{ id:
         .single();
       if (profile) {
         inviterName = (profile as any).full_name || (profile as any).first_name || inviterName; // eslint-disable-line @typescript-eslint/no-explicit-any
-        companyName = (profile as any).company || companyName; // eslint-disable-line @typescript-eslint/no-explicit-any
+        /* company name comes from companyDisplayName below */
       }
     } catch { /* non-fatal — fall back to defaults */ }
+    try {
+      companyName = (await companyDisplayName(db, user.tenantId, user.id)) || companyName;
+    } catch (err) { console.error('[team/invite] company name lookup failed', err); }
 
     // Re-send the real invitation email, and say whether it went out.
     const mail = await sendInviteTeamMember(invite.email, inviterName, companyName, invite.role || 'member', acceptUrl);

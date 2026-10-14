@@ -6,6 +6,7 @@ import { createNotification } from '@/lib/notifications';
 import { sendInviteTeamMember } from '@/lib/email';
 import { apiError } from '@/lib/api-error';
 import { writeWithOptionalColumns } from '@/lib/optional-column';
+import { companyDisplayName } from '@/lib/company-name';
 
 /* The invitee's name. team_invites had no `name` column, so the name typed on
    the invite form was thrown away and the roster could only show an email. The
@@ -212,9 +213,12 @@ async function createAndSendInvite(
         .single();
       if (profile) {
         inviterName = (profile as any).full_name || (profile as any).first_name || inviterName;
-        companyName = (profile as any).company || companyName;
+        /* company name comes from companyDisplayName below */
       }
     } catch { /* non-fatal — fall back to defaults */ }
+    try {
+      companyName = (await companyDisplayName(db, tenantId, user.id)) || companyName;
+    } catch (err) { console.error('[team/invite] company name lookup failed', err); }
 
     // Send the real invitation email, and keep the answer: it may not go out.
     const mail = await sendInviteTeamMember(email, inviterName, companyName, role, acceptUrl);
