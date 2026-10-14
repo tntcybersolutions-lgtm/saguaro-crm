@@ -56,6 +56,9 @@ function daysLeft(dateStr: string | null | undefined): number {
   return Math.ceil((new Date(dateStr).getTime() - Date.now()) / 86400000);
 }
 
+const SUB_TTL_MS = 5 * 60_000;
+let subCache: { at: number; data: SubResponse } | null = null;
+
 export default function SubscriptionWall({ children }: { children: React.ReactNode }) {
   const pathname = usePathname();
   // In the iPhone app the wall shows no way to buy a plan (App Store 3.1.1 /
@@ -67,12 +70,23 @@ export default function SubscriptionWall({ children }: { children: React.ReactNo
   // Always allow billing page through so users can upgrade
   const isBillingPage = pathname === '/app/billing';
 
+  // Asked once, then again at most every 5 minutes as the user moves around —
+  // not on every tap (that was one extra server call per page change). A
+  // lapsed plan still walls within 5 minutes; /app/billing always rechecks so
+  // the wall lifts the moment a payment goes through.
   useEffect(() => {
+    let live = true;
+    const fresh = subCache && Date.now() - subCache.at < SUB_TTL_MS && !isBillingPage;
+    if (fresh) { setSub(subCache!.data); setChecked(true); return; }
     fetch('/api/billing/subscription')
       .then(r => r.ok ? r.json() : null)
-      .then(d => { setSub(d); setChecked(true); })
-      .catch(() => setChecked(true));
-  }, [pathname]);
+      .then(d => {
+        if (d) subCache = { at: Date.now(), data: d };
+        if (live) { setSub(d); setChecked(true); }
+      })
+      .catch(() => { if (live) setChecked(true); });
+    return () => { live = false; };
+  }, [pathname, isBillingPage]);
 
   // Still loading — render children (avoids flash)
   if (!checked) return <>{children}</>;

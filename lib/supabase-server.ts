@@ -65,6 +65,68 @@ async function getTenant(userId: string): Promise<string> {
 }
 
 /**
+ * Verified-session cache (per server instance).
+ *
+ * Every /api call used to make two back-to-back trips before doing its real
+ * work: Supabase Auth to verify the token, then profiles for the tenant. A page
+ * fires 2–8 of these on every tap, so that was 150–300ms of waiting per call,
+ * every call, for an answer that does not change between taps.
+ *
+ * A token that Supabase Auth has verified is remembered for at most 60 seconds
+ * and never past its own expiry. Only verified results are stored; a failed or
+ * unknown token always goes to Supabase Auth. Keyed by a SHA-256 of the token,
+ * so the raw token is never held as a map key.
+ */
+type CachedUser = { id: string; tenantId: string; email: string };
+const USER_CACHE_TTL_MS = 60_000;
+const USER_CACHE_MAX = 1000;
+const userCache = new Map<string, { user: CachedUser; until: number }>();
+
+async function tokenKey(token: string): Promise<string> {
+  const bytes = new TextEncoder().encode(token);
+  const digest = await crypto.subtle.digest('SHA-256', bytes);
+  return Array.from(new Uint8Array(digest), (b) => b.toString(16).padStart(2, '0')).join('');
+}
+
+/** The token's own expiry in ms (no signature check — used only to bound the cache). */
+function tokenExpiryMs(token: string): number {
+  try {
+    const part = token.split('.')[1] || '';
+    const json = Buffer.from(part.replace(/-/g, '+').replace(/_/g, '/'), 'base64').toString('utf8');
+    const exp = JSON.parse(json)?.exp;
+    return typeof exp === 'number' ? exp * 1000 : 0;
+  } catch {
+    return 0;
+  }
+}
+
+/** The token's subject (user id), unverified — used only to start the tenant lookup early. */
+function tokenSubject(token: string): string | null {
+  try {
+    const part = token.split('.')[1] || '';
+    const json = Buffer.from(part.replace(/-/g, '+').replace(/_/g, '/'), 'base64').toString('utf8');
+    const sub = JSON.parse(json)?.sub;
+    return typeof sub === 'string' && sub ? sub : null;
+  } catch {
+    return null;
+  }
+}
+
+function rememberUser(key: string, token: string, user: CachedUser) {
+  const until = Math.min(Date.now() + USER_CACHE_TTL_MS, tokenExpiryMs(token) - 5_000);
+  if (until <= Date.now()) return;
+  if (userCache.size >= USER_CACHE_MAX) {
+    const now = Date.now();
+    userCache.forEach((v, k) => { if (v.until <= now) userCache.delete(k); });
+    if (userCache.size >= USER_CACHE_MAX) {
+      const oldest = userCache.keys().next().value;
+      if (oldest !== undefined) userCache.delete(oldest);
+    }
+  }
+  userCache.set(key, { user, until });
+}
+
+/**
  * Extract authenticated user from a request.
  * Token priority: Authorization header → sb-access-token cookie → Supabase default cookie.
  * If the access token is expired, falls back to sb-refresh-token automatically.
@@ -96,9 +158,21 @@ export async function getUser(
 
     // Try access token
     if (accessToken) {
+      const key = await tokenKey(accessToken);
+      const hit = userCache.get(key);
+      if (hit && hit.until > Date.now()) return hit.user;
+      if (hit) userCache.delete(key);
+
+      // Start the tenant lookup alongside the token check (one round trip, not
+      // two). Its answer is used only if Supabase Auth confirms the same user.
+      const sub = tokenSubject(accessToken);
+      const tenantP = sub ? getTenant(sub).catch(() => null) : null;
       const { data: { user }, error } = await supabase.auth.getUser(accessToken);
       if (!error && user) {
-        return { id: user.id, tenantId: await getTenant(user.id), email: user.email || '' };
+        const early = sub === user.id && tenantP ? await tenantP : null;
+        const verified = { id: user.id, tenantId: early || (await getTenant(user.id)), email: user.email || '' };
+        rememberUser(key, accessToken, verified);
+        return verified;
       }
     }
 
