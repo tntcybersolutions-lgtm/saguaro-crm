@@ -14,19 +14,22 @@ import Link from 'next/link';
 import { useProjects } from '@/lib/hooks/useProjects';
 import { humanError } from '@/lib/errors';
 import { dayIn, deviceTimeZone } from '@/lib/time-zone';
-import { Archive, CheckCircle, Flag, HardHat, WarningCircle } from '@phosphor-icons/react';
-import { FlatStyles, Brief, FlatList, Row, RowAction, RowSkeleton, FlatEmpty, type FlatTone } from '@/components/ui/flat';
+import { WarningCircle } from '@phosphor-icons/react';
+import { FlatStyles, Brief, RowAction, RowSkeleton, FlatEmpty } from '@/components/ui/flat';
 import { jobStage, stageLabel, dateLine, fmtMoneyShort, billedPct, plural, ymd, type JobStage } from '@/lib/job-page';
+import type { JobHealth } from '@/lib/job-health';
+import { HealthRing, ScheduleBar, ItemDots, fmtMoneyExact, JOB_HEALTH_CSS } from '@/components/jobs/JobHealthParts';
 import { isDoneStatus } from '@/lib/project-lifecycle';
 
 type StageFilter = 'all' | 'bidding' | 'building' | 'complete' | 'closed';
-type SortKey = 'name' | 'newest' | 'contract' | 'start';
+type SortKey = 'health' | 'name' | 'newest' | 'contract' | 'start';
 
 type JobRow = {
   id: string; name?: string | null; status?: string | null; phase?: string | null;
   address?: string | null; city?: string | null; state?: string | null; project_number?: string | null;
   start_date?: string | null; end_date?: string | null; created_at?: string | null;
   contract_amount?: unknown; billed_live?: number; pay_apps_total?: number;
+  health?: JobHealth;
 };
 
 /** The chip a job sits under: a closed job is Complete when it was finished, Closed when it was cancelled or lost. */
@@ -35,14 +38,6 @@ function bucket(p: JobRow): Exclude<StageFilter, 'all'> {
   if (s === 'closed') return isDoneStatus(p.status) ? 'complete' : 'closed';
   return s;
 }
-
-/** Each stage's icon in its row tile. */
-const STAGE_ICON: Record<Exclude<StageFilter, 'all'>, { icon: React.ElementType; tone: FlatTone }> = {
-  bidding: { icon: Flag, tone: 'neutral' },
-  building: { icon: HardHat, tone: 'info' },
-  complete: { icon: CheckCircle, tone: 'success' },
-  closed: { icon: Archive, tone: 'neutral' },
-};
 
 const CHIPS: { key: StageFilter; label: string }[] = [
   { key: 'all', label: 'All' },
@@ -57,7 +52,7 @@ export default function JobsPage() {
   const rows = projects as unknown as JobRow[];
   const [q, setQ] = useState('');
   const [stage, setStage] = useState<StageFilter>('all');
-  const [sort, setSort] = useState<SortKey>('name');
+  const [sort, setSort] = useState<SortKey>('health');
   const today = useMemo(() => dayIn(deviceTimeZone() || 'UTC'), []);
 
   const failed = !!loadError || degraded;
@@ -74,6 +69,7 @@ export default function JobsPage() {
     .filter((p) => stage === 'all' || bucket(p) === stage)
     .filter((p) => !needle || [p.name, p.address, p.city, p.project_number].some((v) => String(v || '').toLowerCase().includes(needle)))
     .sort((a, b) => {
+      if (sort === 'health') return (a.health?.score ?? 101) - (b.health?.score ?? 101) || String(a.name || '').localeCompare(String(b.name || ''));
       if (sort === 'contract') return (Number(b.contract_amount) || 0) - (Number(a.contract_amount) || 0);
       if (sort === 'newest') return String(b.created_at || '').localeCompare(String(a.created_at || ''));
       if (sort === 'start') return String(b.start_date || '0000').localeCompare(String(a.start_date || '0000'));
@@ -93,38 +89,52 @@ export default function JobsPage() {
     body = <FlatEmpty>No jobs match. <button type="button" className="jl-inline" onClick={clear}>Clear the filters</button></FlatEmpty>;
   } else {
     body = (
-      <FlatList label="Jobs">
+      <div className="jt" role="table" aria-label="Jobs">
+        <div className="jt-head" role="row">
+          <span role="columnheader">Health</span>
+          <span role="columnheader">Job</span>
+          <span role="columnheader">Schedule</span>
+          <span role="columnheader" className="jt-dots-head"><em>RFIs</em><em>Subs</em><em>COs</em></span>
+          <span role="columnheader" className="jt-money">Contract</span>
+        </div>
         {shown.map((p) => {
           const s = jobStage(p);
           const contract = Number(p.contract_amount) || 0;
           const pct = typeof p.billed_live === 'number' ? billedPct(p.billed_live, contract) : null;
           const when = dateLine(s, ymd(p.start_date), ymd(p.end_date), today);
-          const meta = [stageLabel(p), when?.text || null, pct != null ? `${pct}% billed` : null].filter(Boolean).join(' · ');
-          const st = STAGE_ICON[bucket(p)];
+          const meta = [stageLabel(p), when?.text || null, p.city || p.state || null].filter(Boolean).join(' · ');
+          const h = p.health;
+          const sched = h?.schedule;
+          const schedText = sched && (sched.workPct != null || sched.timePct != null)
+            ? [sched.workPct != null ? `${sched.workPct}% done` : null, sched.daysLate > 0 ? `${sched.daysLate}d late` : sched.timePct != null ? `${sched.timePct}% of time` : null].filter(Boolean).join(' · ')
+            : 'No dates yet';
           return (
-            <li key={p.id} data-tour="project-card">
-              <Row
-                icon={<st.icon size={18} weight="bold" />}
-                tone={st.tone}
-                title={p.name || 'Untitled job'}
-                meta={meta}
-                bar={pct}
-                right={contract > 0 ? fmtMoneyShort(contract) : '—'}
-                rightSub={p.city || p.state || undefined}
-                href={`/app/projects/${p.id}`}
-                chevron={false}
-              />
-            </li>
+            <Link key={p.id} href={`/app/projects/${p.id}`} className="jt-row" role="row" data-tour="project-card" data-tone={h?.tone || 'none'}>
+              <span className="jt-ring" role="cell"><HealthRing health={h} size={46} /></span>
+              <span className="jt-name" role="cell">
+                <b>{p.name || 'Untitled job'}</b>
+                <small>{meta}</small>
+              </span>
+              <span className="jt-sched" role="cell">
+                <ScheduleBar health={h} />
+                <small data-late={sched?.behind ? 'true' : undefined}>{schedText}</small>
+              </span>
+              <span className="jt-dots" role="cell"><ItemDots health={h} /></span>
+              <span className="jt-money" role="cell">
+                <b>{contract > 0 ? fmtMoneyExact(contract) : '—'}</b>
+                <small>{pct != null ? `${pct}% billed` : contract > 0 ? 'Not billed yet' : ' '}</small>
+              </span>
+            </Link>
           );
         })}
-      </FlatList>
+      </div>
     );
   }
 
   return (
     <div className="k-frame jl">
       <FlatStyles />
-      <style dangerouslySetInnerHTML={{ __html: CSS }} />
+      <style dangerouslySetInnerHTML={{ __html: JOB_HEALTH_CSS + CSS }} />
       <header className="k-head jl-head">
         <div className="jl-title">
           <h1 className="k-title">Jobs</h1>
@@ -144,6 +154,7 @@ export default function JobsPage() {
           enterKeyHint="search"
         />
         <select className="jl-sort" aria-label="Sort jobs" value={sort} onChange={(e) => setSort(e.target.value as SortKey)}>
+          <option value="health">Needs attention</option>
           <option value="name">Name</option>
           <option value="newest">Newest</option>
           <option value="contract">Contract</option>
@@ -186,5 +197,29 @@ const CSS = `
 .jl-chip[aria-pressed=true]{background:var(--selected-control-bg);color:var(--selected-control-fg);border-color:var(--selected-control-bg);font-weight:700}
 .jl-chip[aria-pressed=true] span{color:var(--selected-control-fg)}
 .jl-count{margin-left:auto;font-size:13px;color:var(--fl-text-3)}
+.jt{border:1px solid var(--fl-line);border-radius:14px;overflow:hidden;background:var(--bg-surface)}
+.jt-head,.jt-row{display:grid;grid-template-columns:64px minmax(0,2.2fr) minmax(150px,1.3fr) 190px 170px;align-items:center;gap:16px;padding:0 18px}
+.jt-head{height:38px;font-size:12px;font-weight:700;letter-spacing:.06em;text-transform:uppercase;color:var(--fl-text-3);border-bottom:1px solid var(--fl-line);background:color-mix(in srgb,var(--bg-base) 55%,var(--bg-surface))}
+.jt-dots-head{display:flex;gap:14px}.jt-dots-head em{font-style:normal;width:38px}
+.jt-row{min-height:76px;padding-top:12px;padding-bottom:12px;color:var(--fl-text);text-decoration:none;border-bottom:1px solid var(--fl-line);position:relative;transition:background .12s}
+.jt-row:last-child{border-bottom:0}
+.jt-row:hover{background:var(--bg-row-hover)}
+.jt-row::before{content:"";position:absolute;left:0;top:10px;bottom:10px;width:3px;border-radius:0 3px 3px 0;background:transparent}
+.jt-row[data-tone=bad]::before{background:var(--danger)}
+.jt-row[data-tone=warn]::before{background:var(--warning)}
+.jt-name{min-width:0;display:flex;flex-direction:column;gap:3px}
+.jt-name b{font-size:15px;font-weight:700;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.jt-name small,.jt-sched small,.jt-money small{font-size:13px;color:var(--fl-text-2);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.jt-sched{display:flex;flex-direction:column;gap:7px;min-width:0}
+.jt-sched small[data-late=true]{color:var(--danger);font-weight:600}
+.jt-dots .jh-dots{gap:14px}.jt-dots .jh-dot{width:38px}
+.jt-money{text-align:right;display:flex;flex-direction:column;gap:3px;align-items:flex-end;font-variant-numeric:tabular-nums}
+.jt-money b{font-size:15px;font-weight:700;white-space:nowrap}
+@media (max-width:900px){
+  .jt-head{display:none}
+  .jt-row{grid-template-columns:52px minmax(0,1fr) auto;grid-template-areas:"ring name money" "ring sched sched" "ring dots dots";row-gap:8px;column-gap:12px;padding:14px 14px}
+  .jt-ring{grid-area:ring;align-self:start}.jt-name{grid-area:name}.jt-sched{grid-area:sched}.jt-dots{grid-area:dots}.jt-money{grid-area:money;align-self:start}
+  .jt-money b{font-size:14px}
+}
 .jl-inline{color: var(--link);font-weight:650;text-decoration:none;background:none;border:0;padding:0;font:inherit;cursor:pointer;min-height:44px}
 `;

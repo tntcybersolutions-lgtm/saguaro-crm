@@ -1,6 +1,9 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { createServerClient, getUser } from '@/lib/supabase-server';
 import { apiError } from '@/lib/api-error';
+import { jobHealth } from '@/lib/job-health';
+import { jobStage, billedPct } from '@/lib/job-page';
+import { isDoneStatus } from '@/lib/project-lifecycle';
 
 export async function GET(req: NextRequest) {
   try {
@@ -51,17 +54,47 @@ export async function GET(req: NextRequest) {
     // Written out rather than looped: the generated Supabase types key
     // .from() on a literal table-name union, so a `(table: string)` helper
     // blows the type checker's instantiation depth.
-    const [rfiRes, punchRes, coRes, payRes] = await Promise.all([
-      db.from('rfis').select('project_id, status').eq('tenant_id', user.tenantId),
+    const [rfiRes, punchRes, coRes, payRes, subRes, budRes] = await Promise.all([
+      db.from('rfis').select('project_id, status, due_date, response_due_date').eq('tenant_id', user.tenantId).is('deleted_at', null),
       db.from('punch_list').select('project_id, status').eq('tenant_id', user.tenantId),
-      db.from('change_orders').select('project_id, status').eq('tenant_id', user.tenantId),
+      db.from('change_orders').select('project_id, status, created_at').eq('tenant_id', user.tenantId).is('deleted_at', null),
       /* BILLED, FROM THE PAY APPS. projects.billed_to_date / total_billed are
          denormalised and disagree with each other (a fully billed job reads 0
          in one and $2.54M in the other), so the Jobs list's "% billed" is read
          from the pay applications themselves: the latest app's completed and
          stored to date — the same figure /api/project-context reports. */
       db.from('pay_applications').select('project_id, app_number, total_completed_stored, status').eq('tenant_id', user.tenantId).is('deleted_at', null),
+      /* Health ring inputs: submittal due dates and the budget forecast. */
+      db.from('submittals').select('project_id, status, due_date').eq('tenant_id', user.tenantId).is('deleted_at', null),
+      db.from('budget_lines').select('project_id, original_budget, approved_changes, projected, actual, committed').eq('tenant_id', user.tenantId),
     ]);
+    if (subRes.error) console.error('[projects/list] submittal read failed:', subRes.error);
+    if (budRes.error) console.error('[projects/list] budget read failed:', budRes.error);
+    const group = <T extends { project_id: string | null }>(rows: T[] | null | undefined) => {
+      const m = new Map<string, T[]>();
+      for (const r of rows || []) { if (!r.project_id) continue; const a = m.get(r.project_id) || []; a.push(r); m.set(r.project_id, a); }
+      return m;
+    };
+    type DueRow = { project_id: string | null; status: string | null; due_date?: string | null; response_due_date?: string | null };
+    const rfiBy = rfiRes.error ? null : group(rfiRes.data as DueRow[]);
+    const subBy = subRes.error ? null : group(subRes.data as DueRow[]);
+    const coBy = coRes.error ? null : group(coRes.data as { project_id: string | null; status: string | null; created_at: string | null }[]);
+    /* Budget per job: revised = original + approved changes; forecast = the
+       larger of projected (when set), actual and committed — lib/budget-line. */
+    const budgetBy = new Map<string, { revised: number; forecast: number }>();
+    if (!budRes.error) {
+      for (const l of (budRes.data || []) as Record<string, unknown>[]) {
+        const pid = String(l.project_id || ''); if (!pid) continue;
+        const n = (v: unknown) => { const x = Number(v); return Number.isFinite(x) ? x : 0; };
+        const revised = n(l.original_budget) + n(l.approved_changes);
+        const proj = n(l.projected);
+        const forecast = proj > 0 ? proj : Math.max(revised, n(l.actual), n(l.committed));
+        const cur = budgetBy.get(pid) || { revised: 0, forecast: 0 };
+        cur.revised += revised; cur.forecast += forecast;
+        budgetBy.set(pid, cur);
+      }
+    }
+    const todayYmd = new Date().toISOString().slice(0, 10);
 
     const rfiOpen = rfiRes.error ? null : tally(rfiRes.data as never, (s) => s !== 'answered' && s !== 'closed');
     const punchOpen = punchRes.error ? null : tally(punchRes.data as never, (s) => s !== 'completed' && s !== 'voided');
@@ -83,8 +116,29 @@ export async function GET(req: NextRequest) {
 
     const withCounts = projects.map((p: Record<string, unknown>) => {
       const b = billing?.get(String(p.id));
+      const id = String(p.id);
+      const stageRaw = jobStage(p as { status?: unknown; phase?: unknown });
+      const stage = stageRaw === 'closed' ? (isDoneStatus(p.status as string) ? 'complete' : 'closed') : stageRaw;
+      const contract = Number(p.contract_amount ?? p.contract_value) || 0;
+      const billedP = b && contract > 0 ? billedPct(b.billed, contract) : null;
+      const ownPct = Number(p.percent_complete);
+      const workPct = stage === 'complete' ? 100 : billedP != null ? billedP : Number.isFinite(ownPct) && ownPct > 0 ? ownPct : null;
+      const bud = budgetBy.get(id);
+      const health = jobHealth({
+        stage,
+        today: todayYmd,
+        start: (p.actual_start_date || p.start_date || p.notice_to_proceed_date) as string | null,
+        finish: (p.revised_completion_date || p.substantial_completion_date || p.end_date || p.target_finish_date) as string | null,
+        workPct,
+        budgetRevised: bud?.revised,
+        budgetForecast: bud?.forecast,
+        rfis: (rfiBy?.get(id) || []).map((r) => ({ status: r.status, due: r.response_due_date || r.due_date || null })),
+        submittals: (subBy?.get(id) || []).map((r) => ({ status: r.status, due: r.due_date || null })),
+        changeOrders: (coBy?.get(id) || []).map((c) => ({ status: c.status, created: c.created_at })),
+      });
       return {
         ...p,
+        health,
         ...(rfiOpen ? { open_rfis: rfiOpen.get(String(p.id)) || 0 } : {}),
         ...(punchOpen ? { open_punch: punchOpen.get(String(p.id)) || 0 } : {}),
         ...(coOpen ? { open_cos: coOpen.get(String(p.id)) || 0 } : {}),
