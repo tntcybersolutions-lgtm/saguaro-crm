@@ -20,7 +20,7 @@ eq('lien_waivers → subcontractors is two DIFFERENT columns: not ours to guess'
 eq('Sage join appended to a column list', qualifyEmbeds('rfis', 'id,rfi_number,subject,status,projects(name)'), 'id,rfi_number,subject,status,projects!rfis_project_id_fkey(name)');
 eq('star + spaced embed', qualifyEmbeds('daily_logs', '*, projects(name, id)'), '*, projects!daily_logs_project_id_fkey(name, id)');
 eq('aliased embed keeps its alias', qualifyEmbeds('punch_list', 'id, job:projects(name)'), 'id, job:projects!punch_list_project_id_fkey(name)');
-eq('already named: unchanged', qualifyEmbeds('rfis', '*, projects!fk_rfis_project(name)'), '*, projects!fk_rfis_project(name)');
+eq('already named: unchanged', qualifyEmbeds('rfis', '*, projects!rfis_project_id_fkey(name)'), '*, projects!rfis_project_id_fkey(name)');
 eq('unrelated table: unchanged', qualifyEmbeds('pay_applications', '*, projects(name)'), '*, projects(name)');
 eq('nested embed belongs to its own parent', qualifyEmbeds('bid_packages', '*, projects(*, rfis(id))'), '*, projects(*, rfis(id))');
 eq('nested under an ambiguous one: only the top level changes', qualifyEmbeds('change_orders', '*, projects(name, rfis(id))'), '*, projects!change_orders_project_id_fkey(name, rfis(id))');
