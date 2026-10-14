@@ -207,8 +207,8 @@ export async function onSubOnboarded(
         (project as any).tenant_id || '',
         (project as any).created_by ?? null,
         'sub_added',
-        `Preliminary Notice Required \u2014 ${(sub as any).name}`,
-        `${state} requires a preliminary notice for ${(sub as any).name} within 20 days of first work. Generate now.`,
+        `Preliminary Notice Required \u2014 ${(sub as any).company_name || (sub as any).name || 'this subcontractor'}`,
+        `${state} requires a preliminary notice for ${(sub as any).company_name || (sub as any).name || 'this subcontractor'} within 20 days of first work. Generate now.`,
         `/app/projects/${projectId}/compliance`,
         projectId
       );

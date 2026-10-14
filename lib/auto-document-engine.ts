@@ -256,6 +256,7 @@ export async function onSubAdded(subId: string, projectId: string): Promise<void
     if (!sub || !project) return;
     const s = sub as any;
     const p = project as any;
+    const subName: string = s.company_name || s.name || s.contact_name || 'this subcontractor';
 
     // Preliminary notice alert for lien-law states
     if (['AZ', 'CA', 'TX'].includes(p.state || '')) {
@@ -263,8 +264,8 @@ export async function onSubAdded(subId: string, projectId: string): Promise<void
         p.tenant_id,
         null,
         'sub_added',
-        `Preliminary notice required — ${s.name}`,
-        `${p.state} law requires a preliminary notice for ${s.name} within 20 days of first work on ${p.name}.`,
+        `Preliminary notice required — ${subName}`,
+        `${p.state} law requires a preliminary notice for ${subName} within 20 days of first work on ${p.name}.`,
         `${APP_URL}/app/projects/${projectId}/compliance`,
         projectId
       );
@@ -285,7 +286,7 @@ export async function onSubAdded(subId: string, projectId: string): Promise<void
           await must(client.from('w9_requests').insert({
             tenant_id: p.tenant_id,
             project_id: projectId,
-            vendor_name: s.name,
+            vendor_name: subName,
             vendor_email: s.email,
             status: 'pending',
             token: crypto.randomUUID(), // NOT NULL, no DB default — must be set
@@ -295,8 +296,8 @@ export async function onSubAdded(subId: string, projectId: string): Promise<void
             p.tenant_id,
             null,
             'w9_requested',
-            `W-9 request sent — ${s.name}`,
-            `W-9 request automatically sent to ${s.name} for ${p.name}`,
+            `W-9 request sent — ${subName}`,
+            `W-9 request automatically sent to ${subName} for ${p.name}`,
             `${APP_URL}/app/projects/${projectId}/w9`,
             projectId
           );
@@ -309,8 +310,8 @@ export async function onSubAdded(subId: string, projectId: string): Promise<void
       p.tenant_id,
       null,
       'sub_added',
-      `COI required — ${s.name}`,
-      `Request a Certificate of Insurance from ${s.name} before they begin work on ${p.name}.`,
+      `COI required — ${subName}`,
+      `Request a Certificate of Insurance from ${subName} before they begin work on ${p.name}.`,
       `${APP_URL}/app/projects/${projectId}/insurance`,
       projectId
     );

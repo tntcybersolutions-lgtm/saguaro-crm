@@ -209,11 +209,12 @@
   --tile-bg: #243247;
   --tile-border: #334155;
   /* ── Hierarchy, module identity and card edges (global theme pass,
-     12 Oct 2026). Page titles are bright cyan-blue, section headings a
-     lighter cyan, cards carry a clearly visible edge, and every icon tile
-     wears its module's accent. Change the look here, not in pages. ── */
-  --title-page: #38BDF8;      /* page titles (PageShell, ModuleHero, any h1 in the app) */
-  --title-section: #7DD3FC;   /* section and card headings (h2, card titles, list sections) */
+     12 Oct 2026; titles neon yellow 14 Oct 2026 per Chad). Page titles and
+     section headings are the brand neon yellow, cards carry a clearly visible
+     edge, and every icon tile wears its module's accent. Change the look
+     here, not in pages. ── */
+  --title-page: var(--c-yellow);     /* page titles (PageShell, ModuleHero, any h1 in the app) */
+  --title-section: var(--c-yellow-hi); /* section and card headings, sidebar group heads */
   --border-card: #3D4F68;     /* a card's own edge; --border-subtle stays for dividers inside it */
   --card-highlight: inset 0 1px 0 rgba(148,163,184,0.08);
   --surface-card: var(--bg-surface);

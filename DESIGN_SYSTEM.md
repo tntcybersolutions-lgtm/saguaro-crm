@@ -20,8 +20,8 @@ jet-black era), **this file wins**. Copy rules stay in `docs/COPY-STYLE.md`.
 | Primary text | `--text-primary` | `#F8FAFC` |
 | Secondary text | `--text-secondary` | `#CBD5E1` |
 | Muted text | `--text-tertiary` | `#A3B1C6` |
-| Page title | `--title-page` | `#38BDF8` (bright cyan-blue), `--fs-title` 26px / `--fs-title-m` 22px on phones |
-| Section / card heading | `--title-section` | `#7DD3FC`, `--fs-section` 16px |
+| Page title | `--title-page` | `#E8FF2A` neon yellow (`--c-yellow`), `--fs-title` 26px / `--fs-title-m` 22px on phones |
+| Section / card heading | `--title-section` | `--c-yellow-hi` (neon yellow, slightly lifted), `--fs-section` 16px |
 | Card edge | `--border-card` + `--card-highlight` | `#3D4F68` + a 1px top highlight |
 | Module accent (the page's) | `--acc` (set per route by the app shell) | one of the eight `--mod-*` hues below |
 | Primary action, selected navigation | `--brand-primary` + `--on-brand` | `#FFE000` on `#101722` |
@@ -54,8 +54,8 @@ states are mixes of approved values (no new hex). The status values
 | Primary text | #F8FAFC | #F8FAFC | `--text-primary`, `--action-secondary-fg` | titles, values, body |
 | Secondary text | #CBD5E1 | #CBD5E1 | `--text-secondary`, `--nav-fg`, `--tab-fg` | subtitles, descriptions, nav |
 | Muted text | #94A3B8 → raised to #A3B1C6 (global theme pass) | #A3B1C6 (7:1 on a card) | `--text-tertiary` | labels, meta, captions, table headers |
-| Page title | #38BDF8 (global theme pass) | #38BDF8 | `--title-page` | `PageShell`, `ModuleHero`, any `h1` in `.sag-app`, login |
-| Section heading | #7DD3FC (global theme pass) | #7DD3FC | `--title-section` | `h2`, `.k-card-title`, `.pmSecTitle`, `.fl-sec`, sidebar group heads |
+| Page title | #E8FF2A (14 Oct 2026, was #38BDF8) | #E8FF2A | `--title-page` | `PageShell`, `ModuleHero`, any `h1` in `.sag-app`, login |
+| Section heading | --c-yellow-hi (14 Oct 2026, was #7DD3FC) | mix #E8FF2A 86% + #F8FAFC | `--title-section` | `h2`, `.k-card-title`, `.pmSecTitle`, `.fl-sec`, sidebar group heads |
 | Card edge | (global theme pass) | #3D4F68 + top highlight | `--border-card`, `--card-highlight` | `.k-card`, `.pmSec`, `.k-stats`, `.pmStrip`, `.k-callout`, `.fl-list`, `.fl-strip`, `.fl-brief` |
 | Inverse text | #101722 | #101722 | `--text-inverse`, `--on-brand`, `--action-primary-fg` | text on yellow |
 | Primary action | #FFE000 | #FFE000 | `--brand-primary`, `--action-primary-bg` | `.k-btn-primary`, `goldButtonStyle` |
