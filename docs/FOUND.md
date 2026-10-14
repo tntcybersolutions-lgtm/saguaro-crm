@@ -226,3 +226,9 @@ already tracked by the design-system baseline (hex literals, `td` density, Sales
 decision); DataTable menus opening upward near the bottom (that is the correct behaviour); the Vercel *preview*
 session timeout (preview deployments only). CLAUDE.md §7/§8 still name `app/field/` and `lib/field-tokens.ts`,
 which do not exist — Chad's standing orders, not edited here.
+- `app/app/daily-logs/page.tsx:355` — a 409 (log already exists for that day) is thrown as the generic "Failed to create daily log"; the route returns `existingLogId` and the page never offers to open it.
+- `app/app/daily-logs/page.tsx:700` — "Work Performed" is marked `required` but `submitCreate` never checks it, and the create route defaults it to `''`, so an empty narrative saves.
+- `app/api/daily-logs/list/route.ts:20` — bare `catch {}` returns `{ logs: [] }` with a 500 and logs nothing; `[id]/route.ts:19,54,74` return a bare 'Internal server error' instead of `apiError`.
+- `app/api/daily-logs/list/route.ts:11` and `[id]/route.ts:11` — neither filters `deleted_at is null` although `daily_logs.deleted_at` exists; and the list is capped at 1000 rows with no pagination.
+- `app/api/daily-logs/create/route.ts:78` — empty `catch { /* stay manual */ }` around the weather fetch (swallows by design, but violates the empty-catch rule).
+- `app/api/daily-logs/create/route.ts:86` — `high_temp`/`low_temp` are `text` columns in the DB while the page types them `number`; `pick(...) || ...` also turns a typed `0` into null.
