@@ -26,7 +26,7 @@ export default function GlobalError({
         <div style={{ minHeight: '100vh', display: 'flex', alignItems: 'center', justifyContent: 'center', padding: 24 }}>
           <div style={{ width: '100%', maxWidth: 620 }}>
             <div style={{ background: 'rgba(255,255,255,0.045)', border: '1px solid rgba(255,255,255,0.09)', borderRadius: 16, padding: 32 }}>
-              <div style={{ fontSize: 12, fontWeight: 800, color: 'var(--brand-primary, #FFE000)', marginBottom: 12 }}>
+              <div style={{ fontSize: 12, fontWeight: 800, color: 'var(--brand-primary, #E8FF2A)', marginBottom: 12 }}>
                 Saguaro Could Not Start
               </div>
               <h1 style={{ fontSize: 26, fontWeight: 700, lineHeight: 1.25, margin: '0 0 12px', letterSpacing: '-0.02em' }}>
@@ -54,7 +54,7 @@ export default function GlobalError({
               <div style={{ display: 'flex', flexWrap: 'wrap', gap: 12 }}>
                 <button
                   onClick={() => reset()}
-                  style={{ height: 42, padding: '0 22px', borderRadius: 10, fontSize: 14, fontWeight: 700, cursor: 'pointer', background: 'var(--brand-primary, #FFE000)', color: '#101722', border: '1px solid var(--brand-primary, #FFE000)' }}
+                  style={{ height: 42, padding: '0 22px', borderRadius: 10, fontSize: 14, fontWeight: 700, cursor: 'pointer', background: 'var(--brand-primary, #E8FF2A)', color: '#101722', border: '1px solid var(--brand-primary, #E8FF2A)' }}
                 >
                   Try Again
                 </button>

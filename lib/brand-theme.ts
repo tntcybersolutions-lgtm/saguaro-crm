@@ -213,12 +213,15 @@ export interface BrandTheme {
 export const AA_TEXT = 4.5;
 export const AA_LARGE = 3;
 
-/* Saguaro defaults (owner decision 2026-10-02): neon yellow on jet black.
+/* Saguaro defaults (owner decision 2026-10-02, neon yellow re-confirmed 2026-10-14 as #E8FF2A): neon yellow on jet black.
    The previous defaults (gold #FF8A00 on navy #0d1117) are treated as "no
    custom color" so tenants who never picked one move to the new look. */
-const SAGUARO_GOLD = '#FFE600';
+const SAGUARO_GOLD = '#E8FF2A';
 const SAGUARO_BASE = '#000000';
-const LEGACY_DEFAULT_PRIMARY = new Set(['#FF8A00', '#FFE600', '#c8881c']);
+/* Earlier platform defaults count as "no custom color". Compared lowercase
+   (notLegacy lowercases its input; the set held '#FFE600' uppercase, so the
+   old default never matched). */
+const LEGACY_DEFAULT_PRIMARY = new Set(['#ff8a00', '#ffe600', '#ffe000', '#c8881c', '#e8ff2a']);
 const LEGACY_DEFAULT_BASE = new Set(['#0d1117', '#0a0a0a']);
 const notLegacy = (hex: string | null | undefined, legacy: Set<string>) =>
   hex && !legacy.has(hex.trim().toLowerCase()) ? hex : null;

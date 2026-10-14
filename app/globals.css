@@ -47,9 +47,9 @@
   --c-text-2: #CBD5E1;
   --c-text-3: #A3B1C6;
   --c-text-4: color-mix(in srgb, #94A3B8 72%, #101722);
-  --c-yellow: #FFE000;      /* primary action, selected navigation */
-  --c-yellow-hi: color-mix(in srgb, #FFE000 86%, #F8FAFC);
-  --c-yellow-hover: color-mix(in srgb, #FFE000 90%, #101722);
+  --c-yellow: #E8FF2A;      /* primary action, selected navigation */
+  --c-yellow-hi: color-mix(in srgb, #E8FF2A 86%, #F8FAFC);
+  --c-yellow-hover: color-mix(in srgb, #E8FF2A 90%, #101722);
   --c-on-brand: #101722;    /* dark text on yellow */
   --c-blue: #38BDF8;        /* informational links */
   --c-orange: #FBBF24;      /* pending / waiting (amber) */
@@ -57,14 +57,14 @@
   --c-red: #F87171;         /* errors / overdue */
   --c-gray: #94A3B8;        /* closed / neutral status */
   --brand-primary-hi: var(--c-yellow-hi);
-  --brand-primary: #FFE000;
-  --brand-primary-strong: color-mix(in srgb, #FFE000 86%, #F8FAFC);
-  --brand-primary-hover: color-mix(in srgb, #FFE000 90%, #101722);
-  --brand-primary-08: rgba(255,224,0,0.08);
-  --brand-primary-12: rgba(255,224,0,0.12);
-  --brand-primary-18: rgba(255,224,0,0.18);
-  --brand-primary-25: rgba(255,224,0,0.25);
-  --brand-primary-35: rgba(255,224,0,0.35);
+  --brand-primary: #E8FF2A;
+  --brand-primary-strong: color-mix(in srgb, #E8FF2A 86%, #F8FAFC);
+  --brand-primary-hover: color-mix(in srgb, #E8FF2A 90%, #101722);
+  --brand-primary-08: rgba(232,255,42,0.08);
+  --brand-primary-12: rgba(232,255,42,0.12);
+  --brand-primary-18: rgba(232,255,42,0.18);
+  --brand-primary-25: rgba(232,255,42,0.25);
+  --brand-primary-35: rgba(232,255,42,0.35);
   --on-brand: #101722;
   /* Brand gold aliases — track --brand-primary */
   --gold: var(--brand-primary);
@@ -148,7 +148,7 @@
   --sag-topbar-h: calc(56px + env(safe-area-inset-top, 0px));
   --sag-tabbar-h: 0px;
   /* ── Semantic roles (DESIGN_SYSTEM.md §1). Every value is one of the approved
-     colours (#101722 #1B2636 #243247 #334155 #F8FAFC #CBD5E1 #94A3B8 #FFE000
+     colours (#101722 #1B2636 #243247 #334155 #F8FAFC #CBD5E1 #94A3B8 #E8FF2A
      #38BDF8) or a mix of them — no other hex. Status hues are the approved
      green / amber / red names; their exact values await Chad's confirmation. */
   --bg-subtle: color-mix(in srgb, #101722 60%, #1B2636);
@@ -157,10 +157,10 @@
   --text-inverse: #101722;
   --border-interactive: color-mix(in srgb, #334155 72%, #94A3B8);
   --focus-ring: #38BDF8;
-  --action-primary-bg: #FFE000;
+  --action-primary-bg: #E8FF2A;
   --action-primary-fg: #101722;
-  --action-primary-hover: color-mix(in srgb, #FFE000 90%, #101722);
-  --action-primary-pressed: color-mix(in srgb, #FFE000 80%, #101722);
+  --action-primary-hover: color-mix(in srgb, #E8FF2A 90%, #101722);
+  --action-primary-pressed: color-mix(in srgb, #E8FF2A 80%, #101722);
   --action-secondary-bg: #243247;
   --action-secondary-fg: #F8FAFC;
   --action-secondary-border: #334155;
@@ -176,18 +176,18 @@
   --nav-bg: #1B2636;
   --nav-fg: #CBD5E1;
   --nav-hover-bg: #243247;
-  --nav-active-bg: #FFE000;
+  --nav-active-bg: #E8FF2A;
   --nav-active-fg: #101722;
-  --nav-active-indicator: #FFE000;
+  --nav-active-indicator: #E8FF2A;
   --tab-fg: #CBD5E1;
   --tab-hover-bg: #243247;
-  --tab-selected-bg: #FFE000;
+  --tab-selected-bg: #E8FF2A;
   --tab-selected-fg: #101722;
-  --tab-selected-indicator: #FFE000;
+  --tab-selected-indicator: #E8FF2A;
   --selected-row-bg: color-mix(in srgb, #38BDF8 10%, #1B2636);
   --selected-row-indicator: #38BDF8;
   --selected-card-border: #38BDF8;
-  --selected-control-bg: #FFE000;
+  --selected-control-bg: #E8FF2A;
   --selected-control-fg: #101722;
   --success-fg: var(--success);
   --success-bg: color-mix(in srgb, var(--success) 12%, #1B2636);
@@ -720,7 +720,7 @@ tbody td { border-bottom: 1px solid rgba(51,65,85,0.7) !important; }
 /* The heat gradient used on "Sonoran", as a class so any headline fragment can
    carry it. background-clip:text needs a transparent fill to show through. */
 .heat-shine {
-  background: linear-gradient(100deg, #F2D500 4%, #FFE000 42%, #FFF3A0 60%, #F2D500 96%);
+  background: linear-gradient(100deg, #CFE60F 4%, #E8FF2A 42%, #F6FFB0 60%, #CFE60F 96%);
   -webkit-background-clip: text;
           background-clip: text;
   -webkit-text-fill-color: transparent;
@@ -1336,7 +1336,7 @@ select.k-select { padding-right: 36px; }
 .pj-next-toggle:hover { color: var(--text-primary); }
 .pj-next-list { list-style: none; margin: 8px 0 0; padding: 0; display: grid; grid-template-columns: repeat(auto-fill, minmax(260px, 1fr)); gap: 6px 16px; }
 .pj-next-list li { display: flex; align-items: flex-start; gap: 10px; padding: 8px 10px; border-radius: 10px; }
-.pj-next-list li[data-next="true"] { background: rgba(255,224,0,0.06); border: 1px solid rgba(255,224,0,0.35); }
+.pj-next-list li[data-next="true"] { background: rgba(232,255,42,0.06); border: 1px solid rgba(232,255,42,0.35); }
 .pj-next-num { width: 20px; height: 20px; border-radius: 6px; display: inline-grid; place-items: center; flex-shrink: 0; font-size: 12px; font-weight: 800; color: var(--text-secondary); background: var(--bg-surface-2); border: 1px solid var(--border-default); margin-top: 1px; }
 li[data-done="true"] .pj-next-num { color: var(--success); background: rgba(74,222,128,0.12); border-color: rgba(74,222,128,0.4); }
 li[data-next="true"] .pj-next-num { color: var(--on-brand); background: var(--brand-primary); border-color: var(--brand-primary); }
@@ -1706,7 +1706,7 @@ li[data-done="true"] .pj-next-step strong { color: var(--text-tertiary); text-de
     color: var(--text-primary);
   }
   .sag-app select:not([multiple]):not([size]) option:checked {
-    background: rgba(255, 224, 0, 0.10);
+    background: rgba(232, 255, 42, 0.10);
     box-shadow: inset 3px 0 0 var(--brand-primary);
     color: var(--text-primary);
   }

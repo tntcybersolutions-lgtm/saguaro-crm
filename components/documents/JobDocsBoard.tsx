@@ -27,7 +27,7 @@ const CSS = `
 .jdbRow:first-child { border-top: 0; }
 .jdbRow:hover { background: rgba(255,255,255,0.03); }
 .jdbRow:focus-visible { outline: 2px solid var(--focus-ring); outline-offset: -2px; }
-.jdbRow[data-sel="true"] { background: rgba(255,224,0,0.05); box-shadow: inset 3px 0 0 var(--brand-primary); cursor: default; }
+.jdbRow[data-sel="true"] { background: rgba(232,255,42,0.05); box-shadow: inset 3px 0 0 var(--brand-primary); cursor: default; }
 .jdbJob { display: flex; align-items: center; gap: 12px; min-width: 0; }
 .jdbName { min-width: 0; }
 .jdbName b { display: block; font-size: 14.5px; font-weight: 800; color: var(--text-primary); overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }

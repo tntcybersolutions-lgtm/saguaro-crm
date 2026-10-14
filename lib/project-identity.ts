@@ -27,7 +27,7 @@ const A = (hex: string, name: string): ProjectAccent => ({
 export const PROJECT_ACCENTS: ProjectAccent[] = [
   // One professional accent for every project (owner 2026-10-03: no rainbow).
   // Array kept so the hash/override API stays the same.
-  A('#FFE600', 'Brand Yellow'),
+  A('#E8FF2A', 'Brand Yellow'),
 ];
 
 /** Stable hash: same project id -> same accent, on every surface, forever. */

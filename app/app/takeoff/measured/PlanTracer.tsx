@@ -34,10 +34,10 @@ import { humanError } from '@/lib/errors';
 /* ── palette (Sonoran navy + gold) ──────────────────────────────────────── */
 const BG = 'var(--bg-base)', PANEL = 'var(--bg-surface)', LINE = 'rgba(255,255,255,0.09)', GOLD = 'var(--brand-primary)';
 // Canvas 2D cannot resolve CSS custom properties — the drawing surface keeps literal brand hexes.
-const CANVAS_GOLD = '#FBBF24', CANVAS_CYAN = '#FFE000';
+const CANVAS_GOLD = '#FBBF24', CANVAS_CYAN = '#E8FF2A';
 const TEXT = '#e6edf3', DIM = '#8b949e', GREEN = '#4ADE80', RED = '#F87171', CYAN = 'var(--brand-primary-strong)';
 const CANVAS_BG = '#0b0e13';
-const TRADE_PALETTE = ['#FFE000', '#4ADE80', '#FBBF24', '#FBBF24', '#FBBF24', '#FB7185', '#FBBF24', '#FFE000', '#4ADE80', '#FFE000', '#FBBF24', '#4ADE80'];
+const TRADE_PALETTE = ['#E8FF2A', '#4ADE80', '#FBBF24', '#FBBF24', '#FBBF24', '#FB7185', '#FBBF24', '#E8FF2A', '#4ADE80', '#E8FF2A', '#FBBF24', '#4ADE80'];
 const uid = () => Math.random().toString(36).slice(2, 9);
 const usd = (c: number) => '$' + Math.round(c / 100).toLocaleString();
 const clamp = (n: number, lo: number, hi: number) => Math.max(lo, Math.min(hi, n));
