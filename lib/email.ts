@@ -9,6 +9,24 @@ import { currentComm, htmlToText, logComm } from '@/lib/comm-log';
 // Fallbacks use the VERIFIED Resend domain (saguarocontrol.net). Prod sets EMAIL_FROM
 // explicitly; these defaults just keep sends valid if the env var is ever missing.
 const FROM = process.env.EMAIL_FROM || 'Saguaro Control Systems <noreply@saguarocontrol.net>';
+/* The sending address (from EMAIL_FROM, verified in Resend). The display name is
+   set here, not by the env var, so every email reads "Saguaro Control Systems"
+   (or "<inviter> via Saguaro") instead of an internal name like "Saguaro CRM". */
+const FROM_ADDRESS = (FROM.match(/<([^>]+)>/)?.[1] || FROM).trim();
+const REPLY_TO = (process.env.EMAIL_REPLY_TO || '').trim() || undefined;
+function fromWithName(name: string): string {
+  return `${name.replace(/["<>\r\n]/g, '').trim() || 'Saguaro Control Systems'} <${FROM_ADDRESS}>`;
+}
+
+/** Optional per-email sender details that help mail land in the inbox. */
+export type SendOptions = {
+  /** Display name, e.g. "Robert Zilm via Saguaro". */
+  fromName?: string;
+  /** Where a reply goes (the person who triggered the email, when known). */
+  replyTo?: string | null;
+  /** Add a one-click unsubscribe header (alerts and reminders, not invites). */
+  unsubscribe?: boolean;
+};
 const APP_URL = process.env.NEXT_PUBLIC_APP_URL || 'https://saguarocontrol.net';
 
 function getResend(): Resend | null {
@@ -32,7 +50,7 @@ function layout(body: string): string {
 <tr><td style="background:#f4f4f5;padding:16px 32px;border-top:1px solid #e5e7eb;">
   <p style="margin:0;font-size:11px;color:#9ca3af;text-align:center;">
     &copy; ${new Date().getFullYear()} Saguaro Control Systems &mdash; All rights reserved.<br>
-    <a href="${APP_URL}/unsubscribe" style="color:#9ca3af;">Unsubscribe</a> &middot;
+    <a href="${APP_URL}/app/notification-settings" style="color:#9ca3af;">Email settings</a> &middot;
     <a href="${APP_URL}" style="color:#9ca3af;">saguarocontrol.net</a>
   </p>
 </td></tr>
@@ -75,8 +93,8 @@ export type SendResult = { sent: boolean; error?: string };
  * Every helper below returns this result, so a caller that tells the user an
  * email went out can (and must) check it first.
  */
-async function send(to: string | string[], subject: string, html: string): Promise<SendResult> {
-  const result = await deliver(to, subject, html);
+async function send(to: string | string[], subject: string, html: string, opts: SendOptions = {}): Promise<SendResult> {
+  const result = await deliver(to, subject, html, opts);
   // When the caller said what this mail is about (lib/comm-log withComm), it
   // goes on the record — a bid jacket shows every email sent about it.
   if (currentComm()) {
@@ -91,7 +109,7 @@ async function send(to: string | string[], subject: string, html: string): Promi
 
 const NOT_CONFIGURED = 'Email is not configured on this deployment.';
 
-async function deliver(to: string | string[], subject: string, html: string): Promise<SendResult> {
+async function deliver(to: string | string[], subject: string, html: string, opts: SendOptions = {}): Promise<SendResult> {
   const resend = getResend();
   if (!resend) {
     console.log(`[Email SKIPPED — no RESEND_API_KEY] To: ${to} | Subject: ${subject}`);
@@ -102,7 +120,21 @@ async function deliver(to: string | string[], subject: string, html: string): Pr
        unverified domain, rate limit) — it resolves with { error }. Awaiting it
        and returning sent:true reported every refused invitation, award notice
        and reminder as delivered. Read the error it hands back. */
-    const { error } = await resend.emails.send({ from: FROM, to: Array.isArray(to) ? to : [to], subject, html });
+    /* Inbox placement: a real display name, a reply-to a person can answer, a
+       plain-text copy next to the HTML, and (for alerts) a one-click unsubscribe
+       header. Gmail and Outlook weigh all four when deciding Inbox vs Spam. */
+    const replyTo = (opts.replyTo || '').trim() || REPLY_TO;
+    const { error } = await resend.emails.send({
+      from: fromWithName(opts.fromName || 'Saguaro Control Systems'),
+      to: Array.isArray(to) ? to : [to],
+      subject,
+      html,
+      text: htmlToText(html),
+      ...(replyTo ? { replyTo } : {}),
+      ...(opts.unsubscribe
+        ? { headers: { 'List-Unsubscribe': `<${APP_URL}/app/notification-settings>, <mailto:${FROM_ADDRESS}?subject=unsubscribe>` } }
+        : {}),
+    });
     if (error) {
       const msg = typeof error === 'string' ? error : (error as { message?: string }).message || 'Email provider rejected the send.';
       console.error('[Email] Send refused:', msg);
@@ -128,7 +160,7 @@ export async function sendNotificationEmail(to: string, title: string, body: str
     ${h(safe(title))}
     ${body ? p(safe(body)) : ''}
     ${btn('Open in Saguaro →', url)}
-  `));
+  `), { unsubscribe: true });
 }
 
 export async function sendWelcome(to: string, name: string, company: string) {
@@ -614,7 +646,10 @@ export async function sendTrialExpiring(to: string, userName: string, daysLeft: 
 }
 
 /** Says whether the invitation email went out (the invite routes tell the GC). */
-export async function sendInviteTeamMember(to: string, inviterName: string, companyName: string, role: string, acceptUrl: string): Promise<SendResult> {
+export async function sendInviteTeamMember(to: string, inviterName: string, companyName: string, role: string, acceptUrl: string, inviterEmail?: string | null): Promise<SendResult> {
+  /* Sent as "<inviter> via Saguaro" with replies going to the inviter: a named
+     person the recipient knows reads as trusted, not as bulk mail. */
+  const viaName = inviterName && !inviterName.includes('@') ? `${inviterName} via Saguaro` : 'Saguaro Control Systems';
   return send(to, `You're invited to join ${companyName} on Saguaro Control Systems`, layout(`
     ${h(`You've been invited to join ${companyName}`)}
     ${p(`<strong>${inviterName}</strong> has invited you to collaborate on <strong>${companyName}</strong>'s projects on Saguaro Control Systems.`)}
@@ -622,7 +657,7 @@ export async function sendInviteTeamMember(to: string, inviterName: string, comp
     ${p('Saguaro Control Systems is a construction project management platform for GCs and subs — manage projects, documents, bids, and more.')}
     ${btn('Accept Invitation', acceptUrl)}
     ${p('<small style="color:#9ca3af;">This invitation expires in 7 days.</small>')}
-  `));
+  `), { fromName: viaName, replyTo: inviterEmail || null });
 }
 
 // ─── Portal Invite Emails ─────────────────────────────────────────────────────
