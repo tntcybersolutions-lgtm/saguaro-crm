@@ -171,7 +171,7 @@ export default function BudgetPage() {
   async function saveEdit(id: string) {
     const amount = parseFloat(editAmount) || 0;
     const amountCents = toCents(amount);
-    setLines(prev => prev.map(l => l.id === id ? { ...l, original_budget: amount, revised_budget: toDollars(addCents(amountCents, toCents(l.approved_cos))), forecast_cost: toDollars(Math.max(toCents(l.actual_cost), amountCents)) } : l));
+    setLines(prev => prev.map(l => l.id === id ? { ...l, original_budget: amount, revised_budget: toDollars(addCents(amountCents, toCents(l.approved_cos ?? 0))), forecast_cost: toDollars(Math.max(toCents(l.actual_cost ?? 0), amountCents)) } : l));
     setEditingId(null);
     try {
       const r = await fetch(`/api/projects/${projectId}/budget`, {
@@ -192,9 +192,9 @@ export default function BudgetPage() {
   async function handleAdjust(id: string, pct: number) {
     const line = lines.find(l => l.id === id);
     if (!line) return;
-    const newAmtCents = scaleCents(toCents(line.original_budget), 1 + pct / 100);
+    const newAmtCents = scaleCents(toCents(line.original_budget ?? 0), 1 + pct / 100);
     const newAmt = toDollars(newAmtCents);
-    setLines(prev => prev.map(l => l.id === id ? { ...l, original_budget: newAmt, revised_budget: toDollars(addCents(newAmtCents, toCents(l.approved_cos))), forecast_cost: toDollars(Math.max(toCents(l.actual_cost), newAmtCents)) } : l));
+    setLines(prev => prev.map(l => l.id === id ? { ...l, original_budget: newAmt, revised_budget: toDollars(addCents(newAmtCents, toCents(l.approved_cos ?? 0))), forecast_cost: toDollars(Math.max(toCents(l.actual_cost ?? 0), newAmtCents)) } : l));
     setAdjustId(null);
     try {
       const r = await fetch(`/api/projects/${projectId}/budget`, { method: 'PATCH', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ id, original_budget: newAmt }) });

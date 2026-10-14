@@ -67,6 +67,10 @@ export default function AcceptInvitePage() {
   const [accepting, setAccepting] = useState(false);
   const [accepted, setAccepted] = useState(false);
   const [error, setError] = useState('');
+  const [fullName, setFullName] = useState('');
+  const [password, setPassword] = useState('');
+  const [password2, setPassword2] = useState('');
+  const [creating, setCreating] = useState(false);
 
   useEffect(() => {
     const t = new URLSearchParams(window.location.search).get('token')?.trim() || '';
@@ -121,11 +125,38 @@ export default function AcceptInvitePage() {
     }
   }
 
+  /** New invitee: set a password and join the inviting company in one step. */
+  async function handleCreateAccount(e: React.FormEvent) {
+    e.preventDefault();
+    setError('');
+    if (password.length < 8) { setError('Password must be at least 8 characters.'); return; }
+    if (password !== password2) { setError("The two passwords don't match."); return; }
+    setCreating(true);
+    try {
+      const res = await fetch('/api/team/accept-invite/create-account', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        credentials: 'include',
+        body: JSON.stringify({ token, password, fullName: fullName.trim() }),
+      });
+      const data = await res.json().catch(() => ({}));
+      if (!res.ok) {
+        setError(data.error || "Couldn't set up your account. Please try again.");
+        return;
+      }
+      setAccepted(true);
+      setTimeout(() => { window.location.href = data.redirect || '/app'; }, 1400);
+    } catch {
+      setError('No connection. Check your internet and try again.');
+    } finally {
+      setCreating(false);
+    }
+  }
+
   // Absolute return path so login/signup can bring the invitee back here.
   const returnPath = token ? `/accept-invite?token=${encodeURIComponent(token)}` : '/accept-invite';
   const loginHref = (email?: string) =>
     `/login?next=${encodeURIComponent(returnPath)}${email ? `&email=${encodeURIComponent(email)}` : ''}`;
-  const signupHref = `/signup?next=${encodeURIComponent(returnPath)}`;
 
   async function switchAccount(email: string) {
     try { await fetch('/api/auth/logout', { method: 'POST' }); } catch { /* ignore */ }
@@ -264,22 +295,22 @@ export default function AcceptInvitePage() {
                   </>
                 )}
 
-                {/* Not logged in → guide to log in / sign up */}
+                {/* Not logged in → set a password here and join (no separate company signup) */}
                 {!me && (
-                  <>
-                    <p style={{ fontSize: 13, color: DIM, margin: '0 0 14px', lineHeight: 1.5 }}>
-                      To accept, sign in or create your account using <strong style={{ color: TEXT }}>{invite.email}</strong>.
-                    </p>
-                    <a href={loginHref(invite.email)} style={{ ...ctaPrimary, width: '100%', justifyContent: 'center', marginBottom: 10 }}>
-                      <SignIn size={16} weight="bold" /> Sign In &amp; Accept
+                  <form onSubmit={handleCreateAccount}>
+                    <label style={fieldLabel} htmlFor="inv-name">Your Name</label>
+                    <input id="inv-name" value={fullName} onChange={e => setFullName(e.target.value)} autoComplete="name" style={fieldInput} placeholder="First and last name" />
+                    <label style={fieldLabel} htmlFor="inv-pw">Create a Password</label>
+                    <input id="inv-pw" type="password" value={password} onChange={e => setPassword(e.target.value)} autoComplete="new-password" style={fieldInput} placeholder="At least 8 characters" />
+                    <label style={fieldLabel} htmlFor="inv-pw2">Confirm Password</label>
+                    <input id="inv-pw2" type="password" value={password2} onChange={e => setPassword2(e.target.value)} autoComplete="new-password" style={{ ...fieldInput, marginBottom: 18 }} placeholder="Type it again" />
+                    <button type="submit" disabled={creating} style={{ ...ctaPrimary, width: '100%', justifyContent: 'center', opacity: creating ? .7 : 1, cursor: creating ? 'not-allowed' : 'pointer' }}>
+                      {creating ? <><Spinner /> Setting Up…</> : <><UserPlus size={16} weight="bold" /> Set Password &amp; Join {invite.company}</>}
+                    </button>
+                    <a href={loginHref(invite.email)} style={{ ...ctaSecondary, width: '100%', justifyContent: 'center', marginTop: 10 }}>
+                      <SignIn size={16} weight="bold" /> I Already Have an Account
                     </a>
-                    <a href={signupHref} style={{ ...ctaSecondary, width: '100%', justifyContent: 'center' }}>
-                      <UserPlus size={16} weight="bold" /> Create a New Account
-                    </a>
-                    <p style={{ fontSize: 12, color: 'rgba(203,213,225,0.6)', margin: '14px 0 0', textAlign: 'center', lineHeight: 1.5 }}>
-                      New here? Create your account with <strong style={{ color: DIM }}>{invite.email}</strong>, then reopen this invitation link to finish joining.
-                    </p>
-                  </>
+                  </form>
                 )}
               </div>
             </>
@@ -326,6 +357,12 @@ const errorBox: React.CSSProperties = {
   display: 'flex', alignItems: 'flex-start', gap: 8, background: 'rgba(248,113,113,.1)',
   border: '1px solid rgba(248,113,113,.3)', borderRadius: 8, padding: '10px 14px',
   marginBottom: 16, fontSize: 13, color: RED, lineHeight: 1.45,
+};
+const fieldLabel: React.CSSProperties = { display: 'block', fontSize: 13, fontWeight: 700, color: DIM, margin: '0 0 6px' };
+const fieldInput: React.CSSProperties = {
+  display: 'block', width: '100%', boxSizing: 'border-box', padding: '12px 14px', marginBottom: 14,
+  background: 'var(--bg-surface-2)', border: '1px solid var(--border-default)', borderRadius: 9,
+  color: TEXT, fontSize: 16, outline: 'none',
 };
 const noticeBox: React.CSSProperties = {
   background: 'var(--bg-surface-2)', border: '1px solid var(--border-default)',
