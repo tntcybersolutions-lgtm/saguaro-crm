@@ -146,7 +146,7 @@ export async function POST(req: NextRequest, { params }: { params: Promise<{ id:
     } catch (err) { console.error('[team/invite] company name lookup failed', err); }
 
     // Re-send the real invitation email, and say whether it went out.
-    const mail = await sendInviteTeamMember(invite.email, inviterName, companyName, invite.role || 'member', acceptUrl);
+    const mail = await sendInviteTeamMember(invite.email, inviterName, companyName, invite.role || 'member', acceptUrl, user.email);
 
     return NextResponse.json({ success: true, emailed: mail.sent, ...(mail.sent ? {} : { emailError: mail.error || "The email didn't go out." }) });
   } catch (e) {

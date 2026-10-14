@@ -221,7 +221,7 @@ async function createAndSendInvite(
     } catch (err) { console.error('[team/invite] company name lookup failed', err); }
 
     // Send the real invitation email, and keep the answer: it may not go out.
-    const mail = await sendInviteTeamMember(email, inviterName, companyName, role, acceptUrl);
+    const mail = await sendInviteTeamMember(email, inviterName, companyName, role, acceptUrl, user.email);
 
     // In-app notification for the inviter's org.
     await createNotification(
