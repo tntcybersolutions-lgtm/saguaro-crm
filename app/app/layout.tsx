@@ -40,6 +40,7 @@ import { ensureBrowserSession } from '../../lib/supabase-browser';
 import { recordCompanyTimeZoneOnce } from '@/lib/ui/company-time-zone';
 import TableLabels from '@/components/ui/TableLabels';
 import MobileSelectSheet from '@/components/MobileSelectSheet';
+import NavAccelerator from '@/components/NavAccelerator';
 
 interface ChatMsg { role: 'user' | 'assistant'; content: string; }
 
@@ -116,7 +117,13 @@ export default function AppLayout({ children }: { children: React.ReactNode }) {
       setMyWorkCount(null); // offline or the route is not deployed yet — no badge
     }
   }, []);
-  useEffect(() => { void loadMyWorkCount(); }, [pathname, loadMyWorkCount]);
+  // On a route change at most once a minute — every tap used to cost a server call.
+  const lastMyWork = useRef(0);
+  useEffect(() => {
+    if (Date.now() - lastMyWork.current < 60_000) return;
+    lastMyWork.current = Date.now();
+    void loadMyWorkCount();
+  }, [pathname, loadMyWorkCount]);
   useEffect(() => {
     const id = window.setInterval(() => { void loadMyWorkCount(); }, 120_000);
     return () => window.clearInterval(id);
@@ -613,6 +620,7 @@ export default function AppLayout({ children }: { children: React.ReactNode }) {
 
       {/* ── Unsaved-changes gate: every screen, Save and exit / Discard ── */}
       <AutoUnsavedGuard />
+      <NavAccelerator />
 
       {/* ── Photos & video from anywhere, to any job ──────────────────── */}
       <Suspense fallback={null}><QuickMedia /></Suspense>

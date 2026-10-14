@@ -130,7 +130,10 @@ const PIXEL_ID  = process.env.NEXT_PUBLIC_META_PIXEL_ID;
 // user agent (capacitor.config.ts appendUserAgent). Ad and analytics tags must
 // not run there: inside an app they count as tracking under App Store rules,
 // which would need the App Tracking Transparency prompt and a tracking label.
-const OUTSIDE_APP = "navigator.userAgent.indexOf('SaguaroField') === -1";
+// Nor inside the signed-in app (/app): ad tags there re-fire on every page
+// change, each tap adding Google Ads requests and a script tag that never goes
+// away — the app grew slower the longer it was used. Marketing pages only.
+const OUTSIDE_APP = "navigator.userAgent.indexOf('SaguaroField') === -1 && location.pathname.indexOf('/app') !== 0";
 
 export default function RootLayout({ children }: { children: React.ReactNode }) {
   return (
