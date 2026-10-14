@@ -43,18 +43,18 @@ export const MODULE_ACCENTS: Record<string, ModuleAccent> = Object.fromEntries([
   A('permits',    'Permits',          '#C7A97F', '#D69E2E'), // sandstone
   A('todos',      'To-Dos',           '#8FB3A9', '#2CFF7A'), // patina
   A('messages',   'Messages',         '#FF8A00', '#FF8A00'), // steel blue
-  A('radio',      'Saguaro Radio',    '#FFE600', '#FF8A00'), // brand gold-hi (comms flagship)
+  A('radio',      'Saguaro Radio',    '#E8FF2A', '#FF8A00'), // brand gold-hi (comms flagship)
   // Money (gold family — money stays gold)
-  A('payapps',    'Pay Applications', '#FFE600', '#FF8A00'),
+  A('payapps',    'Pay Applications', '#E8FF2A', '#FF8A00'),
   A('budget',     'Budget',           '#E8B04B', '#FF8A00'),
-  A('invoices',   'Invoices',         '#FFE600', '#FF8A00'),
-  A('bills',      'Bills',            '#FFE600', '#D9A431'),
+  A('invoices',   'Invoices',         '#E8FF2A', '#FF8A00'),
+  A('bills',      'Bills',            '#E8FF2A', '#D9A431'),
   A('changeorders','Change Orders',   '#E0A63C', '#E8930C'),
-  A('contracts',  'Contracts',        '#FFE600', '#D9A431'),
+  A('contracts',  'Contracts',        '#E8FF2A', '#D9A431'),
   A('waivers',    'Lien Waivers',     '#C7A97F', '#D69E2E'),
   // Preconstruction
   A('takeoff',    'Takeoff Studio',   '#E8B04B', '#FF8A00'),
-  A('signal',     'Signal Studio',    '#FFE600', '#FF8A00'),
+  A('signal',     'Signal Studio',    '#E8FF2A', '#FF8A00'),
   A('bids',       'Bids',             '#FF3B30', '#E2566E'), // desert rose
   A('estimates',  'Estimates',        '#D98E5C', '#EA7A2E'),
   A('catalog',    'Materials Catalog','#B8A98A', '#FF8A00'),
@@ -81,11 +81,11 @@ export const MODULE_ACCENTS: Record<string, ModuleAccent> = Object.fromEntries([
   A('bidleveling',    'Bid Leveling',       '#C79BAF', '#D1568C'),
 
   // Money — gold and ledger-green family
-  A('commitments',    'Commitments',        '#FFE600', '#D9A431'),
+  A('commitments',    'Commitments',        '#E8FF2A', '#D9A431'),
   A('directcosts',    'Direct Costs',       '#E0A63C', '#E8930C'),
-  A('financials',     'Financials',         '#FFE600', '#FF8A00'),
+  A('financials',     'Financials',         '#E8FF2A', '#FF8A00'),
   A('changeevents',   'Change Events',      '#E0A63C', '#E8930C'),
-  A('costcodes',      'Cost Codes',         '#FFE600', '#D9A431'),
+  A('costcodes',      'Cost Codes',         '#E8FF2A', '#D9A431'),
   A('certifiedpayroll','Certified Payroll', '#84BF8E', '#2CFF7A'),
   A('resourceplanning','Resource Planning', '#2CFF7A', '#2CFF7A'),
 
@@ -157,7 +157,7 @@ export const MODULE_ACCENTS: Record<string, ModuleAccent> = Object.fromEntries([
 ].map((a) => [a.key, a]));
 
 const FALLBACK = A('default', 'Module', '#D4D4D8', '#A3ACBB');
-const UNIFORM = A('brand', 'Brand', '#FFE600', '#FF8A00'); // vivid ground carries a WHITE glyph — orange, not yellow, for contrast
+const UNIFORM = A('brand', 'Brand', '#E8FF2A', '#FF8A00'); // vivid ground carries a WHITE glyph — orange, not yellow, for contrast
 
 /** Accent for a module key (route-ish string ok: '/daily', 'punch-list'...). */
 export function moduleAccent(key?: string | null): ModuleAccent {

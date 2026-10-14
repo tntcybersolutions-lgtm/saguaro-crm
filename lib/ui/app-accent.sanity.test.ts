@@ -27,7 +27,7 @@ const unassigned = Object.keys(MODULE_ACCENTS).filter((k) => !systemKeys.has(k) 
 check('every product module is assigned a domain', unassigned.length === 0, unassigned.join(', '));
 
 /* Status hues never double as module accents. */
-const status = ['#4ADE80', '#FBBF24', '#F87171', '#FFE000'];
+const status = ['#4ADE80', '#FBBF24', '#F87171', '#E8FF2A'];
 check('no domain hue is a status hue or the action yellow', Object.values(DOMAIN_HEX).every((h) => !status.includes(h.toUpperCase())));
 
 /* Aliases resolve through lib/module-identity. */

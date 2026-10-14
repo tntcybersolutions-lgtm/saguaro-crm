@@ -11,7 +11,7 @@ export const paletteHex = {
   bg: '#101722', card: '#1B2636', raised: '#243247', border: '#334155',
   text: '#F8FAFC', text2: '#CBD5E1', text3: '#A3B1C6', text4: '#64748B',
   titlePage: '#38BDF8', titleSection: '#7DD3FC', borderCard: '#3D4F68',
-  yellow: '#FFE000', yellowHi: '#FFE94D', yellowHover: '#F2D500', onBrand: '#101722',
+  yellow: '#E8FF2A', yellowHi: '#F0FF6B', yellowHover: '#CFE60F', onBrand: '#101722',
   blue: '#38BDF8', orange: '#FBBF24', green: '#4ADE80', red: '#F87171', gray: '#94A3B8',
 } as const;
 export const palette = {
@@ -24,7 +24,7 @@ export const palette = {
 export type PaletteKey = keyof typeof palette;
 
 export const colors = {
-  // Brand accent (historically "gold", now yellow #FFE000 — the primary action
+  // Brand accent (historically "gold", now yellow #E8FF2A — the primary action
   // and the selected item only) — resolves through the --brand-primary CSS variable defined in
   // globals.css, so a tenant's white-label color
   // override reskins every component that uses these tokens. Used only in CSS
@@ -75,7 +75,7 @@ export const colors = {
  * letterheads, section dividers, the dark field-app surfaces). The neutral
  * UI chrome stays on `colors` above; `brand` is the desert identity layer. */
 export const brand = {
-  gold:       '#FFE000', // brand yellow (was the wordmark gold)
+  gold:       '#E8FF2A', // brand yellow (was the wordmark gold)
   sunset:     '#F2A93B', // bright sun
   ember:      '#E8732B', // sunset orange
   terracotta: '#A8431C', // canyon rock

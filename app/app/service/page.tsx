@@ -491,7 +491,7 @@ const CSS = `
 .sv-num { font-size: 13px; font-weight: 750; color: var(--text-secondary); }
 .sv-rowtitle { font-size: 15px; font-weight: 650; }
 .sv-rowmeta { font-size: 13px; color: var(--text-tertiary); }
-.sv-unassigned { color: #FFE000; font-style: normal; font-weight: 700; }
+.sv-unassigned { color: #E8FF2A; font-style: normal; font-weight: 700; }
 .sv-pill { font-size: 12px; font-weight: 700; padding: 2px 8px; border-radius: 999px; background: var(--bg-surface-2); color: var(--text-secondary); text-transform: capitalize; }
 .sv-p-emergency { background: rgba(248,113,113,.16); color: #F87171; }
 .sv-p-high { background: rgba(251,191,36,.16); color: #FBBF24; }

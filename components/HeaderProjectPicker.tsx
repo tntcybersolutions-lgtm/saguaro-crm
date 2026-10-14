@@ -485,19 +485,19 @@ const CSS = `
 /* globals.css pins inputs to 13px !important on desktop; 16px on a phone stops iOS zooming on focus. */
 .jp-sheet .jp-search input { font-size: 16px !important; }
 .jp-panel .jp-search input:focus, .jp-panel .jp-search input:focus-visible { border: 0 !important; box-shadow: none !important; outline: none !important; background: transparent !important; }
-.jp-panel .jp-search:focus-within { box-shadow: inset 0 -2px 0 rgba(255,224,0,0.45); }
+.jp-panel .jp-search:focus-within { box-shadow: inset 0 -2px 0 rgba(232,255,42,0.45); }
 .jp-panel .jp-search input::placeholder { color: var(--c-text-3); font-weight: 500; }
 .jp-kbd { font-family: inherit; font-size: 12px; font-weight: 700; line-height: 1; color: var(--c-text-3); padding: 4px 6px; border-radius: 6px; border: 1px solid var(--border-default); background: rgba(255,255,255,0.03); }
 .jp-iconbtn { display: inline-flex; align-items: center; justify-content: center; width: 36px; height: 36px; border-radius: 9px; border: 0; background: transparent; color: var(--c-text-2); cursor: pointer; }
 .jp-iconbtn:hover { background: rgba(255,255,255,0.06); color: var(--c-text); }
-.jp-note { padding: 8px 14px; font-size: 12px; color: var(--c-text-2); background: rgba(255,224,0,0.04); border-bottom: 1px solid var(--border-subtle); }
+.jp-note { padding: 8px 14px; font-size: 12px; color: var(--c-text-2); background: rgba(232,255,42,0.04); border-bottom: 1px solid var(--border-subtle); }
 .jp-note b { color: var(--c-text); font-weight: 750; }
 .jp-scroll { flex: 1; overflow-y: auto; overscroll-behavior: contain; padding: 4px 6px 8px; }
 .jp-group { display: flex; align-items: center; justify-content: space-between; width: 100%; padding: 12px 10px 6px; font-size: 12px; font-weight: 800; letter-spacing: 0.12em; text-transform: uppercase; color: var(--c-text-3); }
 .jp-group-btn { background: transparent; border: 0; cursor: pointer; min-height: 36px; text-align: left; }
 .jp-group-btn:hover { color: var(--c-text-2); }
 .jp-opt { display: flex; align-items: center; gap: 11px; min-height: 48px; padding: 7px 10px; border-radius: 10px; cursor: pointer; }
-.jp-opt[data-active] { background: rgba(255,224,0,0.08); }
+.jp-opt[data-active] { background: rgba(232,255,42,0.08); }
 .jp-main { flex: 1; min-width: 0; display: flex; flex-direction: column; gap: 1px; }
 .jp-name { color: var(--c-text-2); font-size: 14px; font-weight: 700; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
 .jp-opt[data-active] .jp-name, .jp-opt[data-current] .jp-name { color: var(--c-text); }

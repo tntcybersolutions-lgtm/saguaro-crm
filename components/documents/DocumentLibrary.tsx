@@ -300,7 +300,7 @@ export default function DocumentLibrary({ externalQuery = '', jobId = null }: { 
 
 const CSS = `
 .dl { background: var(--bg-surface); border: 1px solid var(--glass-border); border-top: 2px solid color-mix(in srgb, var(--brand-primary) 70%, transparent); border-radius: 14px; padding: 18px 20px; min-width: 0; }
-.dl h2 { margin: 0; font-size: 18px; font-weight: 800; color: var(--title-color, #FFE000); }
+.dl h2 { margin: 0; font-size: 18px; font-weight: 800; color: var(--title-color, #E8FF2A); }
 .dl-head { display: flex; flex-wrap: wrap; gap: 12px; justify-content: space-between; align-items: flex-start; margin-bottom: 14px; }
 .dl-sub { margin: 4px 0 0; font-size: 13px; color: var(--text-tertiary); }
 .dl-viewtoggle, .dl-chips { display: inline-flex; flex-wrap: wrap; gap: 6px; }
@@ -326,7 +326,7 @@ const CSS = `
 .dl-check input { width: 18px; height: 18px; accent-color: var(--brand-primary); cursor: pointer; }
 .dl-doc { display: flex; align-items: center; gap: 12px; min-width: 0; }
 .dl-docText { display: flex; flex-direction: column; min-width: 0; }
-.dl-title { all: unset; cursor: pointer; font-size: 14.5px; font-weight: 750; line-height: 1.3; color: var(--title-color, #FFE000); display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden; overflow-wrap: anywhere; }
+.dl-title { all: unset; cursor: pointer; font-size: 14.5px; font-weight: 750; line-height: 1.3; color: var(--title-color, #E8FF2A); display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden; overflow-wrap: anywhere; }
 .dl-title:hover { text-decoration: underline; }
 .dl-title:focus-visible, .dl-btn:focus-visible, .dl-chips button:focus-visible, .dl-viewtoggle button:focus-visible, .dl-ghead:focus-visible { outline: 2px solid var(--focus-ring); outline-offset: 2px; }
 .dl-meta { display: flex; gap: 10px; font-size: 13px; color: var(--text-tertiary); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
@@ -347,8 +347,8 @@ const CSS = `
 @keyframes dlsk { to { background-position: -200% 0; } }
 @media (prefers-reduced-motion: reduce) { .dl-skel span { animation: none; } }
 .dl-group + .dl-group { border-top: 1px solid var(--glass-border); }
-.dl-ghead { display: flex; align-items: center; gap: 8px; width: 100%; min-height: 44px; padding: 0 14px; border: 0; background: rgba(255,224,0,0.05); color: var(--text-primary); cursor: pointer; font-size: 14px; font-weight: 800; text-align: left; }
-.dl-gname { color: var(--title-color, #FFE000); }
+.dl-ghead { display: flex; align-items: center; gap: 8px; width: 100%; min-height: 44px; padding: 0 14px; border: 0; background: rgba(232,255,42,0.05); color: var(--text-primary); cursor: pointer; font-size: 14px; font-weight: 800; text-align: left; }
+.dl-gname { color: var(--title-color, #E8FF2A); }
 .dl-gcount { margin-left: auto; font-size: 13px; color: var(--text-tertiary); font-variant-numeric: tabular-nums; }
 .dl-more { display: flex; align-items: center; justify-content: space-between; gap: 12px; padding-top: 12px; font-size: 13px; color: var(--text-tertiary); }
 .dl-metaJob { display: none; }

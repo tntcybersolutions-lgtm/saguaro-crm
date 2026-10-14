@@ -294,8 +294,8 @@ const CSS = `
 .ms-group { padding: 14px 12px 6px; font-size: 12px; font-weight: 800; letter-spacing: .12em; text-transform: uppercase; color: var(--c-text-3); }
 .ms-opt { display: flex; align-items: center; gap: 12px; width: 100%; min-height: 54px; padding: 10px 12px; border: 0; border-radius: 12px; background: transparent;
   color: var(--c-text-2); font: inherit; font-size: 16px; font-weight: 650; text-align: left; cursor: pointer; }
-.ms-opt:active { background: rgba(255,224,0,0.08); }
-.ms-opt[data-selected] { background: rgba(255,224,0,0.08); color: var(--c-text); font-weight: 800; }
+.ms-opt:active { background: rgba(232,255,42,0.08); }
+.ms-opt[data-selected] { background: rgba(232,255,42,0.08); color: var(--c-text); font-weight: 800; }
 .ms-opt:disabled { color: var(--c-text-4); cursor: not-allowed; }
 .ms-dot { width: 10px; height: 10px; border-radius: 999px; flex-shrink: 0; }
 .ms-label { flex: 1; min-width: 0; overflow-wrap: anywhere; }

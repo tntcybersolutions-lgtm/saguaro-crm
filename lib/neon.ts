@@ -10,7 +10,7 @@
  * "cycle" now resolves to the single brand accent.
  */
 
-const BRAND = '#FFE600';
+const BRAND = '#E8FF2A';
 
 export const NEON = { yellow: BRAND } as const;
 

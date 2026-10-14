@@ -38,8 +38,8 @@ const ACCENT = 'var(--brand-primary)';
 const ACCENT_12 = 'var(--brand-primary-12, var(--brand-primary-12))';
 const ACCENT_25 = 'var(--brand-primary-25, var(--brand-primary-25))';
 const RED = '#F87171', GREEN = '#4ADE80', AMBER = 'var(--warning)';
-const INK_COLORS = ['#F87171', '#FBBF24', '#FFE000', '#4ADE80', '#FBBF24', '#FBBF24', '#FBBF24', '#FFFFFF'];
-const CATEGORY_COLORS: Record<string, string> = { RFI: '#FBBF24', Punch: '#F87171', Safety: '#FFE000', Other: '#D4D4D8' };
+const INK_COLORS = ['#F87171', '#FBBF24', '#E8FF2A', '#4ADE80', '#FBBF24', '#FBBF24', '#FBBF24', '#FFFFFF'];
+const CATEGORY_COLORS: Record<string, string> = { RFI: '#FBBF24', Punch: '#F87171', Safety: '#E8FF2A', Other: '#D4D4D8' };
 
 const PDF_LONG_EDGE = 2600;   // crisp raster for plan sheets
 const clamp = (n: number, lo: number, hi: number) => Math.max(lo, Math.min(hi, n));

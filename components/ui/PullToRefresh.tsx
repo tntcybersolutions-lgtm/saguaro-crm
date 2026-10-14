@@ -90,7 +90,7 @@ export function PullToRefresh({ onRefresh, children, threshold = 60 }: PullToRef
               style={{
                 width: 24,
                 height: 24,
-                border: `2px solid rgba(255,224,0,${progress})`,
+                border: `2px solid rgba(232,255,42,${progress})`,
                 borderRadius: '50%',
                 display: 'flex',
                 alignItems: 'center',
@@ -100,7 +100,7 @@ export function PullToRefresh({ onRefresh, children, threshold = 60 }: PullToRef
               }}
             >
               <svg width="10" height="10" viewBox="0 0 10 10" fill="none">
-                <path d="M5 1v4l2.5-2.5" stroke={`rgba(255,224,0,${progress})`} strokeWidth="1.5" strokeLinecap="round" />
+                <path d="M5 1v4l2.5-2.5" stroke={`rgba(232,255,42,${progress})`} strokeWidth="1.5" strokeLinecap="round" />
               </svg>
             </div>
           )}

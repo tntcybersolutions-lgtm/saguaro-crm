@@ -35,7 +35,7 @@ const WHITE = '#FFFFFF';
 const MUTED = '#D4D4D8';
 const FAINT = '#A9B4C4';
 const BORDER = 'rgba(255,255,255,0.09)';
-const GOLD_HI = '#FFE000';
+const GOLD_HI = '#E8FF2A';
 const RED = '#F87171';
 const NEST = 'rgba(255,255,255,0.03)';
 
@@ -74,7 +74,7 @@ const LOW_BATTERY = 20;
 /* Deterministic trade color — hash of the trade name into a fixed palette, so
  * any trade (canonical or custom) gets a stable, distinguishable pin color
  * without hardcoding the taxonomy here. Red is reserved for panic. */
-const PIN_PALETTE = ['#FFE000', '#FBBF24', '#4ADE80', '#FBBF24', '#FBBF24', '#FBBF24', '#4ADE80', '#FBBF24', '#4ADE80', '#FBBF24'];
+const PIN_PALETTE = ['#E8FF2A', '#FBBF24', '#4ADE80', '#FBBF24', '#FBBF24', '#FBBF24', '#4ADE80', '#FBBF24', '#4ADE80', '#FBBF24'];
 function tradeColor(trade: string | null | undefined): string {
   if (!trade) return '#94A3B8';
   let h = 0;
@@ -454,7 +454,7 @@ export function CrewMap({
               style={{
                 padding: '7px 13px', border: 'none', cursor: 'pointer',
                 fontSize: 12, fontWeight: 700, whiteSpace: 'nowrap',
-                background: hours === w.h ? 'rgba(255,224,0,0.16)' : 'rgba(255,255,255,0.04)',
+                background: hours === w.h ? 'rgba(232,255,42,0.16)' : 'rgba(255,255,255,0.04)',
                 color: hours === w.h ? GOLD_HI : MUTED,
               }}
             >

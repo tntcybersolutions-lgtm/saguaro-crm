@@ -20,7 +20,7 @@ import { moduleAccent } from '@/lib/ui/app-accent';
 import { STATUS_COLORS } from '@/lib/status-colors';
 
 // Brand hooks (white-label re-themes these via WhiteLabelProvider) ------------
-const GOLD = 'var(--brand-primary)';        // #FFE000 — the primary action / selected item
+const GOLD = 'var(--brand-primary)';        // #E8FF2A — the primary action / selected item
 const ON_GOLD = 'var(--on-brand)';             // dark text/icons on a yellow fill
 // Brand alpha steps — tokens, so a white-label override re-themes them too.
 const BORDER = 'var(--border-subtle)';
