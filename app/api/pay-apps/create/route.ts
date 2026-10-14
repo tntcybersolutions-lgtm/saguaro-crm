@@ -8,6 +8,7 @@ import { must } from '@/lib/db-write';
 import { logActivity, money } from '@/lib/activity';
 import { apiError, apiFail } from '@/lib/api-error';
 import { coTotal } from '@/lib/change-order-amount';
+import { runInBackground } from '@/lib/background';
 
 /** A real calendar date in YYYY-MM-DD — what a Postgres DATE column accepts. */
 function isIsoDate(v: unknown): boolean {
@@ -299,7 +300,7 @@ export async function POST(req: NextRequest) {
     }
 
     // Non-blocking trigger
-    onPayAppCreated((payApp as any).id).catch(console.error);
+    runInBackground(onPayAppCreated((payApp as any).id), 'onPayAppCreated');
 
     /* The money event a GC watches hardest — a pay application going out is
        the job asking to be paid. */

@@ -6,6 +6,7 @@ import type { Database } from '@/lib/database.types';
 import { onProjectCreated } from '@/lib/triggers';
 import { templateByKey } from '@/lib/project-templates';
 import { logActivity } from '@/lib/activity';
+import { runInBackground } from '@/lib/background';
 
 export async function POST(req: NextRequest) {
   try {
@@ -152,7 +153,7 @@ export async function POST(req: NextRequest) {
       if (dirErr) console.error('[projects/create] directory seed', dirErr);
     }
 
-    onProjectCreated(projectId).catch(console.error);
+    runInBackground(onProjectCreated(projectId), 'onProjectCreated');
 
     /* The first event on every job's history. Without it a project's feed
        begins mid-story, with a takeoff appearing on a job that apparently

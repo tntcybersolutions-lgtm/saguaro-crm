@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from 'next/server';
 import { requirePermission } from '@/lib/permissions';
 import { createServerClient } from '@/lib/supabase-server';
 import { createNotification } from '@/lib/notifications';
+import { runInBackground } from '@/lib/background';
 
 const BUCKET = 'project-files';
 const MAX_BYTES = 50 * 1024 * 1024;
@@ -45,10 +46,10 @@ export async function POST(req: NextRequest) {
     if (error) throw error;
 
     const { data: members } = await db.from('radio_members').select('user_id, monitoring').eq('tenant_id', t).eq('channel_id', channelId).not('user_id', 'is', null);
-    Promise.all(((members || []) as any[])
+    runInBackground(Promise.all(((members || []) as any[])
       .filter((m) => m.user_id && m.user_id !== g.user.id && m.monitoring !== false)
       .map((m) => createNotification(t, m.user_id, 'radio_media', `Shared to ${(ch as any)?.name || 'Radio'}`, caption || safeName, `/app/radio?channel=${channelId}`, (ch as any)?.project_id ?? undefined))
-    ).catch(() => {});
+    ), 'radio notify');
 
     return NextResponse.json({ message: msg }, { status: 201 });
   } catch {

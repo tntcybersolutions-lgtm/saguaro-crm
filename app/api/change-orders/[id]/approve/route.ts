@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { requirePermission } from '@/lib/permissions';
 import { onChangeOrderApproved } from '@/lib/triggers';
+import { runInBackground } from '@/lib/background';
 
 export async function POST(req: NextRequest, { params }: { params: Promise<{ id: string }> }) {
   const { id } = await params;
@@ -16,7 +17,7 @@ export async function POST(req: NextRequest, { params }: { params: Promise<{ id:
       approved_at: new Date().toISOString(),
     }).eq('id', id).eq('tenant_id', g.user.tenantId);
     if (error) throw error;
-    onChangeOrderApproved(id).catch(console.error);
+    runInBackground(onChangeOrderApproved(id), 'onChangeOrderApproved');
     return NextResponse.json({ success: true });
   } catch {
     return NextResponse.json({ error: "Internal server error" }, { status: 500 });

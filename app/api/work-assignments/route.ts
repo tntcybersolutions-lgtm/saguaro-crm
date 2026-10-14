@@ -6,6 +6,7 @@ import {
 } from '@/lib/permissions';
 import { createServerClient } from '@/lib/supabase-server';
 import { createNotification } from '@/lib/notifications';
+import { runInBackground } from '@/lib/background';
 
 /**
  * Work Routing Engine — project ownership assignments.
@@ -238,7 +239,7 @@ export async function POST(req: NextRequest) {
     }
 
     // Tell the assignee their queue changed — never block the response on it.
-    createNotification(
+    runInBackground(createNotification(
       t,
       b.assigneeUserId,
       'work_assigned',
@@ -246,7 +247,7 @@ export async function POST(req: NextRequest) {
       `${(project as any).name} — ${humanizeRole(role)}`,
       '/app/my-work',
       b.projectId,
-    ).catch(() => {});
+    ), 'notify assignee');
 
     return NextResponse.json({ assignment }, { status: 201 });
   } catch {

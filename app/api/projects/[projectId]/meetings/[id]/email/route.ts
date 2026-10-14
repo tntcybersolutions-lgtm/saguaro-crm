@@ -67,11 +67,14 @@ export async function POST(
       ${minutes ? `<h3 style="margin:20px 0 8px;color:#0D1116;font-size:16px;">Minutes</h3><p style="margin:0;color:#374151;font-size:14px;line-height:1.6;">${nl2br(minutes)}</p>` : ''}
     `;
 
-    await sendEmail({
+    const sent = await sendEmail({
       to,
       subject: `Meeting Minutes — ${(m.title as string) || projectName}`,
       html,
     });
+    if (!sent) {
+      return NextResponse.json({ error: "The email didn't go out. Please try again in a minute." }, { status: 502 });
+    }
 
     // Best-effort distribution timestamp (ignore failure)
     await must(supabase

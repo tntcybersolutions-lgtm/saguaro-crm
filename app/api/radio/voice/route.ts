@@ -5,6 +5,7 @@ import { createNotification } from '@/lib/notifications';
 import { transcribeRadioVoice } from '@/lib/transcribe';
 import { stampPresentAtSend } from '@/lib/radio-receipts';
 import { must } from '@/lib/db-write';
+import { runInBackground } from '@/lib/background';
 
 const BUCKET = 'project-files';
 const MAX_BYTES = 25 * 1024 * 1024; // 25MB — minutes of audio, not uploads gone wrong
@@ -84,10 +85,10 @@ export async function POST(req: NextRequest) {
 
     // Radio push — members hear about traffic immediately.
     const { data: members } = await db.from('radio_members').select('user_id, monitoring').eq('tenant_id', t).eq('channel_id', channelId).not('user_id', 'is', null);
-    Promise.all(((members || []) as any[])
+    runInBackground(Promise.all(((members || []) as any[])
       .filter((m) => m.user_id && m.user_id !== g.user.id && m.monitoring !== false)
       .map((m) => createNotification(t, m.user_id, 'radio_voice', `PTT — ${(ch as any)?.name || 'Radio'}`, `${g.user.email || 'Team member'} · ${durationSecs ? Math.round(durationSecs) + 's' : 'voice'}`, `/app/radio?channel=${channelId}`, (ch as any)?.project_id ?? undefined))
-    ).catch(() => {});
+    ), 'radio notify');
 
     return NextResponse.json({ message: msg }, { status: 201 });
   } catch {

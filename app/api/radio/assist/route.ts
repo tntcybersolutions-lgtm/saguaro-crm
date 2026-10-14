@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from 'next/server';
 import { requirePermission } from '@/lib/permissions';
 import { createServerClient } from '@/lib/supabase-server';
 import { createNotification } from '@/lib/notifications';
+import { runInBackground } from '@/lib/background';
 
 /**
  * Saguaro Radio — assistance queue (GroupTalk "Queue" parity).
@@ -34,11 +35,11 @@ export async function POST(req: NextRequest) {
       const all = ((members || []) as any[]).filter((m) => m.user_id && m.user_id !== g.user.id);
       const dispatchers = all.filter((m) => m.role === 'dispatcher');
       const targets = (dispatchers.length ? dispatchers : all).map((m) => m.user_id);
-      Promise.all(targets.map((uid) => createNotification(
+      runInBackground(Promise.all(targets.map((uid) => createNotification(
         t, uid, 'radio_assist', 'Assistance requested',
         `${who}${b.note ? ` — ${String(b.note).slice(0, 120)}` : ' needs a hand'}`,
         `/app/radio?channel=${b.channelId}`, b.projectId ?? undefined
-      ))).catch(() => {});
+      ))), 'radio notify');
     }
     return NextResponse.json({ assist: row }, { status: 201 });
   } catch {
@@ -80,12 +81,12 @@ export async function PATCH(req: NextRequest) {
     // Tell the requester their call was picked up / closed.
     const r = data as any;
     if (r?.requester_user_id && r.requester_user_id !== g.user.id) {
-      createNotification(
+      runInBackground(createNotification(
         g.user.tenantId, r.requester_user_id, 'radio_assist_update',
         b.action === 'ack' ? `${who} is on it` : 'Assistance resolved',
         b.action === 'ack' ? 'Your assistance request was acknowledged.' : 'Your assistance request was closed.',
         r.channel_id ? `/app/radio?channel=${r.channel_id}` : '/app/radio', r.project_id ?? undefined
-      ).catch(() => {});
+      ), 'radio notify');
     }
     return NextResponse.json({ assist: data });
   } catch {

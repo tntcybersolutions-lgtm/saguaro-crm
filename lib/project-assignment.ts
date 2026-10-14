@@ -21,6 +21,7 @@ import type { SupabaseClient } from '@supabase/supabase-js';
 import type { Database } from '@/lib/database.types';
 import { createNotification } from '@/lib/notifications';
 import { logActivity } from '@/lib/activity';
+import { runInBackground } from '@/lib/background';
 
 type Db = SupabaseClient<Database>;
 
@@ -183,7 +184,7 @@ export async function assignProjectToUser(
 
   // Tell the assignee — in-app only, never blocks the assignment.
   if (assigneeUserId !== actor.id) {
-    createNotification(
+    runInBackground(createNotification(
       tenantId,
       assigneeUserId,
       'work_assigned',
@@ -191,7 +192,7 @@ export async function assignProjectToUser(
       `${projectName} — Project Manager`,
       `/app/projects/${projectId}/overview`,
       projectId,
-    ).catch((err) => console.error('[project-assignment] notify', err));
+    ), 'notify assignee');
   }
 
   void logActivity({

@@ -226,3 +226,18 @@ already tracked by the design-system baseline (hex literals, `td` density, Sales
 decision); DataTable menus opening upward near the bottom (that is the correct behaviour); the Vercel *preview*
 session timeout (preview deployments only). CLAUDE.md §7/§8 still name `app/field/` and `lib/field-tokens.ts`,
 which do not exist — Chad's standing orders, not edited here.
+
+## 2026-10-14 — found during the "no one gets emails" fix (not fixed here)
+
+- `projects.owner_entity` / `architect_entity` are TEXT, but these read `.name` off them (always undefined, falls back or shows blank):
+  `app/app/projects/[projectId]/overview/page.tsx:326,327,434`, `app/api/pay-apps/create/route.ts:286-288`,
+  `app/api/documents/a310/route.ts:22`, `a312/route.ts:21`, `pay-application/route.ts:84-85`, `closeout/route.ts:35`.
+  Owner/architect names on G702/A310/A312/closeout PDFs come out empty unless typed by hand. Use `owner_name` / `architect_name`.
+- White-label still defaults to `*.saguarocrm.com` subdomains / `tenants.saguarocrm.com` CNAME (`white-label-provisioning.ts:36,38,259,306,457,572`)
+  and `sandbox.saguarocrm.com` (`sandbox-manager*.ts`). Domain is not ours.
+- Vercel env: `CRON_SECRET` is not set, so every cron in `vercel.json` returns 401 (no COI-expiring, lien-deadline, bid-reminder,
+  scheduled-report emails). Needs the env var, not code.
+- DNS: `saguarocontrol.net` has no DMARC record (`_dmarc` TXT) and no root SPF; Gmail/Workspace are likely to spam-folder app mail.
+- `sendWelcome`, `sendPayApp*`, `sendRFI*`, `sendW9Request`, `sendSignatureRequest` etc. in `lib/email.ts` return void, so their
+  callers cannot report a failed send (`documents/sign/send`, `documents/w9-request`).
+- `files/share/route.ts:70` and `radio/panic/route.ts:96` ignore Resend's `{ error }`.
