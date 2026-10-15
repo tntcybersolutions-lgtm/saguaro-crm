@@ -14,6 +14,8 @@ import { useParams } from 'next/navigation';
 import { PageShell, Button, Tabs, Field, Input, Textarea, Select, Toast, useToast, EmptyState } from '@/components/ui/kit';
 import { PencilSimple, FloppyDisk, X, Paperclip, LinkSimple, ChatText, Trash, FileText, ArrowSquareOut, MagnifyingGlass } from '@phosphor-icons/react';
 import ItemHistory from '@/components/item/ItemHistory';
+import DailyLogSections from '@/components/item/DailyLogSections';
+import { LOG_SECTIONS } from '@/lib/daily-log-sections';
 import { itemTool, itemNumber, nounInSentence, statusLabel, type ItemField, type ItemTool } from '@/lib/items/registry';
 
 type Item = Record<string, unknown>;
@@ -67,7 +69,7 @@ export default function ItemPage() {
   const [projectName, setProjectName] = useState('');
   const [files, setFiles] = useState<FileRow[]>([]);
   const [loadErr, setLoadErr] = useState('');
-  const [tab, setTab] = useState('general');
+  const [tab, setTab] = useState(type === 'daily_logs' ? 'log' : 'general');
   const [editing, setEditing] = useState(false);
   const [draft, setDraft] = useState<Record<string, string>>({});
   const [saving, setSaving] = useState(false);
@@ -187,7 +189,8 @@ export default function ItemPage() {
         value={tab}
         onChange={setTab}
         tabs={[
-          { key: 'general', label: 'General' },
+          ...(tool.type === 'daily_logs' ? [{ key: 'log', label: `Log · ${LOG_SECTIONS.length} sections` }] : []),
+          { key: 'general', label: tool.type === 'daily_logs' ? 'Details' : 'General' },
           { key: 'comments', label: 'Comments', count: counts.comments },
           { key: 'related', label: 'Related', count: counts.links },
           { key: 'files', label: 'Files', count: counts.files },
@@ -234,6 +237,11 @@ export default function ItemPage() {
         </section>
       )}
 
+      {tab === 'log' && tool.type === 'daily_logs' && (
+        <section className="ip-section" aria-label="Daily log sections">
+          <DailyLogSections logId={id} projectId={projectId} files={files} onFilesChanged={load} onSaved={() => { setHistoryKey((k) => k + 1); void load(); }} show={show} />
+        </section>
+      )}
       {tab === 'comments' && <CommentsTab type={type} id={id} projectId={projectId} tool={tool} comments={comments} reload={loadComments} show={show} />}
       {tab === 'related' && <RelatedTab type={type} id={id} projectId={projectId} tool={tool} links={links} reload={loadLinks} show={show} />}
       {tab === 'files' && <FilesTab tool={tool} id={id} projectId={projectId} files={files} reload={load} show={show} />}

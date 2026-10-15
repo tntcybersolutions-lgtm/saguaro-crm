@@ -139,6 +139,31 @@ export const ITEM_TOOLS: Record<string, ItemTool> = {
     edit: ['title', 'status', 'assigned_to_name', 'assigned_sub_company', 'due_date', 'priority', 'description', 'location', 'floor_level', 'room_number', 'trade', 'spec_section', 'drawing_sheet_number', 'cost_to_correct', 'correction_deadline', 'completed_by', 'verified_by', 'rejected_reason', 'notes'],
     searchKeys: ['title', 'description', 'location'],
   },
+  daily_logs: {
+    type: 'daily_logs', table: 'daily_logs', noun: 'Daily log', plural: 'Daily logs', perm: 'Projects', listPath: 'daily-logs',
+    numberKey: 'log_date', titleKey: 'phase_of_work', numberPrefix: 'Daily log ', statusKey: 'status',
+    statuses: ['draft', 'submitted', 'approved'], hasDeletedAt: true,
+    fields: [
+      { key: 'status', label: 'Status', kind: 'select', options: ['draft', 'submitted', 'approved'], strip: true },
+      { key: 'log_date', label: 'Date', kind: 'date', strip: true },
+      { key: 'superintendent', label: 'Superintendent', kind: 'text', strip: true },
+      { key: 'manpower_count', label: 'Workers on site', kind: 'number', strip: true },
+      { key: 'weather', label: 'Weather', kind: 'text', strip: true },
+      { key: 'phase_of_work', label: 'Phase of work', kind: 'text' },
+      { key: 'foreman_name', label: 'Foreman', kind: 'text' },
+      { key: 'high_temp', label: 'High °F', kind: 'text' },
+      { key: 'low_temp', label: 'Low °F', kind: 'text' },
+      { key: 'work_performed', label: 'Work performed', kind: 'long' },
+      { key: 'delays', label: 'Delays', kind: 'long' },
+      { key: 'safety_notes', label: 'Safety notes', kind: 'long' },
+      { key: 'notes', label: 'Notes', kind: 'long' },
+      { key: 'approved_by', label: 'Approved by', kind: 'text' },
+      { key: 'approved_at', label: 'Approved', kind: 'datetime' },
+      { key: 'created_at', label: 'Created', kind: 'datetime' },
+    ],
+    edit: ['status', 'log_date', 'superintendent', 'phase_of_work', 'foreman_name', 'safety_notes', 'approved_by'],
+    searchKeys: ['work_performed', 'notes', 'superintendent'],
+  },
 };
 
 export function itemTool(type: string | undefined | null): ItemTool | null {
@@ -163,6 +188,9 @@ export function itemName(tool: ItemTool, row: Record<string, unknown>): string {
 export function itemNumber(tool: ItemTool, n: unknown): string {
   if (n == null || n === '') return '';
   const s = String(n).trim();
+  if (/^\d{4}-\d{2}-\d{2}$/.test(s)) {
+    return `${tool.numberPrefix}${new Date(`${s}T12:00:00`).toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' })}`;
+  }
   return /^[A-Za-z]/.test(s) ? s : `${tool.numberPrefix}${s}`;
 }
 

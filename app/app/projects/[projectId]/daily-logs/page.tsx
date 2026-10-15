@@ -600,7 +600,7 @@ export default function DailyLogsPage(){
     return [
       { label:'Open Day', icon:<ClipboardText size={15}/>, onClick:()=>viewLog(log) },
       { label:'Edit Log', icon:<PencilSimple size={15}/>, onClick:()=>openEdit(log), disabled:temp },
-      { label:'Open Full Record', icon:<ArrowSquareOut size={15}/>, href:`/app/daily-logs/${log.id}`, hidden:temp||local },
+      { label:'Open Full Record', icon:<ArrowSquareOut size={15}/>, href:`/app/projects/${projectId}/items/daily_logs/${log.id}`, hidden:temp||local },
       { label:'Delete', icon:<Trash size={15}/>, onClick:()=>deleteLog(log), tone:'danger', disabled:temp||deleting },
     ];
   }
@@ -701,7 +701,7 @@ export default function DailyLogsPage(){
                   Edit Log
                 </Button>
                 <div className="pdlActionsRow">
-                  <Button icon={<ArrowSquareOut size={16}/>} href={String(selected.id).startsWith('temp-')||savedIdOf(String(selected.id))?undefined:`/app/daily-logs/${selected.id}`} disabled={String(selected.id).startsWith('temp-')||!!savedIdOf(String(selected.id))} title={savedIdOf(String(selected.id))?"Opens once it's sent from this phone":undefined}>
+                  <Button icon={<ArrowSquareOut size={16}/>} href={String(selected.id).startsWith('temp-')||savedIdOf(String(selected.id))?undefined:`/app/projects/${projectId}/items/daily_logs/${selected.id}`} disabled={String(selected.id).startsWith('temp-')||!!savedIdOf(String(selected.id))} title={savedIdOf(String(selected.id))?"Opens once it's sent from this phone":undefined}>
                     Open Full Record
                   </Button>
                   <RowActions actions={[
