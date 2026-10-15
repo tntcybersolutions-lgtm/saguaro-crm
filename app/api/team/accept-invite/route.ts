@@ -286,7 +286,7 @@ export async function POST(req: NextRequest) {
         'sub_added',
         `${memberName} joined your team`,
         `${user.email} accepted your invitation to join ${company} as ${role}.`,
-        invite.project_id ? `/app/projects/${invite.project_id}/team` : '/app',
+        invite.project_id ? `/app/projects/${invite.project_id}/team` : '/app/people?tab=access',
         invite.project_id || undefined,
       );
     } catch { /* non-fatal */ }

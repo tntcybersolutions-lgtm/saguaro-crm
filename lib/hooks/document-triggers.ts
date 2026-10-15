@@ -165,7 +165,7 @@ export async function onPayAppApproved(payAppId: string): Promise<void> {
             projectName: (project as any)?.name || 'Project',
             waiverType: 'conditional_progress',
             amount: sub.contract_amount || 0,
-            portalUrl: `${process.env.NEXT_PUBLIC_APP_URL}/portals/sub/${sub.id}/lien-waiver`,
+            portalUrl: `${process.env.NEXT_PUBLIC_APP_URL || 'https://saguarocontrol.net'}/portals/sub/login`,
           }),
         });
       }
@@ -261,7 +261,7 @@ export async function onProjectPublic(
       'autopilot_alert',
       'Public Project \u2014 Required Documents',
       'Non-Collusion Affidavit and Subcontractor List are required for public project submissions.',
-      `/app/projects/${projectId}/documents`,
+      `/app/projects/${projectId}/files`,
       projectId
     );
   } catch (err) {
