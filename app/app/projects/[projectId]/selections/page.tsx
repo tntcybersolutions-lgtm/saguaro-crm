@@ -1,28 +1,43 @@
 'use client';
+/**
+ * Selections — materials, finishes and owner approvals on the job, on the kit
+ * layout: StatRow (tiles filter the log) → Toolbar → DataTable, with the
+ * selected record in a details rail beside it (stacked on a phone).
+ *
+ * Reads   GET    /api/selections/list?projectId=
+ * Create  POST   /api/selections/create
+ * Edit    PUT    /api/selections/:id
+ * Approve PUT    /api/selections/:id   { owner_approved: true, status: 'selected' }
+ * Delete  DELETE /api/selections/:id
+ * Options          components/selections/SelectionOptions (client choices)
+ */
 import { useProjectContext } from '@/lib/hooks/useProjectContext';
 import { confirmDialog } from '@/lib/ui/async-dialog';
 import React, { useState, useEffect, useCallback, useRef } from 'react';
-import SaguaroDatePicker from '@/components/SaguaroDatePicker';
 import { humanError } from '@/lib/errors';
 import { useParams } from 'next/navigation';
 import { getAuthHeaders } from '@/lib/supabase-browser';
 import { SUB_TRADES, SUB_TRADES_BY_DIVISION } from '@/lib/construction-intelligence';
-import { Palette, X, Plus, Package, Hourglass, SealCheck, Scales, ChartBar, ListChecks, WarningCircle } from '@phosphor-icons/react';
-import { PremiumSurface, ModuleHero, StatCard, SectionCard, PremiumEmpty, StatStrip, FlowSteps, FlowStrip, InsightRow, AutoChip, goldButtonStyle, ghostButtonStyle, goldOutlineButtonStyle, secondaryButtonStyle } from '@/components/ui/premium';
-import { ListToolbar } from '@/components/ui/ListToolbar';
+import {
+  Palette, X, Plus, Package, Hourglass, SealCheck, Scales, WarningCircle,
+  PencilSimple, Trash, Eye, ArrowSquareOut, ArrowClockwise,
+} from '@phosphor-icons/react';
+import {
+  PageShell, Card, StatRow, Badge, Button, Toolbar, DataTable, EmptyState, Select,
+  FormModal, Field, Input, DateInput, Textarea, FormGrid, DetailList, Callout, Toast, useToast,
+  type Column, type Action, type BadgeTone, type StatItem,
+} from '@/components/ui/kit';
 import { useUnsavedGuard, useComposerDirty } from '@/lib/useUnsavedGuard';
 import UnsavedGuardModal from '@/components/UnsavedGuardModal';
 import Suggest from '@/components/ui/Suggest';
 import SelectionOptions from '@/components/selections/SelectionOptions';
-
-const GOLD='var(--brand-primary)',DARK='var(--bg-base)',RAISED='var(--bg-surface)',BORDER='rgba(255,255,255,0.12)',DIM='var(--text-secondary)',TEXT='var(--text-primary)';
-const GREEN='var(--success)',RED='var(--danger)',ORANGE='var(--warning)',BLUE='var(--info)';
+import { layout } from '@/lib/design-tokens';
 
 const CATEGORIES=['Flooring','Countertops','Cabinets','Plumbing Fixtures','Lighting',
   'Appliances','Tile','Paint','Hardware','Other'];
 const STATUSES=['pending','selected','ordered','delivered','installed'];
-const STATUS_COLORS:Record<string,string>={
-  pending:ORANGE,selected:BLUE,ordered:BLUE,delivered:'var(--warning)',installed:GREEN,
+const STATUS_TONE:Record<string,BadgeTone>={
+  pending:'under_contract',selected:'neutral',ordered:'neutral',delivered:'under_contract',installed:'ongoing',
 };
 const STATUS_LABELS:Record<string,string>={
   pending:'Pending',selected:'Selected',ordered:'Ordered',
@@ -31,14 +46,9 @@ const STATUS_LABELS:Record<string,string>={
 
 // Cents when there are cents: an $899.99 option must not read "$900".
 const fmt=(n:number)=>'$'+((n||0).toLocaleString('en-US',{minimumFractionDigits:0,maximumFractionDigits:2}));
-
-const inp:React.CSSProperties={
-  width:'100%',padding:'9px 12px',background:'var(--bg-surface-2)',
-  border:'1px solid rgba(255,255,255,0.12)',borderRadius:7,color:'var(--text-primary)',
-  fontSize:13,outline:'none',boxSizing:'border-box',
-};
-const HINT:React.CSSProperties={fontSize:12,color:'var(--c-text-2)',marginTop:5,lineHeight:1.45};
+const signed=(n:number)=>(n>0?'+':'')+fmt(n);
 const isoDate=(d:Date)=>`${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,'0')}-${String(d.getDate()).padStart(2,'0')}`;
+const fmtDate=(iso:string|null|undefined)=>iso?new Date(iso.slice(0,10)+'T12:00:00').toLocaleDateString('en-US',{month:'short',day:'numeric',year:'numeric'}):'—';
 
 const EMPTY:Record<string,any>={
   category:'Flooring',item:'',manufacturer:'',model:'',color:'',finish:'',
@@ -46,24 +56,34 @@ const EMPTY:Record<string,any>={
   owner_approved:false,due_date:'',notes:'',link:'',
 };
 
-function Field({label,children,auto}:{label:string;children:React.ReactNode;auto?:boolean}){
-  return(
-    <div>
-      <label style={{display:'block',fontSize:12,fontWeight:700,color:DIM,
-        marginBottom:5}}>{label}{auto&&<AutoChip/>}</label>
-      {children}
-    </div>
-  );
-}
+type StatusFilter='all'|'pending'|'approved'|(typeof STATUSES)[number];
 
-function Pill({label,color}:{label:string;color:string}){
-  return(
-    <span style={{fontSize:12,fontWeight:700,padding:'3px 9px',borderRadius:20,
-      background:`color-mix(in srgb, ${color} 13%, transparent)`,color}}>
-      {label}
-    </span>
-  );
+const CSS = `
+.selWs > .k-page { max-width: none; }
+.selCq { container: selws / inline-size; min-width: 0; }
+.selSplit { display: grid; grid-template-columns: minmax(0, 1fr); gap: 16px; align-items: start; min-width: 0; }
+.selSplit > * { min-width: 0; }
+@container selws (min-width: 1080px) {
+  .selSplit[data-open="true"] { grid-template-columns: minmax(340px, 1fr) clamp(${layout.detailRailMin}px, 36%, ${layout.detailRailMax}px); }
+  .selRail { position: sticky; top: 16px; }
 }
+.selSection { display: flex; flex-direction: column; gap: 10px; }
+.selSection + .selSection { margin-top: 18px; padding-top: 18px; border-top: 1px solid var(--border-subtle); }
+.selBadges { display: inline-flex; align-items: center; gap: 6px; flex-wrap: wrap; }
+.selMuted { color: var(--text-tertiary); }
+.selMoney { font-variant-numeric: tabular-nums; white-space: nowrap; }
+.selOver { color: var(--danger); font-weight: 700; }
+.selUnder { color: var(--success); font-weight: 700; }
+.selProse { font-size: var(--fs-md); line-height: 1.6; color: var(--text-secondary); white-space: pre-wrap; overflow-wrap: anywhere; }
+.selBar { height: 8px; border-radius: 6px; background: var(--bg-surface-2); overflow: hidden; }
+.selBar > span { display: block; height: 100%; border-radius: 6px; transition: width .4s; }
+.selBarHead { display: flex; align-items: baseline; justify-content: space-between; gap: 12px; margin-bottom: 8px; font-size: var(--fs-sm); color: var(--text-secondary); }
+.selCheck { display: flex; align-items: center; gap: 10px; min-height: 44px; font-size: 14px; color: var(--text-primary); cursor: pointer; }
+.selCheck input { width: 18px; height: 18px; }
+@media (max-width: 640px) {
+  .selWs .k-btn, .selWs .k-stat, .selWs select.k-select, .selWs .k-input { min-height: 44px; }
+}
+`;
 
 export default function SelectionsPage(){
   const {projectId}=useParams() as {projectId:string};
@@ -73,6 +93,7 @@ export default function SelectionsPage(){
   const [selected,setSelected]=useState<any>(null);
   const [mode,setMode]=useState<'view'|'edit'|'create'|null>(null);
   const [form,setForm]=useState<Record<string,any>>({...EMPTY});
+  const railRef=useRef<HTMLDivElement>(null);
 
   /* ── Unsaved-work guard: the composer holds real typing, so leaving this
    *    module (sidebar, field nav, ⌘K, breadcrumb, back) confirms first, and
@@ -87,17 +108,14 @@ export default function SelectionsPage(){
   });
   const [saving,setSaving]=useState(false);
   const [deleting,setDeleting]=useState(false);
-  const [toast,setToast]=useState<{msg:string;type:'success'|'error'}|null>(null);
+  const { toast, show } = useToast(4000);
+  const showToast=(msg:string,type:'success'|'error'='success')=>show(msg,type==='success'?'good':'bad');
   const [search,setSearch]=useState('');
   const [filterCat,setFilterCat]=useState('all');
-  const [filterStatus,setFilterStatus]=useState('all');
+  const [filterStatus,setFilterStatus]=useState<StatusFilter>('all');
   // SmartCreate: one-shot project snapshot — known vendors, owner, allowance money.
   const { ctx } = useProjectContext(projectId);
   const [auto,setAuto]=useState<{due?:boolean}>({});
-
-  const showToast=(msg:string,type:'success'|'error'='success')=>{
-    setToast({msg,type}); setTimeout(()=>setToast(null),4000);
-  };
 
   const load=useCallback(async()=>{
     setLoading(true);
@@ -110,28 +128,20 @@ export default function SelectionsPage(){
       // The DB uses item_name / selected_amount; this page reads item / cost.
       // Alias them so a saved selection's name + cost render on reload (the rest
       // — manufacturer/model/color/finish/link/owner_approved — are real columns).
-      setItems((d.selections||[]).map((s:any)=>({
+      const next=(d.selections||[]).map((s:any)=>({
         ...s,
         item: s.item ?? s.item_name ?? '',
         cost: Number(s.cost ?? s.selected_amount ?? 0),
         allowance: Number(s.allowance ?? 0),
-      })));
+      }));
+      setItems(next);
+      // Keep the open record in step with the fresh read.
+      setSelected((prev:any)=>prev?(next.find((x:any)=>x.id===prev.id)??prev):prev);
     }catch{setItems([]);setLoadError('Failed to load. Please try again.');}
     finally{setLoading(false);}
   },[projectId]);
 
   useEffect(()=>{load();},[load]);
-
-  // Dead-space kill (spec 4.1): an empty log auto-opens the create panel so
-  // the SmartCreate composer — not a bare box — is the zero state. One-shot
-  // per visit so Cancel stays cancelled.
-  const autoOpenedRef=useRef(false);
-  useEffect(()=>{
-    if(!loading&&!loadError&&items.length===0&&mode===null&&!autoOpenedRef.current){
-      autoOpenedRef.current=true;
-      openCreate();
-    }
-  },[loading,loadError,items.length,mode]);
 
   function openCreate(){
     setForm({...EMPTY,due_date:isoDate(new Date(Date.now()+30*86400000))});
@@ -148,8 +158,18 @@ export default function SelectionsPage(){
       notes:item.notes||'',link:item.link||''});
     setAuto({});setSelected(item);setMode('edit');
   }
-  function viewItem(item:any){setSelected(item);setMode('view');}
+  function viewItem(item:any){
+    setSelected(item);setMode('view');
+    requestAnimationFrame(()=>{
+      const el=railRef.current;
+      if(el&&el.getBoundingClientRect().top>window.innerHeight*0.6) el.scrollIntoView({behavior:'smooth',block:'start'});
+    });
+  }
   function closePanel(){setSelected(null);setMode(null);}
+  /** Closing the composer: back to the record it came from (edit) or nothing (create). */
+  function closeComposer(){
+    guard.requestClose(()=>{ if(mode==='edit'&&selected) setMode('view'); else closePanel(); });
+  }
 
   async function save(): Promise<boolean> {
     if(!form.item.trim()){showToast('Item name is required.','error');return false;}
@@ -204,12 +224,13 @@ export default function SelectionsPage(){
     finally{setDeleting(false);}
   }
 
-  const cats=Array.from(new Set(items.map((i:any)=>i.category).filter(Boolean)));
+  const cats=Array.from(new Set(items.map((i:any)=>i.category).filter(Boolean))) as string[];
   const filtered=items.filter((i:any)=>{
-    const ms=!search||(i.item||'').toLowerCase().includes(search.toLowerCase())
-      ||(i.manufacturer||'').toLowerCase().includes(search.toLowerCase());
+    const q=search.toLowerCase();
+    const ms=!search||(i.item||'').toLowerCase().includes(q)
+      ||(i.manufacturer||'').toLowerCase().includes(q);
     const mc=filterCat==='all'||i.category===filterCat;
-    const mst=filterStatus==='all'||i.status===filterStatus;
+    const mst=filterStatus==='all'||(filterStatus==='approved'?!!i.owner_approved:i.status===filterStatus);
     return ms&&mc&&mst;
   });
 
@@ -218,429 +239,308 @@ export default function SelectionsPage(){
   const pendingCount=items.filter((i:any)=>i.status==='pending').length;
   const approvedCount=items.filter((i:any)=>i.owner_approved).length;
   const overage=totalCost-totalAllowance;
+  const filtersActive=!!search||filterCat!=='all'||filterStatus!=='all';
+  const clearFilters=()=>{setSearch('');setFilterCat('all');setFilterStatus('all');};
 
-  // Group by category for display
-  const grouped: Record<string,any[]>={};
-  for(const item of filtered){
-    const cat=item.category||'Other';
-    if(!grouped[cat]) grouped[cat]=[];
-    grouped[cat].push(item);
+  const stats:StatItem[]=[
+    {label:'Total items',value:loading?'—':items.length,sub:loading?undefined:`${cats.length} ${cats.length===1?'category':'categories'}`,icon:<Package size={15}/>,onClick:()=>setFilterStatus('all'),active:filterStatus==='all'},
+    {label:'Pending decision',value:loading?'—':pendingCount,tone:pendingCount>0?'warn':'default',sub:loading?undefined:pendingCount>0?'Waiting on the owner':'None waiting',icon:<Hourglass size={15}/>,onClick:()=>setFilterStatus('pending'),active:filterStatus==='pending'},
+    {label:'Owner approved',value:loading?'—':approvedCount,tone:approvedCount>0?'good':'default',sub:loading?undefined:`of ${items.length}`,icon:<SealCheck size={15}/>,onClick:()=>setFilterStatus('approved'),active:filterStatus==='approved'},
+    {label:overage>0?'Over allowance':'Under allowance',value:loading?'—':(overage>=0?`+${fmt(overage)}`:fmt(overage)),tone:overage>0?'bad':'good',sub:loading?undefined:`${fmt(totalCost)} of ${fmt(totalAllowance)}`,icon:<Scales size={15}/>},
+  ];
+
+  const columns:Column<any>[]=[
+    {key:'item',header:'Item',primary:true,accessor:(r)=>(r.item||'').toLowerCase(),render:(r)=>r.item||'Untitled'},
+    {key:'category',header:'Category',render:(r)=>r.category||'Other'},
+    {key:'manufacturer',header:'Manufacturer',render:(r)=>r.manufacturer||'—'},
+    {key:'model',header:'Model / SKU',hidden:true,render:(r)=>r.model||'—'},
+    {key:'color',header:'Color',hidden:true,render:(r)=>r.color||'—'},
+    {key:'finish',header:'Finish',hidden:true,render:(r)=>r.finish||'—'},
+    {key:'status',header:'Status',phone:'show',accessor:(r)=>STATUS_LABELS[r.status]||r.status||'',render:(r)=>(
+      <span className="selBadges">
+        <Badge tone={STATUS_TONE[r.status]||'neutral'} dot>{STATUS_LABELS[r.status]||r.status}</Badge>
+        {r.owner_approved&&<Badge tone="ongoing">Owner approved</Badge>}
+      </span>
+    )},
+    {key:'cost',header:'Price',align:'right',phone:'show',total:'sum',format:fmt,accessor:(r)=>Number(r.cost)||0,render:(r)=><span className="selMoney">{r.cost>0?fmt(r.cost):'—'}</span>},
+    {key:'allowance',header:'Allowance',align:'right',total:'sum',format:fmt,accessor:(r)=>Number(r.allowance)||0,render:(r)=><span className="selMoney">{r.allowance>0?fmt(r.allowance):'—'}</span>},
+    {key:'variance',header:'Variance',align:'right',phone:'show',total:'sum',format:signed,accessor:(r)=>(Number(r.cost)||0)-(Number(r.allowance)||0),render:(r)=>{
+      const v=(Number(r.cost)||0)-(Number(r.allowance)||0);
+      if(!(r.cost>0)&&!(r.allowance>0)) return '—';
+      return <span className={`selMoney ${v>0?'selOver':v<0?'selUnder':''}`}>{signed(v)}</span>;
+    }},
+    {key:'selected_by',header:'Selected by',hidden:true,render:(r)=>r.selected_by||'—'},
+    {key:'due_date',header:'Decision due',accessor:(r)=>r.due_date||'',render:(r)=>fmtDate(r.due_date)},
+  ];
+
+  function rowActions(item:any):Action[]{
+    const pending=String(item.status||'pending').toLowerCase()==='pending';
+    return [
+      {label:'View',icon:<Eye size={15}/>,onClick:()=>viewItem(item)},
+      {label:'Edit',icon:<PencilSimple size={15}/>,onClick:()=>openEdit(item)},
+      {label:'Record owner approval',icon:<SealCheck size={15}/>,onClick:()=>approve(item),hidden:!!item.owner_approved||!pending},
+      {label:'Delete',icon:<Trash size={15}/>,onClick:()=>deleteItem(item),tone:'danger',disabled:deleting},
+    ];
   }
 
-  return(
-    <div className="selRoot" style={{display:'flex',height:'100%',minHeight:0,position:'relative'}}>
-      {toast&&(
-        <div style={{position:'fixed',bottom:24,left:'50%',transform:'translateX(-50%)',zIndex:99999,
-          padding:'12px 20px',borderRadius:8,color:'var(--text-primary)',fontWeight:700,fontSize:14,pointerEvents:'none',
-          background:toast.type==='success'?'rgba(74,222,128,.92)':'rgba(248,113,113,.92)'}}>
-          {toast.msg}
-        </div>
-      )}
+  const base=`/app/projects/${projectId}`;
+  const showRail=!!selected&&mode==='view';
+  const formPrice=Number(form.cost)||0, formAllow=Number(form.allowance)||0, formVar=formPrice-formAllow;
 
-      <div style={{flex:1,overflow:'auto',minWidth:0}}>
-        <PremiumSurface>
-
-          {/* Header */}
-          <ModuleHero
-            eyebrow="Selections"
-            eyebrowIcon={<Palette size={13} weight="fill" color="var(--text-secondary)" />}
-            title="Client"
-            accent="Selections"
-            subtitle="Materials, finishes & owner approvals"
-            actions={
-              /* While the New/Edit panel is open its submit is the one yellow action. */
-              <button onClick={openCreate} style={mode==='create'||mode==='edit'?ghostButtonStyle:goldButtonStyle} className="pmBtn">
-                <Plus size={15} weight="bold" /> Add Selection
-              </button>
-            }
-          />
-
-          {/* KPIs */}
-          <div style={{display:'grid',gridTemplateColumns:'repeat(auto-fit,minmax(180px,1fr))',gap:12,marginBottom:24}}>
-            <StatCard icon={<Package size={19} weight="duotone" color="var(--text-secondary)"/>}
-              label="Total Items" value={String(items.length)} delay={0.02} href={`/app/projects/${projectId}/selections`}/>
-            <StatCard icon={<Hourglass size={19} weight="duotone" color={ORANGE}/>}
-              label="Pending Decision" value={String(pendingCount)} accent={ORANGE} delay={0.06} href={`/app/projects/${projectId}/selections`}/>
-            <StatCard icon={<SealCheck size={19} weight="duotone" color={GREEN}/>}
-              label="Owner Approved" value={String(approvedCount)} accent={GREEN} delay={0.10} href={`/app/projects/${projectId}/selections`}/>
-            <StatCard icon={<Scales size={19} weight="duotone" color={overage>0?RED:GREEN}/>}
-              label={overage>0?'Over Allowance':'Under Allowance'}
-              value={overage>=0?`+${fmt(overage)}`:fmt(overage)} accent={overage>0?RED:GREEN} delay={0.14} href={`/app/projects/${projectId}/selections`}/>
+  const rail=showRail&&(()=>{
+    const s=selected;
+    const pending=String(s.status||'pending').toLowerCase()==='pending';
+    const over=s.cost>0&&s.allowance>0&&s.cost>s.allowance;
+    return(
+      <aside ref={railRef} className="selRail" aria-label="Selection details">
+        <Card
+          title={s.item||'Untitled'}
+          subtitle={s.category}
+          actions={<>
+            <Button size="sm" icon={<PencilSimple size={14}/>} onClick={()=>openEdit(s)}>Edit</Button>
+            <Button size="sm" variant="danger" icon={<Trash size={14}/>} onClick={()=>deleteItem(s)} disabled={deleting}>{deleting?'Deleting…':'Delete'}</Button>
+            <Button variant="ghost" size="sm" icon={<X size={16}/>} aria-label="Close details" title="Close details" onClick={closePanel}/>
+          </>}
+        >
+          <div className="selSection">
+            <div className="selBadges">
+              <Badge tone={STATUS_TONE[s.status]||'neutral'} dot>{STATUS_LABELS[s.status]||s.status}</Badge>
+              {s.owner_approved&&<Badge tone="ongoing">Owner approved</Badge>}
+            </div>
+            {!s.owner_approved&&pending&&(
+              <Button icon={<SealCheck size={15}/>} onClick={()=>approve(s)}>Record owner approval</Button>
+            )}
           </div>
 
-          {/* Budget bar */}
-          {totalAllowance>0&&(
-            <div style={{marginBottom:20}}>
-              <SectionCard flat
-                title="Budget vs Allowance"
-                icon={<ChartBar size={17} weight="duotone" color="var(--text-secondary)"/>}
-                action={<span style={{fontSize:13,fontWeight:800,color:overage>0?RED:GREEN}}>
-                  {fmt(totalCost)} / {fmt(totalAllowance)}
-                </span>}
-              >
-                <div style={{background:'rgba(255,255,255,0.12)',borderRadius:4,height:8,overflow:'hidden'}}>
-                  <div style={{height:'100%',borderRadius:4,
-                    background:overage>0?`linear-gradient(90deg,${RED},#F87171)`:`linear-gradient(90deg,${GREEN},#4ADE80)`,
-                    width:`${Math.min(100,totalAllowance>0?(totalCost/totalAllowance*100):0)}%`,transition:'width .4s'}}/>
-                </div>
-              </SectionCard>
+          <div className="selSection">
+            <SelectionOptions
+              key={s.id}
+              selectionId={s.id}
+              projectId={projectId}
+              allowance={Number(s.allowance)||0}
+              pending={pending}
+              onToast={showToast}
+            />
+          </div>
+
+          <div className="selSection">
+            <DetailList items={[
+              ['Manufacturer',s.manufacturer||''],
+              ['Model / SKU',s.model||''],
+              ['Color',s.color||''],
+              ['Finish',s.finish||''],
+              ['Cost',s.cost>0?fmt(s.cost):''],
+              ['Allowance',s.allowance>0?fmt(s.allowance):''],
+              ['Selected By',s.selected_by||''],
+              ['Decision Due',s.due_date?fmtDate(s.due_date):''],
+            ]}/>
+          </div>
+
+          {s.cost>0&&s.allowance>0&&(
+            <div className="selSection">
+              <Callout
+                tone={over?'danger':'success'}
+                icon={<Scales size={16}/>}
+                title={`${fmt(s.cost-s.allowance)} vs allowance`}
+                actions={over&&s.owner_approved&&String(s.status||'').toLowerCase()!=='pending'
+                  ?<Button size="sm" href={`${base}/change-orders`}>Open change orders</Button>:undefined}
+              />
             </div>
           )}
 
-          {/* Selections list */}
-          <SectionCard title="Selections" icon={<ListChecks size={17} weight="duotone" color="var(--text-secondary)"/>}>
-            {/* Toolbar */}
-            <ListToolbar
-              module="selections"
-              search={search}
-              onSearch={setSearch}
-              searchPlaceholder="Search selections by item or manufacturer…"
-              filters={[
-                {key:'category',label:'Category',value:filterCat,onChange:setFilterCat,allLabel:'All Categories',
-                  options:cats as string[]},
-                {key:'status',label:'Status',value:filterStatus,onChange:setFilterStatus,allLabel:'All Statuses',
-                  options:STATUSES.map(s=>({value:s,label:STATUS_LABELS[s]}))},
-              ]}
-              count={{shown:filtered.length,total:items.length}}
-              style={{marginBottom:18}}
-            />
-
-            {loading&&<div style={{padding:40,textAlign:'center',color:DIM}}>Loading selections…</div>}
-
-            {!loading&&loadError&&(
-              <PremiumEmpty
-                tone="error"
-                icon={<WarningCircle size={30} weight="duotone" color={RED} />}
-                title="Couldn't load selections"
-                description={loadError}
-                action={<button onClick={()=>load()} style={goldOutlineButtonStyle} className="pmBtn">Retry</button>}
-                compact
-              />
-            )}
-
-            {!loading&&!loadError&&items.length===0&&(
-              <div>
-                <div style={{display:'flex',alignItems:'center',justifyContent:'space-between',gap:12,flexWrap:'wrap',marginBottom:12}}>
-                  <div style={{fontSize:14,fontWeight:800,color:TEXT}}>
-                    <Palette size={16} weight="duotone" color="var(--text-secondary)" style={{marginRight:7,verticalAlign:'text-bottom'}} />
-                    No selections yet
-                    <span style={{fontWeight:400,color:DIM}}>{mode==='create' ? ' — log the first one in the panel; the decision date is already defaulted.' : ' — track material selections, finishes, and owner approvals.'}</span>
-                  </div>
-                  {mode!=='create'&&(
-                    <button onClick={openCreate} style={secondaryButtonStyle} className="pmBtn"><Plus size={15} weight="bold" /> Add Selection</button>
-                  )}
-                </div>
-                <FlowStrip steps={[
-                  {title:'Log the Selection',desc:'Price vs allowance tracked'},
-                  {title:'Owner Approves',desc:'Recorded in one click'},
-                  {title:'Order to Install',desc:'Status advances from the log'},
-                  {title:'Variance Rolls Up',desc:'Feeds the budget bar live'},
-                ]} />
-              </div>
-            )}
-
-            {/* Grouped by category */}
-            {!loading&&filtered.length>0&&Object.entries(grouped).map(([cat,catItems])=>(
-              <div key={cat} style={{marginBottom:24}}>
-                <div style={{fontSize:12,fontWeight:800,color: 'var(--text-primary)',
-                  marginBottom:10,display:'flex',alignItems:'center',gap:8}}>
-                  {cat}
-                  <span style={{fontSize:12,fontWeight:600,color:DIM}}>
-                    {catItems.length} item{catItems.length!==1?'s':''}
-                  </span>
-                </div>
-                <div style={{display:'flex',flexDirection:'column',gap:8}}>
-                  {catItems.map((item:any)=>{
-                    const isSel=selected?.id===item.id&&mode==='view';
-                    const color=STATUS_COLORS[item.status]||DIM;
-                    return(
-                      <div key={item.id} onClick={()=>viewItem(item)}
-                        style={{background:isSel?'var(--brand-primary-08)':RAISED,
-                          border:`1px solid ${isSel?GOLD:BORDER}`,borderRadius:10,
-                          padding:'12px 16px',cursor:'pointer',transition:'all .15s'}}
-                        onMouseEnter={e=>{if(!isSel)e.currentTarget.style.borderColor='var(--border-strong)';}}
-                        onMouseLeave={e=>{if(!isSel)e.currentTarget.style.borderColor=BORDER;}}>
-                        <div style={{display:'flex',alignItems:'center',justifyContent:'space-between',gap:10}}>
-                          <div style={{flex:1,minWidth:0}}>
-                            <div style={{display:'flex',alignItems:'center',gap:8,flexWrap:'wrap'}}>
-                              <span style={{fontWeight:700,fontSize:14,color:TEXT}}>{item.item}</span>
-                              <Pill label={STATUS_LABELS[item.status]||item.status} color={color}/>
-                              {item.owner_approved&&(
-                                <Pill label="Owner Approved" color={GREEN}/>
-                              )}
-                            </div>
-                            <div style={{fontSize:12,color:DIM,marginTop:3,display:'flex',gap:12,flexWrap:'wrap'}}>
-                              {item.manufacturer&&<span>{item.manufacturer}</span>}
-                              {item.model&&<span>{item.model}</span>}
-                              {item.color&&<span>Color: {item.color}</span>}
-                              {item.selected_by&&<span>by {item.selected_by}</span>}
-                            </div>
-                          </div>
-                          <div style={{textAlign:'right',flexShrink:0}}>
-                            {item.cost>0&&<div style={{fontWeight:800,fontSize:14,color:TEXT}}>{fmt(item.cost)}</div>}
-                            {item.allowance>0&&<div style={{fontSize:12,color:DIM}}>Allowance: {fmt(item.allowance)}</div>}
-                          </div>
-                        </div>
-                      </div>
-                    );
-                  })}
-                </div>
-              </div>
-            ))}
-          </SectionCard>
-        </PremiumSurface>
-      </div>
-
-      {/* Side panel — a full-screen sheet on a phone, where 480px never fit. */}
-      {mode!==null&&(
-        <div className="selPanel" style={{width:480,borderLeft:`1px solid ${BORDER}`,background:DARK,
-          overflow:'auto',flexShrink:0,display:'flex',flexDirection:'column'}}>
-          <div style={{padding:'16px 20px',borderBottom:`1px solid ${BORDER}`,
-            display:'flex',alignItems:'center',justifyContent:'space-between'}}>
-            <div style={{fontWeight:800,fontSize:15,color:TEXT}}>
-              {mode==='create'?'New Selection':mode==='edit'?'Edit Selection':'Selection Detail'}
-            </div>
-            <div style={{display:'flex',gap:8}}>
-              {mode==='view'&&selected&&(
-                <>
-                  <button onClick={()=>openEdit(selected)}
-                    style={{padding:'6px 14px',background:'var(--bg-surface-2)',border:'1px solid var(--border-default)',
-                      borderRadius:6,color: 'var(--text-primary)',fontSize:12,fontWeight:700,cursor:'pointer'}}>
-                    Edit
-                  </button>
-                  <button onClick={()=>deleteItem(selected)} disabled={deleting}
-                    style={{padding:'6px 14px',background:'rgba(248,113,113,.1)',border:`1px solid color-mix(in srgb, ${RED} 27%, transparent)`,
-                      borderRadius:6,color:RED,fontSize:12,fontWeight:700,cursor:'pointer'}}>
-                    {deleting?'…':'Delete'}
-                  </button>
-                </>
+          {(s.link||s.notes)&&(
+            <div className="selSection">
+              {s.link&&(
+                <a className="k-btn k-btn-secondary" href={s.link} target="_blank" rel="noopener noreferrer">
+                  <ArrowSquareOut size={15}/>View product link
+                </a>
               )}
-              <button onClick={closePanel} aria-label="Close"
-                style={{display:'inline-flex',alignItems:'center',justifyContent:'center',padding:'6px 10px',background:'rgba(148,163,184,.1)',
-                  border:`1px solid ${BORDER}`,borderRadius:6,color:DIM,fontSize:12,cursor:'pointer'}}>
-                <X size={14} weight="bold" />
-              </button>
+              {s.notes&&<div className="selProse">{s.notes}</div>}
             </div>
-          </div>
+          )}
+        </Card>
+      </aside>
+    );
+  })();
 
-          <div style={{flex:1,overflow:'auto',padding:20}}>
-            {(mode==='create'||mode==='edit')?(
-              <div style={{display:'flex',flexDirection:'column',gap:16}}>
-                {mode==='create'&&(
-                  <StatStrip items={[
-                    {href: `/app/projects/${projectId}/selections`, label:'Selections Made', value:String(items.length-pendingCount), sub:`of ${items.length} logged`},
-                    {href: `/app/projects/${projectId}/selections`, label:'Pending', value:String(pendingCount), accent:pendingCount>0?ORANGE:undefined, sub:'Awaiting decision'},
-                    {href: `/app/projects/${projectId}/selections`, label:'Total Allowance', value:fmt(totalAllowance), sub:'Across all items'},
-                    {href: `/app/projects/${projectId}/selections`, label:'Variance', value:(overage>0?'+':'')+fmt(overage), accent:overage>0?RED:GREEN, sub:overage>0?'Over allowances':'Under allowances'},
-                  ]}/>
-                )}
-                <div style={{display:'grid',gridTemplateColumns:'1fr 1fr',gap:12}}>
-                  <Field label="Category">
-                    <select value={form.category} onChange={e=>setForm(f=>({...f,category:e.target.value}))}
-                      style={{...inp,padding:'9px 10px'}}>
-                      {form.category&&!CATEGORIES.includes(form.category)&&!SUB_TRADES.includes(form.category)&&(
-                        <option value={form.category}>{form.category}</option>
-                      )}
-                      <optgroup label="Material Categories">
-                        {CATEGORIES.map(c=><option key={c} value={c}>{c}</option>)}
-                      </optgroup>
-                      {SUB_TRADES_BY_DIVISION.map(g=>(
-                        <optgroup key={g.division} label={'Trade Verticals — '+g.division+' '+g.name}>
-                          {g.trades.map(t=><option key={t} value={t}>{t}</option>)}
-                        </optgroup>
-                      ))}
-                      <optgroup label="Trade Verticals — Other / Specialty">
-                        {SUB_TRADES.filter(t=>!SUB_TRADES_BY_DIVISION.some(g=>g.trades.includes(t))).map(t=><option key={t} value={t}>{t}</option>)}
-                      </optgroup>
-                    </select>
-                  </Field>
-                  <Field label="Status">
-                    <select value={form.status} onChange={e=>setForm(f=>({...f,status:e.target.value}))}
-                      style={{...inp,padding:'9px 10px'}}>
-                      {STATUSES.map(s=><option key={s} value={s}>{STATUS_LABELS[s]}</option>)}
-                    </select>
-                  </Field>
-                </div>
-                <Field label="Item Name *">
-                  <input value={form.item} onChange={e=>setForm(f=>({...f,item:e.target.value}))}
-                    style={inp} placeholder="Kitchen faucet, quartz countertop…"/>
-                </Field>
-                <div style={{display:'grid',gridTemplateColumns:'1fr 1fr',gap:12}}>
-                  <Field label="Manufacturer / Vendor">
-                    <Suggest value={form.manufacturer} onChange={e=>setForm(f=>({...f,manufacturer:e.target.value}))}
-                      style={inp} placeholder="Kohler, Moen…" options={((ctx?.vendors || []) as string[]).filter(Boolean)} />
-                    {(ctx?.vendors||[]).length>0&&<div style={HINT}>{(ctx.vendors||[]).length} known vendors on this project — start typing to match.</div>}
-                  </Field>
-                  <Field label="Model / SKU">
-                    <input value={form.model} onChange={e=>setForm(f=>({...f,model:e.target.value}))}
-                      style={inp} placeholder="K-99273-0"/>
-                  </Field>
-                  <Field label="Color">
-                    <input value={form.color} onChange={e=>setForm(f=>({...f,color:e.target.value}))}
-                      style={inp} placeholder="Matte Black"/>
-                  </Field>
-                  <Field label="Finish">
-                    <input value={form.finish} onChange={e=>setForm(f=>({...f,finish:e.target.value}))}
-                      style={inp} placeholder="Brushed Nickel"/>
-                  </Field>
-                  <Field label="Selected Price ($)">
-                    <input type="number" value={form.cost} onChange={e=>setForm(f=>({...f,cost:e.target.value}))}
-                      style={inp} placeholder="0" min={0}/>
-                  </Field>
-                  <Field label="Allowance ($)">
-                    <input type="number" value={form.allowance} onChange={e=>setForm(f=>({...f,allowance:e.target.value}))}
-                      style={inp} placeholder="0" min={0}/>
-                  </Field>
-                </div>
-                {((Number(form.cost)||0)>0||(Number(form.allowance)||0)>0)&&(()=>{
-                  const price=Number(form.cost)||0, allow=Number(form.allowance)||0, v=price-allow;
-                  const over=v>0;
-                  return(
-                    <div style={{background:over?'rgba(248,113,113,.07)':'rgba(74,222,128,.07)',
-                      border:`1px solid color-mix(in srgb, ${over?RED:GREEN} 20%, transparent)`,borderRadius:10,padding:'10px 14px'}}>
-                      <InsightRow label="Selected Price" value={fmt(price)}/>
-                      <InsightRow label="Allowance" value={fmt(allow)}/>
-                      <InsightRow label={over?'Over Allowance':v<0?'Under Allowance':'On Allowance'}
-                        value={(over?'+':'')+fmt(v)} accent={over?RED:'var(--success)'} strong/>
-                    </div>
-                  );
-                })()}
-                <div style={{display:'grid',gridTemplateColumns:'1fr 1fr',gap:12}}>
-                  <Field label="Selected By">
-                    <input value={form.selected_by} onChange={e=>setForm(f=>({...f,selected_by:e.target.value}))}
-                      style={inp} placeholder="Owner or designer name"/>
-                  </Field>
-                  <Field label="Decision Due" auto={auto.due}>
-                    <SaguaroDatePicker value={form.due_date}
-                      onChange={v=>{setAuto(a=>({...a,due:false}));setForm(f=>({...f,due_date:v}));}}
-                      style={inp}/>
-                    {auto.due&&<div style={HINT}>Defaulted 30 days out — tighten to order lead times.</div>}
-                  </Field>
-                </div>
-                <Field label="Product Link">
-                  <input value={form.link} onChange={e=>setForm(f=>({...f,link:e.target.value}))}
-                    style={inp} placeholder="https://…"/>
-                </Field>
-                <Field label="Notes">
-                  <textarea value={form.notes} onChange={e=>setForm(f=>({...f,notes:e.target.value}))}
-                    rows={3} style={{...inp,resize:'vertical',lineHeight:1.5}}
-                    placeholder="Additional notes…"/>
-                </Field>
-                <div style={{display:'flex',alignItems:'center',gap:10,minHeight:44}}>
-                  <input type="checkbox" id="oa" checked={form.owner_approved}
-                    onChange={e=>setForm(f=>({...f,owner_approved:e.target.checked}))}
-                    style={{width:16,height:16,cursor:'pointer'}}/>
-                  <label htmlFor="oa" style={{display:'flex',alignItems:'center',flex:1,minHeight:44,fontSize:13,color:TEXT,cursor:'pointer'}}>Owner Approved</label>
-                </div>
-                <div style={{...HINT,marginTop:-8}}>Leave unchecked to track the decision{ctx?.project?.ownerName?` with ${ctx.project.ownerName}`:''} — approval can be recorded later from the detail view.</div>
-                {mode==='create'&&(
-                  <div style={{background:RAISED,border:`1px solid ${BORDER}`,borderRadius:10,padding:'14px 16px'}}>
-                    <FlowSteps title="After You Save" steps={[
-                      {title:'Owner Decision Tracked', desc:ctx?.project?.ownerName?`Shows as pending until ${ctx.project.ownerName} approves — record it in one click.`:'Shows as pending until owner approval is recorded in one click.'},
-                      {title:'Variance Rolls Up Live', desc:'Price vs allowance feeds the budget bar and the over/under total the moment you save.'},
-                      {title:'Order to Install', desc:'Advance status through Ordered, Delivered and Installed straight from the log.'},
-                    ]}/>
-                  </div>
-                )}
-                <div style={{display:'flex',gap:10,paddingTop:4}}>
-                  <button onClick={save} disabled={saving} className="pmBtn"
-                    style={{...goldButtonStyle,flex:1,padding:'11px 0',fontSize:14,opacity:saving?0.6:1}}>
-                    {saving?'Saving…':mode==='create'?'Add Selection':'Save Changes'}
-                  </button>
-                  <button onClick={closePanel} className="pmBtn"
-                    style={{...ghostButtonStyle,padding:'11px 16px',fontSize:14,color:DIM}}>
-                    Cancel
-                  </button>
-                </div>
-              </div>
-            ):selected?(
-              <div style={{display:'flex',flexDirection:'column',gap:14}}>
-                <div style={{background:RAISED,border:`1px solid ${BORDER}`,borderRadius:10,padding:16}}>
-                  <div style={{fontSize:12,fontWeight:700,color: 'var(--text-primary)',
-                    marginBottom:6}}>{selected.category}</div>
-                  <div style={{fontSize:18,fontWeight:800,color:TEXT,marginBottom:8}}>{selected.item}</div>
-                  <div style={{display:'flex',gap:8,flexWrap:'wrap',marginBottom:12}}>
-                    <Pill label={STATUS_LABELS[selected.status]||selected.status} color={STATUS_COLORS[selected.status]||DIM}/>
-                    {selected.owner_approved&&<Pill label="Owner Approved" color={GREEN}/>}
-                  </div>
-                  {!selected.owner_approved&&(String(selected.status||'pending').toLowerCase()==='pending')&&(
-                    <button onClick={()=>approve(selected)}
-                      style={{padding:'9px 0',width:'100%',background:'rgba(74,222,128,.1)',
-                        border:`1px solid color-mix(in srgb, ${GREEN} 27%, transparent)`,borderRadius:7,color:'var(--success)',
-                        fontSize:13,fontWeight:700,cursor:'pointer'}}>
-                      Record Owner Approval
-                    </button>
-                  )}
-                </div>
+  let listBody:React.ReactNode;
+  if(loadError){
+    listBody=(
+      <EmptyState icon={<WarningCircle size={22}/>} title="Couldn't load selections" text={loadError}
+        action={<Button icon={<ArrowClockwise size={15}/>} onClick={()=>load()}>Try again</Button>}/>
+    );
+  }else{
+    listBody=(
+      <DataTable<any>
+        tableId="project-selections"
+        exportName="selections"
+        columns={columns}
+        rows={filtered}
+        loading={loading}
+        rowKey={(r)=>r.id}
+        defaultSort={{key:'category',dir:'asc'}}
+        onRowClick={viewItem}
+        isSelected={(r)=>showRail&&selected?.id===r.id}
+        rowActions={rowActions}
+        empty={items.length===0?(
+          <EmptyState icon={<Palette size={22}/>} title="No selections yet"
+            text="Track material selections, finishes and owner approvals."
+            action={<Button variant="primary" icon={<Plus size={15} weight="bold"/>} onClick={openCreate}>Add selection</Button>}/>
+        ):(
+          <EmptyState title="Nothing matches" text="Change the search or the filters."
+            action={<Button onClick={clearFilters}>Clear filters</Button>}/>
+        )}
+      />
+    );
+  }
 
-                <SelectionOptions
-                  key={selected.id}
-                  selectionId={selected.id}
-                  projectId={projectId}
-                  allowance={Number(selected.allowance)||0}
-                  pending={String(selected.status||'pending').toLowerCase()==='pending'}
-                  onToast={showToast}
-                />
+  return(
+    <div className="selWs">
+      <style dangerouslySetInnerHTML={{__html:CSS}}/>
+      <PageShell
+        crumbs={[
+          {label:'Projects',href:'/app/projects'},
+          {label:ctx?.project?.name||'Project',href:`${base}/overview`},
+          {label:'Selections'},
+        ]}
+        title="Selections"
+        subtitle="Materials, finishes and owner approvals."
+        actions={
+          <Button variant="primary" icon={<Plus size={15} weight="bold"/>} onClick={openCreate}>Add selection</Button>
+        }
+      >
+        {!loadError&&<StatRow items={stats}/>}
 
-                <div style={{display:'grid',gridTemplateColumns:'1fr 1fr',gap:10}}>
-                  {[
-                    {l:'Manufacturer',v:selected.manufacturer},
-                    {l:'Model / SKU',v:selected.model},
-                    {l:'Color',v:selected.color},
-                    {l:'Finish',v:selected.finish},
-                    {l:'Cost',v:selected.cost>0?fmt(selected.cost):null},
-                    {l:'Allowance',v:selected.allowance>0?fmt(selected.allowance):null},
-                    {l:'Selected By',v:selected.selected_by},
-                    {l:'Decision Due',v:selected.due_date?new Date(selected.due_date+'T12:00:00')
-                      .toLocaleDateString('en-US',{month:'short',day:'numeric',year:'numeric'}):null},
-                  ].filter(x=>x.v).map(x=>(
-                    <div key={x.l} style={{background:'var(--bg-surface-2)',border:`1px solid ${BORDER}`,
-                      borderRadius:8,padding:'10px 12px'}}>
-                      <div style={{fontSize:12,fontWeight:700,color:DIM,marginBottom:4}}>{x.l}</div>
-                      <div style={{fontSize:13,color:TEXT}}>{x.v}</div>
-                    </div>
-                  ))}
-                </div>
+        {!loading&&!loadError&&totalAllowance>0&&(
+          <Card>
+            <div className="selBarHead">
+              <span>Budget vs allowance</span>
+              <strong className={overage>0?'selOver':'selUnder'}>{fmt(totalCost)} / {fmt(totalAllowance)}</strong>
+            </div>
+            <div className="selBar" role="img" aria-label={`${fmt(totalCost)} selected against ${fmt(totalAllowance)} in allowances`}>
+              <span style={{background:overage>0?'var(--danger)':'var(--success)',width:`${Math.min(100,totalAllowance>0?(totalCost/totalAllowance*100):0)}%`}}/>
+            </div>
+          </Card>
+        )}
 
-                {selected.cost>0&&selected.allowance>0&&(
-                  <div style={{background:selected.cost>selected.allowance?'rgba(248,113,113,.07)':'rgba(74,222,128,.07)',
-                    border:`1px solid color-mix(in srgb, ${selected.cost>selected.allowance?RED:GREEN} 20%, transparent)`,borderRadius:8,padding:'10px 14px'}}>
-                    <div style={{fontSize:12,fontWeight:700,color:DIM,marginBottom:4}}>
-                      Budget Impact
-                    </div>
-                    <div style={{fontSize:14,fontWeight:800,color:selected.cost>selected.allowance?RED:GREEN}}>
-                      {fmt(selected.cost-selected.allowance)} vs allowance
-                    </div>
-                    {selected.cost>selected.allowance&&selected.owner_approved&&String(selected.status||'').toLowerCase()!=='pending'&&(
-                      <a href={`/app/projects/${projectId}/change-orders`} style={{display:'inline-block',marginTop:6,fontSize:12,fontWeight:700,color: 'var(--link)'}}>
-                        The overage is a change order — open Change Orders
-                      </a>
-                    )}
-                  </div>
-                )}
+        {!loading&&!loadError&&items.length>0&&(
+          <Toolbar
+            search={search}
+            onSearch={setSearch}
+            placeholder="Search selections by item or manufacturer…"
+            filters={
+              <>
+                <Select aria-label="Category" value={filterCat} onChange={e=>setFilterCat(e.target.value)} style={{width:'auto',minWidth:170}}
+                  options={[{value:'all',label:'All categories'},...cats]}/>
+                <Select aria-label="Status" value={filterStatus} onChange={e=>setFilterStatus(e.target.value as StatusFilter)} style={{width:'auto',minWidth:160}}
+                  options={[{value:'all',label:'All statuses'},...STATUSES.map(s=>({value:s,label:STATUS_LABELS[s]})),{value:'approved',label:'Owner approved'}]}/>
+                {filtersActive&&<Button variant="ghost" size="sm" onClick={clearFilters}>Clear</Button>}
+              </>
+            }
+            actions={<span className="selMuted" style={{fontSize:'var(--fs-sm)'}}>{filtered.length} of {items.length}</span>}
+          />
+        )}
 
-                {selected.link&&(
-                  <a href={selected.link} target="_blank" rel="noopener noreferrer"
-                    style={{display:'block',padding:'10px 14px',background:'var(--bg-surface-2)',
-                      border:'1px solid var(--border-default)',borderRadius:8,color: 'var(--link)',
-                      fontSize:13,fontWeight:600,textAlign:'center',textDecoration:'none'}}>
-                    View Product Link
-                  </a>
-                )}
-
-                {selected.notes&&(
-                  <div style={{background:'var(--bg-surface-2)',border:`1px solid ${BORDER}`,borderRadius:8,padding:'12px 14px'}}>
-                    <div style={{fontSize:12,fontWeight:700,color:DIM,marginBottom:6}}>Notes</div>
-                    <div style={{fontSize:13,color:TEXT,lineHeight:1.6,whiteSpace:'pre-wrap'}}>{selected.notes}</div>
-                  </div>
-                )}
-              </div>
-            ):null}
+        <div className="selCq">
+          <div className="selSplit" data-open={showRail?'true':'false'}>
+            <Card flush>{listBody}</Card>
+            {rail}
           </div>
         </div>
-      )}
-      <UnsavedGuardModal guard={guard} />
-      <style dangerouslySetInnerHTML={{__html:'@media (max-width: 760px){.selPanel{position:fixed;inset:0;width:100%!important;z-index:170;border-left:none!important;padding-top:env(safe-area-inset-top);padding-bottom:env(safe-area-inset-bottom)}}@media (max-width: 767px){.selRoot input:not([type=checkbox]):not([type=radio]){min-height:44px}}'}}/>
+      </PageShell>
+
+      <FormModal
+        open={mode==='create'||mode==='edit'}
+        onClose={closeComposer}
+        title={mode==='create'?'New selection':'Edit selection'}
+        subtitle={mode==='create'?`${items.length} logged · ${pendingCount} pending · ${fmt(totalAllowance)} in allowances`:selected?.item}
+        onSubmit={async()=>{await save();}}
+        submitLabel={mode==='create'?'Add selection':'Save changes'}
+        busy={saving}
+      >
+        <FormGrid cols={2}>
+          <Field label="Category">
+            <select className="k-select" value={form.category} onChange={e=>setForm(f=>({...f,category:e.target.value}))}>
+              {form.category&&!CATEGORIES.includes(form.category)&&!SUB_TRADES.includes(form.category)&&(
+                <option value={form.category}>{form.category}</option>
+              )}
+              <optgroup label="Material Categories">
+                {CATEGORIES.map(c=><option key={c} value={c}>{c}</option>)}
+              </optgroup>
+              {SUB_TRADES_BY_DIVISION.map(g=>(
+                <optgroup key={g.division} label={'Trade Verticals — '+g.division+' '+g.name}>
+                  {g.trades.map(t=><option key={t} value={t}>{t}</option>)}
+                </optgroup>
+              ))}
+              <optgroup label="Trade Verticals — Other / Specialty">
+                {SUB_TRADES.filter(t=>!SUB_TRADES_BY_DIVISION.some(g=>g.trades.includes(t))).map(t=><option key={t} value={t}>{t}</option>)}
+              </optgroup>
+            </select>
+          </Field>
+          <Field label="Status">
+            <Select value={form.status} onChange={e=>setForm(f=>({...f,status:e.target.value}))}
+              options={STATUSES.map(s=>({value:s,label:STATUS_LABELS[s]}))}/>
+          </Field>
+          <Field label="Item name" required span>
+            <Input value={form.item} onChange={e=>setForm(f=>({...f,item:e.target.value}))}
+              placeholder="Kitchen faucet, quartz countertop…" autoFocus/>
+          </Field>
+          <Field label="Manufacturer / Vendor" hint={(ctx?.vendors||[]).length>0?`${(ctx.vendors||[]).length} known vendors on this project — start typing to match.`:undefined}>
+            <Suggest className="k-input" value={form.manufacturer} onChange={e=>setForm(f=>({...f,manufacturer:e.target.value}))}
+              placeholder="Kohler, Moen…" options={((ctx?.vendors || []) as string[]).filter(Boolean)}/>
+          </Field>
+          <Field label="Model / SKU">
+            <Input value={form.model} onChange={e=>setForm(f=>({...f,model:e.target.value}))} placeholder="K-99273-0"/>
+          </Field>
+          <Field label="Color">
+            <Input value={form.color} onChange={e=>setForm(f=>({...f,color:e.target.value}))} placeholder="Matte Black"/>
+          </Field>
+          <Field label="Finish">
+            <Input value={form.finish} onChange={e=>setForm(f=>({...f,finish:e.target.value}))} placeholder="Brushed Nickel"/>
+          </Field>
+          <Field label="Selected price ($)">
+            <Input type="number" inputMode="decimal" value={form.cost} onChange={e=>setForm(f=>({...f,cost:e.target.value}))} placeholder="0" min={0}/>
+          </Field>
+          <Field label="Allowance ($)">
+            <Input type="number" inputMode="decimal" value={form.allowance} onChange={e=>setForm(f=>({...f,allowance:e.target.value}))} placeholder="0" min={0}/>
+          </Field>
+          {(formPrice>0||formAllow>0)&&(
+            <div className="k-span-all">
+              <Callout
+                tone={formVar>0?'danger':'success'}
+                icon={<Scales size={16}/>}
+                title={`${formVar>0?'Over allowance':formVar<0?'Under allowance':'On allowance'}: ${signed(formVar)}`}
+                text={`${fmt(formPrice)} selected against ${fmt(formAllow)} allowance.`}
+              />
+            </div>
+          )}
+          <Field label="Selected by">
+            <Input value={form.selected_by} onChange={e=>setForm(f=>({...f,selected_by:e.target.value}))} placeholder="Owner or designer name"/>
+          </Field>
+          <Field label="Decision due" hint={auto.due?'Defaulted 30 days out — tighten to order lead times.':undefined}>
+            <DateInput value={form.due_date} onChange={e=>{const v=e.target.value;setAuto(a=>({...a,due:false}));setForm(f=>({...f,due_date:v}));}}/>
+          </Field>
+          <Field label="Product link" span>
+            <Input type="url" value={form.link} onChange={e=>setForm(f=>({...f,link:e.target.value}))} placeholder="https://…"/>
+          </Field>
+          <Field label="Notes" span>
+            <Textarea value={form.notes} onChange={e=>setForm(f=>({...f,notes:e.target.value}))} rows={3} placeholder="Additional notes…"/>
+          </Field>
+          <div className="k-field k-span-all">
+            <label className="selCheck">
+              <input type="checkbox" checked={!!form.owner_approved} onChange={e=>setForm(f=>({...f,owner_approved:e.target.checked}))}/>
+              Owner approved
+            </label>
+            <span className="k-hint">Leave unchecked to track the decision{ctx?.project?.ownerName?` with ${ctx.project.ownerName}`:''} — approval can be recorded later from the detail view.</span>
+          </div>
+        </FormGrid>
+      </FormModal>
+
+      {/* Above the FormModal overlay so the unsaved-work prompt is never hidden behind it. */}
+      <div style={{position:'relative',zIndex:10001}}>
+        <UnsavedGuardModal guard={guard}/>
+      </div>
+      <Toast message={toast?.message??null} tone={toast?.tone}/>
     </div>
   );
 }
