@@ -225,7 +225,13 @@ export async function requirePermission(
     return {
       ok: false,
       res: NextResponse.json(
-        { error: 'Forbidden', detail: `Requires ${category} ≥ ${minLevel}` },
+        /* Shown to the person as-is by most screens, so it says what happened
+           and who can fix it, not "Forbidden". */
+        {
+          error: `Your role doesn't allow this (${category}: ${minLevel === 'View' ? 'view' : 'change'}). Ask your company admin for access.`,
+          reason: 'forbidden',
+          detail: `Requires ${category} ≥ ${minLevel}`,
+        },
         { status: 403 },
       ),
     };
