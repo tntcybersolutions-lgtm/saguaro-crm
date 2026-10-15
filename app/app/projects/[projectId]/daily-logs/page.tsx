@@ -29,13 +29,13 @@ import { sendOrSave, listSaved, updateSaved, removeSaved, savedRowId, savedIdOf,
 import {
   ClipboardText, Thermometer, HardHat, WarningCircle, Plus, X, Sparkle, CopySimple, CloudSun,
   UsersThree, PencilSimple, Trash, ArrowSquareOut, ArrowClockwise, ShieldCheck, Package, Wrench, PaperPlaneTilt,
+  CalendarCheck, CalendarBlank, Info,
 } from '@phosphor-icons/react';
 import {
-  PageShell, Card, StatRow, Badge, Button, Toolbar, DataTable, EmptyState, RowActions,
+  PageShell, Card, StatRow, Badge, Button, Toolbar, DataTable, EmptyState, RowActions, Menu, Callout,
   FormModal, Field, Input, Textarea, Select, FormGrid, DetailList, Toast, useToast,
   type Column, type Action, type BadgeTone, type StatItem,
 } from '@/components/ui/kit';
-import { AutoChip, InsightRow } from '@/components/ui/premium';
 import { useUnsavedGuard, useComposerDirty } from '@/lib/useUnsavedGuard';
 import UnsavedGuardModal from '@/components/UnsavedGuardModal';
 import Suggest from '@/components/ui/Suggest';
@@ -119,11 +119,7 @@ const CSS = `
 .pdlActionsRow { display: flex; gap: 8px; align-items: center; }
 .pdlActionsRow > .k-btn { flex: 1 1 auto; }
 .pdlNext { font-size: var(--fs-sm); color: var(--text-tertiary); line-height: 1.5; }
-.pdlBanner { border: 1px solid var(--border-default); border-radius: var(--radius-sm); padding: 12px 14px; background: var(--bg-surface-2); margin-bottom: 16px; }
-.pdlBanner[data-gap="true"] { border-color: rgba(248,113,113,.35); background: rgba(248,113,113,.07); }
-.pdlBannerTitle { display: flex; align-items: center; gap: 8px; font-size: var(--fs-md); font-weight: 700; color: var(--text-primary); }
-.pdlBanner[data-gap="true"] .pdlBannerTitle { color: var(--status-overdue); }
-.pdlNote { display: flex; gap: 10px; align-items: flex-start; font-size: var(--fs-sm); color: var(--text-secondary); line-height: 1.5; padding: 10px 12px; border-radius: var(--radius-sm); border: 1px solid var(--brand-primary-25); background: var(--brand-primary-08); margin-bottom: 16px; }
+.pdlGap { display: flex; flex-direction: column; gap: 10px; margin-bottom: 16px; }
 .pdlRow { display: flex; gap: 8px; align-items: center; }
 .pdlRow .k-input { flex: 1 1 auto; }
 .pdlRow .k-input[data-narrow="true"] { flex: 0 0 72px; text-align: center; }
@@ -554,37 +550,37 @@ export default function DailyLogsPage(){
   // ── Stat tiles: each opens the register filtered to that slice ──
   const stats: StatItem[] = loading
     ? [
-        { label:'Last Log', value:'—', sub:'Loading…' },
-        { label:'This Month', value:'—', sub:'Loading…' },
-        { label:'Days with Delays', value:'—', sub:'Loading…' },
-        { label:'Avg Crew / Day', value:'—', sub:'Loading…' },
+        { label:'Last Log', value:'—', sub:'Loading…', icon:<CalendarCheck size={15}/> },
+        { label:'This Month', value:'—', sub:'Loading…', icon:<CalendarBlank size={15}/> },
+        { label:'Days with Delays', value:'—', sub:'Loading…', icon:<WarningCircle size={15}/> },
+        { label:'Avg Crew / Day', value:'—', sub:'Loading…', icon:<UsersThree size={15}/> },
       ]
     : [
         { label:'Last Log', value: lastLogIso ? fmtDay(lastLogIso) : 'None yet',
           tone: gapDays>0 ? 'bad' : (lastLogIso ? 'good' : 'default'),
           sub: lastLogIso ? (gapDays>0 ? `${gapDays} workday${gapDays===1?'':'s'} unlogged` : 'Record is current') : 'Start the record',
-          onClick: logs[0] ? () => viewLog(logs[0]) : undefined },
+          onClick: logs[0] ? () => viewLog(logs[0]) : undefined, icon:<CalendarCheck size={15}/> },
         { label:'This Month', value: thisMonth, sub: monthFilter===thisMonthIso ? 'Filtered — click to clear' : monthLabel(thisMonthIso),
-          onClick: () => setMonthFilter(m => (m===thisMonthIso ? '' : thisMonthIso)) },
+          onClick: () => setMonthFilter(m => (m===thisMonthIso ? '' : thisMonthIso)), active: monthFilter===thisMonthIso, icon:<CalendarBlank size={15}/> },
         { label:'Days with Delays', value: delayDays, tone: delayDays>0 ? 'bad' : 'default',
           sub: flagFilter==='delays' ? 'Filtered — click to clear' : delayDays>0 ? 'Flagged in the record' : 'None flagged',
-          onClick: () => setFlagFilter(f => (f==='delays' ? 'all' : 'delays')) },
-        { label:'Avg Crew / Day', value: avgCrew, sub: `${logs.length} field report${logs.length===1?'':'s'}`, href: `/app/projects/${projectId}/crews` },
+          onClick: () => setFlagFilter(f => (f==='delays' ? 'all' : 'delays')), active: flagFilter==='delays', icon:<WarningCircle size={15}/> },
+        { label:'Avg Crew / Day', value: avgCrew, sub: `${logs.length} field report${logs.length===1?'':'s'}`, href: `/app/projects/${projectId}/crews`, icon:<UsersThree size={15}/> },
       ];
 
   // ── Register columns: full register, or a compact one beside the day's record ──
   const isSel = (l:any) => selected?.id===l.id && mode!=='create';
-  const dateCol: Column<any> = { key:'log_date', header:'Date', accessor:l=>l.log_date||'', width:130, render:l=><span className="pdlDate" data-sel={isSel(l)?'true':undefined}>{fmtDate(l.log_date)}</span> };
-  const statusCol: Column<any> = { key:'status', header:'Status', accessor:l=>l._offline?'On This Phone':logStatus(l).label, render:l=>{
+  const dateCol: Column<any> = { key:'log_date', header:'Date', primary:true, phone:'show', accessor:l=>l.log_date||'', width:130, render:l=><span className="pdlDate" data-sel={isSel(l)?'true':undefined}>{fmtDate(l.log_date)}</span> };
+  const statusCol: Column<any> = { key:'status', header:'Status', phone:'show', accessor:l=>l._offline?'On This Phone':logStatus(l).label, render:l=>{
     if(l._offline) return <span title={l._offlineError?`Couldn't send: ${l._offlineError}`:"Saved on this phone — it sends when you're back online."}><Badge tone={l._offlineError?'overdue':'gold'}>{l._offlineError?"Couldn't Send":'On This Phone'}</Badge></span>;
     const s=logStatus(l);return <Badge tone={s.tone}>{s.label}</Badge>;
   } };
-  const weatherCol: Column<any> = { key:'weather', header:'Weather', accessor:l=>l.weather||'', render:l=>l.weather?<span className="pdlClamp" style={{maxWidth:160}} title={l.weather}>{l.weather}</span>:<span className="pdlMuted">—</span> };
-  const tempCol: Column<any> = { key:'temp', header:'Temp', accessor:l=>Number(l.high_temp)||0, align:'right', render:l=><span className="pdlMuted pdlNum">{tempStr(l)}</span> };
-  const crewCol: Column<any> = { key:'crew_count', header:'Crew', accessor:l=>Number(l.crew_count)||0, align:'right', render:l=><span className="pdlNum" style={{display:'inline-flex',alignItems:'center',gap:4}}><UsersThree size={14} style={{color:'var(--text-tertiary)'}}/>{Number(l.crew_count)||0}</span> };
-  const superCol: Column<any> = { key:'superintendent', header:'Superintendent', accessor:l=>(l.superintendent||'').toLowerCase(), render:l=>l.superintendent?<span style={{color:'var(--text-primary)'}}>{l.superintendent}</span>:<span className="pdlMuted">—</span> };
-  const workCol: Column<any> = { key:'work_performed', header:'Work Performed', accessor:l=>(l.work_performed||'').toLowerCase(), render:l=>l.work_performed?<span className="pdlClamp" title={l.work_performed}>{l.work_performed}</span>:<span className="pdlMuted">—</span> };
-  const flagsCol: Column<any> = { key:'flags', header:'Flags', accessor:l=>((l.delays||'').trim()?2:0)+((l.safety_notes||'').trim()?1:0), render:l=>{
+  const weatherCol: Column<any> = { key:'weather', header:'Weather', phone:'hide', accessor:l=>l.weather||'', render:l=>l.weather?<span className="pdlClamp" style={{maxWidth:160}} title={l.weather}>{l.weather}</span>:<span className="pdlMuted">—</span> };
+  const tempCol: Column<any> = { key:'temp', header:'Temp', phone:'hide', accessor:l=>Number(l.high_temp)||0, align:'right', render:l=><span className="pdlMuted pdlNum">{tempStr(l)}</span> };
+  const crewCol: Column<any> = { key:'crew_count', header:'Crew', phone:'show', total:'sum', accessor:l=>Number(l.crew_count)||0, align:'right', render:l=><span className="pdlNum" style={{display:'inline-flex',alignItems:'center',gap:4}}><UsersThree size={14} style={{color:'var(--text-tertiary)'}}/>{Number(l.crew_count)||0}</span> };
+  const superCol: Column<any> = { key:'superintendent', header:'Superintendent', phone:'hide', accessor:l=>l.superintendent||'', render:l=>l.superintendent?<span style={{color:'var(--text-primary)'}}>{l.superintendent}</span>:<span className="pdlMuted">—</span> };
+  const workCol: Column<any> = { key:'work_performed', header:'Work Performed', phone:'hide', accessor:l=>l.work_performed||'', render:l=>l.work_performed?<span className="pdlClamp" title={l.work_performed}>{l.work_performed}</span>:<span className="pdlMuted">—</span> };
+  const flagsCol: Column<any> = { key:'flags', header:'Flags', phone:'show', groupable:false, accessor:l=>((l.delays||'').trim()?2:0)+((l.safety_notes||'').trim()?1:0), render:l=>{
     const hasDelay=!!(l.delays||'').trim(), hasSafety=!!(l.safety_notes||'').trim();
     if(!hasDelay&&!hasSafety) return <span className="pdlMuted">Clear</span>;
     return <span className="pdlBadges">{hasDelay&&<Badge tone="overdue">Delays</Badge>}{hasSafety&&<Badge tone="neutral">Safety Note</Badge>}</span>;
@@ -732,7 +728,7 @@ export default function DailyLogsPage(){
       <EmptyState
         icon={<ClipboardText size={22}/>}
         title="No daily logs yet"
-        text="Start the field record — headcount comes from the clocks and weather from NWS, so Auto-Fill does most of the typing."
+        text="Auto-Fill drafts today from the clocks and NWS."
         action={<Button icon={<Plus size={15} weight="bold"/>} onClick={openCreate}>Create First Log</Button>}
       />
     );
@@ -746,6 +742,9 @@ export default function DailyLogsPage(){
         defaultSort={{ key:'log_date', dir:'desc' }}
         onRowClick={viewLog}
         rowActions={logActions}
+        tableId="project-daily-logs"
+        exportName="daily-logs"
+        isSelected={isSel}
         empty={
           <EmptyState
             icon={<ClipboardText size={22}/>}
@@ -777,12 +776,15 @@ export default function DailyLogsPage(){
              so it sits on the right where the eye lands, not buried at
              the head of the row ahead of two fallbacks. */
           <>
-            <Button icon={<Plus size={15} weight="bold"/>} onClick={openCreate}>Blank Log</Button>
+            <Menu
+              label="More log actions"
+              actions={[
+                { label:'Blank Log', icon:<Plus size={15} weight="bold"/>, onClick:openCreate },
+                ...(logs.length>0 ? [{ label:'Homeowner Update', icon:<PaperPlaneTilt size={15} weight="bold"/>, onClick:()=>setOwnerUpdateOpen(true) }] : []),
+              ]}
+            />
             {logs.length>0&&(
               <Button icon={<CopySimple size={15} weight="bold"/>} onClick={copyYesterday}>Copy Yesterday</Button>
-            )}
-            {logs.length>0&&(
-              <Button icon={<PaperPlaneTilt size={15} weight="bold"/>} onClick={()=>setOwnerUpdateOpen(true)}>Homeowner Update</Button>
             )}
             <Button variant="primary" icon={<Sparkle size={15} weight="fill"/>} onClick={openAutoFill} disabled={prefilling}>
               {prefilling?'Assembling draft…':'Auto-Fill Today'}
@@ -839,7 +841,7 @@ export default function DailyLogsPage(){
         open={composerOpen}
         onClose={closeComposer}
         title={mode==='edit' ? `Edit Log — ${fmtDate(form.log_date)}` : 'New Daily Log'}
-        subtitle={mode==='edit' ? (ctx?.project?.name || undefined) : `${ctx?.project?.name ? `${ctx.project.name} · ` : ''}only type what the system cannot know.`}
+        subtitle={ctx?.project?.name || undefined}
         onSubmit={async()=>{ await save(); }}
         submitLabel={mode==='create'?'Create Log':'Save Changes'}
         busy={saving}
@@ -847,38 +849,32 @@ export default function DailyLogsPage(){
         {mode==='create' && (()=>{
           const lastLog = ctx?.recent?.lastDailyLogDate || logs[0]?.log_date || null;
           const gap = unloggedWorkdays(lastLog, localToday(), ctx?.project);
+          const prevLine = prev ? [
+            `Prev crew ${prev.crew_count||0}`,
+            prev.weather ? `${prev.weather}${prev.high_temp!=null?` ${prev.high_temp}°/${prev.low_temp??'—'}°F`:''}` : null,
+            prev.superintendent ? `Super ${prev.superintendent}` : null,
+          ].filter(Boolean).join(' · ') : undefined;
           return (
-            <div className="pdlBanner" data-gap={gap>0?'true':'false'}>
-              <div className="pdlBannerTitle">
-                {gap>0 && <WarningCircle size={16} weight="fill"/>}
-                {lastLog
+            <div className="pdlGap">
+              <Callout
+                tone={gap>0 ? 'danger' : 'info'}
+                icon={gap>0 ? <WarningCircle size={16} weight="fill"/> : <Info size={16}/>}
+                title={lastLog
                   ? gap>0
-                    ? `Gap in the record — last log ${fmtDay(lastLog)}, ${gap} workday${gap===1?'':'s'} unlogged.`
-                    : `Last log: ${fmtDay(lastLog)} — record is current.`
-                  : 'First daily log on this project — it starts the field record.'}
-              </div>
-              {prev && (
-                <div style={{marginTop:8,paddingTop:8,borderTop:'1px solid var(--border-subtle)'}}>
-                  <InsightRow label="Prev Crew" value={`${prev.crew_count||0} on site`}/>
-                  {prev.weather ? <InsightRow label="Prev Weather" value={`${prev.weather}${prev.high_temp!=null?` · ${prev.high_temp}°/${prev.low_temp??'—'}°F`:''}`}/> : null}
-                  {prev.superintendent ? <InsightRow label="Prev Super" value={prev.superintendent}/> : null}
-                </div>
-              )}
+                    ? `Last log ${fmtDay(lastLog)} — ${gap} workday${gap===1?'':'s'} unlogged`
+                    : `Last log ${fmtDay(lastLog)} — record is current`
+                  : 'First daily log on this project'}
+                text={prevLine}
+              />
+              {/* NOBODY TYPES WEATHER — the create route stamps NWS server-side
+                  whenever the fields are left blank. */}
+              <Callout tone="info" icon={<CloudSun size={16} weight="fill"/>} title="Weather stamps itself" text="Leave it blank — NWS fills conditions, temps, wind and rain on save."/>
             </div>
           );
         })()}
 
-        {/* NOBODY TYPES WEATHER — the create route stamps NWS server-side
-            whenever the fields are left blank. Say so, visibly. */}
-        {mode==='create'&&(
-          <div className="pdlNote">
-            <CloudSun size={18} weight="fill" style={{flexShrink:0,color: 'var(--text-primary)'}}/>
-            <div><b>Weather stamps itself.</b> Leave the weather fields blank — conditions, temps, wind and precipitation auto-stamp from the National Weather Service when you save.</div>
-          </div>
-        )}
-
         <FormGrid cols={2}>
-          <Field label="Log Date" hint={mode==='create'?'Defaulted to today — backfill any missed day.':undefined}>
+          <Field label="Log Date" hint={mode==='create'?'Defaulted to today.':undefined}>
             <div className="pdlDateInput"><SaguaroDatePicker value={form.log_date} onChange={v=>setForm(f=>({...f,log_date:v}))} style={DATE_INPUT_STYLE}/></div>
           </Field>
           <Field label="Superintendent" hint={mode==='create'&&logs[0]?.superintendent?`Last log: ${logs[0].superintendent}.`:undefined}>
@@ -887,7 +883,7 @@ export default function DailyLogsPage(){
           <Field label="Weather">
             <Suggest className="k-input" value={form.weather} onChange={e=>setForm(f=>({...f,weather:e.target.value}))} placeholder={mode==='create'?'Auto (NWS)':'Clear, 10 mph W, dusty…'} options={WEATHER_OPTS} />
           </Field>
-          <Field label="Crew Count" hint={mode==='create'&&auto.crew ? 'Counted from clock-ins (web + mobile) or carried from your last log — adjust for today.' : undefined}>
+          <Field label="Crew Count" hint={mode==='create'&&auto.crew ? 'From clock-ins or your last log.' : undefined}>
             <Input type="number" value={form.crew_count} onChange={e=>setForm(f=>({...f,crew_count:e.target.value}))} placeholder="0" min={0}/>
           </Field>
           <Field label="High °F">
@@ -897,21 +893,21 @@ export default function DailyLogsPage(){
             <Input type="number" value={form.low_temp} onChange={e=>setForm(f=>({...f,low_temp:e.target.value}))} placeholder={mode==='create'?'Auto':'72'}/>
           </Field>
           <Field label="Manpower by Trade" span
-            hint={<>{mode==='create'&&auto.manpower&&<AutoChip/>}{auto.manpower
-              ? ' Pulled from your active crews and rosters. When lines are present, their total becomes the saved crew count.'
-              : 'Break the headcount down by trade. When lines are present, their total becomes the saved crew count.'}</>}>
+            hint={auto.manpower
+              ? 'From your active crews. The total becomes the saved crew count.'
+              : 'The total becomes the saved crew count.'}>
             <ManpowerEditor rows={form.manpower_by_trade||[]} onChange={v=>setForm(f=>({...f,manpower_by_trade:v}))}/>
           </Field>
-          <Field label="Subcontractors On Site" hint={auto.subs?<><AutoChip/> Companies from the project team — remove any that were not on site today.</>:undefined}>
+          <Field label="Subcontractors On Site" hint={auto.subs?'From the project team — remove any not on site.':undefined}>
             <ChipEditor items={form.subcontractors_on_site||[]} onChange={v=>setForm(f=>({...f,subcontractors_on_site:v}))} placeholder="Add a subcontractor…"/>
           </Field>
           <Field label="Equipment On Site">
             <ChipEditor items={form.equipment_on_site||[]} onChange={v=>setForm(f=>({...f,equipment_on_site:v}))} placeholder="Add equipment (excavator, crane, lifts…)"/>
           </Field>
-          <Field label="Phase of Work" hint={mode==='create'&&auto.carry&&!!form.phase_of_work?<AutoChip label="Carried"/>:undefined}>
+          <Field label="Phase of Work" hint={mode==='create'&&auto.carry&&!!form.phase_of_work?'Carried from the last log.':undefined}>
             <Input value={form.phase_of_work} onChange={e=>setForm(f=>({...f,phase_of_work:e.target.value}))} placeholder="Foundations, framing, MEP rough-in…"/>
           </Field>
-          <Field label="Equipment Notes" hint={mode==='create'&&auto.carry&&!!form.equipment?<AutoChip label="Carried"/>:undefined}>
+          <Field label="Equipment Notes" hint={mode==='create'&&auto.carry&&!!form.equipment?'Carried from the last log.':undefined}>
             <Input value={form.equipment} onChange={e=>setForm(f=>({...f,equipment:e.target.value}))} placeholder="Hours, downtime, rentals…"/>
           </Field>
           <Field label="Work Performed" span>

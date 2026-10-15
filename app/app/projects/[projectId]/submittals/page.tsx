@@ -7,7 +7,8 @@
  * workspace split: the log on the left, and when a row is selected, the
  * submittal beside a 320–384px details + action rail (advance the workflow,
  * reassign ball-in-court, edit, delete). Phone: stacked. Create / edit open
- * the composer in a FormModal.
+ * the composer in a FormModal. The log is the shared DataTable: saved views,
+ * grouping, column picker and CSV export.
  *
  * Every read / write is the one this screen already used:
  *   list    GET    /api/submittals/list?projectId=
@@ -23,13 +24,12 @@ import SaguaroDatePicker from '@/components/SaguaroDatePicker';
 import { humanError } from '@/lib/errors';
 import { useParams } from 'next/navigation';
 import { getAuthHeaders } from '@/lib/supabase-browser';
-import { Plus, Clipboard, X, CaretRight, ClipboardText, WarningCircle, PencilSimple, Trash, UserSwitch, ArrowClockwise, ArrowSquareOut } from '@phosphor-icons/react';
+import { Plus, Clipboard, X, CaretRight, ClipboardText, WarningCircle, PencilSimple, Trash, UserSwitch, ArrowClockwise, ArrowSquareOut, Stack, HourglassMedium, MagnifyingGlass, CalendarX } from '@phosphor-icons/react';
 import {
   PageShell, Card, StatRow, Badge, Button, Toolbar, DataTable, EmptyState, RowActions,
-  FormModal, Field, Input, Textarea, Select, FormGrid, DetailList, Toast, useToast,
+  FormModal, Field, Input, Textarea, Select, FormGrid, DetailList, Toast, useToast, Callout,
   type Column, type Action, type BadgeTone, type StatItem,
 } from '@/components/ui/kit';
-import { FlowSteps, FlowStrip, InsightRow, AutoChip } from '@/components/ui/premium';
 import { CSI_DIVISIONS, SUB_TRADES } from '@/lib/construction-intelligence';
 import { useUnsavedGuard, useComposerDirty } from '@/lib/useUnsavedGuard';
 import UnsavedGuardModal from '@/components/UnsavedGuardModal';
@@ -56,7 +56,6 @@ function statusBadge(s:string|null|undefined): { label:string; tone:BadgeTone } 
   if (k==='revise_resubmit') return { label:'Revise & Resubmit', tone:'completed' };
   return { label: STATUS_LABELS[k] || k.replace(/_/g,' ').replace(/\b\w/g,(c)=>c.toUpperCase()) || 'Pending', tone:'neutral' };
 }
-const STATUS_RANK:Record<string,number>={pending:0,submitted:1,under_review:2,revise_resubmit:3,approved:4,rejected:5};
 const BIC_OPTIONS=['Contractor','Architect','Owner','Engineer'];
 type StatusFilter = 'all' | 'overdue' | (typeof STATUSES)[number];
 
@@ -113,7 +112,6 @@ const CSS = `
 .sbActionsRow { display: flex; gap: 8px; align-items: center; }
 .sbActionsRow > .k-btn { flex: 1 1 auto; }
 .sbNext { font-size: var(--fs-sm); color: var(--text-tertiary); line-height: 1.5; }
-.sbLadder { border: 1px solid var(--border-default); border-radius: var(--radius-sm); padding: 12px 14px; background: var(--bg-surface-2); margin-bottom: 16px; }
 .sbDateInput { width: 100%; }
 @media (max-width: 640px) {
   .sbWs .k-btn, .sbWs .k-stat, .sbWs select.k-select, .sbWs .k-input { min-height: 44px; }
@@ -334,28 +332,30 @@ export default function SubmittalsPage(){
   // ── Stat tiles: each filters the log ──
   const stats: StatItem[] = loading
     ? [
-        { label:'Total', value:'—', sub:'Loading…' },
-        { label:'Pending', value:'—', sub:'Loading…' },
-        { label:'Under Review', value:'—', sub:'Loading…' },
-        { label:'Overdue', value:'—', sub:'Loading…' },
+        { label:'Total', value:'—', sub:'Loading…', icon:<Stack size={15}/> },
+        { label:'Pending', value:'—', sub:'Loading…', icon:<HourglassMedium size={15}/> },
+        { label:'Under Review', value:'—', sub:'Loading…', icon:<MagnifyingGlass size={15}/> },
+        { label:'Overdue', value:'—', sub:'Loading…', icon:<CalendarX size={15}/> },
       ]
     : [
-        { label:'Total', value:total, sub: filtersActive ? 'Click to show everything' : 'Submittals on the log', onClick: filtersActive ? clearFilters : undefined },
-        { label:'Pending', value:pending, sub: filterStatus==='pending' ? 'Filtered — click to clear' : 'Awaiting submission', onClick:()=>toggleStatus('pending') },
-        { label:'Under Review', value:underReview, tone: underReview>0 ? 'warn' : 'default', sub: filterStatus==='under_review' ? 'Filtered — click to clear' : 'With the reviewer', onClick:()=>toggleStatus('under_review') },
-        { label:'Overdue', value:overdue, tone: overdue>0 ? 'bad' : 'default', sub: filterStatus==='overdue' ? 'Filtered — click to clear' : overdue>0 ? 'Past required date' : 'None overdue', onClick:()=>toggleStatus('overdue') },
+        { label:'Total', value:total, sub: filtersActive ? 'Click to show everything' : 'Submittals on the log', icon:<Stack size={15}/>, onClick: filtersActive ? clearFilters : undefined },
+        { label:'Pending', value:pending, sub: filterStatus==='pending' ? 'Filtered — click to clear' : 'Awaiting submission', icon:<HourglassMedium size={15}/>, onClick:()=>toggleStatus('pending'), active: filterStatus==='pending' },
+        { label:'Under Review', value:underReview, tone: underReview>0 ? 'warn' : 'default', sub: filterStatus==='under_review' ? 'Filtered — click to clear' : 'With the reviewer', icon:<MagnifyingGlass size={15}/>, onClick:()=>toggleStatus('under_review'), active: filterStatus==='under_review' },
+        { label:'Overdue', value:overdue, tone: overdue>0 ? 'bad' : 'default', sub: filterStatus==='overdue' ? 'Filtered — click to clear' : overdue>0 ? 'Past required date' : 'None overdue', icon:<CalendarX size={15}/>, onClick:()=>toggleStatus('overdue'), active: filterStatus==='overdue' },
       ];
 
   // ── Log columns ──
   const isSel = (s:any) => selected?.id===s.id && mode!=='create';
   const numCol: Column<any> = { key:'submittal_number', header:'#', accessor:s=>s.submittal_number||'', width:90, render:s=><span className="sbNum" data-sel={isSel(s)?'true':undefined}>{s.submittal_number||'—'}</span> };
-  const titleCol: Column<any> = { key:'title', header:'Title', accessor:s=>(s.title||'').toLowerCase(), render:s=><div className="sbTitle"><span title={s.title}>{s.title||'—'}</span>{s.trade&&<span>{s.trade}</span>}</div> };
+  const titleCol: Column<any> = { key:'title', header:'Title', primary:true, phone:'show', accessor:s=>s.title||'', render:s=><div className="sbTitle"><span title={s.title}>{s.title||'—'}</span>{s.trade&&<span>{s.trade}</span>}</div> };
   const specCol: Column<any> = { key:'spec_section', phone:'hide', header:'Spec Section', accessor:s=>s.spec_section||'', render:s=>s.spec_section?<span className="sbMuted">{s.spec_section}</span>:<span className="sbMuted">—</span> };
-  const statusCol: Column<any> = { key:'status', phone:'show', header:'Status', accessor:s=>STATUS_RANK[s.status]??9, render:s=>{const b=statusBadge(s.status);return <span className="sbBadges"><Badge tone={b.tone}>{b.label}</Badge>{isOverdue(s)&&<Badge tone="overdue">Overdue</Badge>}</span>;} };
+  const statusCol: Column<any> = { key:'status', phone:'show', header:'Status', accessor:s=>statusBadge(s.status).label, render:s=>{const b=statusBadge(s.status);return <span className="sbBadges"><Badge tone={b.tone}>{b.label}</Badge>{isOverdue(s)&&<Badge tone="overdue">Overdue</Badge>}</span>;} };
   const bicCol: Column<any> = { key:'ball_in_court', phone:'show', header:'Ball in Court', accessor:s=>s.ball_in_court||'', render:s=>s.ball_in_court?<Badge tone="neutral">{s.ball_in_court}</Badge>:<span className="sbMuted">—</span> };
-  const dueCol: Column<any> = { key:'due_date', phone:'show', header:'Required', accessor:s=>s.due_date||'', render:s=><span className={isOverdue(s)?'sbLate':undefined}>{s.due_date?fmtDate(s.due_date):'—'}</span> };
+  const dueCol: Column<any> = { key:'due_date', phone:'show', header:'Required', accessor:s=>s.due_date?String(s.due_date).slice(0,10):'', render:s=><span className={isOverdue(s)?'sbLate':undefined}>{s.due_date?fmtDate(s.due_date):'—'}</span> };
   const revCol: Column<any> = { key:'revision_number', phone:'hide', header:'Rev.', accessor:s=>Number(s.revision_number)||0, align:'right', render:s=><span className="sbMuted">R{s.revision_number??0}</span> };
-  const columns: Column<any>[] = detailOpen ? [numCol, titleCol, statusCol, dueCol] : [numCol, titleCol, specCol, statusCol, bicCol, dueCol, revCol];
+  const tradeCol: Column<any> = { key:'trade', header:'Trade', hidden:true, phone:'hide', accessor:s=>s.trade||'' };
+  const submittedCol: Column<any> = { key:'submitted_at', header:'Submitted', hidden:true, phone:'hide', accessor:s=>s.submitted_at?String(s.submitted_at).slice(0,10):'', render:s=>s.submitted_at?fmtDate(s.submitted_at):'—' };
+  const columns: Column<any>[] = detailOpen ? [numCol, titleCol, statusCol, dueCol] : [numCol, titleCol, specCol, statusCol, bicCol, dueCol, revCol, tradeCol, submittedCol];
 
   /** The record's verbs — shared by the row overflow and the rail. */
   function subActions(s:any): Action[] {
@@ -446,22 +446,12 @@ export default function SubmittalsPage(){
     listBody = <EmptyState icon={<WarningCircle size={22}/>} title="Couldn't load submittals" text={`${loadError} Nothing has been lost — try again.`} action={<Button icon={<ArrowClockwise size={15}/>} onClick={load}>Retry</Button>}/>;
   } else if (!loading && submittals.length===0) {
     listBody = (
-      <>
-        <EmptyState
-          icon={<Clipboard size={22}/>}
-          title="No submittals yet"
-          text="Start the register for shop drawings and product data — the first number and the 14-day review window are already set."
-          action={<Button icon={<Plus size={15} weight="bold"/>} onClick={openCreate}>New Submittal</Button>}
-        />
-        <div style={{padding:'0 16px 16px'}}>
-          <FlowStrip steps={[
-            {title:'Log the Submittal',desc:'Numbered S-001, S-002…'},
-            {title:'Submit for Review',desc:'Ball flips to the architect'},
-            {title:'Advance in One Click',desc:'Right from the log'},
-            {title:'Approved or Revise',desc:'Revisions keep the number'},
-          ]} />
-        </div>
-      </>
+      <EmptyState
+        icon={<Clipboard size={22}/>}
+        title="No submittals yet"
+        text="Shop drawings and product data land here. S-001 and a 14-day review window are already set."
+        action={<Button icon={<Plus size={15} weight="bold"/>} onClick={openCreate}>New Submittal</Button>}
+      />
     );
   } else {
     listBody = (
@@ -473,6 +463,8 @@ export default function SubmittalsPage(){
         defaultSort={{ key:'submittal_number', dir:'asc' }}
         onRowClick={viewSub}
         rowActions={subActions}
+        tableId="project-submittals"
+        exportName="submittals"
         empty={<EmptyState icon={<Clipboard size={22}/>} title="No submittals match these filters" text="Clear the search, status, or ball-in-court filter to see more." action={<Button onClick={clearFilters}>Clear Filters</Button>}/>}
       />
     );
@@ -524,21 +516,18 @@ export default function SubmittalsPage(){
         open={composerOpen}
         onClose={closeComposer}
         title={mode==='edit' ? `Edit ${selected?.submittal_number||'Submittal'}` : 'New Submittal'}
-        subtitle={mode==='create' ? `${ctx?.project?.name ? `${ctx.project.name} · ` : ''}${total} on the log · reviewer ${ctx?.project?.architectName||'the architect'}` : (ctx?.project?.name || undefined)}
+        subtitle={mode==='create' ? `${ctx?.project?.name ? `${ctx.project.name} · ` : ''}${total} on the log · reviewer ${ctx?.project?.architectName||'the architect'}${roster.length>0?` · ${roster.length} subs on the roster`:''}` : (ctx?.project?.name || undefined)}
         onSubmit={async()=>{ await save(); }}
         submitLabel={mode==='create'?'Create Submittal':'Save Changes'}
         busy={saving}
       >
-        {mode==='create'&&ctx&&(
-          <div className="sbLadder">
-            <InsightRow label="Log" value={`${total} · ${ctx.counts?.openSubmittals??0} open now`}/>
-            <InsightRow label="Reviewer" value={ctx.project?.architectName||'Architect'}/>
-            <InsightRow label="Sub Roster" value={`${(ctx.subs||[]).length} trades to pick from`}/>
-            <InsightRow label="Overdue" value={String(overdue)} strong={overdue>0}/>
+        {mode==='create'&&overdue>0&&(
+          <div style={{marginBottom:16}}>
+            <Callout tone="warning" icon={<CalendarX size={16}/>} title={`${overdue} submittal${overdue===1?' is':'s are'} past the required date`} text={`${ctx?.counts?.openSubmittals??pending} open on the log now.`}/>
           </div>
         )}
         <FormGrid cols={2}>
-          <Field label="Submittal #" hint={auto.num ? <><AutoChip/> Next in sequence — {total} already on the log.</> : undefined}>
+          <Field label="Submittal #" hint={auto.num ? `Next in sequence — ${total} already on the log.` : undefined}>
             <Input value={form.submittal_number} onChange={e=>{const v=e.target.value;setAuto(a=>({...a,num:false}));setForm(f=>({...f,submittal_number:v}));}} placeholder="S-001"/>
           </Field>
           <Field label="Revision">
@@ -563,28 +552,19 @@ export default function SubmittalsPage(){
           <Field label="Status">
             <Select value={form.status} onChange={e=>setForm(f=>({...f,status:e.target.value}))} options={STATUSES.map(s=>({ value:s, label:STATUS_LABELS[s] }))}/>
           </Field>
-          <Field label="Ball in Court" hint={auto.bic ? <><AutoChip/> Starts with you — flips to {ctx?.project?.architectName||'the architect'} on submit.</> : undefined}>
+          <Field label="Ball in Court" hint={auto.bic ? `Starts with you — flips to ${ctx?.project?.architectName||'the architect'} on submit.` : undefined}>
             <Select value={form.ball_in_court} onChange={e=>{const v=e.target.value;setAuto(a=>({...a,bic:false}));setForm(f=>({...f,ball_in_court:v}));}} options={BIC_OPTIONS}/>
           </Field>
           <Field label="Submitted Date">
             <div className="sbDateInput"><SaguaroDatePicker value={form.submitted_at} onChange={v=>setForm(f=>({...f,submitted_at:v}))} style={DATE_INPUT_STYLE}/></div>
           </Field>
-          <Field label="Required Date" hint={auto.due ? <><AutoChip/> Standard 14-day review window — adjust to the spec.</> : undefined}>
+          <Field label="Required Date" hint={auto.due ? 'Standard 14-day review window — adjust to the spec.' : undefined}>
             <div className="sbDateInput"><SaguaroDatePicker value={form.due_date} onChange={v=>{setAuto(a=>({...a,due:false}));setForm(f=>({...f,due_date:v}));}} style={DATE_INPUT_STYLE}/></div>
           </Field>
           <Field label="Notes" span>
             <Textarea value={form.notes} onChange={e=>setForm(f=>({...f,notes:e.target.value}))} rows={3} placeholder="Additional notes or comments…"/>
           </Field>
         </FormGrid>
-        {mode==='create'&&(
-          <div style={{marginTop:16}}>
-            <FlowSteps title="After You Submit" steps={[
-              {title:'Submitted for Review', desc:`Ball-in-court flips to ${ctx?.project?.architectName||'the architect'} and the review clock starts.`},
-              {title:'Under Review', desc:'Advance the workflow in one click from the log — no form reopening.'},
-              {title:'Approved — or Revise & Resubmit', desc:'A resubmittal keeps this number and auto-increments the revision (R1, R2…).'},
-            ]}/>
-          </div>
-        )}
       </FormModal>
 
       <div style={{ position:'relative', zIndex:10001 }}><UnsavedGuardModal guard={guard} /></div>

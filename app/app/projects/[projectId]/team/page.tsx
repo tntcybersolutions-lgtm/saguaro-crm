@@ -1,46 +1,53 @@
 'use client';
-import React, { useState, useEffect, useRef } from 'react';
-import { DataTable, type Column } from '@/components/ui/kit';
-import { StatusPill } from '@/components/ui/Status';
+/**
+ * Project Team — the job's people: the internal roster (accepted members plus
+ * invites sent from here), the project directory slots (PM / super / foreman /
+ * owner / architect), work assignments, and subcontractors with portal access.
+ *
+ * Every read / write is the one this screen already used:
+ *   roster + directory   GET   /api/projects/[id]            (team, subs, project)
+ *   directory slot       PATCH /api/projects/[id]            { leadership: {...} }
+ *   invites              GET/POST /api/team/invite           (?projectId=)
+ *   one invite           PATCH / POST (resend) / DELETE /api/team/invite/[inviteId]
+ *   work assignments     GET   /api/work-assignments?projectId=, POST (assign / { end })
+ *   sub portal link      POST  /api/sub-portal/invite
+ */
+import React, { useState, useEffect } from 'react';
 import useSWR from 'swr';
 import { useProjectContext } from '@/lib/hooks/useProjectContext';
-import Link from 'next/link';
 import { useParams } from 'next/navigation';
-import { useToast } from '@/components/Toast';
-import { UsersThree, UserPlus, HardHat, EnvelopeSimple, Phone, IdentificationBadge, ClockCounterClockwise, Briefcase, X } from '@phosphor-icons/react';
-import { PremiumSurface, ModuleHero, SectionCard, PremiumEmpty, StatStrip, FlowSteps, AutoChip, goldButtonStyle, ghostButtonStyle, secondaryButtonStyle } from '@/components/ui/premium';
-import { ListToolbar } from '@/components/ui/ListToolbar';
-import { moduleAccent } from '@/lib/ui/app-accent';
-import { Button, Input, FormModal, FormGrid, Field, Select } from '@/components/ui/kit';
+import {
+  UsersThree, UserPlus, HardHat, EnvelopeSimple, Phone, IdentificationBadge, Briefcase, X,
+  Crown, Compass, PencilSimple, LinkSimple, ArrowSquareOut, WarningCircle,
+} from '@phosphor-icons/react';
+import {
+  PageShell, Card, StatRow, Badge, Button, Toolbar, Tabs, DataTable, EmptyState, ItemList, ItemRow,
+  FormModal, FormGrid, Field, Input, Select, DetailList, Callout, Toast, useToast,
+  type Column, type BadgeTone, type StatItem,
+} from '@/components/ui/kit';
 import ProjectOwnershipCard from '@/components/projects/ProjectOwnershipCard';
-import { createPortal } from 'react-dom';
 import { confirmDialog } from '@/lib/ui/async-dialog';
 
-const DARK='var(--bg-base)',RAISED='var(--bg-surface)',BORDER='rgba(255,255,255,0.12)',DIM='var(--text-secondary)',TEXT='var(--text-primary)',GREEN='var(--success)',RED='var(--danger)';
-const fmt = (n:number) => '$'+n.toLocaleString('en-US',{minimumFractionDigits:2,maximumFractionDigits:2});
 const EMAIL_RE = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
-/* The invite form was a fixed `1fr 320px` grid with three fields abreast: on a
-   390px phone the 320px rail left the form a sliver, the inputs collapsed and
-   the rail sat over Send Invitation. One column below 900px / 700px. */
-const TEAM_CSS = `
-.tmInviteGrid { display: grid; grid-template-columns: minmax(0, 1fr) 320px; gap: 18px; align-items: start; }
-.tmInviteFields { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 14px; margin-bottom: 16px; }
-.tmInviteGrid button { min-height: 44px; }
-@media (max-width: 900px) { .tmInviteGrid { grid-template-columns: minmax(0, 1fr); } }
-@media (max-width: 700px) { .tmInviteFields { grid-template-columns: minmax(0, 1fr); } }
-@media (max-width: 767px) { .tmScope .k-btn { min-height: 44px; } .tmInviteGrid input, .tmInviteGrid select { font-size: 16px !important; min-height: 44px; } }
-.tmRec { display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 4px 18px; }
-.tmRecActs { display: flex; gap: 10px; flex-wrap: wrap; width: 100%; }
-.tmRecActs .k-btn { min-height: 44px; }
-`;
-function Badge({label,color='var(--text-secondary)',bg='rgba(148,163,184,.12)'}:{label:string,color?:string,bg?:string}){
-  return <span style={{fontSize:12,fontWeight:700,padding:'2px 8px',borderRadius:4,background:bg,color}}>{label}</span>;
+const INVITE_ROLES = ['Admin','Manager','Member','Guest','Client','Sub'];
+/** The roster's group filter persists per viewer under the old list toolbar's key. */
+const FILTER_KEY = 'sag_flt_team';
+type Group = 'all' | 'team' | 'subs';
+
+/** Access level → one status colour (lib/status-colors). */
+function accessTone(access: string): BadgeTone {
+  const k = String(access || '').toLowerCase();
+  if (k === 'admin') return 'lead';
+  if (k === 'manager' || k === 'sub portal' || k === 'sub') return 'under_contract';
+  if (k === 'client') return 'ongoing';
+  return 'neutral';
 }
 
 export default function TeamPage(){
   const params = useParams();
   const projectId = params['projectId'] as string;
-  const { showToast } = useToast();
+  const { toast, show } = useToast(4000);
+  const showToast = (msg: string, type: 'success' | 'error') => show(msg, type === 'success' ? 'good' : 'bad');
   const [sendingPortal, setSendingPortal] = useState<string | null>(null);
   const [showInvite, setShowInvite] = useState(false);
   const [rosterMembers, setRosterMembers] = useState<{key:string,name:string,role:string,email:string,access:string,last:string,userId:string|null,inviteId?:string,company?:string,phone?:string,since?:string}[]>([]);
@@ -107,9 +114,23 @@ export default function TeamPage(){
   const [inviting, setInviting] = useState(false);
   const [inviteMsg, setInviteMsg] = useState('');
   const [inviteAuto, setInviteAuto] = useState<{name?:boolean;email?:boolean;role?:boolean}>({});
-  // ListToolbar state — roster search + team/subs group filter (sag_flt_team).
+  // Roster search + team/subs group filter (persisted under sag_flt_team).
   const [search, setSearch] = useState('');
-  const [showGroup, setShowGroup] = useState('all');
+  const [showGroup, setShowGroup] = useState<Group>('all');
+  const [groupRestored, setGroupRestored] = useState(false);
+  useEffect(() => {
+    try {
+      const saved = JSON.parse(window.localStorage.getItem(FILTER_KEY) || '{}') as { filters?: Record<string, string> };
+      const g = saved.filters?.show;
+      if (g === 'team' || g === 'subs' || g === 'all') setShowGroup(g);
+    } catch { /* private mode or a bad value — show everyone */ }
+    setGroupRestored(true);
+  }, []);
+  useEffect(() => {
+    if (!groupRestored) return;
+    try { window.localStorage.setItem(FILTER_KEY, JSON.stringify({ filters: { show: showGroup } })); }
+    catch { /* persistence is best-effort */ }
+  }, [groupRestored, showGroup]);
   // Project intelligence — the roster walks in knowing the job's people and parties.
   const [proj, setProj] = useState<any>(null);
   const { ctx } = useProjectContext(projectId);
@@ -153,16 +174,13 @@ export default function TeamPage(){
     })();
   }, [projectId, reloadKey]);
 
-  /* Opening the invite form has to take you to it. */
-  const inviteFormRef = useRef<HTMLDivElement | null>(null);
+  /* Opening the invite form puts the cursor in Email. */
   const openInvite = () => {
     setShowInvite(true);
     setInviteAuto({});
-    requestAnimationFrame(() => {
-      inviteFormRef.current?.scrollIntoView({ behavior: 'smooth', block: 'center' });
-      inviteFormRef.current?.querySelector('input')?.focus();
-    });
+    requestAnimationFrame(() => { document.getElementById('tm-invite-email')?.focus(); });
   };
+  const closeInvite = () => { if (inviting) return; setShowInvite(false); setInviteMsg(''); };
 
   async function handleInvite() {
     const email = inviteEmail.trim();
@@ -229,7 +247,6 @@ export default function TeamPage(){
   // ── Work assignments — who owns this project day-to-day ────────────────────
   // Active assignments drive each member's My Work hub. SWR keeps the chips
   // live; assign/end are optimistic with rollback so the roster never waits.
-  const WORK = moduleAccent('work');
   const ASSIGN_ROLES = [
     { value: 'project_manager', label: 'Project Manager' },
     { value: 'superintendent',  label: 'Superintendent' },
@@ -289,9 +306,6 @@ export default function TeamPage(){
     }
   }
 
-  const inputStyle = {width:'100%',padding:'8px 12px',background:'var(--bg-surface-2)',border:`1px solid ${BORDER}`,borderRadius:7,color:TEXT,fontSize:13,outline:'none',boxSizing:'border-box' as const};
-  const hintStyle: React.CSSProperties = {fontSize:12,color:'var(--c-text-2)',marginTop:5,lineHeight:1.45};
-
   // Field leadership straight off the project record — PM, super, and foreman,
   // plus the owner and architect of record, each with live contact links.
   const leadership = [
@@ -310,6 +324,10 @@ export default function TeamPage(){
     Foreman: { name: 'foreman_name', email: 'foreman_email' },
     Owner: { name: 'owner_name', email: 'owner_email' },
     Architect: { name: 'architect_name', email: 'architect_email' },
+  };
+  const LEADER_ICONS: Record<string, React.ReactNode> = {
+    'Project Manager': <Briefcase size={16} />, Superintendent: <HardHat size={16} />, Foreman: <HardHat size={16} />,
+    Owner: <Crown size={16} />, Architect: <Compass size={16} />,
   };
   function startEdit(l: { role: string; name: string; email: string }) {
     setEditRole(l.role); setEditName(l.name || ''); setEditEmail(l.email || '');
@@ -366,38 +384,33 @@ export default function TeamPage(){
     { key: 'name', header: 'Name', primary: true, phone: 'show', accessor: m => m.name, render: m => (
       <span className="k-name"><span className="k-avatar" aria-hidden>{m.name[0]}</span><span className="k-name-text"><span>{m.name}</span><span>{m.email}</span></span></span>
     ) },
-    { key: 'role', header: 'Role', phone: 'show', accessor: m => m.role, render: m => m.role },
-    { key: 'access', header: 'Access Level', phone: 'show', accessor: m => m.access, render: m => <StatusPill module="team_access" status={m.access} size="sm" /> },
-    { key: 'assignments', header: 'Work Assignments', sortable: false, phone: 'show', render: m => (
+    { key: 'role', header: 'Role', phone: 'hide', accessor: m => m.role, render: m => m.role },
+    { key: 'access', header: 'Access Level', phone: 'show', accessor: m => m.access, render: m => <Badge tone={accessTone(m.access)}>{m.access}</Badge> },
+    { key: 'assignments', header: 'Work Assignments', sortable: false, groupable: false, phone: 'show', accessor: m => assignmentsFor(m.userId).map(a => assignRoleLabel(a.role)).join(', '), render: m => (
       <span style={{display:'inline-flex',alignItems:'center',gap:6,flexWrap:'wrap'}} onClick={e=>e.stopPropagation()}>
         {assignmentsFor(m.userId).map(a=>(
-          <span key={a.id} style={{display:'inline-flex',alignItems:'center',gap:5,padding:'3px 6px 3px 9px',borderRadius:999,background:WORK.soft,border:`1px solid ${WORK.ring}`,color:WORK.hex,fontSize:12,fontWeight:800,letterSpacing:.3,whiteSpace:'nowrap' as const}}>
+          <Badge key={a.id} tone="ongoing">
             {assignRoleLabel(a.role)}
-            <button onClick={()=>endAssignment(a)} title="End this assignment" aria-label={`End ${assignRoleLabel(a.role)} assignment`} style={{display:'inline-flex',alignItems:'center',justifyContent:'center',width:18,height:18,padding:0,borderRadius:999,background:WORK.soft,border:'none',color:WORK.hex,cursor:'pointer'}}><X size={9} weight="bold"/></button>
-          </span>
+            <button type="button" onClick={()=>endAssignment(a)} title="End this assignment" aria-label={`End ${assignRoleLabel(a.role)} assignment`} style={{display:'inline-flex',alignItems:'center',justifyContent:'center',width:18,height:18,marginLeft:4,padding:0,borderRadius:999,background:'transparent',border:'none',color:'inherit',cursor:'pointer'}}><X size={10} weight="bold"/></button>
+          </Badge>
         ))}
         {m.userId ? (
-          <select value="" disabled={assignBusy} onChange={e=>{const r=e.target.value; if(r) assignWork(m.userId!, r, m.name);}} title="Assign work on this project" aria-label={`Assign work to ${m.name}`} className="k-input" style={{height:30,fontSize:12,padding:'0 8px',width:'auto'}}>
-            <option value="">+ Assign…</option>
-            {ASSIGN_ROLES.map(r=><option key={r.value} value={r.value}>{r.label}</option>)}
-          </select>
+          <Select value="" disabled={assignBusy} onChange={e=>{const r=e.target.value; if(r) assignWork(m.userId!, r, m.name);}} title="Assign work on this project" aria-label={`Assign work to ${m.name}`} style={{minHeight:30,height:30,fontSize:12,padding:'0 8px',width:'auto'}}
+            placeholder="+ Assign…" options={ASSIGN_ROLES} />
         ) : (
-          <span title="They can be assigned work once they accept their invite" style={{fontSize:12,color:DIM,fontStyle:'italic' as const,whiteSpace:'nowrap' as const}}>Invite Pending</span>
+          <span title="They can be assigned work once they accept their invite" style={{fontSize:12,color:'var(--text-tertiary)',fontStyle:'italic',whiteSpace:'nowrap'}}>Invite Pending</span>
         )}
       </span>
     ) },
-    { key: 'last', header: 'Last Active', phone: 'hide', accessor: m => m.last, render: m => <span style={{color:m.inviteId?'var(--warning)':'var(--success)',fontSize:12,fontWeight:700}}>{m.last}</span> },
+    { key: 'last', header: 'Last Active', phone: 'show', accessor: m => m.last, render: m => <Badge tone={m.inviteId ? 'under_contract' : 'ongoing'}>{m.last}</Badge> },
   ];
   const teamSubColumns: Column<TeamSub>[] = [
     { key: 'name', header: 'Company', primary: true, phone: 'show', accessor: s => s.name, render: s => (
       <span className="k-name"><span className="k-avatar" aria-hidden>{(s.name||'?').split(/\s+/).slice(0,2).map(w=>w[0]?.toUpperCase()||'').join('')}</span><span className="k-name-text"><span>{s.name}</span><span>{s.email || findCtxSub(s.name)?.email || ''}</span></span></span>
     ) },
     { key: 'trade', header: 'Trade', phone: 'show', accessor: s => findCtxSub(s.name)?.trade || '', render: s => findCtxSub(s.name)?.trade || '—' },
-    { key: 'contract', header: 'Contract', align: 'right', phone: 'show', accessor: s => Number(findCtxSub(s.name)?.contractAmount) > 0 ? Number(findCtxSub(s.name)?.contractAmount) : null, render: s => { const a = Number(findCtxSub(s.name)?.contractAmount); return a > 0 ? <span style={{color:TEXT,fontWeight:700}}>{fmtMoney(a)}</span> : '—'; } },
-    { key: 'access', header: 'Portal Access', phone: 'show', accessor: s => s.access, render: s => <StatusPill module="team_access" status="sub portal" size="sm" /> },
-    { key: 'actions', header: 'Actions', sortable: false, phone: 'show', render: s => (
-      <button className="k-btn k-btn-secondary k-btn-sm" onClick={e=>{e.stopPropagation();handleSendPortalLink(s);}} disabled={sendingPortal===s.name}>{sendingPortal===s.name?'Working…':'Copy Portal Link'}</button>
-    ) },
+    { key: 'contract', header: 'Contract', align: 'right', phone: 'show', total: 'sum', format: fmtMoney, accessor: s => Number(findCtxSub(s.name)?.contractAmount) > 0 ? Number(findCtxSub(s.name)?.contractAmount) : null, render: s => { const a = Number(findCtxSub(s.name)?.contractAmount); return a > 0 ? <span style={{color:'var(--text-primary)',fontWeight:700}}>{fmtMoney(a)}</span> : '—'; } },
+    { key: 'access', header: 'Portal Access', phone: 'hide', accessor: s => s.access, render: () => <Badge tone={accessTone('sub portal')}>Sub Portal</Badge> },
   ];
   const openRec = openKey ? members.find(m => m.key === openKey) ?? null : null;
   const startRecEdit = (m: Member) => { setRecName(m.name === m.email ? '' : m.name); setRecRole(m.role || 'Member'); setRecMsg(null); setRecEditing(true); };
@@ -463,282 +476,301 @@ export default function TeamPage(){
     setInviteMsg('');
   }
 
-  return <PremiumSurface>
-    <style dangerouslySetInnerHTML={{ __html: TEAM_CSS }} />
-    <div className="tmScope">
-    <ModuleHero
-      eyebrow={ctx?.project?.name || 'Project Team'}
-      eyebrowIcon={<UsersThree size={13} weight="fill" color="var(--text-secondary)" />}
-      title="Project"
-      accent="Team"
-      subtitle="Manage project team members and access"
-      actions={<button type="button" onClick={openInvite} style={goldButtonStyle} className="pmBtn"><UserPlus size={15} weight="bold" /> Invite Member</button>}
-    />
-
-    {!loading && (
-      <StatStrip items={[
+  const base = `/app/projects/${projectId}`;
+  const invitedCount = members.filter(m => m.inviteId).length;
+  const stats: StatItem[] = loading
+    ? [
+        { label: 'Team Members', value: '—', sub: 'Loading…', icon: <UsersThree size={15} /> },
+        { label: 'Subcontractors', value: '—', sub: 'Loading…', icon: <HardHat size={15} /> },
+        { label: 'Leadership', value: '—', sub: 'Loading…', icon: <IdentificationBadge size={15} /> },
+      ]
+    : [
         /* These tiles linked back to this same page, so a tap only reloaded it.
-           Each now goes where its number lives. */
-        {href: '#internal-team', label:'Team Members', value: String(members.length), sub: (() => { const inv = members.filter(m=>m.inviteId).length; const acc = members.length - inv; return `${acc} with access${inv ? ` · ${inv} invited` : ''}`; })()},
-        {href: `/app/projects/${projectId}/subs`, label:'Subcontractors', value: String(subs.length), sub: subTrades.length?`${subTrades.length} trade${subTrades.length===1?'':'s'} — portal access`:'Portal access'},
-        {href: '#project-directory', label:'Leadership', value: `${leadersAssigned}/5`, accent: leadersAssigned>=3?'var(--success)':undefined, sub: leadersAssigned>0?'Directory roles assigned':'Set them in the directory below'},
+           Each now filters the roster or goes where its number lives. */
+        { label: 'Team Members', value: String(members.length), sub: `${members.length - invitedCount} with access${invitedCount ? ` · ${invitedCount} invited` : ''}`, icon: <UsersThree size={15} />, onClick: () => setShowGroup('team'), active: showGroup === 'team' },
+        { label: 'Subcontractors', value: String(subs.length), sub: subTrades.length ? `${subTrades.length} trade${subTrades.length === 1 ? '' : 's'} — portal access` : 'Portal access', icon: <HardHat size={15} />, onClick: () => setShowGroup('subs'), active: showGroup === 'subs' },
+        { label: 'Leadership', value: `${leadersAssigned}/5`, tone: leadersAssigned >= 3 ? 'good' : 'default', sub: leadersAssigned > 0 ? 'Directory roles assigned' : 'Set them in the directory below', icon: <IdentificationBadge size={15} />, href: '#project-directory' },
         ...(ctx ? [
-          {href: proj?.customer_id ? `/app/customers?customer=${encodeURIComponent(proj.customer_id)}` : '#project-directory', label:'Owner', value: ctx.defaults?.ownerName || '—', sub: ctx.defaults?.ownerEmail || 'No email on file'},
-          {href: '#project-directory', label:'Architect', value: ctx.defaults?.architectName || '—', sub: 'Design contact'},
+          { label: 'Owner', value: ctx.defaults?.ownerName || '—', sub: ctx.defaults?.ownerEmail || 'No email on file', icon: <Crown size={15} />, href: proj?.customer_id ? `/app/customers?customer=${encodeURIComponent(proj.customer_id)}` : '#project-directory' } as StatItem,
+          { label: 'Architect', value: ctx.defaults?.architectName || '—', sub: 'Design contact', icon: <Compass size={15} />, href: '#project-directory' } as StatItem,
         ] : []),
-      ]}/>
-    )}
+      ];
 
-    {showInvite && <div ref={inviteFormRef} style={{marginBottom:24}}>
-      <div className="tmInviteGrid">
-      <SectionCard title="Invite Team Member" icon={<UserPlus size={17} weight="duotone" color="var(--text-secondary)" />} subtitle={ctx?.project?.name ? `Grants access to ${ctx.project.name}` : 'Send a role-scoped invitation to this project.'}>
-        {/* A real form: the keyboard's Go/Enter sends, the same as the button. */}
-        <form noValidate aria-label="Invite team member" onSubmit={(e) => { e.preventDefault(); void handleInvite(); }}>
-        <div className="tmInviteFields">
-          <div>
-            <label htmlFor="tm-invite-email" style={{display:'block',fontSize:12,fontWeight:700,color:DIM,marginBottom:5}}>Email *{inviteAuto.email && <AutoChip/>}</label>
-            <input id="tm-invite-email" type="email" inputMode="email" autoComplete="email" value={inviteEmail} onChange={e=>{setInviteEmail(e.target.value);setInviteAuto(a=>({...a,email:false}));if(inviteMsg&&inviteMsg!=='Invitation sent.')setInviteMsg('');}} placeholder="email@company.com" style={inputStyle} aria-required="true" aria-invalid={!!inviteMsg && inviteMsg!=='Invitation sent.' ? true : undefined}/>
-            <div style={hintStyle}>They get a secure accept link by email — it expires after 7 days.</div>
-          </div>
-          <div>
-            <label htmlFor="tm-invite-name" style={{display:'block',fontSize:12,fontWeight:700,color:DIM,marginBottom:5}}>Name{inviteAuto.name && <AutoChip/>}</label>
-            <input id="tm-invite-name" type="text" value={inviteName} onChange={e=>{setInviteName(e.target.value);setInviteAuto(a=>({...a,name:false}));}} placeholder="Full name" style={inputStyle}/>
-            <div style={hintStyle}>Shown on the roster and in notifications.</div>
-          </div>
-          <div>
-            <label htmlFor="tm-invite-role" style={{display:'block',fontSize:12,fontWeight:700,color:DIM,marginBottom:5}}>Role{inviteAuto.role && <AutoChip/>}</label>
-            <select id="tm-invite-role" value={inviteRole} onChange={e=>{setInviteRole(e.target.value);setInviteAuto(a=>({...a,role:false}));}} style={{...inputStyle,cursor:'pointer'}}>
-              {['Admin','Manager','Member','Guest','Client','Sub'].map(r=><option key={r}>{r}</option>)}
-            </select>
-            <div style={hintStyle}>{ROLE_HINTS[inviteRole] || 'Access level for this member.'}</div>
-          </div>
-        </div>
-        {inviteMsg&&<div role={inviteMsg==='Invitation sent.'?'status':'alert'} style={{fontSize:13,marginBottom:12,color:inviteMsg==='Invitation sent.'?GREEN:RED}}>{inviteMsg}</div>}
-        <div style={{display:'flex',gap:10,flexWrap:'wrap'}}>
-          <button type="submit" disabled={inviting} style={{...goldButtonStyle,opacity:inviting?.6:1}} className="pmBtn">{inviting?'Sending…':'Send Invitation'}</button>
-          <button type="button" onClick={()=>{setShowInvite(false);setInviteMsg('');}} style={ghostButtonStyle} className="pmBtn">Cancel</button>
-        </div>
-        </form>
-      </SectionCard>
-      <SectionCard flat title="After You Send" icon={<ClockCounterClockwise size={17} weight="duotone" color="var(--text-secondary)" />}>
-        <FlowSteps title="" steps={[
-          {title:'Invitation Email Goes Out', desc:'A secure accept link is emailed — it expires after 7 days.'},
-          {title:'They Create Their Login', desc:'One click sets up their account under your company.'},
-          {title:'Roster Updates Itself', desc:`They appear below with ${inviteRole} access the moment they accept.`},
-          {title:'Access Stays Adjustable', desc:'Change or revoke roles any time from Roles & Access.'},
-        ]}/>
-      </SectionCard>
-      </div>
-    </div>}
-
-    <ListToolbar
-      module="team"
-      search={search}
-      onSearch={setSearch}
-      searchPlaceholder="Search the roster…"
-      filters={[{ key: 'show', label: 'Show', value: showGroup, onChange: setShowGroup, allLabel: 'Everyone', options: [
-        { value: 'team', label: 'Internal Team' },
-        { value: 'subs', label: 'Subcontractors' },
-      ] }]}
-      count={{ shown: filteredMembers.length + filteredSubs.length, total: members.length + subs.length }}
-      style={{ marginBottom: 16 }}
-    />
-
-    <div style={{display:'flex',flexDirection:'column',gap:20}}>
-      {proj && <ProjectOwnershipCard projectId={projectId} project={proj} onSaved={(p)=>{ if (p && (p as any).id) setProj(p); }}/>}
-      <div id="project-directory" style={{ scrollMarginTop: 76 }} />
-      <SectionCard title="Project Directory" subtitle="Field leadership and parties of record — set or edit any slot right here" icon={<IdentificationBadge size={17} weight="duotone" color="var(--text-secondary)" />}>
-        <div style={{display:'grid',gridTemplateColumns:'repeat(auto-fit,minmax(210px,1fr))',gap:12}}>
-          {leadership.map(l=>(
-            <div key={l.role} style={{padding:'12px 14px',borderRadius:12,border:'1px solid var(--border-default)',background:l.name?'var(--bg-surface-2)':'rgba(255,255,255,0.02)'}}>
-              <div style={{fontSize:12,fontWeight:800,color:DIM,marginBottom:6}}>{l.role}</div>
-              {editRole === l.role ? (
-                <div style={{display:'flex',flexDirection:'column' as const,gap:6}}>
-                  <Input aria-label={`${l.role} name`} value={editName} onChange={e=>setEditName(e.target.value)} placeholder="Name" autoFocus/>
-                  <Input aria-label={`${l.role} email`} type="email" value={editEmail} onChange={e=>setEditEmail(e.target.value)} placeholder="Email (optional)"/>
-                  <div style={{display:'flex',gap:6}}>
-                    <Button size="sm" variant="primary" onClick={saveLeader} disabled={savingLeader}>{savingLeader?'Saving…':'Save'}</Button>
-                    <Button size="sm" variant="ghost" onClick={()=>setEditRole(null)} disabled={savingLeader}>Cancel</Button>
-                  </div>
-                </div>
-              ) : (<>
-              <div style={{fontSize:14,fontWeight:700,color:l.name?TEXT:'rgba(255,255,255,0.35)',marginBottom:6}}>{l.name||'Not assigned'}</div>
-              {l.name ? (
-                <div style={{display:'flex',flexDirection:'column' as const,gap:3}}>
-                  {l.email&&<a href={`mailto:${l.email}`} style={{display:'inline-flex',alignItems:'center',gap:6,fontSize:12,color: 'var(--link)',textDecoration:'none'}}><EnvelopeSimple size={12} weight="bold" color="var(--text-secondary)"/>{l.email}</a>}
-                  {l.phone&&<a href={`tel:${l.phone}`} style={{display:'inline-flex',alignItems:'center',gap:6,fontSize:12,color:DIM,textDecoration:'none'}}><Phone size={12} weight="bold" color={DIM}/>{l.phone}</a>}
-                  {!l.email&&!l.phone&&<span style={{fontSize:12,color:'var(--c-text-2)'}}>No contact on file</span>}
-                  {l.email && !memberEmails.has(l.email.toLowerCase()) && (
-                    <button onClick={()=>inviteFromDirectory(l)} className="pmBtn" style={{marginTop:6,alignSelf:'flex-start',display:'inline-flex',alignItems:'center',gap:5,padding:'4px 10px',background:'var(--bg-surface-2)',border:'1px solid var(--border-default)',borderRadius:7,color: 'var(--text-primary)',fontSize:12,fontWeight:800,cursor:'pointer'}}>
-                      <UserPlus size={12} weight="bold" color="var(--text-secondary)" /> Invite to Project
-                    </button>
-                  )}
-                </div>
-              ) : (
-                <Button size="sm" variant="secondary" onClick={()=>startEdit(l)}>Set {l.role}</Button>
-              )}
-              {l.name && <div style={{marginTop:6}}><Button size="sm" variant="ghost" onClick={()=>startEdit(l)}>Edit</Button></div>}
-              </>)}
+  const directoryCard = (
+    <Card title="Project Directory" subtitle="Field leadership and parties of record" icon={<IdentificationBadge size={17} />}>
+      <ItemList>
+        {leadership.map(l => editRole === l.role ? (
+          <div key={l.role} className="k-item" style={{ display: 'block' }}>
+            <FormGrid cols={2}>
+              <Field label={`${l.role} name`}>
+                <Input value={editName} onChange={e=>setEditName(e.target.value)} placeholder="Name" autoFocus/>
+              </Field>
+              <Field label={`${l.role} email`}>
+                <Input type="email" value={editEmail} onChange={e=>setEditEmail(e.target.value)} placeholder="Email (optional)"/>
+              </Field>
+            </FormGrid>
+            <div style={{ display: 'flex', gap: 8, marginTop: 10 }}>
+              <Button size="sm" onClick={saveLeader} disabled={savingLeader}>{savingLeader ? 'Saving…' : 'Save'}</Button>
+              <Button size="sm" variant="ghost" onClick={()=>setEditRole(null)} disabled={savingLeader}>Cancel</Button>
             </div>
-          ))}
-        </div>
-      </SectionCard>
-      <div id="internal-team" style={{ scrollMarginTop: 76 }} />
-      {(showGroup === 'all' || showGroup === 'team') && (
-      <SectionCard title="Internal Team" icon={<UsersThree size={17} weight="duotone" color="var(--text-secondary)" />}>
-        {loading ? (
-          <div style={{padding:'28px 12px',textAlign:'center',color:DIM,fontSize:13}}>Loading team members…</div>
-        ) : loadError ? (
-          <PremiumEmpty
-            icon={<UsersThree size={30} weight="duotone" color={RED} />}
-            title="Couldn’t load this job’s team"
-            description={loadError}
-            tone="error"
-            action={<button type="button" onClick={() => setReloadKey(k => k + 1)} style={secondaryButtonStyle} className="pmBtn">Try Again</button>}
-            compact
-          />
-        ) : members.length === 0 ? (
-          <PremiumEmpty
-            icon={<UsersThree size={30} weight="duotone" color="var(--text-secondary)" />}
-            title="No team members yet"
-            description={leadersAssigned>0 ? `The directory above lists ${leadersAssigned} leadership role${leadersAssigned===1?'':'s'} — invite them so they can log in, post daily logs, and run the schedule.` : 'Invite your PM, superintendent, and office staff — each gets role-scoped access to this project.'}
-            action={<button onClick={openInvite} style={secondaryButtonStyle} className="pmBtn"><UserPlus size={15} weight="bold" /> Invite Member</button>}
-            compact
-          />
+          </div>
         ) : (
-          <DataTable<Member> columns={memberColumns} rows={filteredMembers} rowKey={m => m.key} onRowClick={m => openMember(m.key)} isSelected={m => m.key === openKey} defaultSort={{ key: 'name', dir: 'asc' }} empty="No one matches." />
-        )}
-      </SectionCard>
-      )}
-
-      {(showGroup === 'all' || showGroup === 'team') && (
-      <SectionCard
-        title="Work Assignments"
-        subtitle="Who owns this project day-to-day — assigned members see it on their My Work hub"
-        icon={<Briefcase size={17} weight="duotone" color={WORK.hex} />}
-        accent={WORK.hex}
-      >
-        {assignments.length > 0 && (
-          <div style={{display:'flex',gap:8,flexWrap:'wrap' as const,marginBottom:16}}>
-            {assignments.map(a=>(
-              <span key={a.id} style={{display:'inline-flex',alignItems:'center',gap:7,padding:'5px 8px 5px 12px',borderRadius:999,background:WORK.soft,border:`1px solid ${WORK.ring}`,color:WORK.hex,fontSize:12,fontWeight:700}}>
-                {a.assignee_name || members.find(m=>m.userId===a.assignee_user_id)?.name || 'Member'}
-                <span style={{fontSize: 12,fontWeight:800,opacity:.8}}>{assignRoleLabel(a.role)}</span>
-                <button onClick={()=>endAssignment(a)} title="End this assignment" aria-label={`End ${assignRoleLabel(a.role)} assignment`} style={{display:'inline-flex',alignItems:'center',justifyContent:'center',width:16,height:16,padding:0,borderRadius:999,background:WORK.soft,border:'none',color:WORK.hex,cursor:'pointer'}}><X size={10} weight="bold"/></button>
+          <ItemRow
+            key={l.role}
+            icon={LEADER_ICONS[l.role]}
+            title={l.name || <span style={{ color: 'var(--text-tertiary)' }}>Not assigned</span>}
+            desc={
+              <span style={{ display: 'inline-flex', gap: 12, flexWrap: 'wrap', alignItems: 'center' }}>
+                <span>{l.role}</span>
+                {l.email && <a className="k-link" href={`mailto:${l.email}`} style={{ display: 'inline-flex', alignItems: 'center', gap: 4 }}><EnvelopeSimple size={12} />{l.email}</a>}
+                {l.phone && <a className="k-link" href={`tel:${l.phone}`} style={{ display: 'inline-flex', alignItems: 'center', gap: 4 }}><Phone size={12} />{l.phone}</a>}
+                {l.name && !l.email && !l.phone && <span>No contact on file</span>}
               </span>
-            ))}
-          </div>
-        )}
-        {members.some(m=>m.userId) ? (
-          <div style={{display:'flex',gap:12,alignItems:'flex-end',flexWrap:'wrap' as const}}>
-            <div style={{flex:'1 1 220px',minWidth:200}}>
-              <label style={{display:'block',fontSize:12,fontWeight:700,color:DIM,marginBottom:5}}>Team Member</label>
-              <select value={composerUser} onChange={e=>setComposerUser(e.target.value)} style={{...inputStyle,cursor:'pointer'}}>
-                <option value="">Choose a member…</option>
-                {members.filter(m=>m.userId).map(m=><option key={m.userId!} value={m.userId!}>{m.name}</option>)}
-              </select>
-              <div style={hintStyle}>Only accepted invites appear — pending members show on the roster as Invite Pending.</div>
-            </div>
-            <div style={{flex:'0 1 210px',minWidth:180}}>
-              <label style={{display:'block',fontSize:12,fontWeight:700,color:DIM,marginBottom:5}}>Assignment Role</label>
-              <select value={composerRole} onChange={e=>setComposerRole(e.target.value)} style={{...inputStyle,cursor:'pointer'}}>
-                {ASSIGN_ROLES.map(r=><option key={r.value} value={r.value}>{r.label}</option>)}
-              </select>
-              <div style={hintStyle}>Their scope on this project — it labels the chip on their hub.</div>
-            </div>
-            <button
-              onClick={()=>{const m=members.find(x=>x.userId===composerUser); assignWork(composerUser, composerRole, m?.name); setComposerUser('');}}
-              disabled={!composerUser||assignBusy}
-              style={{...goldButtonStyle,opacity:!composerUser||assignBusy?.55:1,cursor:!composerUser||assignBusy?'default':'pointer',marginBottom:22}}
-              className="pmBtn"
-            ><Briefcase size={15} weight="bold" /> Assign Work</button>
-          </div>
-        ) : (
-          <div style={{fontSize:13,color:'var(--c-text-2)',lineHeight:1.55}}>
-            Invite team members above — once someone accepts their invite they can be assigned work here, and it lands on their My Work hub immediately.
-          </div>
-        )}
-      </SectionCard>
-      )}
-
-      {(showGroup === 'all' || showGroup === 'subs') && (
-      <SectionCard title="Subcontractors (Portal Access)" icon={<HardHat size={17} weight="duotone" color="var(--text-secondary)" />}>
-        {subs.length === 0 ? (
-          <PremiumEmpty
-            icon={<HardHat size={30} weight="duotone" color="var(--text-secondary)" />}
-            title="No subcontractors yet"
-            description={(ctx?.bidPackages || []).length > 0 ? `${ctx.bidPackages.length} bid package${ctx.bidPackages.length===1?'':'s'} exist on this project — award one, or add subs in the Subs module, and they land here with portal access, waivers, and pay items wired up.` : 'Add subs in the Subs module or award a bid package — each lands here with portal access, lien waivers, and pay items wired up.'}
-            compact
+            }
+            action={
+              <span style={{ display: 'inline-flex', gap: 6, flexWrap: 'wrap', justifyContent: 'flex-end' }}>
+                {l.name && l.email && !memberEmails.has(l.email.toLowerCase()) && (
+                  <Button size="sm" icon={<UserPlus size={13} />} onClick={()=>inviteFromDirectory(l)}>Invite to Project</Button>
+                )}
+                {l.name
+                  ? <Button size="sm" variant="ghost" icon={<PencilSimple size={13} />} onClick={()=>startEdit(l)}>Edit</Button>
+                  : <Button size="sm" onClick={()=>startEdit(l)}>Set {l.role}</Button>}
+              </span>
+            }
           />
-        ) : (
-          <DataTable<TeamSub> columns={teamSubColumns} rows={filteredSubs} rowKey={s => s.name} defaultSort={{ key: 'name', dir: 'asc' }} empty="No subcontractors match." />
-        )}
-      </SectionCard>
-      )}
-    </div>
-    </div>
+        ))}
+      </ItemList>
+    </Card>
+  );
 
-    {openRec && typeof document !== 'undefined' && createPortal(
-      openRec.inviteId && recEditing ? (
-        <FormModal
-          open
-          onClose={() => { if (!recBusy) setRecEditing(false); }}
-          title={`Edit invite — ${openRec.email}`}
-          subtitle="The name it was sent under and the role they get when they accept."
-          onSubmit={saveRecEdit}
-          submitLabel="Save Changes"
-          busy={recBusy}
-          error={recMsg?.bad ? recMsg.text : null}
-        >
-          <FormGrid cols={2}>
-            <Field label="Name">
-              <Input id="tm-rec-name" value={recName} onChange={e => setRecName(e.target.value)} placeholder="Full name" maxLength={120} />
-            </Field>
-            <Field label="Email" hint="The link went to this address — to use another, remove this invite and invite them again.">
-              <Input id="tm-rec-email" type="email" value={openRec.email} readOnly />
-            </Field>
-            <Field label="Role">
-              <Select id="tm-rec-role" value={recRole} onChange={e => setRecRole(e.target.value)} options={Array.from(new Set(['Admin','Manager','Member','Guest','Client','Sub', recRole]))} />
-            </Field>
-          </FormGrid>
-        </FormModal>
-      ) : (
-        <FormModal
-          open
-          onClose={closeMember}
-          title={openRec.name}
-          subtitle={openRec.inviteId ? `Invited ${fmtDay(openRec.since)} — not accepted yet` : `On this job${openRec.since ? ` since ${fmtDay(openRec.since)}` : ''}`}
-          footer={(
-            <div className="tmRecActs">
-              {recMsg && <span className={recMsg.bad ? 'k-error' : 'k-hint'} role={recMsg.bad ? 'alert' : 'status'} style={{ width: '100%' }}>{recMsg.text}</span>}
-              {openRec.inviteId ? (<>
-                <Button variant="primary" onClick={() => startRecEdit(openRec)} disabled={recBusy}>Edit</Button>
-                <Button variant="secondary" onClick={() => { void resendRec(); }} disabled={recBusy}>{recBusy ? 'Working…' : 'Resend Invite'}</Button>
-                <Button variant="ghost" onClick={() => { void removeRecInvite(); }} disabled={recBusy}>Remove Invite</Button>
-              </>) : (
-                <Button variant="secondary" href="/app/people?tab=access">Manage Access in People</Button>
-              )}
-              <Button variant="ghost" onClick={closeMember}>Close</Button>
-            </div>
-          )}
-        >
-          <div className="tmRec">
-            <div><div style={{fontSize:12,fontWeight:700,color:DIM}}>Email</div><div style={{fontSize:14,color:TEXT,fontWeight:600,overflowWrap:'anywhere'}}>{openRec.email || '—'}</div></div>
-            <div><div style={{fontSize:12,fontWeight:700,color:DIM}}>{openRec.inviteId ? 'Role When They Accept' : 'Role'}</div><div style={{fontSize:14,color:TEXT,fontWeight:600}}>{openRec.role || 'Member'}</div></div>
-            {!openRec.inviteId && <div><div style={{fontSize:12,fontWeight:700,color:DIM}}>Company</div><div style={{fontSize:14,color:TEXT,fontWeight:600}}>{openRec.company || '—'}</div></div>}
-            {!openRec.inviteId && <div><div style={{fontSize:12,fontWeight:700,color:DIM}}>Phone</div><div style={{fontSize:14,color:TEXT,fontWeight:600}}>{openRec.phone || '—'}</div></div>}
-            {!openRec.inviteId && <div><div style={{fontSize:12,fontWeight:700,color:DIM}}>Work Assignments</div><div style={{fontSize:14,color:TEXT,fontWeight:600}}>{assignmentsFor(openRec.userId).map(a => assignRoleLabel(a.role)).join(', ') || 'None yet'}</div></div>}
-            <div><div style={{fontSize:12,fontWeight:700,color:DIM}}>Status</div><div style={{fontSize:14,color:openRec.inviteId?'var(--warning)':'var(--success)',fontWeight:700}}>{openRec.last}</div></div>
+  let teamBody: React.ReactNode;
+  if (loadError) {
+    teamBody = <EmptyState icon={<WarningCircle size={22} />} title="Couldn’t load this job’s team" text={loadError} action={<Button onClick={() => setReloadKey(k => k + 1)}>Try Again</Button>} />;
+  } else if (!loading && members.length === 0) {
+    teamBody = (
+      <EmptyState
+        icon={<UsersThree size={22} />}
+        title="No team members yet"
+        text={leadersAssigned > 0 ? `Invite the ${leadersAssigned} leadership role${leadersAssigned === 1 ? '' : 's'} from the directory.` : 'Invite your PM, superintendent and office staff.'}
+        action={<Button icon={<UserPlus size={15} weight="bold" />} onClick={openInvite}>Invite Member</Button>}
+      />
+    );
+  } else {
+    teamBody = (
+      <DataTable<Member>
+        tableId="project-team"
+        exportName="team"
+        columns={memberColumns}
+        rows={filteredMembers}
+        loading={loading}
+        rowKey={m => m.key}
+        onRowClick={m => openMember(m.key)}
+        isSelected={m => m.key === openKey}
+        rowActions={m => [{ label: 'Open', icon: <ArrowSquareOut size={15} />, onClick: () => openMember(m.key) }]}
+        defaultSort={{ key: 'name', dir: 'asc' }}
+        empty={<EmptyState title="No one matches" text="Change the search." action={<Button onClick={() => setSearch('')}>Clear Search</Button>} />}
+      />
+    );
+  }
+
+  const acceptedMembers = members.filter(m => m.userId);
+  const showTeam = showGroup === 'all' || showGroup === 'team';
+  const showSubs = showGroup === 'all' || showGroup === 'subs';
+
+  return <>
+    <PageShell
+      crumbs={[
+        { label: 'Projects', href: '/app/projects' },
+        { label: ctx?.project?.name || 'Project', href: `${base}/overview` },
+        { label: 'Team' },
+      ]}
+      title="Project Team"
+      subtitle="Members, access, assignments and sub portal access."
+      actions={<Button variant="primary" icon={<UserPlus size={15} weight="bold" />} onClick={openInvite}>Invite Member</Button>}
+    >
+      <StatRow items={stats} />
+
+      <Tabs
+        tabs={[
+          { key: 'all', label: 'Everyone', count: members.length + subs.length },
+          { key: 'team', label: 'Internal Team', count: members.length },
+          { key: 'subs', label: 'Subcontractors', count: subs.length },
+        ]}
+        value={showGroup}
+        onChange={k => setShowGroup(k as Group)}
+      />
+      <Toolbar
+        search={search}
+        onSearch={setSearch}
+        placeholder="Search the roster…"
+        actions={<span style={{ fontSize: 'var(--fs-sm)', color: 'var(--text-tertiary)' }}>{(showTeam ? filteredMembers.length : 0) + (showSubs ? filteredSubs.length : 0)} of {(showTeam ? members.length : 0) + (showSubs ? subs.length : 0)}</span>}
+      />
+
+      <div style={{display:'flex',flexDirection:'column',gap:16}}>
+        {proj && <ProjectOwnershipCard projectId={projectId} project={proj} onSaved={(p)=>{ if (p && (p as any).id) setProj(p); }}/>}
+        <div id="project-directory" style={{ scrollMarginTop: 76 }}>{directoryCard}</div>
+
+        {showTeam && (
+          <div id="internal-team" style={{ scrollMarginTop: 76 }}>
+            <Card title="Internal Team" icon={<UsersThree size={17} />} flush>{teamBody}</Card>
           </div>
-        </FormModal>
-      ),
-      document.body,
+        )}
+
+        {showTeam && (
+          <Card title="Work Assignments" subtitle="Shown on each member's My Work hub" icon={<Briefcase size={17} />}>
+            {assignments.length > 0 && (
+              <div style={{display:'flex',gap:8,flexWrap:'wrap',marginBottom:16}}>
+                {assignments.map(a=>(
+                  <Badge key={a.id} tone="ongoing">
+                    {a.assignee_name || members.find(m=>m.userId===a.assignee_user_id)?.name || 'Member'} · {assignRoleLabel(a.role)}
+                    <button type="button" onClick={()=>endAssignment(a)} title="End this assignment" aria-label={`End ${assignRoleLabel(a.role)} assignment`} style={{display:'inline-flex',alignItems:'center',justifyContent:'center',width:18,height:18,marginLeft:4,padding:0,borderRadius:999,background:'transparent',border:'none',color:'inherit',cursor:'pointer'}}><X size={10} weight="bold"/></button>
+                  </Badge>
+                ))}
+              </div>
+            )}
+            {acceptedMembers.length > 0 ? (
+              <div style={{display:'flex',gap:12,alignItems:'flex-end',flexWrap:'wrap'}}>
+                <div style={{flex:'1 1 220px',minWidth:200}}>
+                  <Field label="Team Member" hint="Accepted invites only.">
+                    <Select value={composerUser} onChange={e=>setComposerUser(e.target.value)} placeholder="Choose a member…"
+                      options={acceptedMembers.map(m => ({ value: m.userId!, label: m.name }))} />
+                  </Field>
+                </div>
+                <div style={{flex:'0 1 210px',minWidth:180}}>
+                  <Field label="Assignment Role">
+                    <Select value={composerRole} onChange={e=>setComposerRole(e.target.value)} options={ASSIGN_ROLES} />
+                  </Field>
+                </div>
+                <div style={{ paddingBottom: 22 }}>
+                  <Button
+                    icon={<Briefcase size={15} weight="bold" />}
+                    onClick={()=>{const m=members.find(x=>x.userId===composerUser); assignWork(composerUser, composerRole, m?.name); setComposerUser('');}}
+                    disabled={!composerUser||assignBusy}
+                  >Assign Work</Button>
+                </div>
+              </div>
+            ) : (
+              <EmptyState title="Nobody to assign yet" text="Members can be assigned work once they accept their invite." />
+            )}
+          </Card>
+        )}
+
+        {showSubs && (
+          <Card title="Subcontractors (Portal Access)" icon={<HardHat size={17} />} actions={<Button size="sm" variant="ghost" icon={<ArrowSquareOut size={14} />} href={`${base}/subs`}>Manage Subs</Button>} flush>
+            {subs.length === 0 && !loading ? (
+              <EmptyState
+                icon={<HardHat size={22} />}
+                title="No subcontractors yet"
+                text={(ctx?.bidPackages || []).length > 0 ? `Award one of the ${ctx!.bidPackages.length} bid package${ctx!.bidPackages.length === 1 ? '' : 's'}, or add subs.` : 'Add subs or award a bid package.'}
+                action={<Button href={`${base}/subs`}>Add Subcontractors</Button>}
+              />
+            ) : (
+              <DataTable<TeamSub>
+                tableId="project-team-subs"
+                exportName="team-subcontractors"
+                columns={teamSubColumns}
+                rows={filteredSubs}
+                loading={loading}
+                rowKey={s => s.name}
+                defaultSort={{ key: 'name', dir: 'asc' }}
+                rowActions={s => [{ label: sendingPortal === s.name ? 'Working…' : 'Copy Portal Link', icon: <LinkSimple size={14} />, inline: true, onClick: () => { void handleSendPortalLink(s); }, disabled: sendingPortal === s.name }]}
+                empty={<EmptyState title="No subcontractors match" text="Change the search." action={<Button onClick={() => setSearch('')}>Clear Search</Button>} />}
+              />
+            )}
+          </Card>
+        )}
+      </div>
+    </PageShell>
+
+    {/* Invite — the keyboard's Go/Enter sends, the same as the button. */}
+    <FormModal
+      open={showInvite}
+      onClose={closeInvite}
+      title="Invite Team Member"
+      subtitle={ctx?.project?.name ? `Grants access to ${ctx.project.name}` : 'A role-scoped invitation to this project.'}
+      onSubmit={handleInvite}
+      submitLabel={inviting ? 'Sending…' : 'Send Invitation'}
+      busy={inviting}
+      error={inviteMsg && inviteMsg !== 'Invitation sent.' ? inviteMsg : null}
+    >
+      {inviteMsg === 'Invitation sent.' && (
+        <div style={{ marginBottom: 12 }}><Callout tone="success" title="Invitation sent." /></div>
+      )}
+      <FormGrid cols={3}>
+        <Field label="Email" required hint={inviteAuto.email ? 'From the project directory.' : 'Accept link expires after 7 days.'}>
+          {/* text + email keyboard: the page owns the email rule (the native bubble was easy to miss). */}
+          <Input id="tm-invite-email" type="text" inputMode="email" autoComplete="email" autoCapitalize="none" value={inviteEmail} onChange={e=>{setInviteEmail(e.target.value);setInviteAuto(a=>({...a,email:false}));if(inviteMsg&&inviteMsg!=='Invitation sent.')setInviteMsg('');}} placeholder="email@company.com" aria-required="true" aria-invalid={!!inviteMsg && inviteMsg!=='Invitation sent.' ? true : undefined}/>
+        </Field>
+        <Field label="Name" hint={inviteAuto.name ? 'From the project directory.' : undefined}>
+          <Input id="tm-invite-name" type="text" value={inviteName} onChange={e=>{setInviteName(e.target.value);setInviteAuto(a=>({...a,name:false}));}} placeholder="Full name"/>
+        </Field>
+        <Field label="Role" hint={ROLE_HINTS[inviteRole] || 'Access level for this member.'}>
+          <Select id="tm-invite-role" value={inviteRole} onChange={e=>{setInviteRole(e.target.value);setInviteAuto(a=>({...a,role:false}));}} options={INVITE_ROLES} />
+        </Field>
+      </FormGrid>
+    </FormModal>
+
+    {openRec && openRec.inviteId && recEditing && (
+      <FormModal
+        open
+        onClose={() => { if (!recBusy) setRecEditing(false); }}
+        title={`Edit invite — ${openRec.email}`}
+        subtitle="The name it was sent under and the role they get when they accept."
+        onSubmit={saveRecEdit}
+        submitLabel="Save Changes"
+        busy={recBusy}
+        error={recMsg?.bad ? recMsg.text : null}
+      >
+        <FormGrid cols={2}>
+          <Field label="Name">
+            <Input id="tm-rec-name" value={recName} onChange={e => setRecName(e.target.value)} placeholder="Full name" maxLength={120} />
+          </Field>
+          <Field label="Email" hint="To use another address, remove this invite and invite them again.">
+            <Input id="tm-rec-email" type="email" value={openRec.email} readOnly />
+          </Field>
+          <Field label="Role">
+            <Select id="tm-rec-role" value={recRole} onChange={e => setRecRole(e.target.value)} options={Array.from(new Set([...INVITE_ROLES, recRole]))} />
+          </Field>
+        </FormGrid>
+      </FormModal>
     )}
-    {openKey && !openRec && !loading && typeof document !== 'undefined' && createPortal(
-      <FormModal open onClose={closeMember} title="Not on this job any more" footer={<Button variant="ghost" onClick={closeMember}>Close</Button>}>
-        <p style={{ margin: 0, color: DIM, fontSize: 14, lineHeight: 1.55 }}>That person or invite isn’t on this job’s roster now — the invite may have been accepted, removed or expired.</p>
-      </FormModal>,
-      document.body,
+    {openRec && !(openRec.inviteId && recEditing) && (
+      <FormModal
+        open
+        onClose={closeMember}
+        title={openRec.name}
+        subtitle={openRec.inviteId ? `Invited ${fmtDay(openRec.since)} — not accepted yet` : `On this job${openRec.since ? ` since ${fmtDay(openRec.since)}` : ''}`}
+        footer={(
+          <>
+            {recMsg && <span className={recMsg.bad ? 'k-error' : 'k-hint'} role={recMsg.bad ? 'alert' : 'status'} style={{ marginRight: 'auto', alignSelf: 'center' }}>{recMsg.text}</span>}
+            <Button variant="ghost" onClick={closeMember}>Close</Button>
+            {openRec.inviteId ? (<>
+              <Button variant="danger" onClick={() => { void removeRecInvite(); }} disabled={recBusy}>Remove Invite</Button>
+              <Button variant="secondary" onClick={() => { void resendRec(); }} disabled={recBusy}>{recBusy ? 'Working…' : 'Resend Invite'}</Button>
+              <Button variant="primary" onClick={() => startRecEdit(openRec)} disabled={recBusy}>Edit</Button>
+            </>) : (
+              <Button variant="primary" href="/app/people?tab=access">Manage Access in People</Button>
+            )}
+          </>
+        )}
+      >
+        <DetailList items={[
+          ['Email', openRec.email || '—'],
+          [openRec.inviteId ? 'Role When They Accept' : 'Role', openRec.role || 'Member'],
+          ...(!openRec.inviteId ? [
+            ['Company', openRec.company || '—'],
+            ['Phone', openRec.phone || '—'],
+            ['Work Assignments', assignmentsFor(openRec.userId).map(a => assignRoleLabel(a.role)).join(', ') || 'None yet'],
+          ] as [string, React.ReactNode][] : []),
+          ['Status', <Badge key="st" tone={openRec.inviteId ? 'under_contract' : 'ongoing'}>{openRec.last}</Badge>],
+        ]} />
+      </FormModal>
     )}
-  </PremiumSurface>;
+    {openKey && !openRec && !loading && (
+      <FormModal open onClose={closeMember} size="sm" title="Not on this job any more" footer={<Button variant="ghost" onClick={closeMember}>Close</Button>}>
+        <p style={{ margin: 0, color: 'var(--text-secondary)', fontSize: 14, lineHeight: 1.55 }}>That person or invite isn’t on this job’s roster now — the invite may have been accepted, removed or expired.</p>
+      </FormModal>
+    )}
+    <Toast message={toast?.message ?? null} tone={toast?.tone} />
+  </>;
 }
