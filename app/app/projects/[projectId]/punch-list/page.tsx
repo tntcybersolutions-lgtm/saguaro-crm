@@ -34,14 +34,13 @@ function asCreateBody(row: Record<string, any>, projectId: string) {
 import { SUB_TRADES } from '@/lib/construction-intelligence';
 import {
   CheckCircle, Check, MapPin, User, X, ArrowUUpLeft, Plus, WarningCircle, ListChecks, Camera,
-  PencilSimple, Trash, ArrowClockwise, Lightning, ArrowSquareOut,
+  PencilSimple, Trash, ArrowClockwise, Lightning, ArrowSquareOut, Wrench, Warning,
 } from '@phosphor-icons/react';
 import {
   PageShell, Card, StatRow, Badge, Button, Toolbar, DataTable, EmptyState, RowActions,
   FormModal, Field, Input, Textarea, Select, FormGrid, DetailList, Toast, useToast,
   type Column, type Action, type BadgeTone, type StatItem,
 } from '@/components/ui/kit';
-import { AutoChip, FlowSteps } from '@/components/ui/premium';
 import RadioEvidence, {
   RadioEvidenceChip,
   radioEvidenceFromRecord,
@@ -143,7 +142,6 @@ const CSS = `
 .plBarFill { height: 100%; border-radius: 3px; background: var(--status-ongoing); transition: width .4s; }
 .plBar b { color: var(--text-primary); font-variant-numeric: tabular-nums; }
 .plHint { display: flex; align-items: flex-start; gap: 6px; }
-.plFlow { border: 1px solid var(--border-default); border-radius: var(--radius-sm); padding: 14px 16px; background: var(--bg-surface-2); margin-top: 16px; }
 .plDateInput { width: 100%; }
 @media (max-width: 640px) {
   .plWs .k-btn, .plWs .k-stat, .plWs select.k-select, .plWs .k-input { min-height: 44px; }
@@ -439,16 +437,16 @@ export default function PunchListPage(){
   // ── Stat tiles: each opens the log filtered to that slice ──
   const stats: StatItem[] = loading
     ? [
-        { label:'Open', value:'—', sub:'Loading…' },
-        { label:'In Progress', value:'—', sub:'Loading…' },
-        { label:'Completed', value:'—', sub:'Loading…' },
-        { label:'Critical Open', value:'—', sub:'Loading…' },
+        { label:'Open', value:'—', sub:'Loading…', icon:<ListChecks size={15}/> },
+        { label:'In Progress', value:'—', sub:'Loading…', icon:<Wrench size={15}/> },
+        { label:'Completed', value:'—', sub:'Loading…', icon:<CheckCircle size={15}/> },
+        { label:'Critical Open', value:'—', sub:'Loading…', icon:<Warning size={15}/> },
       ]
     : [
-        { label:'Open', value:openCount, sub: filterStatus==='open' ? 'Filtered — click to clear' : late>0 ? `${late} past due` : 'On the list now', onClick:()=>toggleStatus('open') },
-        { label:'In Progress', value:inProg, tone: inProg>0 ? 'warn' : 'default', sub: filterStatus==='in_progress' ? 'Filtered — click to clear' : 'Being corrected', onClick:()=>toggleStatus('in_progress') },
-        { label:'Completed', value:done, tone: done>0 ? 'good' : 'default', sub: filterStatus==='completed' ? 'Filtered — click to clear' : `${pct}% of ${items.length} item${items.length===1?'':'s'}`, onClick:()=>toggleStatus('completed') },
-        { label:'Critical Open', value:crit, tone: crit>0 ? 'bad' : 'default', sub: filterPriority==='critical' ? 'Filtered — click to clear' : crit>0 ? 'Needs attention first' : 'None open', onClick:()=>setFilterPriority(p => (p==='critical' ? 'all' : 'critical')) },
+        { label:'Open', value:openCount, sub: filterStatus==='open' ? 'Filtered — click to clear' : late>0 ? `${late} past due` : 'On the list now', onClick:()=>toggleStatus('open'), active:filterStatus==='open', icon:<ListChecks size={15}/> },
+        { label:'In Progress', value:inProg, tone: inProg>0 ? 'warn' : 'default', sub: filterStatus==='in_progress' ? 'Filtered — click to clear' : 'Being corrected', onClick:()=>toggleStatus('in_progress'), active:filterStatus==='in_progress', icon:<Wrench size={15}/> },
+        { label:'Completed', value:done, tone: done>0 ? 'good' : 'default', sub: filterStatus==='completed' ? 'Filtered — click to clear' : `${pct}% of ${items.length} item${items.length===1?'':'s'}`, onClick:()=>toggleStatus('completed'), active:filterStatus==='completed', icon:<CheckCircle size={15}/> },
+        { label:'Critical Open', value:crit, tone: crit>0 ? 'bad' : 'default', sub: filterPriority==='critical' ? 'Filtered — click to clear' : crit>0 ? 'Needs attention first' : 'None open', onClick:()=>setFilterPriority(p => (p==='critical' ? 'all' : 'critical')), active:filterPriority==='critical', icon:<Warning size={15}/> },
       ];
 
   // ── Log columns: full log, or a compact log beside the item ──
@@ -470,7 +468,7 @@ export default function PunchListPage(){
     );
   };
   const titleCol: Column<any> = {
-    key:'title', header:'Item', accessor:i=>(i.title||i.description||'').toLowerCase(),
+    key:'title', header:'Item', primary:true, phone:'show', accessor:i=>i.title||i.description||'',
     render:i=>{
       // Filed from a radio transmission? punch_list has no jsonb column, so the
       // provenance rides as the readable block in `notes` — which the list route returns in full.
@@ -484,18 +482,18 @@ export default function PunchListPage(){
       );
     },
   };
-  const priorityCol: Column<any> = { key:'priority', header:'Priority', accessor:i=>PR_RANK[prKey(i.priority)]??9, render:i=>{const b=priorityBadge(i.priority);return <Badge tone={b.tone}>{b.label}</Badge>;} };
-  const statusCol: Column<any> = { key:'status', header:'Status', accessor:i=>STATUS_RANK[i.status]??9, render:i=>{
+  const priorityCol: Column<any> = { key:'priority', header:'Priority', phone:'show', accessor:i=>PR_RANK[prKey(i.priority)]??9, render:i=>{const b=priorityBadge(i.priority);return <Badge tone={b.tone}>{b.label}</Badge>;} };
+  const statusCol: Column<any> = { key:'status', header:'Status', phone:'show', accessor:i=>STATUS_RANK[i.status]??9, render:i=>{
     const b=statusBadge(i.status);
     if(!i._offline) return <Badge tone={b.tone}>{b.label}</Badge>;
     return <span style={{display:'inline-flex',gap:6,flexWrap:'wrap'}} title={i._offlineError?`Couldn't send: ${i._offlineError}`:"Saved on this phone — it sends when you're back online."}>
       <Badge tone={b.tone}>{b.label}</Badge><Badge tone={i._offlineError?'overdue':'gold'}>{i._offlineError?"Couldn't Send":'On This Phone'}</Badge>
     </span>;
   } };
-  const tradeCol: Column<any> = { key:'trade', header:'Trade', accessor:i=>(i.trade||'').toLowerCase(), render:i=>i.trade?<span>{i.trade}</span>:<span className="plMuted">—</span> };
-  const locationCol: Column<any> = { key:'location', header:'Location', accessor:i=>(i.location||'').toLowerCase(), render:i=>i.location?<span style={{display:'inline-flex',alignItems:'center',gap:4}}><MapPin size={12}/>{i.location}</span>:<span className="plMuted">—</span> };
+  const tradeCol: Column<any> = { key:'trade', header:'Trade', phone:'hide', accessor:i=>(i.trade||'').toLowerCase(), render:i=>i.trade?<span>{i.trade}</span>:<span className="plMuted">—</span> };
+  const locationCol: Column<any> = { key:'location', header:'Location', phone:'hide', accessor:i=>(i.location||'').toLowerCase(), render:i=>i.location?<span style={{display:'inline-flex',alignItems:'center',gap:4}}><MapPin size={12}/>{i.location}</span>:<span className="plMuted">—</span> };
   const assignedCol: Column<any> = { key:'assigned_to', header:'Assigned To', accessor:i=>(i.assigned_to||'').toLowerCase(), render:i=>i.assigned_to?<span style={{color:'var(--text-primary)'}}>{i.assigned_to}</span>:<span className="plMuted">Unassigned</span> };
-  const dueCol: Column<any> = { key:'due_date', header:'Due', accessor:i=>i.due_date||'', render:i=><span className={isLate(i)?'plLate':undefined}>{fmtDate(i.due_date)}</span> };
+  const dueCol: Column<any> = { key:'due_date', header:'Due', phone:'show', accessor:i=>i.due_date||'', render:i=><span className={isLate(i)?'plLate':undefined}>{fmtDate(i.due_date)}</span> };
   const columns: Column<any>[] = (selected && mode!=='create')
     ? [titleCol, priorityCol, statusCol, dueCol]
     : [titleCol, priorityCol, statusCol, tradeCol, locationCol, assignedCol, dueCol];
@@ -644,6 +642,10 @@ export default function PunchListPage(){
           loading={loading}
           onRowClick={viewItem}
           rowActions={itemActions}
+          tableId="project-punch-list"
+          exportName="punch-list"
+          defaultSort={{ key:'status', dir:'asc' }}
+          isSelected={isSel}
           empty={
             <EmptyState
               icon={<CheckCircle size={22}/>}
@@ -774,7 +776,7 @@ export default function PunchListPage(){
           </Field>
           <Field
             label="Assigned To"
-            hint={<>{autoAssign&&<AutoChip/>}{autoAssign?` Awarded ${form.trade} sub — change freely.`:(ctx?.subs?.length?`${ctx.subs.length} subs on the roster — pick or type anyone.`:'No subs awarded yet — type a name.')}</>}
+            hint={autoAssign?`Awarded ${form.trade} sub — change freely.`:(ctx?.subs?.length?`${ctx.subs.length} subs on the roster — pick or type anyone.`:'No subs awarded yet — type a name.')}
           >
             {assignOther?(
               <Input value={form.assigned_to} autoFocus onChange={e=>setForm(f=>({...f,assigned_to:e.target.value}))} placeholder="Subcontractor or person"/>
@@ -794,22 +796,13 @@ export default function PunchListPage(){
               />
             )}
           </Field>
-          <Field label="Due Date" hint={mode==='create' ? <>{autoDue&&<AutoChip/>} Defaulted to +7 days — standard punch turnaround.</> : undefined}>
+          <Field label="Due Date" hint={mode==='create' && autoDue ? 'Defaulted to +7 days.' : undefined}>
             <div className="plDateInput"><SaguaroDatePicker value={form.due_date} onChange={v=>{setAutoDue(false);setForm(f=>({...f,due_date:v}));}} style={DATE_INPUT_STYLE}/></div>
           </Field>
-          <Field label="Notes" span hint={<span className="plHint"><Camera size={13} style={{flexShrink:0,marginTop:1}}/><span>Snap photos in Field Mode — documented deficiencies get corrected without a return trip.</span></span>}>
+          <Field label="Notes" span hint={<span className="plHint"><Camera size={13} style={{flexShrink:0,marginTop:1}}/><span>Add photos from Field Mode.</span></span>}>
             <Textarea value={form.notes} onChange={e=>setForm(f=>({...f,notes:e.target.value}))} rows={3} placeholder="Additional notes, photos needed, etc."/>
           </Field>
         </FormGrid>
-        {mode==='create'&&(
-          <div className="plFlow">
-            <FlowSteps title="After You Add" steps={[
-              {title:'Lands on the Punch Log',desc:'Counted against open items and overall completion instantly.'},
-              {title:'Assigned Sub Sees It in Field Mode',desc:form.assigned_to?`${form.assigned_to} gets it on their filtered field list.`:'Assign a sub and it shows on their filtered field list.'},
-              {title:'Check-Off Rolls Up Closeout',desc:'Completion climbs live — critical items surface first.'},
-            ]}/>
-          </div>
-        )}
       </FormModal>
 
       {/* Above the FormModal overlay so the unsaved-work prompt is never hidden behind it. */}
