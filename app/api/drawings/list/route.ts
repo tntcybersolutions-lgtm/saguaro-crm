@@ -20,6 +20,7 @@ export async function GET(req: NextRequest) {
       .from('drawings')
       .select('*')
       .eq('tenant_id', user.tenantId)
+      .is('deleted_at', null)
       .order('sheet_number', { ascending: true })
       .limit(1000);
     if (projectId) query = query.eq('project_id', projectId);

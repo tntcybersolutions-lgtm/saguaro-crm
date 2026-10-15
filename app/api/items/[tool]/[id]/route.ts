@@ -8,6 +8,7 @@ import { loadItem } from '@/lib/items/server';
 import { pickEditable } from '@/lib/items/registry';
 import { apiError } from '@/lib/api-error';
 import { signStoredUrl, signFields } from '@/lib/storage-signing';
+import { pinEntityFor } from '@/lib/drawing-revisions';
 
 export const dynamic = 'force-dynamic';
 
@@ -39,10 +40,22 @@ export async function GET(req: NextRequest, { params }: { params: Promise<{ tool
       const [signed] = await signFields([{ u: l.item[docKey] } as Record<string, unknown>], ['u']);
       files.unshift({ id: `doc-${docKey}`, name: `${l.tool.noun} document (PDF)`, size: null, kind: 'document', by: null, at: (l.item.executed_at ?? l.item.created_at) as unknown, url: (signed?.u as string) || null });
     }
+    // Where this item is pinned on the job's drawings.
+    const { data: pinRows } = await l.db.from('drawing_pins').select('id, drawing_id, page_number').eq('tenant_id', l.user.tenantId)
+      .eq('entity_id', id).in('entity_type', Array.from(new Set([pinEntityFor(l.tool.type), l.tool.type, ...(l.tool.type === 'punch_list' ? ['punch'] : [])])));
+    const dIds = Array.from(new Set(((pinRows || []) as { drawing_id: string }[]).map((p) => p.drawing_id).filter(Boolean)));
+    const { data: dRows } = dIds.length
+      ? await l.db.from('drawings').select('id, name, sheet_number, version, status').eq('tenant_id', l.user.tenantId).in('id', dIds).is('deleted_at', null)
+      : { data: [] as Record<string, unknown>[] };
+    const drawings = ((dRows || []) as Record<string, unknown>[]).map((d) => ({
+      id: d.id, sheet: d.sheet_number, name: d.name, version: d.version, status: d.status,
+      pins: ((pinRows || []) as { drawing_id: string }[]).filter((p) => p.drawing_id === d.id).length,
+      href: `/app/projects/${pid}/drawings/${d.id}`,
+    }));
     // Never hand back the e-sign token or signer IP — the signing link is sent from the contracts screen.
     const item = { ...l.item };
     for (const k of ['signing_token', 'sub_sign_ip', 'html_content']) delete item[k];
-    return NextResponse.json({ item, project, files });
+    return NextResponse.json({ item, project, files, drawings });
   } catch (e) {
     return apiError(`items/${type}`, e);
   }

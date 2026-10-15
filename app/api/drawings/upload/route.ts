@@ -4,6 +4,7 @@ import { requirePermission } from '@/lib/permissions';
 import { apiError } from '@/lib/api-error';
 import { revisionDateValue } from '@/lib/drawing-register';
 import { requestDay } from '@/lib/time-zone';
+import { sheetKey, nextRevision } from '@/lib/drawing-revisions';
 
 export const dynamic = 'force-dynamic';
 
@@ -24,6 +25,8 @@ export async function POST(req: NextRequest) {
 
     const filename = file?.name || `drawing-${Date.now()}`;
     const db = createServerClient();
+    const { data: project } = await db.from('projects').select('id').eq('id', projectId).eq('tenant_id', user.tenantId).maybeSingle();
+    if (!project) return NextResponse.json({ error: 'Project not found' }, { status: 404 });
 
     let url = '';
     if (file) {
@@ -73,12 +76,23 @@ export async function POST(req: NextRequest) {
     // Optional metadata if the client supplies it.
     const notes = field('notes');
     if (notes) row.notes = notes;
+    // Same sheet number on this job = a new revision of that sheet: it becomes
+    // current, earlier ones are superseded, and the revision number counts up.
+    const { data: same } = await db.from('drawings').select('id, sheet_number, version, status')
+      .eq('tenant_id', user.tenantId).eq('project_id', projectId).is('deleted_at', null);
+    const earlier = ((same || []) as { id: string; sheet_number: string | null; version: string | null; status: string | null }[])
+      .filter((d) => sheetKey(d.sheet_number) === sheetKey(sheetNumber));
     const version = field('version', 'revision');
-    if (version) row.version = version;
+    row.version = version || (earlier.length ? nextRevision(earlier.map((d) => d.version)) : '1');
 
     const { data: dbData, error } = await db.from('drawings').insert(row as never).select().single();
     if (error) throw error;
-    return NextResponse.json({ success: true, drawing: dbData, url });
+    const supersede = earlier.filter((d) => d.status !== 'void').map((d) => d.id);
+    if (supersede.length) {
+      const { error: supErr } = await db.from('drawings').update({ status: 'superseded' } as never).in('id', supersede).eq('tenant_id', user.tenantId);
+      if (supErr) throw supErr;
+    }
+    return NextResponse.json({ success: true, drawing: dbData, url, revisionOf: earlier.length ? sheetNumber : null, superseded: supersede.length });
   } catch (err: unknown) {
     return apiError('drawings/upload', err, 'Failed to upload drawing. Please try again.');
   }

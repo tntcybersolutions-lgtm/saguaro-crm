@@ -522,6 +522,7 @@ export default function DrawingsPage(){
     ):<span style={{fontSize:12,color:'var(--text-tertiary)'}}>No File</span>)},
   ];
   const rowActions=(d:any)=>[
+    {label:'Pins & Revisions',href:`/app/projects/${projectId}/drawings/${d.id}`},
     {label:'Open on Canvas',onClick:()=>viewDrawing(d)},
     {label:'Edit',onClick:()=>openEdit(d)},
     {label:'Upload New Revision',onClick:()=>openNewRevision(d)},
@@ -896,7 +897,7 @@ export default function DrawingsPage(){
             <div style={{display:'flex',flexDirection:'column',gap:14}}>
               {mode==='create'&&replacing&&(
                 <div style={{background:'rgba(251,191,36,0.10)',border:'1px solid rgba(251,191,36,0.40)',borderRadius:10,padding:'10px 12px',fontSize:13,color:TEXT,lineHeight:1.5}}>
-                  Replacing <strong>{sheetNo(replacing)||'this sheet'} R{revOf(replacing)}</strong> — this files as R{Number(form.revision)||0}. The earlier revision stays on record; edit it to mark it superseded once the new one is in.
+                  Replacing <strong>{sheetNo(replacing)||'this sheet'} R{revOf(replacing)}</strong> — this files as R{Number(form.revision)||0}. It becomes the current sheet; the earlier revision stays on record, marked superseded.
                 </div>
               )}
               {mode==='create'&&(
@@ -979,7 +980,7 @@ export default function DrawingsPage(){
                   <FlowSteps title="What Happens Next" steps={[
                     {title:'Sheet Files Itself',desc:'Lands under its discipline, sorted by sheet number.'},
                     {title:'The Team Works the Current Set',desc:'Field crews and subs build from sheets marked current.'},
-                    {title:'Revisions Supersede Cleanly',desc:'When the next rev lands, mark this one superseded — it stays on record.'},
+                    {title:'Revisions Supersede Cleanly',desc:'Upload the next rev with the same sheet number — it becomes current and this one is marked superseded, kept on record.'},
                   ]}/>
                 </div>
               )}
