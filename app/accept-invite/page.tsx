@@ -24,6 +24,7 @@ interface Invite {
   valid: boolean;
   reason: Reason;
   email: string;
+  name?: string | null;
   role: string;
   company: string;
   inviterName: string;
@@ -87,7 +88,7 @@ export default function AcceptInvitePage() {
           fetch('/api/auth/me', { credentials: 'include' }),
         ]);
         const inviteData = await inviteRes.json().catch(() => null);
-        if (inviteData) setInvite(inviteData);
+        if (inviteData) { setInvite(inviteData); if (inviteData.name) setFullName(String(inviteData.name)); }
         else setInvite({ valid: false, reason: 'error' } as Invite);
         if (meRes.ok) setMe(await meRes.json().catch(() => null));
       } catch {
