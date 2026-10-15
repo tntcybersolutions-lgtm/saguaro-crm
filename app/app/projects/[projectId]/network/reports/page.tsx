@@ -169,7 +169,7 @@ export default function ReportsPage() {
         </>
       }
     >
-      <style>{CSS}</style>
+      <style dangerouslySetInnerHTML={{ __html: CSS }} />
       <NetworkTabs projectId={projectId} value="reports" />
 
       {loadError ? (

@@ -293,7 +293,7 @@ function IntelligenceChat() {
         </Button>
       }
     >
-      <style>{PAGE_CSS}</style>
+      <style dangerouslySetInnerHTML={{ __html: PAGE_CSS }} />
 
       {/* What the AI already knows - live numbers from the project snapshot */}
       {ctx && <StatRow items={stats} />}
