@@ -1,62 +1,147 @@
 'use client';
 /**
- * Drawing workspace — one sheet, full height.
+ * Drawing workspace — a markup tool, not a picture viewer.
  *
- *   sheets rail (search, by discipline) | the sheet + floating toolbar | pins · revisions · info
+ *  ┌ top bar: sheet ◂ ▸ · revision · zoom · fit · full screen · download · upload ┐
+ *  │ tools │ properties (color · weight) ......................................... │
+ *  │ palette│                    the sheet                          │ Markups / Pins │
+ *  │        │   (markups as SVG over the render, pins on top)       │ Revisions      │
+ *  └ status: page · zoom · scale · markups · saved ────────────────────────────────┘
  *
- * Tools: Pan (drag to move, Ctrl/⌘ + wheel to zoom), RFI pin, Punch pin, Note
- * pin. Dropping an RFI or punch pin offers "Create here" (writes the RFI or
- * punch item with this sheet as its location, then pins it) or linking one
- * that already exists. Layers show/hide pin kinds. Compare overlays any older
- * revision: ink only on the old sheet shows red (removed), only on this one
- * green (added), on both stays dark.
+ * Markups save one row each to drawing_markups (B1 contract: space 'image',
+ * w/h = a 1000-wide reference, geometry in those units) and every person on
+ * the job sees them. Measure uses the sheet's scale, set once with Calibrate.
+ * Pins (RFI / punch / note) create or link real items.
  *
- * Reads   GET  /api/drawings/:id/sheet · /api/drawings/list · /api/items/search
- * Writes  POST/DELETE /api/drawings/:id/pins · POST /api/rfis/create ·
- *         POST /api/punch-list/create · POST /api/drawings/upload
+ * Reads   /api/drawings/:id/sheet · /api/drawings/list · /api/projects/:p/drawings/markups
+ * Writes  markups POST/DELETE · pins POST/DELETE · /api/rfis/create ·
+ *         /api/punch-list/create · /api/drawings/upload
  */
 import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import Link from 'next/link';
 import { useParams, useRouter } from 'next/navigation';
 import { Badge, Button, EmptyState, type BadgeTone } from '@/components/ui/kit';
 import {
-  Hand, Question, Wrench, NotePencil, MagnifyingGlassPlus, MagnifyingGlassMinus, ArrowsOut, CaretLeft, CaretRight,
-  UploadSimple, Stack, X, Trash, ArrowSquareOut, WarningCircle, ClockCounterClockwise, MagnifyingGlass,
-  SquareHalf, CheckCircle, Files, Info, MapPin, Plus, LinkSimple, SidebarSimple,
+  Cursor, Hand, PencilSimple, Highlighter, LineSegment, ArrowUpRight, Square, Circle, Cloud, TextT,
+  Ruler, Crosshair, Polygon, Hash, Question, Wrench, NotePencil, Eraser, CaretLeft, CaretRight, CaretDown,
+  ArrowsOut, CornersOut, DownloadSimple, UploadSimple, X, Trash, Eye, EyeSlash, ArrowSquareOut,
+  WarningCircle, ClockCounterClockwise, SquareHalf, CheckCircle, ArrowCounterClockwise, MapPin, LinkSimple, Plus,
 } from '@phosphor-icons/react';
 
+/* ── types ─────────────────────────────────────────────────────────────── */
 type Item = { type: string; id: string; noun: string; name: string; status: string; closed?: boolean; href: string };
-type Pin = { id: string; x: number; y: number; page: number; title: string | null; description: string | null; status: string | null; item: Item | null; created_at: string };
-type Rev = { id: string; version: string | null; status: string | null; revision_date: string | null; created_at: string; name: string | null; url: string | null; isPdf: boolean };
+type Pin = { id: string; x: number; y: number; page: number; title: string | null; description: string | null; item: Item | null; created_at: string };
+type Rev = { id: string; version: string | null; status: string | null; revision_date: string | null; created_at: string; url: string | null; isPdf: boolean };
 type Sheet = {
   drawing: { id: string; name: string; sheet_number: string; discipline: string | null; version: string | null; status: string | null; revision_date: string | null; url: string; isPdf: boolean };
   project: { id: string; name: string } | null;
   revisions: Rev[];
   pins: Pin[];
 };
-type ListRow = { id: string; sheet_number: string; title: string; discipline: string | null; status: string | null; revision: string | null };
-type Hit = { type: string; id: string; noun: string; name: string; status: string };
-type Tool = 'pan' | 'rfi' | 'punch' | 'note';
-type Kind = 'rfi' | 'punch' | 'note' | 'other';
+type ListRow = { id: string; sheet_number: string; title: string; discipline: string | null; status: string | null };
+type Hit = { type: string; id: string; name: string; status: string };
+type Pt = [number, number];
+type MStyle = { color: string; width: number; opacity?: number; head?: boolean };
+type MData = { space: 'image'; w: number; h: number; style: MStyle; geometry: Pt[]; text?: string; ftPerUnit?: number; feet?: number; kind?: 'scale' | 'count' | 'area'; sqft?: number };
+type Markup = { id: string; markup_type: string; data: MData; page_number: number | null; color: string; created_by: string; created_by_name: string | null; created_at: string };
 
-const KIND_OF = (p: Pin): Kind => (!p.item ? 'note' : p.item.type === 'rfis' ? 'rfi' : p.item.type === 'punch_list' ? 'punch' : 'other');
-const KIND_LABEL: Record<Kind, string> = { rfi: 'RFIs', punch: 'Punch', note: 'Notes', other: 'Other items' };
+type Tool = 'select' | 'pan' | 'pen' | 'highlight' | 'line' | 'arrow' | 'rect' | 'ellipse' | 'cloud' | 'text' | 'measure' | 'area' | 'count' | 'calibrate' | 'rfi' | 'punch' | 'note' | 'erase';
+const DRAW_TOOLS: Tool[] = ['pen', 'highlight', 'line', 'arrow', 'rect', 'ellipse', 'cloud', 'text', 'measure', 'area', 'count', 'calibrate'];
+const PIN_TOOLS: Tool[] = ['rfi', 'punch', 'note'];
+
+/* Redline colors: red is the industry markup color; the rest separate trades. */
+const SWATCHES = [
+  { c: 'rgb(239,68,68)', n: 'Red' }, { c: 'rgb(245,158,11)', n: 'Amber' }, { c: 'rgb(34,197,94)', n: 'Green' },
+  { c: 'rgb(217,70,239)', n: 'Magenta' }, { c: 'rgb(232,255,42)', n: 'Neon' }, { c: 'rgb(15,23,42)', n: 'Ink' },
+];
+const WEIGHTS = [{ w: 2, n: 'Fine' }, { w: 4, n: 'Medium' }, { w: 7, n: 'Bold' }];
+const REF_W = 1000;
+
+const TOOL_GROUPS: { tools: { k: Tool; label: string; key?: string; icon: React.ReactNode }[] }[] = [
+  { tools: [
+    { k: 'select', label: 'Select', key: 'V', icon: <Cursor size={19} /> },
+    { k: 'pan', label: 'Pan', key: 'H', icon: <Hand size={19} /> },
+  ] },
+  { tools: [
+    { k: 'pen', label: 'Pen', key: 'P', icon: <PencilSimple size={19} /> },
+    { k: 'highlight', label: 'Highlighter', key: 'I', icon: <Highlighter size={19} /> },
+    { k: 'line', label: 'Line', key: 'L', icon: <LineSegment size={19} /> },
+    { k: 'arrow', label: 'Arrow', key: 'A', icon: <ArrowUpRight size={19} /> },
+    { k: 'rect', label: 'Rectangle', key: 'R', icon: <Square size={19} /> },
+    { k: 'ellipse', label: 'Ellipse', key: 'E', icon: <Circle size={19} /> },
+    { k: 'cloud', label: 'Revision cloud', key: 'C', icon: <Cloud size={19} /> },
+    { k: 'text', label: 'Text', key: 'T', icon: <TextT size={19} /> },
+  ] },
+  { tools: [
+    { k: 'measure', label: 'Measure length', key: 'M', icon: <Ruler size={19} /> },
+    { k: 'area', label: 'Measure area', key: 'G', icon: <Polygon size={19} /> },
+    { k: 'count', label: 'Count', key: 'N', icon: <Hash size={19} weight="bold" /> },
+    { k: 'calibrate', label: 'Set scale', icon: <Crosshair size={19} /> },
+  ] },
+  { tools: [
+    { k: 'rfi', label: 'RFI pin', icon: <Question size={19} weight="bold" /> },
+    { k: 'punch', label: 'Punch pin', icon: <Wrench size={19} weight="bold" /> },
+    { k: 'note', label: 'Note pin', icon: <NotePencil size={19} weight="bold" /> },
+  ] },
+  { tools: [{ k: 'erase', label: 'Eraser', key: 'X', icon: <Eraser size={19} /> }] },
+];
+const TOOL_LABEL = Object.fromEntries(TOOL_GROUPS.flatMap((g) => g.tools.map((t) => [t.k, t.label]))) as Record<Tool, string>;
+
 const statusTone = (s: string | null): BadgeTone => (s === 'current' ? 'ongoing' : s === 'superseded' ? 'closed' : s === 'void' ? 'overdue' : 'neutral');
 const label = (s: string | null) => { const t = (s || '').replace(/_/g, ' '); return t ? t.charAt(0).toUpperCase() + t.slice(1) : '—'; };
 const day = (d: string | null) => (d ? new Date(d.length <= 10 ? `${d}T12:00:00` : d).toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' }) : '—');
+const pinKind = (p: Pin) => (!p.item ? 'note' : p.item.type === 'rfis' ? 'rfi' : p.item.type === 'punch_list' ? 'punch' : 'other');
+const dist = (a: Pt, b: Pt) => Math.hypot(a[0] - b[0], a[1] - b[1]);
 
-function KindIcon({ k, size = 14 }: { k: Kind; size?: number }) {
-  if (k === 'rfi') return <Question size={size} weight="bold" />;
-  if (k === 'punch') return <Wrench size={size} weight="bold" />;
-  if (k === 'note') return <NotePencil size={size} weight="bold" />;
-  return <MapPin size={size} weight="bold" />;
+/** 12.5 → 12'-6" */
+function feetIn(ft: number): string {
+  if (!Number.isFinite(ft)) return '—';
+  const totalIn = Math.round(ft * 12 * 4) / 4;
+  const f = Math.floor(totalIn / 12);
+  const i = +(totalIn - f * 12).toFixed(2);
+  return `${f}'-${i}"`;
+}
+/** "12' 6"", "12-6", "12.5", "150in" → feet */
+function parseFeet(s: string): number | null {
+  const t = s.trim().toLowerCase();
+  const m = t.match(/^(\d+(?:\.\d+)?)\s*(?:'|ft|feet)?\s*[- ]?\s*(?:(\d+(?:\.\d+)?)\s*(?:"|in|inches)?)?$/);
+  if (/^\d+(\.\d+)?\s*(in|")$/.test(t)) return parseFloat(t) / 12;
+  if (!m) return null;
+  const v = parseFloat(m[1]) + (m[2] ? parseFloat(m[2]) / 12 : 0);
+  return v > 0 ? v : null;
 }
 
-/** Render one PDF page (or image) into a canvas at a given CSS width. */
-async function drawSource(url: string, isPdf: boolean, page: number, cssWidth: number, canvas: HTMLCanvasElement): Promise<number> {
+/** Shoelace area of a polygon in reference units². */
+function polyArea(pts: Pt[]): number {
+  let a = 0;
+  for (let i = 0; i < pts.length; i++) { const [x1, y1] = pts[i], [x2, y2] = pts[(i + 1) % pts.length]; a += x1 * y2 - x2 * y1; }
+  return Math.abs(a) / 2;
+}
+const sqftLabel = (v: number) => `${Math.round(v).toLocaleString('en-US')} sq ft`;
+
+/** A scalloped revision cloud around a rectangle. */
+function cloudPath(a: Pt, b: Pt, w: number): string {
+  const [x0, x1] = [Math.min(a[0], b[0]), Math.max(a[0], b[0])];
+  const [y0, y1] = [Math.min(a[1], b[1]), Math.max(a[1], b[1])];
+  const r = Math.max(6, w * 3);
+  const edge = (sx: number, sy: number, ex: number, ey: number) => {
+    const len = Math.hypot(ex - sx, ey - sy);
+    const n = Math.max(1, Math.round(len / (r * 2)));
+    let d = '';
+    for (let i = 1; i <= n; i++) {
+      const px = sx + ((ex - sx) * i) / n, py = sy + ((ey - sy) * i) / n;
+      d += ` A ${len / n / 2} ${len / n / 2} 0 0 1 ${px} ${py}`;
+    }
+    return d;
+  };
+  return `M ${x0} ${y0}${edge(x0, y0, x1, y0)}${edge(x1, y0, x1, y1)}${edge(x1, y1, x0, y1)}${edge(x0, y1, x0, y0)} Z`;
+}
+
+/** Render one PDF page (or image) into a canvas at a CSS width; returns page count and aspect. */
+async function drawSource(url: string, isPdf: boolean, page: number, cssWidth: number, canvas: HTMLCanvasElement): Promise<{ pages: number; aspect: number }> {
   const dpr = Math.min(window.devicePixelRatio || 1, 2);
   const ctx = canvas.getContext('2d');
-  if (!ctx) return 1;
+  if (!ctx) return { pages: 1, aspect: 1 };
   if (isPdf) {
     const pdfjs = await import('pdfjs-dist');
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
@@ -69,17 +154,17 @@ async function drawSource(url: string, isPdf: boolean, page: number, cssWidth: n
     canvas.width = vp.width; canvas.height = vp.height;
     canvas.style.width = `${vp.width / dpr}px`; canvas.style.height = `${vp.height / dpr}px`;
     await p.render({ canvasContext: ctx, viewport: vp }).promise;
-    return doc.numPages;
+    return { pages: doc.numPages, aspect: base.height / base.width };
   }
   const img = await new Promise<HTMLImageElement>((res, rej) => { const i = new Image(); i.crossOrigin = 'anonymous'; i.onload = () => res(i); i.onerror = rej; i.src = url; });
-  const h = (cssWidth / img.naturalWidth) * img.naturalHeight;
-  canvas.width = cssWidth * dpr; canvas.height = h * dpr;
-  canvas.style.width = `${cssWidth}px`; canvas.style.height = `${h}px`;
+  const aspect = img.naturalHeight / img.naturalWidth;
+  canvas.width = cssWidth * dpr; canvas.height = cssWidth * aspect * dpr;
+  canvas.style.width = `${cssWidth}px`; canvas.style.height = `${cssWidth * aspect}px`;
   ctx.drawImage(img, 0, 0, canvas.width, canvas.height);
-  return 1;
+  return { pages: 1, aspect };
 }
 
-/** Overlay two renders: ink only on old → red, only on new → green, both → dark. */
+/** Ink only on the old revision → red, only on this one → green, both → dark. */
 function compareInto(target: HTMLCanvasElement, oldC: HTMLCanvasElement) {
   const ctx = target.getContext('2d');
   const o = document.createElement('canvas');
@@ -88,184 +173,374 @@ function compareInto(target: HTMLCanvasElement, oldC: HTMLCanvasElement) {
   if (!ctx || !octx) return;
   octx.drawImage(oldC, 0, 0, o.width, o.height);
   const a = ctx.getImageData(0, 0, target.width, target.height);
-  const b = octx.getImageData(0, 0, o.width, o.height);
-  const A = a.data, B = b.data;
+  const B = octx.getImageData(0, 0, o.width, o.height).data, A = a.data;
   for (let i = 0; i < A.length; i += 4) {
-    const inkNew = 255 - (A[i] + A[i + 1] + A[i + 2]) / 3 > 60;
-    const inkOld = 255 - (B[i] + B[i + 1] + B[i + 2]) / 3 > 60;
-    if (inkNew && inkOld) { A[i] = 40; A[i + 1] = 40; A[i + 2] = 40; }
-    else if (inkNew) { A[i] = 22; A[i + 1] = 163; A[i + 2] = 74; }
-    else if (inkOld) { A[i] = 220; A[i + 1] = 38; A[i + 2] = 38; }
-    else { A[i] = 255; A[i + 1] = 255; A[i + 2] = 255; }
-    A[i + 3] = 255;
+    const n = 255 - (A[i] + A[i + 1] + A[i + 2]) / 3 > 60, od = 255 - (B[i] + B[i + 1] + B[i + 2]) / 3 > 60;
+    const c = n && od ? [45, 45, 45] : n ? [22, 163, 74] : od ? [220, 38, 38] : [255, 255, 255];
+    A[i] = c[0]; A[i + 1] = c[1]; A[i + 2] = c[2]; A[i + 3] = 255;
   }
   ctx.putImageData(a, 0, 0);
 }
 
+/* ── one markup as SVG ────────────────────────────────────────────────── */
+function MarkupShape({ m, scale, selected, onPick, interactive }: { m: Markup; scale: number | null; selected: boolean; onPick: () => void; interactive: boolean }) {
+  const d = m.data;
+  if (!d || !Array.isArray(d.geometry) || d.geometry.length === 0) return null;
+  const st = d.style || { color: m.color, width: 3 };
+  const g = d.geometry;
+  const common = {
+    stroke: st.color, strokeWidth: st.width, fill: 'none', strokeLinecap: 'round' as const, strokeLinejoin: 'round' as const,
+    opacity: st.opacity ?? 1, style: { pointerEvents: interactive ? ('stroke' as const) : ('none' as const), cursor: interactive ? 'pointer' : undefined },
+    onClick: interactive ? (e: React.MouseEvent) => { e.stopPropagation(); onPick(); } : undefined,
+  };
+  const halo = selected ? { filter: 'url(#dw-sel)' } : {};
+  let shape: React.ReactNode = null;
+  switch (m.markup_type) {
+    case 'freehand':
+      shape = <polyline points={g.map((p) => p.join(',')).join(' ')} {...common} {...halo} />;
+      break;
+    case 'arrow': {
+      const [a, b] = [g[0], g[g.length - 1]];
+      const ang = Math.atan2(b[1] - a[1], b[0] - a[0]), L = 10 + st.width * 3;
+      const h1: Pt = [b[0] - L * Math.cos(ang - 0.45), b[1] - L * Math.sin(ang - 0.45)];
+      const h2: Pt = [b[0] - L * Math.cos(ang + 0.45), b[1] - L * Math.sin(ang + 0.45)];
+      shape = <g {...halo}><line x1={a[0]} y1={a[1]} x2={b[0]} y2={b[1]} {...common} />{st.head !== false && <polyline points={`${h1.join(',')} ${b.join(',')} ${h2.join(',')}`} {...common} />}</g>;
+      break;
+    }
+    case 'rect': {
+      const [a, b] = [g[0], g[1] || g[0]];
+      shape = <rect x={Math.min(a[0], b[0])} y={Math.min(a[1], b[1])} width={Math.abs(b[0] - a[0])} height={Math.abs(b[1] - a[1])} {...common} {...halo} />;
+      break;
+    }
+    case 'circle': {
+      const [a, b] = [g[0], g[1] || g[0]];
+      shape = <ellipse cx={(a[0] + b[0]) / 2} cy={(a[1] + b[1]) / 2} rx={Math.abs(b[0] - a[0]) / 2} ry={Math.abs(b[1] - a[1]) / 2} {...common} {...halo} />;
+      break;
+    }
+    case 'cloud':
+      shape = <path d={cloudPath(g[0], g[1] || g[0], st.width)} {...common} {...halo} />;
+      break;
+    case 'text':
+      shape = (
+        <text x={g[0][0]} y={g[0][1]} fill={st.color} fontSize={10 + st.width * 3} fontWeight={700} {...halo}
+          style={{ pointerEvents: interactive ? 'all' : 'none', cursor: interactive ? 'pointer' : undefined, paintOrder: 'stroke', stroke: 'rgba(255,255,255,.85)', strokeWidth: 3 }}
+          onClick={interactive ? (e) => { e.stopPropagation(); onPick(); } : undefined}>{d.text}</text>
+      );
+      break;
+    case 'measure': {
+      if (d.kind === 'area') {
+        const sq = d.sqft ?? (scale ? polyArea(g) * scale * scale : null);
+        const cx = g.reduce((s2, p) => s2 + p[0], 0) / g.length, cy = g.reduce((s2, p) => s2 + p[1], 0) / g.length;
+        const lbl = sq != null ? sqftLabel(sq) : 'Set scale';
+        shape = (
+          <g {...halo}>
+            <polygon points={g.map((p) => p.join(',')).join(' ')} {...common} fill={st.color} fillOpacity={0.14} style={{ ...common.style, pointerEvents: interactive ? 'all' : 'none' }} />
+            {g.length > 2 && <><rect x={cx - lbl.length * 4 - 6} y={cy - 11} width={lbl.length * 8 + 12} height={20} rx={4} fill={st.color} style={{ pointerEvents: 'none' }} />
+            <text x={cx} y={cy + 4} textAnchor="middle" fontSize={12} fontWeight={700} fill="white" style={{ pointerEvents: 'none' }}>{lbl}</text></>}
+          </g>
+        );
+        break;
+      }
+      const [a, b] = [g[0], g[1] || g[0]];
+      const ft = d.feet ?? (scale ? dist(a, b) * scale : null);
+      const mx = (a[0] + b[0]) / 2, my = (a[1] + b[1]) / 2;
+      const ang = Math.atan2(b[1] - a[1], b[0] - a[0]), tx = Math.sin(ang) * 6, ty = -Math.cos(ang) * 6;
+      const lbl = ft != null ? feetIn(ft) : 'Set scale';
+      shape = (
+        <g {...halo}>
+          <line x1={a[0]} y1={a[1]} x2={b[0]} y2={b[1]} {...common} strokeDasharray="6 4" />
+          <line x1={a[0] - tx} y1={a[1] - ty} x2={a[0] + tx} y2={a[1] + ty} {...common} />
+          <line x1={b[0] - tx} y1={b[1] - ty} x2={b[0] + tx} y2={b[1] + ty} {...common} />
+          <rect x={mx - lbl.length * 4 - 6} y={my - 11} width={lbl.length * 8 + 12} height={20} rx={4} fill={st.color} style={{ pointerEvents: 'none' }} />
+          <text x={mx} y={my + 4} textAnchor="middle" fontSize={12} fontWeight={700} fill="white" style={{ pointerEvents: 'none' }}>{lbl}</text>
+        </g>
+      );
+      break;
+    }
+    default:
+      return null;
+  }
+  return <g data-mk={m.id}>{shape}</g>;
+}
+
+/* ── page ─────────────────────────────────────────────────────────────── */
 export default function DrawingWorkspace() {
   const { projectId, drawingId } = useParams() as { projectId: string; drawingId: string };
   const router = useRouter();
   const base = `/app/projects/${projectId}`;
   const [sheet, setSheet] = useState<Sheet | null>(null);
   const [error, setError] = useState('');
-  const [list, setList] = useState<ListRow[] | null>(null);
-  const [railQ, setRailQ] = useState('');
-  const [railOpen, setRailOpen] = useState(true);
+  const [list, setList] = useState<ListRow[]>([]);
+  const [markups, setMarkups] = useState<Markup[]>([]);
   const [page, setPage] = useState(1);
   const [pages, setPages] = useState(1);
+  const [aspect, setAspect] = useState(1.4);
   const [zoom, setZoom] = useState(1);
   const [rendering, setRendering] = useState(true);
-  const [tool, setTool] = useState<Tool>('pan');
-  const [layers, setLayers] = useState<Record<Kind, boolean>>({ rfi: true, punch: true, note: true, other: true });
-  const [compareId, setCompareId] = useState<string | null>(null);
-  const [draft, setDraft] = useState<{ x: number; y: number; kind: Exclude<Tool, 'pan'> } | null>(null);
-  const [newTitle, setNewTitle] = useState('');
+  const [tool, setTool] = useState<Tool>('select');
+  const [color, setColor] = useState(SWATCHES[0].c);
+  const [weight, setWeight] = useState(4);
+  const [draftPts, setDraftPts] = useState<Pt[] | null>(null);
+  const [textAt, setTextAt] = useState<Pt | null>(null);
+  const [textVal, setTextVal] = useState('');
+  const [calib, setCalib] = useState<{ a: Pt; b: Pt } | null>(null);
+  const [calibVal, setCalibVal] = useState('');
+  const [pinDraft, setPinDraft] = useState<{ x: number; y: number; kind: 'rfi' | 'punch' | 'note' } | null>(null);
+  const [pinTitle, setPinTitle] = useState('');
   const [q, setQ] = useState('');
   const [hits, setHits] = useState<Hit[]>([]);
+  const [compareId, setCompareId] = useState<string | null>(null);
+  const [showMarkups, setShowMarkups] = useState(true);
+  const [showPins, setShowPins] = useState(true);
+  const [selMarkup, setSelMarkup] = useState<string | null>(null);
+  const [activePin, setActivePin] = useState<string | null>(null);
+  const [tab, setTab] = useState<'markups' | 'pins' | 'revs'>('markups');
   const [busy, setBusy] = useState(false);
+  const [saveState, setSaveState] = useState<'idle' | 'saving' | 'saved' | 'failed'>('idle');
   const [msg, setMsg] = useState<{ text: string; ok?: boolean } | null>(null);
-  const [active, setActive] = useState<string | null>(null);
-  const [tab, setTab] = useState<'pins' | 'revs' | 'info'>('pins');
+  const [cursor, setCursor] = useState<Pt | null>(null);
+  const [myIds, setMyIds] = useState<string[]>([]);
+  const rootRef = useRef<HTMLDivElement>(null);
   const canvasRef = useRef<HTMLCanvasElement>(null);
   const scrollRef = useRef<HTMLDivElement>(null);
+  const svgRef = useRef<SVGSVGElement>(null);
   const fileRef = useRef<HTMLInputElement>(null);
   const drag = useRef<{ x: number; y: number; sl: number; st: number } | null>(null);
+  const REF_H = Math.round(REF_W * aspect);
 
-  const load = useCallback(async () => {
+  /* data */
+  const loadSheet = useCallback(async () => {
     try {
       const r = await fetch(`/api/drawings/${drawingId}/sheet`, { cache: 'no-store' });
       const j = await r.json().catch(() => ({}));
       if (!r.ok) throw new Error(j.error || "Couldn't open this sheet.");
       setSheet(j); setError('');
-    } catch (e) { setError(e instanceof Error ? e.message : "Couldn't open this sheet."); }
+    } catch (e) { setError((e as Error).message); }
   }, [drawingId]);
-  useEffect(() => { load(); }, [load]);
+  const loadMarkups = useCallback(async () => {
+    const r = await fetch(`/api/projects/${projectId}/drawings/markups?drawing_id=${drawingId}`, { cache: 'no-store' });
+    const j = await r.json().catch(() => ({}));
+    if (r.ok) setMarkups((j.markups || []) as Markup[]);
+  }, [projectId, drawingId]);
+  useEffect(() => { loadSheet(); loadMarkups(); }, [loadSheet, loadMarkups]);
   useEffect(() => {
-    fetch(`/api/drawings/list?projectId=${projectId}`).then((r) => r.json()).then((j) => setList(j.drawings || [])).catch(() => setList([]));
+    fetch(`/api/drawings/list?projectId=${projectId}`).then((r) => r.json()).then((j) => setList((j.drawings || []) as ListRow[])).catch(() => setList([]));
   }, [projectId]);
 
-  // Draw the sheet (and the compare overlay when on).
+  /* scale from the latest calibration on this sheet */
+  const scaleMk = useMemo(() => [...markups].reverse().find((m) => m.markup_type === 'stamp' && typeof m.data?.ftPerUnit === 'number'), [markups]);
+  const counts = useMemo(() => markups.filter((m) => m.markup_type === 'stamp' && m.data?.kind === 'count'), [markups]);
+  const ftPerUnit = scaleMk?.data.ftPerUnit ?? null;
+
+  /* render */
   useEffect(() => {
-    const d = sheet?.drawing;
-    const c = canvasRef.current;
+    const d = sheet?.drawing, c = canvasRef.current;
     if (!d?.url || !c) return;
     let cancelled = false;
     (async () => {
       setRendering(true);
       try {
-        const width = Math.max(600, ((scrollRef.current?.clientWidth ?? 1000) - 64)) * zoom;
-        const n = await drawSource(d.url, d.isPdf, page, width, c);
+        const width = Math.max(600, (scrollRef.current?.clientWidth ?? 1000) - 80) * zoom;
+        const { pages: n, aspect: a } = await drawSource(d.url, d.isPdf, page, width, c);
         if (cancelled) return;
-        setPages(n);
+        setPages(n); setAspect(a);
         const old = compareId ? sheet!.revisions.find((r) => r.id === compareId) : null;
-        if (old?.url) {
-          const oc = document.createElement('canvas');
-          await drawSource(old.url, old.isPdf, page, width, oc);
-          if (!cancelled) compareInto(c, oc);
-        }
+        if (old?.url) { const oc = document.createElement('canvas'); await drawSource(old.url, old.isPdf, page, width, oc); if (!cancelled) compareInto(c, oc); }
       } catch (e) {
-        console.error('[drawing workspace] render', e);
-        if (!cancelled) setMsg({ text: compareId ? "Couldn't draw the comparison — the older file may not be readable." : "This sheet's file couldn't be drawn. Use Open file." });
+        console.error('[drawing] render', e);
+        if (!cancelled) setMsg({ text: "This sheet's file couldn't be drawn. Use Download to open it." });
       } finally { if (!cancelled) setRendering(false); }
     })();
     return () => { cancelled = true; };
   }, [sheet, page, zoom, compareId]);
 
-  // Search for the pin picker, limited to the kind being pinned.
+  /* pin search */
   useEffect(() => {
-    if (!draft || draft.kind === 'note') return;
-    const want = draft.kind === 'rfi' ? 'rfis' : 'punch_list';
+    if (!pinDraft || pinDraft.kind === 'note') return;
+    const want = pinDraft.kind === 'rfi' ? 'rfis' : 'punch_list';
     const t = setTimeout(async () => {
       const r = await fetch(`/api/items/search?projectId=${projectId}&q=${encodeURIComponent(q)}`);
       const j = await r.json().catch(() => ({}));
       setHits(((j.items || []) as Hit[]).filter((h) => h.type === want));
     }, 180);
     return () => clearTimeout(t);
-  }, [q, draft, projectId]);
+  }, [q, pinDraft, projectId]);
 
-  // Ctrl/⌘ + wheel zoom.
+  /* keyboard: tool keys, delete, undo, escape */
+  useEffect(() => {
+    const onKey = (e: KeyboardEvent) => {
+      const tag = (e.target as HTMLElement)?.tagName;
+      if (tag === 'INPUT' || tag === 'TEXTAREA' || tag === 'SELECT') return;
+      if (e.key === 'Enter' && tool === 'area' && draftPts) { e.preventDefault(); void finishArea(); return; }
+      if (e.key === 'Escape') { setDraftPts(null); setTextAt(null); setPinDraft(null); setCalib(null); setSelMarkup(null); setActivePin(null); return; }
+      if ((e.ctrlKey || e.metaKey) && e.key.toLowerCase() === 'z') { e.preventDefault(); void undo(); return; }
+      if ((e.key === 'Delete' || e.key === 'Backspace') && selMarkup) { e.preventDefault(); void removeMarkup(selMarkup); return; }
+      if (e.ctrlKey || e.metaKey || e.altKey) return;
+      const hit = TOOL_GROUPS.flatMap((g) => g.tools).find((t) => t.key && t.key.toLowerCase() === e.key.toLowerCase());
+      if (hit) setTool(hit.k);
+      if (e.key === '+' || e.key === '=') setZoom((z) => Math.min(4, +(z * 1.2).toFixed(2)));
+      if (e.key === '-') setZoom((z) => Math.max(0.4, +(z / 1.2).toFixed(2)));
+    };
+    window.addEventListener('keydown', onKey);
+    return () => window.removeEventListener('keydown', onKey);
+  });
+
+  /* ctrl/⌘ + wheel zoom */
   useEffect(() => {
     const el = scrollRef.current;
     if (!el) return;
-    const onWheel = (e: WheelEvent) => {
-      if (!e.ctrlKey && !e.metaKey) return;
-      e.preventDefault();
-      setZoom((z) => Math.min(4, Math.max(0.5, +(z * (e.deltaY < 0 ? 1.15 : 1 / 1.15)).toFixed(2))));
-    };
+    const onWheel = (e: WheelEvent) => { if (!e.ctrlKey && !e.metaKey) return; e.preventDefault(); setZoom((z) => Math.min(4, Math.max(0.4, +(z * (e.deltaY < 0 ? 1.12 : 1 / 1.12)).toFixed(2)))); };
     el.addEventListener('wheel', onWheel, { passive: false });
     return () => el.removeEventListener('wheel', onWheel);
   }, []);
 
-  const pinsAll = sheet?.pins || [];
-  const counts = useMemo(() => {
-    const c: Record<Kind, number> = { rfi: 0, punch: 0, note: 0, other: 0 };
-    pinsAll.forEach((p) => { c[KIND_OF(p)]++; });
-    return c;
-  }, [pinsAll]);
-  const openRfis = pinsAll.filter((p) => KIND_OF(p) === 'rfi' && !p.item?.closed).length;
-  const openPunch = pinsAll.filter((p) => KIND_OF(p) === 'punch' && !p.item?.closed).length;
-  const pinsHere = pinsAll.filter((p) => p.page === page && layers[KIND_OF(p)]);
-  const pinNumber = (p: Pin) => pinsAll.filter((x) => x.page === p.page).indexOf(p) + 1;
-
-  const onStageDown = (e: React.MouseEvent) => {
-    if (tool !== 'pan' || !scrollRef.current) return;
-    drag.current = { x: e.clientX, y: e.clientY, sl: scrollRef.current.scrollLeft, st: scrollRef.current.scrollTop };
-  };
-  const onStageMove = (e: React.MouseEvent) => {
-    const d = drag.current, el = scrollRef.current;
-    if (!d || !el) return;
-    el.scrollLeft = d.sl - (e.clientX - d.x);
-    el.scrollTop = d.st - (e.clientY - d.y);
-  };
-  const onStageClick = (e: React.MouseEvent<HTMLDivElement>) => {
-    if (tool === 'pan') { setActive(null); return; }
-    const r = e.currentTarget.getBoundingClientRect();
-    setDraft({ x: (e.clientX - r.left) / r.width, y: (e.clientY - r.top) / r.height, kind: tool });
-    setQ(''); setNewTitle(''); setMsg(null);
+  /* geometry */
+  const toRef = (e: React.PointerEvent | React.MouseEvent): Pt => {
+    const r = svgRef.current!.getBoundingClientRect();
+    return [+(((e.clientX - r.left) / r.width) * REF_W).toFixed(1), +(((e.clientY - r.top) / r.height) * REF_H).toFixed(1)];
   };
 
+  const saveMarkup = async (type: string, geometry: Pt[], extra: Partial<MData> = {}, style?: Partial<MStyle>) => {
+    const st: MStyle = { color, width: weight, ...(style || {}) };
+    const data: MData = { space: 'image', w: REF_W, h: REF_H, style: st, geometry, ...extra };
+    const temp: Markup = { id: `tmp-${Date.now()}`, markup_type: type, data, page_number: page, color: st.color, created_by: 'me', created_by_name: 'You', created_at: new Date().toISOString() };
+    setMarkups((m) => [...m, temp]);
+    setSaveState('saving');
+    const r = await fetch(`/api/projects/${projectId}/drawings/markups`, {
+      method: 'POST', headers: { 'content-type': 'application/json' },
+      body: JSON.stringify({ drawing_id: drawingId, markup_type: type, data, page_number: page, color: st.color }),
+    }).catch(() => null);
+    const j = r ? await r.json().catch(() => ({})) : {};
+    if (!r || !r.ok || !j.markup?.id) {
+      setMarkups((m) => m.filter((x) => x.id !== temp.id));
+      setSaveState('failed');
+      setMsg({ text: j.error || "Couldn't save that markup. Check your connection and draw it again." });
+      return null;
+    }
+    setMarkups((m) => m.map((x) => (x.id === temp.id ? (j.markup as Markup) : x)));
+    setMyIds((ids) => [...ids, j.markup.id]);
+    setSaveState('saved');
+    return j.markup as Markup;
+  };
+  const removeMarkup = async (id: string) => {
+    if (id.startsWith('tmp-')) return;
+    const keep = markups;
+    setMarkups((m) => m.filter((x) => x.id !== id)); setSelMarkup(null); setSaveState('saving');
+    const r = await fetch(`/api/projects/${projectId}/drawings/markups/${id}`, { method: 'DELETE' }).catch(() => null);
+    if (!r || !r.ok) {
+      setMarkups(keep); setSaveState('failed');
+      const j = r ? await r.json().catch(() => ({})) : {};
+      setMsg({ text: j.error || "Couldn't remove that markup." });
+      return;
+    }
+    setMyIds((ids) => ids.filter((x) => x !== id)); setSaveState('saved');
+  };
+  const undo = async () => { const last = myIds[myIds.length - 1]; if (last) await removeMarkup(last); };
+
+  const onDown = (e: React.PointerEvent<SVGSVGElement>) => {
+    if (tool === 'pan') { drag.current = { x: e.clientX, y: e.clientY, sl: scrollRef.current!.scrollLeft, st: scrollRef.current!.scrollTop }; return; }
+    if (tool === 'select' || tool === 'erase') { setSelMarkup(null); setActivePin(null); return; }
+    const p = toRef(e);
+    if (PIN_TOOLS.includes(tool)) { setPinDraft({ x: p[0] / REF_W, y: p[1] / REF_H, kind: tool as 'rfi' | 'punch' | 'note' }); setPinTitle(''); setQ(''); return; }
+    if (tool === 'text') { setTextAt(p); setTextVal(''); return; }
+    if (tool === 'count') { void saveMarkup('stamp', [p], { kind: 'count' }); return; }
+    if (tool === 'area') {
+      if (!draftPts) setDraftPts([p, p]);
+      else if (e.detail >= 2) void finishArea();
+      else setDraftPts([...draftPts.slice(0, -1), p, p]);
+      return;
+    }
+    if (DRAW_TOOLS.includes(tool)) { (e.target as Element).setPointerCapture?.(e.pointerId); setDraftPts([p, p]); }
+  };
+  const onMove = (e: React.PointerEvent<SVGSVGElement>) => {
+    const p = toRef(e);
+    setCursor(p);
+    if (drag.current && scrollRef.current) { scrollRef.current.scrollLeft = drag.current.sl - (e.clientX - drag.current.x); scrollRef.current.scrollTop = drag.current.st - (e.clientY - drag.current.y); return; }
+    if (!draftPts) return;
+    if (tool === 'area') { setDraftPts([...draftPts.slice(0, -1), p]); return; }
+    if (tool === 'pen' || tool === 'highlight') {
+      const last = draftPts[draftPts.length - 1];
+      if (dist(last, p) > 1.5) setDraftPts([...draftPts, p]);
+    } else setDraftPts([draftPts[0], p]);
+  };
+  const onUp = async () => {
+    drag.current = null;
+    const pts = draftPts;
+    if (!pts || tool === 'area') return;
+    setDraftPts(null);
+    const tiny = dist(pts[0], pts[pts.length - 1]) < 4 && pts.length < 4;
+    if (tiny) return;
+    if (tool === 'pen') await saveMarkup('freehand', pts);
+    else if (tool === 'highlight') await saveMarkup('freehand', pts, {}, { width: Math.max(12, weight * 4), opacity: 0.35 });
+    else if (tool === 'line') await saveMarkup('arrow', [pts[0], pts[1]], {}, { head: false });
+    else if (tool === 'arrow') await saveMarkup('arrow', [pts[0], pts[1]], {}, { head: true });
+    else if (tool === 'rect') await saveMarkup('rect', [pts[0], pts[1]]);
+    else if (tool === 'ellipse') await saveMarkup('circle', [pts[0], pts[1]]);
+    else if (tool === 'cloud') await saveMarkup('cloud', [pts[0], pts[1]]);
+    else if (tool === 'measure') {
+      if (!ftPerUnit) { setMsg({ text: 'Set the scale first: pick Set scale and trace a dimension you know.' }); setTool('calibrate'); return; }
+      await saveMarkup('measure', [pts[0], pts[1]], { feet: +(dist(pts[0], pts[1]) * ftPerUnit).toFixed(3) });
+    } else if (tool === 'calibrate') { setCalib({ a: pts[0], b: pts[1] }); setCalibVal(''); }
+  };
+
+  const finishArea = async () => {
+    const pts = (draftPts || []).slice(0, -1).filter((p, i, a) => i === 0 || dist(p, a[i - 1]) > 2);
+    setDraftPts(null);
+    if (pts.length < 3) { setMsg({ text: 'Click at least three corners, then double-click or press Enter to close the area.' }); return; }
+    if (!ftPerUnit) { setMsg({ text: 'Set the scale first: pick Set scale and trace a dimension you know.' }); setTool('calibrate'); return; }
+    await saveMarkup('measure', pts, { kind: 'area', sqft: +(polyArea(pts) * ftPerUnit * ftPerUnit).toFixed(2) });
+  };
+  const saveText = async () => {
+    if (!textAt || !textVal.trim()) { setTextAt(null); return; }
+    await saveMarkup('text', [textAt], { text: textVal.trim().slice(0, 200) });
+    setTextAt(null);
+  };
+  const saveCalib = async () => {
+    if (!calib) return;
+    const ft = parseFeet(calibVal);
+    if (!ft) { setMsg({ text: 'Type the real length, like 24\' 6" or 12.5.' }); return; }
+    const units = dist(calib.a, calib.b);
+    await saveMarkup('stamp', [calib.a, calib.b], { kind: 'scale', ftPerUnit: ft / units, feet: ft }, { color: 'rgb(148,163,184)', width: 1, opacity: 0 });
+    setCalib(null); setTool('measure');
+    setMsg({ text: `Scale set — ${feetIn(ft)} over that line. Measure now reads real lengths.`, ok: true });
+  };
+
+  /* pins */
   const postPin = async (body: Record<string, unknown>) => {
-    const r = await fetch(`/api/drawings/${drawingId}/pins`, { method: 'POST', headers: { 'content-type': 'application/json' }, body: JSON.stringify({ x_pct: draft!.x, y_pct: draft!.y, page_number: page, ...body }) });
+    const r = await fetch(`/api/drawings/${drawingId}/pins`, { method: 'POST', headers: { 'content-type': 'application/json' }, body: JSON.stringify({ x_pct: pinDraft!.x, y_pct: pinDraft!.y, page_number: page, ...body }) });
     const j = await r.json().catch(() => ({}));
     if (!r.ok) throw new Error(j.error || "Couldn't save the pin.");
     return j.pin?.id as string | undefined;
   };
-  const finish = async (pinId: string | undefined, text: string) => {
-    setDraft(null); setTool('pan'); await load(); setActive(pinId ?? null); setTab('pins'); setMsg({ text, ok: true });
-  };
-  const linkExisting = async (h: Hit) => {
+  const pinDone = async (id: string | undefined, text: string) => { setPinDraft(null); setTool('select'); await loadSheet(); setActivePin(id ?? null); setTab('pins'); setMsg({ text, ok: true }); };
+  const pinCreate = async () => {
+    if (!pinDraft || !sheet || !pinTitle.trim()) return;
     setBusy(true);
-    try { await finish(await postPin({ entity_type: h.type, entity_id: h.id }), `Pinned ${h.name}.`); }
-    catch (e) { setMsg({ text: (e as Error).message }); } finally { setBusy(false); }
-  };
-  const createHere = async () => {
-    if (!draft || !sheet || !newTitle.trim()) return;
-    setBusy(true); setMsg(null);
     try {
-      const where = `${sheet.drawing.sheet_number}${sheet.drawing.name ? ` · ${sheet.drawing.name}` : ''}`;
-      let type = '', id = '', name = newTitle.trim();
-      if (draft.kind === 'rfi') {
-        const r = await fetch('/api/rfis/create', { method: 'POST', headers: { 'content-type': 'application/json' }, body: JSON.stringify({ projectId, subject: name, question: name, drawing_reference: where }) });
-        const j = await r.json().catch(() => ({}));
-        if (!r.ok || !(j.rfi?.id || j.data?.rfi?.id)) throw new Error(j.error || "Couldn't create the RFI.");
-        type = 'rfis'; id = j.rfi?.id || j.data.rfi.id; name = `RFI ${j.rfi?.rfi_number ?? ''}`.trim() + ` · ${name}`;
-      } else if (draft.kind === 'punch') {
-        const r = await fetch('/api/punch-list/create', { method: 'POST', headers: { 'content-type': 'application/json' }, body: JSON.stringify({ projectId, title: name, location: where }) });
-        const j = await r.json().catch(() => ({}));
-        if (!r.ok || !(j.item?.id || j.data?.item?.id)) throw new Error(j.error || "Couldn't create the punch item.");
-        type = 'punch_list'; id = j.item?.id || j.data.item.id;
-      } else {
-        await finish(await postPin({ title: name.slice(0, 120), description: name }), 'Note pinned.');
-        return;
-      }
-      await finish(await postPin({ entity_type: type, entity_id: id }), `${draft.kind === 'rfi' ? 'RFI' : 'Punch item'} created and pinned — ${name}.`);
+      const where = `${sheet.drawing.sheet_number} · ${sheet.drawing.name}`;
+      const title = pinTitle.trim();
+      if (pinDraft.kind === 'note') { await pinDone(await postPin({ title: title.slice(0, 120), description: title }), 'Note pinned.'); return; }
+      const isRfi = pinDraft.kind === 'rfi';
+      const r = await fetch(isRfi ? '/api/rfis/create' : '/api/punch-list/create', {
+        method: 'POST', headers: { 'content-type': 'application/json' },
+        body: JSON.stringify(isRfi ? { projectId, subject: title, question: title, drawing_reference: where } : { projectId, title, location: where }),
+      });
+      const j = await r.json().catch(() => ({}));
+      const id = isRfi ? (j.rfi?.id || j.data?.rfi?.id) : (j.item?.id || j.data?.item?.id);
+      if (!r.ok || !id) throw new Error(j.error || `Couldn't create the ${isRfi ? 'RFI' : 'punch item'}.`);
+      await pinDone(await postPin({ entity_type: isRfi ? 'rfis' : 'punch_list', entity_id: id }), `${isRfi ? 'RFI' : 'Punch item'} created and pinned.`);
     } catch (e) { setMsg({ text: (e as Error).message }); } finally { setBusy(false); }
+  };
+  const pinLink = async (h: Hit) => {
+    setBusy(true);
+    try { await pinDone(await postPin({ entity_type: h.type, entity_id: h.id }), `Pinned ${h.name}.`); }
+    catch (e) { setMsg({ text: (e as Error).message }); } finally { setBusy(false); }
   };
   const removePin = async (p: Pin) => {
     const r = await fetch(`/api/drawings/${drawingId}/pins?pinId=${p.id}`, { method: 'DELETE' });
-    if (r.ok) { setActive(null); await load(); setMsg({ text: 'Pin removed. The item itself is untouched.', ok: true }); }
-    else { const j = await r.json().catch(() => ({})); setMsg({ text: j.error || "Couldn't remove the pin." }); }
+    if (r.ok) { setActivePin(null); await loadSheet(); } else setMsg({ text: "Couldn't remove the pin." });
   };
+
   const uploadRevision = async (f: File) => {
     if (!sheet) return;
     setBusy(true); setMsg({ text: 'Uploading the new revision…', ok: true });
@@ -280,350 +555,424 @@ export default function DrawingWorkspace() {
     } catch (e) { setMsg({ text: (e as Error).message }); } finally { setBusy(false); }
   };
 
-  const rail = useMemo(() => {
-    const qq = railQ.trim().toLowerCase();
-    const rows = (list || []).filter((d) => d.status !== 'superseded' || d.id === drawingId)
-      .filter((d) => !qq || `${d.sheet_number} ${d.title}`.toLowerCase().includes(qq));
-    const groups = new Map<string, ListRow[]>();
-    rows.forEach((d) => groups.set(d.discipline || 'Other', [...(groups.get(d.discipline || 'Other') || []), d]));
-    return Array.from(groups.entries()).sort((a, b) => a[0].localeCompare(b[0]));
-  }, [list, railQ, drawingId]);
+  const fitPage = () => {
+    const el = scrollRef.current;
+    if (!el) return;
+    const w = Math.max(600, el.clientWidth - 80), h = el.clientHeight - 60;
+    setZoom(Math.max(0.4, +Math.min(1, h / (w * aspect)).toFixed(2)));
+  };
+  const fullScreen = () => { const el = rootRef.current; if (!el) return; if (document.fullscreenElement) void document.exitFullscreen(); else void el.requestFullscreen?.(); };
 
   if (error && !sheet) {
-    return (
-      <div className="k-page">
-        <EmptyState icon={<WarningCircle size={22} />} title="Couldn't open this sheet" text={error} action={<Button href={`${base}/drawings`}>Back to drawings</Button>} />
-      </div>
-    );
+    return <div className="k-page"><EmptyState icon={<WarningCircle size={22} />} title="Couldn't open this sheet" text={error} action={<Button href={`${base}/drawings`}>Back to drawings</Button>} /></div>;
   }
+
   const d = sheet?.drawing;
+  const sheets = list.filter((s) => s.status !== 'superseded' || s.id === drawingId).sort((a, b) => a.sheet_number.localeCompare(b.sheet_number, undefined, { numeric: true }));
+  const idx = sheets.findIndex((s) => s.id === drawingId);
+  const prev = idx > 0 ? sheets[idx - 1] : null, next = idx >= 0 && idx < sheets.length - 1 ? sheets[idx + 1] : null;
   const current = sheet?.revisions.find((r) => r.status === 'current');
   const older = (sheet?.revisions || []).filter((r) => r.id !== drawingId);
-  const activePin = pinsAll.find((p) => p.id === active) || null;
+  const pageMarkups = markups.filter((m) => (m.page_number || 1) === page && m.markup_type !== 'stamp');
+  const pins = (sheet?.pins || []).filter((p) => p.page === page);
+  const pinSel = (sheet?.pins || []).find((p) => p.id === activePin) || null;
+  const isDraw = DRAW_TOOLS.includes(tool);
+  const markupLabel: Record<string, string> = { freehand: 'Pen', arrow: 'Line / arrow', rect: 'Rectangle', circle: 'Ellipse', cloud: 'Revision cloud', text: 'Text', measure: 'Measurement' };
 
   return (
-    <div className="dw" data-rail={railOpen || undefined}>
+    <div className="dz" ref={rootRef}>
       <style dangerouslySetInnerHTML={{ __html: CSS }} />
-      <input ref={fileRef} type="file" accept="application/pdf,image/*" hidden onChange={(e) => { const f = e.target.files?.[0]; if (f) uploadRevision(f); e.target.value = ''; }} />
+      <input ref={fileRef} type="file" accept="application/pdf,image/*" hidden onChange={(e) => { const f = e.target.files?.[0]; if (f) void uploadRevision(f); e.target.value = ''; }} />
 
-      {/* Header */}
-      <header className="dw-head">
-        <nav className="dw-crumbs"><Link href={`${base}/overview`}>{sheet?.project?.name || 'Job'}</Link><span>/</span><Link href={`${base}/drawings`}>Drawings</Link><span>/</span><b>{d?.sheet_number || '…'}</b></nav>
-        <div className="dw-titlerow">
-          <h1 className="k-title">{d ? <>{d.sheet_number} <span className="dw-sub">{d.name}</span></> : 'Loading sheet…'}</h1>
-          {d && <Badge tone={statusTone(d.status)} dot>{label(d.status)}{d.version ? ` · Rev ${d.version}` : ''}</Badge>}
-          <span className="dw-grow" />
-          <Button icon={<UploadSimple size={15} />} onClick={() => fileRef.current?.click()} disabled={!sheet || busy}>Upload revision</Button>
+      {/* ── top bar ── */}
+      <header className="dz-top">
+        <Link href={`${base}/drawings`} className="dz-ib" title="All drawings" aria-label="All drawings"><CaretLeft size={18} /></Link>
+        <div className="dz-sheet">
+          <button type="button" className="dz-ib" disabled={!prev} aria-label="Previous sheet" onClick={() => prev && router.push(`${base}/drawings/${prev.id}`)}><CaretLeft size={16} /></button>
+          <label className="dz-sel">
+            <span className="dz-sel-v"><b>{d?.sheet_number || '…'}</b><span>{d?.name}</span></span>
+            <CaretDown size={14} />
+            <select value={drawingId} aria-label="Sheet" onChange={(e) => router.push(`${base}/drawings/${e.target.value}`)}>
+              {!sheets.some((s) => s.id === drawingId) && <option value={drawingId}>{d?.sheet_number}</option>}
+              {sheets.map((s) => <option key={s.id} value={s.id}>{s.sheet_number} — {s.title}</option>)}
+            </select>
+          </label>
+          <button type="button" className="dz-ib" disabled={!next} aria-label="Next sheet" onClick={() => next && router.push(`${base}/drawings/${next.id}`)}><CaretRight size={16} /></button>
         </div>
-        <div className="dw-stats">
-          <button type="button" className="dw-stat" data-k="rfi" onClick={() => { setTab('pins'); setLayers((l) => ({ ...l, rfi: true })); }}><Question size={18} weight="bold" /><b>{openRfis}</b><span>Open RFIs</span></button>
-          <button type="button" className="dw-stat" data-k="punch" onClick={() => { setTab('pins'); setLayers((l) => ({ ...l, punch: true })); }}><Wrench size={18} weight="bold" /><b>{openPunch}</b><span>Open punch</span></button>
-          <button type="button" className="dw-stat" data-k="note" onClick={() => setTab('pins')}><NotePencil size={18} weight="bold" /><b>{counts.note}</b><span>Notes</span></button>
-          <button type="button" className="dw-stat" data-k="rev" onClick={() => setTab('revs')}><ClockCounterClockwise size={18} weight="bold" /><b>{sheet?.revisions.length ?? '—'}</b><span>Revisions</span></button>
-          <div className="dw-stat" data-k="info"><Files size={18} weight="bold" /><b>{d?.discipline || '—'}</b><span>{d ? `Issued ${day(d.revision_date)}` : 'Discipline'}</span></div>
-        </div>
-        {d?.status === 'superseded' && current && (
-          <div className="dw-banner"><ClockCounterClockwise size={16} /> Older revision. <Link className="k-link" href={`${base}/drawings/${current.id}`}>Open the current sheet (Rev {current.version || '—'})</Link></div>
+        {d && <Badge tone={statusTone(d.status)} dot>{label(d.status)} · Rev {d.version || '—'}</Badge>}
+        <span className="dz-grow" />
+        {older.length > 0 && (
+          <label className="dz-sel dz-sel-sm" title="Compare with an older revision">
+            <SquareHalf size={15} /><span className="dz-sel-v">{compareId ? `vs Rev ${sheet?.revisions.find((r) => r.id === compareId)?.version}` : 'Compare'}</span><CaretDown size={13} />
+            <select value={compareId || ''} aria-label="Compare with" onChange={(e) => setCompareId(e.target.value || null)}>
+              <option value="">No comparison</option>
+              {older.map((r) => <option key={r.id} value={r.id}>Rev {r.version} · {day(r.revision_date || r.created_at)}</option>)}
+            </select>
+          </label>
         )}
+        <span className="dz-div" />
+        <button type="button" className="dz-ib" aria-label="Zoom out" onClick={() => setZoom((z) => Math.max(0.4, +(z / 1.2).toFixed(2)))}>−</button>
+        <label className="dz-sel dz-sel-sm dz-zoom">
+          <span className="dz-sel-v">{Math.round(zoom * 100)}%</span><CaretDown size={13} />
+          <select value="" aria-label="Zoom" onChange={(e) => { const v = e.target.value; if (v === 'page') fitPage(); else if (v) setZoom(Number(v)); }}>
+            <option value="" disabled>Zoom</option><option value="page">Fit page</option><option value="1">Fit width</option>
+            {[0.5, 0.75, 1.5, 2, 3, 4].map((z) => <option key={z} value={z}>{z * 100}%</option>)}
+          </select>
+        </label>
+        <button type="button" className="dz-ib" aria-label="Zoom in" onClick={() => setZoom((z) => Math.min(4, +(z * 1.2).toFixed(2)))}>+</button>
+        <button type="button" className="dz-ib" aria-label="Fit page" title="Fit page" onClick={fitPage}><ArrowsOut size={17} /></button>
+        <span className="dz-div" />
+        <button type="button" className="dz-ib" aria-label="Full screen" title="Full screen" onClick={fullScreen}><CornersOut size={17} /></button>
+        {d?.url && <a className="dz-ib" href={d.url} target="_blank" rel="noreferrer" download aria-label="Download" title="Download"><DownloadSimple size={17} /></a>}
+        <button type="button" className="dz-act" disabled={!sheet || busy} onClick={() => fileRef.current?.click()}><UploadSimple size={16} /> Upload revision</button>
       </header>
 
-      <div className="dw-body">
-        {/* Sheets rail */}
-        <aside className="dw-rail" aria-label="Sheets">
-          <div className="dw-rail-search"><MagnifyingGlass size={14} /><input value={railQ} onChange={(e) => setRailQ(e.target.value)} placeholder="Find a sheet" aria-label="Find a sheet" /></div>
-          <div className="dw-rail-list">
-            {list === null ? <p className="dw-dim">Loading sheets…</p> : rail.length === 0 ? <p className="dw-dim">No sheets match.</p> : rail.map(([disc, rows]) => (
-              <div key={disc}>
-                <p className="dw-rail-h">{disc} <span>{rows.length}</span></p>
-                {rows.map((r) => (
-                  <Link key={r.id} href={`${base}/drawings/${r.id}`} className="dw-rail-row" data-on={r.id === drawingId || undefined}>
-                    <span className="dw-rail-thumb"><Files size={16} /></span>
-                    <span className="dw-rail-t"><b>{r.sheet_number}</b><small>{r.title}</small></span>
-                  </Link>
-                ))}
-              </div>
-            ))}
+      {/* ── properties ── */}
+      <div className="dz-props">
+        <span className="dz-tool-name">{TOOL_LABEL[tool]}</span>
+        {(isDraw && tool !== 'calibrate') ? (
+          <>
+            <span className="dz-div" />
+            <div className="dz-swatches" role="radiogroup" aria-label="Color">
+              {SWATCHES.map((s) => <button key={s.n} type="button" role="radio" aria-checked={color === s.c} aria-label={s.n} title={s.n} className="dz-sw" style={{ background: s.c }} data-on={color === s.c || undefined} onClick={() => setColor(s.c)} />)}
+            </div>
+            <span className="dz-div" />
+            <div className="dz-weights" role="radiogroup" aria-label="Line weight">
+              {WEIGHTS.map((w) => <button key={w.w} type="button" role="radio" aria-checked={weight === w.w} title={w.n} className="dz-wt" data-on={weight === w.w || undefined} onClick={() => setWeight(w.w)}><i style={{ height: w.w }} />{w.n}</button>)}
+            </div>
+            {tool === 'area' && <span className="dz-hint">Click each corner · double-click or Enter to close</span>}
+            {tool === 'count' && <span className="dz-hint">Click each one to count it · each color is its own tally</span>}
+            {(tool === 'measure' || tool === 'area') && !ftPerUnit && <button type="button" className="dz-link" onClick={() => setTool('calibrate')}>Set the scale first</button>}
+          </>
+        ) : (
+          <span className="dz-hint">
+            {tool === 'select' && 'Click a markup or pin to select it. Delete removes it. Ctrl+Z undoes your last markup.'}
+            {tool === 'pan' && 'Drag the sheet to move around. Ctrl + scroll zooms.'}
+            {tool === 'calibrate' && 'Trace a dimension printed on the sheet, then type its real length.'}
+            {tool === 'erase' && 'Click a markup to remove it.'}
+            {tool === 'area' && 'Click each corner. Double-click or press Enter to close the area.'}
+            {PIN_TOOLS.includes(tool) && `Click the sheet where the ${tool === 'rfi' ? 'RFI' : tool === 'punch' ? 'punch item' : 'note'} goes.`}
+          </span>
+        )}
+        <span className="dz-grow" />
+        <label className="dz-toggle"><input type="checkbox" checked={showMarkups} onChange={(e) => setShowMarkups(e.target.checked)} /> Markups</label>
+        <label className="dz-toggle"><input type="checkbox" checked={showPins} onChange={(e) => setShowPins(e.target.checked)} /> Pins</label>
+      </div>
+
+      <div className="dz-body">
+        {/* ── tool palette ── */}
+        <nav className="dz-tools" aria-label="Tools">
+          {TOOL_GROUPS.map((g, gi) => (
+            <div key={gi} className="dz-tgroup">
+              {g.tools.map((t) => (
+                <button key={t.k} type="button" className="dz-tool" data-k={t.k} data-on={tool === t.k || undefined} aria-pressed={tool === t.k} aria-label={t.label}
+                  onClick={() => { setTool(t.k); setPinDraft(null); setTextAt(null); setCalib(null); }}>
+                  {t.icon}
+                  <span className="dz-tip">{t.label}{t.key ? <kbd>{t.key}</kbd> : null}</span>
+                </button>
+              ))}
+            </div>
+          ))}
+          <div className="dz-tgroup dz-tgroup-end">
+            <button type="button" className="dz-tool" aria-label="Undo" disabled={!myIds.length} onClick={() => void undo()}><ArrowCounterClockwise size={19} /><span className="dz-tip">Undo <kbd>Ctrl Z</kbd></span></button>
           </div>
-        </aside>
+        </nav>
 
-        {/* Canvas */}
-        <main className="dw-canvas">
-          <div className="dw-toolbar" role="toolbar" aria-label="Drawing tools">
-            <button type="button" className="dw-tb" aria-label={railOpen ? 'Hide sheets' : 'Show sheets'} onClick={() => setRailOpen((v) => !v)}><SidebarSimple size={18} /></button>
-            <span className="dw-tb-sep" />
-            {([['pan', 'Pan', <Hand key="h" size={18} />], ['rfi', 'RFI pin', <Question key="q" size={18} weight="bold" />], ['punch', 'Punch pin', <Wrench key="w" size={18} weight="bold" />], ['note', 'Note pin', <NotePencil key="n" size={18} weight="bold" />]] as [Tool, string, React.ReactNode][]).map(([k, l, icon]) => (
-              <button key={k} type="button" className="dw-tb" data-tool={k} data-on={tool === k || undefined} aria-pressed={tool === k} title={l} onClick={() => { setTool(k); setDraft(null); }}>
-                {icon}<span className="dw-tb-l">{l}</span>
-              </button>
-            ))}
-            <span className="dw-tb-sep" />
-            <button type="button" className="dw-tb" aria-label="Zoom out" onClick={() => setZoom((z) => Math.max(0.5, +(z - 0.25).toFixed(2)))}><MagnifyingGlassMinus size={18} /></button>
-            <span className="dw-tb-v">{Math.round(zoom * 100)}%</span>
-            <button type="button" className="dw-tb" aria-label="Zoom in" onClick={() => setZoom((z) => Math.min(4, +(z + 0.25).toFixed(2)))}><MagnifyingGlassPlus size={18} /></button>
-            <button type="button" className="dw-tb" aria-label="Fit to width" title="Fit" onClick={() => setZoom(1)}><ArrowsOut size={18} /></button>
-            {pages > 1 && (
-              <>
-                <span className="dw-tb-sep" />
-                <button type="button" className="dw-tb" aria-label="Previous page" disabled={page <= 1} onClick={() => setPage((p) => p - 1)}><CaretLeft size={18} /></button>
-                <span className="dw-tb-v">{page} / {pages}</span>
-                <button type="button" className="dw-tb" aria-label="Next page" disabled={page >= pages} onClick={() => setPage((p) => p + 1)}><CaretRight size={18} /></button>
-              </>
-            )}
-            <span className="dw-tb-sep" />
-            <details className="dw-dd">
-              <summary className="dw-tb"><Stack size={18} /><span className="dw-tb-l">Layers</span></summary>
-              <div className="dw-dd-menu">
-                {(Object.keys(KIND_LABEL) as Kind[]).map((k) => (
-                  <label key={k} className="dw-check"><input type="checkbox" checked={layers[k]} onChange={(e) => setLayers((l) => ({ ...l, [k]: e.target.checked }))} /><span className="dw-dot" data-k={k}><KindIcon k={k} size={12} /></span>{KIND_LABEL[k]} <small>{counts[k]}</small></label>
-                ))}
-              </div>
-            </details>
-            {older.length > 0 && (
-              <details className="dw-dd">
-                <summary className="dw-tb" data-on={compareId || undefined}><SquareHalf size={18} /><span className="dw-tb-l">Compare</span></summary>
-                <div className="dw-dd-menu">
-                  <button type="button" className="dw-dd-item" data-on={!compareId || undefined} onClick={() => setCompareId(null)}>Off</button>
-                  {older.map((r) => <button key={r.id} type="button" className="dw-dd-item" data-on={compareId === r.id || undefined} onClick={() => setCompareId(r.id)}>Against Rev {r.version || '—'} · {day(r.revision_date || r.created_at)}</button>)}
-                </div>
-              </details>
-            )}
-            {d?.url && <a className="dw-tb" href={d.url} target="_blank" rel="noreferrer" title="Open file"><ArrowSquareOut size={18} /></a>}
-          </div>
-
-          {compareId && <div className="dw-legend"><i data-k="add" /> Added in this revision <i data-k="del" /> Removed since Rev {sheet?.revisions.find((r) => r.id === compareId)?.version || '—'} <i data-k="same" /> Unchanged</div>}
-          {tool !== 'pan' && !draft && <div className="dw-hint"><KindIcon k={tool as Kind} size={14} /> Tap the sheet where the {tool === 'rfi' ? 'RFI' : tool === 'punch' ? 'punch item' : 'note'} goes · Esc to cancel</div>}
-          {msg && <div className="dw-toast" data-ok={msg.ok || undefined} role="status">{msg.text}<button type="button" aria-label="Dismiss" onClick={() => setMsg(null)}><X size={12} /></button></div>}
-
-          <div ref={scrollRef} className="dw-scroll" data-tool={tool} onMouseDown={onStageDown} onMouseMove={onStageMove} onMouseUp={() => { drag.current = null; }} onMouseLeave={() => { drag.current = null; }}
-            onKeyDown={(e) => { if (e.key === 'Escape') { setDraft(null); setTool('pan'); } }} tabIndex={-1}>
-            <div className="dw-paper" onClick={onStageClick}>
+        {/* ── canvas ── */}
+        <main className="dz-stage">
+          {d?.status === 'superseded' && current && (
+            <div className="dz-banner"><ClockCounterClockwise size={15} /> Older revision. <Link href={`${base}/drawings/${current.id}`}>Open the current sheet (Rev {current.version})</Link></div>
+          )}
+          {compareId && <div className="dz-legend"><i style={{ background: 'rgb(22,163,74)' }} /> Added <i style={{ background: 'rgb(220,38,38)' }} /> Removed <i style={{ background: 'rgb(45,45,45)' }} /> Unchanged</div>}
+          {msg && <div className="dz-toast" data-ok={msg.ok || undefined} role="status">{msg.text}<button type="button" aria-label="Dismiss" onClick={() => setMsg(null)}><X size={12} /></button></div>}
+          <div ref={scrollRef} className="dz-scroll">
+            <div className="dz-paper" data-tool={tool}>
               <canvas ref={canvasRef} />
-              {rendering && <div className="dw-rendering"><span className="dw-spin" /> Drawing the sheet…</div>}
-              {pinsHere.map((p) => {
-                const k = KIND_OF(p);
+              {rendering && <div className="dz-loading"><span className="dz-spin" /> Loading sheet</div>}
+              <svg ref={svgRef} className="dz-svg" viewBox={`0 0 ${REF_W} ${REF_H}`} preserveAspectRatio="none"
+                onPointerDown={onDown} onPointerMove={onMove} onPointerUp={() => void onUp()} onPointerLeave={() => { drag.current = null; setCursor(null); }}>
+                <defs>
+                  <filter id="dw-sel" x="-20%" y="-20%" width="140%" height="140%"><feDropShadow dx="0" dy="0" stdDeviation="3" floodColor="rgb(232,255,42)" floodOpacity="1" /></filter>
+                </defs>
+                {showMarkups && pageMarkups.map((m) => (
+                  <MarkupShape key={m.id} m={m} scale={ftPerUnit} selected={selMarkup === m.id} interactive={tool === 'select' || tool === 'erase'}
+                    onPick={() => { if (tool === 'erase') void removeMarkup(m.id); else { setSelMarkup(m.id); setTab('markups'); } }} />
+                ))}
+                {showMarkups && counts.filter((m) => (m.page_number || 1) === page).map((m) => {
+                  const same = counts.filter((x) => x.data.style.color === m.data.style.color);
+                  const n = same.indexOf(m) + 1, [x, y] = m.data.geometry[0];
+                  return (
+                    <g key={m.id} style={{ pointerEvents: tool === 'select' || tool === 'erase' ? 'all' : 'none', cursor: 'pointer' }}
+                      onClick={(e) => { e.stopPropagation(); if (tool === 'erase') void removeMarkup(m.id); else { setSelMarkup(m.id); setTab('markups'); } }}
+                      filter={selMarkup === m.id ? 'url(#dw-sel)' : undefined}>
+                      <circle cx={x} cy={y} r={11} fill={m.data.style.color} stroke="white" strokeWidth={2} />
+                      <text x={x} y={y + 4} textAnchor="middle" fontSize={11} fontWeight={800} fill="white">{n}</text>
+                    </g>
+                  );
+                })}
+                {draftPts && (() => {
+                  const fake: Markup = {
+                    id: 'draft', page_number: page, color, created_by: '', created_by_name: '', created_at: '',
+                    markup_type: tool === 'pen' || tool === 'highlight' ? 'freehand' : tool === 'line' || tool === 'arrow' ? 'arrow' : tool === 'ellipse' ? 'circle' : tool === 'rect' ? 'rect' : tool === 'cloud' ? 'cloud' : 'measure',
+                    data: { space: 'image', w: REF_W, h: REF_H, geometry: draftPts, style: tool === 'highlight' ? { color, width: Math.max(12, weight * 4), opacity: 0.35 } : tool === 'calibrate' ? { color: 'rgb(232,255,42)', width: 2 } : { color, width: weight, head: tool !== 'line' } },
+                  };
+                  if (tool === 'calibrate') fake.data.feet = undefined;
+                  if (tool === 'area') { fake.data.kind = 'area'; fake.data.style = { color, width: weight }; }
+                  return <MarkupShape m={fake} scale={tool === 'calibrate' ? null : ftPerUnit} selected={false} interactive={false} onPick={() => undefined} />;
+                })()}
+                {calib && <line x1={calib.a[0]} y1={calib.a[1]} x2={calib.b[0]} y2={calib.b[1]} stroke="rgb(232,255,42)" strokeWidth={3} strokeDasharray="6 4" />}
+              </svg>
+
+              {showPins && pins.map((p, i) => {
+                const k = pinKind(p);
                 return (
-                  <button key={p.id} type="button" className="dw-pin" data-k={k} data-closed={p.item?.closed || undefined} data-on={active === p.id || undefined}
+                  <button key={p.id} type="button" className="dz-pin" data-k={k} data-closed={p.item?.closed || undefined} data-on={activePin === p.id || undefined}
                     style={{ left: `${p.x * 100}%`, top: `${p.y * 100}%` }} aria-label={p.item ? p.item.name : p.title || 'Note'}
-                    onClick={(e) => { e.stopPropagation(); setActive(p.id); setTab('pins'); }}>
-                    <span className="dw-pin-head">{p.item?.closed ? <CheckCircle size={14} weight="fill" /> : <KindIcon k={k} />}</span>
-                    <span className="dw-pin-n">{pinNumber(p)}</span>
+                    onClick={(e) => { e.stopPropagation(); if (tool === 'erase') void removePin(p); else { setActivePin(p.id); setTab('pins'); } }}>
+                    {p.item?.closed ? <CheckCircle size={13} weight="fill" /> : k === 'rfi' ? <Question size={13} weight="bold" /> : k === 'punch' ? <Wrench size={13} weight="bold" /> : k === 'note' ? <NotePencil size={13} weight="bold" /> : <MapPin size={13} weight="bold" />}
+                    <span>{i + 1}</span>
                   </button>
                 );
               })}
-              {activePin && activePin.page === page && (
-                <div className="dw-card" style={{ left: `${activePin.x * 100}%`, top: `${activePin.y * 100}%` }} onClick={(e) => e.stopPropagation()}>
-                  <div className="dw-card-top"><span className="dw-dot" data-k={KIND_OF(activePin)}><KindIcon k={KIND_OF(activePin)} size={12} /></span><b>{activePin.item ? activePin.item.noun : 'Note'}</b>{activePin.item && <Badge tone={activePin.item.closed ? 'completed' : 'under_contract'}>{activePin.item.status}</Badge>}<button type="button" aria-label="Close" onClick={() => setActive(null)}><X size={12} /></button></div>
-                  <p>{activePin.item ? activePin.item.name : activePin.title || activePin.description}</p>
-                  <div className="dw-card-act">
-                    {activePin.item && <Link className="k-btn k-btn-primary k-btn-sm" href={activePin.item.href}>Open {activePin.item.noun.toLowerCase()}</Link>}
-                    <button type="button" className="k-btn k-btn-ghost k-btn-sm" onClick={() => removePin(activePin)}><Trash size={13} /> Remove pin</button>
-                  </div>
+
+              {pinSel && pinSel.page === page && (
+                <div className="dz-pop" style={{ left: `${pinSel.x * 100}%`, top: `${pinSel.y * 100}%` }} onPointerDown={(e) => e.stopPropagation()}>
+                  <header><b>{pinSel.item ? pinSel.item.noun : 'Note'}</b>{pinSel.item && <Badge tone={pinSel.item.closed ? 'completed' : 'under_contract'}>{pinSel.item.status}</Badge>}<button type="button" aria-label="Close" onClick={() => setActivePin(null)}><X size={12} /></button></header>
+                  <p>{pinSel.item ? pinSel.item.name : pinSel.title || pinSel.description}</p>
+                  <footer>
+                    {pinSel.item && <Link className="dz-btn" data-primary href={pinSel.item.href}>Open <ArrowSquareOut size={12} /></Link>}
+                    <button type="button" className="dz-btn" onClick={() => void removePin(pinSel)}><Trash size={12} /> Remove pin</button>
+                  </footer>
                 </div>
               )}
-              {draft && (
-                <>
-                  <span className="dw-pin" data-k={draft.kind} data-draft style={{ left: `${draft.x * 100}%`, top: `${draft.y * 100}%` }}><span className="dw-pin-head"><Plus size={14} weight="bold" /></span></span>
-                  <div className="dw-card dw-new" style={{ left: `${draft.x * 100}%`, top: `${draft.y * 100}%` }} onClick={(e) => e.stopPropagation()}>
-                    <div className="dw-card-top"><span className="dw-dot" data-k={draft.kind}><KindIcon k={draft.kind} size={12} /></span><b>{draft.kind === 'rfi' ? 'RFI here' : draft.kind === 'punch' ? 'Punch item here' : 'Note here'}</b><button type="button" aria-label="Cancel" onClick={() => setDraft(null)}><X size={12} /></button></div>
-                    <input autoFocus className="k-input" placeholder={draft.kind === 'rfi' ? 'What do you need answered?' : draft.kind === 'punch' ? 'What needs fixing?' : 'Write the note'} value={newTitle} onChange={(e) => setNewTitle(e.target.value)} onKeyDown={(e) => { if (e.key === 'Enter') void createHere(); }} />
-                    <button type="button" className="k-btn k-btn-primary k-btn-sm" disabled={busy || !newTitle.trim()} onClick={() => void createHere()}>
-                      <Plus size={13} weight="bold" /> {busy ? 'Saving…' : draft.kind === 'rfi' ? 'Create RFI & pin' : draft.kind === 'punch' ? 'Create punch item & pin' : 'Pin note'}
-                    </button>
-                    {draft.kind !== 'note' && (
-                      <>
-                        <p className="dw-or"><LinkSimple size={12} /> or pin one that exists</p>
-                        <input className="k-input" placeholder={`Search ${draft.kind === 'rfi' ? 'RFIs' : 'punch items'}`} value={q} onChange={(e) => setQ(e.target.value)} />
-                        <div className="dw-hits">
-                          {hits.length === 0 ? <p className="dw-dim">None found on this job.</p> : hits.slice(0, 8).map((h) => (
-                            <button key={h.id} type="button" className="dw-hit" disabled={busy} onClick={() => void linkExisting(h)}><span>{h.name}</span><small>{h.status}</small></button>
-                          ))}
-                        </div>
-                      </>
-                    )}
-                  </div>
-                </>
+
+              {pinDraft && (
+                <div className="dz-pop dz-pop-new" style={{ left: `${pinDraft.x * 100}%`, top: `${pinDraft.y * 100}%` }} onPointerDown={(e) => e.stopPropagation()}>
+                  <header><b>{pinDraft.kind === 'rfi' ? 'New RFI on this sheet' : pinDraft.kind === 'punch' ? 'New punch item on this sheet' : 'Note on this sheet'}</b><button type="button" aria-label="Cancel" onClick={() => setPinDraft(null)}><X size={12} /></button></header>
+                  <input autoFocus className="dz-input" placeholder={pinDraft.kind === 'rfi' ? 'What needs an answer?' : pinDraft.kind === 'punch' ? 'What needs fixing?' : 'Write the note'} value={pinTitle} onChange={(e) => setPinTitle(e.target.value)} onKeyDown={(e) => { if (e.key === 'Enter') void pinCreate(); }} />
+                  <button type="button" className="dz-btn" data-primary disabled={busy || !pinTitle.trim()} onClick={() => void pinCreate()}><Plus size={12} weight="bold" /> {busy ? 'Saving…' : pinDraft.kind === 'rfi' ? 'Create RFI' : pinDraft.kind === 'punch' ? 'Create punch item' : 'Pin note'}</button>
+                  {pinDraft.kind !== 'note' && (
+                    <>
+                      <p className="dz-or"><LinkSimple size={12} /> Or pin one that exists</p>
+                      <input className="dz-input" placeholder={`Search ${pinDraft.kind === 'rfi' ? 'RFIs' : 'punch items'}`} value={q} onChange={(e) => setQ(e.target.value)} />
+                      <div className="dz-hits">{hits.length === 0 ? <p className="dz-dim">None on this job yet.</p> : hits.slice(0, 6).map((h) => <button key={h.id} type="button" disabled={busy} onClick={() => void pinLink(h)}><span>{h.name}</span><small>{h.status}</small></button>)}</div>
+                    </>
+                  )}
+                </div>
+              )}
+
+              {textAt && (
+                <div className="dz-pop dz-pop-text" style={{ left: `${(textAt[0] / REF_W) * 100}%`, top: `${(textAt[1] / REF_H) * 100}%` }} onPointerDown={(e) => e.stopPropagation()}>
+                  <input autoFocus className="dz-input" placeholder="Type, then Enter" value={textVal} onChange={(e) => setTextVal(e.target.value)} onKeyDown={(e) => { if (e.key === 'Enter') void saveText(); if (e.key === 'Escape') setTextAt(null); }} onBlur={() => void saveText()} />
+                </div>
+              )}
+
+              {calib && (
+                <div className="dz-pop" style={{ left: `${(calib.b[0] / REF_W) * 100}%`, top: `${(calib.b[1] / REF_H) * 100}%` }} onPointerDown={(e) => e.stopPropagation()}>
+                  <header><b>How long is that line?</b><button type="button" aria-label="Cancel" onClick={() => setCalib(null)}><X size={12} /></button></header>
+                  <input autoFocus className="dz-input" placeholder={`e.g. 24' 6"`} value={calibVal} onChange={(e) => setCalibVal(e.target.value)} onKeyDown={(e) => { if (e.key === 'Enter') void saveCalib(); }} />
+                  <button type="button" className="dz-btn" data-primary onClick={() => void saveCalib()}>Set scale</button>
+                </div>
               )}
             </div>
           </div>
         </main>
 
-        {/* Right panel */}
-        <aside className="dw-panel">
-          <div className="dw-tabs" role="tablist">
-            {([['pins', `Pins ${pinsAll.length}`], ['revs', `Revisions ${sheet?.revisions.length ?? ''}`], ['info', 'Info']] as const).map(([k, l]) => (
-              <button key={k} type="button" role="tab" aria-selected={tab === k} data-on={tab === k || undefined} onClick={() => setTab(k)}>{l}</button>
+        {/* ── side panel ── */}
+        <aside className="dz-side">
+          <div className="dz-tabs" role="tablist">
+            {([['markups', 'Markups', pageMarkups.length], ['pins', 'Pins', sheet?.pins.length ?? 0], ['revs', 'Revisions', sheet?.revisions.length ?? 0]] as const).map(([k, l, n]) => (
+              <button key={k} type="button" role="tab" aria-selected={tab === k} data-on={tab === k || undefined} onClick={() => setTab(k)}>{l}<span>{n}</span></button>
             ))}
           </div>
-          {tab === 'pins' && (
-            <div className="dw-pane">
-              {pinsAll.length === 0 ? (
-                <div className="dw-empty"><MapPin size={28} /><b>No pins yet</b><span>Pick RFI, Punch or Note in the toolbar, then tap the sheet.</span></div>
-              ) : (Object.keys(KIND_LABEL) as Kind[]).filter((k) => counts[k] > 0).map((k) => (
-                <div key={k}>
-                  <p className="dw-group"><span className="dw-dot" data-k={k}><KindIcon k={k} size={12} /></span>{KIND_LABEL[k]}<span>{counts[k]}</span></p>
-                  {pinsAll.filter((p) => KIND_OF(p) === k).map((p) => (
-                    <div key={p.id} className="dw-row" data-on={active === p.id || undefined} data-closed={p.item?.closed || undefined}
-                      onClick={() => { setActive(p.id); if (p.page !== page) setPage(p.page); if (!layers[k]) setLayers((l) => ({ ...l, [k]: true })); }}>
-                      <span className="dw-num" data-k={k}>{pinNumber(p)}</span>
-                      <span className="dw-row-t">
-                        {p.item ? <Link className="k-link" href={p.item.href} onClick={(e) => e.stopPropagation()}>{p.item.name}</Link> : <b>{p.title || 'Note'}</b>}
-                        <small>{p.item ? p.item.status : 'Note'}{pages > 1 ? ` · page ${p.page}` : ''} · {day(p.created_at)}</small>
-                      </span>
-                    </div>
-                  ))}
+          <div className="dz-pane">
+            {tab === 'markups' && counts.length > 0 && (
+              <div className="dz-counts">
+                {Array.from(new Set(counts.map((c) => c.data.style.color))).map((c) => (
+                  <span key={c}><i style={{ background: c }} /><b>{counts.filter((x) => x.data.style.color === c).length}</b> counted</span>
+                ))}
+              </div>
+            )}
+            {tab === 'markups' && (pageMarkups.length === 0 ? (
+              <div className="dz-empty"><PencilSimple size={26} /><b>No markups on this page</b><span>Pick a tool on the left and draw on the sheet. Everyone on the job sees them.</span></div>
+            ) : pageMarkups.slice().reverse().map((m) => (
+              <div key={m.id} className="dz-row" data-on={selMarkup === m.id || undefined} onClick={() => { setSelMarkup(m.id); setTool('select'); }}>
+                <span className="dz-chip" style={{ background: m.data?.style?.color || m.color }} />
+                <span className="dz-row-t"><b>{markupLabel[m.markup_type] || label(m.markup_type)}{m.markup_type === 'text' && m.data?.text ? ` · ${m.data.text}` : ''}{m.markup_type === 'measure' ? (m.data?.kind === 'area' ? ` · ${m.data.sqft != null ? sqftLabel(m.data.sqft) : '—'}` : ` · ${m.data?.feet != null ? feetIn(m.data.feet) : ftPerUnit ? feetIn(dist(m.data.geometry[0], m.data.geometry[1]) * ftPerUnit) : '—'}`) : ''}</b><small>{(m.created_by_name || '').split('@')[0] || 'Someone'} · {day(m.created_at)}</small></span>
+                <button type="button" className="dz-x" aria-label="Remove markup" onClick={(e) => { e.stopPropagation(); void removeMarkup(m.id); }}><Trash size={14} /></button>
+              </div>
+            )))}
+            {tab === 'pins' && ((sheet?.pins.length ?? 0) === 0 ? (
+              <div className="dz-empty"><MapPin size={26} /><b>No pins yet</b><span>Use RFI, Punch or Note in the tools and click the sheet.</span></div>
+            ) : sheet!.pins.map((p) => {
+              const k = pinKind(p);
+              return (
+                <div key={p.id} className="dz-row" data-on={activePin === p.id || undefined} onClick={() => { setActivePin(p.id); if (p.page !== page) setPage(p.page); }}>
+                  <span className="dz-pinmini" data-k={k} data-closed={p.item?.closed || undefined} />
+                  <span className="dz-row-t">{p.item ? <Link href={p.item.href} onClick={(e) => e.stopPropagation()}>{p.item.name}</Link> : <b>{p.title || 'Note'}</b>}<small>{p.item ? p.item.status : 'Note'}{pages > 1 ? ` · page ${p.page}` : ''}</small></span>
                 </div>
-              ))}
-            </div>
-          )}
-          {tab === 'revs' && (
-            <ol className="dw-pane dw-timeline">
-              {(sheet?.revisions || []).map((r) => (
-                <li key={r.id} data-on={r.id === drawingId || undefined}>
-                  <span className="dw-tl-dot" data-cur={r.status === 'current' || undefined} />
-                  <div>
-                    <Link href={`${base}/drawings/${r.id}`}><b>Rev {r.version || '—'}</b></Link> <Badge tone={statusTone(r.status)}>{label(r.status)}</Badge>
-                    <small>{day(r.revision_date || r.created_at)}</small>
-                    {r.id !== drawingId && <button type="button" className="dw-linkbtn" onClick={() => setCompareId(r.id)}><SquareHalf size={13} /> Compare with this</button>}
-                  </div>
-                </li>
-              ))}
-              <li><span className="dw-tl-dot" data-new /><div><button type="button" className="dw-linkbtn" onClick={() => fileRef.current?.click()}><UploadSimple size={13} /> Upload the next revision</button><small>Same sheet number — becomes current, this one is kept as superseded.</small></div></li>
-            </ol>
-          )}
-          {tab === 'info' && d && (
-            <dl className="dw-pane dw-info">
-              {[['Sheet', d.sheet_number], ['Title', d.name], ['Discipline', d.discipline || '—'], ['Revision', d.version || '—'], ['Status', label(d.status)], ['Issued', day(d.revision_date)], ['Pages', String(pages)]].map(([k, v]) => <div key={k}><dt>{k}</dt><dd>{v}</dd></div>)}
-              <div><dt>File</dt><dd><a className="k-link" href={d.url} target="_blank" rel="noreferrer">Open the file <ArrowSquareOut size={12} /></a></dd></div>
-              <div><dt>Help</dt><dd className="dw-dim"><Info size={12} /> Ctrl/⌘ + scroll zooms. Drag to pan.</dd></div>
-            </dl>
-          )}
+              );
+            }))}
+            {tab === 'revs' && (
+              <ol className="dz-tl">
+                {(sheet?.revisions || []).map((r) => (
+                  <li key={r.id} data-on={r.id === drawingId || undefined} data-cur={r.status === 'current' || undefined}>
+                    <span className="dz-tl-dot" />
+                    <div><Link href={`${base}/drawings/${r.id}`}>Rev {r.version || '—'}</Link> <Badge tone={statusTone(r.status)}>{label(r.status)}</Badge><small>{day(r.revision_date || r.created_at)}</small>
+                      {r.id !== drawingId && <button type="button" className="dz-link" onClick={() => setCompareId(r.id)}><SquareHalf size={12} /> Compare</button>}</div>
+                  </li>
+                ))}
+                <li><span className="dz-tl-dot" data-new /><div><button type="button" className="dz-link" onClick={() => fileRef.current?.click()}><UploadSimple size={12} /> Upload the next revision</button><small>Same sheet number; this one is kept as superseded.</small></div></li>
+              </ol>
+            )}
+          </div>
         </aside>
       </div>
+
+      {/* ── status bar ── */}
+      <footer className="dz-status">
+        {pages > 1 ? (
+          <span className="dz-pages"><button type="button" disabled={page <= 1} onClick={() => setPage((p) => p - 1)} aria-label="Previous page"><CaretLeft size={12} /></button>Page {page} of {pages}<button type="button" disabled={page >= pages} onClick={() => setPage((p) => p + 1)} aria-label="Next page"><CaretRight size={12} /></button></span>
+        ) : <span>Page 1 of 1</span>}
+        <span>{Math.round(zoom * 100)}%</span>
+        <span>{ftPerUnit ? <>Scale set from a {feetIn(scaleMk?.data.feet ?? 0)} dimension · <button type="button" className="dz-link" onClick={() => setTool('calibrate')}>Reset</button></> : <button type="button" className="dz-link" onClick={() => setTool('calibrate')}>Scale not set — set it</button>}</span>
+        {cursor && ftPerUnit && <span>{feetIn(cursor[0] * ftPerUnit)}, {feetIn(cursor[1] * ftPerUnit)}</span>}
+        <span className="dz-grow" />
+        <span>{markups.filter((m) => m.markup_type !== 'stamp').length} markups · {counts.length} counted · {sheet?.pins.length ?? 0} pins</span>
+        <span className="dz-save" data-s={saveState}>{saveState === 'saving' ? 'Saving…' : saveState === 'saved' ? 'All changes saved' : saveState === 'failed' ? 'Not saved' : 'Up to date'}</span>
+        <span className="dz-showhide">{showMarkups ? <Eye size={13} /> : <EyeSlash size={13} />}</span>
+      </footer>
     </div>
   );
 }
 
 const CSS = `
-.dw{display:flex;flex-direction:column;height:calc(100vh - 112px);min-height:560px;margin:-8px 0 0}
-.dw-head{padding:6px 4px 12px;display:grid;gap:10px}
-.dw-crumbs{display:flex;gap:6px;font-size:13px;color:var(--text-secondary)}
-.dw-crumbs a{color:var(--text-secondary);text-decoration:none}.dw-crumbs a:hover{color:var(--text-primary)}
-.dw-crumbs b{color:var(--text-primary)}
-.dw-titlerow{display:flex;align-items:center;gap:12px;flex-wrap:wrap}
-.dw-titlerow h1{margin:0}
-.dw-sub{color:var(--text-primary);font-weight:600;opacity:.85}
-.dw-grow{flex:1}
-.dw-stats{display:grid;grid-template-columns:repeat(5,minmax(0,1fr));gap:10px}
-@media (max-width:900px){.dw-stats{grid-template-columns:repeat(2,minmax(0,1fr))}}
-.dw-stat{display:grid;grid-template-columns:auto 1fr;grid-template-rows:auto auto;column-gap:10px;align-items:center;text-align:left;padding:10px 14px;border-radius:10px;border:1px solid var(--border-default);background:linear-gradient(180deg,var(--bg-surface-2),var(--bg-surface));color:var(--text-primary);cursor:pointer;font:inherit}
-.dw-stat svg{grid-row:1/3;padding:8px;border-radius:9px;width:36px;height:36px;box-sizing:border-box}
-.dw-stat b{font-size:20px;line-height:1.1;font-variant-numeric:tabular-nums;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
-.dw-stat span{font-size:12px;color:var(--text-secondary)}
-.dw-stat[data-k=rfi] svg{color:var(--danger);background:rgba(248,113,113,.14)}
-.dw-stat[data-k=punch] svg{color:var(--warning);background:rgba(251,191,36,.14)}
-.dw-stat[data-k=note] svg{color:var(--text-primary);background:rgba(148,163,184,.16)}
-.dw-stat[data-k=rev] svg{color:var(--success);background:rgba(74,222,128,.14)}
-.dw-stat[data-k=info]{cursor:default}.dw-stat[data-k=info] svg{color:var(--text-primary);background:rgba(192,132,252,.14)}
-.dw-stat:hover:not([data-k=info]){border-color:var(--text-tertiary)}
-.dw-banner{display:flex;gap:8px;align-items:center;padding:8px 12px;border-radius:8px;border:1px solid var(--warning);font-size:14px}
-.dw-body{flex:1;min-height:0;display:grid;grid-template-columns:240px minmax(0,1fr) 320px;gap:0;border:1px solid var(--border-default);border-radius:12px;overflow:hidden;background:var(--bg-surface)}
-.dw:not([data-rail]) .dw-body{grid-template-columns:0 minmax(0,1fr) 320px}
-.dw:not([data-rail]) .dw-rail{display:none}
-@media (max-width:1100px){.dw-body{grid-template-columns:0 minmax(0,1fr)}.dw-rail{display:none}.dw-panel{grid-column:1/-1;border-left:0;border-top:1px solid var(--border-default)}.dw{height:auto}.dw-scroll{height:70vh}}
-.dw-rail{border-right:1px solid var(--border-default);display:flex;flex-direction:column;min-height:0}
-.dw-rail-search{display:flex;align-items:center;gap:6px;margin:10px;padding:0 10px;height:36px;border-radius:8px;border:1px solid var(--border-default);background:var(--bg-base);color:var(--text-secondary)}
-.dw-rail-search input{flex:1;background:none;border:0;outline:0;color:var(--text-primary);font-size:14px}
-.dw-rail-list{overflow:auto;padding:0 6px 10px}
-.dw-rail-h{display:flex;justify-content:space-between;margin:10px 6px 4px;font-size:11px;font-weight:700;letter-spacing:.06em;text-transform:uppercase;color:var(--title-section,var(--brand-primary))}
-.dw-rail-h span{color:var(--text-tertiary)}
-.dw-rail-row{display:flex;gap:10px;align-items:center;padding:7px 8px;border-radius:8px;color:var(--text-primary);text-decoration:none}
-.dw-rail-row:hover{background:var(--bg-surface-2)}
-.dw-rail-row[data-on]{background:var(--bg-surface-2);box-shadow:inset 3px 0 0 var(--brand-primary)}
-.dw-rail-thumb{width:34px;height:26px;border-radius:4px;display:grid;place-items:center;background:var(--bg-base);border:1px solid var(--border-default);color:var(--text-tertiary);flex:none}
-.dw-rail-t{display:grid;min-width:0}.dw-rail-t b{font-size:13px}.dw-rail-t small{font-size:12px;color:var(--text-secondary);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
-.dw-canvas{position:relative;min-width:0;min-height:0;display:flex;background:radial-gradient(circle at 50% 0%,var(--bg-surface-2),var(--bg-base) 70%)}
-.dw-toolbar{position:absolute;top:12px;left:50%;transform:translateX(-50%);z-index:5;display:flex;align-items:center;gap:2px;padding:5px;border-radius:12px;background:rgba(16,23,34,.92);border:1px solid var(--border-default);box-shadow:0 10px 30px rgba(0,0,0,.45);backdrop-filter:blur(8px);max-width:calc(100% - 24px);overflow-x:auto}
-.dw-tb{display:inline-flex;align-items:center;gap:6px;min-height:36px;min-width:36px;padding:0 9px;border-radius:8px;border:0;background:none;color:var(--text-secondary);cursor:pointer;font:600 13px/1 inherit;text-decoration:none;list-style:none;white-space:nowrap}
-.dw-tb::-webkit-details-marker{display:none}
-.dw-tb:hover{background:var(--bg-surface-2);color:var(--text-primary)}
-.dw-tb[data-on]{background:var(--bg-surface-2);color:var(--text-primary);box-shadow:inset 0 -2px 0 var(--brand-primary)}
-.dw-tb[data-tool=rfi][data-on]{color:var(--danger)}.dw-tb[data-tool=punch][data-on]{color:var(--warning)}
-.dw-tb:disabled{opacity:.4;cursor:default}
-.dw-tb-v{font-size:12px;color:var(--text-secondary);min-width:44px;text-align:center;font-variant-numeric:tabular-nums}
-.dw-tb-sep{width:1px;height:22px;background:var(--border-default);margin:0 4px;flex:none}
-@media (max-width:1300px){.dw-tb-l{display:none}}
-.dw-dd{position:relative}
-.dw-dd-menu{position:absolute;top:44px;left:0;z-index:6;min-width:230px;padding:6px;border-radius:10px;background:var(--bg-surface);border:1px solid var(--border-default);box-shadow:0 12px 30px rgba(0,0,0,.5);display:grid;gap:2px}
-.dw-check{display:flex;gap:8px;align-items:center;padding:7px 8px;border-radius:6px;font-size:14px;color:var(--text-primary);cursor:pointer}
-.dw-check small{margin-left:auto;color:var(--text-tertiary)}
-.dw-check:hover,.dw-dd-item:hover{background:var(--bg-surface-2)}
-.dw-dd-item{text-align:left;padding:8px;border-radius:6px;border:0;background:none;color:var(--text-primary);font:inherit;font-size:14px;cursor:pointer}
-.dw-dd-item[data-on]{box-shadow:inset 3px 0 0 var(--brand-primary)}
-.dw-legend,.dw-hint{position:absolute;top:62px;left:50%;transform:translateX(-50%);z-index:4;display:flex;gap:8px;align-items:center;padding:6px 12px;border-radius:999px;background:rgba(16,23,34,.92);border:1px solid var(--border-default);font-size:13px;white-space:nowrap}
-.dw-legend i{width:10px;height:10px;border-radius:2px;display:inline-block;margin-left:6px}
-.dw-legend i[data-k=add]{background:rgb(22,163,74)}.dw-legend i[data-k=del]{background:rgb(220,38,38)}.dw-legend i[data-k=same]{background:rgb(40,40,40);border:1px solid var(--text-tertiary)}
-.dw-toast{position:absolute;bottom:14px;left:50%;transform:translateX(-50%);z-index:6;display:flex;gap:10px;align-items:center;padding:9px 12px;border-radius:10px;background:var(--bg-surface);border:1px solid var(--danger);font-size:14px;box-shadow:0 10px 30px rgba(0,0,0,.45)}
-.dw-toast[data-ok]{border-color:var(--success)}
-.dw-toast button{background:none;border:0;color:var(--text-secondary);cursor:pointer}
-.dw-scroll{flex:1;overflow:auto;padding:70px 32px 32px;outline:0}
-.dw-scroll[data-tool=pan]{cursor:grab}.dw-scroll[data-tool=pan]:active{cursor:grabbing}
-.dw-scroll:not([data-tool=pan]) .dw-paper{cursor:crosshair}
-.dw-paper{position:relative;width:max-content;margin:0 auto;line-height:0;box-shadow:0 20px 60px rgba(0,0,0,.55),0 0 0 1px rgba(255,255,255,.06);border-radius:2px;user-select:none}
-.dw-paper canvas{display:block;border-radius:2px}
-.dw-rendering{position:absolute;top:12px;left:12px;display:flex;gap:8px;align-items:center;line-height:1;padding:8px 12px;border-radius:8px;background:rgba(16,23,34,.9);color:var(--text-primary);font-size:13px}
-.dw-spin{width:12px;height:12px;border-radius:50%;border:2px solid var(--border-default);border-top-color:var(--brand-primary);animation:dwspin .8s linear infinite}
-@keyframes dwspin{to{transform:rotate(360deg)}}
-.dw-pin{position:absolute;transform:translate(-50%,-100%);display:flex;flex-direction:column;align-items:center;border:0;background:none;padding:0;cursor:pointer;filter:drop-shadow(0 3px 5px rgba(0,0,0,.55));line-height:1}
-.dw-pin-head{width:30px;height:30px;border-radius:50% 50% 50% 4px;transform:rotate(-45deg);display:grid;place-items:center;border:2px solid var(--bg-base);background:var(--k-c);color:var(--bg-base)}
-.dw-pin-head svg{transform:rotate(45deg)}
-.dw-pin-n{position:absolute;top:-8px;right:-10px;min-width:18px;height:18px;padding:0 4px;border-radius:9px;background:var(--bg-base);color:var(--text-primary);font:700 11px/18px system-ui,sans-serif;border:1px solid var(--k-c)}
-.dw-pin[data-k=rfi],.dw-dot[data-k=rfi],.dw-num[data-k=rfi]{--k-c:var(--danger)}
-.dw-pin[data-k=punch],.dw-dot[data-k=punch],.dw-num[data-k=punch]{--k-c:var(--warning)}
-.dw-pin[data-k=note],.dw-dot[data-k=note],.dw-num[data-k=note]{--k-c:var(--text-secondary)}
-.dw-pin[data-k=other],.dw-dot[data-k=other],.dw-num[data-k=other]{--k-c:var(--success)}
-.dw-pin[data-closed] .dw-pin-head{--k-c:var(--success);opacity:.75}
-.dw-pin[data-on] .dw-pin-head{box-shadow:0 0 0 3px var(--brand-primary)}
-.dw-pin[data-draft]{pointer-events:none;animation:dwdrop .25s ease-out}
-@keyframes dwdrop{from{transform:translate(-50%,-140%);opacity:0}to{transform:translate(-50%,-100%);opacity:1}}
-.dw-card{position:absolute;z-index:3;transform:translate(22px,-50%);width:290px;line-height:1.35;padding:12px;border-radius:12px;background:var(--bg-surface);border:1px solid var(--border-default);box-shadow:0 16px 40px rgba(0,0,0,.55);display:grid;gap:8px;cursor:default;font-size:14px}
-.dw-card p{margin:0;color:var(--text-primary)}
-.dw-card-top{display:flex;gap:8px;align-items:center}
-.dw-card-top button{margin-left:auto;background:none;border:0;color:var(--text-secondary);cursor:pointer;min-width:28px;min-height:28px}
-.dw-card-act{display:flex;gap:6px;flex-wrap:wrap}
-.dw-or{display:flex;gap:6px;align-items:center;margin:4px 0 0;font-size:12px;color:var(--text-secondary)}
-.dw-hits{display:grid;gap:4px;max-height:180px;overflow:auto}
-.dw-hit{display:flex;justify-content:space-between;gap:8px;text-align:left;padding:7px 8px;border-radius:8px;border:1px solid var(--border-default);background:var(--bg-surface-2);color:var(--text-primary);cursor:pointer;font-size:13px}
-.dw-hit small{color:var(--text-secondary);white-space:nowrap}
-.dw-hit:hover{border-color:var(--brand-primary)}
-.dw-dot{width:22px;height:22px;border-radius:6px;display:inline-grid;place-items:center;background:var(--k-c);color:var(--bg-base);flex:none}
-.dw-panel{border-left:1px solid var(--border-default);display:flex;flex-direction:column;min-height:0;background:var(--bg-surface)}
-.dw-tabs{display:flex;border-bottom:1px solid var(--border-default)}
-.dw-tabs button{flex:1;padding:12px 6px;border:0;background:none;color:var(--text-secondary);font:600 13px inherit;cursor:pointer;border-bottom:2px solid transparent}
-.dw-tabs button[data-on]{color:var(--text-primary);border-bottom-color:var(--brand-primary)}
-.dw-pane{overflow:auto;padding:10px 12px;margin:0;flex:1}
-.dw-group{display:flex;gap:8px;align-items:center;margin:8px 0 6px;font-size:12px;font-weight:700;letter-spacing:.05em;text-transform:uppercase;color:var(--text-secondary)}
-.dw-group span:last-child{margin-left:auto;color:var(--text-tertiary)}
-.dw-row{display:flex;gap:10px;align-items:center;padding:8px;border-radius:8px;cursor:pointer}
-.dw-row:hover,.dw-row[data-on]{background:var(--bg-surface-2)}
-.dw-row[data-closed] .dw-row-t{opacity:.6}
-.dw-row-t{display:grid;min-width:0;font-size:14px}
-.dw-row-t small{font-size:12px;color:var(--text-secondary);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
-.dw-num{min-width:24px;height:24px;border-radius:12px;display:grid;place-items:center;font:700 12px system-ui,sans-serif;background:var(--k-c);color:var(--bg-base);flex:none}
-.dw-empty{display:grid;justify-items:center;text-align:center;gap:6px;padding:40px 16px;color:var(--text-secondary);font-size:14px}
-.dw-empty svg{color:var(--text-tertiary)}.dw-empty b{color:var(--text-primary)}
-.dw-timeline{list-style:none;display:grid;gap:0}
-.dw-timeline li{display:grid;grid-template-columns:18px 1fr;gap:10px;padding:0 0 16px;position:relative}
-.dw-timeline li:not(:last-child)::before{content:'';position:absolute;left:8px;top:16px;bottom:0;width:2px;background:var(--border-default)}
-.dw-timeline li>div{display:grid;gap:3px;font-size:14px}
-.dw-timeline a{color:var(--text-primary);text-decoration:none}
-.dw-timeline small{font-size:12px;color:var(--text-secondary)}
-.dw-timeline li[data-on] b{color:var(--title-section,var(--brand-primary))}
-.dw-tl-dot{width:18px;height:18px;border-radius:50%;border:2px solid var(--text-tertiary);background:var(--bg-surface);margin-top:2px;z-index:1}
-.dw-tl-dot[data-cur]{border-color:var(--success);background:var(--success)}
-.dw-tl-dot[data-new]{border-style:dashed}
-.dw-linkbtn{display:inline-flex;gap:5px;align-items:center;width:max-content;padding:0;border:0;background:none;color:var(--text-primary);text-decoration:underline;font:inherit;font-size:13px;cursor:pointer}
-.dw-info{display:grid;gap:10px}
-.dw-info div{display:grid;grid-template-columns:90px 1fr;gap:8px;font-size:14px}
-.dw-info dt{color:var(--text-secondary)}.dw-info dd{margin:0;color:var(--text-primary)}
-.dw-dim{color:var(--text-secondary);font-size:13px;margin:0}
+.dz{--dz-ink:rgb(226,232,240);--dz-dim:rgb(148,163,184);--dz-line:rgba(148,163,184,.18);--dz-chrome:rgb(17,24,35);--dz-chrome-2:rgb(24,33,47);--dz-well:rgb(10,14,22);--dz-hot:var(--brand-primary);
+  display:flex;flex-direction:column;height:calc(100vh - 104px);min-height:600px;border:1px solid var(--dz-line);border-radius:10px;overflow:hidden;background:var(--dz-chrome);color:var(--dz-ink);font-size:13px}
+.dz:fullscreen{height:100vh;border-radius:0}
+.dz-top{display:flex;align-items:center;gap:6px;height:52px;padding:0 10px;background:var(--dz-chrome);border-bottom:1px solid var(--dz-line);flex:none;min-width:0}
+.dz-grow{flex:1}
+.dz-div{width:1px;height:22px;background:var(--dz-line);margin:0 4px;flex:none}
+.dz-ib{display:inline-grid;place-items:center;min-width:34px;height:34px;border-radius:7px;border:0;background:none;color:var(--dz-dim);cursor:pointer;font:600 18px/1 inherit;text-decoration:none;flex:none}
+.dz-ib:hover:not(:disabled){background:var(--dz-chrome-2);color:var(--dz-ink)}
+.dz-ib:disabled{opacity:.3;cursor:default}
+.dz-sheet{display:flex;align-items:center;gap:2px;min-width:0}
+.dz-sel{position:relative;display:inline-flex;align-items:center;gap:8px;height:36px;padding:0 10px;border-radius:7px;background:var(--dz-chrome-2);border:1px solid var(--dz-line);color:var(--dz-ink);cursor:pointer;min-width:0}
+.dz-sel:hover{border-color:rgba(148,163,184,.4)}
+.dz-sel select{position:absolute;inset:0;opacity:0;cursor:pointer;font-size:16px}
+.dz-sel-v{display:flex;gap:8px;align-items:baseline;min-width:0;white-space:nowrap}
+.dz-sel-v b{font-size:15px;color:var(--title-page,var(--dz-hot))}
+.dz-sel-v span{color:var(--dz-dim);overflow:hidden;text-overflow:ellipsis;max-width:34vw}
+.dz-sel-sm{height:32px;gap:6px;font-weight:600}
+.dz-zoom{min-width:78px;justify-content:space-between}
+.dz-act{display:inline-flex;align-items:center;gap:6px;height:34px;padding:0 12px;margin-left:6px;border-radius:7px;border:1px solid var(--dz-line);background:var(--dz-chrome-2);color:var(--dz-ink);font:600 13px/1 inherit;cursor:pointer;white-space:nowrap}
+.dz-act:hover{border-color:var(--dz-hot)}
+.dz-props{display:flex;align-items:center;gap:8px;height:42px;padding:0 12px 0 66px;background:var(--dz-chrome-2);border-bottom:1px solid var(--dz-line);flex:none;overflow-x:auto}
+.dz-tool-name{font-weight:700;color:var(--dz-ink);min-width:96px}
+.dz-hint{color:var(--dz-dim);white-space:nowrap}
+.dz-swatches{display:flex;gap:6px}
+.dz-sw{width:22px;height:22px;border-radius:50%;border:2px solid var(--dz-chrome-2);box-shadow:0 0 0 1px var(--dz-line);cursor:pointer;padding:0}
+.dz-sw[data-on]{box-shadow:0 0 0 2px var(--dz-hot)}
+.dz-weights{display:flex;gap:4px}
+.dz-wt{display:inline-flex;align-items:center;gap:6px;height:28px;padding:0 9px;border-radius:6px;border:1px solid transparent;background:none;color:var(--dz-dim);font:600 12px/1 inherit;cursor:pointer}
+.dz-wt i{display:block;width:18px;border-radius:4px;background:currentColor}
+.dz-wt[data-on]{border-color:var(--dz-line);background:var(--dz-chrome);color:var(--dz-ink)}
+.dz-toggle{display:inline-flex;align-items:center;gap:6px;color:var(--dz-dim);white-space:nowrap;cursor:pointer}
+.dz-toggle input{accent-color:var(--dz-hot)}
+.dz-body{flex:1;min-height:0;display:grid;grid-template-columns:56px minmax(0,1fr) 300px}
+@media (max-width:1100px){.dz-body{grid-template-columns:56px minmax(0,1fr)}.dz-side{display:none}.dz-props{padding-left:12px}}
+.dz-tools{display:flex;flex-direction:column;gap:2px;padding:8px 6px;background:var(--dz-chrome);border-right:1px solid var(--dz-line);overflow-y:auto;overflow-x:visible}
+.dz-tgroup{display:grid;gap:2px;padding-bottom:6px;margin-bottom:6px;border-bottom:1px solid var(--dz-line)}
+.dz-tgroup-end{border:0;margin-top:auto}
+.dz-tool{position:relative;display:grid;place-items:center;width:44px;height:40px;border-radius:8px;border:0;background:none;color:var(--dz-dim);cursor:pointer}
+.dz-tool:hover:not(:disabled){background:var(--dz-chrome-2);color:var(--dz-ink)}
+.dz-tool[data-on]{background:var(--dz-hot);color:var(--bg-base)}
+.dz-tool[data-k=rfi]:not([data-on]){color:rgb(248,113,113)}.dz-tool[data-k=punch]:not([data-on]){color:rgb(251,191,36)}
+.dz-tool:disabled{opacity:.3;cursor:default}
+.dz-tip{position:absolute;left:52px;top:50%;transform:translateY(-50%);display:none;align-items:center;gap:8px;padding:6px 9px;border-radius:6px;background:var(--dz-well);border:1px solid var(--dz-line);color:var(--dz-ink);font:600 12px/1 inherit;white-space:nowrap;z-index:20;pointer-events:none}
+.dz-tip kbd{padding:2px 5px;border-radius:4px;background:var(--dz-chrome-2);color:var(--dz-dim);font:600 11px/1 inherit}
+.dz-tool:hover .dz-tip,.dz-tool:focus-visible .dz-tip{display:inline-flex}
+.dz-stage{position:relative;min-width:0;min-height:0;display:flex;background:var(--dz-well)}
+.dz-scroll{flex:1;overflow:auto;padding:28px 40px}
+.dz-paper{position:relative;width:max-content;margin:0 auto;line-height:0;background:white;box-shadow:0 1px 0 rgba(255,255,255,.04),0 24px 64px rgba(0,0,0,.6)}
+.dz-paper canvas{display:block}
+.dz-svg{position:absolute;inset:0;width:100%;height:100%;touch-action:none}
+.dz-paper[data-tool=pan] .dz-svg{cursor:grab}.dz-paper[data-tool=pan] .dz-svg:active{cursor:grabbing}
+.dz-paper[data-tool=pen] .dz-svg,.dz-paper[data-tool=highlight] .dz-svg,.dz-paper[data-tool=line] .dz-svg,.dz-paper[data-tool=arrow] .dz-svg,.dz-paper[data-tool=rect] .dz-svg,.dz-paper[data-tool=ellipse] .dz-svg,.dz-paper[data-tool=cloud] .dz-svg,.dz-paper[data-tool=measure] .dz-svg,.dz-paper[data-tool=calibrate] .dz-svg,.dz-paper[data-tool=rfi] .dz-svg,.dz-paper[data-tool=punch] .dz-svg,.dz-paper[data-tool=note] .dz-svg{cursor:crosshair}
+.dz-paper[data-tool=text] .dz-svg{cursor:text}
+.dz-paper[data-tool=erase] .dz-svg{cursor:not-allowed}
+.dz-loading{position:absolute;top:14px;left:14px;display:flex;gap:8px;align-items:center;line-height:1;padding:8px 12px;border-radius:7px;background:var(--dz-chrome);color:var(--dz-ink)}
+.dz-spin{width:12px;height:12px;border-radius:50%;border:2px solid var(--dz-line);border-top-color:var(--dz-hot);animation:dzspin .8s linear infinite}
+@keyframes dzspin{to{transform:rotate(360deg)}}
+@media (prefers-reduced-motion:reduce){.dz-spin{animation:none}}
+.dz-pin{position:absolute;transform:translate(-50%,-50%);display:inline-flex;align-items:center;gap:3px;height:24px;padding:0 7px 0 5px;border-radius:12px;border:2px solid white;background:var(--k);color:white;font:700 11px/1 system-ui,sans-serif;cursor:pointer;box-shadow:0 2px 8px rgba(0,0,0,.45);z-index:2}
+.dz-pin[data-k=rfi],.dz-pinmini[data-k=rfi]{--k:rgb(220,38,38)}
+.dz-pin[data-k=punch],.dz-pinmini[data-k=punch]{--k:rgb(217,119,6)}
+.dz-pin[data-k=note],.dz-pinmini[data-k=note]{--k:rgb(71,85,105)}
+.dz-pin[data-k=other],.dz-pinmini[data-k=other]{--k:rgb(147,51,234)}
+.dz-pin[data-closed],.dz-pinmini[data-closed]{--k:rgb(22,163,74)}
+.dz-pin[data-on]{box-shadow:0 0 0 3px var(--dz-hot),0 2px 8px rgba(0,0,0,.45)}
+.dz-pop{position:absolute;z-index:5;transform:translate(16px,-50%);width:280px;padding:12px;border-radius:9px;background:var(--dz-chrome);border:1px solid var(--dz-line);box-shadow:0 18px 44px rgba(0,0,0,.6);line-height:1.4;display:grid;gap:8px;color:var(--dz-ink);font-size:13px}
+.dz-pop header{display:flex;align-items:center;gap:8px}
+.dz-pop header button{margin-left:auto;background:none;border:0;color:var(--dz-dim);cursor:pointer;min-width:26px;min-height:26px}
+.dz-pop p{margin:0}
+.dz-pop footer{display:flex;gap:6px;flex-wrap:wrap}
+.dz-pop-text{width:240px;padding:6px;transform:translate(0,-50%)}
+.dz-input{height:36px;padding:0 10px;border-radius:7px;border:1px solid var(--dz-line);background:var(--dz-well);color:var(--dz-ink);font-size:16px;outline:0}
+.dz-input:focus{border-color:var(--dz-hot)}
+.dz-btn{display:inline-flex;align-items:center;justify-content:center;gap:6px;height:32px;padding:0 12px;border-radius:7px;border:1px solid var(--dz-line);background:var(--dz-chrome-2);color:var(--dz-ink);font:600 13px/1 inherit;cursor:pointer;text-decoration:none}
+.dz-btn[data-primary]{background:var(--dz-hot);border-color:var(--dz-hot);color:var(--bg-base)}
+.dz-btn:disabled{opacity:.45;cursor:default}
+.dz-or{display:flex;gap:6px;align-items:center;color:var(--dz-dim);font-size:12px}
+.dz-hits{display:grid;gap:3px;max-height:170px;overflow:auto}
+.dz-hits button{display:flex;justify-content:space-between;gap:8px;padding:7px 8px;border-radius:6px;border:1px solid var(--dz-line);background:var(--dz-chrome-2);color:var(--dz-ink);text-align:left;cursor:pointer;font-size:13px}
+.dz-hits small{color:var(--dz-dim);white-space:nowrap}
+.dz-hits button:hover{border-color:var(--dz-hot)}
+.dz-banner,.dz-legend{position:absolute;top:10px;left:50%;transform:translateX(-50%);z-index:4;display:flex;gap:8px;align-items:center;padding:6px 12px;border-radius:7px;background:var(--dz-chrome);border:1px solid var(--dz-line);white-space:nowrap}
+.dz-banner{border-color:rgb(217,119,6)}.dz-banner a{color:var(--dz-ink)}
+.dz-legend{top:auto;bottom:12px}
+.dz-legend i{width:10px;height:10px;border-radius:2px;display:inline-block;margin-left:6px}
+.dz-toast{position:absolute;bottom:14px;right:14px;z-index:6;display:flex;gap:10px;align-items:center;max-width:420px;padding:10px 12px;border-radius:8px;background:var(--dz-chrome);border:1px solid rgb(220,38,38);box-shadow:0 12px 32px rgba(0,0,0,.5)}
+.dz-toast[data-ok]{border-color:rgb(22,163,74)}
+.dz-toast button{background:none;border:0;color:var(--dz-dim);cursor:pointer}
+.dz-side{display:flex;flex-direction:column;min-height:0;background:var(--dz-chrome);border-left:1px solid var(--dz-line)}
+.dz-tabs{display:flex;border-bottom:1px solid var(--dz-line);flex:none}
+.dz-tabs button{flex:1;display:inline-flex;justify-content:center;gap:6px;padding:13px 4px;border:0;border-bottom:2px solid transparent;background:none;color:var(--dz-dim);font:600 13px/1 inherit;cursor:pointer}
+.dz-tabs button span{color:var(--dz-dim);font-weight:500}
+.dz-tabs button[data-on]{color:var(--dz-ink);border-bottom-color:var(--dz-hot)}
+.dz-pane{flex:1;overflow:auto;padding:6px}
+.dz-row{display:flex;align-items:center;gap:10px;padding:8px;border-radius:7px;cursor:pointer}
+.dz-row:hover,.dz-row[data-on]{background:var(--dz-chrome-2)}
+.dz-row-t{display:grid;min-width:0;flex:1;gap:2px}
+.dz-row-t b,.dz-row-t a{font-weight:600;color:var(--dz-ink);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;text-decoration:none}
+.dz-row-t a:hover{text-decoration:underline}
+.dz-row-t small{color:var(--dz-dim);font-size:12px}
+.dz-chip{width:12px;height:12px;border-radius:3px;flex:none;box-shadow:0 0 0 1px var(--dz-line)}
+.dz-pinmini{width:12px;height:12px;border-radius:50%;background:var(--k);box-shadow:0 0 0 2px white;flex:none}
+.dz-x{background:none;border:0;color:var(--dz-dim);cursor:pointer;min-width:30px;min-height:30px;border-radius:6px;opacity:0}
+.dz-row:hover .dz-x,.dz-row[data-on] .dz-x{opacity:1}
+.dz-x:hover{color:rgb(248,113,113);background:var(--dz-chrome)}
+.dz-empty{display:grid;justify-items:center;text-align:center;gap:6px;padding:48px 18px;color:var(--dz-dim);line-height:1.45}
+.dz-empty b{color:var(--dz-ink)}
+.dz-tl{list-style:none;margin:0;padding:8px 6px}
+.dz-tl li{position:relative;display:grid;grid-template-columns:16px 1fr;gap:10px;padding-bottom:16px}
+.dz-tl li:not(:last-child)::before{content:'';position:absolute;left:7px;top:16px;bottom:0;width:2px;background:var(--dz-line)}
+.dz-tl li>div{display:grid;gap:3px}
+.dz-tl a{color:var(--dz-ink);font-weight:600;text-decoration:none}
+.dz-tl li[data-on] a{color:var(--title-page,var(--dz-hot))}
+.dz-tl small{color:var(--dz-dim);font-size:12px}
+.dz-tl-dot{width:16px;height:16px;border-radius:50%;border:2px solid var(--dz-dim);background:var(--dz-chrome);margin-top:1px;z-index:1}
+.dz-tl li[data-cur] .dz-tl-dot{border-color:rgb(22,163,74);background:rgb(22,163,74)}
+.dz-tl-dot[data-new]{border-style:dashed}
+.dz-link{display:inline-flex;gap:5px;align-items:center;padding:0;border:0;background:none;color:var(--dz-ink);text-decoration:underline;font:inherit;cursor:pointer;width:max-content}
+.dz-dim{color:var(--dz-dim);margin:0}
+.dz-counts{display:flex;flex-wrap:wrap;gap:12px;padding:8px 10px 10px;border-bottom:1px solid var(--dz-line);margin-bottom:4px}
+.dz-counts span{display:inline-flex;align-items:center;gap:6px;color:var(--dz-dim)}
+.dz-counts i{width:12px;height:12px;border-radius:50%;display:inline-block}
+.dz-counts b{color:var(--dz-ink);font-size:15px}
+.dz-status{display:flex;align-items:center;gap:16px;height:30px;padding:0 12px;background:var(--dz-chrome);border-top:1px solid var(--dz-line);color:var(--dz-dim);font-size:12px;flex:none;white-space:nowrap;overflow:hidden}
+.dz-pages{display:inline-flex;align-items:center;gap:4px}
+.dz-pages button{display:grid;place-items:center;width:20px;height:20px;border-radius:4px;border:0;background:none;color:var(--dz-dim);cursor:pointer}
+.dz-pages button:disabled{opacity:.3}
+.dz-save[data-s=saved]{color:rgb(74,222,128)}.dz-save[data-s=failed]{color:rgb(248,113,113)}.dz-save[data-s=saving]{color:var(--dz-ink)}
 `;
