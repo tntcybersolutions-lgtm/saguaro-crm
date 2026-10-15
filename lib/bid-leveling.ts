@@ -16,10 +16,11 @@
  * see the bids as submitted. A gap on a line nobody priced has no median and
  * is never given a made-up figure — it is counted as an unpriced gap instead.
  *
- * Per-line amounts are optional input. bid_submissions.unit_price_items and
- * the alternate columns exist but no flow writes them yet; parseLineAmounts /
- * parseAlternates read them defensively so the grid fills in the moment they
- * are captured, and level on base totals + scope status until then.
+ * Per-line amounts come from the bidder's price sheet on the bid portal
+ * (normalizeBidSheet writes bid_submissions.unit_price_items and
+ * alternate_amounts; parseLineAmounts / parseAlternates / parseBond read them
+ * back). A bid submitted without a sheet levels on its base total + scope
+ * status.
  */
 import { levelBids, type ScopeLine, type Bidder, type Alternate, type LevelingResult, type LeveledBidder } from '@/lib/bidleveling';
 
@@ -217,14 +218,198 @@ const toCentsNum = (v: unknown): number | null => {
   return Number.isFinite(n) ? Math.round(n * 100) : null;
 };
 
-export interface LineAmount { amountCents: number | null; status?: 'included' | 'excluded' | 'clarify' }
+export interface LineAmount { amountCents: number | null; status?: 'included' | 'excluded' | 'clarify' | 'not_quoted' }
+
+/* ── The bidder's line-item price sheet (portal writer ⇄ leveling reader) ────
+ *
+ * The bid portal writes bid_submissions.unit_price_items in ONE canonical
+ * shape, and the leveling route reads it back through parseLineAmounts /
+ * parseBond below. Both sides go through this section so the shape cannot
+ * drift between them:
+ *
+ *   unit_price_items = {
+ *     version: 1,
+ *     lines: [{ itemId, status, amount }],   // amount: dollars, priced only
+ *     bond:  { status, amount } | null,       // amount: dollars, priced only
+ *     linesTotal: dollars,                    // sum of priced lines
+ *     totalNote?: string,                     // why the base differs from linesTotal
+ *   }
+ *   alternate_amounts = [{ key, label, amount, kind }]  // amount signed: deduct < 0
+ *
+ * Amounts are dollars rounded to the cent, as every other bid_submissions
+ * money column is.
+ */
+
+export type LineQuote = 'priced' | 'included' | 'excluded' | 'not_quoted';
+export const LINE_QUOTES: readonly LineQuote[] = ['priced', 'included', 'excluded', 'not_quoted'];
+export type BondQuote = 'included' | 'priced' | 'not_offered';
+export const BOND_QUOTES: readonly BondQuote[] = ['included', 'priced', 'not_offered'];
+
+export interface BidLine { itemId: string; status: LineQuote; amount: number | null }
+export interface BidBond { status: BondQuote; amount: number | null }
+export interface BidAlternateEntry { key: string; label: string; amount: number; kind: 'add' | 'deduct' }
+export interface UnitPriceItems {
+  version: 1;
+  lines: BidLine[];
+  bond: BidBond | null;
+  linesTotal: number;
+  totalNote?: string;
+}
+
+/** Largest single figure accepted ($10bn) — anything above is a typo. */
+export const MAX_BID_DOLLARS = 10_000_000_000;
+export const MAX_ALTERNATES = 10;
+
+const toDollars = (cents: number) => Math.round(cents) / 100;
+
+/** A money input → whole cents, or null when it is not a finite number ≥ 0. */
+export function moneyToCents(v: unknown): number | null {
+  if (v === null || v === undefined || v === '') return null;
+  const n = typeof v === 'number' ? v : typeof v === 'string' && /^\s*\$?\s*[0-9,]*\.?[0-9]+\s*$/.test(v) ? parseFloat(v.replace(/[$,\s]/g, '')) : NaN;
+  if (!Number.isFinite(n) || n < 0 || n > MAX_BID_DOLLARS) return null;
+  return Math.round(n * 100);
+}
+
+export interface BidSheetInput {
+  lines?: unknown;
+  alternates?: unknown;
+  bond?: unknown;
+}
+
+export type BidSheetResult =
+  | { ok: true; unitPriceItems: UnitPriceItems | null; alternateAmounts: BidAlternateEntry[]; linesTotalCents: number; pricedLineCount: number; bondIncluded: boolean }
+  | { ok: false; error: string };
+
+/**
+ * Validate the bidder's price sheet against THIS package's line ids and turn
+ * it into the stored shape. Rejects (never silently drops) an unknown line,
+ * a repeated line, an unknown status, and any amount that is not a number
+ * ≥ 0. A priced line needs an amount; a priced line of $0 is stored as
+ * Included. Lines the sheet does not mention are stored as Not quoted, so a
+ * stored sheet always covers every line of the package.
+ */
+export function normalizeBidSheet(input: BidSheetInput, lineIds: Iterable<string>, lineNames: Record<string, string> = {}): BidSheetResult {
+  const ids = Array.from(lineIds, String);
+  const valid = new Set(ids);
+  const name = (id: string) => lineNames[id] || 'a scope line';
+  const byId = new Map<string, BidLine>();
+  let totalCents = 0;
+  let priced = 0;
+
+  if (input.lines != null) {
+    if (!Array.isArray(input.lines)) return { ok: false, error: 'Line prices must be a list.' };
+    for (const raw of input.lines) {
+      if (!raw || typeof raw !== 'object') return { ok: false, error: 'A line price is malformed.' };
+      const o = raw as Record<string, unknown>;
+      const id = String(o.itemId ?? '');
+      if (!valid.has(id)) return { ok: false, error: 'A priced line is not part of this bid package. Reload the page and try again.' };
+      if (byId.has(id)) return { ok: false, error: `${name(id)} is listed twice.` };
+      const status = String(o.status ?? '') as LineQuote;
+      if (!LINE_QUOTES.includes(status)) return { ok: false, error: `Choose a price, Included, Excluded or Not quoted for ${name(id)}.` };
+      if (status === 'priced') {
+        const cents = moneyToCents(o.amount);
+        if (cents == null) return { ok: false, error: `Enter a dollar amount of 0 or more for ${name(id)}.` };
+        if (cents === 0) { byId.set(id, { itemId: id, status: 'included', amount: null }); continue; }
+        totalCents += cents;
+        priced += 1;
+        byId.set(id, { itemId: id, status, amount: toDollars(cents) });
+      } else {
+        byId.set(id, { itemId: id, status, amount: null });
+      }
+    }
+  }
+
+  let bond: BidBond | null = null;
+  if (input.bond != null) {
+    const o = input.bond as Record<string, unknown>;
+    const status = String((o && typeof o === 'object' ? o.status : '') ?? '') as BondQuote;
+    if (!BOND_QUOTES.includes(status)) return { ok: false, error: 'Choose how the bond is priced.' };
+    if (status === 'priced') {
+      const cents = moneyToCents(o.amount);
+      if (cents == null || cents === 0) return { ok: false, error: 'Enter the bond price, or choose Included or Not offered.' };
+      bond = { status, amount: toDollars(cents) };
+    } else bond = { status, amount: null };
+  }
+
+  const alternateAmounts: BidAlternateEntry[] = [];
+  if (input.alternates != null) {
+    if (!Array.isArray(input.alternates)) return { ok: false, error: 'Alternates must be a list.' };
+    if (input.alternates.length > MAX_ALTERNATES) return { ok: false, error: `Up to ${MAX_ALTERNATES} alternates.` };
+    input.alternates.forEach((raw) => {
+      if (!raw || typeof raw !== 'object') return;
+      const o = raw as Record<string, unknown>;
+      const label = String(o.label ?? '').trim().slice(0, 200);
+      const cents = moneyToCents(o.amount);
+      if (!label && (o.amount === '' || o.amount == null)) return; // an empty row the bidder never filled
+      alternateAmounts.push({ key: '', label, amount: cents ?? NaN, kind: o.kind === 'deduct' ? 'deduct' : 'add' });
+    });
+    for (const a of alternateAmounts) {
+      if (!a.label) return { ok: false, error: 'Describe each alternate.' };
+      if (!Number.isFinite(a.amount) || a.amount <= 0) return { ok: false, error: `Enter an amount above 0 for "${a.label}".` };
+    }
+    alternateAmounts.forEach((a, i) => {
+      a.key = `Alt ${i + 1}`;
+      a.amount = toDollars(a.amount) * (a.kind === 'deduct' ? -1 : 1);
+    });
+  }
+
+  const sheetGiven = input.lines != null || bond != null;
+  const unitPriceItems: UnitPriceItems | null = sheetGiven
+    ? {
+        version: 1,
+        /* Package order, every line present: unmentioned = Not quoted. */
+        lines: ids.map((id) => byId.get(id) || { itemId: id, status: 'not_quoted' as const, amount: null }),
+        bond,
+        linesTotal: toDollars(totalCents),
+      }
+    : null;
+  return { ok: true, unitPriceItems, alternateAmounts, linesTotalCents: totalCents, pricedLineCount: priced, bondIncluded: bond?.status === 'included' };
+}
+
+/** The stored sheet's lines, in canonical form, on known lines only. */
+export function readBidLines(raw: unknown, lineIds: Iterable<string>): BidLine[] {
+  const amounts = parseLineAmounts(raw, lineIds);
+  return Object.entries(amounts).map(([itemId, a]) => ({
+    itemId,
+    status: a.status === 'not_quoted' ? 'not_quoted'
+      : a.status === 'excluded' ? 'excluded'
+        : a.amountCents ? 'priced'
+          : 'included',
+    amount: a.status === 'not_quoted' || a.status === 'excluded' || !a.amountCents ? null : toDollars(a.amountCents),
+  }));
+}
+
+/** The stored bond quote, or null when the sheet carries none. */
+export function parseBond(raw: unknown): { status: BondQuote; amountCents: number | null } | null {
+  let v: unknown = raw;
+  if (typeof v === 'string') { try { v = JSON.parse(v); } catch { return null; } }
+  if (!v || typeof v !== 'object' || Array.isArray(v)) return null;
+  const b = (v as Record<string, unknown>).bond as Record<string, unknown> | null | undefined;
+  if (!b || typeof b !== 'object') return null;
+  const status = String(b.status ?? '') as BondQuote;
+  if (!BOND_QUOTES.includes(status)) return null;
+  const cents = status === 'priced' ? toCentsNum(b.amount) : null;
+  if (status === 'priced' && (cents == null || cents <= 0)) return null;
+  return { status, amountCents: cents };
+}
+
+/** The bidder's note on why their base differs from the line total. */
+export function parseTotalNote(raw: unknown): string | null {
+  let v: unknown = raw;
+  if (typeof v === 'string') { try { v = JSON.parse(v); } catch { return null; } }
+  if (!v || typeof v !== 'object' || Array.isArray(v)) return null;
+  const n = (v as Record<string, unknown>).totalNote;
+  return typeof n === 'string' && n.trim() ? n.trim() : null;
+}
 
 /**
  * Read bid_submissions.unit_price_items into per-line amounts keyed by
- * bid_package_items.id. Accepts an array of objects ({ itemId | lineId |
- * scopeLineId | bid_package_item_id | id, amount | total | total_amount |
- * price | value, status? }) or a plain { [itemId]: amount } map. Anything that
- * does not name a known line is dropped — never guessed onto one.
+ * bid_package_items.id. Reads the canonical sheet above ({ version, lines })
+ * and, defensively, the older loose shapes: an array of objects ({ itemId |
+ * lineId | scopeLineId | bid_package_item_id | id, amount | total |
+ * total_amount | price | value, status? }) or a plain { [itemId]: amount }
+ * map. Anything that does not name a known line is dropped — never guessed
+ * onto one.
  */
 export function parseLineAmounts(raw: unknown, lineIds: Iterable<string>): Record<string, LineAmount> {
   const valid = new Set(Array.from(lineIds, String));
@@ -232,14 +417,15 @@ export function parseLineAmounts(raw: unknown, lineIds: Iterable<string>): Recor
   let v: unknown = raw;
   if (typeof v === 'string') { try { v = JSON.parse(v); } catch { return out; } }
   if (!v || typeof v !== 'object') return out;
+  if (!Array.isArray(v) && Array.isArray((v as Record<string, unknown>).lines)) v = (v as Record<string, unknown>).lines;
   const put = (id: unknown, amt: unknown, status?: unknown) => {
     const key = String(id ?? '');
     if (!valid.has(key)) return;
     const st = typeof status === 'string' ? status.toLowerCase() : '';
-    const cents = toCentsNum(amt);
+    const cents = st === 'not_quoted' ? null : toCentsNum(amt);
     out[key] = {
       amountCents: cents != null && cents > 0 ? cents : null,
-      ...(st === 'included' || st === 'excluded' || st === 'clarify' ? { status: st as LineAmount['status'] } : {}),
+      ...(st === 'included' || st === 'excluded' || st === 'clarify' || st === 'not_quoted' ? { status: st as LineAmount['status'] } : {}),
     };
   };
   if (Array.isArray(v)) {

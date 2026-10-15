@@ -6,6 +6,7 @@ import { tryWrite } from '@/lib/db-write';
 import { apiError } from '@/lib/api-error';
 import { assembleJacket, forBidder } from '@/lib/bid-jacket';
 import { bidRefusal, deadlineZone } from '@/lib/bid-deadline';
+import { readBidLines, parseAlternates, parseBond, parseTotalNote } from '@/lib/bid-leveling';
 
 /**
  * GET /api/bid-packages/portal/[token] — the bidder's jacket.
@@ -117,7 +118,7 @@ export async function GET(req: NextRequest, { params }: { params: Promise<{ toke
        than invite them to bid a second time. */
     const { data: mine } = await db
       .from('bid_submissions')
-      .select('id, base_amount, amount, status, submitted_at')
+      .select('id, base_amount, amount, status, submitted_at, unit_price_items, alternate_amounts, alternate_1, alternate_2, alternate_3, alternates, exclusions, scope_notes')
       .eq('bid_package_id', inv.bid_package_id)
       .eq('tenant_id', tenantId)
       .eq('contact_email', String(inv.sub_email || '').toLowerCase())
@@ -168,6 +169,14 @@ export async function GET(req: NextRequest, { params }: { params: Promise<{ toke
             id: (mine as Record<string, any>).id,
             amount: (mine as Record<string, any>).base_amount ?? (mine as Record<string, any>).amount,
             submittedAt: (mine as Record<string, any>).submitted_at,
+            /* The bidder's own sheet, so "Revise My Bid" opens pre-filled
+               instead of asking them to re-type every line. */
+            lines: readBidLines((mine as Record<string, any>).unit_price_items, jacket.lineItems.map((l) => l.id)),
+            alternates: parseAlternates(mine as Record<string, any>).map((a) => ({ label: a.description, amount: a.valueCents / 100, kind: a.kind })),
+            bond: (() => { const b = parseBond((mine as Record<string, any>).unit_price_items); return b ? { status: b.status, amount: b.amountCents != null ? b.amountCents / 100 : null } : null; })(),
+            totalNote: parseTotalNote((mine as Record<string, any>).unit_price_items),
+            exclusions: (mine as Record<string, any>).exclusions || null,
+            notes: (mine as Record<string, any>).scope_notes || null,
           }
         : null,
     });
