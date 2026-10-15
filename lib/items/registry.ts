@@ -154,10 +154,21 @@ export function statusLabel(s: string | null | undefined): string {
 
 /** Readable name for an item row: "RFI #12 · Door hardware at level 2". */
 export function itemName(tool: ItemTool, row: Record<string, unknown>): string {
-  const n = row[tool.numberKey];
   const t = String(row[tool.titleKey] ?? '').trim();
-  const num = n != null && n !== '' ? `${tool.numberPrefix}${n}` : tool.noun;
+  const num = itemNumber(tool, row[tool.numberKey]) || tool.noun;
   return t ? `${num} · ${t}` : num;
+}
+
+/** "RFI #12" — but a number that already carries its own letters ("RFI-005") is shown as typed. */
+export function itemNumber(tool: ItemTool, n: unknown): string {
+  if (n == null || n === '') return '';
+  const s = String(n).trim();
+  return /^[A-Za-z]/.test(s) ? s : `${tool.numberPrefix}${s}`;
+}
+
+/** The noun inside a sentence: "this RFI", "this punch item". */
+export function nounInSentence(tool: ItemTool): string {
+  return tool.noun === tool.noun.toUpperCase() ? tool.noun : tool.noun.toLowerCase();
 }
 
 /** Keep only the columns a tool lets the item API write; coerce empties to null. */

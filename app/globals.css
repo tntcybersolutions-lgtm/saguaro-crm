@@ -1181,7 +1181,7 @@ button.k-stat[aria-pressed="true"] { box-shadow: inset 0 -2px 0 var(--brand-prim
 .k-grid-btn:hover:not(:disabled), .k-grid-btn[aria-expanded="true"] { color: var(--text-primary); border-color: var(--text-tertiary); }
 .k-grid-btn:disabled { opacity: .45; cursor: default; }
 .k-grid-count { display: inline-flex; min-width: 18px; height: 18px; padding: 0 5px; align-items: center; justify-content: center; border-radius: 9px; background: var(--bg-surface-2); color: var(--text-secondary); font-size: 11px; font-weight: 700; margin-left: 6px; }
-.k-grid-menu { position: absolute; right: 0; top: calc(100% + 6px); z-index: 50; min-width: 220px; max-height: 360px; overflow: auto; padding: 6px; border-radius: 10px; border: 1px solid var(--border-default); background: var(--bg-surface); box-shadow: 0 12px 32px rgba(0,0,0,.45); }
+.k-grid-menu { z-index: 1000; min-width: 220px; max-height: 360px; overflow: auto; padding: 6px; border-radius: 10px; border: 1px solid var(--border-default); background: var(--bg-surface); box-shadow: 0 12px 32px rgba(0,0,0,.45); }
 .k-grid-list { display: flex; flex-direction: column; }
 .k-grid-list > button, .k-grid-item > button:first-child { text-align: left; min-height: 36px; padding: 0 10px; border: 0; border-radius: 6px; background: transparent; color: var(--text-secondary); font-size: 14px; cursor: pointer; }
 .k-grid-list > button:hover, .k-grid-item > button:first-child:hover, .k-grid-list > button[data-on="true"] { background: var(--bg-surface-2); color: var(--text-primary); }
@@ -1199,7 +1199,7 @@ button.k-stat[aria-pressed="true"] { box-shadow: inset 0 -2px 0 var(--brand-prim
 .k-table tr.k-group-row td { height: 40px; background: var(--bg-surface-2); color: var(--text-primary); font-size: 13px; }
 .k-table tr.k-subtotal-row td { height: 40px; color: var(--text-primary); font-weight: 600; border-bottom: 1px solid var(--border-default); }
 .k-table tfoot tr.k-total-row td { height: 44px; color: var(--text-primary); font-weight: 700; border-top: 2px solid var(--border-default); background: var(--bg-surface-2); position: sticky; bottom: 0; }
-@media (max-width: 640px) { .k-grid-bar .k-grid-n { width: 100%; } .k-grid-menu { right: auto; left: 0; } }
+@media (max-width: 640px) { .k-grid-bar .k-grid-n { width: 100%; } .k-grid-menu { max-width: calc(100vw - 16px); } }
 
 /* Row actions — inline buttons + an overflow menu */
 .k-row-actions { display: inline-flex; align-items: center; gap: 4px; justify-content: flex-end; }

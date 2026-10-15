@@ -578,23 +578,44 @@ function writePrefs(id: string, p: GridPrefs) {
 
 /** A small popover anchored under a toolbar button (columns, views, group). */
 function GridPop({ label, icon, children, count, onOpen }: { label: string; icon?: React.ReactNode; children: (close: () => void) => React.ReactNode; count?: number; onOpen?: () => void }) {
-  const [open, setOpen] = React.useState(false);
+  // Rendered in a portal with fixed positioning: the table wrapper scrolls
+  // sideways (overflow-x), which would clip an absolutely positioned menu.
+  const [pos, setPos] = React.useState<{ top: number; right: number } | null>(null);
+  const btnRef = React.useRef<HTMLButtonElement>(null);
+  const menuRef = React.useRef<HTMLDivElement>(null);
+  const open = pos !== null;
+  const close = () => setPos(null);
   React.useEffect(() => { if (open) onOpen?.(); /* eslint-disable-next-line react-hooks/exhaustive-deps */ }, [open]);
-  const ref = React.useRef<HTMLDivElement>(null);
   React.useEffect(() => {
     if (!open) return;
-    const onDown = (e: MouseEvent) => { if (!ref.current?.contains(e.target as Node)) setOpen(false); };
-    const onKey = (e: KeyboardEvent) => { if (e.key === 'Escape') setOpen(false); };
+    const onDown = (e: MouseEvent) => {
+      const t = e.target as Node;
+      if (btnRef.current?.contains(t) || menuRef.current?.contains(t)) return;
+      close();
+    };
+    const onKey = (e: KeyboardEvent) => { if (e.key === 'Escape') close(); };
     document.addEventListener('mousedown', onDown);
     document.addEventListener('keydown', onKey);
-    return () => { document.removeEventListener('mousedown', onDown); document.removeEventListener('keydown', onKey); };
+    window.addEventListener('resize', close);
+    return () => { document.removeEventListener('mousedown', onDown); document.removeEventListener('keydown', onKey); window.removeEventListener('resize', close); };
   }, [open]);
+  const toggle = () => {
+    if (open) { close(); return; }
+    const r = btnRef.current?.getBoundingClientRect();
+    if (!r) return;
+    setPos({ top: r.bottom + 6, right: Math.max(8, window.innerWidth - r.right) });
+  };
   return (
-    <div className="k-grid-pop" ref={ref}>
-      <button type="button" className="k-grid-btn" aria-haspopup="dialog" aria-expanded={open} onClick={() => setOpen((o) => !o)}>
+    <div className="k-grid-pop">
+      <button ref={btnRef} type="button" className="k-grid-btn" aria-haspopup="dialog" aria-expanded={open} onClick={toggle}>
         {icon}{label}{count ? <span className="k-grid-count">{count}</span> : null}<CaretDown size={12} weight="bold" />
       </button>
-      {open && <div className="k-grid-menu" role="dialog" aria-label={label}>{children(() => setOpen(false))}</div>}
+      {open && createPortal(
+        <div ref={menuRef} className="k-grid-menu" role="dialog" aria-label={label} style={{ position: 'fixed', top: pos.top, right: pos.right }}>
+          {children(close)}
+        </div>,
+        document.body,
+      )}
     </div>
   );
 }

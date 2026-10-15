@@ -14,7 +14,7 @@ import { useParams } from 'next/navigation';
 import { PageShell, Button, Tabs, Field, Input, Textarea, Select, Toast, useToast, EmptyState } from '@/components/ui/kit';
 import { PencilSimple, FloppyDisk, X, Paperclip, LinkSimple, ChatText, Trash, FileText, ArrowSquareOut, MagnifyingGlass } from '@phosphor-icons/react';
 import ItemHistory from '@/components/item/ItemHistory';
-import { itemTool, statusLabel, type ItemField, type ItemTool } from '@/lib/items/registry';
+import { itemTool, itemNumber, nounInSentence, statusLabel, type ItemField, type ItemTool } from '@/lib/items/registry';
 
 type Item = Record<string, unknown>;
 type FileRow = { id: string; name: string; size: number | null; kind: string | null; by: string | null; at: string; url: string | null };
@@ -157,7 +157,7 @@ export default function ItemPage() {
 
   return (
     <PageShell
-      title={editing ? `${tool.numberPrefix}${num ?? ''}` : `${num != null && num !== '' ? `${tool.numberPrefix}${num} · ` : ''}${title}`}
+      title={editing ? (itemNumber(tool, num) || tool.noun) : `${itemNumber(tool, num) ? `${itemNumber(tool, num)} · ` : ''}${title}`}
       subtitle={projectName}
       crumbs={[{ label: projectName || 'Job', href: `/app/projects/${projectId}/overview` }, { label: tool.plural, href: listHref }]}
       actions={editing ? (
@@ -313,7 +313,7 @@ function CommentsTab({ type, id, projectId, tool, comments, reload, show }: {
         </ol>
       )}
       <div className="ip-compose">
-        <Textarea rows={3} placeholder={`Comment on this ${tool.noun.toLowerCase()}…`} value={text} onChange={(e) => setText(e.target.value)} aria-label="Comment" />
+        <Textarea rows={3} placeholder={`Comment on this ${nounInSentence(tool)}…`} value={text} onChange={(e) => setText(e.target.value)} aria-label="Comment" />
         <div className="ip-compose-row">
           <label className="ip-file-btn">
             <Paperclip size={15} /> Attach
@@ -369,7 +369,7 @@ function RelatedTab({ type, id, projectId, tool, links, reload, show }: {
   return (
     <section className="ip-section" aria-label="Related items">
       <div className="ip-row-head">
-        <span className="ip-muted">{links === null ? 'Loading…' : links.length === 0 ? `Nothing linked yet. Link the RFIs, submittals and punch items that go with this ${tool.noun.toLowerCase()}.` : `${links.length} linked`}</span>
+        <span className="ip-muted">{links === null ? 'Loading…' : links.length === 0 ? `Nothing linked yet. Link the RFIs, submittals and punch items that go with this ${nounInSentence(tool)}.` : `${links.length} linked`}</span>
         <div className="ip-spacer" />
         <Button icon={<LinkSimple size={15} />} onClick={() => setPicking((p) => !p)}>{picking ? 'Done' : 'Link an item'}</Button>
       </div>
@@ -423,7 +423,7 @@ function FilesTab({ tool, id, projectId, files, reload, show }: {
   return (
     <section className="ip-section" aria-label="Files">
       <div className="ip-row-head">
-        <span className="ip-muted">{files.length === 0 ? `No files on this ${tool.noun.toLowerCase()} yet.` : `${files.length} file${files.length === 1 ? '' : 's'}`}</span>
+        <span className="ip-muted">{files.length === 0 ? `No files on this ${nounInSentence(tool)} yet.` : `${files.length} file${files.length === 1 ? '' : 's'}`}</span>
         <div className="ip-spacer" />
         <label className="ip-file-btn ip-file-btn-strong">
           <Paperclip size={15} /> {busy ? 'Uploading…' : 'Add files'}
