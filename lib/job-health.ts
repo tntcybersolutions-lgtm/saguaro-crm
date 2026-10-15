@@ -12,12 +12,16 @@
  *   RFIs      up to −15  −5 per overdue open RFI
  *   Submittals up to −15 −5 per overdue open submittal
  *   Change orders up to −10  −3 per change order pending over 14 days
+ *   Punch     up to −8   −2 per overdue open punch item
+ *   Daily log −5         a job being built with no daily log in over 5 days
+ *   Safety    up to −10  −5 per open safety incident from the last 30 days
  *
  * Bands: 70–100 on track (green), 50–69 at risk (yellow), 0–49 in trouble (red).
  */
 
 export type HealthTone = 'good' | 'warn' | 'bad';
-export type ItemState = 'none' | 'ok' | 'soon' | 'late';
+/** none = nothing open (good), na = does not apply to this job yet. */
+export type ItemState = 'none' | 'ok' | 'soon' | 'late' | 'na';
 
 export interface ItemSummary {
   open: number;
@@ -44,6 +48,11 @@ export interface JobHealth {
   rfis: ItemSummary;
   submittals: ItemSummary;
   changeOrders: ItemSummary;
+  punch: ItemSummary;
+  /** open = days since the last daily log (null when none was ever filed). */
+  dailyLog: ItemSummary & { daysSince: number | null };
+  /** open = open incidents in the last 30 days; dueSoon = closed ones in that window. */
+  incidents: ItemSummary;
 }
 
 export interface HealthInput {
@@ -58,6 +67,10 @@ export interface HealthInput {
   rfis?: { status: string | null; due: string | null }[];
   submittals?: { status: string | null; due: string | null }[];
   changeOrders?: { status: string | null; created: string | null }[];
+  punch?: { status: string | null; due: string | null }[];
+  /** Dates (YYYY-MM-DD) of recent daily logs; any window of 14+ days is enough. */
+  logDates?: (string | null)[];
+  incidents?: { status: string | null; date: string | null }[];
 }
 
 const DAY = 86_400_000;
@@ -70,6 +83,8 @@ const clamp = (n: number, lo: number, hi: number) => Math.max(lo, Math.min(hi, n
 
 const RFI_CLOSED = new Set(['answered', 'closed', 'void', 'voided', 'cancelled', 'canceled']);
 const SUB_CLOSED = new Set(['approved', 'approved_as_noted', 'closed', 'void', 'voided', 'rejected', 'cancelled', 'canceled']);
+const PUNCH_CLOSED = new Set(['completed', 'complete', 'voided', 'void', 'verified', 'closed', 'done']);
+const INCIDENT_CLOSED = new Set(['closed', 'resolved', 'void', 'voided', 'cancelled', 'canceled']);
 
 function dueItems(rows: { status: string | null; due: string | null }[] | undefined, closed: Set<string>, today: number): ItemSummary {
   let open = 0, dueSoon = 0, overdue = 0;
@@ -149,9 +164,34 @@ export function jobHealth(input: HealthInput): JobHealth {
   if (coStale > 0) { const off = Math.min(10, coStale * 3); score -= off; reasons.push(`${coStale} change order${coStale === 1 ? '' : 's'} pending over 14 days (−${off})`); }
   const changeOrders: ItemSummary = { open: coOpen, dueSoon: coSoon, overdue: coStale, state: coOpen === 0 ? 'none' : coStale > 0 ? 'late' : coSoon > 0 ? 'soon' : 'ok' };
 
+  /* Punch list */
+  const punch = dueItems(input.punch, PUNCH_CLOSED, today);
+  if (punch.overdue > 0) { const off = Math.min(8, punch.overdue * 2); score -= off; reasons.push(`${punch.overdue} overdue punch item${punch.overdue === 1 ? '' : 's'} (−${off})`); }
+
+  /* Daily log: only once a job is being built and has started. */
+  let dailyLog: JobHealth['dailyLog'] = { open: 0, dueSoon: 0, overdue: 0, state: 'na', daysSince: null };
+  if (active && input.logDates !== undefined && (start == null || start <= today)) {
+    let last: number | null = null;
+    for (const d of input.logDates || []) { const t = toDay(d); if (t != null && t <= today && (last == null || t > last)) last = t; }
+    const daysSince = last == null ? null : Math.round((today - last) / DAY);
+    const state: ItemState = daysSince == null || daysSince > 5 ? 'late' : daysSince > 2 ? 'soon' : 'ok';
+    dailyLog = { open: daysSince ?? 0, dueSoon: state === 'soon' ? 1 : 0, overdue: state === 'late' ? 1 : 0, state, daysSince };
+    if (state === 'late') { score -= 5; reasons.push(daysSince == null ? 'No daily log filed yet (−5)' : `No daily log in ${daysSince} days (−5)`); }
+  }
+
+  /* Safety: incidents in the last 30 days. */
+  let incOpen = 0, incClosed = 0;
+  for (const i of input.incidents || []) {
+    const d = toDay(i.date);
+    if (d == null || today - d > 30 * DAY) continue;
+    if (INCIDENT_CLOSED.has(String(i.status || '').toLowerCase())) incClosed++; else incOpen++;
+  }
+  if (incOpen > 0) { const off = Math.min(10, incOpen * 5); score -= off; reasons.push(`${incOpen} open safety incident${incOpen === 1 ? '' : 's'} (−${off})`); }
+  const incidents: ItemSummary = { open: incOpen, dueSoon: incClosed, overdue: incOpen, state: incOpen > 0 ? 'late' : incClosed > 0 ? 'soon' : 'none' };
+
   score = clamp(Math.round(score), 0, 100);
   const tone: HealthTone = score >= 70 ? 'good' : score >= 50 ? 'warn' : 'bad';
   if (reasons.length === 0) reasons.push('Nothing overdue or over budget');
 
-  return { score, tone, reasons, schedule: { timePct, workPct, daysLate, behind }, budget: { revised, forecast, overPct }, rfis, submittals, changeOrders };
+  return { score, tone, reasons, schedule: { timePct, workPct, daysLate, behind }, budget: { revised, forecast, overPct }, rfis, submittals, changeOrders, punch, dailyLog, incidents };
 }
