@@ -1,22 +1,33 @@
 'use client';
+/**
+ * Client invoices — owner billing and payment tracking, on the kit layout.
+ *
+ * Reads   GET    /api/projects/:id/invoices
+ * Create  POST   /api/invoices/create        (server computes total = amount + tax)
+ * Verbs   POST   /api/invoices/:id/send      (email to the bill-to address)
+ *         POST   /api/invoices/:id/pdf       (→ { pdfUrl }; rows with pdf_url open it directly)
+ *         PATCH  /api/invoices/:id/update    ({ amount, tax })
+ *         DELETE /api/invoices/:id/delete
+ */
 import React, { useState, useEffect, useCallback } from 'react';
-import { StatusPill } from '@/components/ui/Status';
-import { useSort, useSortedRows, SortTh, SortBar } from '@/components/ui/sort';
-import { useProjectContext } from '@/lib/hooks/useProjectContext';
 import { useParams } from 'next/navigation';
-import SaguaroDatePicker from '../../../../../components/SaguaroDatePicker';
+import { useProjectContext } from '@/lib/hooks/useProjectContext';
 import { toCents, toDollars, sumCents, scaleCents } from '@/lib/calc';
-import { PremiumSurface, ModuleHero, SectionCard, PremiumEmpty, StatStrip, FlowSteps, InsightRow, AutoChip, IconChip, goldButtonStyle, ghostButtonStyle, secondaryButtonStyle, railStyle } from '@/components/ui/premium';
-import { SkeletonRow } from '@/components/ui/Skeleton';
-import { Receipt, PencilSimple, Percent, Copy, Trash, Plus, CaretDown, ClockCounterClockwise, Calculator } from '@phosphor-icons/react';
-import { ListToolbar } from '@/components/ui/ListToolbar';
-import { moduleAccent } from '@/lib/ui/app-accent';
 import { useUnsavedGuard, useComposerDirty } from '@/lib/useUnsavedGuard';
 import UnsavedGuardModal from '@/components/UnsavedGuardModal';
 import Suggest from '@/components/ui/Suggest';
 import { openPdf } from '@/components/PdfViewer';
-
-const GOLD='var(--brand-primary)', DARK='var(--bg-base)', RAISED='var(--bg-surface)', BORDER='rgba(255,255,255,0.12)', DIM='var(--text-secondary)', TEXT='var(--text-primary)', GREEN='var(--success)', RED='var(--danger)';
+import { confirmDialog } from '@/lib/ui/async-dialog';
+import { MODULES } from '@/lib/status-system';
+import {
+  PageShell, StatRow, Badge, Button, Toolbar, DataTable, EmptyState, Select, Callout,
+  FormModal, Field, Input, DateInput, FormGrid, Toast, useToast,
+  type Column, type Action, type BadgeTone, type StatItem,
+} from '@/components/ui/kit';
+import {
+  Receipt, PencilSimple, Percent, Copy, Trash, Plus, FilePdf, PaperPlaneTilt,
+  Handshake, Wallet, WarningCircle, ClockCounterClockwise, CheckCircle,
+} from '@phosphor-icons/react';
 
 interface Invoice {
   id: string;
@@ -35,43 +46,48 @@ interface Invoice {
   created_at?: string;
 }
 
-// Lowercase-keyed — the server stores lowercase statuses; rows written before
-// the normalization ('Sent', 'Draft') resolve to the same keys via statusKey().
-const STATUS_MAP: Record<string, { bg: string; color: string; label: string }> = {
-  draft: { bg: 'rgba(148,163,184,.2)', color: DIM, label: 'Draft' },
-  sent: { bg: 'var(--brand-primary-18)', color: 'var(--text-primary)', label: 'Sent' },
-  pending: { bg: 'color-mix(in srgb, var(--warning) 20%, transparent)', color: 'var(--warning)', label: 'Pending' },
-  approved: { bg: 'rgba(74,222,128,.2)', color: GREEN, label: 'Approved' },
-  paid: { bg: 'rgba(74,222,128,.2)', color: GREEN, label: 'Paid' },
-  overdue: { bg: 'rgba(248,113,113,.2)', color: RED, label: 'Overdue' },
-};
-
 /** Lowercase-normalized status — kills the 'Sent' vs 'sent' split-brain. */
 const statusKey = (s?: string | null) => (s || 'draft').toLowerCase();
+
+const TONE: Record<string, BadgeTone> = { draft: 'neutral', waiting: 'under_contract', good: 'ongoing', done: 'completed', bad: 'overdue', warn: 'lead', active: 'ongoing' };
+function invBadge(key: string): { label: string; tone: BadgeTone } {
+  const def = MODULES.invoices?.statuses?.[key];
+  return { label: def?.label || (key.charAt(0).toUpperCase() + key.slice(1)), tone: (def && TONE[def.tone]) || 'neutral' };
+}
 
 /** Canonical invoice figure: stored total when non-zero, else amount + tax.
  *  TEXT-typed money columns -> Number() always; a stale 0 total defers to
  *  amount so real money never rolls up as $0. */
-const INVOICE_COLS: { key: string; label: string }[] = [
-  { key: 'invoice_number', label: 'Invoice #' }, { key: 'vendor_name', label: 'Bill To' }, { key: 'total', label: 'Total' }, { key: 'created_at', label: 'Issued' },
-  { key: 'due_date', label: 'Due' }, { key: 'status', label: 'Status' }, { key: 'notes', label: 'Notes' }, { key: '', label: 'Actions' },
-];
-
 function effectiveTotal(i: { amount?: number | null; tax?: number | null; total?: number | null }): number {
   const t = Number(i.total);
   if (t > 0) return t;
   return (Number(i.amount) || 0) + (Number(i.tax) || 0);
 }
 
+const fmt = (n: number) => '$' + ((Number(n) || 0).toLocaleString('en-US', { minimumFractionDigits: 0, maximumFractionDigits: 0 }));
+
+/** Date-only values parse at local noon so they never shift a day under UTC. */
+function fmtDate(iso: string | null | undefined): string {
+  if (!iso) return '—';
+  const d = iso.length <= 10 ? new Date(iso + 'T12:00:00') : new Date(iso);
+  if (isNaN(d.getTime())) return iso;
+  return d.toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' });
+}
+
 const EMPTY_FORM = { invoice_number: '', vendor_name: '', vendor_email: '', description: '', amount: 0, tax: 0, cost_code: '', due_date: '', notes: '' };
+
+type StatusFilter = 'all' | 'outstanding' | 'draft' | 'sent' | 'pending' | 'approved' | 'paid' | 'overdue';
 
 export default function InvoicesPage() {
   const params = useParams();
   const projectId = params.projectId as string;
+  const base = `/app/projects/${projectId}`;
   const [invoices, setInvoices] = useState<Invoice[]>([]);
   const [loading, setLoading] = useState(true);
+  const [loadError, setLoadError] = useState('');
   const [showForm, setShowForm] = useState(false);
   const [form, setForm] = useState(EMPTY_FORM);
+  const { toast, show } = useToast(4000);
 
   /* ── Unsaved-work guard: the composer holds real typing, so leaving the
    *    page (sidebar, field nav, ⌘K, back) confirms first and the draft is
@@ -85,27 +101,25 @@ export default function InvoicesPage() {
     onSave: () => handleSave(),
   });
   const [saving, setSaving] = useState(false);
-  const [successMsg, setSuccessMsg] = useState('');
-  const [errorMsg, setErrorMsg] = useState('');
-  const [menuId, setMenuId] = useState<string | null>(null);
-  const [editId, setEditId] = useState<string | null>(null);
+  const [formError, setFormError] = useState('');
+  const [editInv, setEditInv] = useState<Invoice | null>(null);
   const [editVal, setEditVal] = useState('');
-  const [adjustId, setAdjustId] = useState<string | null>(null);
-  const [deleteId, setDeleteId] = useState<string | null>(null);
-  const [copiedId, setCopiedId] = useState<string | null>(null);
-  // ListToolbar state — filters + sort persist per module via sag_flt_invoices.
+  const [adjustInv, setAdjustInv] = useState<Invoice | null>(null);
+  const [sendingId, setSendingId] = useState<string | null>(null);
   const [search, setSearch] = useState('');
-  const [statusFilter, setStatusFilter] = useState('all');
-  const [sortBy, setSortBy] = useState('newest');
+  const [statusFilter, setStatusFilter] = useState<StatusFilter>('all');
 
   const fetchInvoices = useCallback(async () => {
     setLoading(true);
+    setLoadError('');
     try {
       const res = await fetch(`/api/projects/${projectId}/invoices`);
-      const json = await res.json();
+      const json = await res.json().catch(() => ({}));
+      if (!res.ok) throw new Error(json.error || "Couldn't load invoices.");
       setInvoices(json.invoices ?? []);
-    } catch {
+    } catch (e) {
       setInvoices([]);
+      setLoadError(e instanceof Error ? e.message : "Couldn't load invoices.");
     } finally {
       setLoading(false);
     }
@@ -150,7 +164,11 @@ export default function InvoicesPage() {
       amt: !!(useCertified && certified > 0),
     });
     setShowForm(true);
-    setErrorMsg('');
+    setFormError('');
+  }
+
+  function closeCreate() {
+    guard.requestClose(() => { setShowForm(false); setFormError(''); });
   }
 
   // Local today (YYYY-MM-DD) — toISOString() is UTC, which rolls to tomorrow
@@ -159,37 +177,27 @@ export default function InvoicesPage() {
   const today = `${nowD.getFullYear()}-${String(nowD.getMonth() + 1).padStart(2, '0')}-${String(nowD.getDate()).padStart(2, '0')}`;
   // Overdue = due before today (local), and not paid / not a draft.
   const isOverdue = (i: Invoice) => !!i.due_date && i.due_date.slice(0, 10) < today && statusKey(i.status) !== 'paid' && statusKey(i.status) !== 'draft';
+  const effKey = (i: Invoice) => (isOverdue(i) ? 'overdue' : statusKey(i.status));
+  const isOutstanding = (i: Invoice) => { const st = statusKey(i.status); return st !== 'paid' && st !== 'draft'; };
   const totalBilled = toDollars(sumCents(invoices.map(i => toCents(effectiveTotal(i)))));
   const totalPaid = toDollars(sumCents(invoices.filter(i => statusKey(i.status) === 'paid').map(i => toCents(effectiveTotal(i)))));
-  const totalOutstanding = toDollars(sumCents(invoices.filter(i => { const st = statusKey(i.status); return st !== 'paid' && st !== 'draft'; }).map(i => toCents(effectiveTotal(i)))));
+  const totalOutstanding = toDollars(sumCents(invoices.filter(isOutstanding).map(i => toCents(effectiveTotal(i)))));
+  const overdueList = invoices.filter(isOverdue);
+  const overdueTotal = toDollars(sumCents(overdueList.map(i => toCents(effectiveTotal(i)))));
 
   // Toolbar-driven view of the list. Status matches the effective (overdue-aware) status.
   const q = search.trim().toLowerCase();
-  const filteredInvoices = invoices
-    .filter(inv => {
-      const effStatus = isOverdue(inv) ? 'overdue' : statusKey(inv.status);
-      if (statusFilter !== 'all' && effStatus !== statusFilter) return false;
-      if (!q) return true;
-      return [inv.invoice_number, inv.vendor_name, inv.description, inv.notes].some(v => String(v || '').toLowerCase().includes(q));
-    })
-    .sort((a, b) => {
-      if (sortBy === 'amount') return (Number(b.amount) || 0) - (Number(a.amount) || 0);
-      if (sortBy === 'due') return String(a.due_date || '9999').localeCompare(String(b.due_date || '9999'));
-      return String(b.created_at || '').localeCompare(String(a.created_at || ''));
-    });
-  // Column sort (any header, both directions) overrides the toolbar order above.
-  const { sort: invSort, setSort: setInvSort, cycle: cycleInvSort } = useSort(null);
-  const invSortValue = useCallback((inv: (typeof invoices)[number], key: string): unknown => {
-    if (key === 'total') return effectiveTotal(inv);
-    if (key === 'status') return isOverdue(inv) ? 'overdue' : statusKey(inv.status);
-    return (inv as unknown as Record<string, unknown>)[key];
-  }, []);
-  const sortedInvoices = useSortedRows(filteredInvoices, invSort, invSortValue);
+  const filteredInvoices = invoices.filter(inv => {
+    if (statusFilter === 'outstanding') { if (!isOutstanding(inv)) return false; }
+    else if (statusFilter !== 'all' && effKey(inv) !== statusFilter) return false;
+    if (!q) return true;
+    return [inv.invoice_number, inv.vendor_name, inv.description, inv.notes].some(v => String(v || '').toLowerCase().includes(q));
+  });
 
   async function handleSave(): Promise<boolean> {
-    if (!form.invoice_number || !form.vendor_name || !form.amount) { setErrorMsg('Invoice number, bill-to, and amount are required.'); return false; }
+    if (!form.invoice_number || !form.vendor_name || !form.amount) { setFormError('Invoice number, bill-to, and amount are required.'); return false; }
     setSaving(true);
-    setErrorMsg('');
+    setFormError('');
     try {
       const res = await fetch('/api/invoices/create', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({
         project_id: projectId,
@@ -212,12 +220,11 @@ export default function InvoicesPage() {
       setInvoices(prev => [...prev, json.invoice as Invoice]);
       setShowForm(false);
       setForm(EMPTY_FORM);
-      setSuccessMsg('Invoice created.');
-      setTimeout(() => setSuccessMsg(''), 4000);
+      show('Invoice created.');
       guard.clearDraft();
       return true;
     } catch {
-      setErrorMsg('Could not create the invoice. Please try again.');
+      setFormError('Could not create the invoice. Please try again.');
       return false;
     } finally {
       setSaving(false);
@@ -225,20 +232,19 @@ export default function InvoicesPage() {
   }
 
   async function handleSend(id: string) {
+    setSendingId(id);
     try {
       const res = await fetch(`/api/invoices/${id}/send`, { method: 'POST' });
       const json = await res.json().catch(() => ({}));
-      if (!res.ok) { setErrorMsg(json.error || 'Could not send the invoice.'); setTimeout(() => setErrorMsg(''), 5000); return; }
+      if (!res.ok) { show(json.error || 'Could not send the invoice.', 'bad'); return; }
       setInvoices(prev => prev.map(i => i.id === id ? { ...i, status: 'sent' } : i));
-      setSuccessMsg('Invoice emailed to the client.');
-      setTimeout(() => setSuccessMsg(''), 4000);
+      show('Invoice emailed to the client.');
     } catch {
-      setErrorMsg('Could not send the invoice. Please try again.');
-      setTimeout(() => setErrorMsg(''), 5000);
+      show('Could not send the invoice. Please try again.', 'bad');
+    } finally {
+      setSendingId(null);
     }
   }
-
-  const fmt = (n: number) => '$' + ((Number(n) || 0).toLocaleString('en-US', { minimumFractionDigits: 0, maximumFractionDigits: 0 }));
 
   const [pdfBusy, setPdfBusy] = useState<string | null>(null);
   /** POST /api/invoices/[id]/pdf -> { pdfUrl }, then open the document. Rows
@@ -253,13 +259,11 @@ export default function InvoicesPage() {
       openPdf({ url: data.pdfUrl });
       fetchInvoices();
     } catch {
-      setErrorMsg('Could not generate the PDF. Please try again.'); setTimeout(() => setErrorMsg(''), 4000);
+      show('Could not generate the PDF. Please try again.', 'bad');
     } finally {
       setPdfBusy(null);
     }
   }
-
-  function openInvMenu(id: string) { setMenuId(id); setEditId(null); setAdjustId(null); setDeleteId(null); }
 
   async function handleEditInv(id: string) {
     const amount = parseFloat(editVal);
@@ -268,13 +272,13 @@ export default function InvoicesPage() {
     // Send {amount, tax} and let the server recompute total = amount + tax;
     // the optimistic total mirrors that so effectiveTotal never shows stale money.
     setInvoices(prev => prev.map(i => i.id === id ? { ...i, amount, total: amount + tax } : i));
-    setEditId(null);
+    setEditInv(null);
     try {
       const res = await fetch(`/api/invoices/${id}/update`, { method: 'PATCH', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ amount, tax }) });
       if (!res.ok) throw new Error('update failed');
-      setSuccessMsg('Amount updated.'); setTimeout(() => setSuccessMsg(''), 3000);
+      show('Amount updated.');
     } catch {
-      setErrorMsg('Could not update the amount. Please try again.'); setTimeout(() => setErrorMsg(''), 4000);
+      show('Could not update the amount. Please try again.', 'bad');
       fetchInvoices();
     }
   }
@@ -285,330 +289,243 @@ export default function InvoicesPage() {
     const newAmt = toDollars(scaleCents(toCents(inv.amount), 1 + pct / 100));
     const tax = Number(inv.tax) || 0;
     setInvoices(prev => prev.map(i => i.id === id ? { ...i, amount: newAmt, total: newAmt + tax } : i));
-    setAdjustId(null);
+    setAdjustInv(null);
     try {
       const res = await fetch(`/api/invoices/${id}/update`, { method: 'PATCH', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ amount: newAmt, tax }) });
       if (!res.ok) throw new Error('update failed');
-      setSuccessMsg(`Adjusted ${pct > 0 ? '+' : ''}${pct}%`); setTimeout(() => setSuccessMsg(''), 3000);
+      show(`Adjusted ${pct > 0 ? '+' : ''}${pct}%`);
     } catch {
-      setErrorMsg('Could not adjust the amount. Please try again.'); setTimeout(() => setErrorMsg(''), 4000);
+      show('Could not adjust the amount. Please try again.', 'bad');
       fetchInvoices();
     }
   }
 
-  function handleCopyInv(id: string, amount: number) {
-    navigator.clipboard.writeText(fmt(amount)).catch(() => {});
-    setCopiedId(id); setTimeout(() => setCopiedId(null), 2000);
-    setMenuId(null);
+  function handleCopyInv(amount: number) {
+    navigator.clipboard.writeText(fmt(amount)).then(
+      () => show(`Copied ${fmt(amount)}.`),
+      () => show('Could not copy — your browser blocked the clipboard.', 'bad'),
+    );
   }
 
-  async function handleDeleteInv(id: string) {
-    setInvoices(prev => prev.filter(i => i.id !== id));
-    setDeleteId(null);
+  async function handleDeleteInv(inv: Invoice) {
+    const ok = await confirmDialog({ title: 'Delete invoice?', message: `Delete invoice ${inv.invoice_number || ''}? This cannot be undone.`, confirmLabel: 'Delete', danger: true });
+    if (!ok) return;
+    setInvoices(prev => prev.filter(i => i.id !== inv.id));
     try {
-      const res = await fetch(`/api/invoices/${id}/delete`, { method: 'DELETE' });
+      const res = await fetch(`/api/invoices/${inv.id}/delete`, { method: 'DELETE' });
       if (!res.ok) throw new Error('delete failed');
-      setSuccessMsg('Invoice deleted.'); setTimeout(() => setSuccessMsg(''), 3000);
+      show('Invoice deleted.');
     } catch {
-      setErrorMsg('Could not delete the invoice. Please try again.'); setTimeout(() => setErrorMsg(''), 4000);
+      show('Could not delete the invoice. Please try again.', 'bad');
       fetchInvoices();
     }
   }
 
-  const inp: React.CSSProperties = { width: '100%', padding: '8px 10px', background: 'var(--bg-surface-2)', border: '1px solid ' + BORDER, borderRadius: 6, color: TEXT, fontSize: 13 };
-  const label: React.CSSProperties = { fontSize: 12, color: DIM, marginBottom: 4, display: 'block' };
-  const hint: React.CSSProperties = { fontSize: 12, color: 'var(--c-text-2)', marginTop: 5, lineHeight: 1.45 };
+  const toggle = (f: StatusFilter) => setStatusFilter(p => (p === f ? 'all' : f));
+  const billedShown = totalBilled > 0 ? totalBilled : ctxBilled;
+  const paidShown = totalPaid > 0 ? totalPaid : ctxPaid;
+  const outstandingShown = totalOutstanding > 0 ? totalOutstanding : Math.max(0, ctxBilled - ctxPaid);
+
+  const stats: StatItem[] = [
+    ...(ctx ? [{
+      label: 'Revised contract', value: fmt(revised), href: `${base}/contracts`, icon: <Handshake size={15} />,
+      sub: `${(coTotal >= 0 ? '+' : '') + fmt(coTotal)} in ${Number(money?.approvedCoCount) || 0} approved COs${Number(money?.pendingCoCount) ? ` · ${money.pendingCoCount} pending` : ''}`,
+    }] : []),
+    { label: 'Total billed', value: loading ? '—' : fmt(billedShown), icon: <Receipt size={15} />, onClick: () => setStatusFilter('all'), active: statusFilter === 'all',
+      sub: loading ? undefined : totalBilled > 0 ? `Across ${invoices.length} invoice${invoices.length === 1 ? '' : 's'}` : ctxBilled > 0 ? 'Project billed to date (pay apps)' : 'Across all invoices' },
+    { label: 'Total paid', value: loading ? '—' : fmt(paidShown), icon: <CheckCircle size={15} />, tone: paidShown > 0 ? 'good' : 'default', onClick: () => toggle('paid'), active: statusFilter === 'paid',
+      sub: loading ? undefined : totalPaid > 0 ? 'Collected on invoices' : ctxPaid > 0 ? 'Collected on the contract' : 'Collected' },
+    { label: 'Outstanding', value: loading ? '—' : fmt(outstandingShown), icon: <Wallet size={15} />, onClick: () => toggle('outstanding'), active: statusFilter === 'outstanding',
+      sub: loading ? undefined : totalOutstanding > 0 ? 'Awaiting payment' : ctxBilled - ctxPaid > 0 ? 'Billed less collected (contract)' : 'Awaiting payment' },
+    { label: 'Overdue', value: loading ? '—' : String(overdueList.length), icon: <WarningCircle size={15} />, tone: overdueList.length ? 'bad' : 'default', onClick: () => toggle('overdue'), active: statusFilter === 'overdue',
+      sub: loading ? undefined : overdueList.length ? `${fmt(overdueTotal)} past due` : 'None past due' },
+  ];
+
+  const columns: Column<Invoice>[] = [
+    { key: 'invoice_number', header: 'Invoice #', primary: true, groupable: false },
+    { key: 'vendor_name', header: 'Bill to' },
+    { key: 'description', header: 'Description', hidden: true },
+    { key: 'total', header: 'Total', align: 'right', total: 'sum', format: fmt, phone: 'show', accessor: effectiveTotal, render: i => <strong style={{ fontVariantNumeric: 'tabular-nums' }}>{fmt(effectiveTotal(i))}</strong> },
+    { key: 'created_at', header: 'Issued', accessor: i => i.created_at || '', render: i => fmtDate(i.created_at) },
+    { key: 'due_date', header: 'Due', accessor: i => i.due_date || '', render: i => <span style={{ color: isOverdue(i) ? 'var(--danger)' : undefined, whiteSpace: 'nowrap' }}>{i.due_date ? fmtDate(i.due_date.slice(0, 10)) : '—'}</span> },
+    { key: 'status', header: 'Status', phone: 'show', accessor: effKey, render: i => { const st = invBadge(effKey(i)); return <Badge tone={st.tone} dot>{st.label}</Badge>; } },
+    { key: 'notes', header: 'Notes', render: i => <span style={{ color: 'var(--text-secondary)' }}>{i.notes || '—'}</span> },
+  ];
+
+  const rowActions = (inv: Invoice): Action[] => [
+    { label: sendingId === inv.id ? 'Sending…' : 'Send to owner', icon: <PaperPlaneTilt size={14} />, inline: true, hidden: statusKey(inv.status) !== 'draft', disabled: sendingId === inv.id, onClick: () => { void handleSend(inv.id); } },
+    { label: pdfBusy === inv.id ? 'Building…' : inv.pdf_url ? 'Open PDF' : 'PDF', icon: <FilePdf size={14} />, inline: true, disabled: pdfBusy === inv.id, onClick: () => { void handlePdf(inv); } },
+    { label: 'Edit amount', icon: <PencilSimple size={14} />, onClick: () => { setEditInv(inv); setEditVal(String(inv.amount)); } },
+    { label: 'Adjust %', icon: <Percent size={14} />, onClick: () => setAdjustInv(inv) },
+    { label: 'Copy total', icon: <Copy size={14} />, onClick: () => handleCopyInv(effectiveTotal(inv)) },
+    { label: 'Delete invoice', icon: <Trash size={14} />, tone: 'danger', onClick: () => { void handleDeleteInv(inv); } },
+  ];
+
+  const payAppCount = Number(money?.payAppCount) || 0;
 
   return (
-    <PremiumSurface>
+    <PageShell
+      crumbs={[
+        { label: 'Projects', href: '/app/projects' },
+        { label: ctx?.project?.name || 'Project', href: `${base}/overview` },
+        { label: 'Client invoices' },
+      ]}
+      title="Client invoices"
+      subtitle="Owner billing and payment tracking."
+      actions={<Button variant="primary" icon={<Plus size={15} weight="bold" />} onClick={() => openCreate()}>New invoice</Button>}
+    >
+      {!loadError && <StatRow items={stats} />}
 
-      {/* Header */}
-      <ModuleHero
-        eyebrow="Project Billing"
-        eyebrowIcon={<IconChip size={24} vivid={moduleAccent('invoices').vivid ?? moduleAccent('invoices').hex}><Receipt size={13} weight="fill" color="var(--text-primary)" /></IconChip>}
-        accentColor={moduleAccent('invoices').hex}
-        title="Client"
-        accent="Invoices"
-        subtitle="Owner billing and payment tracking."
-        actions={
-          <button onClick={() => { if (showForm) { setShowForm(false); setErrorMsg(''); } else { openCreate(); } }} style={goldButtonStyle} className="pmBtn">
-            <Plus size={15} weight="bold" /> New Invoice
-          </button>
-        }
-      />
-
-      {/* One summary: the contract sum, then what has been billed, paid and is still owed */}
-      <StatStrip items={[
-        ...(ctx ? [
-          {href: `/app/projects/${projectId}/contracts`,  label: 'Revised Contract', value: fmt(revised), sub: 'Contract sum to date' },
-          {href: `/app/projects/${projectId}/change-orders`,  label: 'Approved COs', value: (coTotal >= 0 ? '+' : '') + fmt(coTotal), sub: `${Number(money?.approvedCoCount) || 0} approved${Number(money?.pendingCoCount) ? ` · ${money.pendingCoCount} pending` : ''}` },
-        ] : []),
-        {href: `/app/projects/${projectId}/invoices`,  label: 'Total Billed', value: fmt(totalBilled > 0 ? totalBilled : ctxBilled), sub: totalBilled > 0 ? `Across ${invoices.length} invoice${invoices.length === 1 ? '' : 's'}` : ctxBilled > 0 ? 'Project billed to date (pay apps)' : 'Across all invoices' },
-        {href: `/app/projects/${projectId}/invoices`,  label: 'Total Paid', value: fmt(totalPaid > 0 ? totalPaid : ctxPaid), sub: totalPaid > 0 ? 'Collected on invoices' : ctxPaid > 0 ? 'Collected on the contract' : 'Collected' },
-        {href: `/app/projects/${projectId}/invoices`,  label: 'Outstanding', value: fmt(totalOutstanding > 0 ? totalOutstanding : Math.max(0, ctxBilled - ctxPaid)), accent: totalOutstanding > 0 || ctxBilled - ctxPaid > 0 ? undefined : GREEN, sub: totalOutstanding > 0 ? 'Awaiting payment' : ctxBilled - ctxPaid > 0 ? 'Billed less collected (contract)' : 'Awaiting payment' },
-      ]} />
-
-      {successMsg && <div style={{ margin: '0 0 16px', padding: '10px 14px', background: 'rgba(74,222,128,.15)', border: '1px solid rgba(74,222,128,.4)', borderRadius: 10, color: GREEN, fontSize: 13 }}>{successMsg}</div>}
-      {errorMsg && <div style={{ margin: '0 0 16px', padding: '10px 14px', background: 'rgba(248,113,113,.15)', border: '1px solid rgba(248,113,113,.4)', borderRadius: 10, color: RED, fontSize: 13 }}>{errorMsg}</div>}
-
-      {showForm && (
-        <div className={ctx ? 'pmSplit' : undefined} style={railStyle(320, { gap: 18, alignItems: 'start', marginBottom: 24 })}>
-          <SectionCard title="New Invoice" icon={<Plus size={17} weight="bold" color="var(--text-secondary)" />}>
-            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: 14 }}>
-              <div>
-                <label style={label}>Invoice # *{auto.num && <AutoChip />}</label>
-                <input type="text" value={form.invoice_number} onChange={e => setForm(p => ({ ...p, invoice_number: e.target.value }))} style={inp} />
-                <div style={hint}>Next in sequence — {invoices.length} invoice{invoices.length === 1 ? '' : 's'} on this project so far.</div>
-              </div>
-              <div>
-                <label style={label}>Bill To *{auto.billto && <AutoChip />}</label>
-                <Suggest type="text" value={form.vendor_name} onChange={e => setForm(p => ({ ...p, vendor_name: e.target.value }))} placeholder="Client / owner name" style={inp} options={[ctx?.defaults?.ownerName, ...vendorNames].filter((n): n is string => !!n)} />
-                <div style={hint}>{auto.billto ? 'Owner of record from project setup.' : 'Who receives this invoice.'}</div>
-              </div>
-              <div>
-                <label style={label}>Bill To Email{auto.email && <AutoChip />}</label>
-                <input type="email" value={form.vendor_email} onChange={e => setForm(p => ({ ...p, vendor_email: e.target.value }))} placeholder="Required to email/send" style={inp} />
-                <div style={hint}>{auto.email ? 'From the project owner record — Send to Owner delivers here.' : 'Needed for one-click Send to Owner.'}</div>
-              </div>
-              <div>
-                <label style={label}>Amount ($) *{auto.amt && <AutoChip />}</label>
-                <input type="number" value={form.amount} onChange={e => setForm(p => ({ ...p, amount: Number(e.target.value) }))} style={inp} />
-                {lastApp && certified > 0 ? (
-                  <div style={hint}>
-                    App #{lastApp.appNumber} certified {fmt(certified)}.{' '}
-                    <span onClick={() => { setForm(p => ({ ...p, amount: certified })); setAuto(a => ({ ...a, amt: true })); }} style={{ color: 'var(--text-primary)', fontWeight: 700, cursor: 'pointer' }}>Use Certified Amount</span>
-                  </div>
-                ) : (
-                  <div style={hint}>Pre-tax invoice amount.</div>
-                )}
-              </div>
-              <div>
-                <label style={label}>Tax ($)</label>
-                <input type="number" value={form.tax} onChange={e => setForm(p => ({ ...p, tax: Number(e.target.value) }))} style={inp} />
-                <div style={hint}>Optional sales / use tax.</div>
-              </div>
-              <div>
-                <label style={label}>Invoice Total</label>
-                <div style={{ ...inp, display: 'flex', alignItems: 'center', fontWeight: 800, color: 'var(--text-primary)', background: 'var(--bg-surface-2)', border: '1px solid var(--border-default)' }}>
-                  {'$' + ((Number(form.amount) || 0) + (Number(form.tax) || 0)).toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
-                </div>
-                <div style={hint}>Amount + tax — computed live.</div>
-              </div>
-              <div>
-                <label style={label}>Issue Date<AutoChip /></label>
-                <div style={{ ...inp, display: 'flex', alignItems: 'center', color: DIM }}>{new Date().toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' })}</div>
-                <div style={hint}>Recorded automatically when the invoice is created.</div>
-              </div>
-              <div>
-                <label style={label}>Due Date{auto.due && <AutoChip />}</label>
-                <SaguaroDatePicker value={form.due_date} onChange={v => setForm(p => ({ ...p, due_date: v }))} style={inp} />
-                <div style={hint}>Net 30 from today — adjust freely. Overdue flags itself.</div>
-              </div>
-              <div>
-                <label style={label}>Cost Code</label>
-                {costCodes.length > 0 ? (
-                  <select value={form.cost_code} onChange={e => setForm(p => ({ ...p, cost_code: e.target.value }))} style={inp}>
-                    <option value="">No cost code</option>
-                    {costCodes.map(c => <option key={c.costCode} value={c.costCode}>{c.costCode} — {c.description}</option>)}
-                  </select>
-                ) : (
-                  <input type="text" value={form.cost_code} onChange={e => setForm(p => ({ ...p, cost_code: e.target.value }))} placeholder="e.g. 01-000" style={inp} />
-                )}
-                <div style={hint}>{costCodes.length > 0 ? `${costCodes.length} codes from the project budget.` : 'Optional — ties billing to the budget.'}</div>
-              </div>
-              <div style={{ gridColumn: 'span 2' }}>
-                <label style={label}>Description{auto.desc && <AutoChip />}</label>
-                <input type="text" value={form.description} onChange={e => setForm(p => ({ ...p, description: e.target.value }))} placeholder="e.g. Mar 2026 progress" style={inp} />
-                {auto.desc && lastApp && <div style={hint}>Suggested from Pay Application #{lastApp.appNumber}.</div>}
-              </div>
-              <div>
-                <label style={label}>Notes</label>
-                <input type="text" value={form.notes} onChange={e => setForm(p => ({ ...p, notes: e.target.value }))} style={inp} />
-              </div>
-            </div>
-            <div style={{ display: 'flex', gap: 10, marginTop: 16 }}>
-              <button onClick={handleSave} disabled={saving} style={{ ...goldButtonStyle, opacity: saving ? 0.7 : 1 }} className="pmBtn">
-                {saving ? 'Saving…' : 'Create Invoice'}
-              </button>
-              <button onClick={() => { setShowForm(false); setErrorMsg(''); }} style={ghostButtonStyle} className="pmBtn">Cancel</button>
-            </div>
-          </SectionCard>
-          {ctx && (
-            <div style={{ display: 'flex', flexDirection: 'column', gap: 16 }}>
-              <SectionCard flat title="What Saguaro Knows" icon={<ClockCounterClockwise size={17} weight="duotone" color="var(--text-secondary)" />}>
-                <InsightRow label="Original Contract" value={fmt(original)} />
-                {coTotal !== 0 && <InsightRow label="Approved COs" value={(coTotal > 0 ? '+' : '') + fmt(coTotal)} accent={GREEN} />}
-                <InsightRow label="Revised Contract" value={fmt(revised)} />
-                <InsightRow label="Billed to Date" value={fmt(ctxBilled)} />
-                <InsightRow label="Paid to Date" value={fmt(ctxPaid)} accent={GREEN} />
-                {lastApp && (
-                  <>
-                    <div style={{ height: 1, background: 'rgba(255,255,255,0.08)', margin: '8px 0' }} />
-                    <InsightRow label={`Pay App #${lastApp.appNumber}`} value={String(lastApp.status || '—').replace(/_/g, ' ')} />
-                    <InsightRow label="Certified This Period" value={fmt(certified)} accent={GREEN} strong />
-                  </>
-                )}
-              </SectionCard>
-              <SectionCard flat title="After You Create" icon={<Calculator size={17} weight="duotone" color="var(--text-secondary)" />}>
-                <FlowSteps title="" steps={[
-                  { title: 'Draft Is Saved', desc: 'Edit the amount or adjust by % any time before sending.' },
-                  { title: 'Send to Owner', desc: 'One click emails the invoice to the bill-to address above.' },
-                  { title: 'Payment Is Tracked', desc: 'Outstanding and overdue status update automatically from the due date.' },
-                  { title: 'Ledger updates', desc: 'Billed and paid totals roll into the project money snapshot.' },
-                ]} />
-              </SectionCard>
-            </div>
-          )}
-        </div>
+      {!loading && !loadError && invoices.length > 0 && (
+        <Toolbar
+          search={search}
+          onSearch={setSearch}
+          placeholder="Search by number, bill-to or notes…"
+          filters={
+            <Select aria-label="Status" value={statusFilter} onChange={e => setStatusFilter(e.target.value as StatusFilter)} style={{ width: 'auto', minWidth: 170 }}
+              options={[
+                { value: 'all', label: 'All statuses' },
+                { value: 'outstanding', label: 'Outstanding' },
+                { value: 'draft', label: 'Draft' }, { value: 'sent', label: 'Sent' }, { value: 'pending', label: 'Pending' },
+                { value: 'approved', label: 'Approved' }, { value: 'paid', label: 'Paid' }, { value: 'overdue', label: 'Overdue' },
+              ]} />
+          }
+        />
       )}
 
-      <ListToolbar
-        module="invoices"
-        search={search}
-        onSearch={setSearch}
-        searchPlaceholder="Search invoices…"
-        filters={[{ key: 'status', label: 'Status', value: statusFilter, onChange: setStatusFilter, allLabel: 'All Statuses', options: [
-          { value: 'draft', label: 'Draft' }, { value: 'sent', label: 'Sent' }, { value: 'pending', label: 'Pending' },
-          { value: 'approved', label: 'Approved' }, { value: 'paid', label: 'Paid' }, { value: 'overdue', label: 'Overdue' },
-        ] }]}
-        sort={sortBy}
-        onSort={setSortBy}
-        sortOptions={[
-          { value: 'newest', label: 'Newest First' },
-          { value: 'due', label: 'Due Date' },
-          { value: 'amount', label: 'Amount (High First)' },
-        ]}
-        count={{ shown: filteredInvoices.length, total: invoices.length }}
-        style={{ marginBottom: 16 }}
-      />
+      {loadError ? (
+        <EmptyState icon={<WarningCircle size={22} />} title="Couldn't load invoices" text={loadError} action={<Button onClick={fetchInvoices}>Try again</Button>} />
+      ) : (
+        <DataTable<Invoice>
+          tableId="project-invoices"
+          exportName="client-invoices"
+          columns={columns}
+          rows={filteredInvoices}
+          loading={loading}
+          rowKey={i => i.id}
+          defaultSort={{ key: 'created_at', dir: 'desc' }}
+          rowActions={rowActions}
+          empty={
+            invoices.length === 0 ? (
+              <EmptyState
+                icon={<Receipt size={22} />}
+                title="No invoices yet"
+                text={ctxBilled > 0
+                  ? `You have certified ${fmt(ctxBilled)} across ${payAppCount} pay application${payAppCount === 1 ? '' : 's'} — client invoices track the money you collect against it.`
+                  : 'Create your first invoice to start billing owners and tracking payments.'}
+                action={<Button variant="primary" icon={<Plus size={15} weight="bold" />} onClick={() => openCreate(certified > 0)}>{certified > 0 ? `Invoice certified ${fmt(certified)}` : 'New invoice'}</Button>}
+              />
+            ) : (
+              <EmptyState title="Nothing matches" text="Change the search or the status filter." action={<Button onClick={() => { setSearch(''); setStatusFilter('all'); }}>Clear filters</Button>} />
+            )
+          }
+        />
+      )}
 
-      <SectionCard title="All Invoices" icon={<Receipt size={17} weight="duotone" color={moduleAccent('invoices').hex} />} flush>
-        {loading ? <div><SkeletonRow /><SkeletonRow /><SkeletonRow /><SkeletonRow /><SkeletonRow /></div> : invoices.length === 0 ? (
-          <div className={ctx ? 'pmSplit' : undefined} style={railStyle(360, { alignItems: 'stretch' })}>
-            <PremiumEmpty
-              icon={<Receipt size={30} weight="duotone" color="var(--text-secondary)" />}
-              title="No invoices yet"
-              description={ctxBilled > 0
-                ? `You have certified ${fmt(ctxBilled)} across ${Number(money?.payAppCount) || 0} pay application${(Number(money?.payAppCount) || 0) === 1 ? '' : 's'} — client invoices track the money you collect against it.`
-                : 'Create your first invoice to start billing owners and tracking payments.'}
-              action={<button onClick={() => openCreate(certified > 0)} style={secondaryButtonStyle} className="pmBtn"><Plus size={15} weight="bold" /> {certified > 0 ? `Invoice Certified ${fmt(certified)}` : 'New Invoice'}</button>}
+      {/* New invoice */}
+      <FormModal
+        open={showForm}
+        onClose={closeCreate}
+        title="New invoice"
+        subtitle={ctx ? `Revised contract ${fmt(revised)} · billed ${fmt(ctxBilled)} · paid ${fmt(ctxPaid)}` : 'Saved as a draft — send it to the owner from the list.'}
+        onSubmit={async () => { await handleSave(); }}
+        submitLabel="Create invoice"
+        busy={saving}
+        error={formError}
+      >
+        {lastApp && certified > 0 && (
+          <div style={{ marginBottom: 16 }}>
+            <Callout
+              tone="info"
+              icon={<ClockCounterClockwise size={17} />}
+              title={`Pay App #${lastApp.appNumber} certified ${fmt(certified)} this period`}
+              text={`Status: ${String(lastApp.status || '—').replace(/_/g, ' ')}.`}
+              actions={Number(form.amount) === certified
+                ? undefined
+                : <Button size="sm" onClick={() => { setForm(p => ({ ...p, amount: certified })); setAuto(a => ({ ...a, amt: true })); }}>Use certified amount</Button>}
             />
-            {ctx && (
-              <div style={{ borderLeft: '1px solid rgba(255,255,255,0.08)', padding: '22px 24px' }}>
-                <div style={{ fontSize: 12, fontWeight: 900, color: 'var(--c-text-2)', marginBottom: 10 }}>What Saguaro Already Knows</div>
-                <InsightRow label="Original Contract" value={fmt(original)} />
-                <InsightRow label="Approved COs" value={`${(coTotal > 0 ? '+' : '') + fmt(coTotal)} (${Number(money?.approvedCoCount) || 0})`} accent={coTotal > 0 ? GREEN : undefined} />
-                <InsightRow label="Revised Contract" value={fmt(revised)} strong />
-                <InsightRow label="Billed to Date" value={`${fmt(ctxBilled)} · ${Number(money?.billedPct) || 0}%`} />
-                <InsightRow label="Paid to Date" value={fmt(ctxPaid)} accent={GREEN} />
-                {lastApp ? (
-                  <>
-                    <div style={{ height: 1, background: 'rgba(255,255,255,0.08)', margin: '10px 0' }} />
-                    <InsightRow label={`Last Pay App — #${lastApp.appNumber}`} value={String(lastApp.status || '—').replace(/_/g, ' ')} />
-                    <InsightRow label="Certified This Period" value={fmt(certified)} accent={GREEN} strong />
-                    {certified > 0 && (
-                      <div style={{ marginTop: 12, padding: '10px 12px', borderRadius: 8, background: 'var(--bg-surface-2)', border: '1px solid var(--border-default)', fontSize: 12, color: 'var(--text-primary)', lineHeight: 1.5 }}>
-                        Start by invoicing the certified amount from App #{lastApp.appNumber} — the form pre-fills it.
-                      </div>
-                    )}
-                  </>
-                ) : (
-                  <div style={{ marginTop: 12, fontSize: 12, color: DIM, lineHeight: 1.55 }}>
-                    No pay applications yet — invoices can bill any milestone or deposit against the contract.
-                  </div>
-                )}
-              </div>
-            )}
-          </div>
-        ) : (
-          <div style={{ overflowX: 'auto' }}>
-          <SortBar columns={INVOICE_COLS.filter(c => c.key) as { key: string; label: string }[]} sort={invSort} onChange={setInvSort} />
-          <table className="k-table" style={{ width: '100%', borderCollapse: 'collapse' }}>
-            <thead>
-              <tr>
-                {INVOICE_COLS.map(c => c.key
-                  ? <SortTh key={c.key} col={c.key} label={c.label} sort={invSort} onSort={cycleInvSort} style={{ padding: '10px 14px', fontSize: 12, fontWeight: 700, color: DIM, borderBottom: '1px solid ' + BORDER, whiteSpace: 'nowrap' }} />
-                  : <th key={c.label} style={{ padding: '10px 14px', textAlign: 'left', fontSize: 12, fontWeight: 700, color: DIM, borderBottom: '1px solid ' + BORDER, whiteSpace: 'nowrap' }}>{c.label}</th>
-                )}
-              </tr>
-            </thead>
-            <tbody>
-              {sortedInvoices.map(inv => {
-                const overdue = isOverdue(inv);
-                const effKey = overdue ? 'overdue' : statusKey(inv.status);
-                const sc = STATUS_MAP[effKey] || { bg: 'rgba(148,163,184,.2)', color: DIM, label: statusKey(inv.status) };
-                return (
-                  <tr key={inv.id} style={{ borderBottom: '1px solid rgba(255,255,255,0.08)', background: overdue ? 'rgba(248,113,113,.05)' : 'transparent' }}>
-                    <td style={{ padding: '10px 14px', color: 'var(--text-primary)', fontWeight: 700 }}>{inv.invoice_number}</td>
-                    <td style={{ padding: '10px 14px', color: DIM }}>{inv.vendor_name}</td>
-                    <td style={{ padding: '10px 14px', position: 'relative' as const }}>
-                      {deleteId === inv.id ? (
-                        <div style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
-                          <span style={{ fontSize: 12, color: RED, fontWeight: 600 }}>Delete?</span>
-                          <button onClick={() => handleDeleteInv(inv.id)} style={{ padding: '3px 8px', background: 'rgba(248,113,113,.15)', border: '1px solid rgba(248,113,113,.3)', borderRadius: 5, color: RED, fontSize: 12, fontWeight: 700, cursor: 'pointer' }}>Yes</button>
-                          <button onClick={() => setDeleteId(null)} style={{ padding: '3px 8px', background: RAISED, border: `1px solid ${BORDER}`, borderRadius: 5, color: DIM, fontSize: 12, cursor: 'pointer' }}>Cancel</button>
-                        </div>
-                      ) : editId === inv.id ? (
-                        <div style={{ display: 'flex', alignItems: 'center', gap: 4 }}>
-                          <input value={editVal} onChange={e => setEditVal(e.target.value)} type="number" autoFocus onKeyDown={e => { if (e.key === 'Enter') handleEditInv(inv.id); if (e.key === 'Escape') setEditId(null); }} style={{ width: 100, padding: '4px 8px', background: DARK, border: `1px solid ${GOLD}`, borderRadius: 5, color: TEXT, fontSize: 12, outline: 'none', textAlign: 'right' }} />
-                          <button onClick={() => handleEditInv(inv.id)} style={{ padding: '3px 8px', background: 'var(--brand-primary)', border: 'none', borderRadius: 5, color: 'var(--on-brand)', fontSize: 12, fontWeight: 700, cursor: 'pointer' }}>Save</button>
-                          <button onClick={() => setEditId(null)} style={{ padding: '3px 8px', background: RAISED, border: `1px solid ${BORDER}`, borderRadius: 5, color: DIM, fontSize: 12, cursor: 'pointer' }}>Cancel</button>
-                        </div>
-                      ) : adjustId === inv.id ? (
-                        <div style={{ display: 'flex', alignItems: 'center', gap: 3 }}>
-                          {[-10, -5, 5, 10].map(p => (
-                            <button key={p} onClick={() => handleAdjustInv(inv.id, p)} style={{ padding: '3px 7px', background: p > 0 ? 'rgba(74,222,128,.1)' : 'rgba(248,113,113,.1)', border: `1px solid ${p > 0 ? 'rgba(74,222,128,.25)' : 'rgba(248,113,113,.25)'}`, borderRadius: 5, color: p > 0 ? GREEN : RED, fontSize: 12, fontWeight: 700, cursor: 'pointer' }}>{p > 0 ? '+' : ''}{p}%</button>
-                          ))}
-                          <button onClick={() => setAdjustId(null)} style={{ padding: '3px 6px', background: 'none', border: 'none', color: DIM, fontSize: 12, cursor: 'pointer' }}>Cancel</button>
-                        </div>
-                      ) : (
-                        <div style={{ display: 'flex', alignItems: 'center', gap: 4 }}>
-                          <span style={{ color: 'var(--text-primary)', fontWeight: 700, fontVariantNumeric: 'tabular-nums' }}>{fmt(effectiveTotal(inv))}</span>
-                          {copiedId === inv.id && <span style={{ fontSize: 12, color: GREEN, fontWeight: 600 }}>Copied</span>}
-                          <button onClick={() => openInvMenu(inv.id)} style={{ background: 'none', border: 'none', color: DIM, cursor: 'pointer', padding: '2px 4px', lineHeight: 1, opacity: 0.6, display: 'inline-flex', alignItems: 'center' }} onMouseEnter={e => (e.currentTarget.style.opacity = '1')} onMouseLeave={e => (e.currentTarget.style.opacity = '0.6')}><CaretDown size={11} weight="bold" /></button>
-                          {menuId === inv.id && (
-                            <div style={{ position: 'absolute', top: 36, right: 14, background: 'var(--bg-solid-2)', border: `1px solid ${BORDER}`, borderRadius: 'var(--radius-md)', padding: 6, zIndex: 100, minWidth: 160, boxShadow: 'var(--shadow-lg)' }}>
-                              {[
-                                { label: 'Edit Amount', icon: <PencilSimple size={15} weight="bold" color={DIM} />, action: () => { setMenuId(null); setEditId(inv.id); setEditVal(String(inv.amount)); } },
-                                { label: 'Adjust %', icon: <Percent size={15} weight="bold" color={DIM} />, action: () => { setMenuId(null); setAdjustId(inv.id); } },
-                                { label: 'Copy Total', icon: <Copy size={15} weight="bold" color={DIM} />, action: () => handleCopyInv(inv.id, effectiveTotal(inv)) },
-                              ].map(item => (
-                                <div key={item.label} onClick={item.action} style={{ padding: '7px 12px', fontSize: 12, color: TEXT, cursor: 'pointer', borderRadius: 6, display: 'flex', alignItems: 'center', gap: 9 }} onMouseEnter={e => (e.currentTarget.style.background = 'rgba(255,255,255,0.06)')} onMouseLeave={e => (e.currentTarget.style.background = 'transparent')}>
-                                  {item.icon}{item.label}
-                                </div>
-                              ))}
-                              <div style={{ height: 1, background: BORDER, margin: '4px 0' }} />
-                              <div onClick={() => { setMenuId(null); setDeleteId(inv.id); }} style={{ padding: '7px 12px', fontSize: 12, color: RED, cursor: 'pointer', borderRadius: 6, display: 'flex', alignItems: 'center', gap: 9 }} onMouseEnter={e => (e.currentTarget.style.background = 'rgba(248,113,113,.08)')} onMouseLeave={e => (e.currentTarget.style.background = 'transparent')}>
-                                <Trash size={15} weight="bold" color={RED} />Delete Invoice
-                              </div>
-                            </div>
-                          )}
-                        </div>
-                      )}
-                    </td>
-                    <td style={{ padding: '10px 14px', color: DIM, whiteSpace: 'nowrap' }}>{inv.created_at ? new Date(inv.created_at).toLocaleDateString() : '—'}</td>
-                    <td style={{ padding: '10px 14px', color: overdue ? RED : DIM, whiteSpace: 'nowrap' }}>{inv.due_date ? inv.due_date.slice(0, 10) : '—'}</td>
-                    <td style={{ padding: '10px 14px' }}><span style={{ padding: '3px 10px', borderRadius: 20, background: sc.bg, color: sc.color, fontSize: 12, fontWeight: 700 }}>{sc.label}</span></td>
-                    <td style={{ padding: '10px 14px', color: DIM, fontSize: 12 }}>{inv.notes}</td>
-                    <td style={{ padding: '10px 14px', whiteSpace: 'nowrap' }}>
-                      <div style={{ display: 'inline-flex', alignItems: 'center', gap: 6 }}>
-                        <button onClick={() => handlePdf(inv)} disabled={pdfBusy === inv.id} title={inv.pdf_url ? 'Open PDF' : 'Generate PDF'} style={{ padding: '4px 12px', background: 'rgba(255,255,255,0.05)', border: '1px solid ' + BORDER, borderRadius: 5, color: inv.pdf_url ? 'var(--link)' : DIM, fontSize: 12, cursor: 'pointer', opacity: pdfBusy === inv.id ? 0.5 : 1 }}>{pdfBusy === inv.id ? '…' : 'PDF'}</button>
-                        {statusKey(inv.status) === 'draft' && (
-                          <button onClick={() => handleSend(inv.id)} style={{ padding: '4px 12px', background: 'var(--bg-surface-2)', border: '1px solid var(--border-default)', borderRadius: 5, color: 'var(--text-primary)', fontSize: 12, cursor: 'pointer' }}>Send to Owner</button>
-                        )}
-                        {statusKey(inv.status) === 'paid' && <StatusPill module="generic" status="paid" size="sm" />}
-                      </div>
-                    </td>
-                  </tr>
-                );
-              })}
-            </tbody>
-          </table>
-          {menuId && <div style={{ position: 'fixed', inset: 0, zIndex: 50 }} onClick={() => setMenuId(null)} />}
           </div>
         )}
-      </SectionCard>
-    <UnsavedGuardModal guard={guard} />
-    </PremiumSurface>
+        <FormGrid cols={3}>
+          <Field label="Invoice #" required hint={`Next in sequence — ${invoices.length} invoice${invoices.length === 1 ? '' : 's'} on this project so far.`}>
+            <Input value={form.invoice_number} onChange={e => setForm(p => ({ ...p, invoice_number: e.target.value }))} />
+          </Field>
+          <Field label="Bill to" required hint={auto.billto ? 'Owner of record from project setup.' : 'Who receives this invoice.'}>
+            <Suggest type="text" className="k-input" value={form.vendor_name} onChange={e => setForm(p => ({ ...p, vendor_name: e.target.value }))} placeholder="Client / owner name" options={[ctx?.defaults?.ownerName, ...vendorNames].filter((n): n is string => !!n)} />
+          </Field>
+          <Field label="Bill-to email" hint={auto.email ? 'From the project owner record — Send to owner delivers here.' : 'Needed for one-click Send to owner.'}>
+            <Input type="email" value={form.vendor_email} onChange={e => setForm(p => ({ ...p, vendor_email: e.target.value }))} placeholder="Required to email/send" />
+          </Field>
+          <Field label="Amount ($)" required hint={auto.amt ? `Certified amount from App #${lastApp?.appNumber}.` : 'Pre-tax invoice amount.'}>
+            <Input type="number" inputMode="decimal" value={form.amount} onChange={e => setForm(p => ({ ...p, amount: Number(e.target.value) }))} />
+          </Field>
+          <Field label="Tax ($)" hint="Optional sales / use tax.">
+            <Input type="number" inputMode="decimal" value={form.tax} onChange={e => setForm(p => ({ ...p, tax: Number(e.target.value) }))} />
+          </Field>
+          <Field label="Invoice total" hint="Amount + tax — computed live.">
+            <Input readOnly value={'$' + ((Number(form.amount) || 0) + (Number(form.tax) || 0)).toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })} style={{ fontWeight: 800 }} />
+          </Field>
+          <Field label="Issue date" hint="Recorded automatically when the invoice is created.">
+            <Input readOnly value={new Date().toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' })} />
+          </Field>
+          <Field label="Due date" hint="Net 30 from today — adjust freely. Overdue flags itself.">
+            <DateInput value={form.due_date} onChange={e => setForm(p => ({ ...p, due_date: e.target.value }))} />
+          </Field>
+          <Field label="Cost code" hint={costCodes.length > 0 ? `${costCodes.length} codes from the project budget.` : 'Optional — ties billing to the budget.'}>
+            {costCodes.length > 0 ? (
+              <Select value={form.cost_code} onChange={e => setForm(p => ({ ...p, cost_code: e.target.value }))} placeholder="No cost code"
+                options={costCodes.map(c => ({ value: c.costCode, label: `${c.costCode} — ${c.description}` }))} />
+            ) : (
+              <Input value={form.cost_code} onChange={e => setForm(p => ({ ...p, cost_code: e.target.value }))} placeholder="e.g. 01-000" />
+            )}
+          </Field>
+          <Field label="Description" span hint={auto.desc && lastApp ? `Suggested from Pay Application #${lastApp.appNumber}.` : undefined}>
+            <Input value={form.description} onChange={e => setForm(p => ({ ...p, description: e.target.value }))} placeholder="e.g. Mar 2026 progress" />
+          </Field>
+          <Field label="Notes" span>
+            <Input value={form.notes} onChange={e => setForm(p => ({ ...p, notes: e.target.value }))} />
+          </Field>
+        </FormGrid>
+      </FormModal>
+
+      {/* Edit amount */}
+      <FormModal
+        open={!!editInv}
+        onClose={() => setEditInv(null)}
+        size="sm"
+        title="Edit amount"
+        subtitle={editInv ? `${editInv.invoice_number} · pre-tax amount; the total is recomputed with tax` : undefined}
+        onSubmit={() => { if (editInv) void handleEditInv(editInv.id); }}
+        submitLabel="Save"
+      >
+        <Field label="Amount ($)" required>
+          <Input type="number" inputMode="decimal" min={0} step="0.01" value={editVal} onChange={e => setEditVal(e.target.value)} autoFocus />
+        </Field>
+      </FormModal>
+
+      {/* Adjust % */}
+      <FormModal
+        open={!!adjustInv}
+        onClose={() => setAdjustInv(null)}
+        size="sm"
+        title="Adjust amount"
+        subtitle={adjustInv ? `${adjustInv.invoice_number} · now ${fmt(Number(adjustInv.amount) || 0)} before tax` : undefined}
+        footer={<Button variant="ghost" onClick={() => setAdjustInv(null)}>Cancel</Button>}
+      >
+        <div style={{ display: 'flex', gap: 8, flexWrap: 'wrap' }}>
+          {[-10, -5, 5, 10].map(p => (
+            <Button key={p} onClick={() => { if (adjustInv) void handleAdjustInv(adjustInv.id, p); }}>
+              {p > 0 ? '+' : ''}{p}%
+            </Button>
+          ))}
+        </div>
+      </FormModal>
+
+      {/* Above the FormModal overlay so the unsaved-work prompt is never hidden behind it. */}
+      <div style={{ position: 'relative', zIndex: 10001 }}>
+        <UnsavedGuardModal guard={guard} />
+      </div>
+      <Toast message={toast?.message ?? null} tone={toast?.tone} />
+    </PageShell>
   );
 }
