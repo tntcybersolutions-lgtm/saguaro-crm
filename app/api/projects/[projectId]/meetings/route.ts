@@ -1,71 +1,102 @@
+/**
+ * Job meetings — list (with item counts and the four headline numbers) and create.
+ *
+ * GET  /api/projects/:projectId/meetings
+ *      → { meetings: [...with open_items / overdue_items / item_count], stats, today, itemsMissing }
+ * POST /api/projects/:projectId/meetings  { title?, meeting_type, meeting_date, start_time?, location? }
+ *      → { meeting }   meeting_number is the next in that type's series
+ */
 import { NextRequest, NextResponse } from 'next/server';
-import { createServerClient, getUser } from '@/lib/supabase-server';
-import { requirePermission } from '@/lib/permissions';
-import type { Database } from '@/lib/database.types';
+import { requestDay } from '@/lib/time-zone';
+import {
+  meetingsGate, meetingsFail, tableMissing, MEETING_COLS, dateOrNull, timeOrNull, textOrNull,
+} from '@/lib/meetings-server';
+import {
+  isMissingTableError, itemCountsByMeeting, meetingStats, nextMeetingNumber, normalizeType, typeLabel,
+  type ItemLike,
+} from '@/lib/meetings';
 
-import { apiError } from '@/lib/api-error';
+export const dynamic = 'force-dynamic';
+
 export async function GET(req: NextRequest, { params }: { params: { projectId: string } }) {
-  const user = await getUser(req);
-  if (!user) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
+  const g = await meetingsGate(req, 'View', params.projectId);
+  if (!g.ok) return g.res;
+  const { user, db } = g;
   try {
-    const supabase = createServerClient();
-    const { data, error } = await supabase
+    const { data: meetings, error } = await db
       .from('meetings')
-      .select('*')
+      .select(MEETING_COLS)
       .eq('project_id', params.projectId)
       .eq('tenant_id', user.tenantId)
       .order('meeting_date', { ascending: false });
-    if (error) {
-      console.error('[projects/[projectId]/meetings] read failed:', error.message);
-      return apiError('projects/projectId/meetings', error, 'Failed to load meetings');
+    if (error) throw error;
+
+    const itemsQ = await db
+      .from('meeting_items')
+      .select('id, meeting_id, number, status, due_date, carried_from_item_id')
+      .eq('project_id', params.projectId)
+      .eq('tenant_id', user.tenantId);
+    let itemsMissing = false;
+    if (itemsQ.error) {
+      if (!isMissingTableError(itemsQ.error)) throw itemsQ.error;
+      itemsMissing = true;
     }
-    return NextResponse.json({ meetings: data || [] });
+    const items = (itemsQ.data || []) as ItemLike[];
+    const { today } = await requestDay(req.headers, g.db as never, user.tenantId, 'meetings');
+    const counts = itemCountsByMeeting(items, today);
+    const rows = (meetings || []).map((m: Record<string, unknown>) => {
+      const c = counts[m.id as string] || { open: 0, overdue: 0, total: 0 };
+      return { ...m, open_items: c.open, overdue_items: c.overdue, item_count: c.total };
+    });
+    return NextResponse.json({
+      meetings: rows,
+      stats: meetingStats(rows as never, items, today),
+      today,
+      itemsMissing,
+    });
   } catch (e) {
-    const detail = e instanceof Error ? e.message : String(e);
-    console.error('[projects/[projectId]/meetings] read failed:', detail);
-    // A failed read must not render as an empty result — return a real
-    // status so the UI can show an error state with a retry.
-    return apiError('projects/projectId/meetings', e, 'Failed to load meetings');
+    return meetingsFail('projects/meetings GET', e, "Couldn't load meetings");
   }
 }
 
 export async function POST(req: NextRequest, { params }: { params: { projectId: string } }) {
-  const g = await requirePermission(req, 'Projects', 'Edit');
+  const g = await meetingsGate(req, 'Edit', params.projectId);
   if (!g.ok) return g.res;
-  const user = g.user;
+  const { user, db } = g;
   try {
-    const body = await req.json();
-    const supabase = createServerClient();
-    // meetings real columns: title, meeting_type, status, meeting_date, start_time,
-    // end_time, location, agenda(text), notes, attendees(jsonb), agenda_items(jsonb),
-    // created_by(uuid)... The field page sends a full Meeting object (type/date/time/
-    // general_notes plus array fields attendees/agenda/recurring/series_id). Map
-    // scalars to their text columns and persist the structured arrays: attendees[]
-    // into attendees, and the structured agenda[] array into agenda_items.
-    const record: Record<string, unknown> = {
-      project_id: params.projectId,
-      tenant_id: user.tenantId,
-      title: body.title ?? null,
-      meeting_type: body.meeting_type ?? body.type ?? null,
-      location: body.location ?? null,
-      meeting_date: body.meeting_date ?? body.date ?? null,
-      start_time: body.start_time ?? body.time ?? null,
-      notes: body.notes ?? body.general_notes ?? null,
-      attendees: Array.isArray(body.attendees) ? body.attendees : [],
-      agenda_items: Array.isArray(body.agenda) ? body.agenda : [],
-      created_by: user.id,
-      status: body.status || 'scheduled',
-      created_at: new Date().toISOString(),
-    };
-    // title / meeting_type / meeting_date are NOT NULL — reject early with a clear
-    // 400 rather than letting the insert fail and (previously) fabricating a fake id.
-    if (!record.title || !record.meeting_type || !record.meeting_date) {
-      return NextResponse.json({ error: 'title, type and date are required' }, { status: 400 });
-    }
-    const { data, error } = await supabase.from('meetings').insert(record as Database['public']['Tables']['meetings']['Insert']).select().single();
-    if (error) { console.error('[meetings/POST]', error); return apiError('projects/projectId/meetings', error, "Failed to create meeting", 500); }
-    return NextResponse.json({ meeting: data });
-  } catch {
-    return NextResponse.json({ error: 'Failed to create meeting' }, { status: 500 });
+    const body = await req.json().catch(() => ({}));
+    const meeting_date = dateOrNull(body.meeting_date);
+    if (!meeting_date) return NextResponse.json({ error: 'meeting_date is required' }, { status: 400 });
+    const meeting_type = normalizeType(body.meeting_type);
+
+    const { data: series, error: sErr } = await db
+      .from('meetings')
+      .select('meeting_type, meeting_number')
+      .eq('project_id', params.projectId)
+      .eq('tenant_id', user.tenantId);
+    if (sErr) throw sErr;
+    const meeting_number = nextMeetingNumber(series || [], meeting_type);
+
+    const { data, error } = await db
+      .from('meetings')
+      .insert({
+        tenant_id: user.tenantId,
+        project_id: params.projectId,
+        title: textOrNull(body.title) || `${typeLabel(meeting_type)} meeting`,
+        meeting_type,
+        meeting_number,
+        meeting_date,
+        start_time: timeOrNull(body.start_time),
+        location: textOrNull(body.location),
+        status: 'scheduled',
+        created_by: user.id,
+      })
+      .select(MEETING_COLS)
+      .single();
+    if (error) throw error;
+    return NextResponse.json({ meeting: data }, { status: 201 });
+  } catch (e) {
+    if (isMissingTableError(e)) return tableMissing();
+    return meetingsFail('projects/meetings POST', e, "Couldn't create the meeting");
   }
 }
