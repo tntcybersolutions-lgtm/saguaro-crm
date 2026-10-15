@@ -1,15 +1,21 @@
 'use client';
+/**
+ * W-9 Requests — collect W-9s from every vendor and sub on the job. The bid-award
+ * gate refuses to award to a sub with no W-9 on file, so this unblocks buyout.
+ *
+ * Reads  GET  /api/projects/:id                          (contract subs)
+ *        GET  /api/documents/w9-request?projectId=       (request trail)
+ * Sends  POST /api/documents/w9-request  { projectId, subId?, vendorName, vendorEmail }
+ */
 import React, { useState, useEffect, useCallback } from 'react';
-import { StatusPill } from '@/components/ui/Status';
 import { useProjectContext } from '@/lib/hooks/useProjectContext';
 import { useParams } from 'next/navigation';
-import { T, Badge, Table } from '@/components/ui/shell';
 import {
-  PremiumSurface, ModuleHero, SectionCard, PremiumEmpty,
-  StatStrip, FlowStrip, AutoChip,
-  goldButtonStyle, ghostButtonStyle, secondaryButtonStyle
-} from '@/components/ui/premium';
-import { FileText, PaperPlaneTilt, Plus, SealCheck } from '@phosphor-icons/react';
+  PageShell, Card, StatRow, Badge, Button, Toolbar, DataTable, EmptyState, Select,
+  FormModal, Field, Input, FormGrid, ItemList, ItemRow, Toast, useToast,
+  type Column, type Action, type BadgeTone, type StatItem,
+} from '@/components/ui/kit';
+import { FileText, PaperPlaneTilt, Plus, SealCheck, UsersThree, Hourglass, WarningCircle, Handshake } from '@phosphor-icons/react';
 import { localDay } from '@/lib/calendar-day';
 
 interface W9Sub {
@@ -21,10 +27,11 @@ interface W9Sub {
   received_date: string | null;
 }
 
-const STATUS_BADGE: Record<string, 'green' | 'amber' | 'muted'> = {
-  received: 'green',
-  pending: 'amber',
-  not_requested: 'muted',
+const STATUS_TONE: Record<string, BadgeTone> = {
+  received: 'ongoing',
+  submitted: 'ongoing',
+  pending: 'under_contract',
+  not_requested: 'overdue',
 };
 
 const STATUS_LABEL: Record<string, string> = {
@@ -34,21 +41,7 @@ const STATUS_LABEL: Record<string, string> = {
   not_requested: 'Not Requested',
 };
 
-// Semantic accents tuned to the cinematic dark surface (match the dashboard).
-const GREEN = 'var(--success)';
-const AMBER = 'var(--warning)';
-const RED = 'var(--danger)';
-
-const inp: React.CSSProperties = { width: '100%', padding: '9px 12px', background: 'rgba(255,255,255,0.04)', border: `1px solid ${T.border}`, borderRadius: 10, color: T.white, fontSize: 13, outline: 'none', boxSizing: 'border-box' };
-const lbl: React.CSSProperties = { display: 'block', fontSize: 12, fontWeight: 700, color: 'var(--c-text-2)', marginBottom: 6 };
-// Compact on-brand action button for in-table row actions.
-const rowActionStyle: React.CSSProperties = {
-  display: 'inline-flex', alignItems: 'center', justifyContent: 'center', gap: 6,
-  padding: '6px 13px', borderRadius: 8, cursor: 'pointer',
-  background: 'var(--bg-surface-2)', color: 'var(--text-primary)',
-  border: '1px solid var(--border-default)', fontWeight: 700, fontSize: 12,
-  whiteSpace: 'nowrap',
-};
+const fmtDay = (v: string | null) => (v ? new Date(`${v}T12:00:00`).toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' }) : '—');
 
 type W9Filter = 'all' | 'received' | 'pending' | 'missing';
 
@@ -58,25 +51,19 @@ export default function W9Page() {
   const base = `/app/projects/${projectId}`;
   const [subs, setSubs] = useState<W9Sub[]>([]);
   const [loading, setLoading] = useState(true);
-  const [toast, setToast] = useState('');
+  const { toast, show } = useToast(4000);
   const [showForm, setShowForm] = useState(false);
   const [formName, setFormName] = useState('');
   const [formEmail, setFormEmail] = useState('');
   const [sending, setSending] = useState(false);
   const [requestingId, setRequestingId] = useState<string | null>(null);
-  // Which slice of the roster the table shows. The stat cards above drive this
-  // so a click on "W9 Pending" drills the list to exactly those rows, instead
-  // of the number being a dead decoration.
+  const [search, setSearch] = useState('');
+  // Which slice of the roster the table shows — the stat tiles drive this so a
+  // tap on "Pending" drills the list to exactly those rows.
   const [filter, setFilter] = useState<W9Filter>('all');
-  const tableRef = React.useRef<HTMLDivElement | null>(null);
-  const setFilterAndScroll = (f: W9Filter) => {
-    setFilter(prev => (prev === f ? 'all' : f));
-    setTimeout(() => tableRef.current?.scrollIntoView({ behavior: 'smooth', block: 'start' }), 60);
-  };
+  const toggleFilter = (f: W9Filter) => setFilter(prev => (prev === f ? 'all' : f));
 
-  // Project intelligence — roster + bid packages from one snapshot. W-9s are
-  // not paperwork for its own sake: the bid-award gate refuses to award to a
-  // sub with no W-9 on file, so coverage here is what unblocks buyout.
+  // Project intelligence — roster + bid packages from one snapshot.
   const { ctx } = useProjectContext(projectId);
   const [autoFill, setAutoFill] = useState(false);
 
@@ -161,7 +148,8 @@ export default function W9Page() {
     if (filter === 'pending') return s.w9_status === 'pending';
     return s.w9_status === 'not_requested'; // 'missing'
   };
-  const filteredSubs = subs.filter(matchesFilter);
+  const q = search.trim().toLowerCase();
+  const filteredSubs = subs.filter(s => matchesFilter(s) && (!q || `${s.name} ${s.email}`.toLowerCase().includes(q)));
   const FILTER_LABEL: Record<W9Filter, string> = { all: 'All subs', received: 'W-9 received', pending: 'W-9 pending', missing: 'W-9 missing' };
 
   // Roster subs with no W-9 trail here at all — surfaced so the bid-award gate
@@ -175,8 +163,7 @@ export default function W9Page() {
 
   async function requestW9(subId: string, subName: string, subEmail: string) {
     if (!subEmail.trim()) {
-      setToast(`No email on file for ${subName || 'this vendor'}. Use "Send W-9 Request" to enter one.`);
-      setTimeout(() => setToast(''), 4000);
+      show(`No email on file for ${subName || 'this vendor'}. Use "Send W-9 request" to enter one.`, 'bad');
       return;
     }
     setRequestingId(subId);
@@ -188,12 +175,11 @@ export default function W9Page() {
       });
       if (!res.ok) throw new Error('request failed');
       setSubs(prev => prev.map(s => s.id === subId ? { ...s, w9_status: 'pending', requested_date: localDay() } : s));
-      setToast(`W-9 request sent to ${subName}.`);
+      show(`W-9 request sent to ${subName}.`);
     } catch {
-      setToast(`Could not send the W-9 request to ${subName}. Please try again.`);
+      show(`Could not send the W-9 request to ${subName}. Please try again.`, 'bad');
     }
     setRequestingId(null);
-    setTimeout(() => setToast(''), 4000);
   }
 
   async function sendNewRequest() {
@@ -206,211 +192,168 @@ export default function W9Page() {
         body: JSON.stringify({ projectId, vendorName: formName, vendorEmail: formEmail }),
       });
       if (!res.ok) throw new Error('request failed');
-      setToast(`W-9 request sent to ${formEmail}.`);
+      show(`W-9 request sent to ${formEmail}.`);
       setFormName('');
       setFormEmail('');
       setShowForm(false);
       fetchSubs();
     } catch {
-      setToast('Could not send the W-9 request. Please try again.');
+      show('Could not send the W-9 request. Please try again.', 'bad');
     }
     setSending(false);
-    setTimeout(() => setToast(''), 4000);
   }
 
+  const stats: StatItem[] = [
+    { label: 'Total subs', value: loading ? '—' : totalSubs, icon: <UsersThree size={15} />, active: filter === 'all', onClick: () => setFilter('all') },
+    { label: 'W-9 received', value: loading ? '—' : receivedCount, tone: receivedCount > 0 ? 'good' : 'default', icon: <SealCheck size={15} />, active: filter === 'received', onClick: () => toggleFilter('received') },
+    { label: 'W-9 pending', value: loading ? '—' : pendingCount, tone: pendingCount > 0 ? 'warn' : 'default', icon: <Hourglass size={15} />, active: filter === 'pending', onClick: () => toggleFilter('pending') },
+    { label: 'W-9 missing', value: loading ? '—' : missingCount, tone: missingCount > 0 ? 'bad' : 'default', icon: <WarningCircle size={15} />, sub: missingCount > 0 ? 'Blocks bid award' : undefined, active: filter === 'missing', onClick: () => toggleFilter('missing') },
+    ...(ctx ? [{ label: 'Sub commitments', value: fmt(subCommitted), sub: 'Awarded value — open budget', href: `${base}/budget`, icon: <Handshake size={15} /> } as StatItem] : []),
+  ];
+
+  const columns: Column<W9Sub>[] = [
+    { key: 'name', header: 'Sub name', primary: true, render: (s) => s.name || '—' },
+    { key: 'email', header: 'Email', render: (s) => s.email ? <a className="k-link" href={`mailto:${s.email}`} onClick={(e) => e.stopPropagation()}>{s.email}</a> : '—' },
+    { key: 'w9_status', header: 'W-9 status', phone: 'show', accessor: (s) => STATUS_LABEL[s.w9_status] || s.w9_status, render: (s) => <Badge tone={STATUS_TONE[s.w9_status] || 'neutral'} dot>{STATUS_LABEL[s.w9_status] || s.w9_status}</Badge> },
+    { key: 'requested_date', header: 'Requested', accessor: (s) => s.requested_date || '', render: (s) => fmtDay(s.requested_date) },
+    { key: 'received_date', header: 'Received', phone: 'show', accessor: (s) => s.received_date || '', render: (s) => s.received_date ? <span style={{ color: 'var(--success)' }}>{fmtDay(s.received_date)}</span> : '—' },
+  ];
+
+  const rowActions = (s: W9Sub): Action[] => [
+    {
+      label: requestingId === s.id ? 'Sending…' : s.w9_status === 'pending' ? 'Resend' : 'Request W-9',
+      icon: <PaperPlaneTilt size={14} />,
+      onClick: () => requestW9(s.id, s.name, s.email),
+      inline: true,
+      hidden: !(s.w9_status === 'not_requested' || s.w9_status === 'pending'),
+      disabled: requestingId === s.id,
+    },
+  ];
+
+  const openForm = () => setShowForm(true);
   const formValid = !!formName.trim() && !!formEmail.trim();
 
   return (
-    <PremiumSurface>
-      {/* Header */}
-      <ModuleHero
-        eyebrow="W-9 Requests"
-        eyebrowIcon={<FileText size={13} weight="fill" style={{ color: 'var(--text-primary)' }} />}
-        title="W-9"
-        accent="Requests"
+    <div className="w9Ws">
+      <PageShell
+        crumbs={[
+          { label: 'Projects', href: '/app/projects' },
+          { label: ctx?.project?.name || 'Project', href: `${base}/overview` },
+          { label: 'W-9 Requests' },
+        ]}
+        title="W-9 requests"
         subtitle="Collect W-9 forms from vendors and subcontractors."
-        actions={
-          <button
-            onClick={() => setShowForm(p => !p)}
-            className="pmBtn"
-            style={showForm ? ghostButtonStyle : goldButtonStyle}
-          >
-            {showForm ? 'Cancel' : <><Plus size={15} weight="bold" /> Send W-9 Request</>}
-          </button>
-        }
-      />
+        actions={<Button variant="primary" icon={<Plus size={15} weight="bold" />} onClick={openForm}>Send W-9 request</Button>}
+      >
+        <StatRow items={stats} />
 
-      {/* One summary — the first four are live filters on the W-9 Status list below.
-          Click "W-9 Pending" and the table drills to exactly those rows. */}
-      <StatStrip items={[
-        { label: 'Total Subs', value: String(totalSubs), active: filter === 'all', onClick: () => setFilterAndScroll('all') },
-        { label: 'W-9 Received', value: String(receivedCount), accent: GREEN, active: filter === 'received', onClick: () => setFilterAndScroll('received') },
-        { label: 'W-9 Pending', value: String(pendingCount), accent: AMBER, active: filter === 'pending', onClick: () => setFilterAndScroll('pending') },
-        { label: 'W-9 Missing', value: String(missingCount), accent: RED, active: filter === 'missing', onClick: () => setFilterAndScroll('missing') },
-        ...(ctx ? [
-          { label: 'Sub Commitments', value: fmt(subCommitted), sub: 'Awarded value — open budget', href: `${base}/budget` },
-        ] : []),
-      ]} />
-
-      {toast && (
-        <div style={{ marginBottom: 16, padding: '10px 14px', background: T.greenDim, border: `1px solid rgba(74,222,128,0.3)`, borderRadius: 10, color: T.green, fontSize: 13 }}>
-          {toast}
-        </div>
-      )}
-
-      {/* Send Form */}
-      {showForm && (
-        <SectionCard
-          title="Send W-9 Request"
-          icon={<PaperPlaneTilt size={17} weight="duotone" style={{ color: 'var(--text-primary)' }} />}
-          style={{ marginBottom: 24 }}
-        >
-          <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 14 }}>
-            {ctxSubs.length > 0 && (
-              <div style={{ gridColumn: '1/-1' }}>
-                <label style={lbl}>From the Project Roster</label>
-                <select
-                  value={autoFill ? (ctxSubs.find(s => s.companyName === formName)?.id || '') : ''}
-                  onChange={e => {
-                    const s = ctxSubs.find(x => x.id === e.target.value);
-                    if (s) { setFormName(s.companyName || ''); setFormEmail(s.email || ''); setAutoFill(true); }
-                    else setAutoFill(false);
-                  }}
-                  style={inp}
-                >
-                  <option value="">Someone else — enter details below</option>
-                  {ctxSubs.map((s: any) => <option key={s.id} value={s.id}>{s.companyName}{s.trade ? ` — ${s.trade}` : ''}{s.email ? '' : ' (no email on file)'}</option>)}
-                </select>
-              </div>
-            )}
-            <div>
-              <label style={lbl}>Vendor / Sub Name *{autoFill && !!formName && <AutoChip label="Roster" />}</label>
-              <input value={formName} onChange={e => { setFormName(e.target.value); setAutoFill(false); }} placeholder="ABC Electrical LLC" style={inp} />
-            </div>
-            <div>
-              <label style={lbl}>Email Address *{autoFill && !!formEmail && <AutoChip label="Roster" />}</label>
-              <input type="email" value={formEmail} onChange={e => { setFormEmail(e.target.value); setAutoFill(false); }} placeholder="accounting@vendor.com" style={inp} />
-            </div>
-          </div>
-          <div style={{ fontSize: 12, color: 'var(--c-text-2)', marginTop: 12, padding: '10px 14px', background: T.goldDim, border: `1px solid ${T.borderGold}`, borderRadius: 10 }}>
-            The vendor gets an email with a secure link to submit their W-9. Once it comes back it is marked on file — until then, the bid-award gate flags this sub with &quot;W-9 not on file&quot; and blocks award.
-          </div>
-          <div style={{ display: 'flex', gap: 10, marginTop: 16 }}>
-            <button
-              onClick={sendNewRequest}
-              disabled={sending || !formValid}
-              className="pmBtn"
-              style={{ ...goldButtonStyle, opacity: (sending || !formValid) ? 0.5 : 1, cursor: (sending || !formValid) ? 'not-allowed' : 'pointer' }}
-            >
-              <PaperPlaneTilt size={15} weight="fill" /> {sending ? 'Sending…' : 'Send Request'}
-            </button>
-            <button onClick={() => setShowForm(false)} className="pmBtn" style={ghostButtonStyle}>Cancel</button>
-          </div>
-        </SectionCard>
-      )}
-
-      {/* Roster gaps — subs on the project with no W-9 trail at all */}
-      {!loading && untrackedRoster.length > 0 && (
-        <SectionCard
-          title="On the Roster, Never Asked"
-          subtitle="On the project with no W-9 on record. The award gate will flag these."
-          icon={<SealCheck size={17} weight="duotone" style={{ color: AMBER }} />}
-          style={{ marginBottom: 24 }}
-        >
-          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(260px, 1fr))', gap: 10 }}>
-            {untrackedRoster.map((s: any) => (
-              <div key={s.id} style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', gap: 10, padding: '9px 12px', borderRadius: 10, background: 'rgba(255,255,255,0.03)', border: `1px solid ${T.border}` }}>
-                <div style={{ minWidth: 0 }}>
-                  <div style={{ fontSize: 13, fontWeight: 700, color: T.white, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{s.companyName}</div>
-                  <div style={{ fontSize: 12, color: T.muted }}>{s.trade || 'Subcontractor'}{Number(s.contractAmount) > 0 ? ` · ${fmt(Number(s.contractAmount))}` : ''}</div>
-                </div>
-                <button
-                  className="pmBtn"
-                  style={rowActionStyle}
-                  onClick={() => {
-                    if (s.email) { requestW9(s.id, s.companyName || '', s.email).then(() => fetchSubs()); }
-                    else { setFormName(s.companyName || ''); setFormEmail(''); setAutoFill(true); setShowForm(true); }
-                  }}
-                >
-                  {s.email ? 'Request W-9' : 'Add Email'}
-                </button>
-              </div>
-            ))}
-          </div>
-        </SectionCard>
-      )}
-
-      {/* Table */}
-      <div ref={tableRef} style={{ scrollMarginTop: 80 }} />
-      {filter !== 'all' && (
-        <div style={{ display: 'flex', alignItems: 'center', gap: 10, marginBottom: 12, padding: '9px 14px', background: 'rgba(255,255,255,0.03)', border: `1px solid ${T.border}`, borderRadius: 10, fontSize: 13, color: T.white }}>
-          <span>Showing <strong style={{ color: 'var(--text-primary)' }}>{FILTER_LABEL[filter]}</strong> — {filteredSubs.length} of {subs.length}</span>
-          <button onClick={() => setFilter('all')} className="pmBtn" style={{ ...rowActionStyle, marginLeft: 'auto', background: 'rgba(255,255,255,0.05)', color: T.white, border: `1px solid ${T.border}` }}>Clear Filter</button>
-        </div>
-      )}
-      <SectionCard title="W-9 Status" icon={<FileText size={17} weight="duotone" style={{ color: 'var(--text-primary)' }} />} flush>
-        {loading ? (
-          <div style={{ textAlign: 'center', padding: 40, color: 'var(--c-text-2)' }}>Loading…</div>
-        ) : subs.length === 0 ? (
-          <div>
-            <PremiumEmpty
-              icon={<FileText size={30} weight="duotone" style={{ color: 'var(--text-primary)' }} />}
-              title="No W-9s Tracked Yet"
-              description={ctxSubs.length > 0
-                ? `${ctxSubs.length} sub${ctxSubs.length === 1 ? '' : 's'} on the roster and none have been asked for a W-9 yet. A missing W-9 blocks bid award — collect them now and buyout never stalls.`
-                : 'Vendors appear here as you award bid packages and sign contracts. A missing W-9 blocks bid award, so requests usually go out at buyout.'}
-              action={
-                <button onClick={() => setShowForm(true)} className="pmBtn" style={secondaryButtonStyle}>
-                  <Plus size={15} weight="bold" /> Send First W-9 Request
-                </button>
-              }
-            />
-            {ctx && (
-              <div style={{ padding: '0 20px 16px' }}>
-                <FlowStrip steps={[
-                  { title: 'Request Goes Out', desc: 'Secure link, no account needed' },
-                  { title: 'Vendor Submits', desc: 'Marked on file here' },
-                  { title: 'Award Gate Clears', desc: 'No W-9, no award' },
-                  { title: '1099s at Year End', desc: 'TINs already on record' },
-                ]} />
-              </div>
-            )}
-          </div>
-        ) : filteredSubs.length === 0 ? (
-          <div style={{ textAlign: 'center', padding: 32, color: 'var(--c-text-2)', fontSize: 13 }}>
-            No subs are <strong style={{ color: 'var(--text-primary)' }}>{FILTER_LABEL[filter].toLowerCase()}</strong>.{' '}
-            <button onClick={() => setFilter('all')} style={{ background: 'none', border: 'none', color: 'var(--text-primary)', cursor: 'pointer', fontWeight: 700, fontSize: 13, textDecoration: 'underline', padding: 0 }}>Show All {subs.length}</button>
-          </div>
-        ) : (
-          <div style={{ padding: '4px 8px 8px' }}>
-            <Table
-              headers={['Sub Name', 'Email', 'W-9 Status', 'Requested Date', 'Received Date', 'Actions']}
-              rows={filteredSubs.map(s => [
-                <span key="n" style={{ fontWeight: 600 }}>{s.name}</span>,
-                <span key="e" style={{ color: T.muted }}>{s.email}</span>,
-                <Badge key="st" label={STATUS_LABEL[s.w9_status] || s.w9_status} color={STATUS_BADGE[s.w9_status] || 'muted'} />,
-                <span key="rd" style={{ color: T.muted }}>{s.requested_date || '—'}</span>,
-                <span key="rv" style={{ color: s.received_date ? T.green : T.muted }}>{s.received_date || '—'}</span>,
-                <div key="act">
-                  {(s.w9_status === 'not_requested' || s.w9_status === 'pending') && (
-                    <button
-                      onClick={() => requestW9(s.id, s.name, s.email)}
-                      disabled={requestingId === s.id}
-                      className="pmBtn"
-                      style={{ ...rowActionStyle, opacity: requestingId === s.id ? 0.5 : 1, cursor: requestingId === s.id ? 'not-allowed' : 'pointer' }}
+        {/* Roster gaps — subs on the project with no W-9 trail at all */}
+        {!loading && untrackedRoster.length > 0 && (
+          <Card title="On the roster, never asked" subtitle={`${untrackedRoster.length} sub${untrackedRoster.length === 1 ? '' : 's'} with no W-9 on record — the award gate will flag ${untrackedRoster.length === 1 ? 'it' : 'them'}.`} icon={<WarningCircle size={16} />}>
+            <ItemList>
+              {untrackedRoster.map((s: any) => (
+                <ItemRow
+                  key={s.id}
+                  title={s.companyName}
+                  desc={`${s.trade || 'Subcontractor'}${Number(s.contractAmount) > 0 ? ` · ${fmt(Number(s.contractAmount))}` : ''}`}
+                  action={
+                    <Button
+                      size="sm"
+                      icon={s.email ? <PaperPlaneTilt size={13} /> : <Plus size={13} weight="bold" />}
+                      onClick={() => {
+                        if (s.email) { requestW9(s.id, s.companyName || '', s.email).then(() => fetchSubs()); }
+                        else { setFormName(s.companyName || ''); setFormEmail(''); setAutoFill(true); setShowForm(true); }
+                      }}
                     >
-                      {requestingId === s.id ? 'Sending…' : s.w9_status === 'pending' ? 'Resend' : 'Request W-9'}
-                    </button>
-                  )}
-                  {(s.w9_status === 'received' || s.w9_status === 'submitted') && (
-                    <StatusPill module="generic" status="submitted" size="sm" />
-                  )}
-                </div>,
-              ])}
-            />
-          </div>
+                      {s.email ? 'Request W-9' : 'Add email'}
+                    </Button>
+                  }
+                />
+              ))}
+            </ItemList>
+          </Card>
         )}
-      </SectionCard>
-    </PremiumSurface>
+
+        {!loading && subs.length > 0 && (
+          <Toolbar
+            search={search}
+            onSearch={setSearch}
+            placeholder="Search by name or email…"
+            filters={
+              <>
+                <Select aria-label="W-9 status" value={filter} onChange={e => setFilter(e.target.value as W9Filter)} style={{ width: 'auto', minWidth: 160 }}
+                  options={(Object.keys(FILTER_LABEL) as W9Filter[]).map(k => ({ value: k, label: FILTER_LABEL[k] }))} />
+                {(filter !== 'all' || search) && <Button variant="ghost" size="sm" onClick={() => { setFilter('all'); setSearch(''); }}>Clear</Button>}
+              </>
+            }
+            actions={<span style={{ fontSize: 'var(--fs-sm)', color: 'var(--text-tertiary)' }}>{filteredSubs.length} of {subs.length}</span>}
+          />
+        )}
+
+        <Card flush>
+          <DataTable<W9Sub>
+            tableId="project-w9"
+            exportName="w9-requests"
+            columns={columns}
+            rows={filteredSubs}
+            loading={loading}
+            rowKey={(s) => s.id}
+            defaultSort={{ key: 'name', dir: 'asc' }}
+            rowActions={rowActions}
+            empty={subs.length === 0 ? (
+              <EmptyState
+                icon={<FileText size={22} />}
+                title="No W-9s tracked yet"
+                text={ctxSubs.length > 0
+                  ? `${ctxSubs.length} sub${ctxSubs.length === 1 ? '' : 's'} on the roster and none asked yet — a missing W-9 blocks bid award.`
+                  : 'Vendors appear here as you award bid packages and sign contracts.'}
+                action={<Button variant="primary" icon={<Plus size={15} weight="bold" />} onClick={openForm}>Send first W-9 request</Button>}
+              />
+            ) : (
+              <EmptyState title={`No subs are ${FILTER_LABEL[filter].toLowerCase()}`} text="Change the search or the filter." action={<Button onClick={() => { setFilter('all'); setSearch(''); }}>Show all {subs.length}</Button>} />
+            )}
+          />
+        </Card>
+      </PageShell>
+
+      <FormModal
+        open={showForm}
+        onClose={() => setShowForm(false)}
+        title="Send W-9 request"
+        subtitle="The vendor gets a secure link to submit their W-9 — no account needed."
+        footer={
+          <>
+            <Button variant="ghost" onClick={() => setShowForm(false)} disabled={sending}>Cancel</Button>
+            <Button variant="primary" icon={<PaperPlaneTilt size={15} weight="fill" />} onClick={sendNewRequest} disabled={sending || !formValid}>
+              {sending ? 'Sending…' : 'Send request'}
+            </Button>
+          </>
+        }
+      >
+        <FormGrid cols={2}>
+          {ctxSubs.length > 0 && (
+            <Field label="From the project roster" span>
+              <Select
+                value={autoFill ? (ctxSubs.find(s => s.companyName === formName)?.id || '') : ''}
+                onChange={e => {
+                  const s = ctxSubs.find(x => x.id === e.target.value);
+                  if (s) { setFormName(s.companyName || ''); setFormEmail(s.email || ''); setAutoFill(true); }
+                  else setAutoFill(false);
+                }}
+                placeholder="Someone else — enter details below"
+                options={ctxSubs.map((s: any) => ({ value: String(s.id), label: `${s.companyName}${s.trade ? ` — ${s.trade}` : ''}${s.email ? '' : ' (no email on file)'}` }))}
+              />
+            </Field>
+          )}
+          <Field label="Vendor / sub name" required hint={autoFill && !!formName ? 'From the roster.' : undefined}>
+            <Input value={formName} onChange={e => { setFormName(e.target.value); setAutoFill(false); }} placeholder="ABC Electrical LLC" />
+          </Field>
+          <Field label="Email address" required hint={autoFill && !!formEmail ? 'From the roster.' : 'Until it comes back, the award gate blocks this sub.'}>
+            <Input type="email" value={formEmail} onChange={e => { setFormEmail(e.target.value); setAutoFill(false); }} placeholder="accounting@vendor.com" />
+          </Field>
+        </FormGrid>
+      </FormModal>
+      <Toast message={toast?.message ?? null} tone={toast?.tone} />
+    </div>
   );
 }
