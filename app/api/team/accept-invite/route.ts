@@ -25,7 +25,7 @@
  */
 import { NextRequest, NextResponse } from 'next/server';
 import { createServerClient, getUser } from '@/lib/supabase-server';
-import { grantInvitedRole } from '@/lib/invite-role';
+import { grantInvitedRole, findInviteByToken } from '@/lib/invite-role';
 import { createNotification } from '@/lib/notifications';
 import { must } from '@/lib/db-write';
 
@@ -53,11 +53,7 @@ export async function GET(req: NextRequest) {
   try {
     const db = createServerClient();
 
-    const { data: invite, error } = await db
-      .from('team_invites')
-      .select('id, tenant_id, email, role, invited_by, status, accepted_at, created_at, project_id')
-      .eq('token', token)
-      .maybeSingle();
+    const { data: invite, error } = await findInviteByToken(db, token) as { data: any; error: any };
 
     if (error) {
       console.error('[accept-invite GET] lookup error:', error.message);
@@ -98,6 +94,9 @@ export async function GET(req: NextRequest) {
 
     // Determine the effective state (pending / accepted / expired).
     let reason: 'pending' | 'accepted' | 'expired' = 'pending';
+    if (invite.status === 'cancelled') {
+      return NextResponse.json({ valid: false, reason: 'invalid', error: 'This invitation was cancelled.' }, { status: 404 });
+    }
     if (invite.status === 'accepted') reason = 'accepted';
     else if (invite.status === 'expired' || isExpired(invite.created_at)) reason = 'expired';
 
@@ -105,6 +104,7 @@ export async function GET(req: NextRequest) {
       valid: reason === 'pending',
       reason,
       email: invite.email,
+      name: invite.name || null,
       role: invite.role || 'member',
       company: tenantName(tenant),
       inviterName,
@@ -144,11 +144,7 @@ export async function POST(req: NextRequest) {
     const db = createServerClient();
     const nowIso = new Date().toISOString();
 
-    const { data: invite, error: findErr } = await db
-      .from('team_invites')
-      .select('id, tenant_id, email, role, invited_by, status, created_at, project_id')
-      .eq('token', token)
-      .maybeSingle();
+    const { data: invite, error: findErr } = await findInviteByToken(db, token) as { data: any; error: any };
 
     if (findErr) {
       console.error('[accept-invite POST] lookup error:', findErr.message);
@@ -156,6 +152,10 @@ export async function POST(req: NextRequest) {
     }
     if (!invite) {
       return NextResponse.json({ error: 'This invitation link is not valid.', reason: 'invalid' }, { status: 404 });
+    }
+
+    if (invite.status === 'cancelled') {
+      return NextResponse.json({ error: 'This invitation was cancelled. Ask for a new one.', reason: 'invalid' }, { status: 404 });
     }
 
     // Already redeemed — reject (idempotent-safe).

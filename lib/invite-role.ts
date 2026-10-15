@@ -58,3 +58,28 @@ export async function grantInvitedRole(
     return { granted: false, error: 'role grant failed' };
   }
 }
+
+/**
+ * Look an invite up by its emailed token, following a re-send.
+ *
+ * Sending a new invite to the same address cancels the older one, but the
+ * older email is still in the person's inbox. Its link used to open a normal
+ * "Join" page and then fail on submit with "already used — sign in", sending
+ * someone with no account to a sign-in they could not complete. The old token
+ * was delivered to the same address, so it is the same proof of ownership:
+ * a cancelled invite resolves to the newest pending invite for the same
+ * company, email and job. With no newer one it stays cancelled.
+ */
+export async function findInviteByToken(db: Db, token: string) {
+  const first = await db.from('team_invites').select('*').eq('token', token).maybeSingle();
+  if (first.error || !first.data) return first;
+  const row = first.data as { status?: string | null; tenant_id: string; email?: string | null; project_id?: string | null };
+  if (row.status !== 'cancelled' || !row.email) return first;
+  const pattern = String(row.email).replace(/[\\%_]/g, (c) => `\\${c}`);
+  let q = db.from('team_invites').select('*')
+    .eq('tenant_id', row.tenant_id).eq('status', 'pending').ilike('email', pattern);
+  q = row.project_id ? q.eq('project_id', row.project_id) : q.is('project_id', null);
+  const { data: newer, error } = await q.order('created_at', { ascending: false }).limit(1);
+  if (error) { console.error('[invite] newer-invite lookup failed', error); return first; }
+  return newer && newer.length ? { data: newer[0], error: null } : first;
+}
