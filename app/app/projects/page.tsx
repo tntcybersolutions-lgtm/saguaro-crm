@@ -94,8 +94,7 @@ export default function JobsPage() {
       <div className="jt" role="table" aria-label="Jobs">
         <div className="jt-head" role="row">
           <span role="columnheader">Health</span>
-          <span role="columnheader">Job</span>
-          <span role="columnheader">Schedule</span>
+          <span role="columnheader">Job · schedule</span>
           <span role="columnheader" className="jt-money">Over / under</span>
           <span role="columnheader" className="jt-dots-head">{ITEM_COLUMNS.map((c) => <em key={c}>{c}</em>)}</span>
           <span role="columnheader" className="jt-money">Contract</span>
@@ -117,10 +116,10 @@ export default function JobsPage() {
               <span className="jt-name" role="cell">
                 <b>{p.name || 'Untitled job'}</b>
                 <span className="jt-meta"><StagePill stage={bucket(p)} label={stageLabel(p)} />{meta ? <small>{meta}</small> : null}</span>
-              </span>
-              <span className="jt-sched" role="cell">
-                <ScheduleBar health={h} />
-                <small data-late={sched?.behind ? 'true' : undefined}>{schedText}</small>
+                <span className="jt-sched">
+                  <ScheduleBar health={h} />
+                  <small data-late={sched?.behind ? 'true' : undefined}>{schedText}</small>
+                </span>
               </span>
               <span className="jt-ou" role="cell"><OverUnder health={h} /></span>
               <span className="jt-dots" role="cell"><ItemDots health={h} /></span>
@@ -203,9 +202,9 @@ const CSS = `
 .jl-chip[aria-pressed=true] span{color:var(--selected-control-fg)}
 .jl-count{margin-left:auto;font-size:13px;color:var(--fl-text-3)}
 .jt{border:1px solid var(--fl-line);border-radius:14px;overflow:hidden;background:var(--bg-surface)}
-.jt-head,.jt-row{display:grid;grid-template-columns:60px minmax(0,2fr) minmax(130px,1.1fr) 140px 348px 150px;align-items:center;gap:16px;padding:0 18px}
+.jt-head,.jt-row{display:grid;grid-template-columns:50px minmax(0,1fr) 122px 312px 132px;align-items:center;gap:14px;padding:0 16px}
 .jt-head{height:38px;font-size:12px;font-weight:700;letter-spacing:.06em;text-transform:uppercase;color:var(--fl-text-3);border-bottom:1px solid var(--fl-line);background:color-mix(in srgb,var(--bg-base) 55%,var(--bg-surface))}
-.jt-dots-head,.jt-dots .jh-dots{display:grid;grid-template-columns:40px 78px 36px 48px 68px 52px;gap:6px}.jt-dots-head em{font-style:normal;white-space:nowrap;letter-spacing:0}
+.jt-dots-head,.jt-dots .jh-dots{display:grid;grid-template-columns:36px 72px 32px 44px 64px 44px;gap:4px}.jt-dots-head em{font-style:normal;white-space:nowrap;letter-spacing:0}
 .jt-ou{display:flex;justify-content:flex-end}
 .jt-meta{display:flex;align-items:center;gap:8px;min-width:0}
 .jt-row{min-height:76px;padding-top:12px;padding-bottom:12px;color:var(--fl-text);text-decoration:none;border-bottom:1px solid var(--fl-line);position:relative;transition:background .12s}
@@ -215,17 +214,19 @@ const CSS = `
 .jt-row[data-tone=bad]::before{background:var(--danger)}
 .jt-row[data-tone=warn]::before{background:var(--warning)}
 .jt-name{min-width:0;display:flex;flex-direction:column;gap:3px}
-.jt-name b{font-size:15px;font-weight:700;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.jt-name{gap:5px !important}
+.jt-name b{font-size:15px;font-weight:700;line-height:1.3;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden}
 .jt-name small,.jt-sched small,.jt-money small{font-size:13px;color:var(--fl-text-2);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
-.jt-sched{display:flex;flex-direction:column;gap:7px;min-width:0}
+.jt-sched{display:grid;grid-template-columns:minmax(80px,300px) auto;align-items:center;gap:10px;min-width:0;margin-top:3px}
 .jt-sched small[data-late=true]{color:var(--danger);font-weight:600}
 .jt-dots .jh-dot{min-width:0}
 .jt-money{text-align:right;display:flex;flex-direction:column;gap:3px;align-items:flex-end;font-variant-numeric:tabular-nums}
 .jt-money b{font-size:15px;font-weight:700;white-space:nowrap}
-@media (max-width:1280px){
+@media (max-width:1100px){
   .jt-head{display:none}
-  .jt-row{grid-template-columns:52px minmax(0,1fr) auto;grid-template-areas:"ring name money" "ring sched ou" "ring dots dots";row-gap:10px;column-gap:12px;padding:14px 14px}
-  .jt-ring{grid-area:ring;align-self:start}.jt-name{grid-area:name}.jt-sched{grid-area:sched}.jt-dots{grid-area:dots}.jt-money{grid-area:money;align-self:start}.jt-ou{grid-area:ou}
+  .jt-row{grid-template-columns:48px minmax(0,1fr) auto;grid-template-areas:"ring name money" "ring name ou" "ring dots dots";row-gap:10px;column-gap:12px;padding:14px 14px}
+  .jt-ring{grid-area:ring;align-self:start}.jt-name{grid-area:name}.jt-dots{grid-area:dots}.jt-money{grid-area:money;align-self:start}.jt-ou{grid-area:ou;align-self:start}
+  .jt-sched{grid-template-columns:1fr;gap:6px}
   .jt-dots .jh-dots{display:flex;flex-wrap:wrap;gap:6px 14px}
   .jt-dots .jh-dot-l{display:inline;font-size:12px;font-weight:600;color:var(--text-secondary)}
   .jt-money b{font-size:14px}

@@ -200,13 +200,13 @@ export function PortfolioBand({ jobs }: { jobs: PortfolioJob[] }) {
           <span className="pf-bar" aria-label={`${billedPctAll}% of contract billed`}><span style={{ width: `${billedPctAll}%` }} /></span>
           <small>{billedPctAll}% of contract</small>
         </div>
-        <div><dt>Projected budget</dt><dd>{budget > 0 ? fmtMoneyExact(budget) : '—'}</dd></div>
-        <div><dt>Cost at completion</dt><dd>{forecast > 0 ? fmtMoneyExact(forecast) : '—'}</dd></div>
         <div data-tone={budget > 0 ? (diff < 0 ? 'bad' : 'good') : 'na'}>
           <dt>Over / under</dt>
           <dd>{budget > 0 ? `${diff < 0 ? '−' : '+'}${fmtMoneyExact(Math.abs(diff))}` : '—'}</dd>
           {budget > 0 && <small>{diff < 0 ? `${diffPct}% over budget` : `${diffPct}% under budget`}</small>}
         </div>
+        <div><dt>Projected budget</dt><dd>{budget > 0 ? fmtMoneyExact(budget) : '—'}</dd></div>
+        <div><dt>Cost at completion</dt><dd>{forecast > 0 ? fmtMoneyExact(forecast) : '—'}</dd></div>
       </dl>
       <div className="pf-chart">
         <h2 className="pf-h">Projects by budget</h2>
@@ -246,13 +246,13 @@ export const JOB_HEALTH_CSS = `
 .jh-ou[data-tone=good] b{color:var(--success)}.jh-ou[data-tone=bad] b{color:var(--danger)}.jh-ou[data-tone=na] b{color:var(--text-tertiary)}
 .jh-stage{display:inline-flex;align-items:center;gap:6px;height:22px;padding:0 9px;border-radius:999px;font-size:12px;font-weight:700;color:var(--st);background:color-mix(in srgb,var(--st) 14%,transparent);white-space:nowrap}
 .jh-stage::before{content:"";width:6px;height:6px;border-radius:50%;background:var(--st)}
-.pf{display:grid;grid-template-columns:auto minmax(0,1.5fr) minmax(0,1fr);gap:28px;align-items:center;padding:18px 0 22px;margin-bottom:16px;border-bottom:1px solid var(--fl-line)}
-.pf-mix{display:flex;align-items:center;gap:18px}
+.pf{display:grid;grid-template-columns:auto minmax(0,1fr);grid-template-areas:"mix kpis" "mix chart";gap:22px 36px;align-items:center;padding:18px 0 22px;margin-bottom:16px;border-bottom:1px solid var(--fl-line)}
+.pf-mix{grid-area:mix;display:flex;align-items:center;gap:18px}.pf-kpis{grid-area:kpis}.pf-chart{grid-area:chart}
 .pf-legend{list-style:none;margin:0;padding:0;display:flex;flex-direction:column;gap:9px;font-size:13px;color:var(--text-secondary);white-space:nowrap}
 .pf-legend li{display:flex;align-items:center;gap:8px}
 .pf-legend i{width:10px;height:10px;border-radius:50%}
 .pf-legend b{min-width:18px;font-size:18px;font-weight:800;color:var(--text-primary);font-variant-numeric:tabular-nums}
-.pf-kpis{display:grid;grid-template-columns:repeat(auto-fit,minmax(170px,1fr));gap:16px 24px;margin:0}
+.pf-kpis{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:18px 28px;margin:0}
 .pf-kpis>div{display:flex;flex-direction:column;gap:4px;min-width:0}
 .pf-kpis dt{font-size:12px;font-weight:700;letter-spacing:.06em;text-transform:uppercase;color:var(--text-tertiary)}
 .pf-kpis dd{margin:0;font-size:22px;font-weight:800;letter-spacing:-.02em;color:var(--text-primary);font-variant-numeric:tabular-nums;white-space:nowrap}
@@ -262,7 +262,7 @@ export const JOB_HEALTH_CSS = `
 .pf-bar span{display:block;height:100%;border-radius:999px;background:var(--success)}
 .pf-h{margin:0 0 10px;font-size:12px !important;font-weight:700;letter-spacing:.06em;text-transform:uppercase;color:var(--text-tertiary) !important;-webkit-text-fill-color:currentColor}
 .pf-chart ul{list-style:none;margin:0;padding:0;display:flex;flex-direction:column;gap:9px}
-.pf-chart li{display:grid;grid-template-columns:minmax(0,120px) minmax(0,1fr);gap:10px;align-items:center}
+.pf-chart li{display:grid;grid-template-columns:minmax(0,220px) minmax(0,1fr);gap:10px;align-items:center}
 .pf-name{font-size:12px;color:var(--text-secondary);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
 .pf-track{position:relative;height:14px}
 .pf-budget{position:absolute;left:0;top:0;height:6px;border-radius:3px;background:color-mix(in srgb,var(--text-tertiary) 70%,transparent)}
@@ -272,8 +272,8 @@ export const JOB_HEALTH_CSS = `
 .pf-key{display:flex;align-items:center;gap:6px;flex-wrap:wrap;margin:10px 0 0;font-size:12px;color:var(--text-tertiary)}
 .pf-key i{width:10px;height:4px;border-radius:2px;margin-left:6px}.pf-key i:first-child{margin-left:0}
 .pf-key .k-b{background:var(--text-tertiary)}.pf-key .k-c{background:var(--success)}.pf-key .k-o{background:var(--danger)}
-@media (max-width:1180px){.pf{grid-template-columns:auto minmax(0,1fr)}.pf-chart{grid-column:1 / -1}}
-@media (max-width:640px){.pf{grid-template-columns:1fr;gap:20px}.pf-mix{justify-content:flex-start}.pf-kpis{grid-template-columns:1fr 1fr}.pf-kpis dd{font-size:18px}}
+@media (min-width:1600px){.pf{grid-template-columns:auto minmax(0,1.6fr) minmax(0,1fr);grid-template-areas:"mix kpis chart"}}
+@media (max-width:640px){.pf{grid-template-columns:1fr;grid-template-areas:"mix" "kpis" "chart";gap:20px}.pf-mix{justify-content:flex-start}.pf-kpis{grid-template-columns:1fr 1fr}.pf-kpis dd{font-size:18px}}
 .jh-ring{position:relative;display:inline-grid;place-items:center;flex:none}
 .jh-ring svg{position:absolute;inset:0}
 .jh-ring b{position:relative;font-weight:800;font-variant-numeric:tabular-nums;letter-spacing:-.02em;line-height:1}
