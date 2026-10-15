@@ -1,22 +1,16 @@
 'use client';
+/**
+ * Project Messages — the job's running team thread, timestamped.
+ *
+ * Reads  GET  /api/projects/:id/messages   (on load + every 15s)
+ * Sends  POST /api/projects/:id/messages   { content }
+ */
 import React, { useState, useEffect, useCallback, useRef } from 'react';
 import { useProjectContext } from '@/lib/hooks/useProjectContext';
 import { humanError } from '@/lib/errors';
 import { useParams } from 'next/navigation';
-import { ChatCircleText, ChatsCircle, PaperPlaneTilt } from '@phosphor-icons/react';
-import { PremiumSurface, ModuleHero, SectionCard, PremiumEmpty, StatStrip, goldButtonStyle } from '@/components/ui/premium';
-import { ListToolbar } from '@/components/ui/ListToolbar';
-
-// Premium surface palette (matches components/ui/premium.tsx + the dashboard) ----
-const WHITE = 'var(--text-primary)';
-const MUTED = 'rgba(255,255,255,0.62)';
-const FAINT = 'var(--text-secondary)';
-const BORDER = 'rgba(255,255,255,0.08)';
-const RED = 'var(--danger)';
-const ME_BG = 'var(--bg-surface-2)';
-const ME_BORDER = 'var(--border-strong)';
-const OTHER_BG = 'linear-gradient(160deg, rgba(255,255,255,0.055), rgba(255,255,255,0.015))';
-const INPUT_BG = 'rgba(255,255,255,0.04)';
+import { ChatCircleText, ChatsCircle, PaperPlaneTilt, UsersThree, Clock, AddressBook } from '@phosphor-icons/react';
+import { PageShell, Card, StatRow, Button, Toolbar, EmptyState, Input, type StatItem } from '@/components/ui/kit';
 
 interface Message {
   id: string;
@@ -63,6 +57,39 @@ function dayLabel(ts: string): string {
   return d.toLocaleDateString('en-US', { weekday: 'short', month: 'short', day: 'numeric' });
 }
 
+const initials = (name: string) => name.split(/\s+/).filter(Boolean).slice(0, 2).map((p) => p[0]?.toUpperCase()).join('') || '?';
+
+const CSS = `
+.msgThread { display: flex; flex-direction: column; height: calc(100vh - 380px); min-height: 460px; }
+.msgScroll { flex: 1; min-height: 0; overflow-y: auto; padding: 20px; }
+.msgList { display: flex; flex-direction: column; gap: 14px; }
+.msgDay { display: flex; align-items: center; gap: 12px; margin: 2px 0; }
+.msgDay::before, .msgDay::after { content: ''; flex: 1; height: 1px; background: var(--border-subtle); }
+.msgDay span { font-size: 12px; font-weight: 700; color: var(--text-tertiary); }
+.msgRow { display: flex; gap: 10px; align-items: flex-end; max-width: 100%; }
+.msgRow[data-me="true"] { flex-direction: row-reverse; }
+.msgAvatar { width: 30px; height: 30px; flex-shrink: 0; border-radius: 50%; display: grid; place-items: center; font-size: 12px; font-weight: 700; color: var(--text-secondary); background: var(--bg-surface-2); border: 1px solid var(--border-default); }
+.msgCol { display: flex; flex-direction: column; min-width: 0; max-width: min(70%, 640px); }
+.msgRow[data-me="true"] .msgCol { align-items: flex-end; }
+.msgMeta { display: flex; align-items: baseline; gap: 8px; margin-bottom: 4px; font-size: 12px; }
+.msgMeta b { color: var(--text-primary); font-weight: 700; }
+.msgMeta span { color: var(--text-tertiary); }
+.msgBubble { padding: 10px 14px; border-radius: 14px; font-size: 14px; line-height: 1.5; color: var(--text-primary); overflow-wrap: anywhere; white-space: pre-wrap; background: var(--bg-surface-2); border: 1px solid var(--border-subtle); }
+.msgRow[data-me="true"] .msgBubble { border-color: var(--border-strong); border-bottom-right-radius: 4px; }
+.msgRow:not([data-me="true"]) .msgBubble { border-bottom-left-radius: 4px; }
+.msgErr { padding: 8px 20px; border-top: 1px solid var(--border-subtle); }
+.msgSend { display: flex; gap: 10px; align-items: center; padding: 12px 16px; border-top: 1px solid var(--border-subtle); padding-bottom: max(12px, env(safe-area-inset-bottom)); }
+.msgSend .k-input { flex: 1; }
+.msgStarters { display: flex; gap: 8px; flex-wrap: wrap; justify-content: center; }
+@media (max-width: 640px) {
+  .msgThread { height: calc(100dvh - 300px); min-height: 380px; }
+  .msgScroll { padding: 14px 12px; }
+  .msgCol { max-width: 82%; }
+  .msgWs .k-btn, .msgWs .k-stat, .msgWs .k-input { min-height: 44px; }
+  .msgSend .k-input { font-size: 16px; }
+}
+`;
+
 export default function MessagesPage() {
   const params = useParams();
   const projectId = params.projectId as string;
@@ -72,9 +99,10 @@ export default function MessagesPage() {
   const [sending, setSending] = useState(false);
   const [error, setError] = useState('');
   const [myName, setMyName] = useState('');
-  // ListToolbar state — keyword search over the running record.
+  // Toolbar state — keyword search over the running record.
   const [search, setSearch] = useState('');
   const scrollRef = useRef<HTMLDivElement>(null);
+  const inputRef = useRef<HTMLInputElement>(null);
 
   // Remember which sender_name is "me" so my own bubbles align right. The server
   // stamps sender_name from my auth identity and returns it on POST; cache it.
@@ -163,145 +191,113 @@ export default function MessagesPage() {
   }
 
   const sendDisabled = sending || !text.trim();
+  const rosterSize = subCount + (ctx?.project?.ownerName ? 1 : 0);
 
+  const stats: StatItem[] = [
+    { label: 'Messages', value: messages.length, sub: `${todayCount} today`, icon: <ChatCircleText size={15} /> },
+    { label: 'Contributors', value: contributors.length, sub: contributors.slice(0, 2).join(', ') || 'No one yet', icon: <UsersThree size={15} /> },
+    { label: 'Last activity', value: lastMsg ? relativeTime(lastMsg.timestamp) || '—' : '—', sub: lastMsg ? `From ${lastMsg.sender}` : undefined, icon: <Clock size={15} /> },
+    { label: 'Project roster', value: rosterSize, sub: subCount > 0 ? `${subCount} sub${subCount === 1 ? '' : 's'}${ctx?.project?.ownerName ? ' + owner' : ''}` : 'Build the directory to grow it', icon: <AddressBook size={15} />, href: `/app/projects/${projectId}/directory` },
+  ];
+
+  const starters = [
+    { label: 'Kickoff note', text: `Kicking off the ${ctx?.project?.name || 'project'} thread — daily coordination, decisions, and weather calls all live here.` },
+    { label: 'Schedule check', text: 'Schedule check: are we still tracking to this week\'s milestones? Flag any slips here so we can resequence early.' },
+    { label: 'Safety reminder', text: 'Reminder: report near misses the same day and log toolbox talks under Safety — the log only works if we feed it.' },
+  ];
+
+  const base = `/app/projects/${projectId}`;
   return (
-    <PremiumSurface>
-      {/* Header */}
-      <ModuleHero
-        eyebrow={ctx?.project?.name || 'Communication'}
-        eyebrowIcon={<ChatCircleText size={13} weight="fill" color="var(--text-secondary)" />}
-        title="Project"
-        accent="Messages"
+    <div className="msgWs">
+      <style dangerouslySetInnerHTML={{ __html: CSS }} />
+      <PageShell
+        crumbs={[
+          { label: 'Projects', href: '/app/projects' },
+          { label: ctx?.project?.name || 'Project', href: `${base}/overview` },
+          { label: 'Messages' },
+        ]}
+        title="Messages"
         subtitle="The project's running record, timestamped."
-      />
-
-      {/* Thread intelligence strip */}
-      {!loading && messages.length > 0 && (
-        <StatStrip items={[
-          {href: `/app/projects/${projectId}/messages`,  label: 'Messages', value: String(messages.length), sub: `${todayCount} today` },
-          {href: `/app/projects/${projectId}/messages`,  label: 'Contributors', value: String(contributors.length), sub: contributors.slice(0, 2).join(', ') || 'No one yet' },
-          {href: `/app/projects/${projectId}/messages`,  label: 'Last Activity', value: lastMsg ? relativeTime(lastMsg.timestamp) || '—' : '—', sub: lastMsg ? `From ${lastMsg.sender}` : undefined },
-          {href: `/app/projects/${projectId}/messages`,  label: 'Project Roster', value: String(subCount + (ctx?.project?.ownerName ? 1 : 0)), sub: subCount > 0 ? `${subCount} sub${subCount === 1 ? '' : 's'}${ctx?.project?.ownerName ? ' + owner' : ''}` : 'Build the directory to grow it' },
-        ]} />
-      )}
-
-      {/* List toolbar — search the running record */}
-      {!loading && messages.length > 0 && (
-        <ListToolbar
-          search={search}
-          onSearch={setSearch}
-          searchPlaceholder="Search messages…"
-          count={{ shown: visibleMessages.length, total: messages.length }}
-          style={{ marginBottom: 16 }}
-        />
-      )}
-
-      {/* Message thread — full-height card: thread scrolls internally, send bar pinned */}
-      <SectionCard
-        flush
-        icon={<ChatCircleText size={17} weight="duotone" color="var(--text-secondary)" />}
-        title="Team Thread"
-        subtitle={messages.length > 0 ? `${messages.length} message${messages.length === 1 ? '' : 's'} · ${contributors.length} contributor${contributors.length === 1 ? '' : 's'} · refreshes every 15s` : 'Live conversation for this project — refreshes every 15s'}
-        style={{ display: 'flex', flexDirection: 'column', height: messages.length > 0 ? 'calc(100vh - 348px)' : 'calc(100vh - 260px)', minHeight: 460 }}
-        bodyStyle={{ flex: 1, minHeight: 0, display: 'flex', flexDirection: 'column' }}
       >
-        <div
-          ref={scrollRef}
-          style={{ flex: 1, overflowY: 'auto', minHeight: 0, padding: 20 }}
-        >
-          {loading ? (
-            <div style={{ textAlign: 'center', padding: 40, color: MUTED }}>Loading…</div>
-          ) : messages.length === 0 ? (
-            <PremiumEmpty
-              icon={<ChatsCircle size={30} weight="duotone" color="var(--text-secondary)" />}
-              title="No messages yet"
-              description={`Everything posted here becomes the ${ctx?.project?.name ? `${ctx.project.name} ` : 'project '}running record — timestamped, searchable, and visible to the whole team${subCount > 0 ? `, with ${subCount} sub${subCount === 1 ? '' : 's'} on the roster to coordinate` : ''}. Start with one of these:`}
-              action={
-                <div style={{ display: 'flex', gap: 8, flexWrap: 'wrap', justifyContent: 'center' }}>
-                  {[
-                    { label: 'Kickoff Note', text: `Kicking off the ${ctx?.project?.name || 'project'} thread — daily coordination, decisions, and weather calls all live here.` },
-                    { label: 'Schedule Check', text: 'Schedule check: are we still tracking to this week\'s milestones? Flag any slips here so we can resequence early.' },
-                    { label: 'Safety Reminder', text: 'Reminder: report near misses the same day and log toolbox talks under Safety — the log only works if we feed it.' },
-                  ].map(p => (
-                    <button key={p.label} onClick={() => setText(p.text)} className="pmBtn" style={{ minHeight: 44, padding: '10px 14px', borderRadius: 10, background: 'var(--bg-surface-2)', border: '1px solid var(--border-default)', color: 'var(--text-primary)', fontSize: 13, fontWeight: 600, cursor: 'pointer' }}>{p.label}</button>
-                  ))}
-                </div>
-              }
-            />
-          ) : (
-            <div style={{ display: 'flex', flexDirection: 'column', gap: 16 }}>
-              {visibleMessages.map((msg, idx) => {
-                const isMe = !!myName && msg.sender === myName;
-                const day = dayLabel(msg.timestamp);
-                const prevDay = idx > 0 ? dayLabel(visibleMessages[idx - 1].timestamp) : null;
-                return (
-                  <React.Fragment key={msg.id}>
-                  {day && day !== prevDay && (
-                    <div style={{ display: 'flex', alignItems: 'center', gap: 12, margin: '2px 0' }}>
-                      <div style={{ flex: 1, height: 1, background: BORDER }} />
-                      <span style={{ fontSize: 12, fontWeight: 800, color: FAINT }}>{day}</span>
-                      <div style={{ flex: 1, height: 1, background: BORDER }} />
-                    </div>
-                  )}
-                  <div style={{ display: 'flex', flexDirection: 'column', alignItems: isMe ? 'flex-end' : 'flex-start' }}>
-                    <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 4 }}>
-                      <span style={{ fontSize: 12, fontWeight: 700, color: WHITE }}>{msg.sender}</span>
-                      <span style={{ fontSize: 12, color: FAINT }}>{relativeTime(msg.timestamp)}</span>
-                    </div>
-                    <div style={{
-                      maxWidth: '70%',
-                      padding: '10px 16px',
-                      borderRadius: 14,
-                      background: isMe ? ME_BG : OTHER_BG,
-                      border: `1px solid ${isMe ? ME_BORDER : BORDER}`,
-                      color: WHITE,
-                      fontSize: 14,
-                      lineHeight: 1.5,
-                      wordBreak: 'break-word',
-                      boxShadow: '0 10px 30px -22px rgba(0,0,0,0.7)',
-                    }}>
-                      {msg.text}
-                    </div>
-                  </div>
-                  </React.Fragment>
-                );
-              })}
-            </div>
-          )}
-        </div>
+        {!loading && messages.length > 0 && <StatRow items={stats} />}
 
-        {/* Send bar */}
-        {error && (
-          <div style={{ padding: '8px 20px', color: RED, fontSize: 13, borderTop: `1px solid ${BORDER}` }}>{error}</div>
-        )}
-        <div style={{ padding: '12px 20px', borderTop: `1px solid ${BORDER}`, display: 'flex', gap: 10, alignItems: 'center' }}>
-          <input
-            type="text"
-            value={text}
-            onChange={e => setText(e.target.value)}
-            onKeyDown={handleKeyDown}
-            placeholder="Type a message…"
-            style={{
-              flex: 1, padding: '11px 14px',
-              background: INPUT_BG, border: `1px solid ${BORDER}`,
-              borderRadius: 12, color: WHITE, fontSize: 14, outline: 'none',
-            }}
+        {!loading && messages.length > 0 && (
+          <Toolbar
+            search={search}
+            onSearch={setSearch}
+            placeholder="Search messages…"
+            actions={<span style={{ fontSize: 'var(--fs-sm)', color: 'var(--text-tertiary)' }}>{visibleMessages.length} of {messages.length}</span>}
           />
-          <button
-            onClick={handleSend}
-            disabled={sendDisabled}
-            className="pmBtn"
-            style={{
-              ...goldButtonStyle,
-              opacity: sendDisabled ? 0.5 : 1,
-              cursor: sendDisabled ? 'not-allowed' : 'pointer',
-            }}
-          >
-            <PaperPlaneTilt size={15} weight="fill" />
-            {sending ? 'Sending…' : 'Send'}
-          </button>
-        </div>
-      </SectionCard>
-    </PremiumSurface>
+        )}
+
+        <Card
+          flush
+          title="Team thread"
+          icon={<ChatCircleText size={16} />}
+          subtitle={messages.length > 0 ? `${messages.length} message${messages.length === 1 ? '' : 's'} · ${contributors.length} contributor${contributors.length === 1 ? '' : 's'} · refreshes every 15s` : 'Live conversation for this project — refreshes every 15s'}
+        >
+          <div className="msgThread">
+            <div ref={scrollRef} className="msgScroll" aria-live="polite">
+              {loading ? (
+                <div className="msgList" aria-label="Loading messages">
+                  {[0, 1, 2].map(i => <span key={i} className="k-skel" style={{ width: `${60 - i * 12}%`, height: 40, alignSelf: i === 1 ? 'flex-end' : 'flex-start' }} />)}
+                </div>
+              ) : messages.length === 0 ? (
+                <EmptyState
+                  icon={<ChatsCircle size={22} />}
+                  title="No messages yet"
+                  text={`Posts here become the ${ctx?.project?.name ? `${ctx.project.name} ` : 'project '}running record${subCount > 0 ? ` — ${subCount} sub${subCount === 1 ? '' : 's'} on the roster` : ''}. Start with one:`}
+                  action={
+                    <div className="msgStarters">
+                      {starters.map(p => (
+                        <Button key={p.label} onClick={() => { setText(p.text); inputRef.current?.focus(); }}>{p.label}</Button>
+                      ))}
+                    </div>
+                  }
+                />
+              ) : visibleMessages.length === 0 ? (
+                <EmptyState title="No messages match" text="Change the search." action={<Button onClick={() => setSearch('')}>Clear search</Button>} />
+              ) : (
+                <div className="msgList">
+                  {visibleMessages.map((msg, idx) => {
+                    const isMe = !!myName && msg.sender === myName;
+                    const day = dayLabel(msg.timestamp);
+                    const prevDay = idx > 0 ? dayLabel(visibleMessages[idx - 1].timestamp) : null;
+                    return (
+                      <React.Fragment key={msg.id}>
+                        {day && day !== prevDay && <div className="msgDay"><span>{day}</span></div>}
+                        <div className="msgRow" data-me={isMe ? 'true' : undefined}>
+                          <span className="msgAvatar" aria-hidden>{initials(msg.sender)}</span>
+                          <div className="msgCol">
+                            <div className="msgMeta"><b>{isMe ? 'You' : msg.sender}</b><span title={msg.timestamp ? new Date(msg.timestamp).toLocaleString() : undefined}>{relativeTime(msg.timestamp)}</span></div>
+                            <div className="msgBubble">{msg.text}</div>
+                          </div>
+                        </div>
+                      </React.Fragment>
+                    );
+                  })}
+                </div>
+              )}
+            </div>
+
+            {error && <div className="msgErr"><span className="k-error" role="alert">{error}</span></div>}
+            <div className="msgSend">
+              <Input
+                ref={inputRef}
+                type="text"
+                value={text}
+                onChange={e => setText(e.target.value)}
+                onKeyDown={handleKeyDown}
+                placeholder="Type a message…"
+                aria-label="Message"
+              />
+              <Button variant="primary" icon={<PaperPlaneTilt size={15} weight="fill" />} onClick={handleSend} disabled={sendDisabled}>
+                {sending ? 'Sending…' : 'Send'}
+              </Button>
+            </div>
+          </div>
+        </Card>
+      </PageShell>
+    </div>
   );
 }
