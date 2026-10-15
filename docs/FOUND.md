@@ -241,3 +241,7 @@ STILL OPEN:
 - White-label still defaults to `*.saguarocrm.com` subdomains / `tenants.saguarocrm.com` CNAME
   (`white-label-provisioning.ts:36,38,259,306,457,572`) and `sandbox.saguarocrm.com` (`sandbox-manager*.ts`). That
   domain is not ours. Fixing it needs a decision on the white-label domain plus wildcard DNS, so it is not a code-only change.
+- app/api/daily-logs/list/route.ts:20 — bare `catch {}` swallows the error (no apiError/log); also returns `{logs:[]}` on 500 and the `[id]` GET/PUT/DELETE catches (`[id]/route.ts:19,54,73`) do the same. (Path 1 audit)
+- app/api/daily-logs/list/route.ts:11 — no `deleted_at IS NULL` filter although daily_logs has a `deleted_at` column; no `limit` paging beyond 1000. (Path 1 audit)
+- app/api/daily-logs/create/route.ts:166 — 409 duplicate response still returns raw `error` text keyed for display; the `existingLogId` is never used by the client to offer "open it". (Path 1 audit)
+- app/api/daily-logs/[id]/route.ts:36 — PUT allowlist omits `status`, so the Draft→Submitted badge on the list can never change from the detail page. (Path 1 audit)
