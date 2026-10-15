@@ -133,7 +133,9 @@ const CSS = `
 .schRow[data-sel="true"] { background: var(--brand-primary-08); box-shadow: inset 3px 0 0 var(--brand-primary); }
 .schHead { min-height: 30px; border-bottom: 1px solid var(--border-default); }
 .schLabel { padding: 0 12px; font-size: 13px; font-weight: 600; color: var(--text-primary); overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
-.schLabel[data-done="true"] { color: var(--text-secondary); text-decoration: line-through; }
+.schLabel[data-done="true"] { color: var(--text-secondary); }
+/* Done reads as a small green check before the name — never a strikethrough. */
+.schLabel .schDone { display: inline-block; vertical-align: -2px; margin-right: 5px; color: var(--success); flex: none; }
 .schTrack { position: relative; height: 26px; margin-right: 12px; }
 .schTrack[data-base="true"] { height: 32px; }
 .schHead .schTrack { height: 30px; }
@@ -292,7 +294,7 @@ function GanttChart({ tasks, jobHex, selectedId, onSelect, cpm, critOnly, zoom }
               onClick={() => onSelect(task)}
               onKeyDown={e => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); onSelect(task); } }}
             >
-              <div className="schLabel" data-done={isDone ? 'true' : undefined} title={task.name}>{task.name}</div>
+              <div className="schLabel" data-done={isDone ? 'true' : undefined} title={isDone ? `${task.name} (complete)` : task.name}>{isDone && <CheckCircle className="schDone" size={14} weight="fill" aria-label="Complete" />}{task.name}</div>
               <div className="schTrack" data-base={hasBase ? 'true' : undefined}>
                 {/* Baseline: where this task was planned, under the bar. */}
                 {hasBase && (

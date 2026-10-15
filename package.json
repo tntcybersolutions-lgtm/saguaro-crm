@@ -44,7 +44,7 @@
     "e2e": "npm run e2e:nav && npm run e2e:sweep",
     "test:invites": "jest --testEnvironment node lib/invite-flow.sanity.test.ts",
     "test:items": "jest --testEnvironment node lib/items.sanity.test.ts",
-    "test:sanity": "jest --testEnvironment node lib/invite-flow.sanity.test.ts lib/items.sanity.test.ts lib/daily-log-sections.sanity.test.ts lib/budget-rollup.sanity.test.ts lib/commitments.sanity.test.ts lib/drawings.sanity.test.ts lib/panel-layout.sanity.test.ts lib/job-monthly.sanity.test.ts lib/cash-flow-projection.sanity.test.ts lib/schedule-cpm.sanity.test.ts lib/job-banner.sanity.test.ts lib/photo-views.sanity.test.ts lib/drawing-autolinks.sanity.test.ts lib/bid-leveling.sanity.test.ts"
+    "test:sanity": "jest --testEnvironment node lib/invite-flow.sanity.test.ts lib/items.sanity.test.ts lib/daily-log-sections.sanity.test.ts lib/budget-rollup.sanity.test.ts lib/commitments.sanity.test.ts lib/drawings.sanity.test.ts lib/panel-layout.sanity.test.ts lib/job-monthly.sanity.test.ts lib/cash-flow-projection.sanity.test.ts lib/schedule-cpm.sanity.test.ts lib/job-banner.sanity.test.ts lib/photo-views.sanity.test.ts lib/drawing-autolinks.sanity.test.ts lib/bid-leveling.sanity.test.ts lib/job-map.sanity.test.ts"
   },
   "dependencies": {
     "@anthropic-ai/sdk": "^0.54.0",
@@ -80,6 +80,7 @@
     "docx": "^9.7.1",
     "exceljs": "^4.4.0",
     "heic-convert": "^2.1.0",
+    "leaflet": "^1.9.4",
     "mustache": "^4.2.0",
     "next": "^14.0.0",
     "pdf-lib": "^1.17.1",
@@ -91,6 +92,7 @@
     "react-datepicker": "^9.1.0",
     "react-dom": "^18.2.0",
     "react-icons": "^5.6.0",
+    "react-leaflet": "^4.2.1",
     "recharts": "^3.8.1",
     "resend": "^4.0.0",
     "sharp": "^0.34.5",
@@ -110,6 +112,7 @@
     "@testing-library/jest-dom": "^6.1.0",
     "@testing-library/react": "^14.0.0",
     "@testing-library/user-event": "^14.5.0",
+    "@types/leaflet": "^1.9.12",
     "@types/mustache": "^4.2.0",
     "@types/node": "^20.0.0",
     "@types/react": "^18.2.0",
