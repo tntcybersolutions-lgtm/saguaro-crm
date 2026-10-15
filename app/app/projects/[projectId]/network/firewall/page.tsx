@@ -1,27 +1,25 @@
 'use client';
-
-import { useState, useEffect, useCallback, useRef } from 'react';
+/**
+ * Network › Firewall — the packet-filtering policy in rule order. Rules are
+ * numbered in steps of 10, reordered with the arrows, and switched on/off
+ * without deleting.
+ *
+ * Reads  GET   /api/network/projects?projectId=  →  GET /api/network/firewall?networkProjectId=
+ * Writes POST  /api/network/firewall              (new rule, next number = max + 10, or 100)
+ *        PATCH /api/network/firewall/:id          { enabled } | { rule_number } (swap on move)
+ */
+import React, { useState, useEffect, useCallback, useRef } from 'react';
 import { useParams } from 'next/navigation';
-import Link from 'next/link';
+import { useProjectContext } from '@/lib/hooks/useProjectContext';
 import {
-  ShieldCheck, CheckCircle, Prohibit, ClipboardText, Plus, X,
-  CaretUp, CaretDown, CaretRight,
-} from '@phosphor-icons/react';
-import {
-  PremiumSurface, ModuleHero, SectionCard, StatCard, PremiumEmpty, FlowStrip,
-  goldButtonStyle, ghostButtonStyle, secondaryButtonStyle
-} from '@/components/ui/premium';
-import { ModuleSkeleton } from '@/components/ui/PageSkeleton';
+  PageShell, StatRow, Badge, Button, Tabs, DataTable, EmptyState, Select, Field, Input, Textarea,
+  FormGrid, FormModal, Toast, useToast,
+  type Column, type BadgeTone, type StatItem,
+} from '@/components/ui/kit';
+import { ShieldCheck, CheckCircle, Prohibit, ClipboardText, Plus, CaretUp, CaretDown, Power, WarningCircle } from '@phosphor-icons/react';
 import { useUnsavedGuard, useComposerDirty } from '@/lib/useUnsavedGuard';
 import UnsavedGuardModal from '@/components/UnsavedGuardModal';
-
-const BASE = 'var(--bg-surface-2)';
-const GOLD = 'var(--brand-primary)';
-const GREEN = 'var(--success)';
-const RED = 'var(--danger)';
-const BORDER = 'rgba(255,255,255,0.12)';
-const DIM = 'var(--text-secondary)';
-const TEXT = 'var(--text-primary)';
+import NetworkTabs, { networkCrumbs } from '../_components/NetworkTabs';
 
 interface FirewallRule {
   id: string;
@@ -50,27 +48,43 @@ const CATEGORY_LABELS: Record<string, string> = {
 };
 const categoryLabel = (c: string) => CATEGORY_LABELS[c] || c;
 
-const ACTION_STYLES: Record<string, { bg: string; text: string }> = {
-  allow: { bg: `color-mix(in srgb, ${GREEN} 13%, transparent)`, text: GREEN },
-  deny: { bg: `color-mix(in srgb, ${RED} 13%, transparent)`, text: RED },
-  drop: { bg: '#6B728020', text: 'var(--status-closed)' },
-};
+const ACTION_TONE: Record<string, BadgeTone> = { allow: 'ongoing', deny: 'overdue', drop: 'closed' };
+const cap = (s: string) => (s ? s.charAt(0).toUpperCase() + s.slice(1) : '');
+const mono: React.CSSProperties = { fontFamily: 'var(--font-mono, monospace)' };
 
-const inputStyle: React.CSSProperties = {
-  width: '100%', padding: '10px 12px', background: BASE, color: TEXT,
-  border: `1px solid ${BORDER}`, borderRadius: 8, fontSize: 13, outline: 'none',
-};
-const labelStyle: React.CSSProperties = {
-  color: DIM, fontSize: 12, fontWeight: 600, display: 'block', marginBottom: 4,
-};
+/** On/off switch drawn from tokens; role="switch" so it reads as a toggle. */
+function EnabledSwitch({ on, onToggle, label }: { on: boolean; onToggle: () => void; label: string }) {
+  return (
+    <button
+      type="button"
+      role="switch"
+      aria-checked={on}
+      aria-label={label}
+      onClick={(e) => { e.stopPropagation(); onToggle(); }}
+      style={{
+        width: 40, height: 22, borderRadius: 11, border: '1px solid var(--border-default)', cursor: 'pointer', padding: 0,
+        background: on ? 'var(--success)' : 'var(--bg-surface-2)', position: 'relative', transition: 'background .2s', flexShrink: 0,
+      }}
+    >
+      <span style={{
+        width: 16, height: 16, borderRadius: '50%', background: 'var(--text-primary)',
+        position: 'absolute', top: 2, left: on ? 20 : 2, transition: 'left .2s',
+      }} />
+    </button>
+  );
+}
 
 export default function FirewallRulesPage() {
   const { projectId } = useParams() as { projectId: string };
+  const { ctx } = useProjectContext(projectId);
+  const { toast, show } = useToast();
   const [networkProjectId, setNetworkProjectId] = useState('');
   const [rules, setRules] = useState<FirewallRule[]>([]);
   const [loading, setLoading] = useState(true);
+  const [loadError, setLoadError] = useState('');
   const [showForm, setShowForm] = useState(false);
   const [saving, setSaving] = useState(false);
+  const [formError, setFormError] = useState('');
   const [activeCategory, setActiveCategory] = useState('all');
 
   const emptyForm = {
@@ -80,9 +94,8 @@ export default function FirewallRulesPage() {
   };
   const [form, setForm] = useState(emptyForm);
 
-  /* ── Unsaved-work guard: the composer holds real typing, so leaving the
-   *    page (sidebar, field nav, ⌘K, back) confirms first and the draft is
-   *    kept on this device either way. ── */
+  /* Unsaved-work guard: the composer holds real typing, so leaving the page
+   * confirms first and the draft is kept on this device either way. */
   const composerDirty = useComposerDirty(showForm, form);
   const guard = useUnsavedGuard({
     dirty: composerDirty,
@@ -94,6 +107,7 @@ export default function FirewallRulesPage() {
 
   const fetchData = useCallback(async () => {
     setLoading(true);
+    setLoadError('');
     try {
       const npRes = await fetch(`/api/network/projects?projectId=${projectId}`);
       const npData = await npRes.json();
@@ -102,14 +116,16 @@ export default function FirewallRulesPage() {
       const res = await fetch(`/api/network/firewall?networkProjectId=${npData.networkProject.id}`);
       const data = await res.json();
       setRules((data.rules || []).sort((a: FirewallRule, b: FirewallRule) => a.rule_number - b.rule_number));
-    } catch { /* */ }
+    } catch (e) {
+      setLoadError(e instanceof Error ? e.message : "Couldn't load firewall rules");
+    }
     setLoading(false);
   }, [projectId]);
 
   useEffect(() => { fetchData(); }, [fetchData]);
 
-  // Dead-space kill (spec 4.1): an empty policy opens straight into the
-  // add-rule composer. One-shot per visit so Cancel stays cancelled.
+  // An empty policy opens straight into the add-rule form. One-shot per visit
+  // so Cancel stays cancelled.
   const autoOpenedRef = useRef(false);
   useEffect(() => {
     if (!loading && networkProjectId && rules.length === 0 && !autoOpenedRef.current) {
@@ -121,6 +137,7 @@ export default function FirewallRulesPage() {
   const handleSubmit = async (): Promise<boolean> => {
     if (!form.name || !networkProjectId) return false;
     setSaving(true);
+    setFormError('');
     try {
       const nextRuleNum = rules.length > 0 ? Math.max(...rules.map(r => r.rule_number)) + 10 : 100;
       const res = await fetch('/api/network/firewall', {
@@ -134,22 +151,30 @@ export default function FirewallRulesPage() {
         fetchData();
         guard.clearDraft();
         setSaving(false);
+        show('Rule added');
         return true;
       }
-    } catch { /* */ }
+      const j = await res.json().catch(() => ({}));
+      setFormError(j.error || "Couldn't add the rule.");
+    } catch (e) {
+      setFormError(e instanceof Error ? e.message : "Couldn't add the rule.");
+    }
     setSaving(false);
     return false;
   };
 
   const toggleEnabled = async (rule: FirewallRule) => {
     try {
-      await fetch(`/api/network/firewall/${rule.id}`, {
+      const res = await fetch(`/api/network/firewall/${rule.id}`, {
         method: 'PATCH',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ enabled: !rule.enabled }),
       });
+      if (!res.ok) show("Couldn't change the rule", 'bad');
       fetchData();
-    } catch { /* */ }
+    } catch {
+      show("Couldn't change the rule", 'bad');
+    }
   };
 
   const moveRule = async (rule: FirewallRule, direction: 'up' | 'down') => {
@@ -171,264 +196,150 @@ export default function FirewallRulesPage() {
         }),
       ]);
       fetchData();
-    } catch { /* */ }
+    } catch {
+      show("Couldn't reorder the rules", 'bad');
+    }
   };
 
   const filteredRules = activeCategory === 'all' ? rules : rules.filter(r => r.category === activeCategory);
 
-  // Derived KPIs (presentation-only; computed from existing state)
   const enabledCount = rules.filter(r => r.enabled).length;
   const blockingCount = rules.filter(r => r.action !== 'allow').length;
   const loggingCount = rules.filter(r => r.logging).length;
 
-  if (loading) {
-    return (
-      <PremiumSurface>
-        <ModuleSkeleton kpis={4} rows={5} />
-      </PremiumSurface>
-    );
-  }
+  const stats: StatItem[] = [
+    { label: 'Total rules', value: loading ? '—' : String(rules.length), sub: 'Across all categories', icon: <ShieldCheck size={15} />, onClick: () => setActiveCategory('all'), active: activeCategory === 'all' },
+    { label: 'Enabled', value: loading ? '—' : String(enabledCount), sub: loading ? undefined : `${rules.length - enabledCount} disabled`, tone: enabledCount ? 'good' : 'default', icon: <CheckCircle size={15} /> },
+    { label: 'Blocking', value: loading ? '—' : String(blockingCount), sub: 'Deny / drop', icon: <Prohibit size={15} /> },
+    { label: 'Logging', value: loading ? '—' : String(loggingCount), sub: 'Rules logged', icon: <ClipboardText size={15} /> },
+  ];
+
+  const position = (r: FirewallRule) => rules.findIndex(x => x.id === r.id);
+
+  const columns: Column<FirewallRule>[] = [
+    { key: 'order', header: 'Order', width: 76, sortable: false, groupable: false, phone: 'hide', render: (r) => (
+      <span style={{ display: 'inline-flex', gap: 2 }} onClick={(e) => e.stopPropagation()}>
+        <Button variant="ghost" size="sm" icon={<CaretUp size={13} weight="bold" />} aria-label={`Move ${r.name} up`} title="Move up" disabled={position(r) === 0} onClick={() => moveRule(r, 'up')} />
+        <Button variant="ghost" size="sm" icon={<CaretDown size={13} weight="bold" />} aria-label={`Move ${r.name} down`} title="Move down" disabled={position(r) === rules.length - 1} onClick={() => moveRule(r, 'down')} />
+      </span>
+    ) },
+    { key: 'rule_number', header: '#', width: 70, groupable: false, render: (r) => <span style={mono}>#{r.rule_number}</span> },
+    { key: 'action', header: 'Action', phone: 'show', accessor: (r) => cap(r.action), render: (r) => <Badge tone={ACTION_TONE[r.action] || 'neutral'}>{cap(r.action)}</Badge> },
+    { key: 'name', header: 'Rule', primary: true, phone: 'show', render: (r) => (
+      <span style={{ display: 'flex', flexDirection: 'column', gap: 2, minWidth: 0 }}>
+        <span>{r.name}</span>
+        <span style={{ ...mono, fontSize: 12, fontWeight: 400, color: 'var(--text-secondary)' }}>
+          {r.source_network}:{r.source_port || '*'} → {r.destination_network}:{r.destination_port || '*'} ({(r.protocol || '').toUpperCase()})
+        </span>
+      </span>
+    ) },
+    { key: 'direction', header: 'Direction', hidden: true, accessor: (r) => cap(r.direction) },
+    { key: 'category', header: 'Category', accessor: (r) => categoryLabel(r.category), render: (r) => <Badge>{categoryLabel(r.category)}</Badge> },
+    { key: 'logging', header: 'Logging', accessor: (r) => (r.logging ? 'Log' : ''), render: (r) => (r.logging ? 'Log' : '—') },
+    { key: 'enabled', header: 'Enabled', align: 'center', phone: 'show', accessor: (r) => (r.enabled ? 'On' : 'Off'), render: (r) => (
+      <EnabledSwitch on={r.enabled} onToggle={() => toggleEnabled(r)} label={`${r.enabled ? 'Disable' : 'Enable'} ${r.name}`} />
+    ) },
+  ];
+
+  const set = <K extends keyof typeof form>(k: K, v: (typeof form)[K]) => setForm({ ...form, [k]: v });
+  const openForm = () => { setFormError(''); setShowForm(true); };
 
   return (
-    <PremiumSurface>
-      {/* Breadcrumb */}
-      <div style={{ display: 'flex', alignItems: 'center', gap: 6, marginBottom: 16 }}>
-        <Link href={`/app/projects/${projectId}/network`} style={{ color: DIM, fontSize: 12, textDecoration: 'none' }}>Network</Link>
-        <CaretRight size={11} weight="bold" color="rgba(255,255,255,0.4)" />
-        <span style={{ color: TEXT, fontSize: 12, fontWeight: 600 }}>Firewall</span>
-      </div>
+    <PageShell
+      crumbs={networkCrumbs(projectId, ctx?.project?.name, 'Firewall')}
+      title="Firewall rules"
+      subtitle="Define, order and toggle the packet-filtering policy."
+      actions={<Button variant="primary" icon={<Plus size={15} weight="bold" />} onClick={openForm}>Add rule</Button>}
+    >
+      <NetworkTabs projectId={projectId} value="firewall" />
+      {!loadError && <StatRow items={stats} />}
 
-      {/* Header */}
-      <ModuleHero
-        eyebrow="Network"
-        eyebrowIcon={<ShieldCheck size={13} weight="fill" color="var(--text-secondary)" />}
-        title="Firewall"
-        accent="Rules"
-        subtitle="Define, order, and toggle the packet-filtering policy."
-        actions={
-          <button onClick={() => setShowForm(!showForm)} style={showForm ? ghostButtonStyle : goldButtonStyle} className="pmBtn">
-            {showForm ? <><X size={15} weight="bold" /> Cancel</> : <><Plus size={15} weight="bold" /> Add Rule</>}
-          </button>
-        }
-      />
-
-      {/* KPI Row */}
-      <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(180px, 1fr))', gap: 12, marginBottom: 24 }}>
-        <StatCard
-          icon={<ShieldCheck size={19} weight="duotone" color="var(--text-secondary)" />}
-          label="Total Rules" value={String(rules.length)} accent={GOLD}
-          sub="Across all categories" delay={0.02}
-         href={`/app/projects/${projectId}/network/firewall`}/>
-        <StatCard
-          icon={<CheckCircle size={19} weight="duotone" color={GREEN} />}
-          label="Enabled" value={String(enabledCount)} accent={enabledCount ? GREEN : undefined}
-          sub={`${rules.length - enabledCount} disabled`} delay={0.06}
-         href={`/app/projects/${projectId}/network/firewall`}/>
-        <StatCard
-          icon={<Prohibit size={19} weight="duotone" color={RED} />}
-          label="Blocking" value={String(blockingCount)} accent={blockingCount ? RED : undefined}
-          sub="Deny / drop" delay={0.10}
-         href={`/app/projects/${projectId}/network/firewall`}/>
-        <StatCard
-          icon={<ClipboardText size={19} weight="duotone" color="var(--text-secondary)" />}
-          label="Logging" value={String(loggingCount)}
-          sub="Rules logged" delay={0.14}
-         href={`/app/projects/${projectId}/network/firewall`}/>
-      </div>
-
-      {/* Add Rule Form */}
-      {showForm && (
-        <div style={{ marginBottom: 24 }}>
-          <SectionCard title="Add Firewall Rule" icon={<Plus size={17} weight="bold" color="var(--text-secondary)" />}>
-            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(180px, 1fr))', gap: 12 }}>
-              <div>
-                <label style={labelStyle}>Rule Name *</label>
-                <input value={form.name} onChange={e => setForm({ ...form, name: e.target.value })} placeholder="Allow HTTPS Out" style={inputStyle} />
-              </div>
-              <div>
-                <label style={labelStyle}>Action</label>
-                <select value={form.action} onChange={e => setForm({ ...form, action: e.target.value })} style={inputStyle}>
-                  <option value="allow">Allow</option>
-                  <option value="deny">Deny</option>
-                  <option value="drop">Drop</option>
-                </select>
-              </div>
-              <div>
-                <label style={labelStyle}>Direction</label>
-                <select value={form.direction} onChange={e => setForm({ ...form, direction: e.target.value })} style={inputStyle}>
-                  <option value="inbound">Inbound</option>
-                  <option value="outbound">Outbound</option>
-                  <option value="both">Both</option>
-                </select>
-              </div>
-              <div>
-                <label style={labelStyle}>Source Network</label>
-                <input value={form.source_network} onChange={e => setForm({ ...form, source_network: e.target.value })} placeholder="any / 192.168.10.0/24" style={inputStyle} />
-              </div>
-              <div>
-                <label style={labelStyle}>Source Port</label>
-                <input value={form.source_port} onChange={e => setForm({ ...form, source_port: e.target.value })} placeholder="any" style={inputStyle} />
-              </div>
-              <div>
-                <label style={labelStyle}>Dest Network</label>
-                <input value={form.destination_network} onChange={e => setForm({ ...form, destination_network: e.target.value })} placeholder="any / 10.0.0.0/8" style={inputStyle} />
-              </div>
-              <div>
-                <label style={labelStyle}>Dest Port</label>
-                <input value={form.destination_port} onChange={e => setForm({ ...form, destination_port: e.target.value })} placeholder="443, 80" style={inputStyle} />
-              </div>
-              <div>
-                <label style={labelStyle}>Protocol</label>
-                <select value={form.protocol} onChange={e => setForm({ ...form, protocol: e.target.value })} style={inputStyle}>
-                  <option value="tcp">TCP</option>
-                  <option value="udp">UDP</option>
-                  <option value="icmp">ICMP</option>
-                  <option value="any">Any</option>
-                </select>
-              </div>
-              <div>
-                <label style={labelStyle}>Category</label>
-                <select value={form.category} onChange={e => setForm({ ...form, category: e.target.value })} style={inputStyle}>
-                  {CATEGORIES.filter(c => c !== 'all').map(c => <option key={c} value={c}>{categoryLabel(c)}</option>)}
-                </select>
-              </div>
-              <div style={{ display: 'flex', alignItems: 'flex-end' }}>
-                <label style={{ display: 'flex', alignItems: 'center', gap: 8, color: TEXT, fontSize: 13, cursor: 'pointer' }}>
-                  <input type="checkbox" checked={form.logging} onChange={e => setForm({ ...form, logging: e.target.checked })} />
-                  Enable Logging
-                </label>
-              </div>
-            </div>
-            <div style={{ marginTop: 12 }}>
-              <label style={labelStyle}>Description</label>
-              <textarea value={form.description} onChange={e => setForm({ ...form, description: e.target.value })} rows={2} style={{ ...inputStyle, resize: 'vertical' }} />
-            </div>
-            <button onClick={handleSubmit} disabled={saving || !form.name} className="pmBtn" style={{
-              ...goldButtonStyle, marginTop: 16, opacity: saving || !form.name ? 0.5 : 1,
-              cursor: saving || !form.name ? 'not-allowed' : 'pointer',
-            }}>
-              {saving ? 'Saving…' : <><Plus size={15} weight="bold" /> Add Rule</>}
-            </button>
-          </SectionCard>
-        </div>
+      {!loadError && rules.length > 0 && (
+        <Tabs
+          tabs={CATEGORIES.map(c => ({ key: c, label: categoryLabel(c), count: c === 'all' ? rules.length : rules.filter(r => r.category === c).length }))}
+          value={activeCategory}
+          onChange={setActiveCategory}
+        />
       )}
 
-      {/* Category Tabs */}
-      <div style={{ display: 'flex', gap: 6, marginBottom: 16, flexWrap: 'wrap' }}>
-        {CATEGORIES.map(cat => (
-          <button
-            key={cat}
-            onClick={() => setActiveCategory(cat)}
-            style={{
-              padding: '6px 14px', border: `1px solid ${activeCategory === cat ? 'color-mix(in srgb, var(--brand-primary) 45%, transparent)' : BORDER}`,
-              borderRadius: 999, background: activeCategory === cat ? 'var(--brand-primary-12)' : 'rgba(255,255,255,0.03)',
-              color: activeCategory === cat ? GOLD : DIM, fontSize: 12, fontWeight: 700, cursor: 'pointer',
-              transition: 'all .15s',
-            }}
-          >
-            {categoryLabel(cat)}
-          </button>
-        ))}
-      </div>
+      {loadError ? (
+        <EmptyState icon={<WarningCircle size={22} />} title="Couldn't load firewall rules" text={loadError} action={<Button onClick={fetchData}>Try again</Button>} />
+      ) : (
+        <DataTable<FirewallRule>
+          tableId="project-network-firewall"
+          exportName="firewall-rules"
+          columns={columns}
+          rows={filteredRules}
+          loading={loading}
+          rowKey={(r) => r.id}
+          defaultSort={{ key: 'rule_number', dir: 'asc' }}
+          rowStyle={(r) => (r.enabled ? undefined : { opacity: 0.55 })}
+          rowActions={(r) => [
+            { label: 'Move up', icon: <CaretUp size={14} />, disabled: position(r) === 0, onClick: () => moveRule(r, 'up') },
+            { label: 'Move down', icon: <CaretDown size={14} />, disabled: position(r) === rules.length - 1, onClick: () => moveRule(r, 'down') },
+            { label: r.enabled ? 'Disable rule' : 'Enable rule', icon: <Power size={14} />, onClick: () => toggleEnabled(r) },
+          ]}
+          empty={
+            rules.length === 0 ? (
+              <EmptyState icon={<ShieldCheck size={22} />} title="No firewall rules yet" text="Add the first rule to start the policy. Numbering steps by 10 automatically."
+                action={<Button variant="primary" icon={<Plus size={15} weight="bold" />} onClick={openForm}>Add rule</Button>} />
+            ) : (
+              <EmptyState title="No rules in this category" text="Pick a different category, or add a rule to this one."
+                action={<Button onClick={() => setActiveCategory('all')}>Show all rules</Button>} />
+            )
+          }
+        />
+      )}
 
-      {/* Rules List */}
-      <SectionCard
-        title="Firewall Rules"
-        icon={<ShieldCheck size={17} weight="duotone" color="var(--text-secondary)" />}
-        action={<span style={{ fontSize: 12, fontWeight: 700, color: DIM }}>{filteredRules.length} {filteredRules.length === 1 ? 'rule' : 'rules'}</span>}
-        flush
+      <FormModal
+        open={showForm}
+        onClose={() => setShowForm(false)}
+        title="Add firewall rule"
+        onSubmit={async () => { await handleSubmit(); }}
+        submitLabel="Add rule"
+        busy={saving}
+        error={formError}
       >
-        {filteredRules.length === 0 ? (
-          <div style={{ padding: 20 }}>
-            <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 12, flexWrap: 'wrap', marginBottom: 12 }}>
-              <div style={{ fontSize: 14, fontWeight: 800, color: TEXT }}>
-                <ShieldCheck size={16} weight="duotone" color="var(--text-secondary)" style={{ marginRight: 7, verticalAlign: 'text-bottom' }} />
-                {rules.length === 0 ? 'No firewall rules yet' : 'No rules in this category'}
-                <span style={{ fontWeight: 400, color: DIM }}>
-                  {rules.length === 0
-                    ? (showForm ? ' — define the first rule in the form above; numbering spaces by 10 automatically.' : ' — add the first rule to start the packet-filtering policy.')
-                    : ' — try a different category, or add a rule to this one.'}
-                </span>
-              </div>
-              {!showForm && (
-                <button onClick={() => setShowForm(true)} style={secondaryButtonStyle} className="pmBtn"><Plus size={15} weight="bold" /> Add Rule</button>
-              )}
-            </div>
-            {rules.length === 0 && (
-              <FlowStrip steps={[
-                { title: 'Add Rules', desc: 'Numbered in steps of 10' },
-                { title: 'Order Matters', desc: 'Reorder with the arrows' },
-                { title: 'Toggle Without Deleting', desc: 'Disable to test' },
-                { title: 'Policy Exports', desc: 'Into the as-built docs' },
-              ]} />
-            )}
-          </div>
-        ) : (
-          filteredRules.map((rule, idx) => {
-            const as = ACTION_STYLES[rule.action] || ACTION_STYLES.allow;
-            return (
-              <div
-                key={rule.id}
-                style={{
-                  display: 'flex', alignItems: 'center', gap: 12, padding: '12px 16px',
-                  background: !rule.enabled ? 'rgba(255,255,255,0.02)' : 'transparent',
-                  opacity: rule.enabled ? 1 : 0.5,
-                  borderBottom: idx < filteredRules.length - 1 ? `1px solid rgba(255,255,255,0.06)` : 'none',
-                }}
-              >
-                {/* Reorder buttons */}
-                <div style={{ display: 'flex', flexDirection: 'column', gap: 2 }}>
-                  <button onClick={() => moveRule(rule, 'up')} style={{ background: 'none', border: 'none', color: DIM, cursor: 'pointer', padding: 0, lineHeight: 1, display: 'flex' }}><CaretUp size={12} weight="bold" /></button>
-                  <button onClick={() => moveRule(rule, 'down')} style={{ background: 'none', border: 'none', color: DIM, cursor: 'pointer', padding: 0, lineHeight: 1, display: 'flex' }}><CaretDown size={12} weight="bold" /></button>
-                </div>
+        <FormGrid cols={3}>
+          <Field label="Rule name" required>
+            <Input required value={form.name} onChange={e => set('name', e.target.value)} placeholder="Allow HTTPS Out" />
+          </Field>
+          <Field label="Action">
+            <Select value={form.action} onChange={e => set('action', e.target.value)} options={[{ value: 'allow', label: 'Allow' }, { value: 'deny', label: 'Deny' }, { value: 'drop', label: 'Drop' }]} />
+          </Field>
+          <Field label="Direction">
+            <Select value={form.direction} onChange={e => set('direction', e.target.value)} options={[{ value: 'inbound', label: 'Inbound' }, { value: 'outbound', label: 'Outbound' }, { value: 'both', label: 'Both' }]} />
+          </Field>
+          <Field label="Source network">
+            <Input value={form.source_network} onChange={e => set('source_network', e.target.value)} placeholder="any / 192.168.10.0/24" />
+          </Field>
+          <Field label="Source port">
+            <Input value={form.source_port} onChange={e => set('source_port', e.target.value)} placeholder="any" />
+          </Field>
+          <Field label="Protocol">
+            <Select value={form.protocol} onChange={e => set('protocol', e.target.value)} options={[{ value: 'tcp', label: 'TCP' }, { value: 'udp', label: 'UDP' }, { value: 'icmp', label: 'ICMP' }, { value: 'any', label: 'Any' }]} />
+          </Field>
+          <Field label="Dest network">
+            <Input value={form.destination_network} onChange={e => set('destination_network', e.target.value)} placeholder="any / 10.0.0.0/8" />
+          </Field>
+          <Field label="Dest port">
+            <Input value={form.destination_port} onChange={e => set('destination_port', e.target.value)} placeholder="443, 80" />
+          </Field>
+          <Field label="Category">
+            <Select value={form.category} onChange={e => set('category', e.target.value)} options={CATEGORIES.filter(c => c !== 'all').map(c => ({ value: c, label: categoryLabel(c) }))} />
+          </Field>
+          <Field label="Description" span>
+            <Textarea value={form.description} onChange={e => set('description', e.target.value)} rows={2} />
+          </Field>
+          <label className="k-span-all" style={{ display: 'flex', alignItems: 'center', gap: 8, color: 'var(--text-primary)', fontSize: 14, cursor: 'pointer', minHeight: 44 }}>
+            <input type="checkbox" checked={form.logging} onChange={e => set('logging', e.target.checked)} />
+            Enable logging
+          </label>
+        </FormGrid>
+      </FormModal>
 
-                {/* Rule Number */}
-                <div style={{ color: DIM, fontSize: 12, fontFamily: 'monospace', fontWeight: 700, width: 40, textAlign: 'center' }}>
-                  #{rule.rule_number}
-                </div>
-
-                {/* Action Badge */}
-                <span style={{
-                  fontSize: 12, padding: '3px 10px', borderRadius: 10, fontWeight: 700,
-                  background: as.bg, color: as.text, textTransform: 'capitalize', width: 60, textAlign: 'center',
-                }}>{rule.action}</span>
-
-                {/* Name */}
-                <div style={{ flex: 1, minWidth: 0 }}>
-                  <div style={{ color: TEXT, fontSize: 13, fontWeight: 600 }}>{rule.name}</div>
-                  <div style={{ color: DIM, fontSize: 12, marginTop: 2 }}>
-                    {rule.source_network}:{rule.source_port || '*'} → {rule.destination_network}:{rule.destination_port || '*'} ({rule.protocol.toUpperCase()})
-                  </div>
-                </div>
-
-                {/* Category */}
-                <span style={{
-                  fontSize: 12, padding: '2px 8px', borderRadius: 10, background: 'rgba(255,255,255,0.06)',
-                  color: DIM, fontWeight: 600,
-                }}>{categoryLabel(rule.category)}</span>
-
-                {/* Logging */}
-                {rule.logging && <span style={{ fontSize: 12, color: DIM }}>Log</span>}
-
-                {/* Enabled Toggle */}
-                <button
-                  onClick={() => toggleEnabled(rule)}
-                  style={{
-                    width: 40, height: 22, borderRadius: 11, border: 'none', cursor: 'pointer',
-                    background: rule.enabled ? GREEN : 'rgba(255,255,255,0.18)', position: 'relative', transition: 'background .2s',
-                  }}
-                >
-                  <div style={{
-                    width: 16, height: 16, borderRadius: '50%', background: 'var(--text-primary)',
-                    position: 'absolute', top: 3, left: rule.enabled ? 21 : 3, transition: 'left .2s',
-                  }} />
-                </button>
-              </div>
-            );
-          })
-        )}
-      </SectionCard>
-    <UnsavedGuardModal guard={guard} />
-    </PremiumSurface>
+      <UnsavedGuardModal guard={guard} />
+      <Toast message={toast?.message ?? null} tone={toast?.tone} />
+    </PageShell>
   );
 }
