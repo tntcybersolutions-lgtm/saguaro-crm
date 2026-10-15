@@ -20,14 +20,13 @@ import React, { useState, useEffect, useCallback, useRef } from 'react';
 import { useProjectContext } from '@/lib/hooks/useProjectContext';
 import { useParams } from 'next/navigation';
 import SaguaroDatePicker from '../../../../../components/SaguaroDatePicker';
-import { Clipboard, Plus, X, Warning, ClipboardText, Trash } from '@phosphor-icons/react';
+import { Clipboard, Plus, X, Warning, ClipboardText, Trash, PaperPlaneTilt, SealCheck, HourglassMedium, WarningOctagon, CurrencyDollar } from '@phosphor-icons/react';
 import { confirmDialog } from '@/lib/ui/async-dialog';
 import {
-  PageShell, Card, StatRow, Badge, Button, Toolbar, DataTable, EmptyState,
+  PageShell, Card, StatRow, Badge, Button, Toolbar, DataTable, EmptyState, Callout,
   FormModal, Field, Input, Select, FormGrid, DetailList, Toast, useToast,
   type Column, type BadgeTone, type StatItem, type Action,
 } from '@/components/ui/kit';
-import { FlowSteps, InsightRow, AutoChip } from '@/components/ui/premium';
 import { useUnsavedGuard, useComposerDirty } from '@/lib/useUnsavedGuard';
 import UnsavedGuardModal from '@/components/UnsavedGuardModal';
 import Suggest from '@/components/ui/Suggest';
@@ -102,10 +101,6 @@ const CSS = `
 .peActions { display: flex; flex-direction: column; gap: 8px; }
 .peActions .k-btn { width: 100%; justify-content: flex-start; }
 .peRail { position: sticky; top: 16px; }
-.peLadder { border: 1px solid var(--border-default); border-radius: var(--radius-sm); padding: 12px 14px; background: var(--bg-surface-2); margin-bottom: 16px; }
-.peWatch { display: flex; gap: 10px; align-items: flex-start; font-size: var(--fs-sm); color: var(--text-primary); line-height: 1.55; padding: 10px 14px; border-radius: var(--radius-sm); border: 1px solid rgba(251,191,36,.35); background: rgba(251,191,36,.08); }
-.peWatch > svg { color: var(--status-under-contract); flex-shrink: 0; margin-top: 2px; }
-.peWatch b { color: var(--status-under-contract); }
 .peCorr { margin-top: 16px; }
 .peDateInput { width: 100%; }
 @media (max-width: 640px) {
@@ -301,27 +296,27 @@ export default function PermitsPage() {
   // ── Stat tiles: the AHJ lifecycle + the expiry watch — each filters the register ──
   const stats: StatItem[] = loading
     ? [
-        { label: 'Applied', value: '—', sub: 'Loading…' },
-        { label: 'Issued', value: '—', sub: 'Loading…' },
-        { label: 'Expiring ≤ 30 Days', value: '—', sub: 'Loading…' },
-        { label: 'Expired', value: '—', sub: 'Loading…' },
-        { label: 'Fees to Date', value: '—', sub: 'Loading…' },
+        { label: 'Applied', value: '—', sub: 'Loading…', icon: <PaperPlaneTilt size={15} /> },
+        { label: 'Issued', value: '—', sub: 'Loading…', icon: <SealCheck size={15} /> },
+        { label: 'Expiring ≤ 30 Days', value: '—', sub: 'Loading…', icon: <HourglassMedium size={15} /> },
+        { label: 'Expired', value: '—', sub: 'Loading…', icon: <WarningOctagon size={15} /> },
+        { label: 'Fees to Date', value: '—', sub: 'Loading…', icon: <CurrencyDollar size={15} /> },
       ]
     : [
-        { label: 'Applied', value: applied, tone: applied > 0 ? 'warn' : 'default', sub: permitStatusFilter === 'applied' ? 'Filtered — click to clear' : 'Awaiting the AHJ', onClick: () => toggleStatus('applied') },
-        { label: 'Issued', value: issued, tone: issued > 0 ? 'good' : 'default', sub: permitStatusFilter === 'issued' ? 'Filtered — click to clear' : inInspections > 0 ? `+${inInspections} in inspections` : 'Work may proceed', onClick: () => toggleStatus('issued') },
-        { label: 'Expiring ≤ 30 Days', value: expiringSoon.length, tone: expiringSoon.length > 0 ? 'warn' : 'default', sub: permitStatusFilter === 'expiring' ? 'Filtered — click to clear' : expiringSoon.length > 0 ? `Renew ${expiringSoon[0].permit_number} first` : 'Nothing lapsing soon', onClick: () => toggleStatus('expiring') },
-        { label: 'Expired', value: expired, tone: expired > 0 ? 'bad' : 'default', sub: permitStatusFilter === 'expired' ? 'Filtered — click to clear' : expired > 0 ? 'Work at risk — renew now' : 'None lapsed', onClick: () => toggleStatus('expired') },
-        { label: 'Fees to Date', value: fmtUsd(totalFees), sub: `Across ${permits.length} permit${permits.length === 1 ? '' : 's'}${closed > 0 ? ` · ${closed} closed` : ''}` },
+        { label: 'Applied', value: applied, tone: applied > 0 ? 'warn' : 'default', sub: 'Awaiting the AHJ', icon: <PaperPlaneTilt size={15} />, onClick: () => toggleStatus('applied'), active: permitStatusFilter === 'applied' },
+        { label: 'Issued', value: issued, tone: issued > 0 ? 'good' : 'default', sub: inInspections > 0 ? `+${inInspections} in inspections` : 'Work may proceed', icon: <SealCheck size={15} />, onClick: () => toggleStatus('issued'), active: permitStatusFilter === 'issued' },
+        { label: 'Expiring ≤ 30 Days', value: expiringSoon.length, tone: expiringSoon.length > 0 ? 'warn' : 'default', sub: expiringSoon.length > 0 ? `Renew ${expiringSoon[0].permit_number} first` : 'Nothing lapsing soon', icon: <HourglassMedium size={15} />, onClick: () => toggleStatus('expiring'), active: permitStatusFilter === 'expiring' },
+        { label: 'Expired', value: expired, tone: expired > 0 ? 'bad' : 'default', sub: expired > 0 ? 'Work at risk — renew now' : 'None lapsed', icon: <WarningOctagon size={15} />, onClick: () => toggleStatus('expired'), active: permitStatusFilter === 'expired' },
+        { label: 'Fees to Date', value: fmtUsd(totalFees), sub: `Across ${permits.length} permit${permits.length === 1 ? '' : 's'}${closed > 0 ? ` · ${closed} closed` : ''}`, icon: <CurrencyDollar size={15} /> },
       ];
 
   // ── Register columns ──
   const isSel = (p: Permit) => p.id === selectedId;
-  const numCol: Column<Permit> = { key: 'permit_number', header: 'Permit #', accessor: p => p.permit_number || '', width: 150, render: p => <span className="peNum" data-sel={isSel(p) ? 'true' : undefined}>{p.permit_number || '—'}</span> };
+  const numCol: Column<Permit> = { key: 'permit_number', header: 'Permit #', primary: true, groupable: false, accessor: p => p.permit_number || '', width: 150, render: p => <span className="peNum" data-sel={isSel(p) ? 'true' : undefined}>{p.permit_number || '—'}</span> };
   const typeCol: Column<Permit> = { key: 'permit_type', header: 'Type', accessor: p => p.permit_type || '', render: p => <span style={{ color: 'var(--text-primary)' }}>{p.permit_type}</span> };
   const agencyCol: Column<Permit> = { key: 'issuing_authority', phone: 'hide', header: 'Agency', accessor: p => (p.issuing_authority || '').toLowerCase(), render: p => p.issuing_authority || <span className="peMuted">—</span> };
   const statusCol: Column<Permit> = { key: 'status', phone: 'show', header: 'Status', accessor: p => STATUS_RANK[effStatus(p)] ?? 9, render: p => { const b = statusBadge(effStatus(p)); return <span className="peBadges"><Badge tone={b.tone}>{b.label}</Badge>{isExpiringSoon(p) && <Badge tone="under_contract">Expiring</Badge>}</span>; } };
-  const feeCol: Column<Permit> = { key: 'fee', phone: 'show', header: 'Fee', accessor: p => Number(p.fee) || 0, align: 'right', render: p => <span className="peMoney">{fmtUsd(Number(p.fee) || 0)}</span> };
+  const feeCol: Column<Permit> = { key: 'fee', phone: 'show', header: 'Fee', accessor: p => Number(p.fee) || 0, align: 'right', total: 'sum', format: fmtUsd, render: p => <span className="peMoney">{fmtUsd(Number(p.fee) || 0)}</span> };
   const issuedCol: Column<Permit> = { key: 'issued_date', phone: 'hide', header: 'Issued', accessor: p => p.issued_date || '', render: p => <span className="peMuted">{fmtDate(p.issued_date)}</span> };
   const expiryCol: Column<Permit> = { key: 'expiry_date', phone: 'show', header: 'Expiry', accessor: p => p.expiry_date || '', render: p => {
     const st = effStatus(p); const d = daysToExpiry(p); const soon = isExpiringSoon(p);
@@ -345,11 +340,11 @@ export default function PermitsPage() {
               {isExpiringSoon(selected) && <Badge tone="under_contract">Expiring in {d}d</Badge>}
             </div>
             <div className="peNext">
-              {st === 'applied' && 'Submitted to the AHJ — waiting on issuance.'}
-              {st === 'issued' && 'Issued — work may start. Inspections on this permit live in the Inspections module.'}
+              {st === 'applied' && 'Waiting on the AHJ.'}
+              {st === 'issued' && 'Work may start.'}
               {st === 'inspections' && 'AHJ sign-offs in progress.'}
               {st === 'closed' && 'Final approval on record.'}
-              {st === 'expired' && 'Lapsed — call the issuing agency before work has to stop.'}
+              {st === 'expired' && 'Lapsed — call the agency.'}
             </div>
           </div>
           <div className="peSection">
@@ -381,16 +376,16 @@ export default function PermitsPage() {
     listBody = (
       <EmptyState
         icon={<Clipboard size={22} />}
-        title="Start the permit register"
-        text={city
-          ? `This project sits in ${city} — most jobs need a Building permit plus separate trade permits (Electrical, Plumbing, Mechanical) before mobilization. The register tracks each one from application through inspections to closeout, and warns 30 days before anything expires.`
-          : 'Most jobs need a Building permit plus separate trade permits before mobilization. The register tracks each one from application through inspections to closeout, and warns 30 days before anything expires.'}
+        title="No permits yet"
+        text={city ? `Add the ${city} building and trade permits for this job.` : 'Add the building and trade permits for this job.'}
         action={<Button icon={<Plus size={15} weight="bold" />} onClick={openCreate}>Add First Permit</Button>}
       />
     );
   } else {
     listBody = (
       <DataTable
+        tableId="project-permits"
+        exportName="permits"
         columns={columns}
         rows={filteredPermits}
         rowKey={p => p.id}
@@ -413,20 +408,19 @@ export default function PermitsPage() {
           { label: 'Permits' },
         ]}
         title="Permits & Approvals"
-        subtitle={openCount > 0 ? `${openCount} open permit${openCount === 1 ? '' : 's'}${expiringSoon.length > 0 ? ` — ${expiringSoon.length} expiring within 30 days` : ''}${city ? ` · ${city} jurisdiction` : ''}.` : `Building permits and regulatory approvals${city ? ` — ${city} jurisdiction` : ''}.`}
+        subtitle={`${openCount} open${city ? ` · ${city} jurisdiction` : ''}`}
         actions={<Button variant="primary" icon={<Plus size={15} weight="bold" />} onClick={openCreate}>Add Permit</Button>}
       >
         {!loadError && <StatRow items={stats} />}
 
         {expiringSoon.length > 0 && (
-          <div className="peWatch" role="status">
-            <Warning size={17} weight="fill" />
-            <div>
-              <b>{expiringSoon.length} permit{expiringSoon.length === 1 ? '' : 's'} expiring within 30 days:</b>{' '}
-              {expiringSoon.map((p, i) => { const d = daysToExpiry(p); return <span key={p.id}>{i > 0 ? ' · ' : ''}<b style={{ color: 'var(--text-primary)' }}>{p.permit_number}</b> ({p.permit_type}) in {d} day{d === 1 ? '' : 's'}</span>; })}
-              <span className="peMuted"> — call the issuing agency before work has to stop.</span>
-            </div>
-          </div>
+          <Callout
+            tone="warning"
+            icon={<Warning size={17} weight="fill" />}
+            title={`${expiringSoon.length} permit${expiringSoon.length === 1 ? '' : 's'} expiring within 30 days`}
+            text={expiringSoon.map((p) => { const d = daysToExpiry(p); return `${p.permit_number} (${p.permit_type}) in ${d} day${d === 1 ? '' : 's'}`; }).join(' · ')}
+            actions={permitStatusFilter !== 'expiring' ? <Button size="sm" onClick={() => setPermitStatusFilter('expiring')}>Show them</Button> : undefined}
+          />
         )}
 
         {!loading && !loadError && permits.length > 0 && (
@@ -463,52 +457,35 @@ export default function PermitsPage() {
         open={showForm}
         onClose={closeComposer}
         title="Add Permit"
-        subtitle={city ? `Filing with the ${city} AHJ — prefilled from the project record.` : 'The permit enters the pipeline as Applied.'}
+        subtitle={addr ? `${addr.split(',')[0]}${city ? ` · ${city}` : ''}` : undefined}
         onSubmit={async () => { await handleSave(); }}
         submitLabel="Save Permit"
         busy={saving}
         error={errorMsg || null}
       >
-        {ctx && (
-          <div className="peLadder">
-            <InsightRow label="Site" value={addr ? addr.split(',')[0] : '—'} />
-            {city ? <InsightRow label="Jurisdiction" value={city} /> : null}
-            <InsightRow label="Owner" value={ctx.defaults?.ownerName || '—'} />
-            <InsightRow label="Open Permits" value={String(openCount)} />
-            <InsightRow label="Expiring ≤ 30 Days" value={String(expiringSoon.length)} strong={expiringSoon.length > 0} />
-          </div>
-        )}
         <FormGrid cols={2}>
-          <Field label="Permit Type" hint="Most jobs carry Building plus separate trade permits.">
+          <Field label="Permit Type">
             <Select value={form.permit_type} onChange={e => setForm(p => ({ ...p, permit_type: e.target.value }))} options={TYPES} />
           </Field>
-          <Field label="Permit Number" required hint="Exactly as stamped by the AHJ — inspectors pull it up by this number.">
+          <Field label="Permit Number" required hint="As stamped by the AHJ.">
             <Input value={form.number} onChange={e => { setForm(p => ({ ...p, number: e.target.value })); if (errorMsg) setErrorMsg(''); }} placeholder="e.g. BLD-2026-01423" autoFocus />
           </Field>
-          <Field label="Issuing Agency (AHJ)" required hint={<>{autoF.authority && <AutoChip />} {autoF.authority ? 'Guessed from the project address — correct it if another agency has jurisdiction.' : city ? `Project sits in ${city} — its building department is the usual AHJ.` : 'The authority having jurisdiction over the site.'}</>}>
+          <Field label="Issuing Agency (AHJ)" required hint={autoF.authority ? 'From the project address.' : undefined}>
             <Suggest className="k-input" value={form.authority} onChange={e => { const v = e.target.value; setAutoF(a => ({ ...a, authority: false })); setForm(p => ({ ...p, authority: v })); if (errorMsg) setErrorMsg(''); }} placeholder="e.g. City Building Department" options={authorityOptions} />
           </Field>
-          <Field label="Fee ($)" hint="Plan-check and permit fees — rolls into Fees to Date.">
+          <Field label="Fee ($)">
             <Input type="number" step="0.01" value={form.fee} onChange={e => setForm(p => ({ ...p, fee: Number(e.target.value) }))} />
           </Field>
-          <Field label="Applied Date" hint={<>{autoF.applied && <AutoChip />} Defaults to today — the permit enters the pipeline as Applied.</>}>
+          <Field label="Applied Date" hint={autoF.applied ? 'Today.' : undefined}>
             <div className="peDateInput"><SaguaroDatePicker value={form.applied_date} onChange={v => { setAutoF(a => ({ ...a, applied: false })); setForm(p => ({ ...p, applied_date: v })); }} style={DATE_INPUT_STYLE} /></div>
           </Field>
-          <Field label="Issue Date" hint="Leave blank until the AHJ approves — work starts at issuance.">
+          <Field label="Issue Date" hint="Blank until the AHJ approves.">
             <div className="peDateInput"><SaguaroDatePicker value={form.issued_date} onChange={v => setForm(p => ({ ...p, issued_date: v }))} style={DATE_INPUT_STYLE} /></div>
           </Field>
-          <Field label="Expiry Date" span hint="Many AHJs lapse permits 180 days after the last passed inspection — rows flag amber 30 days out.">
+          <Field label="Expiry Date" span hint="Flags amber 30 days out.">
             <div className="peDateInput"><SaguaroDatePicker value={form.expiry_date} onChange={v => setForm(p => ({ ...p, expiry_date: v }))} style={DATE_INPUT_STYLE} /></div>
           </Field>
         </FormGrid>
-        <div style={{ marginTop: 16 }}>
-          <FlowSteps title="After You Save" steps={[
-            { title: 'Permit Enters the Pipeline', desc: 'Starts as Applied and moves through issuance, inspections, and closeout.' },
-            { title: 'Expiry Is Watched', desc: 'The row flags amber 30 days before expiry and red once lapsed.' },
-            { title: 'Inspections Log Against It', desc: 'AHJ inspections on this permit live in the Inspections module.' },
-            { title: 'Fees Roll Up', desc: 'Permit fees total into the register and the project cost picture.' },
-          ]} />
-        </div>
       </FormModal>
 
       <div style={{ position: 'relative', zIndex: 10001 }}><UnsavedGuardModal guard={guard} /></div>
