@@ -26,6 +26,51 @@ const SERVICE: string = _SERVICE;
 
 let _serviceClient: SupabaseClient<Database> | null = null;
 
+/**
+ * Who is making this write — for the change history.
+ *
+ * The server writes with the service role, so the database cannot tell which
+ * person saved an RFI or a budget line. Every write (any method but GET/HEAD)
+ * carries an `x-actor-id` header naming the signed-in user of the request; the
+ * database's history trigger (record_item_history) reads it. The id comes only
+ * from a session getUser() has already VERIFIED for this request (the cache
+ * below), never from an unchecked token, so it cannot be forged by a caller.
+ * Outside a request (scripts, tests, cron) there is no header and the history
+ * row records no person.
+ */
+async function withActor(init: { method?: string; headers?: HeadersInit } & Record<string, unknown>) {
+  const method = String(init.method || 'GET').toUpperCase();
+  if (method === 'GET' || method === 'HEAD') return init;
+  try {
+    const { headers } = await import('next/headers');
+    const h = headers();
+    const raw = h.get('authorization')?.replace('Bearer ', '').trim();
+    const cookie = h.get('cookie') || '';
+    const fromCookie = (name: string) => {
+      const m = cookie.match(new RegExp(`(?:^|;\\s*)${name}=([^;]+)`));
+      return m ? decodeURIComponent(m[1]) : undefined;
+    };
+    const candidates = [
+      raw && isJWT(raw) ? raw : undefined,
+      fromCookie('sb-access-token'),
+      fromCookie('sb-jddfvugsaosvgllbkzch-auth-token'),
+      fromCookie('sb-refresh-token'),
+    ].filter(Boolean) as string[];
+    for (const token of candidates) {
+      const key = await tokenKey(token);
+      const hit = userCache.get(key) || actorCache.get(key);
+      if (hit && hit.until > Date.now()) {
+        const merged = new Headers(init.headers);
+        merged.set('x-actor-id', hit.user.id);
+        return { ...init, headers: merged };
+      }
+    }
+  } catch {
+    /* not inside a request — no actor */
+  }
+  return init;
+}
+
 /** Service-role client — bypasses RLS. Server only. Typed against the live DB schema. */
 export function createServerClient(): SupabaseClient<Database> {
   if (_serviceClient) return _serviceClient;
@@ -38,7 +83,7 @@ export function createServerClient(): SupabaseClient<Database> {
     // withDbRetry: a 503 that says the query never started (schema-cache reload
     // after a migration, a pool timeout) is retried for ~3.5 s instead of
     // reaching the user as a 500.
-    global: { fetch: withDbRetry((input: any, init?: any) => fetch(input, { ...(init || {}), cache: 'no-store' })) }, // eslint-disable-line @typescript-eslint/no-explicit-any
+    global: { fetch: withDbRetry(async (input: any, init?: any) => fetch(input, await withActor({ ...(init || {}), cache: 'no-store' }))) }, // eslint-disable-line @typescript-eslint/no-explicit-any
   });
   return _serviceClient;
 }
@@ -81,6 +126,8 @@ type CachedUser = { id: string; tenantId: string; email: string };
 const USER_CACHE_TTL_MS = 60_000;
 const USER_CACHE_MAX = 1000;
 const userCache = new Map<string, { user: CachedUser; until: number }>();
+/** Users signed in through a refresh this instance verified, keyed by that refresh token (history actor only). */
+const actorCache = new Map<string, { user: CachedUser; until: number }>();
 
 async function tokenKey(token: string): Promise<string> {
   const bytes = new TextEncoder().encode(token);
@@ -192,7 +239,10 @@ export async function getUser(
             maxAge: 60 * 60 * 24 * 365,
           });
         }
-        return { id: data.user.id, tenantId: await getTenant(data.user.id), email: data.user.email || '' };
+        const refreshed = { id: data.user.id, tenantId: await getTenant(data.user.id), email: data.user.email || '' };
+        if (actorCache.size > USER_CACHE_MAX) actorCache.clear();
+        actorCache.set(await tokenKey(refreshToken), { user: refreshed, until: Date.now() + 10 * 60_000 });
+        return refreshed;
       }
     }
 
