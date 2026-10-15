@@ -1,23 +1,27 @@
 'use client';
-
-import { useState, useEffect, useCallback } from 'react';
-import { useProjectContext } from '@/lib/hooks/useProjectContext';
+/**
+ * Network — the job's low-voltage / IT network at a glance: device, VLAN,
+ * cabling and alert counts, a readiness checklist computed from the live
+ * inventory, the site profile, and every device on the job.
+ *
+ * Reads  GET  /api/network/projects?projectId=     (the job's network module)
+ *        GET  /api/network/devices|vlans|cables|alerts?networkProjectId=
+ * Writes POST /api/network/projects                 (first-time setup)
+ */
+import React, { useState, useEffect, useCallback } from 'react';
 import { useParams, useRouter } from 'next/navigation';
-import Link from 'next/link';
-import { Globe, ArrowsLeftRight, Shield, WifiHigh, Printer, VideoCamera, HardDrives, Laptop, Phone, Plug, CellSignalFull, BatteryFull, Package, Robot, Devices, Shuffle, Gear, ChartBar, Plus, CheckCircle, Warning, Circle, WarningCircle, Info, Lightning, SquaresFour } from '@phosphor-icons/react';
-import { PremiumSurface, ModuleHero, SectionCard, StatCard, PremiumEmpty, IconChip, StatStrip, FlowSteps, InsightRow, goldButtonStyle, railStyle } from '@/components/ui/premium';
-import { ModuleSkeleton } from '@/components/ui/PageSkeleton';
-
-const GOLD = 'var(--brand-primary)';
-const GREEN = 'var(--success)';
-const BLUE = 'var(--brand-primary)';
-const RED = 'var(--danger)';
-const TEXT = 'var(--text-primary)';
-// Premium kit surface tokens (match components/ui/premium.tsx) ------------------
-const WHITE = 'var(--text-primary)';
-const MUTED = 'rgba(255,255,255,0.62)';
-const KIT_BORDER = 'rgba(255,255,255,0.08)';
-const KIT_SURFACE = 'linear-gradient(160deg, rgba(255,255,255,0.045), rgba(255,255,255,0.012))';
+import { useProjectContext } from '@/lib/hooks/useProjectContext';
+import {
+  PageShell, StatRow, Badge, Button, Card, DataTable, EmptyState, Menu, Field, Input, Select, FormGrid,
+  DetailList, ItemList, ItemRow, Callout, Toast, useToast,
+  type Column, type BadgeTone, type StatItem,
+} from '@/components/ui/kit';
+import {
+  Globe, ArrowsLeftRight, Shield, WifiHigh, Printer, VideoCamera, HardDrives, Laptop, Phone, Plug,
+  CellSignalFull, BatteryFull, Package, Robot, Devices, Shuffle, ChartBar, Plus, CheckCircle, Warning,
+  Circle, WarningCircle, Info, ArrowSquareOut, type Icon as PhosphorIcon,
+} from '@phosphor-icons/react';
+import NetworkTabs, { networkCrumbs, networkHref } from './_components/NetworkTabs';
 
 interface NetworkProject {
   id: string;
@@ -66,26 +70,38 @@ interface Alert {
   resolved: boolean;
 }
 
-const DEVICE_TYPE_ICONS: Record<string, React.ComponentType<any>> = {
+const DEVICE_TYPE_ICONS: Record<string, PhosphorIcon> = {
   router: Globe, switch: ArrowsLeftRight, firewall: Shield, access_point: WifiHigh,
   printer: Printer, camera: VideoCamera, server: HardDrives, workstation: Laptop,
   voip_phone: Phone, iot: Plug, modem: CellSignalFull, ups: BatteryFull,
 };
 
-const STATUS_COLORS: Record<string, string> = {
-  online: GREEN, offline: RED, planned: 'var(--status-closed)', warning: 'var(--warning)',
-};
-
-const NAV_ITEMS = [
-  { label: 'Devices', href: 'devices', icon: Devices, desc: 'Device inventory' },
-  { label: 'VLANs', href: 'vlans', icon: Shuffle, desc: 'VLAN management' },
-  { label: 'Cables', href: 'cables', icon: Plug, desc: 'Cable schedule' },
-  { label: 'Firewall', href: 'firewall', icon: Shield, desc: 'Firewall rules' },
-  { label: 'WiFi', href: 'wifi', icon: WifiHigh, desc: 'WiFi & Signal Studio' },
-  { label: 'Config', href: 'config', icon: Gear, desc: 'Config generator' },
-  { label: 'Wizard', href: 'wizard', icon: Robot, desc: 'AI network wizard' },
-  { label: 'Reports', href: 'reports', icon: ChartBar, desc: 'Reports & exports' },
+const SITE_TYPES = [
+  { value: 'commercial_office', label: 'Commercial Office' },
+  { value: 'retail', label: 'Retail' },
+  { value: 'warehouse', label: 'Warehouse' },
+  { value: 'medical', label: 'Medical / Healthcare' },
+  { value: 'education', label: 'Education' },
+  { value: 'hospitality', label: 'Hospitality' },
+  { value: 'industrial', label: 'Industrial' },
+  { value: 'residential_mdu', label: 'Residential MDU' },
+  { value: 'mixed_use', label: 'Mixed Use' },
 ];
+
+const cap = (s: string) => { const t = (s || '').replace(/_/g, ' '); return t.charAt(0).toUpperCase() + t.slice(1); };
+
+function deviceTone(s: string): BadgeTone {
+  if (s === 'online') return 'ongoing';
+  if (s === 'offline') return 'overdue';
+  if (s === 'warning' || s === 'maintenance') return 'lead';
+  if (s === 'planned') return 'closed';
+  return 'neutral';
+}
+
+function TypeIcon({ type }: { type: string }) {
+  const I = DEVICE_TYPE_ICONS[type] || Package;
+  return <I size={15} />;
+}
 
 export default function NetworkDashboard() {
   const { projectId } = useParams() as { projectId: string };
@@ -96,14 +112,17 @@ export default function NetworkDashboard() {
   const [cables, setCables] = useState<CableRun[]>([]);
   const [alerts, setAlerts] = useState<Alert[]>([]);
   const [loading, setLoading] = useState(true);
+  const [loadError, setLoadError] = useState('');
   const [showSetup, setShowSetup] = useState(false);
   const [setupForm, setSetupForm] = useState({ site_type: 'commercial_office', total_sq_ft: 5000, floor_count: 1 });
   const [creating, setCreating] = useState(false);
-  // Project snapshot — names the job in the hero and grounds the setup screen.
+  const [setupError, setSetupError] = useState('');
+  const { toast, show } = useToast();
   const { ctx } = useProjectContext(projectId);
 
   const fetchAll = useCallback(async () => {
     setLoading(true);
+    setLoadError('');
     try {
       const npRes = await fetch(`/api/network/projects?projectId=${projectId}`);
       const npData = await npRes.json();
@@ -128,7 +147,9 @@ export default function NetworkDashboard() {
       setVlans(vlanData.vlans || []);
       setCables(cableData.cables || []);
       setAlerts(alertData.alerts || []);
-    } catch { /* API may not exist yet */ }
+    } catch (e) {
+      setLoadError(e instanceof Error ? e.message : "Couldn't load the network");
+    }
     setLoading(false);
   }, [projectId]);
 
@@ -136,6 +157,7 @@ export default function NetworkDashboard() {
 
   const handleSetup = async () => {
     setCreating(true);
+    setSetupError('');
     try {
       const res = await fetch('/api/network/projects', {
         method: 'POST',
@@ -146,329 +168,171 @@ export default function NetworkDashboard() {
       if (data.networkProject) {
         setNetworkProject(data.networkProject);
         setShowSetup(false);
+        show('Network module set up');
+      } else {
+        setSetupError(data.error || "Couldn't set up the network module.");
       }
-    } catch { /* handle */ }
+    } catch (e) {
+      setSetupError(e instanceof Error ? e.message : "Couldn't set up the network module.");
+    }
     setCreating(false);
   };
 
-  const devicesByType = devices.reduce<Record<string, Device[]>>((acc, d) => {
-    (acc[d.device_type] = acc[d.device_type] || []).push(d);
-    return acc;
-  }, {});
-
   const testedCables = cables.filter(c => c.tested).length;
   const passedCables = cables.filter(c => c.test_result === 'pass').length;
-  const openAlerts = alerts.filter(a => !a.resolved).length;
-
-  // Premium input styling shared by the setup form fields.
-  const inputStyle: React.CSSProperties = {
-    width: '100%', padding: '10px 12px', background: 'rgba(255,255,255,0.04)',
-    color: TEXT, border: `1px solid ${KIT_BORDER}`, borderRadius: 8, fontSize: 13, outline: 'none',
-  };
-
-  if (loading) {
-    return (
-      <PremiumSurface>
-        <ModuleSkeleton kpis={4} rows={5} />
-      </PremiumSurface>
-    );
-  }
+  const openAlerts = alerts.filter(a => !a.resolved);
+  const onlineCount = devices.filter(d => d.status === 'online').length;
+  const siteType = (networkProject?.site_type || 'site').replace(/_/g, ' ');
+  const sqFt = (networkProject?.total_sq_ft || 0).toLocaleString();
+  const floors = networkProject?.floor_count || 1;
+  const crumbs = networkCrumbs(projectId, ctx?.project?.name);
 
   if (showSetup) {
     return (
-      <PremiumSurface>
-        <ModuleHero
-          eyebrow={ctx?.project?.name || 'Network Hub'}
-          eyebrowIcon={<Globe size={13} weight="fill" color="var(--text-secondary)" />}
-          title="Low-Voltage &"
-          accent="IT Network"
-          subtitle="Design, document, and certify this building's network."
-        />
-        {ctx && (
-          <div>
-            <StatStrip items={[
-              {href: `/app/projects/${projectId}/network`,  label: 'Project', value: ctx.project?.name || '—', sub: ctx.project?.projectNumber ? `#${ctx.project.projectNumber}` : (ctx.project?.status || 'active') },
-              {href: `/app/projects/${projectId}/network`,  label: 'Site Address', value: ctx.project?.address || '—', sub: 'The network documents against this site' },
-              {href: `/app/projects/${projectId}/network`,  label: 'Subs On the Job', value: String((ctx.subs || []).length), sub: 'Coordinate low-volt rough-in' },
-              {href: `/app/projects/${projectId}/network`,  label: 'Open RFIs', value: String(Number(ctx.counts?.openRfis) || 0), sub: 'Design questions in flight' },
-              {href: `/app/projects/${projectId}/network`,  label: 'Schedule Tasks', value: String(Number(ctx.counts?.scheduleTasks) || 0), sub: Number(ctx.schedule?.criticalCount) ? `${ctx.schedule.criticalCount} critical` : 'Plan cable pulls around them' },
-            ]} />
+      <PageShell crumbs={crumbs} title="Network" subtitle="Design, document and certify this building's network.">
+        <Card title="Set up the network module" subtitle={ctx?.project?.name ? `Low-voltage / IT network for ${ctx.project.name}` : undefined} icon={<Globe size={18} />}>
+          <FormGrid cols={3}>
+            <Field label="Site type" hint="Sets the wizard's VLAN plan, device density and WiFi targets.">
+              <Select value={setupForm.site_type} onChange={e => setSetupForm({ ...setupForm, site_type: e.target.value })} options={SITE_TYPES} />
+            </Field>
+            <Field label="Square footage">
+              <Input type="number" value={setupForm.total_sq_ft} onChange={e => setSetupForm({ ...setupForm, total_sq_ft: +e.target.value })} />
+            </Field>
+            <Field label="Floor count">
+              <Input type="number" value={setupForm.floor_count} onChange={e => setSetupForm({ ...setupForm, floor_count: +e.target.value })} />
+            </Field>
+          </FormGrid>
+          {setupError && <div style={{ marginTop: 12 }}><Callout tone="danger" icon={<WarningCircle size={16} />} title="Setup failed" text={setupError} /></div>}
+          <div style={{ marginTop: 16 }}>
+            <Button variant="primary" icon={<Plus size={15} weight="bold" />} onClick={handleSetup} disabled={creating}>
+              {creating ? 'Creating…' : 'Set up network module'}
+            </Button>
           </div>
-        )}
-        <div className="pmSplit" style={railStyle(360, { gap: 22, alignItems: 'start' })}>
-          <SectionCard
-            icon={<Globe size={18} weight="duotone" color="var(--text-secondary)" />}
-            title="Set Up Network Module"
-            subtitle={ctx?.project?.name ? `Configure the low voltage / IT network for ${ctx.project.name}.` : 'Configure your low voltage / IT network for this project.'}
-          >
-            <div style={{ display: 'flex', flexDirection: 'column', gap: 16 }}>
-              <div>
-                <label style={{ color: MUTED, fontSize: 12, fontWeight: 600, display: 'block', marginBottom: 4 }}>Site Type</label>
-                <select
-                  value={setupForm.site_type}
-                  onChange={e => setSetupForm({ ...setupForm, site_type: e.target.value })}
-                  style={inputStyle}
-                >
-                  <option value="commercial_office">Commercial Office</option>
-                  <option value="retail">Retail</option>
-                  <option value="warehouse">Warehouse</option>
-                  <option value="medical">Medical / Healthcare</option>
-                  <option value="education">Education</option>
-                  <option value="hospitality">Hospitality</option>
-                  <option value="industrial">Industrial</option>
-                  <option value="residential_mdu">Residential MDU</option>
-                  <option value="mixed_use">Mixed Use</option>
-                </select>
-                <div style={{ fontSize: 12, color: 'var(--c-text-2)', marginTop: 5, lineHeight: 1.45 }}>Sets wizard defaults — VLAN plan, device density, and WiFi coverage targets.</div>
-              </div>
-              <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 12 }}>
-                <div>
-                  <label style={{ color: MUTED, fontSize: 12, fontWeight: 600, display: 'block', marginBottom: 4 }}>Square Footage</label>
-                  <input
-                    type="number"
-                    value={setupForm.total_sq_ft}
-                    onChange={e => setSetupForm({ ...setupForm, total_sq_ft: +e.target.value })}
-                    style={inputStyle}
-                  />
-                  <div style={{ fontSize: 12, color: 'var(--c-text-2)', marginTop: 5, lineHeight: 1.45 }}>Drives AP counts and cable-run estimates.</div>
-                </div>
-                <div>
-                  <label style={{ color: MUTED, fontSize: 12, fontWeight: 600, display: 'block', marginBottom: 4 }}>Floor Count</label>
-                  <input
-                    type="number"
-                    value={setupForm.floor_count}
-                    onChange={e => setSetupForm({ ...setupForm, floor_count: +e.target.value })}
-                    style={inputStyle}
-                  />
-                </div>
-              </div>
-              <button
-                onClick={handleSetup}
-                disabled={creating}
-                className="pmBtn"
-                style={{ ...goldButtonStyle, width: '100%', opacity: creating ? 0.6 : 1, cursor: creating ? 'not-allowed' : 'pointer' }}
-              >
-                {creating ? 'Creating…' : 'Set Up Network Module'}
-              </button>
-            </div>
-          </SectionCard>
-          <SectionCard flat icon={<Robot size={17} weight="duotone" color="var(--text-secondary)" />} title="What You Get">
-            <FlowSteps title="" steps={[
-              { title: 'AI Network Wizard', desc: 'Describe the site — the wizard drafts the device list, VLAN plan, and IP scheme.' },
-              { title: 'Device & VLAN Inventory', desc: 'Every switch, AP, and camera tracked with IP, MAC, VLAN, and location.' },
-              { title: 'Cable Schedule & Testing', desc: 'Label every run, log certification results, and watch the pass rate climb.' },
-              { title: 'Signal Studio & Reports', desc: 'Physics-based coverage design in Signal Studio, plus client-ready closeout documentation.' },
-            ]} />
-          </SectionCard>
-        </div>
-      </PremiumSurface>
+        </Card>
+        <Toast message={toast?.message ?? null} tone={toast?.tone} />
+      </PageShell>
     );
   }
 
+  const stats: StatItem[] = [
+    { label: 'Devices', value: loading ? '—' : String(devices.length), sub: loading ? undefined : `${onlineCount} online`, icon: <Devices size={15} />, href: networkHref(projectId, 'devices') },
+    { label: 'Online', value: loading ? '—' : String(onlineCount), sub: loading ? undefined : `Of ${devices.length} total`, tone: onlineCount ? 'good' : 'default', icon: <Circle size={15} /> },
+    { label: 'VLANs', value: loading ? '—' : String(vlans.length), icon: <Shuffle size={15} />, href: networkHref(projectId, 'vlans') },
+    { label: 'Cable runs tested', value: loading ? '—' : `${testedCables}/${cables.length}`, sub: loading ? undefined : cables.length > 0 ? `${Math.round((passedCables / Math.max(testedCables, 1)) * 100)}% pass rate` : 'No runs yet', icon: <Plug size={15} />, href: networkHref(projectId, 'cables') },
+    { label: 'Open alerts', value: loading ? '—' : String(openAlerts.length), tone: openAlerts.length ? 'bad' : 'good', icon: <Warning size={15} /> },
+  ];
+
+  const readiness = [
+    { key: 'cfg', done: true, title: 'Module configured', desc: `${cap(siteType)} · ${sqFt} SF · ${floors} floor${floors > 1 ? 's' : ''}`, href: undefined as string | undefined },
+    { key: 'dev', done: devices.length > 0, title: 'Device inventory', desc: devices.length > 0 ? `${devices.length} device${devices.length === 1 ? '' : 's'} · ${onlineCount} online` : 'No devices yet', href: networkHref(projectId, 'devices') },
+    { key: 'vlan', done: vlans.length > 0, title: 'Network segmented', desc: vlans.length > 0 ? `${vlans.length} VLAN${vlans.length === 1 ? '' : 's'} defined` : 'No VLANs yet', href: networkHref(projectId, 'vlans') },
+    { key: 'cab', done: cables.length > 0 && testedCables === cables.length, title: 'Cabling tested', desc: cables.length > 0 ? `${testedCables}/${cables.length} runs tested · ${passedCables} passed` : 'No cable runs yet', href: networkHref(projectId, 'cables') },
+    { key: 'alr', done: openAlerts.length === 0, title: 'Alerts clear', desc: openAlerts.length > 0 ? `${openAlerts.length} open alert${openAlerts.length === 1 ? '' : 's'}` : 'No open alerts', href: undefined },
+  ];
+
+  const columns: Column<Device>[] = [
+    { key: 'hostname', header: 'Hostname', primary: true, phone: 'show', render: (d) => <span style={{ display: 'inline-flex', alignItems: 'center', gap: 8 }}><TypeIcon type={d.device_type} />{d.hostname}</span> },
+    { key: 'device_type', header: 'Type', accessor: (d) => cap(d.device_type), render: (d) => cap(d.device_type) },
+    { key: 'ip_address', header: 'IP address', phone: 'show', render: (d) => d.ip_address ? <span style={{ fontFamily: 'var(--font-mono, monospace)' }}>{d.ip_address}</span> : '—' },
+    { key: 'location', header: 'Location', render: (d) => d.location || '—' },
+    { key: 'status', header: 'Status', phone: 'show', render: (d) => <Badge tone={deviceTone(d.status)} dot>{cap(d.status || 'planned')}</Badge> },
+  ];
+
   return (
-    <PremiumSurface>
-      {/* Header */}
-      <ModuleHero
-        eyebrow={ctx?.project?.name || 'Network Hub'}
-        eyebrowIcon={<Globe size={13} weight="fill" color="var(--text-secondary)" />}
-        title="Network"
-        accent="Dashboard"
-        subtitle={
-          <>
-            {networkProject?.site_type?.replace(/_/g, ' ')} &middot; {networkProject?.total_sq_ft?.toLocaleString()} SF &middot; {networkProject?.floor_count} floor{(networkProject?.floor_count || 1) > 1 ? 's' : ''}
-          </>
-        }
-        actions={
-          <button
-            onClick={() => router.push(`/app/projects/${projectId}/network/wizard`)}
-            className="pmBtn"
-            style={goldButtonStyle}
-          >
-            <Robot size={16} weight="fill" color="var(--on-brand)" /> AI Network Wizard
-          </button>
-        }
-      />
-
-      {/* Stats Row */}
-      <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(190px, 1fr))', gap: 16, marginBottom: 28 }}>
-        <StatCard icon={<Devices size={19} weight="duotone" color="var(--text-secondary)" />} label="Total Devices" value={String(devices.length)} accent={BLUE} delay={0.02}  href={`/app/projects/${projectId}/network/devices`}/>
-        <StatCard icon={<Circle size={19} weight="duotone" color={GREEN} />} label="Online" value={String(devices.filter(d => d.status === 'online').length)} accent={GREEN} sub={`Of ${devices.length} total`} delay={0.06}  href={`/app/projects/${projectId}/network`}/>
-        <StatCard icon={<Shuffle size={19} weight="duotone" color="var(--warning)" />} label="VLANs" value={String(vlans.length)} accent="var(--warning)" delay={0.10}  href={`/app/projects/${projectId}/network/vlans`}/>
-        <StatCard icon={<Plug size={19} weight="duotone" color="var(--text-secondary)" />} label="Cable Runs" value={`${testedCables}/${cables.length}`} accent={GOLD} sub="Tested" delay={0.14}  href={`/app/projects/${projectId}/network/cables`}/>
-        <StatCard icon={<CheckCircle size={19} weight="duotone" color={GREEN} />} label="Pass Rate" value={cables.length > 0 ? `${Math.round((passedCables / Math.max(testedCables, 1)) * 100)}%` : 'N/A'} accent={GREEN} delay={0.18}  href={`/app/projects/${projectId}/network`}/>
-        <StatCard icon={<Warning size={19} weight="duotone" color={openAlerts > 0 ? RED : GREEN} />} label="Open Alerts" value={String(openAlerts)} accent={openAlerts > 0 ? RED : GREEN} delay={0.22}  href={`/app/projects/${projectId}/network`}/>
-      </div>
-
-      {/* Quick Actions + modules, with a live readiness rail */}
-      <div className="pmSplit" style={railStyle(340, { gap: 22, alignItems: 'start', marginBottom: 24 })}>
-      <div style={{ minWidth: 0 }}>
-      {/* Quick Actions */}
-      <SectionCard
-        icon={<Lightning size={17} weight="duotone" color="var(--text-secondary)" />}
-        title="Quick Actions"
-        style={{ marginBottom: 24 }}
-      >
-        <div style={{ display: 'flex', flexWrap: 'wrap', gap: 8 }}>
-          {[
-            { label: 'Add Device', href: `devices`, icon: Plus },
-            { label: 'Add VLAN', href: `vlans`, icon: Shuffle },
-            { label: 'Add Cable Run', href: `cables`, icon: Plug },
-            /* "Scan Network" (#scan) and "Ask Sage" (#sage) were removed: both
-               rendered as <Link href="#"> with no target on the page, so they
-               were dead clicks. A button that does nothing costs more trust
-               than the feature would have earned. The AI Network Wizard above
-               is the working path to the same job. */
-            { label: 'Generate Report', href: `reports`, icon: ChartBar },
-          ].map(action => (
-            <Link
-              key={action.label}
-              href={action.href.startsWith('#') ? '#' : `/app/projects/${projectId}/network/${action.href}`}
-              className="pmBtn"
-              style={{
-                padding: '9px 16px', background: 'rgba(255,255,255,0.04)', border: `1px solid ${KIT_BORDER}`,
-                borderRadius: 10, color: 'var(--c-text-2)', fontSize: 13, fontWeight: 700, textDecoration: 'none',
-                display: 'inline-flex', alignItems: 'center', gap: 7,
-              }}
-            >
-              <action.icon size={16} weight="bold" color="var(--text-secondary)" /> {action.label}
-            </Link>
-          ))}
-        </div>
-      </SectionCard>
-
-      {/* Navigation Grid */}
-      <SectionCard
-        icon={<SquaresFour size={17} weight="duotone" color="var(--text-secondary)" />}
-        title="Network Modules"
-        style={{ marginBottom: 32 }}
-      >
-        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(200px, 1fr))', gap: 14 }}>
-          {NAV_ITEMS.map(item => (
-            <Link
-              key={item.href}
-              href={`/app/projects/${projectId}/network/${item.href}`}
-              className="pmHover"
-              style={{
-                display: 'block', textDecoration: 'none', height: '100%',
-                background: KIT_SURFACE, border: `1px solid ${KIT_BORDER}`, borderRadius: 16,
-                padding: '18px 20px',
-                boxShadow: '0 10px 30px -20px rgba(0,0,0,0.6), inset 0 1px 0 rgba(255,255,255,0.04)',
-              }}
-            >
-              <IconChip size={40}><item.icon size={20} weight="duotone" color="var(--text-secondary)" /></IconChip>
-              <div style={{ color: WHITE, fontSize: 15, fontWeight: 800, marginTop: 12 }}>{item.label}</div>
-              <div style={{ color: MUTED, fontSize: 13, marginTop: 3 }}>{item.desc}</div>
-            </Link>
-          ))}
-        </div>
-      </SectionCard>
-      </div>
-
-      {/* Readiness rail — derived from the live inventory */}
-      <div style={{ display: 'flex', flexDirection: 'column', gap: 16 }}>
-        <SectionCard flat icon={<CheckCircle size={17} weight="duotone" color="var(--text-secondary)" />} title="Network Readiness">
-          <FlowSteps title="" steps={[
-            { title: 'Module Configured', done: true, desc: `${(networkProject?.site_type || 'site').replace(/_/g, ' ')} · ${(networkProject?.total_sq_ft || 0).toLocaleString()} SF · ${networkProject?.floor_count || 1} floor${(networkProject?.floor_count || 1) > 1 ? 's' : ''}.` },
-            { title: 'Device Inventory', done: devices.length > 0, desc: devices.length > 0 ? `${devices.length} device${devices.length === 1 ? '' : 's'} — ${devices.filter(d => d.status === 'online').length} online.` : 'Add devices by hand, or let the AI wizard draft the design.' },
-            { title: 'Network Segmented', done: vlans.length > 0, desc: vlans.length > 0 ? `${vlans.length} VLAN${vlans.length === 1 ? '' : 's'} defined.` : 'Define VLANs to separate voice, data, cameras, and guests.' },
-            { title: 'Cabling Tested', done: cables.length > 0 && testedCables === cables.length, desc: cables.length > 0 ? `${testedCables}/${cables.length} runs tested — ${passedCables} passed.` : 'Log cable runs, then record results as you certify.' },
-            { title: 'Alerts Clear', done: openAlerts === 0, desc: openAlerts > 0 ? `${openAlerts} open alert${openAlerts === 1 ? '' : 's'} below need attention.` : 'No open alerts on this network.' },
-          ]} />
-        </SectionCard>
-        <SectionCard flat icon={<Globe size={17} weight="duotone" color="var(--text-secondary)" />} title="Site Profile">
-          <InsightRow label="Site Type" value={(networkProject?.site_type || '—').replace(/_/g, ' ')} />
-          <InsightRow label="Square Footage" value={`${(networkProject?.total_sq_ft || 0).toLocaleString()} SF`} />
-          <InsightRow label="Floors" value={String(networkProject?.floor_count || 1)} />
-          <InsightRow label="Devices per 1k SF" value={networkProject?.total_sq_ft ? (devices.length / (networkProject.total_sq_ft / 1000)).toFixed(1) : '—'} />
-          {ctx?.project?.address && <InsightRow label="Address" value={ctx.project.address} />}
-        </SectionCard>
-      </div>
-      </div>
-
-      {/* Devices by Type */}
-      <SectionCard
-        icon={<Devices size={17} weight="duotone" color="var(--text-secondary)" />}
-        title="Devices by Type"
-        style={{ marginBottom: 24 }}
-      >
-        {Object.keys(devicesByType).length === 0 ? (
-          <PremiumEmpty
-            icon={<Devices size={30} weight="duotone" color="var(--text-secondary)" />}
-            title="No devices added yet"
-            description={`This ${(networkProject?.site_type || 'site').replace(/_/g, ' ')} covers ${(networkProject?.total_sq_ft || 0).toLocaleString()} SF — add devices by hand, or let the AI wizard draft the full design in one pass.`}
-            action={<Link href={`/app/projects/${projectId}/network/devices`} className="pmBtn" style={goldButtonStyle}><Plus size={15} weight="bold" color="var(--on-brand)" /> Add Your First Device</Link>}
-            compact
+    <PageShell
+      crumbs={crumbs}
+      title="Network"
+      subtitle={networkProject ? `${cap(siteType)} · ${sqFt} SF · ${floors} floor${floors > 1 ? 's' : ''}` : 'Low-voltage and IT network for this job.'}
+      actions={
+        <>
+          <Menu
+            triggerLabel="Add"
+            triggerIcon={<Plus size={15} />}
+            actions={[
+              { label: 'Add device', icon: <Devices size={14} />, href: networkHref(projectId, 'devices') },
+              { label: 'Add VLAN', icon: <Shuffle size={14} />, href: networkHref(projectId, 'vlans') },
+              { label: 'Add cable run', icon: <Plug size={14} />, href: networkHref(projectId, 'cables') },
+              { label: 'Generate report', icon: <ChartBar size={14} />, href: networkHref(projectId, 'reports') },
+            ]}
           />
-        ) : (
-          Object.entries(devicesByType).map(([type, devs]) => (
-            <div key={type} style={{ marginBottom: 16 }}>
-              <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 8 }}>
-                <span style={{ display: 'inline-flex', alignItems: 'center' }}>{(() => { const Icon = DEVICE_TYPE_ICONS[type] || Package; return <Icon size={18} weight="duotone" color="var(--text-secondary)" />; })()}</span>
-                <span style={{ color: TEXT, fontSize: 13, fontWeight: 700, textTransform: 'capitalize' }}>{type.replace(/_/g, ' ')}</span>
-                <span style={{
-                  background: 'rgba(255,255,255,0.08)', color: MUTED, fontSize: 12, padding: '2px 8px',
-                  borderRadius: 10, fontWeight: 700,
-                }}>{devs.length}</span>
-              </div>
-              <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(280px, 1fr))', gap: 8 }}>
-                {devs.map(dev => (
-                  <Link
-                    key={dev.id}
-                    href={`/app/projects/${projectId}/network/devices?selected=${dev.id}`}
-                    style={{
-                      display: 'flex', alignItems: 'center', gap: 10, padding: '10px 12px',
-                      background: 'rgba(255,255,255,0.03)', borderRadius: 10, border: `1px solid ${KIT_BORDER}`,
-                      textDecoration: 'none', transition: 'border-color .15s',
-                    }}
-                    onMouseEnter={e => { (e.currentTarget as HTMLElement).style.borderColor = 'color-mix(in srgb, var(--brand-primary) 45%, transparent)'; }}
-                    onMouseLeave={e => { (e.currentTarget as HTMLElement).style.borderColor = KIT_BORDER; }}
-                  >
-                    <div style={{
-                      width: 8, height: 8, borderRadius: '50%',
-                      background: STATUS_COLORS[dev.status] || 'var(--status-closed)',
-                      flexShrink: 0,
-                    }} />
-                    <div style={{ flex: 1, minWidth: 0 }}>
-                      <div style={{ color: TEXT, fontSize: 13, fontWeight: 600, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{dev.hostname}</div>
-                      <div style={{ color: MUTED, fontSize: 12 }}>{dev.ip_address || 'No IP'} &middot; {dev.location || 'No location'}</div>
-                    </div>
-                    <span style={{
-                      fontSize: 12, padding: '2px 8px', borderRadius: 10, fontWeight: 600,
-                      background: `color-mix(in srgb, ${STATUS_COLORS[dev.status] || 'var(--status-closed)'} 13%, transparent)`,
-                      color: STATUS_COLORS[dev.status] || 'var(--status-closed)',
-                      textTransform: 'capitalize',
-                    }}>{dev.status}</span>
-                  </Link>
-                ))}
-              </div>
-            </div>
-          ))
-        )}
-      </SectionCard>
+          <Button variant="primary" icon={<Robot size={15} weight="fill" />} onClick={() => router.push(networkHref(projectId, 'wizard'))}>AI Network Wizard</Button>
+        </>
+      }
+    >
+      <NetworkTabs projectId={projectId} value="overview" />
 
-      {/* Open Alerts */}
-      {alerts.filter(a => !a.resolved).length > 0 && (
-        <SectionCard flat
-          icon={<Warning size={17} weight="duotone" color={RED} />}
-          title="Open Alerts"
-          accent={RED}
-        >
-          {alerts.filter(a => !a.resolved).map(alert => (
-            <div key={alert.id} style={{
-              display: 'flex', alignItems: 'center', gap: 12, padding: '10px 12px',
-              background: alert.severity === 'critical' ? `color-mix(in srgb, ${RED} 9%, transparent)` : 'rgba(255,255,255,0.03)',
-              borderRadius: 10, border: `1px solid ${alert.severity === 'critical' ? `color-mix(in srgb, ${RED} 27%, transparent)` : KIT_BORDER}`,
-              marginBottom: 6,
-            }}>
-              <span style={{ display: 'inline-flex', alignItems: 'center' }}>{alert.severity === 'critical' ? <WarningCircle size={16} weight="fill" color={RED} /> : alert.severity === 'warning' ? <Warning size={16} weight="fill" color="var(--text-secondary)" /> : <Info size={16} weight="fill" color="var(--text-secondary)" />}</span>
-              <div style={{ flex: 1 }}>
-                <div style={{ color: TEXT, fontSize: 13 }}>{alert.message}</div>
-                <div style={{ color: MUTED, fontSize: 12 }}>{new Date(alert.created_at).toLocaleString()}</div>
-              </div>
+      {loadError ? (
+        <EmptyState icon={<WarningCircle size={22} />} title="Couldn't load the network" text={loadError} action={<Button onClick={fetchAll}>Try again</Button>} />
+      ) : (
+        <>
+          <StatRow items={stats} />
+
+          {openAlerts.length > 0 && (
+            <Card title="Open alerts" icon={<Warning size={16} />} flush>
+              <ItemList>
+                {openAlerts.map(alert => (
+                  <ItemRow
+                    key={alert.id}
+                    icon={alert.severity === 'critical' ? <WarningCircle size={16} weight="fill" /> : alert.severity === 'warning' ? <Warning size={16} weight="fill" /> : <Info size={16} weight="fill" />}
+                    tone={alert.severity === 'critical' ? 'danger' : alert.severity === 'warning' ? 'warning' : 'info'}
+                    title={alert.message}
+                    desc={new Date(alert.created_at).toLocaleString()}
+                  />
+                ))}
+              </ItemList>
+            </Card>
+          )}
+
+          {!loading && (
+            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(min(100%, 320px), 1fr))', gap: 'var(--section-gap)', alignItems: 'start' }}>
+              <Card title="Readiness" icon={<CheckCircle size={16} />} flush>
+                <ItemList>
+                  {readiness.map(r => (
+                    <ItemRow
+                      key={r.key}
+                      icon={r.done ? <CheckCircle size={16} weight="fill" /> : <Circle size={16} />}
+                      tone={r.done ? 'success' : 'neutral'}
+                      title={r.title}
+                      desc={r.desc}
+                      href={r.href}
+                    />
+                  ))}
+                </ItemList>
+              </Card>
+              <Card title="Site profile" icon={<Globe size={16} />}>
+                <DetailList items={[
+                  ['Site type', cap(siteType)],
+                  ['Square footage', `${sqFt} SF`],
+                  ['Floors', String(floors)],
+                  ['Devices per 1k SF', networkProject?.total_sq_ft ? (devices.length / (networkProject.total_sq_ft / 1000)).toFixed(1) : '—'],
+                  ...(ctx?.project?.address ? [['Address', ctx.project.address] as [string, React.ReactNode]] : []),
+                ]} />
+              </Card>
             </div>
-          ))}
-        </SectionCard>
+          )}
+
+          <DataTable<Device>
+            tableId="project-network-devices-overview"
+            exportName="network-devices"
+            columns={columns}
+            rows={devices}
+            loading={loading}
+            rowKey={(d) => d.id}
+            defaultSort={{ key: 'device_type', dir: 'asc' }}
+            onRowClick={(d) => router.push(`${networkHref(projectId, 'devices')}?selected=${d.id}`)}
+            rowActions={(d) => [{ label: 'Open', icon: <ArrowSquareOut size={14} />, href: `${networkHref(projectId, 'devices')}?selected=${d.id}` }]}
+            empty={
+              <EmptyState
+                icon={<Devices size={22} />}
+                title="No devices added yet"
+                text={`Add devices by hand, or let the AI wizard draft the full design for this ${siteType}.`}
+                action={<Button variant="primary" icon={<Plus size={15} weight="bold" />} href={networkHref(projectId, 'devices')}>Add your first device</Button>}
+              />
+            }
+          />
+        </>
       )}
-    </PremiumSurface>
+      <Toast message={toast?.message ?? null} tone={toast?.tone} />
+    </PageShell>
   );
 }
