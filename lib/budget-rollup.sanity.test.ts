@@ -64,6 +64,14 @@ describe('budget roll-ups', () => {
     expect(e.over_under).toBe(-15000.55);
   });
 
+  test("a bid award's commitment and its draft PO count once", async () => {
+    const PKG = 'aaaaaaaa-0000-4000-8000-0000000000e1';
+    fake.T('commitments').push({ id: 'c4', tenant_id: A, project_id: JOB, budget_line_item_id: L2, original_amount: 60000, current_amount: 60000, status: 'active', bid_package_id: PKG });
+    fake.T('purchase_orders').push({ id: 'p3', tenant_id: A, project_id: JOB, cost_code: '03 30 00', total: 60000, status: 'draft', notes: `Auto-generated on bid award (package ${PKG}). Committed cost.` });
+    const c = (await get()).lines.find((l: { id: string }) => l.id === L2);
+    expect(c.committed_cost).toBe(60000);
+  });
+
   test('a line with no commitments keeps what was entered', async () => {
     const j = await get();
     const c = j.lines.find((l: { id: string }) => l.id === L2);

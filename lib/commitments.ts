@@ -3,7 +3,9 @@
  * purchase orders. A job's subcontracts live in `contracts` (prime contracts
  * with the owner are left out), its POs in `purchase_orders`, and awarding a
  * bid package also writes a `commitments` row for the same deal — that row is
- * merged into its contract by bid package so nothing is counted twice.
+ * merged into its contract by bid package so nothing is counted twice. The
+ * award also drafts a PO for that deal (its notes name the package); that PO
+ * is left out when the package's subcontract is on the list.
  *
  * Billed to date comes from the job's bills matched by vendor name, but only
  * when that vendor holds a single commitment on the job — with two, a bill
@@ -44,6 +46,12 @@ const str = (v: unknown) => (v == null ? '' : String(v)).trim();
 const norm = (v: unknown) => str(v).toLowerCase().replace(/\s+/g, ' ');
 const round = (n: number) => Math.round(n * 100) / 100;
 const isPrime = (t: unknown) => /prime|owner/i.test(str(t));
+
+/** The bid package a PO was drafted for by the award (its notes say so), or null. */
+export function awardPackageOf(po: Rec): string | null {
+  const m = str(po.notes).match(/bid award \(package ([0-9a-f-]{36})\)/i);
+  return m ? m[1] : null;
+}
 
 export function buildCommitments(input: {
   projectId: string;
@@ -99,7 +107,14 @@ export function buildCommitments(input: {
     }));
   }
 
+  // The award also drafts a PO for the same deal; the subcontract is the commitment.
+  const awardedPackages = new Set<string>([
+    ...input.contracts.filter((c) => c.bid_package_id && !isPrime(c.contract_type)).map((c) => String(c.bid_package_id)),
+    ...input.legacy.filter((c) => c.bid_package_id).map((c) => String(c.bid_package_id)),
+  ]);
   for (const p of input.purchaseOrders) {
+    const pkg = awardPackageOf(p);
+    if (pkg && awardedPackages.has(pkg)) continue;
     const lineSum = Array.isArray(p.line_items) ? (p.line_items as Rec[]).reduce((s, l) => s + (num(l.total) || num(l.amount) || num(l.qty ?? l.quantity) * num(l.unit_price ?? l.rate)), 0) : 0;
     const total = num(p.total) || num(p.subtotal) + num(p.tax) + num(p.shipping) || lineSum;
     rows.push(row({

@@ -79,6 +79,13 @@ describe('commitments list', () => {
     expect(ids).toEqual([SC1, SC2, VOID, PO1].sort());
   });
 
+  test("the award's draft PO for the same deal is not counted again", async () => {
+    fake.T('purchase_orders').push({ id: 'po-award', tenant_id: A, project_id: JOB, vendor_name: 'Desert Air Systems', description: 'HVAC — awarded subcontract', status: 'draft', total: 100000, notes: `Auto-generated on bid award (package ${PKG}). Committed cost.` });
+    const rows = (await list()).body.commitments;
+    expect(rows.find((r: { id: string }) => r.id === 'po-award')).toBeUndefined();
+    expect(rows.filter((r: { vendor: string }) => r.vendor === 'Desert Air Systems')).toHaveLength(1);
+  });
+
   test('revised, billed, paid, remaining and retainage on a subcontract', async () => {
     const sc = (await list()).body.commitments.find((r: { id: string }) => r.id === SC1);
     expect(sc).toMatchObject({ kind: 'Subcontract', number: 'SC-001', vendor: 'Desert Air Systems', original: 100000, approved_changes: 5000, revised: 105000 });
