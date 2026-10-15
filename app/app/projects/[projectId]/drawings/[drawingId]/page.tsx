@@ -13,6 +13,10 @@
  * the job sees them. Measure uses the sheet's scale, set once with Calibrate.
  * Pins (RFI / punch / note) create or link real items.
  *
+ * Sheet links: sheet numbers in the PDF text (A-501, 5/A-501) that name a
+ * current sheet on the job become click-through hotspots — computed on view
+ * from pdf.js text, never stored (lib/drawing-autolinks.ts).
+ *
  * Reads   /api/drawings/:id/sheet · /api/drawings/list · /api/projects/:p/drawings/markups
  * Writes  markups POST/DELETE · pins POST/DELETE · /api/rfis/create ·
  *         /api/punch-list/create · /api/drawings/upload
@@ -21,6 +25,8 @@ import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react'
 import Link from 'next/link';
 import { useParams, useRouter } from 'next/navigation';
 import { Badge, Button, EmptyState, type BadgeTone } from '@/components/ui/kit';
+import { sheetKey } from '@/lib/drawing-revisions';
+import { buildSheetIndex, computeAutoLinks, autoLinkLabel, type AutoLink, type Box, type TextItemLite } from '@/lib/drawing-autolinks';
 import {
   Cursor, Hand, PencilSimple, Highlighter, LineSegment, ArrowUpRight, Square, Circle, Cloud, TextT,
   Ruler, Crosshair, Polygon, Hash, Question, Wrench, NotePencil, Eraser, CaretLeft, CaretRight, CaretDown,
@@ -38,7 +44,8 @@ type Sheet = {
   revisions: Rev[];
   pins: Pin[];
 };
-type ListRow = { id: string; sheet_number: string; title: string; discipline: string | null; status: string | null };
+type ListRow = { id: string; sheet_number: string; title: string; discipline: string | null; status: string | null; created_at?: string | null };
+type PageText = { key: string; items: TextItemLite[]; vt: number[]; vw: number };
 type Hit = { type: string; id: string; name: string; status: string };
 type Pt = [number, number];
 type MStyle = { color: string; width: number; opacity?: number; head?: boolean };
@@ -140,7 +147,7 @@ function cloudPath(a: Pt, b: Pt, w: number): string {
 }
 
 /** Render one PDF page (or image) into a canvas at a CSS width; returns page count and aspect. */
-async function drawSource(url: string, isPdf: boolean, page: number, cssWidth: number, canvas: HTMLCanvasElement): Promise<{ pages: number; aspect: number }> {
+async function drawSource(url: string, isPdf: boolean, page: number, cssWidth: number, canvas: HTMLCanvasElement, withText = false): Promise<{ pages: number; aspect: number; text?: Omit<PageText, 'key'> }> {
   const dpr = Math.min(window.devicePixelRatio || 1, 2);
   const ctx = canvas.getContext('2d');
   if (!ctx) return { pages: 1, aspect: 1 };
@@ -156,7 +163,17 @@ async function drawSource(url: string, isPdf: boolean, page: number, cssWidth: n
     canvas.width = vp.width; canvas.height = vp.height;
     canvas.style.width = `${vp.width / dpr}px`; canvas.style.height = `${vp.height / dpr}px`;
     await p.render({ canvasContext: ctx, viewport: vp }).promise;
-    return { pages: doc.numPages, aspect: base.height / base.width };
+    let text: Omit<PageText, 'key'> | undefined;
+    if (withText) {
+      // Text for sheet links, in scale-1 viewport space so zoom never changes it. A page with no text layer just has no links.
+      try {
+        const tc = await p.getTextContent();
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
+        const items = (tc.items as any[]).filter((it) => typeof it?.str === 'string' && Array.isArray(it.transform)).map((it) => ({ str: it.str as string, transform: it.transform as number[], width: Number(it.width) || 0, height: Number(it.height) || 0 }));
+        text = { items, vt: base.transform as number[], vw: base.width };
+      } catch (e) { console.warn('[drawing] text layer', e); text = { items: [], vt: base.transform as number[], vw: base.width }; }
+    }
+    return { pages: doc.numPages, aspect: base.height / base.width, text };
   }
   const img = await new Promise<HTMLImageElement>((res, rej) => { const i = new Image(); i.crossOrigin = 'anonymous'; i.onload = () => res(i); i.onerror = rej; i.src = url; });
   const aspect = img.naturalHeight / img.naturalWidth;
@@ -318,6 +335,10 @@ export default function DrawingWorkspace() {
   const [priv, setPriv] = useState(false);
   const [commentText, setCommentText] = useState('');
   const [linkDraft, setLinkDraft] = useState<{ a: Pt; b: Pt } | null>(null);
+  const [pageText, setPageText] = useState<PageText | null>(null);
+  const [showAuto, setShowAuto] = useState(true);
+  const [hoverAuto, setHoverAuto] = useState<AutoLink | null>(null);
+  const textKeyRef = useRef('');
   const rootRef = useRef<HTMLDivElement>(null);
   const canvasRef = useRef<HTMLCanvasElement>(null);
   const scrollRef = useRef<HTMLDivElement>(null);
@@ -373,9 +394,13 @@ export default function DrawingWorkspace() {
       setRendering(true);
       try {
         const width = Math.max(600, (scrollRef.current?.clientWidth ?? 1000) - 80) * zoom;
-        const { pages: n, aspect: a } = await drawSource(d.url, d.isPdf, page, width, c);
+        const tKey = `${d.id}#${page}`;
+        const wantText = d.isPdf && textKeyRef.current !== tKey;
+        const { pages: n, aspect: a, text } = await drawSource(d.url, d.isPdf, page, width, c, wantText);
         if (cancelled) return;
         setPages(n); setAspect(a);
+        if (!d.isPdf) { textKeyRef.current = ''; setPageText(null); }
+        else if (text) { textKeyRef.current = tKey; setPageText({ key: tKey, ...text }); }
         const old = compareId ? sheet!.revisions.find((r) => r.id === compareId) : null;
         if (old?.url) { const oc = document.createElement('canvas'); await drawSource(old.url, old.isPdf, page, width, oc); if (!cancelled) compareInto(c, oc); }
       } catch (e) {
@@ -615,6 +640,7 @@ export default function DrawingWorkspace() {
       const ctx = out.getContext('2d')!;
       ctx.drawImage(c, 0, 0);
       const clone = svg.cloneNode(true) as SVGSVGElement;
+      clone.querySelectorAll('[data-autolink]').forEach((n) => n.remove());
       clone.setAttribute('width', String(c.width)); clone.setAttribute('height', String(c.height));
       clone.setAttribute('xmlns', 'http://www.w3.org/2000/svg');
       const url = URL.createObjectURL(new Blob([new XMLSerializer().serializeToString(clone)], { type: 'image/svg+xml' }));
@@ -666,6 +692,13 @@ export default function DrawingWorkspace() {
   const isDraw = DRAW_TOOLS.includes(tool);
   const markupLabel: Record<string, string> = { freehand: 'Pen', arrow: 'Line / arrow', rect: 'Rectangle', circle: 'Ellipse', cloud: 'Revision cloud', text: 'Text', measure: 'Measurement', link: 'Link' };
   const privateCount = markups.filter((m) => m.data?.private).length;
+  const linkBoxes: Box[] = pageMarkups.filter((m) => m.markup_type === 'link' && m.data?.geometry?.length).map((m) => {
+    const [a, b] = [m.data.geometry[0], m.data.geometry[1] || m.data.geometry[0]];
+    return { x: Math.min(a[0], b[0]), y: Math.min(a[1], b[1]), w: Math.abs(b[0] - a[0]), h: Math.abs(b[1] - a[1]) };
+  });
+  const sheetIndex = d ? buildSheetIndex(list, sheetKey(d.sheet_number)) : new Map();
+  const autoLinks: AutoLink[] = d?.isPdf && pageText && pageText.key === `${d.id}#${page}` ? computeAutoLinks(pageText.items, pageText.vt, pageText.vw, sheetIndex, { refW: REF_W, skip: linkBoxes }) : [];
+  const autoLive = showAuto && (tool === 'select' || tool === 'pan');
 
   return (
     <div className="dz" ref={rootRef}>
@@ -750,6 +783,7 @@ export default function DrawingWorkspace() {
         </button>
         <label className="dz-toggle"><input type="checkbox" checked={showMarkups} onChange={(e) => setShowMarkups(e.target.checked)} /> Markups</label>
         <label className="dz-toggle"><input type="checkbox" checked={showPins} onChange={(e) => setShowPins(e.target.checked)} /> Pins</label>
+        {d?.isPdf && <label className="dz-toggle" title="Sheet numbers on this page that open that sheet"><input type="checkbox" checked={showAuto} onChange={(e) => { setShowAuto(e.target.checked); setHoverAuto(null); }} /> Sheet links <span className="dz-al-n">{autoLinks.length}</span></label>}
       </div>
 
       <div className="dz-body">
@@ -817,6 +851,17 @@ export default function DrawingWorkspace() {
                   if (tool === 'area') { fake.data.kind = 'area'; fake.data.style = { color, width: weight }; }
                   return <MarkupShape m={fake} scale={tool === 'calibrate' ? null : ftPerUnit} selected={false} interactive={false} onPick={() => undefined} />;
                 })()}
+                {showAuto && autoLinks.length > 0 && (
+                  <g data-autolink="" className="dz-al" data-live={autoLive || undefined}>
+                    {autoLinks.map((l) => (
+                      <rect key={l.key} x={l.box.x} y={l.box.y} width={l.box.w} height={l.box.h} rx={2} role="link" aria-label={autoLinkLabel(l)}
+                        style={{ pointerEvents: autoLive ? 'all' : 'none' }}
+                        onPointerEnter={() => setHoverAuto(l)} onPointerLeave={() => setHoverAuto((h) => (h?.key === l.key ? null : h))}
+                        onPointerDown={(e) => e.stopPropagation()}
+                        onClick={(e) => { e.stopPropagation(); router.push(`${base}/drawings/${l.sheetId}`); }} />
+                    ))}
+                  </g>
+                )}
                 {calib && <line x1={calib.a[0]} y1={calib.a[1]} x2={calib.b[0]} y2={calib.b[1]} stroke="rgb(232,255,42)" strokeWidth={3} strokeDasharray="6 4" />}
               </svg>
 
@@ -831,6 +876,12 @@ export default function DrawingWorkspace() {
                   </button>
                 );
               })}
+
+              {showAuto && autoLive && hoverAuto && autoLinks.some((l) => l.key === hoverAuto.key) && (
+                <div className="dz-al-tip" role="tooltip" style={{ left: `${(hoverAuto.box.x / REF_W) * 100}%`, top: `${(hoverAuto.box.y / REF_H) * 100}%` }}>
+                  <LinkSimple size={12} weight="bold" /> {autoLinkLabel(hoverAuto)}
+                </div>
+              )}
 
               {pinSel && pinSel.page === page && (
                 <div className="dz-pop" style={{ left: `${pinSel.x * 100}%`, top: `${pinSel.y * 100}%` }} onPointerDown={(e) => e.stopPropagation()}>
@@ -896,6 +947,9 @@ export default function DrawingWorkspace() {
             ))}
           </div>
           <div className="dz-pane">
+            {tab === 'markups' && d?.isPdf && (
+              <div className="dz-counts"><span><LinkSimple size={13} weight="bold" /> Auto links: <b>{showAuto ? autoLinks.length : 0}</b>{!showAuto && autoLinks.length > 0 ? ` (${autoLinks.length} hidden)` : ''}</span></div>
+            )}
             {tab === 'markups' && privateCount > 0 && (
               <div className="dz-privbar"><Lock size={13} weight="bold" /> {privateCount} only you can see <button type="button" className="dz-link" onClick={() => void publishAll()}>Publish all</button></div>
             )}
@@ -1116,5 +1170,10 @@ const CSS = `
 .dz-pages{display:inline-flex;align-items:center;gap:4px}
 .dz-pages button{display:grid;place-items:center;width:20px;height:20px;border-radius:4px;border:0;background:none;color:var(--dz-dim);cursor:pointer}
 .dz-pages button:disabled{opacity:.3}
+.dz-al rect{fill:var(--link);fill-opacity:0;stroke:var(--link);stroke-width:1.5;stroke-opacity:.75;vector-effect:non-scaling-stroke}
+.dz-al[data-live] rect{cursor:pointer}
+.dz-al[data-live] rect:hover{fill-opacity:.16;stroke-opacity:1;stroke-width:2}
+.dz-al-n{min-width:18px;height:18px;padding:0 5px;border-radius:9px;background:var(--dz-chrome);color:var(--dz-ink);font:700 11px/18px inherit;text-align:center}
+.dz-al-tip{position:absolute;z-index:4;transform:translate(0,calc(-100% - 6px));display:inline-flex;align-items:center;gap:6px;padding:6px 9px;border-radius:6px;background:var(--dz-chrome);border:1px solid var(--link);color:var(--dz-ink);font:600 12px/1.2 system-ui,sans-serif;white-space:nowrap;pointer-events:none;box-shadow:0 8px 24px rgba(0,0,0,.5)}
 .dz-save[data-s=saved]{color:rgb(74,222,128)}.dz-save[data-s=failed]{color:rgb(248,113,113)}.dz-save[data-s=saving]{color:var(--dz-ink)}
 `;
