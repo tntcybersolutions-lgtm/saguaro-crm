@@ -1,25 +1,24 @@
 'use client';
+/**
+ * Project To-Dos — the small field actions with an owner and a due date.
+ *
+ * Reads   GET   /api/projects/:id/todos
+ *         GET   /api/projects/:id/team          (assignee suggestions)
+ * Create  POST  /api/projects/:id/todos         { title, description, assigned_to, due_date, priority, status:'open' }
+ * Done    PATCH /api/todos/:id/complete
+ */
 import React, { useState, useEffect, useCallback } from 'react';
 import { useProjectContext } from '@/lib/hooks/useProjectContext';
-import SaguaroDatePicker from '@/components/SaguaroDatePicker';
 import { useParams } from 'next/navigation';
-import { T, Badge } from '@/components/ui/shell';
 import {
-  PremiumSurface,
-  ModuleHero,
-  SectionCard,
-  PremiumEmpty,
-  StatStrip,
-  FlowSteps,
-  InsightRow,
-  AutoChip,
-  goldButtonStyle,
-  ghostButtonStyle, secondaryButtonStyle
-} from '@/components/ui/premium';
-import { Clipboard, Check, Plus, ClockCounterClockwise } from '@phosphor-icons/react';
-import { ListToolbar } from '@/components/ui/ListToolbar';
+  PageShell, Card, StatRow, Badge, Button, Toolbar, Tabs, DataTable, EmptyState, Select,
+  FormModal, Field, Input, DateInput, Textarea, FormGrid, Toast, useToast,
+  type Column, type Action, type BadgeTone, type StatItem,
+} from '@/components/ui/kit';
+import { Clipboard, Check, Plus, CheckCircle, CalendarBlank, WarningCircle, Fire, ChartPieSlice, ListChecks } from '@phosphor-icons/react';
 import { useUnsavedGuard, useComposerDirty } from '@/lib/useUnsavedGuard';
 import UnsavedGuardModal from '@/components/UnsavedGuardModal';
+import Suggest from '@/components/ui/Suggest';
 import { localDay } from '@/lib/calendar-day';
 
 interface TodoItem {
@@ -35,24 +34,31 @@ interface TodoItem {
 
 type FilterTab = 'all' | 'active' | 'completed';
 
-const PRIORITY_BADGE: Record<string, 'red' | 'amber' | 'muted'> = { high: 'red', medium: 'amber', low: 'muted' };
+const PRIORITY_TONE: Record<string, BadgeTone> = { high: 'overdue', medium: 'under_contract', low: 'neutral' };
 const PRIORITIES = ['high', 'medium', 'low'];
-
-// Desert-dusk accents (match dashboard) ---------------------------------------
-const GREEN = 'var(--success)';
-const RED = 'var(--danger)';
-
-const inp: React.CSSProperties = { width: '100%', padding: '8px 12px', background: T.surface2, border: `1px solid ${T.border}`, borderRadius: 8, color: T.white, fontSize: 13, outline: 'none' };
-const lbl: React.CSSProperties = { display: 'block', fontSize: 12, fontWeight: 600, color: T.muted, marginBottom: 6 };
-const hint: React.CSSProperties = { fontSize: 12, color: 'var(--c-text-2)', marginTop: 5, lineHeight: 1.45 };
+const PRIORITY_RANK: Record<string, number> = { high: 0, medium: 1, low: 2 };
+const cap = (s: string) => (s ? s.charAt(0).toUpperCase() + s.slice(1) : '—');
 
 const localIso = (d: Date) => `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`;
+const fmtDay = (iso: string) => new Date(`${iso}T12:00:00`).toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' });
 
 interface TeamMember { id: string; name: string; email: string; role: string; }
 
-
-
 const EMPTY_FORM = { title: '', description: '', assigned_to: '', due_date: '', priority: 'medium' };
+
+const CSS = `
+.tdCheck { width: 26px; height: 26px; border-radius: 7px; border: 2px solid var(--border-strong); background: transparent; display: inline-flex; align-items: center; justify-content: center; cursor: pointer; color: var(--bg-base); }
+.tdCheck[aria-checked="true"] { border-color: var(--success); background: var(--success); cursor: default; }
+.tdDone { text-decoration: line-through; }
+.tdDesc { font-size: 12px; color: var(--text-tertiary); white-space: normal; line-height: 1.4; }
+.tdLate { color: var(--danger); font-weight: 700; white-space: nowrap; }
+.tdDue { white-space: nowrap; }
+.tdUnassigned { color: var(--text-tertiary); font-style: italic; }
+@media (max-width: 640px) {
+  .tdWs .k-btn, .tdWs .k-stat, .tdWs select.k-select, .tdWs .k-input { min-height: 44px; }
+  .tdCheck { width: 32px; height: 32px; }
+}
+`;
 
 export default function TodosPage() {
   const params = useParams();
@@ -74,9 +80,8 @@ export default function TodosPage() {
     onSave: () => handleAdd(),
   });
   const [saving, setSaving] = useState(false);
-  const [toast, setToast] = useState('');
+  const { toast, show } = useToast(4000);
   const [filter, setFilter] = useState<FilterTab>('all');
-  // ListToolbar state — search + priority join the existing status state (sag_flt_todos).
   const [search, setSearch] = useState('');
   const [priorityFilter, setPriorityFilter] = useState('all');
 
@@ -97,7 +102,7 @@ export default function TodosPage() {
 
   useEffect(() => { fetchTodos(); }, [fetchTodos]);
 
-  // Project intelligence — roster for the assignee select + cross-module counts.
+  // Project intelligence — roster for the assignee field + cross-module counts.
   const { ctx } = useProjectContext(projectId);
   const [team, setTeam] = useState<TeamMember[]>([]);
   const [auto, setAuto] = useState<{ due?: boolean }>({});
@@ -112,6 +117,7 @@ export default function TodosPage() {
   }, [projectId]);
 
   const subs = (ctx?.subs || []) as { membershipId?: string; id?: string; companyName: string; trade?: string }[];
+  const roster = Array.from(new Set([...team.map(m => m.name), ...subs.map(s => s.companyName)].filter(Boolean)));
 
   // Prefilled add flow: due a week out, medium priority.
   function openCreate() {
@@ -120,6 +126,7 @@ export default function TodosPage() {
     setAuto({ due: true });
     setShowForm(true);
   }
+  function closeForm() { guard.requestClose(() => setShowForm(false)); }
 
   const q = search.trim().toLowerCase();
   const filtered = todos.filter(t => {
@@ -133,7 +140,8 @@ export default function TodosPage() {
   const totalCount = todos.length;
   const activeCount = todos.filter(t => !t.complete).length;
   const completedCount = todos.filter(t => t.complete).length;
-  const overdueCount = todos.filter(t => t.due_date && t.due_date < today && !t.complete).length;
+  const isOverdue = (t: TodoItem) => !!t.due_date && t.due_date < today && !t.complete;
+  const overdueCount = todos.filter(isOverdue).length;
 
   const weekOut = localIso(new Date(Date.now() + 7 * 86400000));
   const dueThisWeek = todos.filter(t => !t.complete && t.due_date && t.due_date >= today && t.due_date <= weekOut).length;
@@ -166,13 +174,11 @@ export default function TodosPage() {
       setTodos(prev => [{ ...t, complete: /complete/i.test(String(t.status || '')) }, ...prev]);
       setShowForm(false);
       setForm(EMPTY_FORM);
-      setToast('Task added.');
-      setTimeout(() => setToast(''), 4000);
+      show('Task added.');
       guard.clearDraft();
       return true;
     } catch {
-      setToast('Could not add the task. Please try again.');
-      setTimeout(() => setToast(''), 4000);
+      show('Could not add the task. Please try again.', 'bad');
       return false;
     } finally {
       setSaving(false);
@@ -187,165 +193,164 @@ export default function TodosPage() {
       const res = await fetch(`/api/todos/${id}/complete`, { method: 'PATCH' });
       if (!res.ok) throw new Error('update failed');
     } catch {
-      setToast('Could not update the task. Please try again.');
-      setTimeout(() => setToast(''), 4000);
+      show('Could not update the task. Please try again.', 'bad');
       fetchTodos();
     }
   }
 
+  const stats: StatItem[] = [
+    { label: 'Active', value: loading ? '—' : activeCount, icon: <ListChecks size={15} />, onClick: () => setFilter('active'), active: filter === 'active', sub: busiest ? `Most on ${busiest[0]} (${busiest[1]})` : `${team.length + subs.length} people on the roster` },
+    { label: 'Due this week', value: loading ? '—' : dueThisWeek, icon: <CalendarBlank size={15} />, sub: nextDue ? `Next: ${fmtDay(nextDue.due_date)} — ${nextDue.title.slice(0, 24)}` : 'Nothing coming due' },
+    { label: 'Overdue', value: loading ? '—' : overdueCount, tone: overdueCount > 0 ? 'bad' : 'good', icon: <WarningCircle size={15} />, sub: overdueCount > 0 ? 'Needs attention today' : 'Nothing slipping' },
+    { label: 'High priority open', value: loading ? '—' : highOpen, tone: highOpen > 0 ? 'bad' : 'default', icon: <Fire size={15} />, onClick: () => { setFilter('active'); setPriorityFilter(priorityFilter === 'high' ? 'all' : 'high'); }, active: priorityFilter === 'high', sub: highOpen > 0 ? 'Knock these out first' : 'None open' },
+    { label: 'Completion', value: loading ? '—' : `${completionPct}%`, tone: completionPct >= 75 ? 'good' : 'default', icon: <ChartPieSlice size={15} />, onClick: () => setFilter('completed'), active: filter === 'completed', sub: `${completedCount} of ${totalCount} done` },
+  ];
+
+  const dueLabel = (t: TodoItem) => {
+    if (!t.due_date) return '—';
+    if (isOverdue(t)) return `Overdue: ${fmtDay(t.due_date)}`;
+    if (t.complete) return fmtDay(t.due_date);
+    if (t.due_date === today) return 'Due today';
+    const days = Math.max(0, Math.round((new Date(t.due_date + 'T00:00:00').getTime() - new Date(today + 'T00:00:00').getTime()) / 86400000));
+    return `${fmtDay(t.due_date)} (${days}d)`;
+  };
+
+  const columns: Column<TodoItem>[] = [
+    {
+      key: 'complete', header: 'Done', width: 56, groupable: false, accessor: (t) => (t.complete ? 1 : 0),
+      render: (t) => (
+        <button
+          type="button"
+          role="checkbox"
+          aria-checked={t.complete}
+          aria-label={t.complete ? `${t.title}: done` : `Mark "${t.title}" done`}
+          className="tdCheck"
+          onClick={(e) => { e.stopPropagation(); toggleComplete(t.id); }}
+        >
+          {t.complete && <Check size={15} weight="bold" />}
+        </button>
+      ),
+    },
+    {
+      key: 'title', header: 'Task', primary: true, accessor: (t) => (t.title || '').toLowerCase(),
+      render: (t) => (
+        <div className="k-cell-stack">
+          <span className={t.complete ? 'tdDone' : undefined}>{t.title}</span>
+          {t.description && <div className="tdDesc">{t.description}</div>}
+        </div>
+      ),
+    },
+    { key: 'assigned_to', header: 'Assigned to', accessor: (t) => t.assigned_to || '', render: (t) => t.assigned_to || (!t.complete ? <span className="tdUnassigned">Unassigned</span> : '—') },
+    { key: 'due_date', header: 'Due', phone: 'show', accessor: (t) => t.due_date || '9999', render: (t) => <span className={isOverdue(t) ? 'tdLate' : 'tdDue'}>{dueLabel(t)}</span> },
+    { key: 'priority', header: 'Priority', phone: 'show', accessor: (t) => PRIORITY_RANK[t.priority] ?? 9, render: (t) => <Badge tone={PRIORITY_TONE[t.priority] || 'neutral'} dot>{cap(t.priority)}</Badge> },
+  ];
+
+  const rowActions = (t: TodoItem): Action[] => [
+    { label: 'Mark done', icon: <CheckCircle size={15} />, onClick: () => toggleComplete(t.id), hidden: t.complete },
+  ];
+
+  const openRfis = Number(ctx?.counts?.openRfis) || 0;
+  const openPunch = Number(ctx?.counts?.openPunch) || 0;
+  const empty = todos.length === 0 ? (
+    <EmptyState
+      icon={<Clipboard size={22} />}
+      title="No tasks yet"
+      text={ctx ? `RFIs (${openRfis} open) and punch (${openPunch} open) live in their own modules — to-dos are callbacks, pickups and reminders.` : 'Callbacks, pickups and field reminders, each with an owner and a due date.'}
+      action={<Button variant="primary" icon={<Plus size={15} weight="bold" />} onClick={openCreate}>Add task</Button>}
+    />
+  ) : filter === 'completed' && completedCount === 0 ? (
+    <EmptyState title="Nothing completed yet" text={`${activeCount} task${activeCount === 1 ? ' is' : 's are'} still active.`} />
+  ) : filter === 'active' && activeCount === 0 ? (
+    <EmptyState title="No active tasks" text="Every task is checked off." action={<Button onClick={() => setFilter('all')}>Show all</Button>} />
+  ) : (
+    <EmptyState title="Nothing matches" text="Change the search or the filters." action={<Button onClick={() => { setSearch(''); setPriorityFilter('all'); setFilter('all'); }}>Clear filters</Button>} />
+  );
+
+  const base = `/app/projects/${projectId}`;
   return (
-    <PremiumSurface>
-
-      {/* Header */}
-      <ModuleHero
-        eyebrow={ctx?.project?.name || 'Tasks'}
-        eyebrowIcon={<Clipboard size={13} weight="fill" style={{ color: 'var(--text-primary)' }} />}
-        title="Project"
-        accent="To-Dos"
-        subtitle="Project tasks and action items."
-        actions={
-          <button onClick={() => { if (showForm) { setShowForm(false); } else { openCreate(); } }} style={goldButtonStyle} className="pmBtn">
-            <Plus size={15} weight="bold" /> Add Task
-          </button>
-        }
-      />
-
-      {/* Task intelligence strip — where the work stands right now (the one summary on this screen) */}
-      {!loading && (todos.length > 0 || ctx) && (
-        <StatStrip items={[
-          {href: `/app/projects/${projectId}/todos`,  label: 'Active', value: String(activeCount), sub: 'In progress' },
-          {href: `/app/projects/${projectId}/todos`,  label: 'Due This Week', value: String(dueThisWeek), sub: nextDue ? `Next: ${nextDue.due_date} — ${nextDue.title.slice(0, 24)}` : 'Nothing coming due' },
-          {href: `/app/projects/${projectId}/todos`,  label: 'Overdue', value: String(overdueCount), accent: overdueCount > 0 ? RED : GREEN, sub: overdueCount > 0 ? 'Needs attention today' : 'Nothing slipping' },
-          {href: `/app/projects/${projectId}/todos`,  label: 'High Priority Open', value: String(highOpen), accent: highOpen > 0 ? RED : undefined, sub: highOpen > 0 ? 'Knock these out first' : 'No fires burning' },
-          {href: `/app/projects/${projectId}/todos`,  label: 'Completion', value: `${completionPct}%`, accent: completionPct >= 75 ? GREEN : undefined, sub: `${completedCount} of ${totalCount} done` },
-          {href: `/app/projects/${projectId}/todos`,  label: 'Busiest Assignee', value: busiest ? busiest[0] : '—', sub: busiest ? `${busiest[1]} open task${busiest[1] === 1 ? '' : 's'}` : `${team.length + subs.length} people on the roster` },
-        ]} />
-      )}
-
-      {/* List toolbar — search + status/priority filters (replaces the old tab pills) */}
-      <ListToolbar
-        module="todos"
-        search={search}
-        onSearch={setSearch}
-        searchPlaceholder="Search tasks…"
-        filters={[
-          { key: 'status', label: 'Status', value: filter, onChange: (v: string) => setFilter(v as FilterTab), allLabel: 'All Tasks', options: [
-            { value: 'active', label: 'Active' },
-            { value: 'completed', label: 'Completed' },
-          ] },
-          { key: 'priority', label: 'Priority', value: priorityFilter, onChange: setPriorityFilter, allLabel: 'All Priorities', options: PRIORITIES.map(p => ({ value: p, label: p.charAt(0).toUpperCase() + p.slice(1) })) },
+    <div className="tdWs">
+      <style dangerouslySetInnerHTML={{ __html: CSS }} />
+      <PageShell
+        crumbs={[
+          { label: 'Projects', href: '/app/projects' },
+          { label: ctx?.project?.name || 'Project', href: `${base}/overview` },
+          { label: 'To-Dos' },
         ]}
-        count={{ shown: filtered.length, total: todos.length }}
-        style={{ marginBottom: 20 }}
-      />
+        title="To-Dos"
+        subtitle="Project tasks and action items."
+        actions={<Button variant="primary" icon={<Plus size={15} weight="bold" />} onClick={openCreate}>Add task</Button>}
+      >
+        {(todos.length > 0 || ctx || loading) && <StatRow items={stats} />}
 
-      {toast && (
-        <div style={{ marginBottom: 16, padding: '10px 14px', background: T.greenDim, border: `1px solid rgba(74,222,128,0.3)`, borderRadius: 8, color: T.green, fontSize: 13 }}>
-          {toast}
-        </div>
-      )}
+        <Tabs
+          tabs={[
+            { key: 'all', label: 'All', count: totalCount },
+            { key: 'active', label: 'Active', count: activeCount },
+            { key: 'completed', label: 'Completed', count: completedCount },
+          ]}
+          value={filter}
+          onChange={(k) => setFilter(k as FilterTab)}
+        />
 
-      {/* Create Form */}
-      {showForm && (
-        <div style={{ marginBottom: 24 }}>
-          <SectionCard title="Add Task" icon={<Plus size={16} weight="bold" style={{ color: 'var(--text-primary)' }} />}>
-            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(2, 1fr)', gap: 14 }}>
-              <div style={{ gridColumn: 'span 2' }}>
-                <label style={lbl}>Title *</label>
-                <input type="text" value={form.title} onChange={e => setForm(p => ({ ...p, title: e.target.value }))} placeholder="Task description…" style={inp} />
-              </div>
-              <div style={{ gridColumn: 'span 2' }}>
-                <label style={lbl}>Description</label>
-                <textarea value={form.description} onChange={e => setForm(p => ({ ...p, description: e.target.value }))} rows={2} style={{ ...inp, resize: 'vertical' }} />
-              </div>
-              <div>
-                <label style={lbl}>Assigned To</label>
-                <input type="text" value={form.assigned_to} onChange={e => setForm(p => ({ ...p, assigned_to: e.target.value }))} style={inp} />
-              </div>
-              <div>
-                <label style={lbl}>Due Date</label>
-                <SaguaroDatePicker value={form.due_date} onChange={v => setForm(p => ({ ...p, due_date: v }))} style={inp} />
-              </div>
-              <div>
-                <label style={lbl}>Priority</label>
-                <select value={form.priority} onChange={e => setForm(p => ({ ...p, priority: e.target.value }))} style={inp}>
-                  {PRIORITIES.map(p => <option key={p} value={p}>{p.charAt(0).toUpperCase() + p.slice(1)}</option>)}
-                </select>
-              </div>
-            </div>
-            <div style={{ display: 'flex', gap: 10, marginTop: 16 }}>
-              <button onClick={handleAdd} disabled={saving} className="pmBtn" style={{ ...goldButtonStyle, opacity: saving ? 0.6 : 1, cursor: saving ? 'not-allowed' : 'pointer' }}>{saving ? 'Saving…' : 'Add Task'}</button>
-              <button onClick={() => setShowForm(false)} className="pmBtn" style={ghostButtonStyle}>Cancel</button>
-            </div>
-          </SectionCard>
-        </div>
-      )}
+        <Toolbar
+          search={search}
+          onSearch={setSearch}
+          placeholder="Search tasks…"
+          filters={
+            <Select aria-label="Priority" value={priorityFilter} onChange={e => setPriorityFilter(e.target.value)} style={{ width: 'auto', minWidth: 150 }}
+              options={[{ value: 'all', label: 'All priorities' }, ...PRIORITIES.map(p => ({ value: p, label: cap(p) }))]} />
+          }
+          actions={<span style={{ fontSize: 'var(--fs-sm)', color: 'var(--text-tertiary)' }}>{filtered.length} of {todos.length}</span>}
+        />
 
-      {/* Todo List */}
-      <SectionCard title="Task List" icon={<Clipboard size={16} weight="duotone" style={{ color: 'var(--text-primary)' }} />} flush>
-        {loading ? (
-          <div style={{ textAlign: 'center', padding: 40, color: 'var(--c-text-2)' }}>Loading…</div>
-        ) : filtered.length === 0 ? (
-          <PremiumEmpty
-            icon={<Clipboard size={30} weight="duotone" style={{ color: 'var(--text-primary)' }} />}
-            title={todos.length === 0 ? 'No Tasks Yet' : filter === 'completed' ? 'Nothing Completed Yet' : filter === 'active' ? 'No Active Tasks' : 'No Tasks Here'}
-            description={todos.length === 0
-              ? (ctx
-                ? `The project already tracks ${Number(ctx?.counts?.openRfis) || 0} open RFI${(Number(ctx?.counts?.openRfis) || 0) === 1 ? '' : 's'} and ${Number(ctx?.counts?.openPunch) || 0} open punch item${(Number(ctx?.counts?.openPunch) || 0) === 1 ? '' : 's'} in their own modules — to-dos capture everything smaller: callbacks, pickups, and field reminders, each with an owner and a due date.`
-                : 'To-dos capture the small field actions with an owner and a due date — callbacks, pickups, reminders. The first one takes ten seconds.')
-              : filter === 'completed'
-                ? `${activeCount} task${activeCount === 1 ? ' is' : 's are'} still active — completed ones land here as they are checked off.`
-                : 'Every task is checked off — switch to All or Completed to see the history.'}
-            action={<button onClick={openCreate} style={secondaryButtonStyle} className="pmBtn"><Plus size={15} weight="bold" /> Add Task</button>}
+        <Card flush>
+          <DataTable<TodoItem>
+            tableId="project-todos"
+            exportName="todos"
+            columns={columns}
+            rows={filtered}
+            loading={loading}
+            rowKey={(t) => t.id}
+            defaultSort={{ key: 'due_date', dir: 'asc' }}
+            rowStyle={(t) => (t.complete ? { opacity: 0.55 } : undefined)}
+            rowActions={rowActions}
+            empty={empty}
           />
-        ) : (
-          <div style={{ display: 'flex', flexDirection: 'column' }}>
-            {filtered.map(todo => {
-              const overdue = todo.due_date && todo.due_date < today && !todo.complete;
-              return (
-                <div key={todo.id} style={{ display: 'flex', alignItems: 'center', gap: 14, padding: '14px 20px', borderBottom: `1px solid rgba(255,255,255,0.06)`, opacity: todo.complete ? 0.5 : 1 }}>
-                  {/* Checkbox */}
-                  <button
-                    onClick={() => toggleComplete(todo.id)}
-                    style={{
-                      width: 22, height: 22, borderRadius: 6,
-                      border: `2px solid ${todo.complete ? GREEN : T.border}`,
-                      background: todo.complete ? GREEN : 'transparent',
-                      cursor: 'pointer', flexShrink: 0,
-                      display: 'flex', alignItems: 'center', justifyContent: 'center',
-                    }}
-                  >
-                    {todo.complete && <Check size={14} weight="bold" color="var(--bg-base)" />}
-                  </button>
-                  {/* Content */}
-                  <div style={{ flex: 1, minWidth: 0 }}>
-                    <div style={{ color: T.white, fontSize: 14, fontWeight: 500, textDecoration: todo.complete ? 'line-through' : 'none' }}>{todo.title}</div>
-                    {todo.description && <div style={{ fontSize: 12, color: T.muted, marginTop: 2 }}>{todo.description}</div>}
-                    <div style={{ fontSize: 12, color: todo.assigned_to ? T.muted : 'color-mix(in srgb, var(--brand-primary) 75%, transparent)', marginTop: 2 }}>
-                      {todo.assigned_to || (!todo.complete ? 'Unassigned' : '')}
-                    </div>
-                  </div>
-                  {/* Due date */}
-                  <span style={{ fontSize: 12, color: overdue ? RED : T.muted, whiteSpace: 'nowrap', fontWeight: overdue ? 700 : 400 }}>
-                    {todo.due_date
-                      ? overdue
-                        ? `Overdue: ${todo.due_date}`
-                        : todo.complete
-                          ? todo.due_date
-                          : todo.due_date === today
-                            ? 'Due today'
-                            : `${todo.due_date} (${Math.max(0, Math.round((new Date(todo.due_date + 'T00:00:00').getTime() - new Date(today + 'T00:00:00').getTime()) / 86400000))}d)`
-                      : '—'}
-                  </span>
-                  {/* Priority */}
-                  <Badge label={todo.priority ? todo.priority.charAt(0).toUpperCase() + todo.priority.slice(1) : '—'} color={PRIORITY_BADGE[todo.priority] || 'muted'} />
-                </div>
-              );
-            })}
-          </div>
-        )}
-      </SectionCard>
-    <UnsavedGuardModal guard={guard} />
-    </PremiumSurface>
+        </Card>
+      </PageShell>
+
+      <FormModal
+        open={showForm}
+        onClose={closeForm}
+        title="Add task"
+        subtitle={`${activeCount} active · ${overdueCount} overdue`}
+        onSubmit={async () => { await handleAdd(); }}
+        submitLabel="Add task"
+        busy={saving}
+      >
+        <FormGrid cols={3}>
+          <Field label="Title" required span>
+            <Input value={form.title} onChange={e => setForm(p => ({ ...p, title: e.target.value }))} placeholder="Task description…" required autoFocus />
+          </Field>
+          <Field label="Description" span>
+            <Textarea value={form.description} onChange={e => setForm(p => ({ ...p, description: e.target.value }))} rows={2} />
+          </Field>
+          <Field label="Assigned to" hint={roster.length > 0 ? `${roster.length} on the roster — start typing to match.` : undefined}>
+            <Suggest className="k-input" value={form.assigned_to} onChange={e => setForm(p => ({ ...p, assigned_to: e.target.value }))} options={roster} placeholder="Name or company" />
+          </Field>
+          <Field label="Due date" hint={auto.due && form.due_date === weekOut ? 'Defaulted a week out.' : undefined}>
+            <DateInput value={form.due_date} onChange={e => { const v = e.target.value; setAuto({}); setForm(p => ({ ...p, due_date: v })); }} />
+          </Field>
+          <Field label="Priority">
+            <Select value={form.priority} onChange={e => setForm(p => ({ ...p, priority: e.target.value }))} options={PRIORITIES.map(p => ({ value: p, label: cap(p) }))} />
+          </Field>
+        </FormGrid>
+      </FormModal>
+
+      <div style={{ position: 'relative', zIndex: 10001 }}>
+        <UnsavedGuardModal guard={guard} />
+      </div>
+      <Toast message={toast?.message ?? null} tone={toast?.tone} />
+    </div>
   );
 }
