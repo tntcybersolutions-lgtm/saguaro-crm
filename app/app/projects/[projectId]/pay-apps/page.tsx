@@ -1,17 +1,21 @@
 'use client';
 /**
- * Pay Applications — Pass 4, on the RFIs reference layout (dense register).
+ * Pay Applications — the G702 register for the job.
  *
  * Anatomy: title + one primary action (New Pay Application) → StatRow
  * (contract position: revised / billed / retainage / paid / lien waivers) →
- * Toolbar → the G702 register. A row opens the application's own page.
+ * Toolbar → the register in the shared DataTable (saved views, grouping,
+ * columns, CSV export, row checkboxes for bulk approve / bulk PDF). A row opens
+ * the application's own page.
  *
  * Money: every DB numeric can round-trip as a string — Number() before any
- * math, and amounts are never truncated. Retainage held to date is the LATEST
- * application's cumulative figure (summing across apps would re-count every
- * prior period). Approval / record-payment stay the explicit existing
- * workflows on the application page; this register only lists, bulk-approves
- * (the same PATCH it always sent), exports and deletes.
+ * math, and amounts are never truncated. Completed-to-date and retainage are
+ * CUMULATIVE per application, so their totals are the latest application's
+ * figure, never a sum across apps (that would re-count every prior period).
+ * This Period and Payment Due are per-period, so those totals are sums.
+ * Approval / record-payment stay the explicit existing workflows on the
+ * application page; this register only lists, bulk-approves (the same PATCH it
+ * always sent), exports and deletes.
  *
  * Every read / write is the one this screen already used:
  *   list      GET    /api/pay-apps/list?projectId=
@@ -21,21 +25,23 @@
  *   pdf       POST   /api/documents/pay-application
  *   delete    DELETE /api/pay-apps/[id]
  * Live status (useLiveStatus) and the NudgeRing anchor are unchanged; the
- * persisted drag-reorder (sort_order) stays the source of truth for row order.
+ * persisted drag-reorder (sort_order) stays the source of truth for row order
+ * (drag the grip beside the app number while no filter is on).
  */
 import React, { useState, useEffect, useCallback } from 'react';
-import { useSort, useSortedRows, SortTh, SortBar } from '@/components/ui/sort';
 import { useProjectContext } from '@/lib/hooks/useProjectContext';
 import { confirmDialog } from '@/lib/ui/async-dialog';
 import { humanError } from '@/lib/errors';
 import { useParams, useRouter } from 'next/navigation';
 import DragHandle, { useDragReorder } from '../../../../../components/DragHandle';
-import { Clipboard, CheckCircle, FileText, PencilSimple, Copy, Trash, Plus, ArrowClockwise, WarningCircle, X } from '@phosphor-icons/react';
 import {
-  PageShell, Card, StatRow, Badge, Button, Toolbar, EmptyState, RowActions, Select, Toast, useToast,
-  type BadgeTone, type StatItem,
+  Clipboard, CheckCircle, FileText, PencilSimple, Copy, Trash, Plus, ArrowClockwise, WarningCircle,
+  Scales, Receipt, Vault, Wallet, Lock,
+} from '@phosphor-icons/react';
+import {
+  PageShell, Card, StatRow, Badge, Button, Toolbar, DataTable, EmptyState, Select, Toast, useToast,
+  type BadgeTone, type StatItem, type Column, type Action,
 } from '@/components/ui/kit';
-import { FlowStrip } from '@/components/ui/premium';
 import { LifecycleRail } from '@/components/ui/Status';
 import { useLiveStatus } from '@/lib/hooks/useLiveStatus';
 import NudgeRing from '@/components/intelligence/NudgeRing';
@@ -45,7 +51,6 @@ import { openPdf } from '@/components/PdfViewer';
 // MONEY: several DB numerics round-trip as strings — coerce before any math/format.
 const money = new Intl.NumberFormat('en-US', { style: 'currency', currency: 'USD', minimumFractionDigits: 2, maximumFractionDigits: 2 });
 const fmt = (n:number|string|null|undefined) => money.format(Number(n)||0);
-const fmtSigned = (n:number) => (n<0 ? '-' : n>0 ? '+' : '') + money.format(Math.abs(n||0));
 /** Date-only values parse at local noon ('T12:00:00') so they never shift a day under UTC. */
 const fmtDay = (d?:string|null, year=false) => d ? new Date(String(d).slice(0,10)+'T12:00:00').toLocaleDateString('en-US', year ? {month:'short',day:'numeric',year:'numeric'} : {month:'short',day:'numeric'}) : '—';
 
@@ -59,66 +64,27 @@ function statusBadge(s:string|null|undefined): { label:string; tone:BadgeTone } 
   if (k==='paid') return { label:'Paid', tone:'completed' };
   return { label:'Draft', tone:'neutral' };
 }
-const STAGE_RANK:Record<string,number> = {draft:0,submitted:1,approved:2,certified:2.5,paid:3};
 const STATUS_OPTIONS = ['draft','submitted','approved','certified','paid'];
+
+const appNo = (pa:any) => Number(pa?.app_number ?? pa?.application_number) || 0;
+const doneOf = (pa:any) => Number(pa?.total_completed_stored ?? pa?.total_completed) || 0;
+const retOf = (pa:any) => Number(pa?.total_retainage ?? pa?.retainage_amount) || 0;
+/** The highest-numbered application in a list — cumulative figures are read from it alone. */
+const latestOf = (list:any[]) => list.reduce((best:any, p:any) => (!best || appNo(p) > appNo(best) ? p : best), null as any);
 
 const CSS = `
 .paWs > .k-page { max-width: none; }
-.paBulk { display: flex; align-items: center; gap: 8px; flex-wrap: wrap; padding: 10px 16px; border-bottom: 1px solid var(--border-subtle); background: var(--brand-primary-08); font-size: var(--fs-sm); }
-.paBulk > b { color: var(--text-primary); }
-.paTableWrap { overflow-x: auto; }
-.paTable { width: 100%; border-collapse: collapse; font-size: var(--fs-sm); }
-.paTable th { position: sticky; top: 0; z-index: 1; background: rgba(21,23,28,0.88); text-align: left; padding: 8px 12px; font-size: 12px; font-weight: 700; color: var(--text-tertiary); border-bottom: 1px solid var(--border-default); white-space: nowrap; }
-.paTable td { padding: 0 12px; height: 52px; border-bottom: 1px solid var(--border-subtle); color: var(--text-secondary); white-space: nowrap; font-variant-numeric: tabular-nums; vertical-align: middle; }
-.paTable th:first-child, .paTable td:first-child { padding-left: var(--sp-4); width: 28px; }
-.paTable th:last-child, .paTable td:last-child { padding-right: var(--sp-4); }
-.paTable th[data-align="right"], .paTable td[data-align="right"] { text-align: right; }
-.paTable tbody tr { cursor: pointer; }
-.paTable tbody tr:hover td { background: rgba(255,255,255,0.03); }
-.paTable tbody tr[data-dragging="true"] td { opacity: .5; }
-.paNum { color: var(--text-primary); font-weight: 800; }
-.paMoney { color: var(--text-primary); font-weight: 700; }
+.paNum { display: inline-flex; align-items: center; gap: 6px; color: var(--text-primary); font-weight: 800; font-variant-numeric: tabular-nums; }
+.paMoney { color: var(--text-primary); font-weight: 700; font-variant-numeric: tabular-nums; }
 .paMuted { color: var(--text-tertiary); }
 .paSub { display: block; font-size: var(--fs-xs); color: var(--text-tertiary); margin-top: 2px; font-weight: 500; }
 .paLife { min-width: 150px; }
 .paWaivers { font-size: var(--fs-xs); font-weight: 700; color: var(--status-under-contract); white-space: nowrap; margin-top: 3px; }
 .paWaivers[data-ok="true"] { color: var(--status-ongoing); }
-.paCheck { accent-color: var(--brand-primary); cursor: pointer; width: 16px; height: 16px; }
-.paCq { container: paws / inline-size; min-width: 0; }
-.paInlineErr { display: flex; align-items: center; gap: 8px; flex-wrap: wrap; font-size: var(--fs-sm); color: var(--status-overdue); padding: 10px 14px; border: 1px solid rgba(248,113,113,.35); border-radius: var(--radius-sm); background: rgba(248,113,113,.08); }
-.paSkel { height: 14px; border-radius: 4px; background: var(--border-subtle); }
-@media (max-width: 640px) {
-  .paWs .k-btn, .paWs .k-stat, .paWs select.k-select, .paWs .k-input { min-height: 44px; }
-  .paTable td { height: 56px; }
-}
-/* Phones: each pay app is a card — number and period, payment due on the right,
-   lifecycle under it, then completed-to-date, the status and the one menu. The
-   drag handle and the bulk checkbox stay in a slim first column. */
 @media (max-width: 767px) {
-  .paTableWrap { overflow-x: visible; }
-  .paTable thead { display: none; }
-  .paTable, .paTable tbody { display: block; width: 100%; }
-  .paTable tbody tr { display: grid; grid-template-columns: 28px minmax(0, 1fr) auto; grid-template-rows: auto auto auto auto; column-gap: 10px; row-gap: 6px; padding: 12px var(--sp-4); border-bottom: 1px solid var(--border-subtle); align-items: center; }
-  .paTable tbody tr:hover td { background: transparent; }
-  .paTable td { display: block; height: auto !important; padding: 0 !important; border: 0; white-space: normal; width: auto !important; }
-  .paTable td:nth-child(1) { grid-column: 1; grid-row: 1; }
-  .paTable td:nth-child(2) { grid-column: 1; grid-row: 2; }
-  .paTable td:nth-child(3) { grid-column: 2; grid-row: 1; font-size: var(--fs-md); }
-  .paTable td:nth-child(4) { grid-column: 2; grid-row: 2; }
-  .paTable td:nth-child(5) { grid-column: 2 / 4; grid-row: 3; }
-  .paTable td:nth-child(6) { grid-column: 2; grid-row: 4; display: flex; flex-direction: column; }
-  .paTable td:nth-child(6)::before { content: 'Completed to date'; font-size: 12px; color: var(--text-tertiary); text-transform: uppercase; letter-spacing: .04em; }
-  .paTable td:nth-child(7), .paTable td:nth-child(8) { display: none; }
-  .paTable td:nth-child(9) { grid-column: 3; grid-row: 1; text-align: right; display: flex; flex-direction: column; align-items: flex-end; }
-  .paTable td:nth-child(9)::before { content: 'Payment due'; font-size: 12px; color: var(--text-tertiary); text-transform: uppercase; letter-spacing: .04em; }
-  .paTable td:nth-child(10) { grid-column: 3; grid-row: 2 / 5; align-self: end; justify-self: end; }
+  .paGrip { display: none; }
 }
 `;
-
-const PA_COLS = [
-  { key: 'num', label: 'App #' }, { key: 'period', label: 'Period' }, { key: 'status', label: 'Lifecycle' }, { key: 'done', label: 'Completed to Date' },
-  { key: 'this', label: 'This Period' }, { key: 'ret', label: 'Retainage' }, { key: 'due', label: 'Payment Due' },
-];
 
 export default function PayAppsPage() {
   const params = useParams();
@@ -129,10 +95,10 @@ export default function PayAppsPage() {
   const [loading,setLoading]   = useState(true);
   const [error,setError]       = useState('');
   const [downloading,setDownloading] = useState<string|null>(null);
+  const [bulkBusy,setBulkBusy] = useState(false);
   const { toast, show } = useToast(4000);
   const setToast = (t:{msg:string;type:'success'|'error'}) => show(t.msg, t.type==='success'?'good':'bad');
   const [copiedId, setCopiedId] = useState<string|null>(null);
-  const [bulkSelected, setBulkSelected] = useState<Set<string>>(new Set());
   const [search, setSearch] = useState('');
   const [statusFilter, setStatusFilter] = useState('all');
 
@@ -141,64 +107,60 @@ export default function PayAppsPage() {
   const { ctx } = useProjectContext(projectId);
   const [waiversByApp,setWaiversByApp] = useState<Record<string,{total:number;signed:number}>>({});
   useEffect(()=>{
-    // Both mount reads race in parallel — context never gates waiver coverage.
-    Promise.all([
-      (async()=>{
-        try{
-          const r = await fetch(`/api/lien-waivers/list?projectId=${projectId}`);
-          const d = await r.json();
-          const map:Record<string,{total:number;signed:number}> = {};
-          for(const w of (d.lienWaivers||[])){
-            if(!w?.pay_application_id) continue;
-            const m = map[w.pay_application_id] || (map[w.pay_application_id]={total:0,signed:0});
-            m.total++;
-            if(w.status==='signed') m.signed++;
-          }
-          setWaiversByApp(map);
-        }catch{}
-      })(),
-    ]);
+    (async()=>{
+      try{
+        const r = await fetch(`/api/lien-waivers/list?projectId=${projectId}`);
+        const d = await r.json();
+        const map:Record<string,{total:number;signed:number}> = {};
+        for(const w of (d.lienWaivers||[])){
+          if(!w?.pay_application_id) continue;
+          const m = map[w.pay_application_id] || (map[w.pay_application_id]={total:0,signed:0});
+          m.total++;
+          if(w.status==='signed') m.signed++;
+        }
+        setWaiversByApp(map);
+      }catch(e){
+        // Waiver coverage is enrichment only — the register still renders without it.
+        console.error('lien waiver coverage', e);
+      }
+    })();
   },[projectId]);
 
   const { dragHandlers, draggingIndex } = useDragReorder(payApps, (reordered) => {
     setPayApps(reordered);
-    // Persist new order to DB
-    reordered.forEach((pa: any, idx: number) => {
+    // Persist new order to DB — one PATCH per row, as before.
+    void Promise.all(reordered.map((pa: any, idx: number) =>
       fetch(`/api/pay-apps/${pa.id}`, {
         method: 'PATCH',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ sort_order: idx }),
-      }).catch(() => {});
-    });
+      }).then(r => r.ok, () => false),
+    )).then(oks => { if (oks.some(ok => !ok)) setToast({ msg: "The new order didn't fully save. Reload to see the saved order.", type: 'error' }); });
   });
 
-  const toggleBulk = (id: string) => {
-    setBulkSelected(prev => {
-      const next = new Set(prev);
-      if (next.has(id)) next.delete(id); else next.add(id);
-      return next;
-    });
+  const handleBulkApprove = async (list:any[]) => {
+    setBulkBusy(true);
+    const approved = new Set<string>();
+    for (const pa of list) {
+      try {
+        const r = await fetch(`/api/pay-apps/${pa.id}`, {
+          method: 'PATCH',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ status: 'approved' }),
+        });
+        if (r.ok) approved.add(pa.id);
+      } catch (e) {
+        console.error('bulk approve', e);
+      }
+    }
+    setPayApps(prev => prev.map(p => approved.has(p.id) ? { ...p, status: 'approved' } : p));
+    setBulkBusy(false);
+    if (approved.size === list.length) setToast({ msg: `${approved.size} pay app${approved.size===1?'':'s'} approved.`, type: 'success' });
+    else setToast({ msg: `${approved.size} of ${list.length} approved. Try the rest again.`, type: 'error' });
   };
 
-  const handleBulkApprove = async () => {
-    for (const id of bulkSelected) {
-      await fetch(`/api/pay-apps/${id}`, {
-        method: 'PATCH',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ status: 'approved' }),
-      }).catch(() => {});
-    }
-    setPayApps(prev => prev.map(p => bulkSelected.has(p.id) ? { ...p, status: 'approved' } : p));
-    setBulkSelected(new Set());
-    setToast({ msg: `${bulkSelected.size} pay app(s) approved.`, type: 'success' });
-  };
-
-  const handleBulkExport = async () => {
-    for (const id of bulkSelected) {
-      const pa = payApps.find((p: any) => p.id === id);
-      if (pa) await downloadG702(pa);
-    }
-    setBulkSelected(new Set());
+  const handleBulkExport = async (list:any[]) => {
+    for (const pa of list) await downloadG702(pa);
   };
 
   const load = useCallback(async()=>{
@@ -258,7 +220,7 @@ export default function PayAppsPage() {
   }
 
   function handleCopyPay(id: string, amount: number) {
-    navigator.clipboard.writeText(fmt(amount)).catch(() => {});
+    navigator.clipboard.writeText(fmt(amount)).catch((e) => console.error('clipboard', e));
     setCopiedId(id); setTimeout(() => setCopiedId(null), 2000);
     setToast({ msg: `${fmt(amount)} copied.`, type: 'success' });
   }
@@ -282,21 +244,16 @@ export default function PayAppsPage() {
   // Each app's total_retainage is CUMULATIVE (retainage on completed-to-date), so
   // summing across apps re-counts every prior period. Retainage held to date is
   // the LATEST application's figure alone.
-  const latestApp = payApps.reduce((best:any,p:any)=>{
-    const n = Number(p.app_number ?? p.application_number)||0;
-    const b = best ? (Number(best.app_number ?? best.application_number)||0) : -1;
-    return n>b ? p : best;
-  }, null as any);
-  const retainageHeld  = Number(latestApp?.total_retainage ?? latestApp?.retainage_amount)||0;
+  const latestApp = latestOf(payApps);
+  const retainageHeld  = retOf(latestApp);
 
   // Contract intelligence (from /api/project-context) + waiver coverage rollup
-  const money    = ctx?.money;
-  const original = Number(money?.originalContract)||0;
-  const coTotal  = Number(money?.approvedCoTotal)||0;
-  const revised  = Number(money?.revisedContract)||(original+coTotal);
-  const ctxBilled= Number(money?.billedToDate)||0;
-  const ctxPaid  = Number(money?.paidToDate)||0;
-  const subCount = (ctx?.subs||[]).length;
+  const ctxMoney = ctx?.money;
+  const original = Number(ctxMoney?.originalContract)||0;
+  const coTotal  = Number(ctxMoney?.approvedCoTotal)||0;
+  const revised  = Number(ctxMoney?.revisedContract)||(original+coTotal);
+  const ctxBilled= Number(ctxMoney?.billedToDate)||0;
+  const ctxPaid  = Number(ctxMoney?.paidToDate)||0;
   const outstandingCertified = Math.max(0, totalCertified - ctxPaid);
   const waiverTotals = Object.values(waiversByApp).reduce((a,w)=>({total:a.total+w.total,signed:a.signed+w.signed}),{total:0,signed:0});
   const pendingApproval = payApps.filter((p:any)=>p.status==='submitted').length;
@@ -311,56 +268,89 @@ export default function PayAppsPage() {
   });
   const filtersActive = !!search || statusFilter!=='all';
   const clearFilters = () => { setSearch(''); setStatusFilter('all'); };
-  // Column sort over the whole visible register (every money column, period, lifecycle).
-  const { sort: paSort, setSort: setPaSort, cycle: cyclePaSort } = useSort(null);
-  const paSortValue = useCallback((pa: any, key: string): unknown => {
-    switch (key) {
-      case 'num': return Number(pa.app_number ?? pa.application_number) || 0;
-      case 'period': return pa.period_to || pa.period_from || '';
-      case 'status': return String(pa.status || 'draft');
-      case 'done': return Number(pa.total_completed_stored ?? pa.total_completed) || 0;
-      case 'this': return Number(pa.this_period) || 0;
-      case 'ret': return Number(pa.total_retainage ?? pa.retainage_amount) || 0;
-      case 'due': return Number(pa.current_payment_due) || 0;
-      default: return undefined;
-    }
-  }, []);
-  const sortedVisible = useSortedRows(visible, paSort, paSortValue);
-  // Drag-reorder only makes sense on the whole, unfiltered, unsorted register.
-  const dragEnabled = !filtersActive && !paSort;
+  // Drag-reorder only makes sense on the whole, unfiltered register.
+  const dragEnabled = !filtersActive;
 
   // ── Stat tiles: contract position ──
   const stats: StatItem[] = loading && !ctx
     ? [
-        { label:'Revised Contract', value:'—', sub:'Loading…' },
-        { label:'Billed to Date', value:'—', sub:'Loading…' },
-        { label:'Retainage Held', value:'—', sub:'Loading…' },
-        { label:'Paid to Date', value:'—', sub:'Loading…' },
-        { label:'Lien Waivers', value:'—', sub:'Loading…' },
+        { label:'Revised Contract', value:'—', sub:'Loading…', icon:<Scales size={15}/> },
+        { label:'Billed to Date', value:'—', sub:'Loading…', icon:<Receipt size={15}/> },
+        { label:'Retainage Held', value:'—', sub:'Loading…', icon:<Vault size={15}/> },
+        { label:'Paid to Date', value:'—', sub:'Loading…', icon:<Wallet size={15}/> },
+        { label:'Lien Waivers', value:'—', sub:'Loading…', icon:<Lock size={15}/> },
       ]
     : [
-        { label:'Revised Contract', value:fmt(revised), sub:`${fmt(original)} original ${coTotal>=0?'+':'-'} ${fmt(Math.abs(coTotal))} approved COs`, href:`/app/projects/${projectId}/contracts` },
-        { label:'Billed to Date', value:fmt(ctxBilled), sub: revised > 0 ? `${Math.round((ctxBilled / revised) * 1000) / 10}% of revised · ${payApps.length} application${payApps.length===1?'':'s'}` : `No contract value set · ${payApps.length} application${payApps.length===1?'':'s'}` },
-        { label:'Retainage Held', value:fmt(retainageHeld), sub:`Held to date · ${Number(money?.retainagePct)||10}% per contract` },
-        { label:'Paid to Date', value:fmt(ctxPaid), tone: outstandingCertified>0 ? 'warn' : ctxPaid>0 ? 'good' : 'default', sub: outstandingCertified>0 ? `${fmt(outstandingCertified)} certified, unpaid` : 'All certified money collected', onClick: pendingApproval>0 ? () => setStatusFilter(s => (s==='submitted' ? 'all' : 'submitted')) : undefined },
-        { label:'Lien Waivers', value: waiverTotals.total>0 ? `${waiverTotals.signed} of ${waiverTotals.total}` : '—', tone: waiverTotals.total>0 ? (waiverTotals.signed===waiverTotals.total ? 'good' : 'warn') : 'default', sub: waiverTotals.total>0 ? 'Signed — payment is waiver-gated' : 'Generate at owner approval', href:`/app/projects/${projectId}/lien-waivers` },
+        { label:'Revised Contract', value:fmt(revised), sub:`${fmt(original)} original ${coTotal>=0?'+':'-'} ${fmt(Math.abs(coTotal))} approved COs`, icon:<Scales size={15}/>, href:`/app/projects/${projectId}/contracts` },
+        { label:'Billed to Date', value:fmt(ctxBilled), sub: revised > 0 ? `${Math.round((ctxBilled / revised) * 1000) / 10}% of revised · ${payApps.length} application${payApps.length===1?'':'s'}` : `No contract value set · ${payApps.length} application${payApps.length===1?'':'s'}`, icon:<Receipt size={15}/> },
+        { label:'Retainage Held', value:fmt(retainageHeld), sub:`Held to date · ${Number(ctxMoney?.retainagePct)||10}% per contract`, icon:<Vault size={15}/> },
+        { label:'Paid to Date', value:fmt(ctxPaid), tone: outstandingCertified>0 ? 'warn' : ctxPaid>0 ? 'good' : 'default', sub: outstandingCertified>0 ? `${fmt(outstandingCertified)} certified, unpaid` : 'All certified money collected', icon:<Wallet size={15}/>, onClick: pendingApproval>0 ? () => setStatusFilter(s => (s==='submitted' ? 'all' : 'submitted')) : undefined, active: pendingApproval>0 ? statusFilter==='submitted' : undefined },
+        { label:'Lien Waivers', value: waiverTotals.total>0 ? `${waiverTotals.signed} of ${waiverTotals.total}` : '—', tone: waiverTotals.total>0 ? (waiverTotals.signed===waiverTotals.total ? 'good' : 'warn') : 'default', sub: waiverTotals.total>0 ? 'Signed — payment is waiver-gated' : 'Generate at owner approval', icon:<Lock size={15}/>, href:`/app/projects/${projectId}/lien-waivers` },
       ];
 
-  const allVisibleSelected = visible.length>0 && visible.every((p:any)=>bulkSelected.has(p.id));
-
-  // ── Register body: loading / error / empty / no-match / rows — each distinct ──
-  let listBody: React.ReactNode;
-  if (loading) {
-    listBody = (
-      <div style={{ padding: 16, display: 'flex', flexDirection: 'column', gap: 14 }} aria-busy="true">
-        {[0,1,2,3,4].map(i => (
-          <div key={i} style={{ display: 'grid', gridTemplateColumns: '60px 150px 1fr 120px 120px 120px', gap: 14, alignItems: 'center' }}>
-            <div className="paSkel" /><div className="paSkel" /><div className="paSkel" style={{ width: '70%' }} /><div className="paSkel" /><div className="paSkel" /><div className="paSkel" />
+  // ── Register columns ──
+  const latestMoney = (pick:(pa:any)=>number) => (list:any[]) => <span className="paMoney" title="Latest application (cumulative)">{fmt(pick(latestOf(list)))}</span>;
+  const columns: Column<any>[] = [
+    {
+      key:'num', header:'App #', primary:true, width:96, groupable:false,
+      accessor:pa=>appNo(pa),
+      render:pa=>{
+        const idx = payApps.indexOf(pa);
+        const handlers = dragEnabled && idx>=0 ? dragHandlers(idx) : null;
+        return (
+          <span className="paNum">
+            {handlers && (
+              <span className="paGrip" onClick={e=>e.stopPropagation()}>
+                <DragHandle {...handlers} index={idx} isDragging={draggingIndex===idx} />
+              </span>
+            )}
+            #{pa.app_number ?? pa.application_number}
+          </span>
+        );
+      },
+    },
+    { key:'period', header:'Period', phone:'show', accessor:pa=>pa.period_to ? String(pa.period_to).slice(0,10) : pa.period_from ? String(pa.period_from).slice(0,10) : '', render:pa=><span className="paMuted">{fmtDay(pa.period_from)} – {fmtDay(pa.period_to, true)}</span> },
+    { key:'status', header:'Status', phone:'show', accessor:pa=>statusBadge(pa.status).label, render:pa=>{ const b=statusBadge(pa.status); return <Badge tone={b.tone} dot>{b.label}</Badge>; } },
+    {
+      key:'lifecycle', header:'Lifecycle', phone:'hide', sortable:false, groupable:false,
+      accessor:pa=>{ const w=waiversByApp[pa.id]; return w && w.total>0 ? `${w.signed} of ${w.total} waivers signed` : ''; },
+      render:pa=>{
+        const w = waiversByApp[pa.id];
+        return (
+          <div className="paLife">
+            <LifecycleRail module="pay_applications" status={pa.status||'draft'} since={pa.updated_at || pa.created_at} changed={liveChanged.has(pa.id)} showAction={false}/>
+            {w && w.total>0 && <div className="paWaivers" data-ok={w.signed===w.total ? 'true' : undefined}>{w.signed} of {w.total} waivers signed</div>}
           </div>
-        ))}
-      </div>
-    );
-  } else if (error) {
+        );
+      },
+    },
+    {
+      key:'done', header:'Completed to Date', align:'right', phone:'hide', accessor:doneOf, total:latestMoney(doneOf), format:fmt,
+      render:pa=>{ const done=doneOf(pa); const cs=Number(pa.contract_sum_to_date ?? pa.contract_sum)||0; return <><span className="paMoney">{fmt(done)}</span>{cs>0 && <span className="paSub">{Math.round((done/cs)*100)}% of {fmt(cs)}</span>}</>; },
+    },
+    { key:'this', header:'This Period', align:'right', phone:'hide', accessor:pa=>Number(pa.this_period)||0, total:'sum', format:fmt, render:pa=>fmt(pa.this_period||0) },
+    { key:'ret', header:'Retainage', align:'right', phone:'hide', accessor:retOf, total:latestMoney(retOf), format:fmt, render:pa=>fmt(retOf(pa)) },
+    {
+      key:'due', header:'Payment Due', align:'right', phone:'show', accessor:pa=>Number(pa.current_payment_due)||0, total:'sum', format:fmt,
+      render:pa=><><span className="paMoney">{fmt(pa.current_payment_due||0)}</span>{copiedId===pa.id && <span className="paSub">Copied</span>}</>,
+    },
+    { key:'contract', header:'Contract to Date', align:'right', hidden:true, phone:'hide', accessor:pa=>Number(pa.contract_sum_to_date ?? pa.contract_sum)||0, render:pa=>fmt(pa.contract_sum_to_date ?? pa.contract_sum) },
+  ];
+
+  const payAppActions = (pa:any): Action[] => [
+    { label:'Open Pay App', icon:<Clipboard size={15}/>, href:`/app/projects/${projectId}/pay-apps/${pa.id}` },
+    { label: downloading===pa.id ? 'Generating…' : 'G702 / G703 PDF', icon:<FileText size={15}/>, onClick:()=>downloadG702(pa), disabled:!!downloading },
+    // No inline amount edit: PATCHing current_payment_due raw would
+    // bypass the exact-cents engine and desync retainage/earned/G702.
+    // The pay app composer recomputes every figure server-side.
+    { label:'Edit in Pay App', icon:<PencilSimple size={15}/>, href:`/app/projects/${projectId}/pay-apps/${pa.id}` },
+    { label:'Copy Payment Due', icon:<Copy size={15}/>, onClick:()=>handleCopyPay(pa.id, Number(pa.current_payment_due)||0) },
+    { label:'Delete', icon:<Trash size={15}/>, onClick:()=>confirmDeletePayApp(pa), tone:'danger' },
+  ];
+
+  // ── Register body: error / empty / rows (loading is the table's own skeleton) ──
+  let listBody: React.ReactNode;
+  if (!loading && error) {
     listBody = (
       <EmptyState
         icon={<WarningCircle size={22}/>}
@@ -369,131 +359,42 @@ export default function PayAppsPage() {
         action={<Button icon={<ArrowClockwise size={15}/>} onClick={load}>Retry</Button>}
       />
     );
-  } else if (payApps.length===0) {
-    listBody = (
-      <div className="paCq">
-        <div>
-          <EmptyState
-            icon={<Clipboard size={22}/>}
-            title={revised>0?`${fmt(revised)} under contract — nothing billed yet`:'No pay applications yet'}
-            text={revised>0
-              ? `Application #1 builds your schedule of values against the ${fmt(revised)} contract${coTotal>0?` (${fmt(original)} base + ${fmt(coTotal)} approved COs)`:''}. Every application after it rolls the SOV forward — you only enter each period's work.`
-              : 'A pay application is the AIA G702/G703 packet that bills the owner for a period of work. Build the schedule of values once — it rolls forward automatically every period after.'}
-            action={<Button icon={<Plus size={15} weight="bold"/>} href={`/app/projects/${projectId}/pay-apps/new`}>Create Application #1</Button>}
-          />
-          {ctx && (
-            <div style={{ padding: '0 20px 16px' }}>
-              <FlowStrip steps={[
-                { title: 'Build the SOV', desc: 'Scheduled values and work completed' },
-                { title: 'Submit to the Owner', desc: 'One-click approval link' },
-                { title: 'Waivers Generate', desc: subCount > 0 ? `Conditional, for your ${subCount} sub${subCount === 1 ? '' : 's'}` : 'Conditional, for every sub' },
-                { title: 'Payment Is Waiver-Gated', desc: 'Mark Paid waits for signed waivers' },
-              ]}/>
-            </div>
-          )}
-        </div>
-      </div>
-    );
-  } else if (visible.length===0) {
+  } else if (!loading && payApps.length===0) {
     listBody = (
       <EmptyState
         icon={<Clipboard size={22}/>}
-        title="No applications match these filters"
-        text="Clear the search or status filter to see more."
-        action={<Button onClick={clearFilters}>Clear Filters</Button>}
+        title={revised>0?`${fmt(revised)} under contract — nothing billed yet`:'No pay applications yet'}
+        text={revised>0
+          ? `Application #1 sets the schedule of values against the ${fmt(revised)} contract${coTotal>0?` (${fmt(original)} base + ${fmt(coTotal)} approved COs)`:''}. Every app after it rolls forward.`
+          : 'Application #1 sets the schedule of values. Every app after it rolls forward.'}
+        action={<Button icon={<Plus size={15} weight="bold"/>} href={`/app/projects/${projectId}/pay-apps/new`}>Create Application #1</Button>}
       />
     );
   } else {
     listBody = (
-      <>
-        {bulkSelected.size > 0 && (
-          <div className="paBulk" role="region" aria-label="Bulk actions">
-            <b>{bulkSelected.size} selected</b>
-            <Button size="sm" icon={<CheckCircle size={14}/>} onClick={handleBulkApprove}>Approve Selected</Button>
-            <Button size="sm" icon={<FileText size={14}/>} onClick={handleBulkExport} disabled={!!downloading}>Export Selected PDFs</Button>
-            <Button size="sm" variant="ghost" icon={<X size={14}/>} onClick={()=>setBulkSelected(new Set())}>Clear</Button>
-          </div>
-        )}
-        <div className="paTableWrap">
-          <SortBar columns={PA_COLS} sort={paSort} onChange={setPaSort} />
-          <table className="paTable">
-            <thead>
-              <tr>
-                <th aria-label="Reorder" />
-                <th style={{ width: 28 }}>
-                  <input type="checkbox" className="paCheck" aria-label="Select all" checked={allVisibleSelected} onChange={() => { if (allVisibleSelected) setBulkSelected(new Set()); else setBulkSelected(new Set(visible.map((p:any) => p.id))); }} />
-                </th>
-                <SortTh col="num" label="App #" sort={paSort} onSort={cyclePaSort} />
-                <SortTh col="period" label="Period" sort={paSort} onSort={cyclePaSort} />
-                <SortTh col="status" label="Lifecycle" sort={paSort} onSort={cyclePaSort} />
-                <SortTh col="done" label="Completed to Date" sort={paSort} onSort={cyclePaSort} align="right" />
-                <SortTh col="this" label="This Period" sort={paSort} onSort={cyclePaSort} align="right" />
-                <SortTh col="ret" label="Retainage" sort={paSort} onSort={cyclePaSort} align="right" />
-                <SortTh col="due" label="Payment Due" sort={paSort} onSort={cyclePaSort} align="right" />
-                <th aria-label="Actions" />
-              </tr>
-            </thead>
-            <tbody>
-              {sortedVisible.map((pa:any)=>{
-                const idx = payApps.indexOf(pa);
-                const handlers = dragEnabled ? dragHandlers(idx) : null;
-                const done=Number(pa.total_completed_stored ?? pa.total_completed)||0;
-                const cs=Number(pa.contract_sum_to_date ?? pa.contract_sum)||0;
-                const w = waiversByApp[pa.id];
-                const num = pa.app_number ?? pa.application_number;
-                return (
-                  <tr
-                    key={pa.id}
-                    onClick={()=>router.push(`/app/projects/${projectId}/pay-apps/${pa.id}`)}
-                    data-dragging={dragEnabled && draggingIndex===idx ? 'true' : undefined}
-                    {...(handlers||{})}
-                  >
-                    <td onClick={e=>e.stopPropagation()}>
-                      {handlers && <DragHandle {...handlers} index={idx} isDragging={draggingIndex===idx} />}
-                    </td>
-                    <td onClick={e=>e.stopPropagation()}>
-                      <input type="checkbox" className="paCheck" aria-label={`Select pay app #${num}`} checked={bulkSelected.has(pa.id)} onChange={()=>toggleBulk(pa.id)} />
-                    </td>
-                    <td><span className="paNum">#{num}</span></td>
-                    <td className="paMuted">{fmtDay(pa.period_from)} – {fmtDay(pa.period_to, true)}</td>
-                    <td>
-                      <div className="paLife">
-                        <LifecycleRail module="pay_applications" status={pa.status||'draft'} since={pa.updated_at || pa.created_at} changed={liveChanged.has(pa.id)} showAction={false}/>
-                        {w && w.total>0 && <div className="paWaivers" data-ok={w.signed===w.total ? 'true' : undefined}>{w.signed} of {w.total} waivers signed</div>}
-                      </div>
-                    </td>
-                    <td data-align="right">
-                      <span className="paMoney">{fmt(done)}</span>
-                      {cs>0 && <span className="paSub">{Math.round((done/cs)*100)}% of {fmt(cs)}</span>}
-                    </td>
-                    <td data-align="right">{fmt(pa.this_period||0)}</td>
-                    <td data-align="right">{fmt(pa.total_retainage ?? pa.retainage_amount)}</td>
-                    <td data-align="right">
-                      <span className="paMoney">{fmt(pa.current_payment_due||0)}</span>
-                      {copiedId===pa.id && <span className="paSub">Copied</span>}
-                    </td>
-                    <td onClick={e=>e.stopPropagation()}>
-                      <div style={{ display:'inline-flex', alignItems:'center', gap:6 }}>
-                        <Badge tone={statusBadge(pa.status).tone}>{statusBadge(pa.status).label}</Badge>
-                        <RowActions actions={[
-                          { label:'Open Pay App', icon:<Clipboard size={15}/>, href:`/app/projects/${projectId}/pay-apps/${pa.id}` },
-                          { label: downloading===pa.id ? 'Generating…' : 'G702 / G703 PDF', icon:<FileText size={15}/>, onClick:()=>downloadG702(pa), disabled:!!downloading },
-                          // No inline amount edit: PATCHing current_payment_due raw would
-                          // bypass the exact-cents engine and desync retainage/earned/G702.
-                          // The pay app composer recomputes every figure server-side.
-                          { label:'Edit in Pay App', icon:<PencilSimple size={15}/>, href:`/app/projects/${projectId}/pay-apps/${pa.id}` },
-                          { label:'Copy Payment Due', icon:<Copy size={15}/>, onClick:()=>handleCopyPay(pa.id, Number(pa.current_payment_due)||0) },
-                          { label:'Delete', icon:<Trash size={15}/>, onClick:()=>confirmDeletePayApp(pa), tone:'danger' },
-                        ]}/>
-                      </div>
-                    </td>
-                  </tr>
-                );
-              })}
-            </tbody>
-          </table>
-        </div>
-      </>
+      <DataTable<any>
+        tableId="project-pay-apps"
+        exportName="pay-applications"
+        columns={columns}
+        rows={visible}
+        loading={loading}
+        rowKey={pa=>pa.id}
+        onRowClick={pa=>router.push(`/app/projects/${projectId}/pay-apps/${pa.id}`)}
+        rowActions={payAppActions}
+        rowStyle={pa=>(dragEnabled && draggingIndex===payApps.indexOf(pa) ? { opacity: 0.5 } : undefined)}
+        bulkActions={list=>[
+          { label: bulkBusy ? 'Approving…' : 'Approve Selected', icon:<CheckCircle size={14}/>, onClick:()=>{ void handleBulkApprove(list); }, disabled: bulkBusy },
+          { label:'Export Selected PDFs', icon:<FileText size={14}/>, onClick:()=>{ void handleBulkExport(list); }, disabled: !!downloading },
+        ]}
+        empty={
+          <EmptyState
+            icon={<Clipboard size={22}/>}
+            title="No applications match these filters"
+            text="Clear the search or status filter to see more."
+            action={<Button onClick={clearFilters}>Clear Filters</Button>}
+          />
+        }
+      />
     );
   }
 
@@ -507,7 +408,7 @@ export default function PayAppsPage() {
           { label:'Pay Applications' },
         ]}
         title="Pay Applications"
-        subtitle="AIA G702/G703 — Application and Certificate for Payment. Retainage comes off the top."
+        subtitle="AIA G702/G703 billing — retainage comes off the top."
         actions={
           <Button variant="primary" data-tour="new-pay-app" icon={<Plus size={15} weight="bold"/>} href={`/app/projects/${projectId}/pay-apps/new`}>
             New Pay Application
@@ -533,7 +434,6 @@ export default function PayAppsPage() {
                 {filtersActive && <Button variant="ghost" size="sm" onClick={clearFilters}>Clear</Button>}
               </>
             }
-            actions={<span className="paMuted" style={{ fontSize:'var(--fs-sm)' }}>{visible.length} of {payApps.length}{dragEnabled ? ' · drag to reorder' : ''}</span>}
           />
         )}
 
