@@ -194,8 +194,6 @@ function BidLevelingBoard() {
         /* Per-line prices the submission itself carried (unit_price_items),
            keyed to this package's lines by the API. A stated status wins over
            the AI reading; a priced line with no status is included. */
-        const amounts = (b.lineAmounts || {}) as Record<string, { amountCents: number | null; status?: ScopeStatus }>;
-        for (const [lineId, a] of Object.entries(amounts)) {
         const amounts = (b.lineAmounts || {}) as Record<string, { amountCents: number | null; status?: ScopeStatus | 'not_quoted' }>;
         for (const [lineId, a] of Object.entries(amounts)) {
           /* The bidder said they did not quote it: off the bid entirely, so
@@ -220,8 +218,6 @@ function BidLevelingBoard() {
           baseBidCents: Math.round(Number(b.base || 0) * 100),
           scope,
           alternates: Array.isArray(b.alternates) ? b.alternates : [],
-          adjustments: b.gap ? { carryCents: Math.round(Number(b.gap) * 100), note: 'Scope gap' } : undefined,
-          bondIncluded: !!b.bond,
           /* A separately priced bond is carried in the leveled total only when
              the package requires a bond; otherwise it is not part of the job. */
           adjustments: (() => {
