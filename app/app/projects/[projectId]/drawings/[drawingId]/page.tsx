@@ -977,9 +977,10 @@ export default function DrawingWorkspace() {
 
 const CSS = `
 .dz{--dz-ink:rgb(226,232,240);--dz-dim:rgb(148,163,184);--dz-line:rgba(148,163,184,.18);--dz-chrome:rgb(17,24,35);--dz-chrome-2:rgb(24,33,47);--dz-well:rgb(10,14,22);--dz-hot:var(--brand-primary);
-  display:flex;flex-direction:column;height:calc(100vh - 150px);min-height:520px;border:1px solid var(--dz-line);border-radius:10px;overflow:hidden;background:var(--dz-chrome);color:var(--dz-ink);font-size:13px}
+  display:flex;flex-direction:column;height:calc(100vh - 150px);min-height:520px;width:100%;max-width:100%;min-width:0;box-sizing:border-box;border:1px solid var(--dz-line);border-radius:10px;overflow:hidden;background:var(--dz-chrome);color:var(--dz-ink);font-size:13px}
 .dz:fullscreen{height:100vh !important;border-radius:0}
-.dz-top{display:flex;align-items:center;gap:6px;height:52px;padding:0 10px;background:var(--dz-chrome);border-bottom:1px solid var(--dz-line);flex:none;min-width:0}
+.dz-top{display:flex;align-items:center;gap:6px;height:52px;padding:0 10px;background:var(--dz-chrome);border-bottom:1px solid var(--dz-line);flex:none;min-width:0;overflow-x:auto;scrollbar-width:none}
+.dz-top::-webkit-scrollbar{display:none}
 .dz-grow{flex:1}
 .dz-div{width:1px;height:22px;background:var(--dz-line);margin:0 4px;flex:none}
 .dz-ib{display:inline-grid;place-items:center;min-width:34px;height:34px;border-radius:7px;border:0;background:none;color:var(--dz-dim);cursor:pointer;font:600 18px/1 inherit;text-decoration:none;flex:none}
@@ -991,7 +992,7 @@ const CSS = `
 .dz-sel select{position:absolute;inset:0;opacity:0;cursor:pointer;font-size:16px}
 .dz-sel-v{display:flex;gap:8px;align-items:baseline;min-width:0;white-space:nowrap}
 .dz-sel-v b{font-size:15px;color:var(--title-page,var(--dz-hot))}
-.dz-sel-v span{color:var(--dz-dim);overflow:hidden;text-overflow:ellipsis;max-width:34vw}
+.dz-sel-v span{color:var(--dz-dim);overflow:hidden;text-overflow:ellipsis;max-width:22vw}
 .dz-sel-sm{height:32px;gap:6px;font-weight:600}
 .dz-zoom{min-width:78px;justify-content:space-between}
 .dz-act{display:inline-flex;align-items:center;gap:6px;height:34px;padding:0 12px;margin-left:6px;border-radius:7px;border:1px solid var(--dz-line);background:var(--dz-chrome-2);color:var(--dz-ink);font:600 13px/1 inherit;cursor:pointer;white-space:nowrap}
@@ -1008,7 +1009,7 @@ const CSS = `
 .dz-wt[data-on]{border-color:var(--dz-line);background:var(--dz-chrome);color:var(--dz-ink)}
 .dz-toggle{display:inline-flex;align-items:center;gap:6px;color:var(--dz-dim);white-space:nowrap;cursor:pointer}
 .dz-toggle input{accent-color:var(--dz-hot)}
-.dz-body{flex:1;min-height:0;display:grid;grid-template-columns:88px minmax(0,1fr) 300px}
+.dz-body{flex:1;min-height:0;min-width:0;display:grid;grid-template-columns:88px minmax(0,1fr) minmax(240px,300px)}
 @media (max-width:1100px){.dz-body{grid-template-columns:88px minmax(0,1fr)}.dz-side{display:none}.dz-props{padding-left:12px}}
 .dz-tools{display:flex;flex-direction:column;align-items:center;gap:2px;padding:8px 6px;background:var(--dz-chrome);border-right:1px solid var(--dz-line);overflow:visible;position:relative;z-index:3}
 .dz-tgroup{display:grid;grid-template-columns:repeat(2,36px);gap:3px;padding-bottom:6px;margin-bottom:6px;border-bottom:1px solid var(--dz-line)}
@@ -1066,7 +1067,7 @@ const CSS = `
 .dz-toast button{background:none;border:0;color:var(--dz-dim);cursor:pointer}
 .dz-side{display:flex;flex-direction:column;min-height:0;background:var(--dz-chrome);border-left:1px solid var(--dz-line)}
 .dz-tabs{display:flex;border-bottom:1px solid var(--dz-line);flex:none}
-.dz-tabs button{flex:1;display:inline-flex;justify-content:center;gap:6px;padding:13px 4px;border:0;border-bottom:2px solid transparent;background:none;color:var(--dz-dim);font:600 13px/1 inherit;cursor:pointer}
+.dz-tabs button{flex:1;min-width:0;display:inline-flex;justify-content:center;gap:5px;padding:13px 2px;white-space:nowrap;border:0;border-bottom:2px solid transparent;background:none;color:var(--dz-dim);font:600 13px/1 inherit;cursor:pointer}
 .dz-tabs button span{color:var(--dz-dim);font-weight:500}
 .dz-tabs button[data-on]{color:var(--dz-ink);border-bottom-color:var(--dz-hot)}
 .dz-pane{flex:1;overflow:auto;padding:6px}
