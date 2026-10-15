@@ -1,291 +1,166 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { createServerClient, getUser } from '@/lib/supabase-server';
-import { toCents, toDollars, sumCents, subCents, scaleCents } from '@/lib/calc';
+import { apiError } from '@/lib/api-error';
+import { requestDay } from '@/lib/time-zone';
+import { contractMoney } from '@/lib/job-contract';
+import { buildCommitments, isLiveCommitment } from '@/lib/commitments';
+import { projectCashFlow } from '@/lib/cash-flow-projection';
 
-function monthLabel(offset: number): string {
-  const d = new Date();
-  d.setMonth(d.getMonth() + offset);
-  return d.toLocaleString('en-US', { month: 'short', year: 'numeric' });
-}
+/**
+ * GET — the job's six-month cash flow. Every figure is money really still
+ * owed in or out (see lib/cash-flow-projection.ts): sent-but-unpaid pay apps,
+ * unpaid owner invoices, unpaid vendor bills, contract still to bill and
+ * committed cost still to bill (both spread only to the job's end month), and
+ * retainage held. A closed job carries only its open items.
+ */
 
-function monthRange(offset: number): { start: string; end: string } {
-  const d = new Date();
-  d.setMonth(d.getMonth() + offset);
-  const y = d.getFullYear();
-  const m = d.getMonth();
-  const start = `${y}-${String(m + 1).padStart(2, '0')}-01`;
-  const lastDay = new Date(y, m + 1, 0).getDate();
-  const end = `${y}-${String(m + 1).padStart(2, '0')}-${String(lastDay).padStart(2, '0')}`;
-  return { start, end };
-}
+/** Pay apps that went to the owner and are waiting on payment. */
+const SENT_UNPAID = new Set(['submitted', 'under_review', 'in_review', 'certified', 'approved']);
+/** Bills / invoices that are not owed (paid, or never real). */
+const NOT_OWED = new Set(['paid', 'void', 'voided', 'cancelled', 'canceled', 'rejected', 'draft']);
+/** Days from a pay app going out to the owner's payment. */
+const PAY_TERMS_DAYS = 30;
+
+const N = (v: unknown) => { const n = Number(v); return Number.isFinite(n) ? n : 0; };
+const low = (v: unknown) => String(v ?? '').toLowerCase().trim();
+const day = (v: unknown) => (v ? String(v).slice(0, 10) : null);
+const addDays = (d: string, n: number) => {
+  const t = new Date(`${d}T00:00:00Z`); t.setUTCDate(t.getUTCDate() + n); return t.toISOString().slice(0, 10);
+};
+const owed = (r: any) => Math.max(0, (N(r.total) || N(r.amount)) - N(r.paid_amount));
 
 export async function GET(
   req: NextRequest,
   { params }: { params: Promise<{ projectId: string }> }
 ) {
+  const user = await getUser(req);
+  if (!user) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
   const { projectId } = await params;
-  try {
-    const user = await getUser(req);
-    if (!user) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
+  const t = user.tenantId;
 
+  try {
     const db = createServerClient();
 
-    // Verify project belongs to tenant
     const { data: project, error: pErr } = await db
       .from('projects')
-      .select('id, name, original_contract_value, contract_value, original_contract, contract_amount, retainage_pct, start_date, end_date, status')
+      .select('id, name, status, original_contract_amount, contract_amount, retainage_pct, start_date, end_date')
       .eq('id', projectId)
-      .eq('tenant_id', user.tenantId)
-      .single();
-    if (pErr || !project) return NextResponse.json({ error: 'Project not found' }, { status: 404 });
-
+      .eq('tenant_id', t)
+      .maybeSingle();
+    if (pErr) throw pErr;
+    if (!project) return NextResponse.json({ error: 'Project not found' }, { status: 404 });
     const p = project as any;
 
-    // Fetch all financial data in parallel
-    const [
-      { data: payApps },
-      { data: invoices },
-      { data: bills },
-      { data: contracts },
-      { data: changeOrders },
-    ] = await Promise.all([
+    const [payAppsQ, invoicesQ, billsQ, contractsQ, posQ, legacyQ, cosQ, budgetQ, tasksQ] = await Promise.all([
       db.from('pay_applications')
-        .select('id, app_number, status, period_to, current_payment_due, retainage_held, total_retainage, total_completed_stored, created_at')
-        .eq('project_id', projectId)
-        .eq('tenant_id', user.tenantId)
-        .order('app_number', { ascending: true }),
-      /* tenant_id alongside project_id on both of these. The project is
-         verified against the tenant above, so a foreign projectId never gets
-         this far and nothing was exposed — but relying on that means the
-         isolation of these two queries lives in a check forty lines away.
-         Every other query in this route carries the filter; these two did not. */
+        .select('id, app_number, status, period_to, submitted_at, created_at, current_payment_due, payment_amount, total_retainage, retainage_held, retainage_percent, total_completed_stored, deleted_at')
+        .eq('project_id', projectId).eq('tenant_id', t),
       db.from('invoices')
-        .select('id, invoice_number, vendor_name, amount, status, due_date, description, created_at')
-        .eq('project_id', projectId)
-        .eq('tenant_id', user.tenantId)
-        .eq('direction', 'receivable') // money in; vendor bills are money out (bills)
-        .order('created_at', { ascending: false }),
+        .select('id, invoice_number, vendor_name, amount, total, paid_amount, status, due_date, direction, created_at')
+        .eq('project_id', projectId).eq('tenant_id', t),
       db.from('bills')
-        .select('id, vendor_name, amount, status, due_date, description, created_at')
-        .eq('project_id', projectId)
-        .eq('tenant_id', user.tenantId)
-        .order('created_at', { ascending: false }),
+        .select('id, bill_number, vendor_name, amount, total, paid_amount, status, due_date, created_at')
+        .eq('project_id', projectId).eq('tenant_id', t),
       db.from('contracts')
-        .select('id, party_company, contract_amount, status, retainage_pct, created_at')
-        .eq('project_id', projectId)
-        .eq('tenant_id', user.tenantId),
-      db.from('change_orders')
-        .select('id, title, amount, status, created_at')
-        .eq('project_id', projectId)
-        .eq('tenant_id', user.tenantId),
+        .select('id, contract_number, contract_type, title, trade, scope_summary, party_name, party_company, vendor_name, counterparty_name, status, amount, contract_amount, original_amount, approved_changes, invoiced_amount, paid_amount, retainage_pct, executed_date, executed_at, bid_package_id')
+        .eq('project_id', projectId).eq('tenant_id', t),
+      db.from('purchase_orders')
+        .select('id, po_number, purchase_order, vendor_name, description, cost_code, status, total, subtotal, tax, shipping, line_items, issued_date, notes')
+        .eq('project_id', projectId).eq('tenant_id', t),
+      db.from('commitments')
+        .select('id, commitment_number, commitment_type, vendor_name, description, scope_of_work, status, original_amount, approved_changes, invoiced_to_date, retainage_held, contract_date, bid_package_id')
+        .eq('project_id', projectId).eq('tenant_id', t),
+      db.from('change_orders').select('id, status, amount, cost_impact').eq('project_id', projectId).eq('tenant_id', t),
+      db.from('budget_lines').select('id, committed, actual').eq('project_id', projectId).eq('tenant_id', t),
+      db.from('schedule_tasks').select('id, end_date, status, pct_complete').eq('project_id', projectId).eq('tenant_id', t),
     ]);
+    for (const q of [payAppsQ, invoicesQ, billsQ, contractsQ, cosQ]) if (q.error) throw q.error;
 
-    const allPayApps = (payApps || []) as any[];
-    const allInvoices = (invoices || []) as any[];
-    const allBills = (bills || []) as any[];
-    const allContracts = (contracts || []) as any[];
-    const allCOs = (changeOrders || []) as any[];
+    const payApps = ((payAppsQ.data || []) as any[]).filter((a) => !a.deleted_at && !['void', 'voided', 'rejected'].includes(low(a.status)));
+    const invoices = (invoicesQ.data || []) as any[];
+    const bills = (billsQ.data || []) as any[];
+    const contracts = (contractsQ.data || []) as any[];
+    // Optional sources: a missing table or column leaves them empty, never the page.
+    const pos = (posQ.error ? [] : posQ.data || []) as any[];
+    const legacy = (legacyQ.error ? [] : legacyQ.data || []) as any[];
+    const budget = (budgetQ.error ? [] : budgetQ.data || []) as any[];
+    const tasks = (tasksQ.error ? [] : tasksQ.data || []) as any[];
 
-    // Contract totals (all money math in integer cents). Original = first
-    // POSITIVE contract column (see project-report/route.ts) — many projects
-    // leave contract_amount at 0 and carry the value in contract_value.
-    const contractAmountCents = toCents(p.original_contract_value || p.contract_value || p.original_contract || p.contract_amount || 0);
-    const retainagePct = p.retainage_pct || 10;
-    const approvedCOs = allCOs.filter((co: any) => co.status === 'approved');
-    const totalCOAmountCents = sumCents(approvedCOs.map((co: any) => toCents(co.amount || 0)));
-    const adjustedContractCents = sumCents([contractAmountCents, totalCOAmountCents]);
+    // Contract: the same rule as /api/project-context and the owner portal.
+    const prime = contracts.find((c) => low(c.contract_type) === 'prime') ?? null;
+    const contract = contractMoney({ project: p, prime, changeOrders: (cosQ.data || []) as any[] });
 
-    /* Total billed so far — the LATEST application's figure, not a sum.
-       total_completed_stored is AIA G702 line 4, "Total Completed and Stored
-       to Date": already cumulative on every application, so adding them counts
-       application 1's work once for every application that followed it.
-
-       This fed remainingToBill, which feeds the monthly billing target below —
-       so on a job billed to $3.73M across six applications it computed $13.8M
-       billed, clamped remaining-to-bill to zero, and forecast that there was
-       nothing left to bill on a job 44% complete. A contractor plans payroll
-       off that number.
-
-       Ties on app_number happen in real data; break them on the larger
-       cumulative total so a stray duplicate carrying 0 can never win and zero
-       out the whole forecast. (Same rule as the mobile app's financials
-       screen, which is where this reasoning was already written down.) */
-    const latestPayApp = allPayApps.reduce<any | null>((best, a) => {
+    // Billed and retainage held: the latest application (both are cumulative).
+    const latest = payApps.reduce<any | null>((best, a) => {
       if (!best) return a;
-      const an = Number(a.app_number) || 0, bn = Number(best.app_number) || 0;
+      const an = N(a.app_number), bn = N(best.app_number);
       if (an !== bn) return an > bn ? a : best;
-      return (Number(a.total_completed_stored) || 0) > (Number(best.total_completed_stored) || 0) ? a : best;
+      return N(a.total_completed_stored) > N(best.total_completed_stored) ? a : best;
     }, null);
-    const totalBilledCents = toCents(latestPayApp?.total_completed_stored || 0);
-    const remainingToBillCents = Math.max(0, subCents(adjustedContractCents, totalBilledCents));
+    const billedToDate = N(latest?.total_completed_stored);
+    const retainageHeld = N(latest?.total_retainage ?? latest?.retainage_held);
+    const retainagePct = N(latest?.retainage_percent) || N(p.retainage_pct) || 10;
 
-    /* Total retainage held — the LATEST application's total_retainage.
-       Two bugs in one line before this:
-
-       1. It read pay_applications.retainage_held, which NO route writes.
-          pay-apps/create computes retainage and stores it as total_retainage
-          (see its G702 math: retainage = percentOf(totalCompletedStored)).
-          retainage_held is only ever written on the PROJECTS table, by
-          financial/project-report. So this sum was structurally zero for every
-          pay application the product has ever created — a GC with $373K held
-          back saw $0 in their cash-flow forecast.
-
-       2. It summed. total_retainage is derived from total_completed_stored,
-          which is cumulative, so it is cumulative too. Even once it read a
-          populated column, adding the applications together would have
-          over-counted it the same way the billed figure was over-counted.
-
-       Falls back to retainage_held for any legacy row that happens to carry
-       it, since reading a stale value beats reporting nothing. */
-    const totalRetainageHeldCents = toCents(
-      latestPayApp?.total_retainage ?? latestPayApp?.retainage_held ?? 0,
-    );
-
-    // Outstanding payables
-    const unpaidBills = allBills.filter((b: any) => b.status !== 'paid');
-    const unpaidInvoices = allInvoices.filter((inv: any) => inv.status !== 'paid');
-
-    // Sub contract totals for payable projections
-    const subContractTotalCents = sumCents(allContracts.map((c: any) => toCents(c.contract_amount || 0)));
-    const paidBillsTotalCents = sumCents(
-      allBills.filter((b: any) => b.status === 'paid').map((b: any) => toCents(b.amount || 0))
-    );
-    const remainingSubPayableCents = Math.max(0, subCents(subContractTotalCents, paidBillsTotalCents));
-
-    // Build 6 monthly periods
-    const periodCount = 6;
-    const monthlyBillingTargetCents = remainingToBillCents > 0 ? scaleCents(remainingToBillCents, 1 / periodCount) : 0;
-    const monthlyPayableTargetCents = remainingSubPayableCents > 0 ? scaleCents(remainingSubPayableCents, 1 / periodCount) : 0;
-
-    let runningBalanceCents = 0;
-    const periods: any[] = [];
-    // Accumulate period receivables/payables in cents so the summary totals
-    // are exact sums of the per-period figures (no rounded-then-resummed drift).
-    let totalReceivablesCents = 0;
-    let totalPayablesCents = 0;
-
-    for (let i = 0; i < periodCount; i++) {
-      const range = monthRange(i);
-      const label = monthLabel(i);
-
-      // Receivables: scheduled pay apps that fall in this period + projected billing
-      const periodPayApps = allPayApps.filter((pa: any) => {
-        const dt = pa.period_to || pa.created_at;
-        return dt && dt >= range.start && dt <= range.end;
+    const unpaidPayApps = payApps
+      .filter((a) => SENT_UNPAID.has(low(a.status)))
+      .map((a) => {
+        const sent = day(a.submitted_at) || day(a.period_to) || day(a.created_at);
+        return {
+          label: `Pay App #${a.app_number}`,
+          amount: Math.max(0, N(a.current_payment_due) - N(a.payment_amount)),
+          expectedDate: sent ? addDays(sent, PAY_TERMS_DAYS) : null,
+        };
       });
-      const scheduledReceivablesCents = sumCents(
-        periodPayApps.map((pa: any) => toCents(pa.current_payment_due || 0))
-      );
-      // If no scheduled pay apps, use projected monthly billing
-      const receivablesCents = scheduledReceivablesCents > 0 ? scheduledReceivablesCents : monthlyBillingTargetCents;
 
-      // Payables: bills/invoices due in this period + projected sub payments
-      const periodBills = unpaidBills.filter((b: any) => {
-        const due = b.due_date || b.created_at;
-        return due && due >= range.start && due <= range.end;
-      });
-      const periodInvoices = unpaidInvoices.filter((inv: any) => {
-        const due = inv.due_date || inv.created_at;
-        return due && due >= range.start && due <= range.end;
-      });
-      const scheduledBillPayablesCents = sumCents(periodBills.map((b: any) => toCents(b.amount || 0)));
-      const scheduledInvoicePayablesCents = sumCents(periodInvoices.map((inv: any) => toCents(inv.amount || 0)));
-      const scheduledPayablesCents = sumCents([scheduledBillPayablesCents, scheduledInvoicePayablesCents]);
-      const payablesCents = scheduledPayablesCents > 0 ? scheduledPayablesCents : monthlyPayableTargetCents;
+    const open = (r: any) => !NOT_OWED.has(low(r.status));
+    const payableInvoices = invoices.filter((i) => low(i.direction) === 'payable');
+    const receivableInvoices = invoices.filter((i) => low(i.direction) !== 'payable');
+    const unpaidReceivables = receivableInvoices.filter(open).map((i) => ({
+      label: `Invoice #${i.invoice_number || ''}`.trim(), amount: owed(i), dueDate: day(i.due_date) || day(i.created_at),
+    }));
+    const unpaidPayables = [
+      ...bills.filter(open).map((b) => ({ label: `Bill: ${b.vendor_name || 'Vendor'}${b.bill_number ? ' #' + b.bill_number : ''}`, amount: owed(b), dueDate: day(b.due_date) || day(b.created_at) })),
+      ...payableInvoices.filter(open).map((i) => ({ label: `Bill: ${i.vendor_name || 'Vendor'}${i.invoice_number ? ' #' + i.invoice_number : ''}`, amount: owed(i), dueDate: day(i.due_date) || day(i.created_at) })),
+    ];
 
-      // Retainage release: assume last period releases all retainage
-      const retainageReleaseCents = i === periodCount - 1 ? totalRetainageHeldCents : 0;
+    // Committed but not yet billed: commitments' remaining, or the budget's
+    // committed − actual where that is larger (both measure the same thing).
+    const commitments = buildCommitments({ projectId, contracts, purchaseOrders: pos, legacy, bills: [...bills, ...payableInvoices] });
+    const commitmentRemaining = commitments.filter(isLiveCommitment).reduce((s, c) => s + Math.max(0, c.remaining), 0);
+    const budgetToBill = budget.reduce((s, b) => s + Math.max(0, N(b.committed) - N(b.actual)), 0);
+    const committedUnbilled = Math.max(commitmentRemaining, budgetToBill);
 
-      const netCents = sumCents([subCents(receivablesCents, payablesCents), retainageReleaseCents]);
-      runningBalanceCents += netCents;
-      totalReceivablesCents += receivablesCents;
-      totalPayablesCents += payablesCents;
+    const openTaskEndDates = tasks
+      .filter((tk) => !['complete', 'completed', 'done'].includes(low(tk.status)) && N(tk.pct_complete) < 100)
+      .map((tk) => day(tk.end_date));
 
-      // Line items for expandable detail
-      const lineItems: any[] = [];
-      if (periodPayApps.length > 0) {
-        periodPayApps.forEach((pa: any) => {
-          lineItems.push({
-            type: 'receivable',
-            label: `Pay App #${pa.app_number}`,
-            amount: toDollars(toCents(pa.current_payment_due || 0)),
-          });
-        });
-      } else {
-        lineItems.push({
-          type: 'receivable',
-          label: 'Projected billing',
-          amount: toDollars(monthlyBillingTargetCents),
-        });
-      }
+    const { today } = await requestDay(req.headers, db, t, 'cash-flow');
 
-      periodBills.forEach((b: any) => {
-        lineItems.push({
-          type: 'payable',
-          label: `Bill: ${b.vendor_name || 'Vendor'}`,
-          amount: toDollars(subCents(0, toCents(b.amount || 0))),
-        });
-      });
-      periodInvoices.forEach((inv: any) => {
-        lineItems.push({
-          type: 'payable',
-          label: `Invoice: ${inv.vendor_name || 'Vendor'} #${inv.invoice_number || ''}`,
-          amount: toDollars(subCents(0, toCents(inv.amount || 0))),
-        });
-      });
-      if (scheduledPayablesCents === 0 && monthlyPayableTargetCents > 0) {
-        lineItems.push({
-          type: 'payable',
-          label: 'Projected sub payments',
-          amount: toDollars(subCents(0, monthlyPayableTargetCents)),
-        });
-      }
-      if (retainageReleaseCents > 0) {
-        lineItems.push({
-          type: 'retainage',
-          label: 'Retainage release',
-          amount: toDollars(retainageReleaseCents),
-        });
-      }
-
-      periods.push({
-        month: label,
-        start: range.start,
-        end: range.end,
-        receivables: toDollars(receivablesCents),
-        payables: toDollars(payablesCents),
-        retainage_release: toDollars(retainageReleaseCents),
-        net: toDollars(netCents),
-        running_balance: toDollars(runningBalanceCents),
-        line_items: lineItems,
-      });
-    }
-
-    const netCashFlowCents = sumCents([subCents(totalReceivablesCents, totalPayablesCents), totalRetainageHeldCents]);
-    const dangerZone = periods.some((p) => p.running_balance < 0);
+    const projection = projectCashFlow({
+      today, status: p.status, endDate: day(p.end_date), openTaskEndDates,
+      revisedContract: contract.current, billedToDate, retainageHeld, retainagePct,
+      unpaidPayApps, unpaidReceivables, unpaidPayables, committedUnbilled,
+    });
 
     return NextResponse.json({
       project: {
         id: p.id,
         name: p.name,
-        contract_amount: toDollars(contractAmountCents),
-        adjusted_contract: toDollars(adjustedContractCents),
+        status: p.status,
+        closed: projection.closed,
+        end_month: projection.endMonth,
+        contract_amount: contract.original,
+        adjusted_contract: contract.current,
         retainage_pct: retainagePct,
-        total_billed: toDollars(totalBilledCents),
-        remaining_to_bill: toDollars(remainingToBillCents),
-        total_retainage_held: toDollars(totalRetainageHeldCents),
+        total_billed: billedToDate,
+        remaining_to_bill: projection.remainingToBill,
+        total_retainage_held: retainageHeld,
+        committed_unbilled: Math.round(committedUnbilled * 100) / 100,
       },
-      periods,
-      summary: {
-        total_receivables: toDollars(totalReceivablesCents),
-        total_payables: toDollars(totalPayablesCents),
-        net_cash_flow: toDollars(netCashFlowCents),
-        retainage_due: toDollars(totalRetainageHeldCents),
-        danger_zone: dangerZone,
-      },
+      periods: projection.periods,
+      summary: projection.summary,
     });
   } catch (e) {
-    console.error('Cash flow projection error:', e);
-    return NextResponse.json({ error: 'Failed to generate cash flow projection' }, { status: 500 });
+    return apiError('cash-flow', e, "Couldn't build the cash flow for this job.");
   }
 }
