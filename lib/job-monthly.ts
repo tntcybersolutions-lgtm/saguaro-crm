@@ -21,8 +21,10 @@ export function buildJobMonthly(input: {
   apps: (PayAppIn & { payment_received_at?: string | null })[];
   bills: { total?: unknown; amount?: unknown; status?: string | null; due_date?: string | null; created_at?: string | null }[];
   changeOrders: { amount?: unknown; status?: string | null; approved_at?: string | null }[];
+  /** How many months, ending this month. 12 by default (the job page). */
+  count?: number;
 }): JobMonthly {
-  const keys = lastMonths(input.today, 12);
+  const keys = lastMonths(input.today, input.count ?? 12);
   const by = new Map(keys.map((k) => [k, { billed: 0, collected: 0, costs: 0, changes: 0 }]));
   for (const p of input.apps) {
     const st = String(p.status || '').toLowerCase();

@@ -2,13 +2,15 @@
 /**
  * Reports & Analytics — Pass 4 on the kit.
  *
- * Anatomy: title + one primary action (Ask Sage, in the query bar) → StatRow
- * (what the engine already knows) → the Sage query bar (question, project,
+ * Anatomy: title + one primary action (Ask Sage, in the query bar) → the chart
+ * library (components/reports/ReportCharts: ready-made charts for the company
+ * or one job, GET /api/reports/summary) → the Sage query bar (question, project,
  * period, suggestion chips) → workspace split: progress / results / the
  * standard report library on the left, recent runs in a rail on the right.
  *
  * Every read / write is the one this screen already used:
  *   projects  GET  /api/projects
+ *   charts    GET  /api/reports/summary?projectId=&range=
  *   branding  GET  /api/branding
  *   run       SSE  /api/reports/sage?q=&projectId=
  *   export    POST /api/reports/export  { format, title, columns, rows, totals, companyName, logoUrl }
@@ -19,9 +21,11 @@
 import React, { useState, useEffect, useRef, useCallback } from 'react';
 import { CurrencyDollar, ChartBar, Clipboard, ArrowsClockwise, Lock, ShieldCheck, CalendarBlank, CheckCircle, HardHat, Warning, Package, Clock, ArrowRight, X, Sparkle } from '@phosphor-icons/react';
 import {
-  PageShell, Card, StatRow, Badge, Button, Input, Select, DataTable, EmptyState, Toast, useToast,
-  type Column, type BadgeTone, type StatItem,
+  PageShell, Card, Badge, Button, Input, Select, DataTable, EmptyState, Toast, useToast,
+  type Column, type BadgeTone,
 } from '@/components/ui/kit';
+import ReportCharts from '@/components/reports/ReportCharts';
+import type { ReportRange } from '@/lib/reports';
 import { AutoChip } from '@/components/ui/premium';
 import { PdfIcon, XlsIcon, CsvIcon, DocIcon, FileButton } from '@/components/ui/FileTypeIcon';
 import { layout } from '@/lib/design-tokens';
@@ -243,6 +247,7 @@ export default function ReportsPage() {
   const [sageQuery, setSageQuery] = useState('');
   const [projectFilter, setProjectFilter] = useState('');
   const [dateRange, setDateRange] = useState('');
+  const [chartRange, setChartRange] = useState<ReportRange>('12m');
   const [projects, setProjects] = useState<Array<{ id: string; name: string }>>([]);
   const [pageState, setPageState] = useState<PageState>('idle');
   const [progress, setProgress] = useState<ReportProgress>({ step: 0, pct: 5, message: 'Connecting to Sage…' });
@@ -401,13 +406,6 @@ export default function ReportsPage() {
   const selectedProjectName = projectFilter ? projects.find(p => p.id === projectFilter)?.name : '';
   const rd = rangeDates(dateRange);
 
-  const stats: StatItem[] = [
-    { label: 'Report Library', value: STANDARD_REPORTS.length, sub: 'Standard reports, one tap each' },
-    { label: 'Projects In Scope', value: projectFilter ? 1 : projects.length, sub: selectedProjectName || 'All projects' },
-    { label: 'Runs This Session', value: history.length, sub: history[0] ? `Last: ${timeAgo(history[0].ts)}` : 'None yet' },
-    { label: 'Export Formats', value: 4, sub: 'PDF, Excel, Word, and CSV' },
-  ];
-
   const resultColumns: Column<Record<string, unknown>>[] = (reportResult?.columns ?? []).map((col, ci) => ({
     key: col.key,
     header: col.label,
@@ -423,10 +421,10 @@ export default function ReportsPage() {
       <PageShell
         crumbs={[{ label: 'Home', href: '/app' }, { label: 'Reports' }]}
         title="Reports & Analytics"
-        subtitle="Ask Sage, the AI assistant, for any report — or run one from the standard library. Every export carries your letterhead."
+        subtitle={selectedProjectName || 'All jobs'}
         actions={<Button icon={<ChartBar size={15} weight="bold" />} href="/app/reports/builder">Custom Report Builder</Button>}
       >
-        <StatRow items={stats} />
+        <ReportCharts jobs={projects} projectId={projectFilter} onProjectChange={setProjectFilter} range={chartRange} onRangeChange={setChartRange} />
 
         {/* ── Sage query bar ── */}
         <Card title="Ask Sage" subtitle="AI-generated reports from your live data — results say what they are and where the figures came from.">
