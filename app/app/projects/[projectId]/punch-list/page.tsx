@@ -34,7 +34,7 @@ function asCreateBody(row: Record<string, any>, projectId: string) {
 import { SUB_TRADES } from '@/lib/construction-intelligence';
 import {
   CheckCircle, Check, MapPin, User, X, ArrowUUpLeft, Plus, WarningCircle, ListChecks, Camera,
-  PencilSimple, Trash, ArrowClockwise, Lightning,
+  PencilSimple, Trash, ArrowClockwise, Lightning, ArrowSquareOut,
 } from '@phosphor-icons/react';
 import {
   PageShell, Card, StatRow, Badge, Button, Toolbar, DataTable, EmptyState, RowActions,
@@ -506,6 +506,7 @@ export default function PunchListPage(){
     const isDone=item.status==='completed';
     return [
       { label:'Open Details', icon:<ListChecks size={15}/>, onClick:()=>viewItem(item) },
+      { label:'Open full page', icon:<ArrowSquareOut size={15}/>, href:`/app/projects/${projectId}/items/punch_list/${item.id}`, hidden:temp },
       { label: isDone?'Reopen Item':'Mark Complete', icon: isDone?<ArrowUUpLeft size={15}/>:<CheckCircle size={15}/>, onClick:()=>toggleComplete(item), disabled:temp },
       { label:'Edit Item', icon:<PencilSimple size={15}/>, onClick:()=>openEdit(item), disabled:temp },
       { label:'Delete', icon:<Trash size={15}/>, onClick:()=>deleteItem(item), tone:'danger', disabled:temp||deleting },

@@ -28,7 +28,7 @@ import {
 } from '@/components/ui/kit';
 import {
   Question, WarningCircle, Plus, Lightning, X, ChatText, UserSwitch, CheckCircle,
-  Trash, FilePdf, Waveform, ArrowClockwise,
+  Trash, FilePdf, Waveform, ArrowClockwise, ArrowSquareOut,
 } from '@phosphor-icons/react';
 import { CSI_DIVISIONS } from '@/lib/construction-intelligence';
 import SaguaroDatePicker from '../../../../../components/SaguaroDatePicker';
@@ -552,6 +552,31 @@ export default function RFIsPage() {
     }
   }
 
+  /** Close every checked RFI that is still open (one PATCH each, same route as Close). */
+  async function bulkClose(list: RFI[]) {
+    const open = list.filter(r => r.status !== 'closed');
+    if (!open.length) { show('Those RFIs are already closed.'); return; }
+    const ok = await confirmDialog({
+      title: `Close ${open.length} RFI${open.length === 1 ? '' : 's'}?`,
+      message: 'They move to Closed and drop out of overdue tracking.',
+      confirmLabel: 'Close',
+    });
+    if (!ok) return;
+    const results = await Promise.all(open.map(async r => {
+      try {
+        const res = await fetch(`/api/rfis/${r.id}`, {
+          method: 'PATCH',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ status: 'closed', closed_at: new Date().toISOString() }),
+        });
+        return res.ok;
+      } catch { return false; }
+    }));
+    const done = results.filter(Boolean).length;
+    show(done === open.length ? `${done} RFI${done === 1 ? '' : 's'} closed.` : `${done} of ${open.length} closed. Try the rest again.`, done === open.length ? undefined : 'bad');
+    revalidate();
+  }
+
   async function deleteRfi(rfi: RFI) {
     if (!(await confirmDialog({ title: 'Please confirm', message: `Delete RFI #${rfi.rfi_number}? This cannot be undone.`, confirmLabel: 'Delete', danger: true }))) return;
     setRfis(prev => prev.filter(r => r.id !== rfi.id));
@@ -588,6 +613,7 @@ export default function RFIsPage() {
     const temp = rfi.id.startsWith('temp-');
     return [
       { label: 'Open Details', icon: <Question size={15} />, onClick: () => selectRfi(rfi) },
+      { label: 'Open full page', icon: <ArrowSquareOut size={15} />, href: `/app/projects/${projectId}/items/rfis/${rfi.id}`, hidden: temp },
       { label: 'Answer', icon: <ChatText size={15} />, onClick: () => startAnswer(rfi), hidden: !ANSWERABLE(s), disabled: temp },
       { label: 'Reassign', icon: <UserSwitch size={15} />, onClick: () => startAssign(rfi), disabled: temp },
       { label: 'Close RFI', icon: <CheckCircle size={15} />, onClick: () => closeRfi(rfi), hidden: s === 'closed', disabled: temp },
@@ -848,6 +874,9 @@ export default function RFIsPage() {
         loading={loading}
         onRowClick={selectRfi}
         rowActions={rfiActions}
+        tableId="project-rfis"
+        exportName="rfis"
+        bulkActions={list => [{ label: `Close ${list.length}`, icon: <CheckCircle size={14} />, onClick: () => { void bulkClose(list); } }]}
         empty={
           <EmptyState
             icon={<Question size={22} />}
