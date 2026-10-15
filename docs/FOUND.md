@@ -244,3 +244,4 @@ STILL OPEN:
 
 - 2026-10-15 (Step 6): `contracts` has no cost code or budget line, so a subcontract written by hand (not from a bid award) is on Commitments but not in the budget's Committed column. Needs a cost-code/budget-line picker on the subcontract.
 - 2026-10-15 (Step 6): `app/api/projects/[projectId]/purchase-orders/route.ts` GET filters by project only (project ownership is checked first, but the query itself has no `.eq('tenant_id', …)` — §3 rule).
+- 2026-10-15 (Kit look): `app/app/projects/[projectId]/pay-apps/[id]/page.tsx:694` "Released to Date" is fixed at $0 — there is no retainage-release field read, so a closeout pay app that releases retainage would still show $0.
