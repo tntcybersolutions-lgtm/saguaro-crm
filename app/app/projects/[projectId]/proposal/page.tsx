@@ -1,16 +1,21 @@
 'use client';
-import React, { useState, useEffect, useCallback } from 'react';
+import React, { useState, useEffect, useCallback, useRef } from 'react';
 import { useProjectContext } from '@/lib/hooks/useProjectContext';
 import { useParams } from 'next/navigation';
 import MarkOutcomeModal from '@/components/bids/MarkOutcomeModal';
-import { PremiumSurface, ModuleHero, SectionCard, PremiumEmpty, StatStrip, FlowSteps, InsightRow, AutoChip, goldButtonStyle, ghostButtonStyle, secondaryButtonStyle, railStyle } from '@/components/ui/premium';
-import { FileText, FilePlus, ClockCounterClockwise, SealCheck, Plus } from '@phosphor-icons/react';
+import {
+  PageShell, Card, StatRow, Badge, Button, DataTable, EmptyState, Callout,
+  FormModal, Field, Input, FormGrid, Toast,
+  type Column, type Action, type BadgeTone, type StatItem,
+} from '@/components/ui/kit';
+import {
+  FileText, ClockCounterClockwise, SealCheck, Plus, Receipt, Handshake, Wallet, WarningCircle,
+  X, PaperPlaneTilt, FilePdf, UploadSimple, ThumbsUp, ThumbsDown,
+} from '@phosphor-icons/react';
 import { useUnsavedGuard, useComposerDirty } from '@/lib/useUnsavedGuard';
 import UnsavedGuardModal from '@/components/UnsavedGuardModal';
 import { openPdf } from '@/components/PdfViewer';
 import ESignatureFlow from '@/components/ESignatureFlow';
-
-const GOLD='var(--brand-primary)', RAISED='var(--bg-surface-2)', BORDER='rgba(255,255,255,0.12)', DIM='var(--text-secondary)', TEXT='var(--text-primary)', GREEN='var(--success)', RED='var(--danger)';
 
 interface Proposal {
   id: string;
@@ -30,16 +35,6 @@ interface Proposal {
   decline_reason: string | null;
 }
 
-const STATUS_MAP: Record<string, { bg: string; color: string }> = {
-  Draft: { bg: 'rgba(148,163,184,.2)', color: DIM },
-  Sent: { bg: 'color-mix(in srgb, var(--brand-primary) 20%, transparent)', color: 'var(--text-primary)' },
-  Under_Review: { bg: 'color-mix(in srgb, var(--warning) 20%, transparent)', color: 'var(--warning)' },
-  Accepted: { bg: 'rgba(74,222,128,.2)', color: GREEN },
-  Superseded: { bg: 'rgba(148,163,184,.2)', color: DIM },
-  Rejected: { bg: 'rgba(248,113,113,.2)', color: RED },
-  Declined: { bg: 'rgba(248,113,113,.2)', color: RED },
-};
-
 const EMPTY_FORM = { amount: 0, notes: '' };
 
 /* Statuses are stored in mixed case — the create route writes 'Draft', the
@@ -50,7 +45,15 @@ const EMPTY_FORM = { amount: 0, notes: '' };
 const statusKey = (s: string | null | undefined) => String(s || '').trim().toLowerCase().replace(/\s+/g, '_');
 const statusLabel = (s: string | null | undefined) =>
   statusKey(s).split('_').filter(Boolean).map(w => w.charAt(0).toUpperCase() + w.slice(1)).join(' ') || '—';
-const statusStyle = (s: string | null | undefined) => STATUS_MAP[statusLabel(s).replace(/ /g, '_')] || { bg: 'rgba(148,163,184,.2)', color: DIM };
+/** One status → one badge: draft neutral, out with the client amber, accepted green, declined red, superseded grey. */
+function statusTone(s: string | null | undefined): BadgeTone {
+  const k = statusKey(s);
+  if (k === 'accepted') return 'ongoing';
+  if (k === 'declined' || k === 'rejected') return 'overdue';
+  if (k === 'superseded') return 'closed';
+  if (k === 'sent' || k === 'under_review' || k === 'viewed') return 'lead';
+  return 'neutral';
+}
 
 // The API returns raw `proposals` rows (proposal_number / created_at /
 // description) that don't match this page's display fields (version /
@@ -234,196 +237,172 @@ export default function ProposalPage() {
     }
   }
 
-  const inp: React.CSSProperties = { width: '100%', padding: '8px 10px', background: 'var(--bg-surface-2)', border: '1px solid ' + BORDER, borderRadius: 6, color: TEXT, fontSize: 13 };
-  const label: React.CSSProperties = { fontSize: 12, color: DIM, marginBottom: 4, display: 'block' };
+  const base = `/app/projects/${projectId}`;
+  const closeForm = () => { setShowForm(false); setErrorMsg(''); };
+  const fileRef = useRef<HTMLInputElement>(null);
+  const uploadForRef = useRef<string | null>(null);
+  const pickUpload = (id: string) => { uploadForRef.current = id; fileRef.current?.click(); };
+
+  const stats: StatItem[] = [
+    ...(ctx ? [
+      { label: 'Approved COs', value: (coTotal >= 0 ? '+' : '') + fmt(coTotal), sub: `${Number(money?.approvedCoCount) || 0} approved${Number(money?.pendingCoCount) ? ` · ${money.pendingCoCount} pending` : ''}`, icon: <Receipt size={15} />, href: `${base}/change-orders` } as StatItem,
+      { label: 'Contract to Date', value: fmt(revised), sub: `${fmt(original)} original + approved COs`, icon: <Handshake size={15} />, href: `${base}/contracts` } as StatItem,
+    ] : []),
+    { label: 'Versions', value: loading && proposals.length === 0 ? '—' : String(proposals.length), sub: lastProposal ? `Latest ${lastProposal.version} — ${statusLabel(lastProposal.status)}` : 'None yet', icon: <ClockCounterClockwise size={15} /> },
+    {
+      label: 'Accepted', value: accepted ? fmt(Number(accepted.amount) || 0) : '—', tone: accepted ? 'good' : 'default', icon: <SealCheck size={15} />,
+      sub: accepted ? (() => { const d = revised > 0 ? (Number(accepted.amount) || 0) - revised : 0; const b = accepted.notes ? `${accepted.version} — ${accepted.notes}` : accepted.version; return d !== 0 ? `${b} · ${d > 0 ? '+' : '-'}${fmt(Math.abs(d))} vs contract to date` : b; })() : 'No accepted version yet',
+    },
+    ...(ctx ? [
+      { label: 'Billed to Date', value: fmt(Number(money?.billedToDate) || 0), sub: `${Number(money?.billedPct) || 0}% of contract`, icon: <Wallet size={15} /> } as StatItem,
+    ] : []),
+  ];
+
+  const columns: Column<Proposal>[] = [
+    { key: 'version', header: 'Version', primary: true, phone: 'show', width: 96 },
+    { key: 'created_date', header: 'Created', render: p => p.created_date || '—' },
+    { key: 'amount', header: 'Amount', align: 'right', phone: 'show', accessor: p => Number(p.amount) || 0, render: p => <strong style={{ fontVariantNumeric: 'tabular-nums' }}>${(Number(p.amount) || 0).toLocaleString()}</strong> },
+    {
+      key: 'status', header: 'Status', phone: 'show', accessor: p => statusLabel(p.status),
+      render: p => (
+        <div style={{ display: 'flex', flexDirection: 'column', gap: 4, alignItems: 'flex-start' }}>
+          <Badge tone={statusTone(p.status)} dot>{statusLabel(p.status)}</Badge>
+          {p.signed_at
+            ? <span style={{ fontSize: 12, color: 'var(--success)' }}>Signed by {p.signed_by || 'client'} · {fmtWhen(p.signed_at)}</span>
+            : p.viewed_at && <span style={{ fontSize: 12, color: 'var(--text-secondary)' }}>Opened {fmtWhen(p.viewed_at)}</span>}
+          {p.decline_reason && <span style={{ fontSize: 12, color: 'var(--danger)' }}>“{p.decline_reason}”</span>}
+        </div>
+      ),
+    },
+    { key: 'notes', header: 'Notes', render: p => p.notes || '—' },
+  ];
+
+  const rowActions = (p: Proposal): Action[] => {
+    const s = statusKey(p.status);
+    const outcomeSet = s === 'accepted' || s === 'declined' || s === 'rejected';
+    return [
+      { label: s === 'draft' ? 'Send to Client' : 'E-Sign Status', icon: <PaperPlaneTilt size={14} />, inline: true, hidden: !((!outcomeSet || p.signed_at || p.decline_reason) && s !== 'superseded'), onClick: () => setSigningId(signingId === p.id ? null : p.id) },
+      { label: 'View PDF', icon: <FilePdf size={14} />, hidden: !p.pdf_url, onClick: () => openPdf({ url: p.pdf_url! }) },
+      { label: uploadingId === p.id ? 'Uploading…' : 'Upload PDF', icon: <UploadSimple size={14} />, disabled: uploadingId === p.id, onClick: () => pickUpload(p.id) },
+      { label: 'Mark Accepted', icon: <ThumbsUp size={14} />, hidden: outcomeSet, onClick: () => handleMarkOutcome(p, true) },
+      { label: 'Mark Declined', icon: <ThumbsDown size={14} />, tone: 'danger', hidden: outcomeSet, onClick: () => handleMarkOutcome(p, false) },
+    ];
+  };
+
+  const altSeeds = seedOptions.filter(o => o.amount > 0 && seed && o.amount !== seed.amount && o.amount !== Number(form.amount)).slice(0, 2);
 
   return (
-    <PremiumSurface>
-      {/* Header */}
-      <ModuleHero
-        eyebrow={ctx?.project?.name || 'Proposal'}
-        eyebrowIcon={<FileText size={13} weight="fill" style={{ color: 'var(--text-primary)' }} />}
-        title="Proposals &"
-        accent="Contract Amounts"
-        subtitle="Versions, contract amounts, and win/loss outcomes."
-        actions={
-          <button onClick={() => { if (showForm) { setShowForm(false); setErrorMsg(''); } else { openCreate(); } }} style={goldButtonStyle} className="pmBtn">
-            <Plus size={15} weight="bold" /> New Version
-          </button>
-        }
-      />
+    <>
+      <PageShell
+        crumbs={[
+          { label: 'Projects', href: '/app/projects' },
+          { label: ctx?.project?.name || projectName || 'Project', href: `${base}/overview` },
+          { label: 'Proposals' },
+        ]}
+        title="Proposals"
+        subtitle="Versions, contract amounts and win/loss outcomes."
+        actions={<Button variant="primary" icon={<Plus size={15} weight="bold" />} onClick={() => { if (showForm) closeForm(); else openCreate(); }}>New Version</Button>}
+      >
+        <StatRow items={stats} />
 
-      {/* One summary: contract money, proposal versions, the accepted proposal (the headline) and billing */}
-      <StatStrip items={[
-        ...(ctx ? [
-          {href: `/app/projects/${projectId}/change-orders`,  label: 'Approved COs', value: (coTotal >= 0 ? '+' : '') + fmt(coTotal), sub: `${Number(money?.approvedCoCount) || 0} approved${Number(money?.pendingCoCount) ? ` · ${money.pendingCoCount} pending` : ''}` },
-          {href: `/app/projects/${projectId}/contracts`,  label: 'Contract to Date', value: fmt(revised), sub: 'Original + approved COs' },
-        ] : []),
-        {href: `/app/projects/${projectId}/proposal`,  label: 'Versions', value: String(proposals.length), sub: lastProposal ? `Latest ${lastProposal.version} — ${statusLabel(lastProposal.status)}` : 'None yet' },
-        {href: `/app/projects/${projectId}/proposal`,  label: 'Accepted', value: accepted ? fmt(Number(accepted.amount) || 0) : '—', accent: accepted ? GREEN : undefined, sub: accepted ? (() => { const d = revised > 0 ? (Number(accepted.amount) || 0) - revised : 0; const base = accepted.notes ? `${accepted.version} — ${accepted.notes}` : accepted.version; return d !== 0 ? `${base} · ${d > 0 ? '+' : '-'}${fmt(Math.abs(d))} vs contract to date` : base; })() : 'No accepted version yet' },
-        ...(ctx ? [
-          {href: `/app/projects/${projectId}/proposal`,  label: 'Billed to Date', value: fmt(Number(money?.billedToDate) || 0), sub: `${Number(money?.billedPct) || 0}% of contract` },
-        ] : []),
-      ]} />
-
-      {successMsg && <div style={{ marginBottom: 16, padding: '10px 14px', background: 'rgba(74,222,128,.15)', border: '1px solid rgba(74,222,128,.4)', borderRadius: 10, color: GREEN, fontSize: 13 }}>{successMsg}</div>}
-      {errorMsg && <div style={{ marginBottom: 16, padding: '10px 14px', background: 'rgba(248,113,113,.15)', border: '1px solid rgba(248,113,113,.4)', borderRadius: 10, color: RED, fontSize: 13 }}>{errorMsg}</div>}
-
-      {showForm && (
-        <div className={ctx ? 'pmSplit' : undefined} style={railStyle(320, { gap: 18, alignItems: 'start', marginBottom: 24 })}>
-          <SectionCard title={`New Proposal Version (${latestVersion})`} icon={<FilePlus size={17} weight="duotone" style={{ color: 'var(--text-primary)' }} />} subtitle={lastProposal ? `Supersedes ${lastProposal.version} — prior versions stay in the history below.` : 'First version on this project.'}>
-            <div style={{ display: 'grid', gridTemplateColumns: '1fr 2fr', gap: 14 }}>
-              <div>
-                <label style={label}>Amount ($) *{auto.amt && <AutoChip />}</label>
-                <input type="number" value={form.amount} onChange={e => { setForm(p => ({ ...p, amount: Number(e.target.value) })); setAuto({}); }} style={inp} />
-                <div style={{ fontSize: 12, color: 'var(--c-text-2)', marginTop: 5, lineHeight: 1.45 }}>
-                  {seed
-                    ? <>Seeded from {seed.source} ({fmt(seed.amount)}).{seedOptions.filter(o => o.amount > 0 && o.amount !== seed.amount && o.amount !== Number(form.amount)).slice(0, 2).map(o => (
-                        <span key={o.source}> Use {o.source}: <span onClick={() => { setForm(p => ({ ...p, amount: o.amount })); setAuto({ amt: true }); }} style={{ color: 'var(--text-primary)', fontWeight: 700, cursor: 'pointer' }}>{fmt(o.amount)}</span>.</span>
-                      ))}</>
-                    : <>No contract amount or takeoff on file yet — enter the proposed sum.</>}
-                </div>
-              </div>
-              <div>
-                <label style={label}>Notes</label>
-                <input type="text" value={form.notes} onChange={e => setForm(p => ({ ...p, notes: e.target.value }))} placeholder="e.g. Revised after value engineering" style={inp} />
-                <div style={{ fontSize: 12, color: 'var(--c-text-2)', marginTop: 5, lineHeight: 1.45 }}>What changed in this version — shows in the history table.</div>
-              </div>
-            </div>
-            <div style={{ display: 'flex', gap: 10, marginTop: 16 }}>
-              <button onClick={handleSave} disabled={saving} style={{ ...goldButtonStyle, opacity: saving ? 0.7 : 1 }} className="pmBtn">
-                {saving ? 'Saving…' : 'Create Version'}
-              </button>
-              <button onClick={() => { setShowForm(false); setErrorMsg(''); }} style={ghostButtonStyle} className="pmBtn">Cancel</button>
-            </div>
-          </SectionCard>
-          {ctx && (
-            <div style={{ display: 'flex', flexDirection: 'column', gap: 16 }}>
-              <SectionCard flat title="What Saguaro Knows" icon={<ClockCounterClockwise size={17} weight="duotone" style={{ color: 'var(--text-primary)' }} />}>
-                <InsightRow label="Original Contract" value={fmt(original)} />
-                {coTotal !== 0 && <InsightRow label="Approved COs" value={(coTotal > 0 ? '+' : '') + fmt(coTotal)} accent={GREEN} />}
-                <InsightRow label="Contract to Date" value={fmt(revised)} strong />
-                <InsightRow label="Billed to Date" value={fmt(Number(money?.billedToDate) || 0)} />
-                {accepted && <InsightRow label={`Accepted — ${accepted.version}`} value={fmt(acceptedAmount)} accent={GREEN} />}
-                {takeoffSell > 0 && <InsightRow label="AI Takeoff Sell Total" value={fmt(takeoffSell)} accent={GOLD} />}
-                {lastProposal && (
-                  <>
-                    <div style={{ height: 1, background: 'rgba(255,255,255,0.08)', margin: '8px 0' }} />
-                    <InsightRow label={`Last Version — ${lastProposal.version}`} value={statusLabel(lastProposal.status)} />
-                    <InsightRow label="Last Amount" value={fmt(Number(lastProposal.amount) || 0)} accent={GOLD} />
-                  </>
-                )}
-              </SectionCard>
-              <SectionCard flat title="After You Create" icon={<SealCheck size={17} weight="duotone" style={{ color: 'var(--text-primary)' }} />}>
-                <FlowSteps title="" steps={[
-                  { title: 'Draft Is Versioned', desc: 'Prior versions mark themselves Superseded — the history stays intact.' },
-                  { title: 'Send to Client', desc: 'Your client gets a link to read and e-sign it. You see when they open it.' },
-                  { title: 'Signed Becomes the Contract', desc: 'Their signature sets the contract amount, moves the job to Building and starts the budget from the takeoff.' },
-                  { title: 'Signed on Paper?', desc: 'Mark Accepted or Declined yourself — win/loss feeds bidding analytics.' },
-                ]} />
-              </SectionCard>
-            </div>
-          )}
-        </div>
-      )}
-
-      {signing && (
-        <SectionCard
-          title={signing.signed_at ? `${signing.version} — Signed` : signing.decline_reason || statusKey(signing.status) === 'declined' ? `${signing.version} — Declined` : statusKey(signing.status) === 'draft' ? `Send ${signing.version} to Your Client` : `${signing.version} — Waiting on Your Client`}
-          icon={<SealCheck size={17} weight="duotone" style={{ color: 'var(--text-primary)' }} />}
-          subtitle={signing.signed_at
-            ? `${fmt(signing.amount)} — signed by ${signing.signed_by || 'your client'}. This is the contract.`
-            : `${fmt(signing.amount)} — they read the terms and sign online. Signing makes it the contract.`}
-          action={<button onClick={() => setSigningId(null)} style={ghostButtonStyle} className="pmBtn">Close</button>}
-        >
-          <ESignatureFlow
-            key={signing.id}
-            projectId={projectId}
-            docType="proposal"
-            docTitle={`${ctx?.project?.name || projectName || 'Proposal'} — Proposal ${signing.version}`}
-            pdfUrl={signing.pdf_url || ''}
-            sourceId={signing.id}
-            initialSigners={[{
-              name: signing.client_name || ctx?.project?.ownerName || '',
-              email: signing.client_email || ctx?.project?.ownerEmail || '',
-              role: 'Owner',
-            }]}
-            onComplete={() => { fetchProposals(); revalidateCtx(); }}
-          />
-        </SectionCard>
-      )}
-
-      {/* Version history */}
-      <SectionCard title="Proposal Versions" icon={<ClockCounterClockwise size={17} weight="duotone" style={{ color: 'var(--text-primary)' }} />} flush>
-        {loading && proposals.length === 0 ? (
-          <div style={{ textAlign: 'center', padding: 40, color: DIM }}>Loading…</div>
-        ) : proposals.length === 0 ? (
-          <PremiumEmpty
-            icon={<FileText size={30} weight="duotone" style={{ color: 'var(--text-primary)' }} />}
-            title="No Proposals Yet"
-            description={revised > 0
-              ? `The contract sum to date is ${fmt(revised)} — start v1.0 prefilled at that amount, then version every revision and capture the win or loss.`
-              : 'Create your first proposal version to start tracking contract amounts and outcomes.'}
-            action={
-              <button onClick={openCreate} style={secondaryButtonStyle} className="pmBtn">
-                <Plus size={15} weight="bold" /> {revised > 0 ? `Start v1.0 at ${fmt(revised)}` : 'New Version'}
-              </button>
-            }
-          />
-        ) : (
-          <div style={{ overflowX: 'auto', WebkitOverflowScrolling: 'touch' as const }}>
-            <table className="k-table" style={{ width: '100%', borderCollapse: 'collapse' }}>
-              <thead>
-                <tr style={{ background: 'rgba(255,255,255,0.03)' }}>
-                  {['Version','Created','Amount','Status','Notes','Actions'].map(h => (
-                    <th key={h} style={{ padding: '10px 16px', textAlign: 'left', fontSize: 12, fontWeight: 700, color: DIM, borderBottom: '1px solid rgba(255,255,255,0.08)', whiteSpace: 'nowrap' }}>{h}</th>
-                  ))}
-                </tr>
-              </thead>
-              <tbody>
-                {proposals.map(p => {
-                  const sc = statusStyle(p.status);
-                  const s = statusKey(p.status);
-                  const outcomeSet = s === 'accepted' || s === 'declined' || s === 'rejected';
-                  return (
-                    <tr key={p.id} style={{ borderBottom: '1px solid rgba(255,255,255,0.06)', background: s === 'accepted' ? 'rgba(74,222,128,.06)' : 'transparent' }}>
-                      <td style={{ padding: '10px 16px', color: 'var(--text-primary)', fontWeight: 700 }}>{p.version}</td>
-                      <td style={{ padding: '10px 16px', color: DIM }}>{p.created_date}</td>
-                      <td style={{ padding: '10px 16px', color: TEXT, fontWeight: 800, fontSize: 14 }}>${p.amount?.toLocaleString()}</td>
-                      <td style={{ padding: '10px 16px' }}>
-                        <span style={{ padding: '3px 10px', borderRadius: 20, background: sc.bg, color: sc.color, fontSize: 12, fontWeight: 700 }}>{statusLabel(p.status)}</span>
-                        {(p.viewed_at || p.signed_at || p.decline_reason) && (
-                          <div style={{ fontSize: 12, color: DIM, marginTop: 5, lineHeight: 1.45 }}>
-                            {p.signed_at
-                              ? <span style={{ color: GREEN }}>Signed by {p.signed_by || 'client'} · {fmtWhen(p.signed_at)}</span>
-                              : p.viewed_at && <span>Opened {fmtWhen(p.viewed_at)}</span>}
-                            {p.decline_reason && <div style={{ color: RED }}>“{p.decline_reason}”</div>}
-                          </div>
-                        )}
-                      </td>
-                      <td style={{ padding: '10px 16px', color: DIM }}>{p.notes}</td>
-                      <td style={{ padding: '10px 16px', whiteSpace: 'nowrap', display: 'flex', gap: 6, alignItems: 'center' }}>
-                        {p.pdf_url && <button onClick={() => openPdf({ url: p.pdf_url! })} style={{ padding: '4px 10px', background: RAISED, border: '1px solid ' + BORDER, borderRadius: 5, color: DIM, fontSize: 12, cursor: 'pointer' }}>View PDF</button>}
-                        {(!outcomeSet || p.signed_at || p.decline_reason) && s !== 'superseded' && (
-                          <button onClick={() => setSigningId(signingId === p.id ? null : p.id)} style={{ padding: '4px 10px', background: 'color-mix(in srgb, var(--brand-primary) 20%, transparent)', border: '1px solid color-mix(in srgb, var(--brand-primary) 40%, transparent)', borderRadius: 5, color: 'var(--text-primary)', fontSize: 12, fontWeight: 700, cursor: 'pointer' }}>
-                            {s === 'draft' ? 'Send to Client' : 'E-Sign Status'}
-                          </button>
-                        )}
-                        {!outcomeSet && <button onClick={() => handleMarkOutcome(p, true)} style={{ padding: '4px 10px', background: 'rgba(74,222,128,.2)', border: '1px solid rgba(74,222,128,.4)', borderRadius: 5, color: GREEN, fontSize: 12, fontWeight: 700, cursor: 'pointer', whiteSpace: 'nowrap' }}>Mark Accepted</button>}
-                        {!outcomeSet && <button onClick={() => handleMarkOutcome(p, false)} style={{ padding: '4px 10px', background: 'rgba(248,113,113,.2)', border: '1px solid rgba(248,113,113,.4)', borderRadius: 5, color: RED, fontSize: 12, fontWeight: 700, cursor: 'pointer', whiteSpace: 'nowrap' }}>Mark Declined</button>}
-                        <label style={{ padding: '4px 10px', background: RAISED, border: '1px solid ' + BORDER, borderRadius: 5, color: DIM, fontSize: 12, cursor: 'pointer' }}>
-                          {uploadingId === p.id ? 'Uploading…' : 'Upload PDF'}
-                          <input type="file" accept=".pdf" style={{ display: 'none' }} onChange={e => { if (e.target.files?.[0]) handleUpload(p.id, e.target.files[0]); }} />
-                        </label>
-                      </td>
-                    </tr>
-                  );
-                })}
-              </tbody>
-            </table>
+        {errorMsg && !showForm && (
+          <div style={{ marginBottom: 16 }}>
+            <Callout tone="danger" icon={<WarningCircle size={18} />} title={errorMsg} actions={<Button size="sm" variant="ghost" onClick={() => setErrorMsg('')}>Dismiss</Button>} />
           </div>
         )}
-      </SectionCard>
+
+        {signing && (
+          <div style={{ marginBottom: 16 }}>
+            <Card
+              title={signing.signed_at ? `${signing.version} — Signed` : signing.decline_reason || statusKey(signing.status) === 'declined' ? `${signing.version} — Declined` : statusKey(signing.status) === 'draft' ? `Send ${signing.version} to Your Client` : `${signing.version} — Waiting on Your Client`}
+              icon={<SealCheck size={17} />}
+              subtitle={signing.signed_at
+                ? `${fmt(signing.amount)} — signed by ${signing.signed_by || 'your client'}. This is the contract.`
+                : `${fmt(signing.amount)} — they read the terms and sign online. Signing makes it the contract.`}
+              actions={<Button size="sm" variant="ghost" icon={<X size={14} />} onClick={() => setSigningId(null)}>Close</Button>}
+            >
+              <ESignatureFlow
+                key={signing.id}
+                projectId={projectId}
+                docType="proposal"
+                docTitle={`${ctx?.project?.name || projectName || 'Proposal'} — Proposal ${signing.version}`}
+                pdfUrl={signing.pdf_url || ''}
+                sourceId={signing.id}
+                initialSigners={[{
+                  name: signing.client_name || ctx?.project?.ownerName || '',
+                  email: signing.client_email || ctx?.project?.ownerEmail || '',
+                  role: 'Owner',
+                }]}
+                onComplete={() => { fetchProposals(); revalidateCtx(); }}
+              />
+            </Card>
+          </div>
+        )}
+
+        {/* Version history */}
+        <Card title="Proposal Versions" icon={<ClockCounterClockwise size={17} />} flush>
+          <DataTable<Proposal>
+            tableId="project-proposals"
+            exportName="proposals"
+            columns={columns}
+            rows={proposals}
+            rowKey={p => p.id}
+            loading={loading && proposals.length === 0}
+            rowStyle={p => (statusKey(p.status) === 'accepted' ? { background: 'color-mix(in srgb, var(--success) 6%, transparent)' } : undefined)}
+            rowActions={rowActions}
+            empty={
+              <EmptyState
+                icon={<FileText size={22} />}
+                title="No proposals yet"
+                text={revised > 0 ? `The contract sum to date is ${fmt(revised)}.` : 'Create the first version to track contract amounts and outcomes.'}
+                action={<Button icon={<Plus size={15} weight="bold" />} onClick={openCreate}>{revised > 0 ? `Start v1.0 at ${fmt(revised)}` : 'New Version'}</Button>}
+              />
+            }
+          />
+        </Card>
+        <input
+          ref={fileRef}
+          type="file"
+          accept=".pdf"
+          style={{ display: 'none' }}
+          aria-hidden
+          tabIndex={-1}
+          onChange={e => {
+            const f = e.target.files?.[0];
+            const id = uploadForRef.current;
+            e.target.value = '';
+            if (f && id) handleUpload(id, f);
+          }}
+        />
+      </PageShell>
+
+      <FormModal
+        open={showForm}
+        onClose={closeForm}
+        title={`New Proposal Version (${latestVersion})`}
+        subtitle={lastProposal ? `Supersedes ${lastProposal.version} — prior versions stay in the history.` : 'First version on this project.'}
+        onSubmit={async () => { await handleSave(); }}
+        submitLabel="Create Version"
+        busy={saving}
+        error={errorMsg}
+      >
+        <FormGrid cols={2}>
+          <Field
+            label="Amount ($)"
+            required
+            hint={seed
+              ? <>Seeded from {seed.source} ({fmt(seed.amount)}).{altSeeds.map(o => (
+                  <span key={o.source}> Use {o.source}: <button type="button" className="k-link" style={{ background: 'none', border: 0, padding: 0, font: 'inherit', fontWeight: 700, cursor: 'pointer' }} onClick={() => { setForm(p => ({ ...p, amount: o.amount })); setAuto({ amt: true }); }}>{fmt(o.amount)}</button>.</span>
+                ))}</>
+              : 'No contract amount or takeoff on file yet — enter the proposed sum.'}
+          >
+            <Input type="number" inputMode="decimal" value={form.amount} onChange={e => { setForm(p => ({ ...p, amount: Number(e.target.value) })); setAuto({}); }} />
+          </Field>
+          <Field label="Notes" hint="What changed in this version — shows in the history.">
+            <Input type="text" value={form.notes} onChange={e => setForm(p => ({ ...p, notes: e.target.value }))} placeholder="e.g. Revised after value engineering" />
+          </Field>
+        </FormGrid>
+      </FormModal>
 
       {outcomeModal && (
         <MarkOutcomeModal
@@ -437,7 +416,11 @@ export default function ProposalPage() {
           onRecorded={() => fetchProposals()}
         />
       )}
-    <UnsavedGuardModal guard={guard} />
-    </PremiumSurface>
+      {/* Above the FormModal overlay so the unsaved-work prompt is never hidden behind it. */}
+      <div style={{ position: 'relative', zIndex: 10001 }}>
+        <UnsavedGuardModal guard={guard} />
+      </div>
+      <Toast message={successMsg || null} />
+    </>
   );
 }

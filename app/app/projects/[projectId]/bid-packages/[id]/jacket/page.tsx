@@ -9,28 +9,27 @@
  * who received it still had to go looking for everything that actually lets
  * them price the work.
  *
- * This route owns fetching, loading and failure. What a jacket looks like lives
- * in components/BidJacketView; what a GC can DO with it lives in
- * components/BidJacketAssembly, mounted into the view's slot so the same view
- * can be rendered for a logged-out bidder without carrying GC-only actions.
+ * This route owns fetching, loading and failure, and the kit page frame. What
+ * a jacket looks like lives in components/BidJacketView (shared with the
+ * logged-out bidder view, so it keeps its own cover); what a GC can DO with it
+ * lives in components/BidJacketAssembly, mounted into the view's slot so the
+ * same view can be rendered for a bidder without carrying GC-only actions.
  */
 
 import React, { useCallback, useEffect, useState } from 'react';
-import { useParams, useRouter } from 'next/navigation';
-import { WarningCircle } from '@phosphor-icons/react';
-import { PremiumSurface, SectionCard, PremiumEmpty, ghostButtonStyle } from '@/components/ui/premium';
+import { useParams } from 'next/navigation';
+import { WarningCircle, ArrowLeft, ArrowClockwise } from '@phosphor-icons/react';
+import { useProjectContext } from '@/lib/hooks/useProjectContext';
+import { PageShell, Card, Button, EmptyState } from '@/components/ui/kit';
 import BidJacketView, { type Jacket } from '@/components/BidJacketView';
 import BidJacketAssembly, { type Drift, type Issued } from '@/components/BidJacketAssembly';
 import JacketPdfButton from '@/components/JacketPdfButton';
-
-const DIM = 'var(--text-tertiary)';
-const AMBER = 'var(--warning)';
 
 type Payload = Jacket & { issued: Issued; drift: Drift | null };
 
 export default function BidJacketPage() {
   const { projectId, id } = useParams<{ projectId: string; id: string }>();
-  const router = useRouter();
+  const { ctx } = useProjectContext(projectId);
 
   const [jacket, setJacket] = useState<Payload | null>(null);
   const [loading, setLoading] = useState(true);
@@ -53,52 +52,71 @@ export default function BidJacketPage() {
 
   useEffect(() => { load(); }, [load]);
 
+  const base = `/app/projects/${projectId}`;
+  const packageLabel = jacket?.package.name || jacket?.package.trade || 'Bid Package';
+  const crumbs = [
+    { label: 'Projects', href: '/app/projects' },
+    { label: ctx?.project?.name || 'Project', href: `${base}/overview` },
+    { label: 'Bid Packages', href: `${base}/bid-packages` },
+    { label: packageLabel, href: `${base}/bid-packages/${id}` },
+    { label: 'Bid Jacket' },
+  ];
+
   /* Only the FIRST load blanks the page. A refresh after Issue or an addendum
      used to swap the whole jacket for "Opening jacket…", which unmounted the
      assembly controls and threw away the very result the GC needed to read —
      who was emailed and who was not. */
   if (loading && !jacket) {
     return (
-      <PremiumSurface>
-        <div style={{ padding: 40, color: DIM }}>Opening jacket…</div>
-      </PremiumSurface>
+      <PageShell crumbs={crumbs} title="Bid Jacket" subtitle="Opening jacket…">
+        <Card>
+          <div style={{ color: 'var(--text-tertiary)', fontSize: 14 }} aria-busy="true">Opening jacket…</div>
+        </Card>
+      </PageShell>
     );
   }
 
   if (error || !jacket) {
     return (
-      <PremiumSurface>
-        <SectionCard>
-          <PremiumEmpty
-            icon={<WarningCircle size={30} weight="duotone" color={AMBER} />}
-            title="This Jacket Could Not Be Opened"
-            description={error || 'The bid package was not found.'}
+      <PageShell crumbs={crumbs} title="Bid Jacket">
+        <Card flush>
+          <EmptyState
+            icon={<WarningCircle size={22} />}
+            title="This jacket could not be opened"
+            text={error || 'The bid package was not found.'}
             action={
-              <button onClick={() => router.push(`/app/projects/${projectId}/bid-packages`)} style={ghostButtonStyle}>
-                Back to Bid Packages
-              </button>
+              <div style={{ display: 'flex', gap: 8, flexWrap: 'wrap', justifyContent: 'center' }}>
+                {error && <Button icon={<ArrowClockwise size={15} />} onClick={load}>Try again</Button>}
+                <Button variant="ghost" icon={<ArrowLeft size={15} />} href={`${base}/bid-packages`}>Back to Bid Packages</Button>
+              </div>
             }
           />
-        </SectionCard>
-      </PremiumSurface>
+        </Card>
+      </PageShell>
     );
   }
 
   return (
-    <PremiumSurface>
-      <BidJacketView
+    <PageShell
+      crumbs={crumbs}
+      title="Bid Jacket"
+      subtitle={jacket.package.trade || jacket.package.name}
+      actions={
         /* The view's "Printed Jacket" opens the stored PDF, which is right for
            a bidder (no login, it is the copy they were sent). The GC gets
-           Download PDF below instead, built from the jacket on this screen,
-           so the stored copy's button is not offered twice here. */
+           Download PDF here instead, built from the jacket on this screen,
+           so the stored copy's button is not offered twice. */
+        <JacketPdfButton packageId={id} title={`${jacket.package.trade || jacket.package.name} — Bid Jacket`} />
+      }
+    >
+      <BidJacketView
         jacket={{ ...jacket, package: { ...jacket.package, jacketPdfUrl: null } }}
         projectId={projectId}
         packageId={id}
+        /* The breadcrumb leads back to the package; the view's own back link
+           would say the same thing twice. */
+        backHref={null}
         slot={
-          <>
-          <div style={{ display: 'flex', justifyContent: 'flex-end', marginBottom: 12 }}>
-            <JacketPdfButton packageId={id} title={`${jacket.package.trade || jacket.package.name} — Bid Jacket`} />
-          </div>
           <BidJacketAssembly
             packageId={id}
             projectId={projectId}
@@ -112,9 +130,8 @@ export default function BidJacketPage() {
                server that holds it. */
             onChanged={load}
           />
-          </>
         }
       />
-    </PremiumSurface>
+    </PageShell>
   );
 }
