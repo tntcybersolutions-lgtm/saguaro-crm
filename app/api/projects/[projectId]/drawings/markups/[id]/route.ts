@@ -145,7 +145,7 @@ export async function POST(req: NextRequest, { params }: { params: Promise<{ pro
     // through the parent markup before inserting.
     const { data: markup, error: mErr } = await supabase
       .from('drawing_markups')
-      .select('id')
+      .select('id, created_by, data')
       .eq('id', id)
       .eq('project_id', projectId)
       .eq('tenant_id', user.tenantId)
@@ -154,7 +154,8 @@ export async function POST(req: NextRequest, { params }: { params: Promise<{ pro
       console.error('[markup comment POST] lookup failed:', mErr.message);
       return apiError('projects/projectId/drawings/markups/id', mErr);
     }
-    if (!markup) return NextResponse.json({ error: 'Markup not found' }, { status: 404 });
+    const hidden = !!(markup && markup.data && typeof markup.data === 'object' && (markup.data as { private?: boolean }).private === true && markup.created_by !== user.id);
+    if (!markup || hidden) return NextResponse.json({ error: 'Markup not found' }, { status: 404 });
 
     const { data, error } = await supabase
       .from('drawing_markup_comments')
