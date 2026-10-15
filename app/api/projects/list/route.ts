@@ -54,9 +54,10 @@ export async function GET(req: NextRequest) {
     // Written out rather than looped: the generated Supabase types key
     // .from() on a literal table-name union, so a `(table: string)` helper
     // blows the type checker's instantiation depth.
-    const [rfiRes, punchRes, coRes, payRes, subRes, budRes] = await Promise.all([
+    const since = new Date(Date.now() - 31 * 86_400_000).toISOString().slice(0, 10);
+    const [rfiRes, punchRes, coRes, payRes, subRes, budRes, logRes, incRes] = await Promise.all([
       db.from('rfis').select('project_id, status, due_date, response_due_date').eq('tenant_id', user.tenantId).is('deleted_at', null),
-      db.from('punch_list').select('project_id, status').eq('tenant_id', user.tenantId),
+      db.from('punch_list').select('project_id, status, due_date').eq('tenant_id', user.tenantId).is('deleted_at', null),
       db.from('change_orders').select('project_id, status, created_at').eq('tenant_id', user.tenantId).is('deleted_at', null),
       /* BILLED, FROM THE PAY APPS. projects.billed_to_date / total_billed are
          denormalised and disagree with each other (a fully billed job reads 0
@@ -67,7 +68,12 @@ export async function GET(req: NextRequest) {
       /* Health ring inputs: submittal due dates and the budget forecast. */
       db.from('submittals').select('project_id, status, due_date').eq('tenant_id', user.tenantId).is('deleted_at', null),
       db.from('budget_lines').select('project_id, original_budget, approved_changes, projected, actual, committed').eq('tenant_id', user.tenantId),
+      /* Daily log and safety dots: only the last month matters. */
+      db.from('daily_logs').select('project_id, log_date').eq('tenant_id', user.tenantId).is('deleted_at', null).gte('log_date', since),
+      db.from('safety_incidents').select('project_id, status, incident_date, created_at').eq('tenant_id', user.tenantId).is('deleted_at', null).gte('created_at', since),
     ]);
+    if (logRes.error) console.error('[projects/list] daily log read failed:', logRes.error);
+    if (incRes.error) console.error('[projects/list] incident read failed:', incRes.error);
     if (subRes.error) console.error('[projects/list] submittal read failed:', subRes.error);
     if (budRes.error) console.error('[projects/list] budget read failed:', budRes.error);
     const group = <T extends { project_id: string | null }>(rows: T[] | null | undefined) => {
@@ -78,6 +84,9 @@ export async function GET(req: NextRequest) {
     type DueRow = { project_id: string | null; status: string | null; due_date?: string | null; response_due_date?: string | null };
     const rfiBy = rfiRes.error ? null : group(rfiRes.data as DueRow[]);
     const subBy = subRes.error ? null : group(subRes.data as DueRow[]);
+    const punchBy = punchRes.error ? null : group(punchRes.data as DueRow[]);
+    const logBy = logRes.error ? null : group(logRes.data as { project_id: string | null; log_date: string | null }[]);
+    const incBy = incRes.error ? null : group(incRes.data as { project_id: string | null; status: string | null; incident_date: string | null; created_at: string | null }[]);
     const coBy = coRes.error ? null : group(coRes.data as { project_id: string | null; status: string | null; created_at: string | null }[]);
     /* Budget per job: revised = original + approved changes; forecast = the
        larger of projected (when set), actual and committed — lib/budget-line. */
@@ -135,6 +144,10 @@ export async function GET(req: NextRequest) {
         rfis: (rfiBy?.get(id) || []).map((r) => ({ status: r.status, due: r.response_due_date || r.due_date || null })),
         submittals: (subBy?.get(id) || []).map((r) => ({ status: r.status, due: r.due_date || null })),
         changeOrders: (coBy?.get(id) || []).map((c) => ({ status: c.status, created: c.created_at })),
+        punch: (punchBy?.get(id) || []).map((r) => ({ status: r.status, due: r.due_date || null })),
+        // A failed read passes undefined so the dot shows "not available", not a false "no log".
+        logDates: logBy ? (logBy.get(id) || []).map((r) => r.log_date) : undefined,
+        incidents: (incBy?.get(id) || []).map((r) => ({ status: r.status, date: r.incident_date || r.created_at })),
       });
       return {
         ...p,

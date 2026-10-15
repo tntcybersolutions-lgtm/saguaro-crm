@@ -18,7 +18,7 @@ import { WarningCircle } from '@phosphor-icons/react';
 import { FlatStyles, Brief, RowAction, RowSkeleton, FlatEmpty } from '@/components/ui/flat';
 import { jobStage, stageLabel, dateLine, fmtMoneyShort, billedPct, plural, ymd, type JobStage } from '@/lib/job-page';
 import type { JobHealth } from '@/lib/job-health';
-import { HealthRing, ScheduleBar, ItemDots, fmtMoneyExact, JOB_HEALTH_CSS } from '@/components/jobs/JobHealthParts';
+import { HealthRing, ScheduleBar, ItemDots, OverUnder, StagePill, PortfolioBand, ITEM_COLUMNS, fmtMoneyExact, JOB_HEALTH_CSS } from '@/components/jobs/JobHealthParts';
 import { isDoneStatus } from '@/lib/project-lifecycle';
 
 type StageFilter = 'all' | 'bidding' | 'building' | 'complete' | 'closed';
@@ -89,12 +89,15 @@ export default function JobsPage() {
     body = <FlatEmpty>No jobs match. <button type="button" className="jl-inline" onClick={clear}>Clear the filters</button></FlatEmpty>;
   } else {
     body = (
+      <>
+      <PortfolioBand jobs={shown.map((p) => ({ id: p.id, name: p.name, contract: Number(p.contract_amount) || 0, billed: typeof p.billed_live === 'number' ? p.billed_live : null, health: p.health }))} />
       <div className="jt" role="table" aria-label="Jobs">
         <div className="jt-head" role="row">
           <span role="columnheader">Health</span>
           <span role="columnheader">Job</span>
           <span role="columnheader">Schedule</span>
-          <span role="columnheader" className="jt-dots-head"><em>RFIs</em><em>Subs</em><em>COs</em></span>
+          <span role="columnheader" className="jt-money">Over / under</span>
+          <span role="columnheader" className="jt-dots-head">{ITEM_COLUMNS.map((c) => <em key={c}>{c}</em>)}</span>
           <span role="columnheader" className="jt-money">Contract</span>
         </div>
         {shown.map((p) => {
@@ -102,7 +105,7 @@ export default function JobsPage() {
           const contract = Number(p.contract_amount) || 0;
           const pct = typeof p.billed_live === 'number' ? billedPct(p.billed_live, contract) : null;
           const when = dateLine(s, ymd(p.start_date), ymd(p.end_date), today);
-          const meta = [stageLabel(p), when?.text || null, p.city || p.state || null].filter(Boolean).join(' · ');
+          const meta = [when?.text || null, p.city || p.state || null, p.project_number ? `#${p.project_number}` : null].filter(Boolean).join(' · ');
           const h = p.health;
           const sched = h?.schedule;
           const schedText = sched && (sched.workPct != null || sched.timePct != null)
@@ -113,12 +116,13 @@ export default function JobsPage() {
               <span className="jt-ring" role="cell"><HealthRing health={h} size={46} /></span>
               <span className="jt-name" role="cell">
                 <b>{p.name || 'Untitled job'}</b>
-                <small>{meta}</small>
+                <span className="jt-meta"><StagePill stage={bucket(p)} label={stageLabel(p)} />{meta ? <small>{meta}</small> : null}</span>
               </span>
               <span className="jt-sched" role="cell">
                 <ScheduleBar health={h} />
                 <small data-late={sched?.behind ? 'true' : undefined}>{schedText}</small>
               </span>
+              <span className="jt-ou" role="cell"><OverUnder health={h} /></span>
               <span className="jt-dots" role="cell"><ItemDots health={h} /></span>
               <span className="jt-money" role="cell">
                 <b>{contract > 0 ? fmtMoneyExact(contract) : '—'}</b>
@@ -128,6 +132,7 @@ export default function JobsPage() {
           );
         })}
       </div>
+      </>
     );
   }
 
@@ -198,9 +203,11 @@ const CSS = `
 .jl-chip[aria-pressed=true] span{color:var(--selected-control-fg)}
 .jl-count{margin-left:auto;font-size:13px;color:var(--fl-text-3)}
 .jt{border:1px solid var(--fl-line);border-radius:14px;overflow:hidden;background:var(--bg-surface)}
-.jt-head,.jt-row{display:grid;grid-template-columns:64px minmax(0,2.2fr) minmax(150px,1.3fr) 190px 170px;align-items:center;gap:16px;padding:0 18px}
+.jt-head,.jt-row{display:grid;grid-template-columns:60px minmax(0,2fr) minmax(130px,1.1fr) 140px 348px 150px;align-items:center;gap:16px;padding:0 18px}
 .jt-head{height:38px;font-size:12px;font-weight:700;letter-spacing:.06em;text-transform:uppercase;color:var(--fl-text-3);border-bottom:1px solid var(--fl-line);background:color-mix(in srgb,var(--bg-base) 55%,var(--bg-surface))}
-.jt-dots-head{display:flex;gap:14px}.jt-dots-head em{font-style:normal;width:38px}
+.jt-dots-head,.jt-dots .jh-dots{display:grid;grid-template-columns:40px 78px 36px 48px 68px 52px;gap:6px}.jt-dots-head em{font-style:normal;white-space:nowrap;letter-spacing:0}
+.jt-ou{display:flex;justify-content:flex-end}
+.jt-meta{display:flex;align-items:center;gap:8px;min-width:0}
 .jt-row{min-height:76px;padding-top:12px;padding-bottom:12px;color:var(--fl-text);text-decoration:none;border-bottom:1px solid var(--fl-line);position:relative;transition:background .12s}
 .jt-row:last-child{border-bottom:0}
 .jt-row:hover{background:var(--bg-row-hover)}
@@ -212,13 +219,15 @@ const CSS = `
 .jt-name small,.jt-sched small,.jt-money small{font-size:13px;color:var(--fl-text-2);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
 .jt-sched{display:flex;flex-direction:column;gap:7px;min-width:0}
 .jt-sched small[data-late=true]{color:var(--danger);font-weight:600}
-.jt-dots .jh-dots{gap:14px}.jt-dots .jh-dot{width:38px}
+.jt-dots .jh-dot{min-width:0}
 .jt-money{text-align:right;display:flex;flex-direction:column;gap:3px;align-items:flex-end;font-variant-numeric:tabular-nums}
 .jt-money b{font-size:15px;font-weight:700;white-space:nowrap}
-@media (max-width:900px){
+@media (max-width:1280px){
   .jt-head{display:none}
-  .jt-row{grid-template-columns:52px minmax(0,1fr) auto;grid-template-areas:"ring name money" "ring sched sched" "ring dots dots";row-gap:8px;column-gap:12px;padding:14px 14px}
-  .jt-ring{grid-area:ring;align-self:start}.jt-name{grid-area:name}.jt-sched{grid-area:sched}.jt-dots{grid-area:dots}.jt-money{grid-area:money;align-self:start}
+  .jt-row{grid-template-columns:52px minmax(0,1fr) auto;grid-template-areas:"ring name money" "ring sched ou" "ring dots dots";row-gap:10px;column-gap:12px;padding:14px 14px}
+  .jt-ring{grid-area:ring;align-self:start}.jt-name{grid-area:name}.jt-sched{grid-area:sched}.jt-dots{grid-area:dots}.jt-money{grid-area:money;align-self:start}.jt-ou{grid-area:ou}
+  .jt-dots .jh-dots{display:flex;flex-wrap:wrap;gap:6px 14px}
+  .jt-dots .jh-dot-l{display:inline;font-size:12px;font-weight:600;color:var(--text-secondary)}
   .jt-money b{font-size:14px}
 }
 .jl-inline{color: var(--link);font-weight:650;text-decoration:none;background:none;border:0;padding:0;font:inherit;cursor:pointer;min-height:44px}
