@@ -4,27 +4,34 @@
  * incl. video up to 500MB), preview inline (image/video/audio/pdf), rename, move
  * to folders, crop images, share (link/email/SMS/Slack/Teams), soft-delete + trash.
  * Backed by the canonical project_files table via /api/files/* (signed URLs).
+ *
+ * Reads   GET  /api/projects/:id/files?include=linked | ?trash=1
+ *         GET  /api/projects/:id/folders
+ * Writes  PUT  /api/files/:id  { file_name } | { folder } | { restore: true }
+ *         DELETE /api/files/:id[?hard=1]
+ *         POST /api/files/share  { fileId, channel, to }
+ *         POST /api/storage/connectors/:id/export  { fileId }
  */
-import React, { useState, useEffect, useCallback, useMemo, useRef } from 'react';
+import React, { useState, useEffect, useCallback, useMemo } from 'react';
 import { textPrompt, confirmDialog } from '@/lib/ui/async-dialog';
-import { useEscapeClose } from '@/lib/ui/use-escape-close';
-import { z } from '@/lib/design-tokens';
 import { useProjectContext } from '@/lib/hooks/useProjectContext';
 import { humanError } from '@/lib/errors';
 import { useParams } from 'next/navigation';
-import { Btn, T } from '@/components/ui/shell';
-import { PremiumSurface, ModuleHero, SectionCard, PremiumEmpty, StatStrip, ghostButtonStyle } from '@/components/ui/premium';
-import { ListToolbar } from '@/components/ui/ListToolbar';
+import {
+  PageShell, Card, StatRow, Badge, Button, Toolbar, Tabs, DataTable, EmptyState, Select,
+  FormModal, ItemList, ItemRow, Toast, useToast,
+  type Column, type Action, type StatItem,
+} from '@/components/ui/kit';
 import { FileThumb, FilePreview, KIND_TINT } from '@/components/FilePreview';
 import { FileDropzone } from '@/components/FileDropzone';
 import { FileCropper } from '@/components/FileCropper';
 import { ExternalBrowser } from '@/components/ExternalBrowser';
 import { classifyKind, KIND_LABEL, type FileKind } from '@/lib/filekind';
 import {
-  Folder, FolderOpen, X, DownloadSimple, PencilSimple, FolderSimplePlus, Crop, ShareNetwork,
+  Folder, FolderOpen, DownloadSimple, PencilSimple, FolderSimplePlus, Crop, ShareNetwork,
   Trash, ArrowCounterClockwise, MagnifyingGlass, LinkSimple, EnvelopeSimple, ChatText, MicrosoftTeamsLogo, SlackLogo,
-  CloudArrowDown, CloudArrowUp, ListBullets, SquaresFour, CaretRight, FilePdf, FileDoc, FileXls, FileImage,
-  FileVideo, FileAudio, File as FileIcon, Sparkle, Compass,
+  CloudArrowDown, CloudArrowUp, ListBullets, SquaresFour, FilePdf, FileDoc, FileXls, FileImage,
+  FileVideo, FileAudio, File as FileIcon, Sparkle, Compass, Eye, Files, CalendarPlus, Image as ImageIcon, UploadSimple,
 } from '@phosphor-icons/react';
 
 /* eslint-disable @typescript-eslint/no-explicit-any */
@@ -42,42 +49,40 @@ const KIND_ICON: Record<FileKind, React.ElementType> = {
   pdf: FilePdf, doc: FileDoc, sheet: FileXls, image: FileImage, video: FileVideo, audio: FileAudio, cad: Compass, other: FileIcon,
 };
 const sourceOf = (f: any): string => (isLinked(f) ? SOURCE_LABEL[f.source] || 'Linked' : f.uploaded_by_name ? `Uploaded by ${f.uploaded_by_name}` : 'Uploaded');
+/** Same as the preview's Download link: the file's own name, in a new tab. */
+function downloadFile(f: any) {
+  if (!f?.file_url) return;
+  const a = document.createElement('a');
+  a.href = f.file_url; a.download = f.file_name || ''; a.target = '_blank'; a.rel = 'noreferrer';
+  document.body.appendChild(a); a.click(); a.remove();
+}
+const SourceIcon = ({ f }: { f: any }) => (f.source === 'generated' ? <Sparkle size={13} weight="fill" /> : f.source === 'drawing' ? <Compass size={13} /> : <CloudArrowUp size={13} />);
 
-/* The library reads as a register, not a wall of identical PDF icons: full
-   names (two lines before "…"), what each file is, where it came from, and
-   when — grouped by folder. Photos and video keep a picture grid. */
+/* Photos and video keep a picture grid; everything else reads as a register. */
 const FL_CSS = `
-.fl-views{display:inline-flex;padding:3px;border:1px solid var(--border-subtle);border-radius:12px;gap:2px;background:var(--bg-surface)}
-.fl-views button{all:unset;cursor:pointer;display:inline-flex;align-items:center;gap:6px;min-height:36px;padding:0 12px;border-radius:9px;font-size:13px;font-weight:600;color:var(--text-secondary)}
-.fl-views button[aria-pressed="true"]{background:var(--brand-primary);color:var(--on-brand)}
-.fl-views button:focus-visible{outline:2px solid var(--focus-ring);outline-offset:2px}
-.fl-group{margin-bottom:18px}
-.fl-ghead{display:flex;align-items:center;gap:8px;padding:0 4px 8px;font-size:12px;font-weight:700;letter-spacing:.06em;text-transform:uppercase;color:var(--text-tertiary)}
-.fl-ghead b{font-weight:700;letter-spacing:0;color:var(--text-secondary);background:var(--bg-surface-2);border:1px solid var(--border-default);border-radius:999px;padding:0 8px;font-size:12px}
-.fl-ghead i{flex:1;height:1px;background:var(--border-subtle)}
-.fl-list{border:1px solid var(--border-default);border-radius:14px;overflow:hidden;background:var(--c-card)}
-.fl-row{display:grid;grid-template-columns:44px minmax(0,1fr) 190px 120px 22px;align-items:center;gap:14px;min-height:64px;padding:10px 16px;border-top:1px solid var(--border-subtle);cursor:pointer;transition:background .15s}
-.fl-row:first-child{border-top:0}
-.fl-row:hover,.fl-row:focus-visible{background:var(--brand-primary-08);outline:none}
-.fl-ico{width:40px;height:40px;border-radius:10px;display:grid;place-items:center;background:color-mix(in srgb,var(--tint) 14%,transparent);border:1px solid color-mix(in srgb,var(--tint) 45%,transparent);color:var(--tint)}
-.fl-name{font-size:14.5px;font-weight:700;line-height:1.3;color:var(--text-primary);display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden;word-break:break-word}
-.fl-meta{display:flex;flex-wrap:wrap;align-items:center;gap:4px 10px;margin-top:4px;font-size:12px;color:var(--text-secondary)}
-.fl-kind{font-weight:800;color:var(--tint)}
-.fl-src{display:inline-flex;align-items:center;gap:5px;font-size:12px;font-weight:700;color:var(--text-secondary);min-width:0}
-.fl-src[data-sage="true"]{color: var(--text-secondary)}
-.fl-src span{overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
-.fl-date{font-size:13px;color:var(--text-secondary);text-align:right;font-variant-numeric:tabular-nums}
-.fl-go{color:var(--c-orange)}
-.fl-acts{grid-column:2/-1;display:flex;gap:6px}
-.fl-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(210px,1fr));gap:14px}
-.fl-card{background:var(--c-card);border:1px solid var(--border-default);border-radius:14px;overflow:hidden;cursor:pointer;display:flex;flex-direction:column;transition:border-color .15s,transform .15s}
-.fl-card:hover,.fl-card:focus-visible{border-color:var(--brand-primary-35);transform:translateY(-1px);outline:none}
-.fl-card-doc{display:flex;align-items:center;gap:10px;padding:14px 14px 0}
-.fl-card-body{padding:12px 14px 14px;display:flex;flex-direction:column;gap:6px;flex:1}
-.fl-card .fl-name{-webkit-line-clamp:3}
-.fl-monly{display:none}
-@media (max-width:900px){.fl-row{grid-template-columns:40px minmax(0,1fr) 22px}.fl-src.fl-col,.fl-date{display:none}.fl-monly{display:inline-flex}.fl-row .fl-name{-webkit-line-clamp:3}}
-@media (max-width:640px){.fl-row{padding:10px 12px;gap:12px}.fl-grid{grid-template-columns:repeat(auto-fill,minmax(160px,1fr))}}
+.flWs .flDrop { margin-bottom: 16px; }
+.flDropNote { margin: 8px 0 0; font-size: 13px; color: var(--text-secondary); }
+.flDropNote b { color: var(--text-primary); }
+.flIco { width: 36px; height: 36px; flex-shrink: 0; border-radius: 10px; display: grid; place-items: center; background: color-mix(in srgb, var(--tint) 14%, transparent); border: 1px solid color-mix(in srgb, var(--tint) 45%, transparent); color: var(--tint); }
+.flName { white-space: normal !important; display: -webkit-box !important; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden; word-break: break-word; }
+.flSrc { display: inline-flex; align-items: center; gap: 5px; color: var(--text-secondary); white-space: nowrap; }
+.flViews { display: inline-flex; gap: 6px; }
+.flViews .k-btn[aria-pressed="true"] { border-color: var(--border-strong); background: var(--bg-surface-2); color: var(--text-primary); }
+.flGrid { display: grid; grid-template-columns: repeat(auto-fill, minmax(210px, 1fr)); gap: 14px; }
+.flCard { background: var(--bg-surface-2); border: 1px solid var(--border-default); border-radius: var(--radius-md); overflow: hidden; cursor: pointer; display: flex; flex-direction: column; transition: border-color .15s; text-align: left; font: inherit; color: inherit; padding: 0; }
+.flCard:hover, .flCard:focus-visible { border-color: var(--border-strong); outline: none; }
+.flCardDoc { display: flex; align-items: center; gap: 10px; padding: 14px 14px 0; }
+.flCardBody { padding: 12px 14px 14px; display: flex; flex-direction: column; gap: 6px; flex: 1; }
+.flCardName { font-size: 14px; font-weight: 700; line-height: 1.3; color: var(--text-primary); display: -webkit-box; -webkit-line-clamp: 3; -webkit-box-orient: vertical; overflow: hidden; word-break: break-word; }
+.flMeta { display: flex; flex-wrap: wrap; align-items: center; gap: 4px 10px; font-size: 12px; color: var(--text-secondary); }
+.flKind { font-weight: 800; color: var(--tint); }
+.flCardActs { display: flex; gap: 6px; margin-top: 4px; flex-wrap: wrap; }
+.flPrevMeta { font-size: 13px; color: var(--text-secondary); margin-bottom: 12px; }
+.flLinkedNote { font-size: 12px; color: var(--text-tertiary); margin-top: 12px; line-height: 1.5; }
+@media (max-width: 640px) {
+  .flGrid { grid-template-columns: repeat(auto-fill, minmax(160px, 1fr)); }
+  .flWs .k-btn, .flWs .k-stat, .flWs select.k-select, .flWs .k-input { min-height: 44px; }
+}
 `;
 
 export default function FilesPage() {
@@ -93,11 +98,9 @@ export default function FilesPage() {
   const [cropping, setCropping] = useState<any | null>(null);
   const [shareFor, setShareFor] = useState<any | null>(null);
   const [exportFor, setExportFor] = useState<any | null>(null);
-  const previewRef = useRef<HTMLDivElement>(null);
   const closePreview = useCallback(() => setSel(null), []);
-  useEscapeClose(previewRef, closePreview, !!sel);
   const [showImport, setShowImport] = useState(false);
-  const [toast, setToast] = useState('');
+  const { toast, show } = useToast(3500);
   const [view, setView] = useState<'list' | 'grid'>('list');
   // "Added This Week" tile: narrows the library to the last 7 days of uploads.
   const [recentOnly, setRecentOnly] = useState(false);
@@ -120,7 +123,7 @@ export default function FilesPage() {
   // Project intelligence — one snapshot; the library walks in knowing the job.
   const { ctx } = useProjectContext(projectId);
 
-  const flash = (m: string) => { setToast(m); setTimeout(() => setToast(''), 3500); };
+  const flash = (m: string, tone: 'good' | 'bad' = 'good') => show(m, tone);
   /* Folders the project was set up with, whether or not anything is filed in
      them yet. Deriving the list purely from uploaded files meant a brand-new
      project showed none at all — the GC had nowhere to put a drawing and no
@@ -156,266 +159,286 @@ export default function FilesPage() {
     return true;
   });
 
-  /* Rows grouped by folder (seeded order first), newest first inside each. */
-  const groups = useMemo(() => {
-    const by = new Map<string, any[]>();
-    for (const f of filtered) { const key = f.folder || 'Unfiled'; if (!by.has(key)) by.set(key, []); by.get(key)!.push(f); }
-    const order = [...folders, 'Unfiled'];
-    return Array.from(by.entries())
-      .sort(([a], [b]) => (order.indexOf(a) === -1 ? 999 : order.indexOf(a)) - (order.indexOf(b) === -1 ? 999 : order.indexOf(b)) || a.localeCompare(b))
-      .map(([name, items]) => ({ name, items: items.slice().sort((x, y) => String(y.created_at || '').localeCompare(String(x.created_at || ''))) }));
-  }, [filtered, folders]);
-
   const patchFile = (row: any) => { setFiles((prev) => prev.map((f) => (f.id === row.id ? { ...f, ...row } : f))); setSel((s: any) => (s && s.id === row.id ? { ...s, ...row } : s)); };
   const rename = async (f: any) => { const name = await textPrompt({ title: 'Rename file', label: 'File name', defaultValue: f.file_name, required: true }); if (!name || name === f.file_name) return; const r = await (await fetch(`/api/files/${f.id}`, { method: 'PUT', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ file_name: name }) })).json(); if (r.file) { patchFile(r.file); flash('Renamed.'); } };
   const move = async (f: any) => { const dest = await textPrompt({ title: 'Move file', label: 'Folder (blank = root)', defaultValue: f.folder || '' }); if (dest === null) return; const r = await (await fetch(`/api/files/${f.id}`, { method: 'PUT', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ folder: dest }) })).json(); if (r.file) { patchFile(r.file); flash(dest ? `Moved to ${dest}.` : 'Moved to root.'); } };
   const del = async (f: any, hard = false) => { if (hard && !(await confirmDialog({ title: "Delete permanently?", message: `"${f.file_name}" cannot be recovered.`, confirmLabel: "Delete", danger: true }))) return; await fetch(`/api/files/${f.id}${hard ? '?hard=1' : ''}`, { method: 'DELETE' }); setFiles((prev) => prev.filter((x) => x.id !== f.id)); setSel(null); flash(hard ? 'Deleted permanently.' : 'Moved to trash.'); };
   const restore = async (f: any) => { await fetch(`/api/files/${f.id}`, { method: 'PUT', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ restore: true }) }); setFiles((prev) => prev.filter((x) => x.id !== f.id)); flash('Restored.'); };
 
-  const kinds: { k: string; label: string }[] = [{ k: 'all', label: 'All' }, ...(['image', 'video', 'pdf', 'doc', 'sheet', 'audio', 'cad', 'other'] as FileKind[]).map((k) => ({ k, label: KIND_LABEL[k] }))];
+  const kinds: { k: string; label: string }[] = (['image', 'video', 'pdf', 'doc', 'sheet', 'audio', 'cad', 'other'] as FileKind[]).map((k) => ({ k, label: KIND_LABEL[k] }));
   const counts = { total: files.length, video: files.filter((f) => kindOf(f) === 'video').length, image: files.filter((f) => kindOf(f) === 'image').length };
   const docCount = Math.max(0, counts.total - counts.video - counts.image);
   const bytesTotal = ownFiles.reduce((s, f) => s + (Number(f.file_size) || 0), 0);
   const addedThisWeek = files.filter(isThisWeek).length;
-  /* Stat tiles that point at this same screen were links back to itself — a
-     tap reloaded the page and changed nothing. They now filter the library
-     below (and say so), clear the filters, or are plain figures. */
+  /* Stat tiles filter the library below, clear the filters, or link to the
+     screen that owns the figure — never a link back to this same screen. */
   const filtersActive = !!search || kindFilter !== 'all' || folder !== 'all' || recentOnly;
   const clearFilters = () => { setSearch(''); setKindFilter('all'); setFolder('all'); setRecentOnly(false); };
   const toggleVideos = () => setKindFilter((k) => (k === 'video' ? 'all' : 'video'));
   const lastUpload = files.reduce<string | null>((m, f) => (f.created_at && (!m || f.created_at > m) ? f.created_at : m), null);
+  const base = `/app/projects/${projectId}`;
+
+  const stats: StatItem[] = [
+    { label: 'Library', value: loading ? '—' : counts.total, icon: <Files size={15} />, onClick: clearFilters, active: !filtersActive, sub: bytesTotal > 0 ? `${fmtSize(bytesTotal)} stored · ${folders.length} folder${folders.length === 1 ? '' : 's'}` : `${folders.length} folder${folders.length === 1 ? '' : 's'}` },
+    { label: 'Added this week', value: loading ? '—' : addedThisWeek, tone: addedThisWeek > 0 ? 'good' : 'default', icon: <CalendarPlus size={15} />, onClick: () => setRecentOnly((v) => !v), active: recentOnly, sub: lastUpload ? `Last upload ${fmtDate(lastUpload)}` : 'Nothing uploaded yet' },
+    { label: 'Photos', value: loading ? '—' : counts.image, icon: <ImageIcon size={15} />, href: `${base}/photos`, sub: 'Site + progress shots' },
+    { label: 'Videos', value: loading ? '—' : counts.video, icon: <FileVideo size={15} />, onClick: toggleVideos, active: kindFilter === 'video', sub: 'Walkthroughs, site video' },
+    { label: 'Docs & drawings', value: loading ? '—' : docCount, icon: <FilePdf size={15} />, href: `${base}/drawings`, sub: 'PDFs, sheets, CAD, docs' },
+  ];
+
+  /** The file's verbs — shared by the list row, the grid card and the preview. */
+  function fileActions(f: any): Action[] {
+    if (trash) {
+      return [
+        { label: 'Restore', icon: <ArrowCounterClockwise size={14} />, onClick: () => restore(f), inline: true },
+        { label: 'Delete', icon: <Trash size={14} />, onClick: () => del(f, true), tone: 'danger', inline: true },
+      ];
+    }
+    if (isLinked(f)) {
+      return [
+        { label: 'Preview', icon: <Eye size={15} />, onClick: () => setSel(f) },
+        { label: 'Download', icon: <DownloadSimple size={15} />, onClick: () => downloadFile(f) },
+        { label: `Open in ${f.source === 'drawing' ? 'Drawings' : 'Documents'}`, icon: <FolderOpen size={15} />, href: f.open_href, hidden: !f.open_href },
+      ];
+    }
+    return [
+      { label: 'Preview', icon: <Eye size={15} />, onClick: () => setSel(f) },
+      { label: 'Download', icon: <DownloadSimple size={15} />, onClick: () => downloadFile(f) },
+      { label: 'Rename', icon: <PencilSimple size={15} />, onClick: () => rename(f) },
+      { label: 'Move', icon: <FolderSimplePlus size={15} />, onClick: () => move(f) },
+      { label: 'Edit / Crop', icon: <Crop size={15} />, onClick: () => setCropping(f), hidden: kindOf(f) !== 'image' },
+      { label: 'Share', icon: <ShareNetwork size={15} />, onClick: () => setShareFor(f) },
+      { label: 'Export to cloud', icon: <CloudArrowUp size={15} />, onClick: () => setExportFor(f) },
+      { label: 'Delete', icon: <Trash size={15} />, onClick: () => del(f), tone: 'danger' },
+    ];
+  }
+
+  const columns: Column<any>[] = [
+    {
+      key: 'file_name', header: 'Name', primary: true, accessor: (f) => String(f.file_name || '').toLowerCase(),
+      render: (f) => {
+        const k = kindOf(f); const Icon = KIND_ICON[k];
+        return (
+          <span className="k-name" title={f.file_name}>
+            <span className="flIco" style={{ ['--tint' as string]: KIND_TINT[k] } as React.CSSProperties}><Icon size={19} weight="duotone" /></span>
+            <span className="k-name-text"><span className="flName">{f.file_name}</span><span>{[f.category, f.file_size ? fmtSize(f.file_size) : ''].filter(Boolean).join(' · ') || KIND_LABEL[k]}</span></span>
+          </span>
+        );
+      },
+    },
+    { key: 'kind', header: 'Type', phone: 'show', accessor: (f) => KIND_LABEL[kindOf(f)], render: (f) => <Badge tone="neutral">{KIND_LABEL[kindOf(f)]}</Badge> },
+    { key: 'folder', header: 'Folder', accessor: (f) => f.folder || 'Unfiled', render: (f) => f.folder ? <span className="flSrc"><FolderOpen size={13} />{f.folder}</span> : '—' },
+    { key: 'source', header: 'Source', accessor: (f) => sourceOf(f), render: (f) => <span className="flSrc"><SourceIcon f={f} />{sourceOf(f)}</span> },
+    { key: 'file_size', header: 'Size', align: 'right', hidden: true, accessor: (f) => Number(f.file_size) || 0, render: (f) => fmtSize(f.file_size) },
+    { key: 'created_at', header: 'Added', phone: 'show', accessor: (f) => f.created_at || '', render: (f) => fmtDate(f.created_at) || '—' },
+  ];
+
+  const emptyNode = trash
+    ? <EmptyState icon={<Trash size={22} />} title="Trash is empty" text="Deleted files land here and can be restored." />
+    : files.length > 0
+      ? <EmptyState icon={<MagnifyingGlass size={22} />} title="No files match" text="Try a different search or filter." action={filtersActive ? <Button onClick={clearFilters}>Clear filters</Button> : undefined} />
+      : <EmptyState icon={<Folder size={22} />} title="No files yet" text="Drop files above or import from the cloud." />;
+
+  const pickUpload = () => document.querySelector<HTMLInputElement>('.flDrop input[type="file"]')?.click();
+
+  const grid = (
+    <div className="flGrid">
+      {filtered.map((f) => {
+        const k = kindOf(f); const Icon = KIND_ICON[k];
+        const visual = k === 'image' || k === 'video';
+        return (
+          <div key={f.id} role="button" tabIndex={0} className="flCard" title={f.file_name}
+            onClick={() => (trash ? null : setSel(f))}
+            onKeyDown={(e) => { if (!trash && (e.key === 'Enter' || e.key === ' ')) { e.preventDefault(); setSel(f); } }}>
+            {visual ? <FileThumb kind={k} url={f.file_url} poster={f.poster_url} /> : (
+              <div className="flCardDoc">
+                <span className="flIco" style={{ ['--tint' as string]: KIND_TINT[k] } as React.CSSProperties}><Icon size={19} weight="duotone" /></span>
+                <span className="flSrc"><SourceIcon f={f} /><span>{sourceOf(f)}</span></span>
+              </div>
+            )}
+            <div className="flCardBody">
+              <span className="flCardName">{f.file_name}</span>
+              <span className="flMeta">
+                <span className="flKind" style={{ ['--tint' as string]: KIND_TINT[k] } as React.CSSProperties}>{KIND_LABEL[k]}</span>
+                {f.file_size ? <span>{fmtSize(f.file_size)}</span> : null}
+                {f.created_at && <span>{fmtDate(f.created_at)}</span>}
+              </span>
+              {f.folder && <span className="flMeta"><FolderOpen size={12} />{f.folder}</span>}
+              {trash && (
+                <div className="flCardActs" onClick={(e) => e.stopPropagation()}>
+                  <Button size="sm" icon={<ArrowCounterClockwise size={13} />} onClick={() => restore(f)}>Restore</Button>
+                  <Button size="sm" variant="danger" onClick={() => del(f, true)}>Delete</Button>
+                </div>
+              )}
+            </div>
+          </div>
+        );
+      })}
+    </div>
+  );
+
+  // The preview hides while a share / export / crop window is on top of it.
+  const previewOpen = !!sel && !shareFor && !exportFor && !cropping;
 
   return (
-    <>
+    <div className="flWs">
       <style dangerouslySetInnerHTML={{ __html: FL_CSS }} />
-      <PremiumSurface>
-        {/* Header */}
-        <ModuleHero
-          title="Files & Media"
-          subtitle={ctx?.project?.name ? `${ctx.project.name} · plans, permits, contracts, photos and video in one place.` : 'Plans, permits, contracts, photos and video in one place.'}
+      <PageShell
+        crumbs={[
+          { label: 'Projects', href: '/app/projects' },
+          { label: ctx?.project?.name || 'Project', href: `${base}/overview` },
+          { label: 'Files' },
+        ]}
+        title="Files & media"
+        subtitle="Plans, permits, contracts, photos and video in one place."
+        actions={
+          <>
+            <Button icon={<CloudArrowDown size={15} weight="bold" />} onClick={() => setShowImport(true)}>Import from cloud</Button>
+            <Button variant="primary" icon={<UploadSimple size={15} weight="bold" />} onClick={() => { if (trash) { setTrash(false); requestAnimationFrame(pickUpload); } else pickUpload(); }}>Upload files</Button>
+          </>
+        }
+      >
+        {!loading && !trash && <StatRow items={stats} />}
+
+        {!trash && (
+          <div className="flDrop">
+            <FileDropzone projectId={projectId} folder={folder !== 'all' ? folder : null} onUploaded={(rows) => { if (rows?.length) { setFiles((prev) => [...rows, ...prev]); flash(`${rows.length} uploaded.`); } }} />
+            <p className="flDropNote">Uploads go to {folder !== 'all' ? <b>{folder}</b> : 'the library'}.</p>
+          </div>
+        )}
+
+        <Tabs
+          tabs={[{ key: 'library', label: 'Library', count: trash ? undefined : files.length }, { key: 'trash', label: 'Trash', count: trash ? files.length : undefined }]}
+          value={trash ? 'trash' : 'library'}
+          onChange={(k) => { setTrash(k === 'trash'); setSel(null); }}
+        />
+
+        <Toolbar
+          search={search}
+          onSearch={setSearch}
+          placeholder="Search files…"
+          filters={
+            <>
+              <Select aria-label="Type" value={kindFilter} onChange={(e) => setKindFilter(e.target.value)} style={{ width: 'auto', minWidth: 140 }}
+                options={[{ value: 'all', label: 'All types' }, ...kinds.map((k) => ({ value: k.k, label: k.label }))]} />
+              <Select aria-label="Folder" value={folder} onChange={(e) => setFolder(e.target.value)} style={{ width: 'auto', minWidth: 150, maxWidth: 240 }}
+                options={[{ value: 'all', label: 'All folders' }, ...folders]} />
+              {filtersActive && <Button variant="ghost" size="sm" onClick={clearFilters}>Clear</Button>}
+            </>
+          }
           actions={
-            <button onClick={() => setShowImport(true)} style={ghostButtonStyle} className="pmBtn">
-              <CloudArrowDown size={15} weight="bold" /> Import from Cloud
-            </button>
+            <div className="flViews" role="group" aria-label="View">
+              <Button size="sm" icon={<ListBullets size={14} weight="bold" />} aria-pressed={view === 'list'} onClick={() => setView('list')}>List</Button>
+              <Button size="sm" icon={<SquaresFour size={14} weight="bold" />} aria-pressed={view === 'grid'} onClick={() => setView('grid')}>Grid</Button>
+            </div>
           }
         />
 
-        {/* Library intelligence — what the system already knows */}
-        {!loading && (
-          <StatStrip items={[
-            { label: 'Library', value: String(counts.total), onClick: filtersActive ? clearFilters : undefined, sub: filtersActive ? 'Filtered — tap to show all' : bytesTotal > 0 ? `${fmtSize(bytesTotal)} stored` : 'No storage used yet' },
-            { label: 'Added This Week', value: String(addedThisWeek), accent: addedThisWeek > 0 ? 'var(--success)' : undefined, onClick: addedThisWeek > 0 || recentOnly ? () => setRecentOnly((v) => !v) : undefined, active: recentOnly, sub: recentOnly ? 'Showing this week — tap to clear' : lastUpload ? `Last upload ${fmtDate(lastUpload)}` : 'Nothing uploaded yet' },
-            {href: `/app/projects/${projectId}/photos`,  label: 'Photos', value: String(counts.image), sub: 'Site + progress shots' },
-            { label: 'Videos', value: String(counts.video), onClick: counts.video > 0 || kindFilter === 'video' ? toggleVideos : undefined, active: kindFilter === 'video', sub: kindFilter === 'video' ? 'Showing videos — tap to clear' : 'Walkthroughs, site video' },
-            {href: `/app/projects/${projectId}/drawings`,  label: 'Docs & Drawings', value: String(docCount), sub: 'PDFs, sheets, CAD, docs' },
-            { label: 'Folders', value: String(folders.length), sub: folders.length > 0 ? folders.slice(0, 2).join(', ') + (folders.length > 2 ? '…' : '') : 'Organize with Move' },
-          ]} />
+        {view === 'grid' && !loading ? (
+          <Card
+            title={trash ? 'Trash' : 'Library'}
+            subtitle={`${filtered.length} ${filtered.length === 1 ? 'file' : 'files'}${recentOnly ? ' · added this week' : ''}${!trash && folder !== 'all' ? ` · ${folder}` : ''}`}
+          >
+            {filtered.length === 0 ? emptyNode : grid}
+          </Card>
+        ) : (
+          <Card flush>
+            <DataTable<any>
+              tableId={trash ? 'project-files-trash' : 'project-files'}
+              exportName={trash ? 'files-trash' : 'files'}
+              columns={columns}
+              rows={filtered}
+              loading={loading}
+              rowKey={(f) => `${isLinked(f) ? 'l' : 'f'}:${f.id}`}
+              defaultSort={{ key: 'created_at', dir: 'desc' }}
+              onRowClick={trash ? undefined : (f) => setSel(f)}
+              rowActions={fileActions}
+              empty={emptyNode}
+            />
+          </Card>
         )}
-
-        {!trash && (
-          <div style={{ marginBottom: 16 }}>
-            <FileDropzone projectId={projectId} folder={folder !== 'all' ? folder : null} onUploaded={(rows) => { if (rows?.length) { setFiles((prev) => [...rows, ...prev]); flash(`${rows.length} uploaded.`); } }} />
-            <p style={{ margin: '8px 0 0', fontSize: 13, color: 'var(--text-secondary)' }}>
-              Uploads go to {folder !== 'all' ? <b style={{ color: 'var(--text-primary)' }}>{folder}</b> : 'the library'}.
-            </p>
-          </div>
-        )}
-
-        {toast && <div style={{ marginBottom: 14, padding: '9px 14px', background: T.greenDim, border: '1px solid rgba(74,222,128,0.3)', borderRadius: 8, color: T.green, fontSize: 13 }}>{toast}</div>}
-
-        {/* Library */}
-        <SectionCard
-          icon={<Folder size={17} weight="duotone" color="var(--text-secondary)" />}
-          title={trash ? 'Trash' : 'Library'}
-          subtitle={`${filtered.length} ${filtered.length === 1 ? 'file' : 'files'}${recentOnly ? ' · added this week' : ''}${!trash && folder !== 'all' ? ` · ${folder}` : ''}`}
-          action={
-            <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
-              <div className="fl-views" role="group" aria-label="View">
-                <button type="button" aria-pressed={view === 'list'} onClick={() => setView('list')}><ListBullets size={14} weight="bold" />List</button>
-                <button type="button" aria-pressed={view === 'grid'} onClick={() => setView('grid')}><SquaresFour size={14} weight="bold" />Grid</button>
-              </div>
-              <Btn size="sm" variant={trash ? 'primary' : 'ghost'} onClick={() => setTrash((t) => !t)}><Trash size={14} />{trash ? 'Viewing Trash' : 'Trash'}</Btn>
-            </div>
-          }
-        >
-          {/* Toolbar */}
-          <ListToolbar
-            module="files"
-            search={search}
-            onSearch={setSearch}
-            searchPlaceholder="Search files…"
-            filters={[
-              { key: 'kind', label: 'Type', value: kindFilter, onChange: setKindFilter, allLabel: 'All Types',
-                options: kinds.filter((k) => k.k !== 'all').map((k) => ({ value: k.k, label: k.label })) },
-              { key: 'folder', label: 'Folder', value: folder, onChange: setFolder, allLabel: 'All Folders',
-                options: folders },
-            ]}
-            count={{ shown: filtered.length, total: files.length }}
-            style={{ marginBottom: 16 }}
-          />
-
-          {/* grid */}
-          {loading ? <div style={{ textAlign: 'center', padding: 44, color: T.muted, fontSize: 13 }}>Loading…</div>
-            : filtered.length === 0 ? (
-              trash || files.length > 0 ? (
-                <PremiumEmpty
-                  icon={trash ? <Trash size={30} weight="duotone" color="var(--text-secondary)" /> : <MagnifyingGlass size={30} weight="duotone" color="var(--text-secondary)" />}
-                  title={trash ? 'Trash Is Empty' : 'No Files Match'}
-                  description={trash ? 'Deleted files show up here and can be restored before permanent removal.' : 'Try a different search term or filter to find what you’re looking for.'}
-                  action={!trash && filtersActive ? <button type="button" onClick={clearFilters} style={{ ...ghostButtonStyle, minHeight: 44 }} className="pmBtn">Clear Filters</button> : undefined}
-                  compact
-                />
-              ) : (
-                <PremiumEmpty
-                  title="No files yet"
-                  description="Drop files above or use Import from Cloud. Photos and attachments from the field land here too."
-                  compact
-                />
-              )
-            ) : view === 'list' ? (
-              <div>
-                {groups.map((g) => (
-                  <section key={g.name} className="fl-group">
-                    {groups.length > 1 && <div className="fl-ghead"><FolderOpen size={13} weight="fill" />{g.name}<b>{g.items.length}</b><i /></div>}
-                    <div className="fl-list">
-                      {g.items.map((f) => {
-                        const k = kindOf(f); const Icon = KIND_ICON[k];
-                        return (
-                          <div key={f.id} role="button" tabIndex={0} className="fl-row" title={f.file_name}
-                            onClick={() => (trash ? null : setSel(f))}
-                            onKeyDown={(e) => { if (!trash && (e.key === 'Enter' || e.key === ' ')) { e.preventDefault(); setSel(f); } }}>
-                            <span className="fl-ico" style={{ ['--tint' as string]: KIND_TINT[k] } as React.CSSProperties}><Icon size={21} weight="duotone" /></span>
-                            <span style={{ minWidth: 0 }}>
-                              <span className="fl-name">{f.file_name}</span>
-                              <span className="fl-meta">
-                                <span className="fl-kind" style={{ ['--tint' as string]: KIND_TINT[k] } as React.CSSProperties}>{KIND_LABEL[k]}</span>
-                                {f.file_size ? <span>{fmtSize(f.file_size)}</span> : null}
-                                {f.category && <span>{f.category}</span>}
-                                {groups.length === 1 && f.folder && <span style={{ display: 'inline-flex', alignItems: 'center', gap: 4 }}><FolderOpen size={12} />{f.folder}</span>}
-                                {f.created_at && <span className="fl-monly">{fmtDate(f.created_at)}</span>}
-                                <span className="fl-monly fl-src" data-sage={f.source === 'generated' || undefined}>{sourceOf(f)}</span>
-                              </span>
-                            </span>
-                            <span className="fl-src fl-col" data-sage={f.source === 'generated' || undefined}>
-                              {f.source === 'generated' ? <Sparkle size={13} weight="fill" /> : f.source === 'drawing' ? <Compass size={13} /> : <CloudArrowUp size={13} />}
-                              <span>{sourceOf(f)}</span>
-                            </span>
-                            <span className="fl-date">{fmtDate(f.created_at)}</span>
-                            <CaretRight size={16} weight="bold" className="fl-go" />
-                            {trash && <div className="fl-acts" onClick={(e) => e.stopPropagation()}><Btn size="sm" variant="ghost" onClick={() => restore(f)}><ArrowCounterClockwise size={12} />Restore</Btn><Btn size="sm" variant="danger" onClick={() => del(f, true)}>Delete</Btn></div>}
-                          </div>
-                        );
-                      })}
-                    </div>
-                  </section>
-                ))}
-              </div>
-            ) : (
-              <div className="fl-grid">
-                {filtered.map((f) => {
-                  const k = kindOf(f); const Icon = KIND_ICON[k];
-                  const visual = k === 'image' || k === 'video';
-                  return (
-                    <div key={f.id} role="button" tabIndex={0} className="fl-card" title={f.file_name}
-                      onClick={() => (trash ? null : setSel(f))}
-                      onKeyDown={(e) => { if (!trash && (e.key === 'Enter' || e.key === ' ')) { e.preventDefault(); setSel(f); } }}>
-                      {visual ? <FileThumb kind={k} url={f.file_url} poster={f.poster_url} /> : (
-                        <div className="fl-card-doc">
-                          <span className="fl-ico" style={{ ['--tint' as string]: KIND_TINT[k] } as React.CSSProperties}><Icon size={21} weight="duotone" /></span>
-                          <span className="fl-src" data-sage={f.source === 'generated' || undefined}>
-                            {f.source === 'generated' ? <Sparkle size={13} weight="fill" /> : f.source === 'drawing' ? <Compass size={13} /> : <CloudArrowUp size={13} />}
-                            <span>{sourceOf(f)}</span>
-                          </span>
-                        </div>
-                      )}
-                      <div className="fl-card-body">
-                        <span className="fl-name">{f.file_name}</span>
-                        <span className="fl-meta">
-                          <span className="fl-kind" style={{ ['--tint' as string]: KIND_TINT[k] } as React.CSSProperties}>{KIND_LABEL[k]}</span>
-                          {f.file_size ? <span>{fmtSize(f.file_size)}</span> : null}
-                          {f.created_at && <span>{fmtDate(f.created_at)}</span>}
-                        </span>
-                        {f.folder && <span className="fl-meta" style={{ marginTop: 0 }}><FolderOpen size={12} />{f.folder}</span>}
-                        {trash && <div style={{ display: 'flex', gap: 6, marginTop: 4 }} onClick={(e) => e.stopPropagation()}><Btn size="sm" variant="ghost" onClick={() => restore(f)}><ArrowCounterClockwise size={12} />Restore</Btn><Btn size="sm" variant="danger" onClick={() => del(f, true)}>Delete</Btn></div>}
-                      </div>
-                    </div>
-                  );
-                })}
-              </div>
-            )}
-        </SectionCard>
-      </PremiumSurface>
+      </PageShell>
 
       {/* preview + actions */}
-      {sel && (
-        <div onClick={closePreview} style={OVERLAY}>
-          <div ref={previewRef} role="dialog" aria-modal="true" aria-label={sel.file_name || 'File'} onClick={(e) => e.stopPropagation()} style={{ background: 'var(--bg-elevated)', backdropFilter: 'var(--glass-blur)', WebkitBackdropFilter: 'var(--glass-blur)', border: `1px solid ${T.border}`, borderRadius: 14, padding: 16, width: 'min(820px,100%)', maxHeight: '92vh', overflow: 'auto' }}>
-            <div style={{ display: 'flex', alignItems: 'center', marginBottom: 12 }}>
-              <div style={{ flex: 1, minWidth: 0 }}>
-                <div className="k-dialog-title" style={{ whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>{sel.file_name}</div>
-                <div style={{ fontSize: 13, color: T.muted }}>{KIND_LABEL[kindOf(sel)]} · {fmtSize(sel.file_size)} · {fmtDate(sel.created_at)}{sel.uploaded_by_name ? ` · ${sel.uploaded_by_name}` : ''}</div>
-              </div>
-              <button onClick={closePreview} aria-label="Close" style={CLOSE_BTN}><X size={20} color={T.muted} /></button>
-            </div>
+      <FormModal
+        open={previewOpen}
+        onClose={closePreview}
+        title={<span style={{ display: 'block', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>{sel?.file_name || 'File'}</span>}
+        subtitle={sel ? `${KIND_LABEL[kindOf(sel)]} · ${fmtSize(sel.file_size)} · ${fmtDate(sel.created_at)}${sel.uploaded_by_name ? ` · ${sel.uploaded_by_name}` : ''}` : undefined}
+        footer={sel ? (
+          <>
+            <a className="k-btn k-btn-secondary" href={sel.file_url} download={sel.file_name} target="_blank" rel="noreferrer"><DownloadSimple size={15} />Download</a>
+            {isLinked(sel) ? (
+              sel.open_href ? <Button icon={<FolderOpen size={15} />} href={sel.open_href}>Open in {sel.source === 'drawing' ? 'Drawings' : 'Documents'}</Button> : null
+            ) : (
+              <>
+                <Button icon={<PencilSimple size={15} />} onClick={() => rename(sel)}>Rename</Button>
+                <Button icon={<FolderSimplePlus size={15} />} onClick={() => move(sel)}>Move</Button>
+                {kindOf(sel) === 'image' && <Button icon={<Crop size={15} />} onClick={() => setCropping(sel)}>Edit / Crop</Button>}
+                <Button icon={<ShareNetwork size={15} />} onClick={() => setShareFor(sel)}>Share</Button>
+                <Button icon={<CloudArrowUp size={15} />} onClick={() => setExportFor(sel)}>Export to cloud</Button>
+                <span style={{ flex: 1 }} />
+                <Button variant="danger" icon={<Trash size={15} />} onClick={() => del(sel)}>Delete</Button>
+              </>
+            )}
+          </>
+        ) : null}
+      >
+        {sel && (
+          <>
             <FilePreview kind={kindOf(sel)} url={sel.file_url} name={sel.file_name} />
-            <div style={{ display: 'flex', gap: 8, marginTop: 12, flexWrap: 'wrap' }}>
-              <a href={sel.file_url} download={sel.file_name} target="_blank" rel="noreferrer" style={{ textDecoration: 'none' }}><Btn size="sm" variant="ghost"><DownloadSimple size={14} />Download</Btn></a>
-              {isLinked(sel) ? (
-                <>
-                  {sel.open_href && <a href={sel.open_href} style={{ textDecoration: 'none' }}><Btn size="sm" variant="ghost"><FolderOpen size={14} />Open in {sel.source === 'drawing' ? 'Drawings' : 'Documents'}</Btn></a>}
-                  <div style={{ flexBasis: '100%', fontSize: 12, color: T.muted }}>
-                    {SOURCE_LABEL[sel.source] || 'Linked'} · shown here for one view of the job. Rename, revise or remove it {sel.source === 'drawing' ? 'in the Drawing Register' : 'in Documents'}.
-                  </div>
-                </>
-              ) : (<>
-              <Btn size="sm" variant="ghost" onClick={() => rename(sel)}><PencilSimple size={14} />Rename</Btn>
-              <Btn size="sm" variant="ghost" onClick={() => move(sel)}><FolderSimplePlus size={14} />Move</Btn>
-              {kindOf(sel) === 'image' && <Btn size="sm" variant="ghost" onClick={() => setCropping(sel)}><Crop size={14} />Edit / Crop</Btn>}
-              <Btn size="sm" variant="ghost" onClick={() => setShareFor(sel)}><ShareNetwork size={14} />Share</Btn>
-              <Btn size="sm" variant="ghost" onClick={() => setExportFor(sel)}><CloudArrowUp size={14} />Export to Cloud</Btn>
-              <div style={{ flex: 1 }} />
-              <Btn size="sm" variant="danger" onClick={() => del(sel)}><Trash size={14} />Delete</Btn>
-              </>)}
-            </div>
-          </div>
-        </div>
-      )}
+            {isLinked(sel) && (
+              <div className="flLinkedNote">
+                {SOURCE_LABEL[sel.source] || 'Linked'} · shown here for one view of the job. Rename, revise or remove it {sel.source === 'drawing' ? 'in the Drawing Register' : 'in Documents'}.
+              </div>
+            )}
+          </>
+        )}
+      </FormModal>
 
       {cropping && <FileCropper fileId={cropping.id} url={cropping.file_url} name={cropping.file_name} onClose={() => setCropping(null)} onDone={(row) => { patchFile(row); setCropping(null); flash('Image updated.'); }} />}
       {shareFor && <ShareMenu file={shareFor} onClose={() => setShareFor(null)} onToast={flash} />}
       {exportFor && <ExportMenu file={exportFor} onClose={() => setExportFor(null)} onToast={flash} />}
       {showImport && <ExternalBrowser projectId={projectId} onImported={(row) => { if (row) { setFiles((prev) => [row, ...prev]); flash(`Imported ${row.file_name}.`); } }} onClose={() => setShowImport(false)} />}
-    </>
-  );
-}
-
-function ExportMenu({ file, onClose, onToast }: { file: any; onClose: () => void; onToast: (m: string) => void }) {
-  const [connectors, setConnectors] = useState<any[]>([]);
-  const [busy, setBusy] = useState('');
-  const ref = useRef<HTMLDivElement>(null);
-  useEscapeClose(ref, onClose);
-  useEffect(() => { fetch('/api/storage/connectors').then((r) => r.json()).then((j) => setConnectors((j.connectors || []).filter((c: any) => c.connected))); }, []);
-  const exportTo = async (c: any) => {
-    setBusy(c.id);
-    try { const j = await (await fetch(`/api/storage/connectors/${c.id}/export`, { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ fileId: file.id }) })).json(); if (j.error) throw new Error(j.error); onToast(`Exported to ${c.display_name}.`); onClose(); }
-    catch (e: any) { console.error(e); onToast(humanError(e, 'Export failed. Please try again.')); }
-    setBusy('');
-  };
-  return (
-    <div onClick={onClose} style={OVERLAY}>
-      <div ref={ref} role="dialog" aria-modal="true" aria-label="Export to Cloud" onClick={(e) => e.stopPropagation()} style={{ background: 'var(--bg-elevated)', backdropFilter: 'var(--glass-blur)', WebkitBackdropFilter: 'var(--glass-blur)', border: `1px solid ${T.border}`, borderRadius: 14, padding: 18, width: 'min(360px,100%)' }}>
-        <div style={{ display: 'flex', alignItems: 'center', marginBottom: 12 }}><CloudArrowUp size={18} color="var(--text-secondary)" weight="fill" /><div className="k-dialog-title" style={{ marginLeft: 8, flex: 1 }}>Export to Cloud</div><button onClick={onClose} aria-label="Close" style={CLOSE_BTN}><X size={18} color={T.muted} /></button></div>
-        {connectors.length === 0 ? <div style={{ color: T.muted, fontSize: 13 }}>No connected storage. Add one in <a href="/app/settings/storage" style={{ color: 'var(--link)' }}>Settings → External Storage</a>.</div>
-          : <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>{connectors.map((c) => <button key={c.id} disabled={!!busy} onClick={() => exportTo(c)} style={{ display: 'flex', alignItems: 'center', gap: 10, background: T.bg, border: `1px solid ${T.border}`, borderRadius: 10, padding: '11px 14px', minHeight: 44, cursor: 'pointer', color: T.white, fontSize: 14, textAlign: 'left' }}><Folder size={16} color="var(--text-secondary)" />{busy === c.id ? 'Uploading…' : c.display_name}</button>)}</div>}
-      </div>
+      <Toast message={toast?.message ?? null} tone={toast?.tone} />
     </div>
   );
 }
 
-function ShareMenu({ file, onClose, onToast }: { file: any; onClose: () => void; onToast: (m: string) => void }) {
+function ExportMenu({ file, onClose, onToast }: { file: any; onClose: () => void; onToast: (m: string, tone?: 'good' | 'bad') => void }) {
+  const [connectors, setConnectors] = useState<any[] | null>(null);
   const [busy, setBusy] = useState('');
-  const ref = useRef<HTMLDivElement>(null);
-  useEscapeClose(ref, onClose);
+  useEffect(() => {
+    fetch('/api/storage/connectors')
+      .then((r) => r.json())
+      .then((j) => setConnectors((j.connectors || []).filter((c: any) => c.connected)))
+      .catch((e: unknown) => { console.error('[files] connectors load failed', e); setConnectors([]); });
+  }, []);
+  const exportTo = async (c: any) => {
+    setBusy(c.id);
+    try { const j = await (await fetch(`/api/storage/connectors/${c.id}/export`, { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ fileId: file.id }) })).json(); if (j.error) throw new Error(j.error); onToast(`Exported to ${c.display_name}.`); onClose(); }
+    catch (e: any) { console.error(e); onToast(humanError(e, 'Export failed. Please try again.'), 'bad'); }
+    setBusy('');
+  };
+  return (
+    <FormModal open onClose={onClose} size="sm" title="Export to cloud" subtitle={file.file_name}>
+      {connectors === null ? (
+        <div style={{ color: 'var(--text-tertiary)', fontSize: 13 }}>Loading…</div>
+      ) : connectors.length === 0 ? (
+        <EmptyState title="No connected storage" text="Add one in Settings → External Storage." action={<Button href="/app/settings/storage">Open settings</Button>} />
+      ) : (
+        <ItemList>
+          {connectors.map((c) => (
+            <ItemRow key={c.id} icon={<Folder size={16} />} title={busy === c.id ? 'Uploading…' : c.display_name} onClick={busy ? undefined : () => exportTo(c)} />
+          ))}
+        </ItemList>
+      )}
+    </FormModal>
+  );
+}
+
+function ShareMenu({ file, onClose, onToast }: { file: any; onClose: () => void; onToast: (m: string, tone?: 'good' | 'bad') => void }) {
+  const [busy, setBusy] = useState('');
   const share = async (channel: string) => {
     setBusy(channel);
     try {
@@ -425,39 +448,28 @@ function ShareMenu({ file, onClose, onToast }: { file: any; onClose: () => void;
       const res = await fetch('/api/files/share', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ fileId: file.id, channel, to }) });
       const json = await res.json();
       if (json.error) throw new Error(json.error);
-      if (channel === 'link' && json.url) { await navigator.clipboard.writeText(json.url).catch(() => {}); onToast('Share link copied.'); }
+      if (channel === 'link' && json.url) { await navigator.clipboard.writeText(json.url).catch((e: unknown) => console.error('[files] clipboard write failed', e)); onToast('Share link copied.'); }
       else if (channel === 'sms' && json.smsUrl) { window.location.href = json.smsUrl; onToast('Opening Messages…'); }
       else if (channel === 'email') onToast(json.attached ? 'Emailed with the file attached.' : 'Emailed with a link.');
       else if (channel === 'slack' || channel === 'teams') onToast(`Posted to ${channel === 'slack' ? 'Slack' : 'Teams'}.`);
       onClose();
-    } catch (e: any) { onToast(e?.message || 'Share failed. Please try again.'); }
+    } catch (e: any) { onToast(e?.message || 'Share failed. Please try again.', 'bad'); }
     setBusy('');
   };
-  const opts: { c: string; label: string; icon: React.ReactNode }[] = [
-    { c: 'link', label: 'Copy Link', icon: <LinkSimple size={16} /> },
+  const opts: { c: string; label: string; icon: React.ReactNode; desc?: string }[] = [
+    { c: 'link', label: 'Copy link', icon: <LinkSimple size={16} /> },
     { c: 'email', label: 'Email', icon: <EnvelopeSimple size={16} /> },
     { c: 'sms', label: 'Text (SMS)', icon: <ChatText size={16} /> },
-    { c: 'slack', label: 'Slack', icon: <SlackLogo size={16} /> },
-    { c: 'teams', label: 'Teams', icon: <MicrosoftTeamsLogo size={16} /> },
+    { c: 'slack', label: 'Slack', icon: <SlackLogo size={16} />, desc: 'Posts to the Incoming Webhook in Settings → Integrations' },
+    { c: 'teams', label: 'Teams', icon: <MicrosoftTeamsLogo size={16} />, desc: 'Posts to the Incoming Webhook in Settings → Integrations' },
   ];
   return (
-    <div onClick={onClose} style={OVERLAY}>
-      <div ref={ref} role="dialog" aria-modal="true" aria-label="Share File" onClick={(e) => e.stopPropagation()} style={{ background: 'var(--bg-elevated)', backdropFilter: 'var(--glass-blur)', WebkitBackdropFilter: 'var(--glass-blur)', border: `1px solid ${T.border}`, borderRadius: 14, padding: 18, width: 'min(360px,100%)' }}>
-        <div style={{ display: 'flex', alignItems: 'center', marginBottom: 12 }}><ShareNetwork size={18} color="var(--text-secondary)" weight="fill" /><div className="k-dialog-title" style={{ marginLeft: 8, flex: 1 }}>Share File</div><button onClick={onClose} aria-label="Close" style={CLOSE_BTN}><X size={18} color={T.muted} /></button></div>
-        <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
-          {opts.map((o) => (
-            <button key={o.c} disabled={!!busy} onClick={() => share(o.c)} style={{ display: 'flex', alignItems: 'center', gap: 11, background: T.bg, border: `1px solid ${T.border}`, borderRadius: 10, padding: '11px 14px', minHeight: 44, cursor: 'pointer', color: T.white, fontSize: 14, textAlign: 'left' }}>
-              <span style={{ color: 'var(--text-primary)' }}>{o.icon}</span>{busy === o.c ? 'Working…' : o.label}
-            </button>
-          ))}
-        </div>
-        <div style={{ fontSize: 12, color: T.muted, marginTop: 12, lineHeight: 1.5 }}>Slack/Teams post to your workspace's Incoming Webhook (set it in Settings → Integrations).</div>
-      </div>
-    </div>
+    <FormModal open onClose={onClose} size="sm" title="Share file" subtitle={file.file_name}>
+      <ItemList>
+        {opts.map((o) => (
+          <ItemRow key={o.c} icon={o.icon} title={busy === o.c ? 'Working…' : o.label} desc={o.desc} onClick={busy ? undefined : () => share(o.c)} />
+        ))}
+      </ItemList>
+    </FormModal>
   );
 }
-
-/* Every window here sits on the modal layer (z.modal) — above the job bar, the
-   top bar and the phone tab bar — and clear of the notch and home indicator. */
-const OVERLAY: React.CSSProperties = { position: 'fixed', inset: 0, background: 'rgba(0,0,0,0.75)', zIndex: z.modal, display: 'flex', alignItems: 'center', justifyContent: 'center', padding: 'max(16px, env(safe-area-inset-top)) 16px max(16px, env(safe-area-inset-bottom))' };
-const CLOSE_BTN: React.CSSProperties = { background: 'none', border: 'none', cursor: 'pointer', minWidth: 44, minHeight: 44, display: 'inline-flex', alignItems: 'center', justifyContent: 'center', margin: -10 };
