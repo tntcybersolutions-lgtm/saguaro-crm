@@ -20,22 +20,16 @@ import { requirePermission } from '@/lib/permissions';
 import { SAGE_CONDUCT_MANDATE } from '@/lib/sage-prompts';
 import type { Database } from '@/lib/database.types';
 import { qualifyEmbeds } from '@/lib/db-embeds';
+import { SAGE_REPORT_COLUMNS } from '@/lib/sage-report-schema';
 
-// Tables that have a direct project_id column
-const TABLES_WITH_PROJECT_ID = new Set([
-  'pay_applications', 'rfis', 'change_orders', 'lien_waivers',
-  'subcontractors', 'insurance_certificates', 'budget_lines',
-  'daily_logs', 'punch_list', 'takeoffs', 'timesheets',
-  'bid_packages', 'incidents', 'schedule_phases',
-]);
-
-// Tables that have a direct tenant_id column
-const TABLES_WITH_TENANT_ID = new Set([
-  'projects', 'pay_applications', 'rfis', 'change_orders', 'lien_waivers',
-  'subcontractors', 'insurance_certificates', 'budget_lines',
-  'daily_logs', 'punch_list', 'takeoffs', 'timesheets',
-  'bid_packages', 'incidents', 'schedule_phases', 'notifications',
-]);
+// Tables Sage may read, and which carry project_id / tenant_id — from the live
+// column list, so a filter is never applied to a column the table lacks
+// (subcontractors has no project_id; filtering it by one broke every report).
+const has = (table: string, col: string) => (SAGE_REPORT_COLUMNS[table] || []).includes(col);
+const TABLES_WITH_PROJECT_ID = new Set(Object.keys(SAGE_REPORT_COLUMNS).filter((t) => has(t, 'project_id')));
+const TABLES_WITH_TENANT_ID = new Set(Object.keys(SAGE_REPORT_COLUMNS).filter((t) => has(t, 'tenant_id')));
+/** Names the model has used for tables that are called something else. */
+const TABLE_ALIASES: Record<string, string> = { incidents: 'safety_incidents', punch_items: 'punch_list', subs: 'subcontractors' };
 
 export const runtime = 'nodejs';
 export const maxDuration = 120;
@@ -88,22 +82,24 @@ You are Sage, Saguaro Control Systems's expert construction data analyst. Given 
 
 NOTE: All tables are already filtered by tenant_id and project_id server-side — do NOT include tenant_id or project_id in your filters. Focus on business-logic filters only (status, date ranges, etc.).
 
-Available Supabase tables and their queryable columns:
-- projects: id, name, status('active'|'completed'|'bidding'), contract_amount, address, start_date, end_date, created_at
-- pay_applications: id, project_id, app_number, app_number, period_to, status('draft'|'submitted'|'approved'|'paid'), contract_sum, total_completed_stored, current_payment_due, total_retainage, created_at
-- rfis: id, project_id, rfi_number, subject, title, status('open'|'answered'|'closed'), due_date, response_due_date, cost_impact, schedule_impact, created_at
-- change_orders: id, project_id, co_number, title, status('pending'|'approved'|'rejected'), cost_impact, schedule_impact, created_at
-- lien_waivers: id, project_id, subcontractor_id, claimant_name, waiver_type, amount, status('pending'|'signed'), through_date, signed_at, created_at
-- subcontractors: id, project_id, name, trade, contract_amount, status, created_at
-- insurance_certificates: id, project_id, subcontractor_id, policy_type, carrier, policy_number, expiry_date, coverage_amount, status('active'|'expired'), created_at
-- budget_lines: id, project_id, cost_code, description, original_budget, approved_changes, revised_budget, committed, actual, projected, percent_complete, created_at
-- daily_logs: id, project_id, log_date, weather, crew_count, work_performed, delays, created_at
-- punch_list: id, project_id, location, description, trade, status('open'|'in_progress'|'complete'), priority('low'|'medium'|'high'), due_date, created_at
-- takeoffs: id, project_id, name, status, total_cost, material_cost, labor_cost, building_area, analyzed_at, created_at
-- timesheets: id, project_id, employee_name, week_ending, hours_regular, hours_overtime, status, created_at
-- bid_packages: id, project_id, name, trade, status('open'|'awarded'|'closed'), due_date, requires_bond, created_at
-- incidents: id, project_id, incident_type, severity, injury_type, osha_reportable, incident_date, created_at
-- schedule_phases: id, project_id, name, planned_start, planned_end, actual_start, actual_end, status, created_at
+Available Supabase tables and their queryable columns (use ONLY these exact names):
+- projects: id, name, status, contract_amount, address, city, state, start_date, end_date, created_at
+- pay_applications: id, project_id, app_number, period_to, status('draft'|'submitted'|'approved'|'paid'), contract_sum, total_completed_stored, current_payment_due, total_retainage, created_at
+- rfis: id, project_id, rfi_number, subject, question, status('open'|'answered'|'closed'), priority, due_date, response_due_date, cost_impact, schedule_impact_days, assigned_to_name, created_at
+- change_orders: id, project_id, co_number, title, description, status('pending'|'approved'|'rejected'), amount, cost_impact, schedule_impact_days, created_at
+- lien_waivers: id, project_id, claimant_name, company_name, waiver_type, amount, status('pending'|'signed'), through_date, signed_at, created_at
+- subcontractors: id, company_name, contact_name, trade, status, insurance_expiry, license_expiry, rating, created_at (company-wide; NOT per project)
+- insurance_certificates: id, project_id, sub_name, policy_type, carrier, policy_number, effective_date, expiry_date, coverage_amount, status('active'|'expired'), created_at
+- budget_lines: id, project_id, cost_code, description, original_budget, approved_changes, revised_budget, committed, actual, projected, variance, percent_complete, created_at
+- daily_logs: id, project_id, log_date, weather, crew_count, manpower_count, work_performed, delays, delay_hours, created_at
+- punch_list: id, project_id, title, location, description, trade, status('open'|'in_progress'|'completed'), priority('low'|'medium'|'high'), due_date, assigned_to_name, created_at
+- takeoffs: id, project_id, name, status, grand_total, material_cost, labor_cost, building_area, analyzed_at, created_at
+- timesheets: id, project_id, employee_name, week_ending, work_date, hours_regular, hours_overtime, status, created_at
+- bid_packages: id, project_id, name, trade, status('open'|'awarded'|'closed'), due_date, bid_count, low_bid_amount, created_at
+- safety_incidents: id, project_id, incident_type, severity, injury_type, osha_recordable, incident_date, status, created_at
+- schedule_phases: id, project_id, name, start_date, end_date, percent_complete, status, created_at
+
+Joins: only "projects" (select "name") is supported, and only on tables that have project_id.
 
 Return ONLY raw JSON like this:
 {
@@ -113,7 +109,7 @@ Return ONLY raw JSON like this:
     {
       "id": "rfis",
       "table": "rfis",
-      "select": "id,rfi_number,subject,status,due_date,response_due_date,cost_impact,schedule_impact",
+      "select": "id,rfi_number,subject,status,due_date,response_due_date,cost_impact,schedule_impact_days",
       "filters": [{"col": "status", "op": "eq", "val": "open"}],
       "joins": [{"table": "projects", "select": "name", "on": "project_id"}],
       "orderBy": {"col": "due_date", "asc": true},
@@ -207,15 +203,20 @@ async function executeQuery(
   projectId?: string,
   tenantId?: string
 ): Promise<{ data: any[]; error: any }> {
-  // Build select string — incorporate join selects inline (Supabase PostgREST syntax)
-  let selectStr = query.select;
-  if (query.joins && query.joins.length > 0) {
-    for (const join of query.joins) {
-      // Append joined table columns: e.g. "projects(name)"
-      const joinCols = join.select.split(',').map((c) => c.trim()).join(',');
-      selectStr += `,${join.table}(${joinCols})`;
-    }
+  // Keep only names the live table has: a guessed column fails the whole query.
+  const table = TABLE_ALIASES[query.table] || query.table;
+  if (!SAGE_REPORT_COLUMNS[table]) return { data: [], error: { message: `Unknown table ${query.table}` } };
+  query = { ...query, table };
+  const cols = String(query.select || '').split(',').map((c) => c.trim()).filter((c) => c === '*' || has(table, c));
+  let selectStr = cols.length ? cols.join(',') : 'id';
+  // Only the projects join is supported (every other relation is ambiguous or absent).
+  for (const join of query.joins || []) {
+    if (join.table !== 'projects' || !has(table, 'project_id')) continue;
+    const joinCols = join.select.split(',').map((c) => c.trim()).filter((c) => has('projects', c));
+    if (joinCols.length) selectStr += `,projects(${joinCols.join(',')})`;
   }
+  query.filters = (query.filters || []).filter((f) => has(table, f.col));
+  if (query.orderBy && !has(table, query.orderBy.col)) query.orderBy = undefined;
 
   // rfis / punch_list / change_orders / daily_logs… carry two FKs to projects:
   // name the one to embed through, or PostgREST refuses the whole query.
