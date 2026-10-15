@@ -56,14 +56,15 @@ import { useProjects } from '@/lib/hooks/useProjects';
 import type { JobHealth } from '@/lib/job-health';
 import { HealthRing, ScheduleBar, ItemDots, OverUnder, JOB_HEALTH_CSS } from '@/components/jobs/JobHealthParts';
 import { ArrangeButton, usePanelLayout, type PanelDef } from '@/components/layout/ArrangePanels';
+import JobMonthlyChart from '@/components/jobs/JobMonthlyChart';
 
 /* The job page's panels, in their standard order. Top: health, money, brief; then the tools column and the side column. */
 const JOB_PANELS: PanelDef[] = [
-  { key: 'health', label: 'Job health' }, { key: 'money', label: 'Money' }, { key: 'brief', label: "Sage's read" },
+  { key: 'health', label: 'Job health' }, { key: 'money', label: 'Money' }, { key: 'monthly', label: 'Money by month' }, { key: 'brief', label: "Sage's read" },
   { key: 'tools', label: 'Tools' }, { key: 'attention', label: 'Needs attention' }, { key: 'upcoming', label: 'Coming up' },
   { key: 'steps', label: 'Steps' }, { key: 'job', label: 'Job details' },
 ];
-const TOP = ['health', 'money', 'brief'];
+const TOP = ['health', 'money', 'monthly', 'brief'];
 const SIDE_PANELS = ['attention', 'upcoming', 'steps', 'job'];
 
 /* ── Fetchers ─────────────────────────────────────────────────────────── */
@@ -517,6 +518,7 @@ export default function JobPage() {
         )}
       </div>
     ),
+    monthly: <JobMonthlyChart projectId={projectId} />,
     brief: brief ? (
         <Brief action={{ label: brief.action.label, href: base + brief.action.href }}>
           {brief.parts.map((x, i) => (typeof x === 'string' ? <React.Fragment key={i}>{x}</React.Fragment> : <b key={i}>{x.b}</b>))}
