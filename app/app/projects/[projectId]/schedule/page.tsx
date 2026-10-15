@@ -3,8 +3,13 @@
  * Project Schedule — tasks on a Gantt timeline, or as a sortable list.
  *
  * Anatomy: title + one primary action (Add Task) → StatRow (Tasks Complete and
- * Delayed filter the views) → Tabs (Gantt / List) + Toolbar → the timeline or
- * the DataTable, with a task detail card beside it (stacked on phones).
+ * Delayed filter the views; Critical Tasks turns on the critical-path view) →
+ * Tabs (Gantt / List / 3-Week Lookahead) + Toolbar → the timeline, the
+ * DataTable or the lookahead, with a task detail card beside it (stacked on phones).
+ *
+ * Critical path: lib/schedule-cpm.ts runs CPM (forward/backward pass, total
+ * float) over every task's dates and finish-to-start predecessor links. The
+ * Gantt draws each link as an arrow, critical bars and arrows in --danger.
  *
  * Every write goes through a route this screen already used:
  *   list     GET    /api/schedule/list?projectId=
@@ -13,7 +18,7 @@
  *   delete   DELETE /api/schedule/[id]
  *   baseline POST   /api/projects/[id]/schedule/baseline
  */
-import React, { useState, useEffect, useCallback, useRef } from 'react';
+import React, { useState, useEffect, useLayoutEffect, useCallback, useRef, useMemo } from 'react';
 import { useParams } from 'next/navigation';
 import { jobBarStyle } from '@/lib/project-colors';
 import { useProjectColor } from '@/lib/hooks/useProjectColor';
@@ -30,7 +35,7 @@ import {
 } from '@/components/ui/kit';
 import {
   WarningCircle, CalendarBlank, X, Plus, TrendUp, CheckCircle, Clock, Flag,
-  PencilSimple, Trash, ArrowClockwise, Eye, ChartLineDown,
+  PencilSimple, Trash, ArrowClockwise, Eye, ChartLineDown, Lightning,
 } from '@phosphor-icons/react';
 import { SUB_TRADES, SUB_TRADES_BY_DIVISION } from '@/lib/construction-intelligence';
 import { useUnsavedGuard, useComposerDirty } from '@/lib/useUnsavedGuard';
@@ -38,6 +43,7 @@ import UnsavedGuardModal from '@/components/UnsavedGuardModal';
 import Suggest from '@/components/ui/Suggest';
 import { localDay } from '@/lib/calendar-day';
 import { baselineSummary, finishVariance, varianceLabel } from '@/lib/schedule-baseline';
+import { computeCpm, lookahead, type CpmOutput } from '@/lib/schedule-cpm';
 
 const STATUSES = ['not_started', 'in_progress', 'completed', 'delayed', 'on_hold'];
 const STATUS_LABELS: Record<string, string> = {
@@ -94,8 +100,32 @@ const CSS = `
   .schSplit[data-open="true"] { grid-template-columns: minmax(0, 1fr) clamp(320px, 30%, 400px); }
   .schSplit[data-open="true"] .schDetail { position: sticky; top: 16px; }
 }
-.schGantt { overflow-x: auto; }
-.schGrid { min-width: 700px; }
+.schGantt { overflow-x: auto; -webkit-overflow-scrolling: touch; }
+.schGrid { min-width: 700px; position: relative; }
+.schRow[data-dim="true"] .schTrack, .schRow[data-dim="true"] .schLabel { opacity: .3; }
+.schBar[data-crit="true"] { box-shadow: 0 0 0 1px color-mix(in srgb, var(--danger) 45%, transparent); }
+.schLinks { position: absolute; top: 0; left: 0; pointer-events: none; overflow: visible; z-index: 2; }
+.schLinks path { fill: none; stroke: var(--text-secondary); stroke-width: 1.25; opacity: .75; }
+.schLinks path[data-crit="true"] { stroke: var(--danger); stroke-width: 2; opacity: 1; }
+.schLinks path[data-dim="true"] { opacity: .15; }
+.schGBar { display: flex; align-items: center; gap: 8px; flex-wrap: wrap; padding: 10px 12px; border-bottom: 1px solid var(--border-subtle); }
+.schGBar .schSp { flex: 1; }
+.schZoom { display: inline-flex; gap: 6px; }
+.schWarn { font-size: 12px; font-weight: 700; color: var(--warning); }
+.schFloat[data-crit="true"] { color: var(--danger); font-weight: 800; }
+.schLaWeek + .schLaWeek { border-top: 1px solid var(--border-default); }
+.schLaHead { display: flex; align-items: baseline; gap: 10px; padding: 12px 12px 8px; }
+.schLaTitle { font-size: 14px; font-weight: 800; color: var(--text-primary); }
+.schLaRow { display: grid; grid-template-columns: minmax(0, 1fr) 150px 120px 90px; gap: 12px; align-items: center; min-height: 44px; padding: 6px 12px; border-top: 1px solid var(--border-subtle); cursor: pointer; }
+.schLaRow:hover { background: var(--bg-row-hover); }
+.schLaRow:focus-visible { outline: 2px solid var(--border-interactive); outline-offset: -2px; }
+.schLaRow[data-sel="true"] { background: var(--brand-primary-08); box-shadow: inset 3px 0 0 var(--brand-primary); }
+.schLaName { min-width: 0; display: flex; flex-direction: column; gap: 2px; }
+.schLaName b { font-size: 14px; color: var(--text-primary); overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.schLaName span { font-size: 12px; color: var(--text-tertiary); overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.schLaName b[data-crit="true"]::before { content: ''; display: inline-block; width: 8px; height: 8px; border-radius: 2px; background: var(--danger); margin-right: 6px; vertical-align: 1px; }
+.schLaDates { font-size: 13px; color: var(--text-secondary); font-variant-numeric: tabular-nums; }
+.schLaEmpty { padding: 4px 12px 14px; font-size: 13px; color: var(--text-tertiary); }
 .schRow { display: grid; grid-template-columns: 200px minmax(0, 1fr); align-items: center; min-height: 38px; border-bottom: 1px solid var(--border-subtle); }
 .schRow[role="button"] { cursor: pointer; }
 .schRow[role="button"]:hover { background: var(--bg-row-hover); }
@@ -130,17 +160,72 @@ const CSS = `
 .schForm { display: flex; flex-direction: column; gap: 16px; }
 @media (max-width: 640px) {
   .schRow { grid-template-columns: 140px minmax(0, 1fr); }
-  .schWs .k-btn, .schWs .k-stat, .schWs select.k-select, .schWs .k-input { min-height: 44px; }
+  .schWs .k-btn, .schWs .k-stat, .schWs select.k-select, .schWs .k-input, .schWs .k-chip { min-height: 44px; }
+  .schLaRow { grid-template-columns: minmax(0, 1fr) auto; row-gap: 4px; }
+  .schLaRow .schLaDates { grid-column: 1; grid-row: 2; }
+  .schLaRow .schMeter { display: none; }
 }
 `;
 
 /* ── Gantt timeline ─────────────────────────────────────────────── */
-function GanttChart({ tasks, jobHex, selectedId, onSelect }: { tasks: any[]; jobHex: string; selectedId?: string | null; onSelect: (t: any) => void }) {
+type GanttZoom = 'fit' | 'week' | 'day';
+const ZOOM_PX: Record<GanttZoom, number> = { fit: 0, week: 16, day: 40 };
+
+function GanttChart({ tasks, jobHex, selectedId, onSelect, cpm, critOnly, zoom }: {
+  tasks: any[]; jobHex: string; selectedId?: string | null; onSelect: (t: any) => void;
+  cpm: CpmOutput; critOnly: boolean; zoom: GanttZoom;
+}) {
+  const gridRef = useRef<HTMLDivElement>(null);
+  const barRefs = useRef(new Map<string, HTMLDivElement>());
+  const [arrows, setArrows] = useState<{ key: string; d: string; critical: boolean; dim: boolean }[]>([]);
+  const [box, setBox] = useState({ w: 0, h: 0 });
+  const uid = React.useId().replace(/[^a-zA-Z0-9]/g, '');
+
   const withDates = tasks.filter(t =>
     t.start_date && t.end_date
     && !Number.isNaN(Date.parse(t.start_date))
     && !Number.isNaN(Date.parse(t.end_date))
   );
+  const shownKey = withDates.map(t => `${t.id}:${t.start_date}:${t.end_date}`).join('|');
+
+  /* Arrows are measured from the bars themselves, so they stay on them
+     through window resize, browser zoom, the zoom chips and filters. A link
+     to a task that is filtered out (or has no dates) has no bar: no arrow. */
+  const measure = useCallback(() => {
+    const grid = gridRef.current;
+    if (!grid) return;
+    const g = grid.getBoundingClientRect();
+    const out: { key: string; d: string; critical: boolean; dim: boolean }[] = [];
+    for (const l of cpm.links) {
+      const a = barRefs.current.get(l.from), b = barRefs.current.get(l.to);
+      if (!a || !b) continue;
+      const ra = a.getBoundingClientRect(), rb = b.getBoundingClientRect();
+      const x1 = ra.right - g.left, y1 = ra.top + ra.height / 2 - g.top;
+      const x2 = rb.left - g.left, y2 = rb.top + rb.height / 2 - g.top;
+      const gap = 8;
+      let d: string;
+      if (x2 - x1 >= gap * 2) {
+        d = `M${x1},${y1} H${x1 + gap} V${y2} H${x2}`;
+      } else {
+        // Successor starts at/before the predecessor's end: route around the bar.
+        const ym = y2 >= y1 ? rb.top - g.top - 4 : rb.bottom - g.top + 4;
+        d = `M${x1},${y1} H${x1 + gap} V${ym} H${x2 - gap} V${y2} H${x2}`;
+      }
+      out.push({ key: `${l.from}>${l.to}`, d, critical: l.critical, dim: critOnly && !l.critical });
+    }
+    setArrows(out);
+    setBox({ w: grid.offsetWidth, h: grid.offsetHeight });
+  }, [cpm, critOnly]);
+
+  useLayoutEffect(() => { measure(); }, [measure, shownKey, zoom]);
+  useEffect(() => {
+    const grid = gridRef.current;
+    if (!grid || typeof ResizeObserver === 'undefined') return;
+    const ro = new ResizeObserver(() => measure());
+    ro.observe(grid);
+    return () => ro.disconnect();
+  }, [measure, withDates.length > 0]); // eslint-disable-line react-hooks/exhaustive-deps
+
   if (!withDates.length) return (
     <EmptyState icon={<CalendarBlank size={22} />} title="No dated tasks" text="Give a task a start and end date and it draws here." />
   );
@@ -157,6 +242,7 @@ function GanttChart({ tasks, jobHex, selectedId, onSelect }: { tasks: any[]; job
   const ymd = (d: Date) => d.toISOString().split('T')[0]; // a UTC-midnight calendar day
   const totalDays = daysBetween(ymd(minDate), ymd(maxDate));
   const pct = (date: string) => Math.max(0, Math.min(100, daysBetween(ymd(minDate), date) / totalDays * 100));
+  const gridMin = zoom === 'fit' ? undefined : Math.max(700, 212 + totalDays * ZOOM_PX[zoom]);
 
   const markers: Date[] = [];
   const cur = new Date(minDate);
@@ -171,7 +257,7 @@ function GanttChart({ tasks, jobHex, selectedId, onSelect }: { tasks: any[]; job
 
   return (
     <div className="schGantt">
-      <div className="schGrid">
+      <div className="schGrid" ref={gridRef} style={gridMin ? { minWidth: gridMin } : undefined}>
         <div className="schRow schHead" aria-hidden>
           <div className="schLabel schMuted" style={{ fontSize: 12, fontWeight: 700 }}>Task</div>
           <div className="schTrack">
@@ -188,9 +274,12 @@ function GanttChart({ tasks, jobHex, selectedId, onSelect }: { tasks: any[]; job
           const left = pct(task.start_date);
           const width = Math.max(.5, pct(task.end_date) - left);
           const fill = STATUS_FILL[task.status] || 'var(--text-tertiary)';
-          const isDone = task.status === 'completed';
+          const isDone = task.status === 'completed' || task.status === 'complete';
           const hasBase = !!(task.baseline_start && task.baseline_end);
           const v = finishVariance(task);
+          const c = cpm.byId[String(task.id)];
+          const crit = !!c?.critical;
+          const edge = crit ? 'var(--danger)' : jobHex;
           return (
             <div
               key={task.id}
@@ -198,7 +287,8 @@ function GanttChart({ tasks, jobHex, selectedId, onSelect }: { tasks: any[]; job
               role="button"
               tabIndex={0}
               data-sel={task.id === selectedId ? 'true' : undefined}
-              aria-label={`${task.name}, ${fmtShort(task.start_date)} to ${fmtShort(task.end_date)}, ${task.pct_complete ?? 0}% complete`}
+              data-dim={critOnly && !crit ? 'true' : undefined}
+              aria-label={`${task.name}, ${fmtShort(task.start_date)} to ${fmtShort(task.end_date)}, ${task.pct_complete ?? 0}% complete${crit ? ', critical path' : c ? `, ${c.float} days float` : ''}`}
               onClick={() => onSelect(task)}
               onKeyDown={e => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); onSelect(task); } }}
             >
@@ -213,10 +303,14 @@ function GanttChart({ tasks, jobHex, selectedId, onSelect }: { tasks: any[]; job
                   <div className="schVar" style={{ left: `calc(${Math.min(96, pct(task.end_date))}% + 4px)`, color: v > 0 ? 'var(--danger)' : 'var(--success)' }}>{varianceLabel(v)}</div>
                 )}
                 {todayInRange && <div className="schToday" style={{ left: `${todayPct}%` }} />}
-                <div className="schBar" style={{
-                  left: `${left}%`, width: `${width}%`,
-                  ...jobBarStyle(jobHex), border: `1px solid color-mix(in srgb, ${jobHex} 40%, transparent)`, borderLeft: `3px solid ${jobHex}`,
-                }}>
+                <div
+                  className="schBar"
+                  data-crit={crit ? 'true' : undefined}
+                  ref={el => { const id = String(task.id); if (el) barRefs.current.set(id, el); else barRefs.current.delete(id); }}
+                  style={{
+                    left: `${left}%`, width: `${width}%`,
+                    ...jobBarStyle(jobHex), border: `1px solid color-mix(in srgb, ${edge} ${crit ? 85 : 40}%, transparent)`, borderLeft: `3px solid ${edge}`,
+                  }}>
                   <div className="schFill" style={{ background: fill, width: `${task.pct_complete ?? 0}%` }} />
                   {width > 8 && <div className="schPct">{task.pct_complete ?? 0}%</div>}
                 </div>
@@ -224,6 +318,22 @@ function GanttChart({ tasks, jobHex, selectedId, onSelect }: { tasks: any[]; job
             </div>
           );
         })}
+
+        {/* Finish-to-start links, predecessor end → successor start. */}
+        <svg className="schLinks" width={box.w} height={box.h} viewBox={`0 0 ${box.w || 1} ${box.h || 1}`} aria-hidden>
+          <defs>
+            <marker id={`${uid}a`} viewBox="0 0 8 8" refX="7" refY="4" markerWidth="7" markerHeight="7" markerUnits="userSpaceOnUse" orient="auto">
+              <path d="M0,0 L8,4 L0,8 z" style={{ fill: 'var(--text-secondary)' }} />
+            </marker>
+            <marker id={`${uid}c`} viewBox="0 0 8 8" refX="7" refY="4" markerWidth="8" markerHeight="8" markerUnits="userSpaceOnUse" orient="auto">
+              <path d="M0,0 L8,4 L0,8 z" style={{ fill: 'var(--danger)' }} />
+            </marker>
+          </defs>
+          {arrows.filter(a => !a.critical).concat(arrows.filter(a => a.critical)).map(a => (
+            <path key={a.key} d={a.d} data-crit={a.critical ? 'true' : undefined} data-dim={a.dim ? 'true' : undefined}
+              markerEnd={`url(#${uid}${a.critical ? 'c' : 'a'})`} />
+          ))}
+        </svg>
       </div>
     </div>
   );
@@ -263,7 +373,9 @@ export default function SchedulePage() {
   const [saving, setSaving] = useState(false);
   const [deleting, setDeleting] = useState(false);
   const { toast, show } = useToast(4000);
-  const [viewMode, setViewMode] = useState<'gantt' | 'list'>('gantt');
+  const [viewMode, setViewMode] = useState<'gantt' | 'list' | 'lookahead'>('gantt');
+  const [critOnly, setCritOnly] = useState(false);
+  const [zoom, setZoom] = useState<GanttZoom>('fit');
   const [baselining, setBaselining] = useState(false);
   const [search, setSearch] = useState('');
   const [filterStatus, setFilterStatus] = useState('all');
@@ -501,6 +613,16 @@ export default function SchedulePage() {
   const toggleStatus = (s: string) => setFilterStatus(prev => (prev === s ? 'all' : s));
 
   const today = localDay(); // this device's day, not the UTC day (tomorrow from 7 PM on in Iowa)
+  // CPM runs over the whole job — filters only hide rows, they never change the path.
+  const cpm = useMemo(() => computeCpm(tasks.map((t: any) => ({ ...t, id: String(t.id) }))), [tasks]);
+  const critCount = cpm.criticalIds.length;
+  const weeks = useMemo(() => lookahead(filtered, today), [filtered, today]);
+  const lookaheadCount = weeks.reduce((n, w) => n + w.tasks.length, 0);
+  const nameOf = (id: string) => tasks.find((t: any) => String(t.id) === id)?.name || 'a deleted task';
+  const linkIssues = [
+    ...cpm.cycles.map(c => `Circular link ignored: ${nameOf(c.from)} → ${nameOf(c.to)}`),
+    ...cpm.missing.map(m => `${nameOf(m.task)} follows a task that no longer exists`),
+  ];
   const allEnds = tasks.filter((t: any) => t.end_date).map((t: any) => t.end_date);
   const projectEnd = allEnds.length ? allEnds.reduce((m, d) => d > m ? d : m) : '';
   const daysLeft = projectEnd ? Math.max(0, daysBetween(today, projectEnd)) : 0;
@@ -515,6 +637,15 @@ export default function SchedulePage() {
     { label: 'Days Remaining', value: busy ? '—' : daysLeft ? String(daysLeft) : '—', sub: busy ? undefined : projectEnd ? `Ends ${fmtDate(projectEnd)}` : 'No end dates yet', icon: <Clock size={15} /> },
     { label: 'Tasks Complete', value: busy ? '—' : `${completedCount}/${tasks.length}`, sub: busy ? undefined : filterStatus === 'completed' ? 'Filtered — click to clear' : 'Tasks finished', icon: <CheckCircle size={15} />, onClick: () => toggleStatus('completed'), active: filterStatus === 'completed' },
     { label: 'Delayed', value: busy ? '—' : String(delayedCount), tone: !busy && delayedCount ? 'bad' : 'default', sub: busy ? undefined : filterStatus === 'delayed' ? 'Filtered — click to clear' : delayedCount ? 'Need attention' : 'On track', icon: <WarningCircle size={15} />, onClick: () => toggleStatus('delayed'), active: filterStatus === 'delayed' },
+    {
+      label: 'Critical Tasks',
+      value: busy ? '—' : String(critCount),
+      tone: !busy && critCount ? 'bad' : 'default',
+      sub: busy ? undefined : critOnly ? 'Showing critical path — click to clear' : cpm.projectFinish ? `Drive the ${fmtShort(cpm.projectFinish)} finish` : 'No dated tasks yet',
+      icon: <Lightning size={15} />,
+      onClick: () => { setCritOnly(v => !v); setViewMode('gantt'); },
+      active: critOnly,
+    },
     {
       label: 'Behind Baseline',
       value: busy ? '—' : base.baselined ? `${base.late}/${base.baselined}` : '—',
@@ -549,6 +680,14 @@ export default function SchedulePage() {
         </div>
       ),
     },
+    {
+      key: 'float', header: 'Float (days)', align: 'right', groupable: false,
+      accessor: t => cpm.byId[String(t.id)]?.float ?? null,
+      render: t => {
+        const c = cpm.byId[String(t.id)];
+        return c ? <span className="schFloat" data-crit={c.critical ? 'true' : undefined} title={c.critical ? 'On the critical path' : undefined}>{c.float}</span> : '—';
+      },
+    },
     { key: 'assigned_to', header: 'Assigned', render: t => t.assigned_to || '—' },
     { key: 'trade', header: 'Trade', hidden: true, render: t => t.trade || '—' },
   ];
@@ -558,7 +697,7 @@ export default function SchedulePage() {
   const otherTasks = tasks.filter((t: any) => t.id !== selected?.id);
   const pred = form.predecessor_id ? tasks.find((t: any) => t.id === form.predecessor_id) : null;
   const next = ctx?.schedule?.nextTasks?.[0];
-  const critical = ctx?.schedule?.criticalCount ?? 0;
+  const critical = cpm.criticalIds.filter(id => { const s = tasks.find((t: any) => String(t.id) === id)?.status; return s !== 'completed' && s !== 'complete'; }).length;
   const composerOpen = mode === 'create' || mode === 'edit';
   const viewing = mode === 'view' && selected ? selected : null;
 
@@ -603,9 +742,57 @@ export default function SchedulePage() {
   } else if (viewMode === 'gantt') {
     body = (
       <Card flush>
+        <div className="schGBar">
+          <button type="button" className="k-chip" aria-pressed={critOnly} onClick={() => setCritOnly(v => !v)} title="Dim every task that is not on the critical path">
+            <Lightning size={14} weight="fill" style={{ color: critOnly ? undefined : 'var(--danger)' }} />
+            Critical path{critCount ? ` · ${critCount}` : ''}
+          </button>
+          {linkIssues.length > 0 && <span className="schWarn" title={linkIssues.join('\n')}>{linkIssues.length} link{linkIssues.length === 1 ? '' : 's'} ignored</span>}
+          <span className="schSp" />
+          <div className="schZoom" role="group" aria-label="Zoom">
+            {([['fit', 'Fit'], ['week', 'Weeks'], ['day', 'Days']] as [GanttZoom, string][]).map(([k, l]) => (
+              <button key={k} type="button" className="k-chip" aria-pressed={zoom === k} onClick={() => setZoom(k)}>{l}</button>
+            ))}
+          </div>
+        </div>
         {filtered.length
-          ? <GanttChart tasks={filtered} jobHex={jobHex} selectedId={viewing?.id} onSelect={viewTask} />
+          ? <GanttChart tasks={filtered} jobHex={jobHex} selectedId={viewing?.id} onSelect={viewTask} cpm={cpm} critOnly={critOnly} zoom={zoom} />
           : <EmptyState title="Nothing matches" text="Change the search or the filters." action={<Button onClick={clearFilters}>Clear filters</Button>} />}
+      </Card>
+    );
+  } else if (viewMode === 'lookahead') {
+    body = (
+      <Card flush>
+        {weeks.map(w => (
+          <div key={w.index} className="schLaWeek">
+            <div className="schLaHead">
+              <span className="schLaTitle">Week {w.index + 1} · {fmtShort(w.start)} – {fmtShort(w.end)}</span>
+              <span className="schMuted" style={{ fontSize: 12 }}>{w.tasks.length} task{w.tasks.length === 1 ? '' : 's'}</span>
+            </div>
+            {w.tasks.length === 0 && <div className="schLaEmpty">Nothing active or starting.</div>}
+            {w.tasks.map((t: any) => {
+              const c = cpm.byId[String(t.id)];
+              const underway = t.start_date < today;
+              return (
+                <div key={t.id} className="schLaRow" role="button" tabIndex={0}
+                  data-sel={t.id === viewing?.id ? 'true' : undefined}
+                  onClick={() => viewTask(t)}
+                  onKeyDown={e => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); viewTask(t); } }}>
+                  <div className="schLaName">
+                    <b data-crit={c?.critical ? 'true' : undefined} title={t.name}>{t.name}</b>
+                    <span>{[t.trade || t.phase, t.assigned_to, c ? (c.critical ? 'Critical' : `${c.float}d float`) : null].filter(Boolean).join(' · ') || '—'}</span>
+                  </div>
+                  <div className="schLaDates">{underway ? `Underway · ends ${fmtShort(t.end_date)}` : `${fmtShort(t.start_date)} – ${fmtShort(t.end_date)}`}</div>
+                  <div><Badge tone={STATUS_TONE[t.status] || 'neutral'} dot>{STATUS_LABELS[t.status] || t.status}</Badge></div>
+                  <div className="schMeter">
+                    <Meter pct={t.pct_complete ?? 0} status={t.status} />
+                    <span style={{ fontSize: 12, fontWeight: 700, color: 'var(--text-primary)' }}>{t.pct_complete ?? 0}%</span>
+                  </div>
+                </div>
+              );
+            })}
+          </div>
+        ))}
       </Card>
     );
   } else {
@@ -627,6 +814,7 @@ export default function SchedulePage() {
     );
   }
 
+  const vCpm = viewing ? cpm.byId[String(viewing.id)] : undefined;
   const detail = viewing && (
     <div ref={detailRef} className="schDetail">
       <Card
@@ -652,6 +840,8 @@ export default function SchedulePage() {
             ['End Date', viewing.end_date ? fmtDate(viewing.end_date) : null],
             ['Baseline', viewing.baseline_start && viewing.baseline_end ? `${fmtShort(viewing.baseline_start)} – ${fmtShort(viewing.baseline_end)}${finishVariance(viewing) ? ` (${varianceLabel(finishVariance(viewing))})` : ' (on plan)'}` : null],
             ['Duration', viewing.start_date && viewing.end_date ? `${daysBetween(viewing.start_date, viewing.end_date)} days` : null],
+            ['Total Float', vCpm ? <span className="schFloat" data-crit={vCpm.critical ? 'true' : undefined}>{vCpm.critical ? `${vCpm.float} days · critical path` : `${vCpm.float} day${vCpm.float === 1 ? '' : 's'}`}</span> : null],
+            ['Late Finish', vCpm && !vCpm.critical ? fmtDate(vCpm.lf) : null],
             ['Trade', viewing.trade],
             ['Assigned To', viewing.assigned_to],
             ['Predecessor', tasks.find((t: any) => t.id === viewing.predecessor_id)?.name || viewing.predecessor],
@@ -700,9 +890,9 @@ export default function SchedulePage() {
         {!loading && !loadError && tasks.length > 0 && (
           <>
             <Tabs
-              tabs={[{ key: 'gantt', label: 'Gantt' }, { key: 'list', label: 'List', count: filtered.length }]}
+              tabs={[{ key: 'gantt', label: 'Gantt' }, { key: 'list', label: 'List', count: filtered.length }, { key: 'lookahead', label: '3-Week Lookahead', count: lookaheadCount }]}
               value={viewMode}
-              onChange={k => setViewMode(k as 'gantt' | 'list')}
+              onChange={k => setViewMode(k as 'gantt' | 'list' | 'lookahead')}
             />
             <Toolbar
               search={search}
