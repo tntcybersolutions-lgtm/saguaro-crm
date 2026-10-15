@@ -14,6 +14,8 @@ import type { FlatSection } from '@/lib/home/flat-build';
 import type { QueueItem } from '@/lib/home/rank';
 import type { TickerItem } from '@/lib/home/ticker';
 import { fmtDowMonDay, shortJobName } from '@/lib/home/flat';
+import type { JobHealth } from '@/lib/job-health';
+import { HealthRing, JOB_HEALTH_CSS } from '@/components/jobs/JobHealthParts';
 
 /* ── Text ───────────────────────────────────────────────────────────────── */
 
@@ -91,25 +93,38 @@ export function BiddingSection({ sec, onRetry }: { sec: FlatSection<BidRow>; onR
 
 /* ── Jobs ───────────────────────────────────────────────────────────────── */
 
-export function JobsSection({ sec, onRetry }: { sec: FlatSection<JobRow>; onRetry: () => void }) {
+/** Health per job id, from the Jobs list (useProjects). Jobs are shown worst first once it is in. */
+export function JobsSection({ sec, onRetry, health }: { sec: FlatSection<JobRow>; onRetry: () => void; health?: Map<string, JobHealth> }) {
   if (sec.state === 'restricted') return null;
+  const rows = health && health.size
+    ? [...sec.rows].sort((a, b) => (health.get(a.id)?.score ?? 101) - (health.get(b.id)?.score ?? 101))
+    : sec.rows;
   return (
     <>
       <SectionLabel id="fh-jobs" action={sec.total ? { label: `All ${sec.total}`, href: '/app/projects' } : undefined}>Jobs</SectionLabel>
       {sec.state === 'failed' ? <SectionFailed name="Jobs" onRetry={onRetry} />
         : sec.state === 'empty' ? <SectionEmpty text="No active jobs yet." action={{ label: 'New job', href: '/app/projects/new' }} />
         : (
+          <div className="hs-jobs">
+          <style dangerouslySetInnerHTML={{ __html: JOB_HEALTH_CSS + HS_JOBS_CSS }} />
           <FlatList label="Jobs">
-            {sec.rows.map(j => (
-              <li key={j.id}>
-                <Row icon={<HardHat size={18} weight="bold" />} tone={j.dot ? undefined : 'info'} dot={j.dot || undefined} title={j.title} meta={<Meta parts={j.meta} />} bar={j.billedPct} right={j.right} rightSub={j.rightSub} href={j.href} chevron={false} />
-              </li>
-            ))}
+            {rows.map(j => {
+              const h = health?.get(j.id);
+              return (
+                <li key={j.id} data-ring={h ? '' : undefined}>
+                  <Row icon={h ? <HealthRing health={h} size={40} /> : <HardHat size={18} weight="bold" />} tone={h ? undefined : j.dot ? undefined : 'info'} dot={h ? undefined : j.dot || undefined} title={j.title} meta={<Meta parts={j.meta} />} bar={j.billedPct} right={j.right} rightSub={j.rightSub} href={j.href} chevron={false} />
+                </li>
+              );
+            })}
           </FlatList>
+          </div>
         )}
     </>
   );
 }
+
+/* The ring replaces the icon tile: no box behind it. */
+const HS_JOBS_CSS = `.hs-jobs li[data-ring] .k-tile{background:transparent !important;border:0 !important;box-shadow:none !important;width:42px;height:42px;padding:0}`;
 
 /* ── Money ──────────────────────────────────────────────────────────────── */
 
