@@ -22,7 +22,7 @@ export const CHART = {
   // The accent names are kept for the prop API; yellow is for actions, never
   // data (DESIGN_SYSTEM.md §1). Series come from the approved palette only.
   gold: 'var(--chart-1)',
-  goldStrong: 'color-mix(in srgb, #38BDF8 72%, #F8FAFC)',
+  goldStrong: 'color-mix(in srgb, #E8FF2A 72%, #F8FAFC)',
   blue: 'var(--chart-2)',
   blueStrong: '#F8FAFC',
   green: 'var(--success, #4ADE80)',
@@ -57,7 +57,7 @@ export function accentColors(accent: ChartAccent): AccentPair {
 export const CATEGORICAL: readonly string[] = [
   'var(--chart-1)',                               // link blue
   'var(--chart-2)',                               // light blue
-  'color-mix(in srgb, #38BDF8 55%, #101722)',     // deep blue
+  'color-mix(in srgb, #E8FF2A 55%, #101722)',     // deep blue
   '#CBD5E1',                                      // secondary text
   'var(--chart-3)',                               // green
   'var(--chart-4)',                               // amber

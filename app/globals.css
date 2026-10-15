@@ -51,7 +51,7 @@
   --c-yellow-hi: color-mix(in srgb, #E8FF2A 86%, #F8FAFC);
   --c-yellow-hover: color-mix(in srgb, #E8FF2A 90%, #101722);
   --c-on-brand: #101722;    /* dark text on yellow */
-  --c-blue: #38BDF8;        /* informational links */
+  --c-blue: #E8FF2A;        /* informational links */
   --c-orange: #FBBF24;      /* pending / waiting (amber) */
   --c-green: #4ADE80;       /* success / ongoing / completed */
   --c-red: #F87171;         /* errors / overdue */
@@ -73,17 +73,17 @@
   --gold-soft: var(--brand-primary-12);
   --gold-ring: var(--brand-primary-35);
   /* Links — blue, never the brand yellow. */
-  --link: #38BDF8;
-  --link-hover: color-mix(in srgb, #38BDF8 72%, #F8FAFC);
+  --link: #E8FF2A;
+  --link-hover: color-mix(in srgb, #E8FF2A 72%, #F8FAFC);
   /* Status — green success, amber pending, red errors, blue informational,
      slate closed (lib/status-colors.ts). A status always carries its word. */
   --status-overdue: #F87171;
   --status-lead: #FBBF24;
-  --status-under-contract: #38BDF8;
+  --status-under-contract: #E8FF2A;
   --status-ongoing: #4ADE80;
   --status-completed: #4ADE80;
   --status-closed: #94A3B8;
-  --info: #38BDF8;
+  --info: #E8FF2A;
   --success: #4ADE80;
   --danger: #F87171;
   --warning: #FBBF24;
@@ -149,14 +149,14 @@
   --sag-tabbar-h: 0px;
   /* ── Semantic roles (DESIGN_SYSTEM.md §1). Every value is one of the approved
      colours (#101722 #1B2636 #243247 #334155 #F8FAFC #CBD5E1 #94A3B8 #E8FF2A
-     #38BDF8) or a mix of them — no other hex. Status hues are the approved
+     #E8FF2A) or a mix of them — no other hex. Status hues are the approved
      green / amber / red names; their exact values await Chad's confirmation. */
   --bg-subtle: color-mix(in srgb, #101722 60%, #1B2636);
   --surface-modal: #1B2636;
   --surface-popover: #243247;
   --text-inverse: #101722;
   --border-interactive: color-mix(in srgb, #334155 72%, #94A3B8);
-  --focus-ring: #38BDF8;
+  --focus-ring: #E8FF2A;
   --action-primary-bg: #E8FF2A;
   --action-primary-fg: #101722;
   --action-primary-hover: color-mix(in srgb, #E8FF2A 90%, #101722);
@@ -184,9 +184,9 @@
   --tab-selected-bg: #E8FF2A;
   --tab-selected-fg: #101722;
   --tab-selected-indicator: #E8FF2A;
-  --selected-row-bg: color-mix(in srgb, #38BDF8 10%, #1B2636);
-  --selected-row-indicator: #38BDF8;
-  --selected-card-border: #38BDF8;
+  --selected-row-bg: color-mix(in srgb, #E8FF2A 10%, #1B2636);
+  --selected-row-indicator: #E8FF2A;
+  --selected-card-border: #E8FF2A;
   --selected-control-bg: #E8FF2A;
   --selected-control-fg: #101722;
   --success-fg: var(--success);
@@ -198,11 +198,11 @@
   --danger-fg: var(--danger);
   --danger-bg: color-mix(in srgb, var(--danger) 12%, #1B2636);
   --danger-border: color-mix(in srgb, var(--danger) 40%, #334155);
-  --info-fg: #38BDF8;
-  --info-bg: color-mix(in srgb, #38BDF8 12%, #1B2636);
-  --info-border: color-mix(in srgb, #38BDF8 40%, #334155);
-  --chart-1: #38BDF8;
-  --chart-2: color-mix(in srgb, #38BDF8 45%, #F8FAFC);
+  --info-fg: #E8FF2A;
+  --info-bg: color-mix(in srgb, #E8FF2A 12%, #1B2636);
+  --info-border: color-mix(in srgb, #E8FF2A 40%, #334155);
+  --chart-1: #E8FF2A;
+  --chart-2: color-mix(in srgb, #E8FF2A 45%, #F8FAFC);
   --chart-3: var(--success);
   --chart-4: var(--warning);
   --chart-5: #94A3B8;
@@ -226,13 +226,13 @@
      every module (and every /app route) to one of these and mirrors the
      hexes for canvas/SVG. They mark identity only — icon tiles, the sidebar
      glyphs, a header tile; status meaning stays green / amber / red. */
-  --mod-core: #38BDF8;    /* home, dashboards, reports, settings */
+  --mod-core: #E879F9;    /* home, dashboards, reports, settings */
   --mod-sales: #A78BFA;   /* leads, customers, bids, intelligence */
-  --mod-precon: #22D3EE;  /* takeoff, estimates, bid packages, catalog */
+  --mod-precon: #FB7185;  /* takeoff, estimates, bid packages, catalog */
   --mod-build: #818CF8;   /* jobs, schedule, contracts, submittals, closeout */
   --mod-field: #2DD4BF;   /* daily logs, photos, punch, time, equipment */
   --mod-money: #F472B6;   /* pay apps, invoices, budget, change orders, waivers */
-  --mod-docs: #60A5FA;    /* drawings, specs, documents, RFIs, messages */
+  --mod-docs: #C084FC;    /* drawings, specs, documents, RFIs, messages */
   --mod-people: #FB923C;  /* subs, team, compliance, safety, people */
   --acc: var(--mod-core); /* the current module's accent; the app shell sets it per route */
 }
@@ -590,8 +590,8 @@ input::placeholder, textarea::placeholder {
 .badge-green { background: rgba(74,222,128,0.12); color: #4ADE80; border: 1px solid rgba(74,222,128,0.40); }
 .badge-gold { background: rgba(251,191,36,0.12); color: #FBBF24; border: 1px solid rgba(251,191,36,0.40); }
 .badge-red { background: rgba(248,113,113,0.12); color: #F87171; border: 1px solid rgba(248,113,113,0.40); }
-.badge-blue { background: rgba(56,189,248,0.12); color: #38BDF8; border: 1px solid rgba(56,189,248,0.40); }
-.badge-purple { background: rgba(56,189,248,0.12); color: #38BDF8; border: 1px solid rgba(56,189,248,0.40); }
+.badge-blue { background: rgba(232,255,42,0.12); color: #E8FF2A; border: 1px solid rgba(232,255,42,0.40); }
+.badge-purple { background: rgba(232,255,42,0.12); color: #E8FF2A; border: 1px solid rgba(232,255,42,0.40); }
 .badge-gray { background: rgba(148,163,184,0.12); color: #CBD5E1; border: 1px solid rgba(148,163,184,0.40); }
 [class^="badge-"] {
   display: inline-flex; align-items: center; padding: 2px 10px;
@@ -881,7 +881,7 @@ input:-webkit-autofill:focus {
 ::-webkit-scrollbar-track { background: transparent; }
 
 /* Text selection: brand-tinted, readable everywhere. */
-::selection { background: rgba(56,189,248,0.30); color: var(--c-text); }
+::selection { background: rgba(232,255,42,0.30); color: var(--c-text); }
 
 /* ── Tables: machined panel material (2026-08-22) ──────────────────────────
    Zebra-free milled rows: solid header band + Title Case labels,
