@@ -1,15 +1,22 @@
 'use client';
-import React, { useState, useEffect, useCallback } from 'react';
+/**
+ * Spec Sections — the project manual by CSI MasterFormat division.
+ *
+ * Reads   GET  /api/projects/:id/specs
+ * Create  POST /api/specs/create          { projectId, status:'draft', last_updated, division, section, title }
+ * Upload  POST /api/specs/:specId/upload  (multipart: file, specId)
+ * View    openPdf(url)
+ */
+import React, { useState, useEffect, useCallback, useRef } from 'react';
 import { openPdf } from '@/components/PdfViewer';
 import { useProjectContext } from '@/lib/hooks/useProjectContext';
 import { useParams } from 'next/navigation';
-import { Badge, Btn, Table, T } from '@/components/ui/shell';
 import {
-  PremiumSurface, ModuleHero, SectionCard, PremiumEmpty,
-  StatStrip, FlowSteps, InsightRow, AutoChip, goldButtonStyle, ghostButtonStyle, secondaryButtonStyle, railStyle
-} from '@/components/ui/premium';
-import { FileText, Plus, ClockCounterClockwise } from '@phosphor-icons/react';
-import { ListToolbar } from '@/components/ui/ListToolbar';
+  PageShell, Card, StatRow, Badge, Button, Toolbar, Tabs, DataTable, EmptyState, Select,
+  FormModal, Field, Input, FormGrid, Callout, Toast, useToast,
+  type Column, type Action, type BadgeTone, type StatItem,
+} from '@/components/ui/kit';
+import { FileText, Plus, Eye, UploadSimple, Files, PencilLine, PaperPlaneTilt, SealCheck, WarningCircle } from '@phosphor-icons/react';
 import { CSI_DIVISIONS } from '@/lib/construction-intelligence';
 import { useUnsavedGuard, useComposerDirty } from '@/lib/useUnsavedGuard';
 import UnsavedGuardModal from '@/components/UnsavedGuardModal';
@@ -27,12 +34,13 @@ interface Spec {
   project_id: string;
 }
 
-const STATUS_BADGE: Record<string, 'muted' | 'blue' | 'amber' | 'green'> = {
-  draft: 'muted',
-  issued: 'blue',
-  revised: 'amber',
-  approved: 'green',
+const STATUS_TONE: Record<string, BadgeTone> = {
+  draft: 'neutral',
+  issued: 'under_contract',
+  revised: 'under_contract',
+  approved: 'ongoing',
 };
+const cap = (s: string) => (s ? s.charAt(0).toUpperCase() + s.slice(1) : '—');
 
 const EMPTY_FORM = { division: '', section: '', title: '' };
 
@@ -48,6 +56,7 @@ function divCode(raw: string): string {
 function divName(code: string): string {
   return (CSI_DIVISIONS as Record<string, { name: string }>)[code]?.name || '';
 }
+const specDiv = (s: Spec) => divCode(s.division) || divCode(s.section);
 
 // The API returns raw `specifications` rows (section_number / updated_at /
 // file_url) whose names don't match this page's display fields. Normalize so a
@@ -64,6 +73,12 @@ function normalizeSpec(r: Record<string, unknown>): Spec {
     related_submittals: Array.isArray(r.related_submittals) ? (r.related_submittals as string[]) : [],
     project_id: String(r.project_id ?? ''),
   };
+}
+
+function fmtDay(v: string): string {
+  if (!v) return '—';
+  const d = new Date(v.length <= 10 ? `${v}T12:00:00` : v);
+  return isNaN(d.getTime()) ? v.substring(0, 10) : d.toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' });
 }
 
 export default function SpecsPage() {
@@ -85,14 +100,15 @@ export default function SpecsPage() {
     onSave: () => handleSave(),
   });
   const [saving, setSaving] = useState(false);
-  const [successMsg, setSuccessMsg] = useState('');
+  const { toast, show } = useToast(4000);
   const [errorMsg, setErrorMsg] = useState('');
   const [search, setSearch] = useState('');
   const [uploading, setUploading] = useState<string | null>(null);
   const [autoDiv, setAutoDiv] = useState(false);
   const [grouped, setGrouped] = useState(true);
-  // ListToolbar state — status joins the existing search + view toggle (sag_flt_specs).
   const [statusFilter, setStatusFilter] = useState('all');
+  const fileRef = useRef<HTMLInputElement>(null);
+  const uploadFor = useRef<string | null>(null);
 
   // Project intelligence — one snapshot; the spec book walks in knowing the job.
   const { ctx } = useProjectContext(projectId);
@@ -124,18 +140,20 @@ export default function SpecsPage() {
   // CSI-division grouping — canonical MasterFormat order, unknowns last.
   const byDivision: Record<string, Spec[]> = {};
   for (const s of filtered) {
-    const code = divCode(s.division) || divCode(s.section) || '__';
+    const code = specDiv(s) || '__';
     (byDivision[code] = byDivision[code] || []).push(s);
   }
-  for (const code of Object.keys(byDivision)) byDivision[code].sort((a, b) => a.section.localeCompare(b.section, undefined, { numeric: true }));
   const divisionOrder = [...DIV_CODES.filter(c => byDivision[c]), ...(byDivision['__'] ? ['__'] : [])];
-  const coveredDivisions = new Set(specs.map(s => divCode(s.division) || divCode(s.section)).filter(Boolean)).size;
+  const coveredDivisions = new Set(specs.map(specDiv).filter(Boolean)).size;
 
   // Bid packages tell us which divisions the spec book still owes sections for.
   const pkgs = (ctx?.bidPackages || []) as { id: string; name: string; trade: string; csiDivision?: string; status?: string }[];
   const pkgDivisions = new Set(pkgs.map(p => divCode(String(p.csiDivision || ''))).filter(Boolean));
-  const uncoveredPkgDivs = [...pkgDivisions].filter(c => !specs.some(s => (divCode(s.division) || divCode(s.section)) === c));
+  const uncoveredPkgDivs = [...pkgDivisions].filter(c => !specs.some(s => specDiv(s) === c));
   const openSubmittals = Number(ctx?.counts?.openSubmittals) || 0;
+
+  function openForm() { setShowForm(true); setErrorMsg(''); }
+  function closeForm() { guard.requestClose(() => { setShowForm(false); setErrorMsg(''); }); }
 
   async function handleSave(): Promise<boolean> {
     if (!form.section || !form.title) { setErrorMsg('Section number and title are required.'); return false; }
@@ -153,8 +171,7 @@ export default function SpecsPage() {
       setSpecs(prev => [...prev, normalizeSpec(json.spec)].sort((a, b) => a.section.localeCompare(b.section)));
       setShowForm(false);
       setForm(EMPTY_FORM);
-      setSuccessMsg('Spec section added.');
-      setTimeout(() => setSuccessMsg(''), 4000);
+      show('Spec section added.');
       guard.clearDraft();
       return true;
     } catch {
@@ -173,252 +190,177 @@ export default function SpecsPage() {
       fd.append('specId', specId);
       const res = await fetch(`/api/specs/${specId}/upload`, { method: 'POST', body: fd });
       if (!res.ok) throw new Error('upload failed');
-      setSuccessMsg('Spec file uploaded.');
+      show('Spec file uploaded.');
       fetchSpecs();
     } catch {
-      setErrorMsg('Could not upload the spec file. Please try again.');
+      show('Could not upload the spec file. Please try again.', 'bad');
     } finally {
       setUploading(null);
-      setTimeout(() => { setSuccessMsg(''); setErrorMsg(''); }, 4000);
     }
   }
 
-  const inp: React.CSSProperties = {
-    width: '100%', padding: '9px 12px', background: 'rgba(255,255,255,0.04)',
-    border: `1px solid ${T.border}`, borderRadius: 10, color: T.white, fontSize: 13, outline: 'none',
-  };
-  const lbl: React.CSSProperties = { display: 'block', fontSize: 12, fontWeight: 700, color: T.muted, marginBottom: 6 };
-  const hint: React.CSSProperties = { fontSize: 12, color: 'var(--c-text-2)', marginTop: 5, lineHeight: 1.45 };
+  function pickFile(specId: string) {
+    uploadFor.current = specId;
+    if (fileRef.current) { fileRef.current.value = ''; fileRef.current.click(); }
+  }
 
-  const specRow = (s: Spec) => {
-    const code = divCode(s.division) || divCode(s.section);
-    return [
-      <span key="sec" style={{ color: 'var(--text-primary)', fontWeight: 700 }}>{s.section}</span>,
-      s.title,
-      <span key="div" style={{ color: T.muted }}>{code ? `${code} — ${divName(code)}` : (s.division || '—')}</span>,
-      <Badge key="st" label={s.status ? s.status.charAt(0).toUpperCase() + s.status.slice(1) : '—'} color={STATUS_BADGE[s.status] || 'muted'} />,
-      <span key="upd" style={{ color: T.muted, whiteSpace: 'nowrap' }}>{s.last_updated ? String(s.last_updated).substring(0, 10) : '—'}</span>,
-      <span key="sub" style={{ color: T.muted, fontSize: 12 }}>
-        {s.related_submittals && s.related_submittals.length > 0 ? s.related_submittals.join(', ') : '—'}
-      </span>,
-      <div key="act" style={{ display: 'flex', gap: 6 }}>
-        {s.url && (
-          <Btn size="sm" variant="ghost" onClick={() => openPdf({ url: s.url!, title: `${s.section} — ${s.title}` })}>View</Btn>
-        )}
-        <label style={{ cursor: 'pointer' }}>
-          <Btn size="sm" variant="ghost" disabled={uploading === s.id}>
-            {uploading === s.id ? 'Uploading…' : 'Upload'}
-          </Btn>
-          <input type="file" accept=".pdf" style={{ display: 'none' }} onChange={e => { if (e.target.files?.[0]) handleUploadSpec(s.id, e.target.files[0]); }} />
-        </label>
-      </div>,
-    ];
-  };
+  const toggleStatus = (s: string) => setStatusFilter(prev => (prev === s ? 'all' : s));
+  const stats: StatItem[] = [
+    { label: 'Total sections', value: loading ? '—' : specs.length, sub: coveredDivisions > 0 ? `Across ${coveredDivisions} of ${DIV_CODES.length} divisions` : 'Across all divisions', icon: <Files size={15} />, onClick: () => setStatusFilter('all'), active: statusFilter === 'all' },
+    { label: 'Draft', value: loading ? '—' : draftCount, sub: 'Not yet issued', icon: <PencilLine size={15} />, onClick: () => toggleStatus('draft'), active: statusFilter === 'draft' },
+    { label: 'Issued', value: loading ? '—' : issuedCount, tone: issuedCount > 0 ? 'warn' : 'default', sub: 'Out for review', icon: <PaperPlaneTilt size={15} />, onClick: () => toggleStatus('issued'), active: statusFilter === 'issued' },
+    { label: 'Approved', value: loading ? '—' : approvedCount, tone: approvedCount > 0 ? 'good' : 'default', sub: 'Finalized', icon: <SealCheck size={15} />, onClick: () => toggleStatus('approved'), active: statusFilter === 'approved' },
+    ...(ctx ? [{
+      label: 'Spec gaps', value: uncoveredPkgDivs.length, tone: uncoveredPkgDivs.length > 0 ? 'warn' : 'good',
+      sub: uncoveredPkgDivs.length > 0 ? `Div ${uncoveredPkgDivs.slice(0, 3).join(', ')}${uncoveredPkgDivs.length > 3 ? '…' : ''} unspecified` : 'Every package covered',
+      icon: <WarningCircle size={15} />,
+    } as StatItem] : []),
+  ];
 
+  const columns: Column<Spec>[] = [
+    { key: 'section', header: 'Section #', primary: true, phone: 'show', width: 130, accessor: (s) => s.section, render: (s) => s.section || '—' },
+    { key: 'title', header: 'Title', phone: 'show', render: (s) => s.title || '—' },
+    { key: 'division', header: 'Division', accessor: (s) => specDiv(s) || s.division, render: (s) => { const c = specDiv(s); return c ? `${c} — ${divName(c)}` : (s.division || '—'); } },
+    { key: 'status', header: 'Status', phone: 'show', accessor: (s) => cap(s.status), render: (s) => <Badge tone={STATUS_TONE[s.status] || 'neutral'} dot>{cap(s.status)}</Badge> },
+    { key: 'last_updated', header: 'Last updated', accessor: (s) => s.last_updated || '', render: (s) => fmtDay(s.last_updated) },
+    { key: 'related_submittals', header: 'Submittals', accessor: (s) => (s.related_submittals || []).join(', '), render: (s) => (s.related_submittals && s.related_submittals.length > 0 ? s.related_submittals.join(', ') : '—') },
+  ];
+
+  const rowActions = (s: Spec): Action[] => [
+    { label: 'View', icon: <Eye size={14} />, onClick: () => openPdf({ url: s.url!, title: `${s.section} — ${s.title}` }), inline: true, hidden: !s.url },
+    { label: uploading === s.id ? 'Uploading…' : 'Upload', icon: <UploadSimple size={14} />, onClick: () => pickFile(s.id), inline: true, disabled: uploading === s.id },
+  ];
+
+  const table = (rows: Spec[], opts: { id: string; bar: boolean }) => (
+    <DataTable<Spec>
+      tableId={opts.id}
+      exportName="spec-sections"
+      toolbar={opts.bar}
+      columns={columns}
+      rows={rows}
+      loading={loading}
+      rowKey={(s) => s.id}
+      defaultSort={{ key: 'section', dir: 'asc' }}
+      rowActions={rowActions}
+      empty={specs.length === 0 ? (
+        <EmptyState
+          icon={<FileText size={22} />}
+          title="Start the spec book"
+          text={pkgs.length > 0
+            ? `Your ${pkgs.length} bid package${pkgs.length === 1 ? ' references' : 's reference'} ${pkgDivisions.size > 0 ? `${pkgDivisions.size} CSI division${pkgDivisions.size === 1 ? '' : 's'}` : 'the CSI divisions'} — add a section per division.`
+            : 'Add sections by CSI MasterFormat number.'}
+          action={<Button variant="primary" icon={<Plus size={15} weight="bold" />} onClick={openForm}>Add section</Button>}
+        />
+      ) : (
+        <EmptyState title="Nothing matches" text="Change the search or the status filter." action={<Button onClick={() => { setSearch(''); setStatusFilter('all'); }}>Clear filters</Button>} />
+      )}
+    />
+  );
+
+  const base = `/app/projects/${projectId}`;
   return (
-    <PremiumSurface>
-
-      {/* Header */}
-      <ModuleHero
-        eyebrow={ctx?.project?.name || 'Specifications'}
-        eyebrowIcon={<FileText size={13} weight="fill" style={{ color: 'var(--text-primary)' }} />}
-        title="Spec"
-        accent="Sections"
+    <div className="specWs">
+      <PageShell
+        crumbs={[
+          { label: 'Projects', href: '/app/projects' },
+          { label: ctx?.project?.name || 'Project', href: `${base}/overview` },
+          { label: 'Specifications' },
+        ]}
+        title="Spec sections"
         subtitle={specs.length > 0 ? `${specs.length} section${specs.length === 1 ? '' : 's'} across ${coveredDivisions} of ${DIV_CODES.length} CSI divisions.` : 'Project specifications organized by CSI division.'}
-        actions={
-          <button
-            onClick={() => { setShowForm(p => !p); setErrorMsg(''); }}
-            className="pmBtn"
-            style={showForm ? ghostButtonStyle : goldButtonStyle}
-          >
-            {showForm ? 'Cancel' : (<><Plus size={15} weight="bold" /> Add Section</>)}
-          </button>
-        }
-      />
-
-      {/* One summary: the book's own figures, plus the spec gaps once the project context is in */}
-      <StatStrip items={[
-        { href: `/app/projects/${projectId}/specs`, label: 'Total Sections', value: String(specs.length), sub: coveredDivisions > 0 ? `Across ${coveredDivisions} division${coveredDivisions === 1 ? '' : 's'}` : 'Across all divisions' },
-        { href: `/app/projects/${projectId}/specs`, label: 'Draft', value: String(draftCount), sub: 'Not yet issued' },
-        { href: `/app/projects/${projectId}/specs`, label: 'Issued', value: String(issuedCount), sub: 'Out for review' },
-        { href: `/app/projects/${projectId}/specs`, label: 'Approved', value: String(approvedCount), accent: T.green, sub: 'Finalized' },
-        ...(ctx ? [
-          { href: `/app/projects/${projectId}/specs`, label: 'Spec Gaps', value: String(uncoveredPkgDivs.length), accent: uncoveredPkgDivs.length > 0 ? 'var(--warning)' : T.green, sub: uncoveredPkgDivs.length > 0 ? `Div ${uncoveredPkgDivs.slice(0, 3).join(', ')}${uncoveredPkgDivs.length > 3 ? '…' : ''} unspecified` : 'Every package covered' },
-        ] : []),
-      ]} />
-
-      {successMsg && (
-        <div style={{ marginBottom: 16, padding: '10px 14px', background: T.greenDim, border: `1px solid rgba(74,222,128,0.4)`, borderRadius: 10, color: T.green, fontSize: 13 }}>{successMsg}</div>
-      )}
-      {errorMsg && (
-        <div style={{ marginBottom: 16, padding: '10px 14px', background: T.redDim, border: `1px solid rgba(248,113,113,0.4)`, borderRadius: 10, color: T.red, fontSize: 13 }}>{errorMsg}</div>
-      )}
-
-      {/* Create Form */}
-      {showForm && (
-        <div className={ctx ? 'pmSplit' : undefined} style={railStyle(320, { gap: 18, alignItems: 'start', marginBottom: 24 })}>
-        <SectionCard
-          icon={<Plus size={17} weight="bold" color="var(--text-secondary)" />}
-          title="Add Spec Section"
-          subtitle={uncoveredPkgDivs.length > 0 ? `${uncoveredPkgDivs.length} bid-package division${uncoveredPkgDivs.length === 1 ? ' still has' : 's still have'} no spec section.` : 'Sections file themselves under their CSI division.'}
-        >
-          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: 14 }}>
-            <div>
-              <label style={lbl}>Division{autoDiv && form.division ? <AutoChip /> : null}</label>
-              <select value={form.division} onChange={e => { setAutoDiv(false); setForm(p => ({ ...p, division: e.target.value })); }} style={inp}>
-                <option value="">Select division…</option>
-                {DIV_CODES.map(c => <option key={c} value={c}>{c} — {divName(c)}</option>)}
-              </select>
-              <div style={hint}>{form.division && divName(form.division) ? `Files under Division ${form.division} — ${divName(form.division)}.` : `All ${DIV_CODES.length} CSI MasterFormat divisions — or type the section number and it fills itself.`}</div>
-            </div>
-            <div>
-              <label style={lbl}>Section # *</label>
-              <input value={form.section} onChange={e => {
-                const v = e.target.value;
-                const auto = divCode(v);
-                if (auto) setAutoDiv(true);
-                setForm(p => ({ ...p, section: v, division: auto || p.division }));
-              }} placeholder="e.g. 03 31 00" style={inp} />
-              <div style={hint}>MasterFormat number — the division fills itself from the first two digits.</div>
-            </div>
-            <div>
-              <label style={lbl}>Title *</label>
-              <input value={form.title} onChange={e => setForm(p => ({ ...p, title: e.target.value }))} placeholder={form.division && divName(form.division) ? `e.g. ${divName(form.division)}` : 'e.g. Cast-in-Place Concrete'} style={inp} />
-              <div style={hint}>Section title as it reads in the project manual.</div>
-            </div>
-          </div>
-          <div style={{ display: 'flex', gap: 10, marginTop: 18 }}>
-            <button
-              onClick={handleSave}
-              disabled={saving}
-              className="pmBtn"
-              style={{ ...goldButtonStyle, opacity: saving ? 0.5 : 1, cursor: saving ? 'not-allowed' : 'pointer' }}
-            >
-              {saving ? 'Saving…' : 'Save Section'}
-            </button>
-            <button
-              onClick={() => { setShowForm(false); setErrorMsg(''); }}
-              className="pmBtn"
-              style={ghostButtonStyle}
-            >
-              Cancel
-            </button>
-          </div>
-        </SectionCard>
-        {ctx && (
-          <div style={{ display: 'flex', flexDirection: 'column', gap: 16 }}>
-            <SectionCard flat title="What Saguaro Knows" icon={<ClockCounterClockwise size={17} weight="duotone" color="var(--text-secondary)" />}>
-              <InsightRow label="Spec Sections" value={`${specs.length} across ${coveredDivisions} division${coveredDivisions === 1 ? '' : 's'}`} />
-              <InsightRow label="Bid Packages" value={String(pkgs.length)} />
-              <InsightRow label="Open Submittals" value={String(openSubmittals)} accent={openSubmittals > 0 ? T.gold : undefined} />
-              <InsightRow label="Subs on the Job" value={String((ctx.subs || []).length)} />
-              {uncoveredPkgDivs.length > 0 && (
-                <div style={{ marginTop: 10, padding: '10px 12px', borderRadius: 8, background: 'var(--bg-surface-2)', border: '1px solid var(--border-default)', fontSize: 12, color: 'var(--text-primary)', lineHeight: 1.5 }}>
-                  Bid packages reference Division{uncoveredPkgDivs.length === 1 ? '' : 's'} {uncoveredPkgDivs.join(', ')} with no spec section yet — start there.
-                </div>
-              )}
-            </SectionCard>
-            <SectionCard flat title="After You Save" icon={<FileText size={17} weight="duotone" color="var(--text-secondary)" />}>
-              <FlowSteps title="" steps={[
-                { title: 'Section Files by Division', desc: 'The book groups itself in CSI MasterFormat order.' },
-                { title: 'Upload the PDF', desc: 'Attach the section document right from the register row.' },
-                { title: 'Issue for Coordination', desc: 'Move draft to issued when it goes out to bidders and subs.' },
-                { title: 'Submittals Check Against It', desc: 'Product data and shop drawings get reviewed against this section.' },
-              ]} />
-            </SectionCard>
-          </div>
-        )}
-        </div>
-      )}
-
-      {/* List toolbar — search + status filter; view toggle rides in extra */}
-      <ListToolbar
-        module="specs"
-        search={search}
-        onSearch={setSearch}
-        searchPlaceholder="Search sections…"
-        filters={[{ key: 'status', label: 'Status', value: statusFilter, onChange: setStatusFilter, allLabel: 'All Statuses', options: [
-          { value: 'draft', label: 'Draft' },
-          { value: 'issued', label: 'Issued' },
-          { value: 'revised', label: 'Revised' },
-          { value: 'approved', label: 'Approved' },
-        ] }]}
-        count={{ shown: filtered.length, total: specs.length }}
-        style={{ marginBottom: 16 }}
-        extra={
-          <div style={{ display: 'flex', background: 'rgba(255,255,255,0.04)', border: `1px solid ${T.border}`, borderRadius: 10, overflow: 'hidden' }}>
-            <button onClick={() => setGrouped(true)} style={{ padding: '7px 13px', border: 'none', cursor: 'pointer', fontSize: 12, fontWeight: 700, background: grouped ? T.gold : 'transparent', color: grouped ? 'var(--on-brand)' : T.muted }}>By Division</button>
-            <button onClick={() => setGrouped(false)} style={{ padding: '7px 13px', border: 'none', cursor: 'pointer', fontSize: 12, fontWeight: 700, background: !grouped ? T.gold : 'transparent', color: !grouped ? 'var(--on-brand)' : T.muted }}>Flat List</button>
-          </div>
-        }
-      />
-
-      {/* Table */}
-      <SectionCard
-        icon={<FileText size={17} weight="duotone" color="var(--text-secondary)" />}
-        title="Sections"
-        flush
+        actions={<Button variant="primary" icon={<Plus size={15} weight="bold" />} onClick={openForm}>Add section</Button>}
       >
-        {loading ? (
-          <div style={{ padding: 48, textAlign: 'center', color: T.muted, fontSize: 13 }}>Loading specifications…</div>
-        ) : specs.length === 0 ? (
-          <div style={{ padding: '12px 8px' }}>
-            <PremiumEmpty
-              icon={<FileText size={30} weight="duotone" color="var(--text-secondary)" />}
-              title="Start the Spec Book"
-              description={pkgs.length > 0
-                ? `Your ${pkgs.length} bid package${pkgs.length === 1 ? ' already references' : 's already reference'} ${pkgDivisions.size > 0 ? `${pkgDivisions.size} CSI division${pkgDivisions.size === 1 ? '' : 's'}` : 'the CSI divisions'} — add a section per division and the book files itself in MasterFormat order. Submittals get reviewed against these sections.`
-                : 'Add sections by CSI MasterFormat number — the book groups itself by division, and submittals get reviewed against each section.'}
-              action={
-                <button onClick={() => { setShowForm(true); setErrorMsg(''); }} className="pmBtn" style={secondaryButtonStyle}>
-                  <Plus size={15} weight="bold" /> Add Section
-                </button>
-              }
+        <StatRow items={stats} />
+
+        {!loading && specs.length > 0 && (
+          <>
+            <Tabs
+              tabs={[{ key: 'division', label: 'By division', count: divisionOrder.length }, { key: 'flat', label: 'Flat list', count: filtered.length }]}
+              value={grouped ? 'division' : 'flat'}
+              onChange={(k) => setGrouped(k === 'division')}
             />
-          </div>
-        ) : grouped ? (
-          <div>
+            <Toolbar
+              search={search}
+              onSearch={setSearch}
+              placeholder="Search sections…"
+              filters={
+                <Select aria-label="Status" value={statusFilter} onChange={e => setStatusFilter(e.target.value)} style={{ width: 'auto', minWidth: 150 }}
+                  options={[{ value: 'all', label: 'All statuses' }, { value: 'draft', label: 'Draft' }, { value: 'issued', label: 'Issued' }, { value: 'revised', label: 'Revised' }, { value: 'approved', label: 'Approved' }]} />
+              }
+              actions={<span style={{ fontSize: 'var(--fs-sm)', color: 'var(--text-tertiary)' }}>{filtered.length} of {specs.length}</span>}
+            />
+          </>
+        )}
+
+        {grouped && !loading && filtered.length > 0 ? (
+          <div style={{ display: 'flex', flexDirection: 'column', gap: 16 }}>
             {divisionOrder.map(code => (
-              <div key={code}>
-                <div style={{ display: 'flex', alignItems: 'center', gap: 10, padding: '11px 20px', background: 'var(--bg-surface-2)', borderTop: '1px solid rgba(255,255,255,0.06)', borderBottom: '1px solid rgba(255,255,255,0.06)' }}>
-                  <span style={{ fontSize: 12, fontWeight: 900, color: 'var(--text-primary)' }}>{code === '__' ? 'Unassigned' : `Div ${code}`}</span>
-                  <span style={{ fontSize: 13, fontWeight: 700, color: T.white }}>{code === '__' ? 'No division set' : divName(code)}</span>
-                  <span style={{ fontSize: 12, color: T.muted, marginLeft: 'auto' }}>{byDivision[code].length} section{byDivision[code].length === 1 ? '' : 's'}{pkgDivisions.has(code) ? ' · bid package scoped' : ''}</span>
-                </div>
-                <Table headers={['Section #', 'Title', 'Division', 'Status', 'Last Updated', 'Submittals', 'Actions']} rows={byDivision[code].map(specRow)} />
-              </div>
+              <Card
+                key={code}
+                flush
+                title={code === '__' ? 'Unassigned' : `Div ${code} — ${divName(code)}`}
+                subtitle={`${byDivision[code].length} section${byDivision[code].length === 1 ? '' : 's'}`}
+                actions={pkgDivisions.has(code) ? <Badge tone="neutral">Bid package scoped</Badge> : undefined}
+              >
+                {table(byDivision[code], { id: 'project-specs-division', bar: false })}
+              </Card>
             ))}
           </div>
         ) : (
-          <Table
-            headers={['Section #', 'Title', 'Division', 'Status', 'Last Updated', 'Submittals', 'Actions']}
-            rows={filtered.map(s => [
-              <span key="sec" style={{ color: 'var(--text-primary)', fontWeight: 700 }}>{s.section}</span>,
-              s.title,
-              <span key="div" style={{ color: T.muted }}>{s.division || '—'}</span>,
-              <Badge key="st" label={s.status ? s.status.charAt(0).toUpperCase() + s.status.slice(1) : '—'} color={STATUS_BADGE[s.status] || 'muted'} />,
-              <span key="upd" style={{ color: T.muted, whiteSpace: 'nowrap' }}>{s.last_updated || '—'}</span>,
-              <span key="sub" style={{ color: T.muted, fontSize: 12 }}>
-                {s.related_submittals && s.related_submittals.length > 0
-                  ? s.related_submittals.join(', ')
-                  : '—'}
-              </span>,
-              <div key="act" style={{ display: 'flex', gap: 6 }}>
-                {s.url && (
-                  <Btn size="sm" variant="ghost" onClick={() => openPdf({ url: s.url!, title: `${s.section} — ${s.title}` })}>View</Btn>
-                )}
-                <label style={{ cursor: 'pointer' }}>
-                  <Btn size="sm" variant="ghost" disabled={uploading === s.id}>
-                    {uploading === s.id ? 'Uploading…' : 'Upload'}
-                  </Btn>
-                  <input type="file" accept=".pdf" style={{ display: 'none' }} onChange={e => { if (e.target.files?.[0]) handleUploadSpec(s.id, e.target.files[0]); }} />
-                </label>
-              </div>,
-            ])}
-          />
+          <Card flush>{table(filtered, { id: 'project-specs', bar: true })}</Card>
         )}
-      </SectionCard>
-    <UnsavedGuardModal guard={guard} />
-    </PremiumSurface>
+      </PageShell>
+
+      <input
+        ref={fileRef}
+        type="file"
+        accept=".pdf"
+        style={{ display: 'none' }}
+        onChange={e => { const f = e.target.files?.[0]; const id = uploadFor.current; if (f && id) handleUploadSpec(id, f); }}
+      />
+
+      <FormModal
+        open={showForm}
+        onClose={closeForm}
+        title="Add spec section"
+        subtitle={`${specs.length} section${specs.length === 1 ? '' : 's'} · ${pkgs.length} bid package${pkgs.length === 1 ? '' : 's'} · ${openSubmittals} open submittal${openSubmittals === 1 ? '' : 's'}`}
+        onSubmit={async () => { await handleSave(); }}
+        submitLabel="Save section"
+        busy={saving}
+        error={errorMsg}
+      >
+        {uncoveredPkgDivs.length > 0 && (
+          <div style={{ marginBottom: 16 }}>
+            <Callout
+              tone="warning"
+              icon={<WarningCircle size={16} />}
+              title={`Division${uncoveredPkgDivs.length === 1 ? '' : 's'} ${uncoveredPkgDivs.join(', ')} ${uncoveredPkgDivs.length === 1 ? 'has' : 'have'} a bid package but no spec section`}
+            />
+          </div>
+        )}
+        <FormGrid cols={3}>
+          <Field label="Section #" required hint="The division fills itself from the first two digits.">
+            <Input value={form.section} onChange={e => {
+              const v = e.target.value;
+              const auto = divCode(v);
+              if (auto) setAutoDiv(true);
+              setForm(p => ({ ...p, section: v, division: auto || p.division }));
+            }} placeholder="e.g. 03 31 00" autoFocus />
+          </Field>
+          <Field label="Division" hint={form.division && divName(form.division) ? `${autoDiv ? 'Filled from the section number — ' : ''}Division ${form.division} — ${divName(form.division)}.` : `All ${DIV_CODES.length} CSI MasterFormat divisions.`}>
+            <Select value={form.division} onChange={e => { setAutoDiv(false); setForm(p => ({ ...p, division: e.target.value })); }}
+              placeholder="Select division…" options={DIV_CODES.map(c => ({ value: c, label: `${c} — ${divName(c)}` }))} />
+          </Field>
+          <Field label="Title" required hint="As it reads in the project manual.">
+            <Input value={form.title} onChange={e => setForm(p => ({ ...p, title: e.target.value }))} placeholder={form.division && divName(form.division) ? `e.g. ${divName(form.division)}` : 'e.g. Cast-in-Place Concrete'} />
+          </Field>
+        </FormGrid>
+      </FormModal>
+
+      <div style={{ position: 'relative', zIndex: 10001 }}>
+        <UnsavedGuardModal guard={guard} />
+      </div>
+      <Toast message={toast?.message ?? null} tone={toast?.tone} />
+    </div>
   );
 }

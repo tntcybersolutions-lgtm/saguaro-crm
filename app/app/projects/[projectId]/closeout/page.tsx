@@ -1,20 +1,27 @@
 'use client';
+/**
+ * Project Closeout — the finish line (close / reopen gate), the twelve-item
+ * closeout checklist, and the contract money that closes with it.
+ *
+ * Reads   GET  /api/projects/:id/closeout/checklist   (saved item states)
+ *         GET  /api/projects/:id/close                (gate: blockers, contract)
+ * Writes  POST /api/projects/:id/closeout/checklist   { items: [{id,status}] }
+ *         POST /api/projects/:id/close                { force, closeout_date }
+ *         DELETE /api/projects/:id/close              (reopen)
+ * Docs    POST /api/documents/g704 | g706 | closeout  { projectId } → openPdf
+ */
 import React, { useState, useEffect } from 'react';
 import { useProjectContext } from '@/lib/hooks/useProjectContext';
 import { useParams } from 'next/navigation';
-import { ProgressBar, Badge, T } from '@/components/ui/shell';
 import {
-  PremiumSurface,
-  ModuleHero,
-  SectionCard,
-  StatStrip,
-  FlowSteps,
-  InsightRow,
-  goldButtonStyle,
-  ghostButtonStyle,
-} from '@/components/ui/premium';
-import { CheckCircle, ChartBar, Check, Package, ListChecks } from '@phosphor-icons/react';
-import { ListToolbar } from '@/components/ui/ListToolbar';
+  PageShell, Card, StatRow, Badge, Button, Toolbar, DataTable, EmptyState, Select, Menu,
+  Callout, DetailList, Timeline, Toast, useToast,
+  type Column, type Action, type StatItem,
+} from '@/components/ui/kit';
+import {
+  CheckCircle, Check, ListChecks, FilePdf, Package, Wallet, Scales, Wrench, UsersThree,
+  WarningCircle, ArrowCounterClockwise, Circle, Export,
+} from '@phosphor-icons/react';
 import { openPdf } from '@/components/PdfViewer';
 
 /** YYYY-MM-DD on the user's device clock. */
@@ -45,17 +52,42 @@ const CHECKLIST_ITEMS: ChecklistItem[] = [
   { id: 'final_inspection', label: 'Final Inspection', status: 'incomplete' },
   { id: 'certificate_of_occupancy', label: 'Certificate of Occupancy', status: 'incomplete' },
 ];
+const ORDER = new Map(CHECKLIST_ITEMS.map((c, i) => [c.id, i]));
+
+const CSS = `
+.coCq { container: cows / inline-size; min-width: 0; }
+.coGrid { display: grid; grid-template-columns: minmax(0, 1fr); gap: 16px; align-items: start; }
+.coGrid > * { min-width: 0; }
+@container cows (min-width: 1000px) { .coGrid { grid-template-columns: minmax(0, 1fr) 340px; } }
+.coRail { display: flex; flex-direction: column; gap: 16px; }
+.coProg { display: flex; align-items: center; gap: 12px; padding: 14px 16px; border-bottom: 1px solid var(--border-subtle); }
+.coProg .k-prog { flex: 1; margin-top: 0; height: 8px; }
+.coProg strong { font-variant-numeric: tabular-nums; color: var(--text-primary); }
+.coCheck { width: 26px; height: 26px; border-radius: 7px; border: 2px solid var(--border-strong); background: transparent; display: inline-flex; align-items: center; justify-content: center; cursor: pointer; color: var(--bg-base); }
+.coCheck[aria-checked="true"] { border-color: var(--success); background: var(--success); }
+.coDone { color: var(--success); text-decoration: line-through; }
+.coHint { font-size: 12px; line-height: 1.45; white-space: normal; color: var(--text-tertiary); }
+.coHint[data-tone="warn"] { color: var(--warning); }
+.coHint[data-tone="ready"] { color: var(--success); }
+.coBadges { display: inline-flex; gap: 6px; flex-wrap: wrap; }
+.coBlockers { display: flex; flex-wrap: wrap; gap: 8px; }
+.coErr { font-size: var(--fs-sm); color: var(--danger); font-weight: 600; }
+@media (max-width: 640px) {
+  .coWs .k-btn, .coWs .k-stat, .coWs select.k-select, .coWs .k-input { min-height: 44px; }
+  .coCheck { width: 32px; height: 32px; }
+}
+`;
 
 export default function CloseoutPage() {
   const params = useParams();
   const projectId = params.projectId as string;
   const [items, setItems] = useState<ChecklistItem[]>(CHECKLIST_ITEMS);
   const [generating, setGenerating] = useState<string | null>(null);
-  const [toast, setToast] = useState('');
+  const { toast, show } = useToast(4000);
   const [exporting, setExporting] = useState(false);
   // Project intelligence — punch, billing, retainage, and roster state.
   const { ctx } = useProjectContext(projectId);
-  // ListToolbar state — checklist search + complete/incomplete filter (sag_flt_closeout).
+  // Toolbar state — checklist search + complete/incomplete filter.
   const [search, setSearch] = useState('');
   const [statusFilter, setStatusFilter] = useState('all');
 
@@ -128,8 +160,7 @@ export default function CloseoutPage() {
       }
       if (!res.ok) throw new Error(data.error || 'Could not close the project.');
       setConfirmOverride(false);
-      setToast('Project closed. It no longer counts as active work.');
-      setTimeout(() => setToast(''), 4000);
+      show('Project closed. It no longer counts as active work.');
       await loadGate();
     } catch (e: any) {
       setCloseErr(e?.message || 'Could not close the project. Please try again.');
@@ -145,8 +176,7 @@ export default function CloseoutPage() {
       const res = await fetch(`/api/projects/${projectId}/close`, { method: 'DELETE' });
       const data = await res.json().catch(() => ({}));
       if (!res.ok) throw new Error(data.error || 'Could not reopen the project.');
-      setToast('Project reopened.');
-      setTimeout(() => setToast(''), 4000);
+      show('Project reopened.');
       await loadGate();
     } catch (e: any) {
       setCloseErr(e?.message || 'Could not reopen the project. Please try again.');
@@ -189,7 +219,6 @@ export default function CloseoutPage() {
   // $0 billed against a $0 contract is "no contract sum", not done.
   const fullyBilled = revised > 0 && billed >= revised;
   const balanceSub = revised <= 0 ? 'No contract sum set' : fullyBilled ? 'Fully billed' : 'Still to bill';
-  const balanceAccent = fullyBilled ? T.green : undefined;
   // Unsigned waivers that actually block the close (placeholders excluded),
   // so the checklist and the gate count the same thing.
   const waiverBlockers = Number(gate?.blockers?.find(b => b.key === 'lien_waivers')?.count) || 0;
@@ -249,8 +278,7 @@ export default function CloseoutPage() {
     } catch {
       // Revert the optimistic toggle so the UI reflects what actually persisted.
       setItems(prevItems);
-      setToast('Could not save the checklist. Please try again.');
-      setTimeout(() => setToast(''), 4000);
+      show('Could not save the checklist. Please try again.', 'bad');
     }
   }
 
@@ -267,12 +295,11 @@ export default function CloseoutPage() {
       const url = data.url || data.pdfUrl || data.downloadUrl;
       if (!res.ok || !url) throw new Error(data.error || 'generation failed');
       openPdf({ url });
-      setToast(`${item.generateLabel} generated successfully.`);
+      show(`${item.generateLabel} generated successfully.`);
     } catch {
-      setToast(`Could not generate ${item.generateLabel}. Please try again.`);
+      show(`Could not generate ${item.generateLabel}. Please try again.`, 'bad');
     } finally {
       setGenerating(null);
-      setTimeout(() => setToast(''), 4000);
     }
   }
 
@@ -288,283 +315,227 @@ export default function CloseoutPage() {
       const url = data.url || data.pdfUrl || data.downloadUrl;
       if (!res.ok || !url) throw new Error(data.error || 'generation failed');
       openPdf({ url });
-      setToast('Closeout package generated.');
+      show('Closeout package generated.');
     } catch {
-      setToast('Could not generate the closeout package. Please try again.');
+      show('Could not generate the closeout package. Please try again.', 'bad');
     } finally {
       setExporting(false);
-      setTimeout(() => setToast(''), 4000);
     }
   }
 
+  const G704: ChecklistItem = { id: 'g704', label: 'G704', status: 'incomplete', generateEndpoint: '/api/documents/g704', generateLabel: 'G704' };
+  const G706: ChecklistItem = { id: 'g706', label: 'G706', status: 'incomplete', generateEndpoint: '/api/documents/g706', generateLabel: 'G706' };
+
+  const base = `/app/projects/${projectId}`;
+  const remaining = total - completed;
+  const blockerCount = gate ? gate.blockers.reduce((s, b) => s + b.count, 0) : 0;
+
+  const stats: StatItem[] = [
+    { label: 'Checklist', value: `${pct}%`, tone: pct === 100 ? 'good' : 'default', sub: remaining === 0 ? 'All complete' : `${remaining} still outstanding`, icon: <ListChecks size={15} />, onClick: () => setStatusFilter(statusFilter === 'incomplete' ? 'all' : 'incomplete'), active: statusFilter === 'incomplete' },
+    ...(ctx ? [
+      { label: 'Balance to finish', value: fmtM(balanceToFinish), tone: fullyBilled ? 'good' : 'default', sub: balanceSub, icon: <Wallet size={15} /> } as StatItem,
+      { label: 'Retainage held', value: `≈${fmtM(retainageHeld)}`, sub: `${Number(money?.retainagePct) || 0}% — releases at closeout`, icon: <Scales size={15} /> } as StatItem,
+      { label: 'Open punch', value: openPunch, tone: openPunch > 0 ? 'bad' : 'good', sub: openPunch > 0 ? 'Blocks final inspection' : 'List is clear', icon: <Wrench size={15} />, href: `${base}/punch-list` } as StatItem,
+      { label: 'Subs to clear', value: subCount, sub: 'Final waivers + W-9s', icon: <UsersThree size={15} /> } as StatItem,
+    ] : []),
+  ];
+
+  const signalOf = (item: ChecklistItem) => (item.status === 'complete' ? undefined : ITEM_SIGNALS[item.id]);
+
+  const columns: Column<ChecklistItem>[] = [
+    {
+      key: 'done', header: 'Done', width: 56, sortable: false, groupable: false, accessor: (r) => (r.status === 'complete' ? 1 : 0),
+      render: (r) => (
+        <button
+          type="button"
+          role="checkbox"
+          aria-checked={r.status === 'complete'}
+          aria-label={`${r.label}: ${r.status === 'complete' ? 'complete' : 'incomplete'}`}
+          className="coCheck"
+          onClick={(e) => { e.stopPropagation(); toggleItem(r.id); }}
+        >
+          {r.status === 'complete' && <Check size={15} weight="bold" />}
+        </button>
+      ),
+    },
+    {
+      key: 'label', header: 'Item', primary: true, accessor: (r) => ORDER.get(r.id) ?? 99,
+      render: (r) => {
+        const sig = signalOf(r);
+        return (
+          <div className="k-cell-stack">
+            <span className={r.status === 'complete' ? 'coDone' : undefined}>{r.label}</span>
+            {sig?.hint && <div className="coHint" data-tone={sig.warn ? 'warn' : sig.ready ? 'ready' : undefined}>{sig.hint}</div>}
+          </div>
+        );
+      },
+    },
+    {
+      key: 'status', header: 'Status', phone: 'show', accessor: (r) => (r.status === 'complete' ? 'Complete' : 'Incomplete'),
+      render: (r) => {
+        const sig = signalOf(r);
+        return (
+          <span className="coBadges">
+            <Badge tone={r.status === 'complete' ? 'ongoing' : 'neutral'} dot>{r.status === 'complete' ? 'Complete' : 'Incomplete'}</Badge>
+            {sig?.ready && <Badge tone="ongoing">Ready</Badge>}
+            {sig?.warn && <Badge tone="under_contract">Attention</Badge>}
+          </span>
+        );
+      },
+    },
+  ];
+
+  const rowActions = (r: ChecklistItem): Action[] => [
+    { label: generating === r.id ? 'Generating…' : (r.generateLabel || 'Generate'), icon: <FilePdf size={14} />, onClick: () => generateDoc(r), inline: true, hidden: !r.generateEndpoint, disabled: generating === r.id },
+    { label: r.status === 'complete' ? 'Mark incomplete' : 'Mark complete', icon: r.status === 'complete' ? <Circle size={15} /> : <CheckCircle size={15} />, onClick: () => toggleItem(r.id) },
+  ];
+
+  // The finish line: close / reopen, with the open items named and linked.
+  const gatePanel = gate && (() => {
+    const clear = gate.blockers.length === 0 && gate.unchecked.length === 0;
+    const title = gate.closed
+      ? 'This project is closed'
+      : clear ? 'Ready to close' : `${blockerCount} item${blockerCount === 1 ? '' : 's'} still open across ${gate.blockers.length} area${gate.blockers.length === 1 ? '' : 's'}`;
+    const text = gate.closed ? (
+      <>
+        Closed {gate.project?.closeout_date || '—'}.
+        {gate.project?.substantial_completion_date && <> Substantial completion {gate.project.substantial_completion_date}.</>}
+        {gate.project?.final_completion_date && <> Final completion {gate.project.final_completion_date}.</>}
+        {' '}Reopening puts it back on the active list and clears the closeout date.
+      </>
+    ) : clear ? 'Punch list, RFIs, change orders, pay applications and lien waivers are all clear.' : (
+      <div className="coBlockers" style={{ marginTop: 8 }}>
+        {gate.blockers.map(b => (
+          <Button key={b.key} size="sm" href={`${base}/${b.href}`}>{b.label}</Button>
+        ))}
+        {/* A query that failed is NOT reported as "nothing open" — a closeout
+            gate that rubber-stamps on an error is worse than no gate. */}
+        {gate.unchecked.length > 0 && <span className="coErr" style={{ alignSelf: 'center' }}>Could not check: {gate.unchecked.join(', ')}</span>}
+      </div>
+    );
+    const actions = gate.closed ? (
+      <Button icon={<ArrowCounterClockwise size={15} />} onClick={reopenProject} disabled={closing}>{closing ? 'Reopening…' : 'Reopen project'}</Button>
+    ) : confirmOverride ? (
+      <>
+        <Button variant="danger" onClick={() => closeProject(true)} disabled={closing}>{closing ? 'Closing…' : 'Close anyway'}</Button>
+        <Button variant="ghost" onClick={() => setConfirmOverride(false)}>Cancel</Button>
+      </>
+    ) : (
+      <Button icon={<CheckCircle size={15} />} onClick={() => closeProject(false)} disabled={closing}>{closing ? 'Closing…' : 'Close project'}</Button>
+    );
+    return (
+      <>
+        <Callout
+          tone={gate.closed || clear ? 'success' : 'warning'}
+          icon={gate.closed || clear ? <CheckCircle size={18} weight="fill" /> : <WarningCircle size={18} weight="fill" />}
+          title={title}
+          text={text}
+          actions={actions}
+        />
+        {closeErr && <div className="coErr" role="alert" style={{ marginTop: 8 }}>{closeErr}</div>}
+      </>
+    );
+  })();
+
+  const lienDone = items.find(i => i.id === 'all_lien_waivers')?.status === 'complete';
+  const path = [
+    { key: 'punch', done: !!ctx && openPunch === 0, title: 'Clear the punch list', meta: openPunch > 0 ? `${openPunch} open` : 'Clear' },
+    { key: 'bill', done: fullyBilled, title: 'Bill the contract out', meta: revised > 0 ? `${fmtM(billed)} of ${fmtM(revised)} · ${billedPct}%` : 'No contract sum' },
+    { key: 'waivers', done: lienDone, title: 'Collect final waivers', meta: subCount > 0 ? `${subCount} subs` : 'Your own final' },
+    { key: 'docs', done: docsDone, title: 'Assemble turnover docs', meta: 'As-builts, O&M, warranties, W-9s' },
+    { key: 'inspect', done: inspectDone, title: 'Inspect and certify', meta: 'Final inspection, then C of O' },
+    { key: 'export', done: pct === 100, title: 'Export the package', meta: pct === 100 ? 'Ready' : `${remaining} item${remaining === 1 ? '' : 's'} to go` },
+  ];
+
   return (
-    <PremiumSurface>
-      {/* Header */}
-      <ModuleHero
-        eyebrow={ctx?.project?.name || 'Closeout'}
-        eyebrowIcon={<Package size={13} weight="fill" color="var(--text-secondary)" />}
-        title="Project"
-        accent="Closeout"
+    <div className="coWs">
+      <style dangerouslySetInnerHTML={{ __html: CSS }} />
+      <PageShell
+        crumbs={[
+          { label: 'Projects', href: '/app/projects' },
+          { label: ctx?.project?.name || 'Project', href: `${base}/overview` },
+          { label: 'Closeout' },
+        ]}
+        title="Closeout"
+        badge={gate?.closed ? <Badge tone="closed" dot>Closed</Badge> : undefined}
         subtitle={`${completed} of ${total} items complete — ${pct}% ready for handover.`}
         actions={
           <>
-            <button
-              onClick={() => generateDoc({ id: 'g704', label: 'G704', status: 'incomplete', generateEndpoint: '/api/documents/g704', generateLabel: 'G704' })}
-              disabled={!!generating}
-              className="pmBtn"
-              style={{ ...ghostButtonStyle, opacity: generating ? 0.5 : 1, cursor: generating ? 'not-allowed' : 'pointer' }}
-            >
-              Generate G704
-            </button>
-            <button
-              onClick={() => generateDoc({ id: 'g706', label: 'G706', status: 'incomplete', generateEndpoint: '/api/documents/g706', generateLabel: 'G706' })}
-              disabled={!!generating}
-              className="pmBtn"
-              style={{ ...ghostButtonStyle, opacity: generating ? 0.5 : 1, cursor: generating ? 'not-allowed' : 'pointer' }}
-            >
-              Generate G706
-            </button>
-            <button
-              onClick={exportCloseout}
-              disabled={exportDisabled}
-              className="pmBtn"
-              style={{ ...goldButtonStyle, opacity: exportDisabled ? 0.5 : 1, cursor: exportDisabled ? 'not-allowed' : 'pointer' }}
-            >
-              {exporting ? 'Generating…' : 'Export Closeout Package'}
-            </button>
+            <Menu
+              triggerLabel="Documents"
+              triggerIcon={<FilePdf size={15} />}
+              actions={[
+                { label: 'Generate G704', icon: <FilePdf size={15} />, onClick: () => generateDoc(G704), disabled: !!generating },
+                { label: 'Generate G706', icon: <FilePdf size={15} />, onClick: () => generateDoc(G706), disabled: !!generating },
+              ]}
+            />
+            <Button variant="primary" icon={<Export size={15} />} onClick={exportCloseout} disabled={exportDisabled} title={pct < 100 ? 'Unlocks when every checklist item is complete' : undefined}>
+              {exporting ? 'Generating…' : 'Export closeout package'}
+            </Button>
           </>
         }
-      />
+      >
+        {gatePanel}
 
-      {/* ── THE FINISH LINE ─────────────────────────────────────────────
-           First thing on the page, because it is the thing the page is
-           for. The gate warns rather than walls: real jobs close with an
-           owner-waived punch item or an RFI nobody will ever answer, and
-           blocking outright just teaches people to falsify the fields the
-           gate reads. So the open items are named, counted and linked,
-           and overriding them takes a second, separate click. ── */}
-      {gate && (
-        <SectionCard
-          title={gate.closed ? 'This Project Is Closed' : 'Close Out This Project'}
-          subtitle={
-            gate.closed
-              ? `Closed ${gate.project?.closeout_date || '—'} — it no longer counts as active work.`
-              : gate.blockers.length === 0 && gate.unchecked.length === 0
-                ? 'Nothing is open. This job is ready to close.'
-                : `${gate.blockers.reduce((s, b) => s + b.count, 0)} item${gate.blockers.reduce((s, b) => s + b.count, 0) === 1 ? '' : 's'} still open across ${gate.blockers.length} area${gate.blockers.length === 1 ? '' : 's'}.`
+        <StatRow items={stats} />
+
+        <Toolbar
+          search={search}
+          onSearch={setSearch}
+          placeholder="Search closeout items…"
+          filters={
+            <Select aria-label="Status" value={statusFilter} onChange={e => setStatusFilter(e.target.value)} style={{ width: 'auto', minWidth: 150 }}
+              options={[{ value: 'all', label: 'All items' }, { value: 'incomplete', label: 'Incomplete' }, { value: 'complete', label: 'Complete' }]} />
           }
-          icon={gate.closed
-            ? <CheckCircle size={17} weight="duotone" color={T.green} />
-            : <ListChecks size={17} weight="duotone" color="var(--text-secondary)" />}
-        >
-          <div style={{ display: 'flex', gap: 16, alignItems: 'flex-start', flexWrap: 'wrap' }}>
-            <div style={{ flex: 1, minWidth: 280 }}>
-              {gate.closed ? (
-                <div style={{ fontSize: 13, color: T.muted, lineHeight: 1.6 }}>
-                  {gate.project?.substantial_completion_date && <div>Substantial completion: {gate.project.substantial_completion_date}</div>}
-                  {gate.project?.final_completion_date && <div>Final completion: {gate.project.final_completion_date}</div>}
-                  <div>Reopening puts it back on the active list and clears the closeout date.</div>
-                </div>
-              ) : gate.blockers.length === 0 && gate.unchecked.length === 0 ? (
-                <div style={{ fontSize: 13, color: T.muted }}>
-                  Punch list, RFIs, change orders, pay applications and lien waivers are all clear.
-                </div>
-              ) : (
-                <div style={{ display: 'flex', flexWrap: 'wrap', gap: 7 }}>
-                  {gate.blockers.map(b => (
-                    <a
-                      key={b.key}
-                      href={`/app/projects/${projectId}/${b.href}`}
-                      className="pmBtn"
-                      style={{
-                        display: 'inline-flex', alignItems: 'center', gap: 6,
-                        padding: '5px 10px', borderRadius: 8, textDecoration: 'none',
-                        border: '1px solid var(--border-default)', background: 'var(--bg-surface-2)',
-                        color: 'var(--link)', fontSize: 12, fontWeight: 700, whiteSpace: 'nowrap',
-                      }}
-                    >
-                      {b.label}
-                    </a>
-                  ))}
-                  {/* A query that failed is NOT reported as "nothing open" —
-                      a closeout gate that rubber-stamps on an error is worse
-                      than no gate. */}
-                  {gate.unchecked.length > 0 && (
-                    <span style={{ fontSize: 12, color: 'var(--danger)', fontWeight: 700, alignSelf: 'center' }}>
-                      Could not check: {gate.unchecked.join(', ')}
-                    </span>
-                  )}
-                </div>
-              )}
-              {closeErr && <div style={{ marginTop: 10, fontSize: 12, color: 'var(--danger)' }}>{closeErr}</div>}
-            </div>
+          actions={<span style={{ fontSize: 'var(--fs-sm)', color: 'var(--text-tertiary)' }}>{visibleItems.length} of {items.length}</span>}
+        />
 
-            <div style={{ display: 'flex', flexDirection: 'column', gap: 8, alignItems: 'stretch' }}>
-              {gate.closed ? (
-                <button
-                  onClick={reopenProject}
-                  disabled={closing}
-                  className="pmBtn"
-                  style={{ ...ghostButtonStyle, opacity: closing ? 0.5 : 1, cursor: closing ? 'not-allowed' : 'pointer' }}
-                >
-                  {closing ? 'Reopening…' : 'Reopen Project'}
-                </button>
-              ) : confirmOverride ? (
-                <>
-                  <button
-                    onClick={() => closeProject(true)}
-                    disabled={closing}
-                    className="pmBtn"
-                    style={{ ...goldButtonStyle, opacity: closing ? 0.5 : 1, cursor: closing ? 'not-allowed' : 'pointer' }}
-                  >
-                    {closing ? 'Closing…' : 'Close Anyway'}
-                  </button>
-                  <button onClick={() => setConfirmOverride(false)} className="pmBtn" style={{ ...ghostButtonStyle }}>
-                    Cancel
-                  </button>
-                </>
-              ) : (
-                <button
-                  onClick={() => closeProject(false)}
-                  disabled={closing}
-                  className="pmBtn"
-                  style={{ ...goldButtonStyle, opacity: closing ? 0.5 : 1, cursor: closing ? 'not-allowed' : 'pointer' }}
-                >
-                  {closing ? 'Closing…' : 'Close Project'}
-                </button>
+        <div className="coCq">
+          <div className="coGrid">
+            <Card flush>
+              <div className="coProg" aria-label={`Closeout ${pct}% complete`}>
+                <span className="k-prog" aria-hidden><span style={{ width: `${pct}%`, background: pct === 100 ? 'var(--success)' : 'var(--brand-primary)' }} /></span>
+                <strong>{pct}%</strong>
+              </div>
+              <DataTable<ChecklistItem>
+                tableId="project-closeout"
+                exportName="closeout-checklist"
+                toolbar={false}
+                columns={columns}
+                rows={visibleItems}
+                rowKey={(r) => r.id}
+                defaultSort={{ key: 'label', dir: 'asc' }}
+                rowActions={rowActions}
+                empty={<EmptyState title="No checklist items match" text="Change the search or the filter." action={<Button onClick={() => { setSearch(''); setStatusFilter('all'); }}>Clear filters</Button>} />}
+              />
+            </Card>
+
+            <div className="coRail">
+              <Card title="Path to handover" icon={<Package size={16} />}>
+                <Timeline items={path.map(p => ({
+                  key: p.key,
+                  tone: p.done ? 'success' : 'neutral',
+                  icon: p.done ? <Check size={12} weight="bold" /> : <Circle size={10} />,
+                  title: p.title,
+                  meta: p.meta,
+                }))} />
+              </Card>
+              {ctx && (
+                <Card title="Contract" icon={<Wallet size={16} />}>
+                  <DetailList items={[
+                    ['Revised Contract', fmtM(revised)],
+                    ['Billed to Date', `${fmtM(billed)} · ${billedPct}%`],
+                    ['Balance to Finish', fmtM(balanceToFinish)],
+                    ['Retainage Held', `≈${fmtM(retainageHeld)}`],
+                    ...(lastApp ? [[`Pay App #${lastApp.appNumber} status`, String(lastApp.status || '—').replace(/_/g, ' ').replace(/\b\w/g, (c: string) => c.toUpperCase())] as [string, React.ReactNode]] : []),
+                  ]} />
+                </Card>
               )}
             </div>
           </div>
-        </SectionCard>
-      )}
-
-      {/* One summary row: what is left on the checklist, then the contract
-          money and field items that close with it. Completed / progress are
-          already in the header line and the progress bar below; the revised
-          contract and billed-to-date roll up into Balance to Finish. */}
-      <StatStrip items={[
-        { href: `/app/projects/${projectId}/closeout`, label: 'Remaining', value: String(total - completed), sub: total - completed === 0 ? 'All complete' : 'Still outstanding' },
-        ...(ctx ? [
-          { href: `/app/projects/${projectId}/closeout`, label: 'Balance to Finish', value: fmtM(balanceToFinish), accent: fullyBilled ? T.green : undefined, sub: balanceSub },
-          { href: `/app/projects/${projectId}/closeout`, label: 'Retainage Held', value: `≈${fmtM(retainageHeld)}`, sub: `${Number(money?.retainagePct) || 0}% — releases at closeout` },
-          { href: `/app/projects/${projectId}/punch-list`, label: 'Open Punch', value: String(openPunch), accent: openPunch > 0 ? 'var(--danger)' : T.green, sub: openPunch > 0 ? 'Blocks final inspection' : 'List is clear' },
-          { href: `/app/projects/${projectId}/closeout`, label: 'Subs to Clear', value: String(subCount), sub: 'Final waivers + W-9s' },
-        ] : []),
-      ]} />
-
-      {toast && (
-        <div style={{ marginBottom: 16, padding: '10px 14px', background: T.greenDim, border: `1px solid rgba(74,222,128,0.3)`, borderRadius: 10, color: T.green, fontSize: 13 }}>
-          {toast}
         </div>
-      )}
-
-      {/* Checklist + context rail */}
-      <div style={{ display: 'grid', gridTemplateColumns: 'minmax(0,1fr) 340px', gap: 22, alignItems: 'start' }}>
-      <div style={{ minWidth: 0 }}>
-      {/* Progress Bar */}
-      <SectionCard flat
-        title="Closeout Progress"
-        icon={<ChartBar size={17} weight="duotone" color="var(--text-secondary)" />}
-        action={<span style={{ fontSize: 14, fontWeight: 800, color: pct === 100 ? T.green : 'var(--text-primary)', fontVariantNumeric: 'tabular-nums' }}>{pct}%</span>}
-        style={{ marginBottom: 24 }}
-      >
-        <ProgressBar pct={pct} color={pct === 100 ? T.green : T.gold} height={10} />
-        <div style={{ marginTop: 10, fontSize: 12, color: 'var(--c-text-2)' }}>
-          {pct === 100 ? 'Ready to export the closeout package.' : `${total - completed} items remaining`}
-        </div>
-      </SectionCard>
-
-      {/* List toolbar — find a closeout item fast */}
-      <ListToolbar
-        module="closeout"
-        search={search}
-        onSearch={setSearch}
-        searchPlaceholder="Search closeout items…"
-        filters={[{ key: 'status', label: 'Status', value: statusFilter, onChange: setStatusFilter, allLabel: 'All Items', options: [
-          { value: 'incomplete', label: 'Incomplete' },
-          { value: 'complete', label: 'Complete' },
-        ] }]}
-        count={{ shown: visibleItems.length, total: items.length }}
-        style={{ marginBottom: 16 }}
-      />
-
-      {/* Checklist */}
-      <SectionCard
-        title="Closeout Checklist"
-        subtitle={`${completed}/${total} complete`}
-        icon={<ListChecks size={17} weight="duotone" color="var(--text-secondary)" />}
-        flush
-      >
-        {visibleItems.length === 0 ? (
-          <div style={{ padding: '18px 20px', fontSize: 13, color: 'var(--c-text-2)' }}>No checklist items match.</div>
-        ) : visibleItems.map((item, idx) => { const sig = ITEM_SIGNALS[item.id]; return (
-          <div key={item.id} style={{ display: 'flex', alignItems: 'center', gap: 14, padding: '14px 20px', borderBottom: idx === visibleItems.length - 1 ? 'none' : `1px solid rgba(255,255,255,0.06)` }}>
-            <button
-              onClick={() => toggleItem(item.id)}
-              style={{
-                width: 22, height: 22, borderRadius: 6,
-                border: `2px solid ${item.status === 'complete' ? T.green : 'rgba(255,255,255,0.22)'}`,
-                background: item.status === 'complete' ? T.green : 'transparent',
-                cursor: 'pointer', flexShrink: 0,
-                display: 'flex', alignItems: 'center', justifyContent: 'center',
-              }}
-            >
-              {item.status === 'complete' && <Check size={14} weight="bold" color="var(--bg-base)" />}
-            </button>
-            <div style={{ flex: 1, minWidth: 0 }}>
-              <span style={{
-                fontSize: 14, color: item.status === 'complete' ? T.green : 'var(--text-primary)',
-                textDecoration: item.status === 'complete' ? 'line-through' : 'none',
-              }}>
-                {item.label}
-              </span>
-              {sig?.hint && item.status !== 'complete' && (
-                <div style={{ fontSize: 12, color: sig.warn ? 'var(--warning)' : sig.ready ? T.green : 'rgba(255,255,255,0.5)', marginTop: 3, lineHeight: 1.45 }}>{sig.hint}</div>
-              )}
-            </div>
-            {sig?.ready && item.status !== 'complete' && <Badge label="Ready" color="green" />}
-            {sig?.warn && item.status !== 'complete' && <Badge label="Attention" color="amber" />}
-            <Badge label={item.status === 'complete' ? 'Complete' : 'Incomplete'} color={item.status === 'complete' ? 'green' : 'muted'} />
-            {item.generateEndpoint && (
-              <button
-                onClick={() => generateDoc(item)}
-                disabled={generating === item.id}
-                className="pmBtn"
-                style={{ ...ghostButtonStyle, padding: '7px 14px', fontSize: 13, opacity: generating === item.id ? 0.5 : 1, cursor: generating === item.id ? 'not-allowed' : 'pointer' }}
-              >
-                {generating === item.id ? 'Generating…' : item.generateLabel}
-              </button>
-            )}
-          </div>
-        ); })}
-      </SectionCard>
-      </div>
-
-      {/* Context rail — the path to handover, from live project data */}
-      <div style={{ display: 'flex', flexDirection: 'column', gap: 16 }}>
-        <SectionCard flat title="Path to Handover" icon={<Package size={17} weight="duotone" color="var(--text-secondary)" />}>
-          <FlowSteps title="" steps={[
-            { title: 'Clear the Punch List', done: !!ctx && openPunch === 0, desc: openPunch > 0 ? `${openPunch} item${openPunch === 1 ? '' : 's'} still open.` : 'No open punch items on record.' },
-            { title: 'Bill the Contract Out', done: fullyBilled, desc: revised > 0 ? `${fmtM(billed)} of ${fmtM(revised)} billed (${billedPct}%).` : 'Contract money flows in from pay applications.' },
-            { title: 'Collect Final Waivers', done: items.find(i => i.id === 'all_lien_waivers')?.status === 'complete', desc: subCount > 0 ? `Unconditional finals from all ${subCount} subs release retainage cleanly.` : 'Your own final waiver clears the owner.' },
-            { title: 'Assemble Turnover Docs', done: docsDone, desc: 'As-builts, O&M manuals, warranties, and W-9s in one binder.' },
-            { title: 'Inspect and Certify', done: inspectDone, desc: 'Final inspection, then the certificate of occupancy.' },
-            { title: 'Export the Package', done: pct === 100, desc: pct === 100 ? 'All items complete — export the closeout package above.' : `Unlocks at 100% — ${total - completed} item${total - completed === 1 ? '' : 's'} to go.` },
-          ]} />
-        </SectionCard>
-        {ctx && (
-          <SectionCard flat title="What Saguaro Knows" icon={<ChartBar size={17} weight="duotone" color="var(--text-secondary)" />}>
-            <InsightRow label="Revised Contract" value={fmtM(revised)} strong />
-            <InsightRow label="Billed to Date" value={`${fmtM(billed)} · ${billedPct}%`} />
-            <InsightRow label="Balance to Finish" value={fmtM(balanceToFinish)} accent={balanceAccent} />
-            <InsightRow label="Retainage Held" value={`≈${fmtM(retainageHeld)}`} />
-            <InsightRow label="Open Punch Items" value={String(openPunch)} accent={openPunch > 0 ? 'var(--danger)' : T.green} />
-            <InsightRow label="Subs to Clear" value={String(subCount)} />
-            {lastApp && <InsightRow label={`Pay App #${lastApp.appNumber}`} value={String(lastApp.status || '—').replace(/_/g, ' ').replace(/\b\w/g, c => c.toUpperCase())} />}
-          </SectionCard>
-        )}
-      </div>
-      </div>
-    </PremiumSurface>
+      </PageShell>
+      <Toast message={toast?.message ?? null} tone={toast?.tone} />
+    </div>
   );
 }
