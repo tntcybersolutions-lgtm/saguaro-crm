@@ -1,8 +1,8 @@
 'use client';
 /**
  * ClusterMap — a real map with clustered pins, on the free stack: Leaflet +
- * react-leaflet with CARTO's dark basemap over OpenStreetMap data (free with
- * the attribution shown in the corner). Set NEXT_PUBLIC_MAP_TILE_URL (and
+ * react-leaflet over Esri World Imagery satellite tiles with place labels (free
+ * to display with the attribution in the corner, no API key). Set NEXT_PUBLIC_MAP_TILE_URL (and
  * NEXT_PUBLIC_MAP_TILE_ATTRIBUTION) to point it at another tile server.
  *
  * Leaflet touches `window` on import, so NEVER import this file directly from
@@ -20,9 +20,12 @@ import L from 'leaflet';
 import { MapContainer, TileLayer, Marker, Popup, useMap, useMapEvents } from 'react-leaflet';
 import { clusterPoints, boundsOf, type GeoFix, type PointCluster } from '@/lib/photo-views';
 
-const TILE_URL = process.env.NEXT_PUBLIC_MAP_TILE_URL || 'https://{s}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}{r}.png';
+// Default: Esri World Imagery (satellite) + place labels — free to display with
+// attribution and needs no API key (the CARTO basemap now demands one).
+const TILE_URL = process.env.NEXT_PUBLIC_MAP_TILE_URL || 'https://server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/{z}/{y}/{x}';
+const LABEL_URL = process.env.NEXT_PUBLIC_MAP_TILE_URL ? '' : 'https://server.arcgisonline.com/ArcGIS/rest/services/Reference/World_Boundaries_and_Places/MapServer/tile/{z}/{y}/{x}';
 const TILE_ATTRIBUTION = process.env.NEXT_PUBLIC_MAP_TILE_ATTRIBUTION
-  || '&copy; <a href="https://www.openstreetmap.org/copyright" target="_blank" rel="noopener noreferrer">OpenStreetMap</a> contributors &copy; <a href="https://carto.com/attributions" target="_blank" rel="noopener noreferrer">CARTO</a>';
+  || 'Imagery &copy; Esri, Maxar, Earthstar Geographics, and the GIS User Community';
 const MAX_ZOOM = 19;
 /* Past this zoom a merged pin opens its popup instead of zooming further. */
 const SPLIT_LIMIT = 17;
@@ -148,7 +151,8 @@ export default function ClusterMap<T>({ items, geoOf, pinHtml, pinTone, pinLabel
     <div className="cmap" style={{ height }} role="region" aria-label={ariaLabel}>
       <style dangerouslySetInnerHTML={{ __html: CSS }} />
       <MapContainer center={start} zoom={bounds ? 12 : 4} maxZoom={MAX_ZOOM} scrollWheelZoom={false} style={{ height: '100%', width: '100%' }} attributionControl>
-        <TileLayer url={TILE_URL} attribution={TILE_ATTRIBUTION} maxZoom={MAX_ZOOM} subdomains="abcd" detectRetina />
+        <TileLayer url={TILE_URL} attribution={TILE_ATTRIBUTION} maxZoom={MAX_ZOOM} maxNativeZoom={19} />
+        {LABEL_URL && <TileLayer url={LABEL_URL} maxZoom={MAX_ZOOM} maxNativeZoom={19} />}
         <FitTo bounds={bounds} fitKey={fitKey ?? String(items.length)} />
         <Pins items={items} geoOf={geoOf} pinHtml={pinHtml} pinTone={pinTone} pinLabel={pinLabel} popup={popup} />
       </MapContainer>
