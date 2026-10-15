@@ -78,8 +78,15 @@ const CSS = `
 .zlStrip::-webkit-scrollbar { display: none; }
 .zlThumb { flex: 0 0 auto; width: 52px; height: 52px; padding: 0; border-radius: 10px; overflow: hidden; border: 2px solid transparent; background: rgba(255,255,255,0.06); opacity: .55; cursor: pointer; position: relative; color: var(--text-secondary); display: inline-flex; align-items: center; justify-content: center; }
 .zlThumb[data-current="true"] { border-color: var(--brand-primary); opacity: 1; }
-.zlThumb img { width: 100%; height: 100%; object-fit: cover; display: block; }
+.zlThumb img { width: 100%; height: 100%; object-fit: contain; display: block; }
 .zlThumb .zlThumbPlay { position: absolute; inset: 0; display: flex; align-items: center; justify-content: center; color: white; filter: drop-shadow(0 1px 2px rgba(0,0,0,.6)); }
+.zlBody { position: relative; z-index: 1; flex: 1 1 auto; min-height: 0; display: flex; }
+.zlBody > .zlStage { flex: 1 1 auto; min-width: 0; }
+.zlPanel { position: relative; z-index: 3; flex: 0 0 auto; width: 340px; max-width: 40vw; overflow-y: auto; overscroll-behavior: contain; touch-action: pan-y; border-left: 1px solid var(--border-subtle); background: var(--bg-surface); padding: 16px; transition: opacity .2s ease; }
+@media (max-width: 899px) {
+  .zlPanel { position: absolute; left: 0; right: 0; bottom: 0; width: auto; max-width: none; max-height: 58%; border-left: 0; border-top: 1px solid var(--border-default); border-radius: 16px 16px 0 0; box-shadow: 0 -20px 50px -20px rgba(0,0,0,.7); }
+}
+.zl[data-chrome="off"] .zlPanel { opacity: 0; pointer-events: none; }
 .zlPill { position: absolute; left: 50%; bottom: 96px; transform: translateX(-50%); z-index: 4; padding: 10px 16px; border-radius: 999px; background: var(--bg-solid-2); border: 1px solid var(--border-default); font-size: 14px; font-weight: 700; white-space: nowrap; box-shadow: 0 12px 30px -12px rgba(0,0,0,.7); }
 .zl[data-chrome="off"] .zlBar, .zl[data-chrome="off"] .zlStrip, .zl[data-chrome="off"] .zlSide { opacity: 0; pointer-events: none; }
 @media (pointer: coarse) { .zlSide { display: none; } .zlHideTouch { display: none; } }
@@ -99,6 +106,8 @@ export default function ZoomLightbox({
   onMediaError,
   onDelete,
   onSend,
+  details,
+  actions,
 }: {
   items: LightboxItem[];
   index: number;
@@ -112,6 +121,11 @@ export default function ZoomLightbox({
   onDelete?: (item: LightboxItem) => Promise<boolean> | boolean;
   /** Send this item to another job (the page opens its job picker). */
   onSend?: (item: LightboxItem) => void;
+  /** A details panel for this item, shown beside the photo (a sheet on phones).
+   *  When given, the Info button toggles it instead of calling onInfo. */
+  details?: (item: LightboxItem) => React.ReactNode;
+  /** Extra buttons for the top bar (e.g. Mark Up), drawn before Save. */
+  actions?: (item: LightboxItem) => React.ReactNode;
 }) {
   const item = items[index];
   const rootRef = useRef<HTMLDivElement>(null);
@@ -127,6 +141,7 @@ export default function ZoomLightbox({
   const [failed, setFailed] = useState<Record<string, boolean>>({});
   const [busy, setBusy] = useState<'' | 'save' | 'delete'>('');
   const [pill, setPill] = useState('');
+  const [panel, setPanel] = useState(() => typeof window !== 'undefined' && window.innerWidth >= 900);
 
   // Everything a gesture reads, kept current without re-binding listeners.
   const live = useRef({ items, index, onIndex, onClose, onMediaError });
@@ -577,7 +592,10 @@ export default function ZoomLightbox({
             <button type="button" className="zlBtn zlHideSm zlHideTouch" aria-label="Zoom in" onClick={() => zoomBy(1.5)} disabled={pct >= MAX * 100}><MagnifyingGlassPlus size={18} /></button>
           </>
         )}
-        {onInfo && <button type="button" className="zlBtn" aria-label="Details" title="Details" onClick={() => onInfo(item)}><Info size={19} /></button>}
+        {details
+          ? <button type="button" className="zlBtn" aria-label={panel ? 'Hide details' : 'Show details'} aria-pressed={panel} title="Details" onClick={() => setPanel((v) => !v)}><Info size={19} weight={panel ? 'fill' : 'regular'} /></button>
+          : onInfo && <button type="button" className="zlBtn" aria-label="Details" title="Details" onClick={() => onInfo(item)}><Info size={19} /></button>}
+        {actions?.(item)}
         <button type="button" className="zlBtn" aria-label={`Save ${isVideo ? 'video' : 'photo'}`} title="Save / share" onClick={save} disabled={!!busy}>
           {busy === 'save' ? <CircleNotch size={18} className="zlSpin" /> : <DownloadSimple size={19} />}
         </button>
@@ -595,6 +613,7 @@ export default function ZoomLightbox({
         <button type="button" className="zlBtn" aria-label="Close" title="Close (Esc)" onClick={onClose}><X size={20} weight="bold" /></button>
       </div>
 
+      <div className="zlBody">
       <div ref={stageRef} className="zlStage" data-video={isVideo ? 'true' : undefined}>
         <div ref={trackRef} className="zlTrack">
           {slide(-1)}
@@ -607,6 +626,10 @@ export default function ZoomLightbox({
             <div className="zlSide" data-side="right"><button type="button" className="zlBtn" aria-label="Next" onClick={() => step(1)} disabled={index >= items.length - 1}><CaretRight size={20} /></button></div>
           </>
         )}
+      </div>
+      {details && panel && (
+        <aside className="zlPanel" aria-label="Details">{details(item)}</aside>
+      )}
       </div>
 
       {items.length > 1 && (

@@ -82,6 +82,67 @@ export async function saveMedia(item: { url: string; title?: string | null; kind
   return 'downloaded';
 }
 
+/**
+ * Save several photos / videos at once (the gallery's Select → Download).
+ * No zip: on a phone with file sharing they go to ONE share sheet together
+ * (Save N Images); in the iPhone app one share sheet with every file;
+ * otherwise sequential downloads. Returns how many were saved and how many
+ * could not be fetched.
+ */
+export async function saveMediaMany(
+  items: { url: string; title?: string | null; kind: 'image' | 'video' }[],
+  onProgress?: (done: number, total: number) => void,
+): Promise<{ saved: number; failed: number; result: SaveResult }> {
+  const files: File[] = [];
+  let failed = 0;
+  for (let i = 0; i < items.length; i++) {
+    const it = items[i];
+    try {
+      const res = await fetch(it.url);
+      if (!res.ok) throw new Error(`download ${res.status}`);
+      const blob = await res.blob();
+      const name = mediaFileName(it.title, blob.type || '', it.kind);
+      // Same title twice must not overwrite: "Footing.jpg", "Footing 2.jpg".
+      const taken = files.filter((f) => f.name.replace(/( \d+)?(\.[^.]+)$/, '$2') === name).length;
+      const unique = taken ? name.replace(/(\.[^.]+)$/, ` ${taken + 1}$1`) : name;
+      files.push(new File([blob], unique, { type: blob.type || (it.kind === 'video' ? 'video/mp4' : 'image/jpeg') }));
+    } catch (e) {
+      console.error('[saveMediaMany] fetch failed', e);
+      failed++;
+    }
+    onProgress?.(i + 1, items.length);
+  }
+  if (!files.length) return { saved: 0, failed, result: 'cancelled' };
+
+  if (isNative()) {
+    const [{ Filesystem, Directory }, { Share }] = await Promise.all([import('@capacitor/filesystem'), import('@capacitor/share')]);
+    const uris: string[] = [];
+    for (const f of files) {
+      const w = await Filesystem.writeFile({ path: `share/${Date.now()}-${f.name}`, data: await blobToBase64(f), directory: Directory.Cache, recursive: true });
+      uris.push(w.uri);
+    }
+    try { await Share.share({ title: `${files.length} items`, files: uris }); return { saved: files.length, failed, result: 'shared' }; }
+    catch (e) { if (isCancel(e)) return { saved: 0, failed, result: 'cancelled' }; throw e; }
+  }
+
+  const nav = navigator as Navigator & { canShare?: (d: ShareData) => boolean };
+  const touch = window.matchMedia('(pointer: coarse)').matches;
+  if (touch && nav.share && nav.canShare?.({ files })) {
+    try { await nav.share({ files }); return { saved: files.length, failed, result: 'shared' }; }
+    catch (e) { if (isCancel(e)) return { saved: 0, failed, result: 'cancelled' }; }
+  }
+  for (const f of files) {
+    const href = URL.createObjectURL(f);
+    const a = document.createElement('a');
+    a.href = href; a.download = f.name;
+    document.body.appendChild(a); a.click(); a.remove();
+    setTimeout(() => URL.revokeObjectURL(href), 30_000);
+    // Browsers drop rapid-fire downloads; a short gap keeps every one.
+    await new Promise((r) => setTimeout(r, 350));
+  }
+  return { saved: files.length, failed, result: 'downloaded' };
+}
+
 /* ── Files behind a signed-in link, in the iPhone app ─────────────────────── */
 
 const EXT_BY_TYPE: Array<[RegExp, string]> = [

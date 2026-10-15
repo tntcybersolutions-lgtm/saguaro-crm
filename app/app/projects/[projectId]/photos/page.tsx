@@ -14,13 +14,24 @@
  * (stacked on phones). ← / → step through the visible photos, Esc closes.
  * Create / edit open the composer in a FormModal with a real file input.
  *
+ * Views (kit Tabs): Timeline — months → days, with a sticky jump-to-month
+ * rail; Albums — a tile per album (cover + count), open one for its grid,
+ * new / rename by re-filing photos (album is a column on each photo);
+ * Location — photos with GPS clustered by spot, each with an Open in Maps
+ * link (the repo has no map library, so no tiles are drawn).
+ * Select mode (checkbox on hover, long-press on a phone) → download, move to
+ * album, send to another job, delete. Markup draws on a photo and saves the
+ * result as a NEW photo "<title> (marked up)" — the original is untouched.
+ * Pure grouping / clustering / filtering lives in lib/photo-views.ts.
+ *
  * Every read / write is the one this screen already used:
  *   list      GET    /api/photos/list?projectId=&include=files
  *   upload    POST   /api/photos/upload            (multipart, new photo)
  *   create    POST   /api/photos/create            (URL-only photo)
  *   details   PUT    /api/photos/[id]
  *   replace   POST   /api/photos/[id]/upload       (multipart, replace image / crop save)
- *   delete    DELETE /api/photos/[id]
+ *   delete    DELETE /api/photos/[id]   (a video: DELETE /api/files/[id])
+ *   send      POST   /api/media/move       (SendToJobDialog, up to 100 at once)
  * Thumbnails come from the list route's thumbnail_url; the full original is
  * only ever drawn in the viewer. URLs are whatever the authorized list route
  * returned — nothing here publishes private media.
@@ -35,8 +46,14 @@ import { getAuthHeaders } from '@/lib/supabase-browser';
 import PhotoEditor from '../../../../../components/PhotoEditor';
 import MediaUploadPanel from '@/components/media/MediaUploadPanel';
 import ZoomLightbox, { type LightboxItem } from '@/components/media/ZoomLightbox';
+import PhotoMarkup from '@/components/media/PhotoMarkup';
+import { saveMediaMany } from '@/lib/media-save';
+import {
+  groupByDay, groupByMonth, clusterByLocation, matchesPhotoFilter, albumSummaries, photoGeo,
+  isIssuePhoto, uploaders as uploadersOf, cleanAlbumName, photoTags, type PhotoFilter,
+} from '@/lib/photo-views';
 import SubInbox from '@/components/media/SubInbox';
-import SendToJobDialog from '@/components/media/SendToJobDialog';
+import SendToJobDialog, { type MoveItem } from '@/components/media/SendToJobDialog';
 import { useUploadQueue } from '@/lib/useUploadQueue';
 import { uploadPhoto, uploadVideo, fmtDuration } from '@/lib/media-upload';
 import {
@@ -47,11 +64,12 @@ import OnThisPhone from '@/components/media/OnThisPhone';
 import {
   Camera, X, PencilSimple, Plus, Images, WarningCircle, ArrowClockwise, Trash,
   Crop, CaretLeft, CaretRight, Play, ArrowsOut, LinkSimple, PaperPlaneTilt,
-  Info, VideoCamera, CalendarBlank, FolderOpen,
+  Info, VideoCamera, CalendarBlank, FolderOpen, MapPin, CheckSquare, Square, CheckCircle,
+  DownloadSimple, FolderSimplePlus, PencilLine, Scribble, Funnel,
 } from '@phosphor-icons/react';
 import {
   PageShell, Card, StatRow, Badge, Button, Toolbar, Tabs, EmptyState, RowActions,
-  FormModal, Field, Input, Textarea, Select, FormGrid, DetailList, Toast, useToast,
+  FormModal, Field, Input, Textarea, Select, FormGrid, DetailList, Toast, useToast, DateInput,
   type BadgeTone, type StatItem,
 } from '@/components/ui/kit';
 import { useUnsavedGuard, useComposerDirty } from '@/lib/useUnsavedGuard';
@@ -165,7 +183,40 @@ const CSS = `
 .phUpBar { display: block; width: 56px; height: 4px; border-radius: 4px; background: var(--bg-surface-2); overflow: hidden; }
 .phUpBar > b { display: block; height: 100%; background: var(--success); transition: width .2s; }
 .phLinkAlt { align-self: flex-start; }
+.phViews { display: flex; align-items: center; gap: 12px; flex-wrap: wrap; }
+.phViews .k-tabs { margin: 0; }
+.phViews > .phSpacer { flex: 1; }
+.phMore { display: flex; align-items: flex-end; gap: 10px; flex-wrap: wrap; }
+.phMore label { display: flex; flex-direction: column; gap: 4px; font-size: 12px; font-weight: 700; color: var(--text-tertiary); min-width: 140px; flex: 1 1 140px; max-width: 220px; }
+.phToggle[aria-pressed="true"] { border-color: var(--border-interactive); color: var(--text-primary); background: var(--bg-surface-2); }
+.phJump { position: sticky; top: 0; z-index: 4; display: flex; gap: 6px; overflow-x: auto; padding: 8px 0; background: var(--bg-base); scrollbar-width: none; }
+.phJump::-webkit-scrollbar { display: none; }
+.phChip { flex: 0 0 auto; min-height: 36px; padding: 0 12px; border-radius: 999px; border: 1px solid var(--border-default); background: var(--bg-surface); color: var(--text-secondary); font: inherit; font-size: 13px; font-weight: 700; cursor: pointer; display: inline-flex; align-items: center; gap: 6px; }
+.phChip small { color: var(--text-tertiary); font-size: 12px; font-weight: 600; }
+.phChip[aria-current="true"] { border-color: var(--border-interactive); color: var(--text-primary); background: var(--bg-surface-2); }
+.phMonth { scroll-margin-top: 60px; display: flex; flex-direction: column; gap: 16px; }
+.phMonthHead { font-size: var(--fs-md); font-weight: 800; color: var(--text-primary); display: flex; align-items: baseline; gap: 8px; }
+.phMonthHead small { font-size: var(--fs-sm); color: var(--text-tertiary); font-weight: 600; }
+.phCheck { position: absolute; top: 6px; left: 6px; width: 32px; height: 32px; display: inline-flex; align-items: center; justify-content: center; border-radius: 8px; border: 1px solid var(--border-strong); background: color-mix(in srgb, var(--bg-base) 80%, transparent); color: var(--text-primary); cursor: pointer; opacity: 0; transition: opacity .15s; padding: 0; }
+.phTile:hover .phCheck, .phTile:focus-within .phCheck, .phTile[data-picking="true"] .phCheck { opacity: 1; }
+.phTile[data-picked="true"] .phThumb { border-color: var(--brand-primary); box-shadow: 0 0 0 2px var(--brand-primary); }
+.phTile[data-picked="true"] .phCheck { color: var(--brand-primary); border-color: var(--brand-primary); }
+.phTile[data-picking="true"] .phTileTools { display: none; }
+.phThumb img { -webkit-touch-callout: none; user-select: none; -webkit-user-select: none; }
+.phBulk { position: sticky; bottom: 0; z-index: 5; display: flex; align-items: center; gap: 8px; flex-wrap: wrap; padding: 10px 12px calc(10px + env(safe-area-inset-bottom)); background: var(--bg-surface); border-top: 1px solid var(--border-default); }
+.phBulk strong { font-size: var(--fs-md); margin-right: auto; }
+.phAlbumGrid { display: grid; grid-template-columns: repeat(auto-fill, minmax(180px, 1fr)); gap: 14px; padding: 16px; }
+.phAlbumHead { display: flex; align-items: center; gap: 8px; flex-wrap: wrap; padding: 16px 16px 0; }
+.phAlbumHead h3 { margin: 0 auto 0 0; font-size: var(--fs-md); font-weight: 800; }
+.phGeo { display: flex; flex-direction: column; gap: 10px; }
+.phGeoHead { display: flex; align-items: center; gap: 10px; flex-wrap: wrap; font-size: var(--fs-sm); color: var(--text-secondary); }
+.phGeoHead strong { color: var(--text-primary); font-size: var(--fs-md); }
+.phPanel { display: flex; flex-direction: column; gap: 14px; }
+.phPanel h2 { margin: 0; font-size: 17px; font-weight: 800; overflow-wrap: anywhere; }
 @media (max-width: 640px) {
+  .phAlbumGrid { grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 10px; padding: 12px; }
+  .phCheck { width: 36px; height: 36px; }
+  .phMore label { max-width: none; }
   .phWs .k-btn, .phWs .k-stat, .phWs select.k-select, .phWs .k-input { min-height: 44px; }
   .phGallery { padding: 12px; }
   .phGrid, .phSplit[data-open="true"] .phGrid { grid-template-columns: repeat(auto-fill, minmax(104px, 1fr)); gap: 8px; }
@@ -209,6 +260,24 @@ export default function PhotosPage(){
   const [filterAlbum,setFilterAlbum]=useState('All');
   const [periodFilter,setPeriodFilter]=useState<'all'|'month'>('all');
   const [editingPhoto, setEditingPhoto] = useState<{id:string;url:string}|null>(null);
+  const [view,setView]=useState<'timeline'|'albums'|'map'>('timeline');
+  const [openAlbum,setOpenAlbum]=useState<string|null>(null);
+  const [dateFrom,setDateFrom]=useState('');
+  const [dateTo,setDateTo]=useState('');
+  const [uploader,setUploader]=useState('');
+  const [hasLoc,setHasLoc]=useState(false);
+  const [issuesOnly,setIssuesOnly]=useState(false);
+  const [showMore,setShowMore]=useState(false);
+  /* Select mode: tiles toggle instead of open; the bulk bar acts on `picked`. */
+  const [picking,setPicking]=useState(false);
+  const [picked,setPicked]=useState<Set<string>>(()=>new Set());
+  const [bulkBusy,setBulkBusy]=useState('');
+  /* "Add to <album>": New Album picks its photos in select mode. */
+  const [targetAlbum,setTargetAlbum]=useState<string|null>(null);
+  const [albumDlg,setAlbumDlg]=useState<{mode:'new'|'rename'|'move';from?:string;name:string;choice:string}|null>(null);
+  const [albumErr,setAlbumErr]=useState('');
+  const [sendTargets,setSendTargets]=useState<{items:MoveItem[];what:string;bulk:boolean}|null>(null);
+  const [markup,setMarkup]=useState<{photo:any;reopen:boolean}|null>(null);
 
   // Real file upload — the thing this panel was missing entirely.
   const [uploadFile,setUploadFile]=useState<File|null>(null);
@@ -236,7 +305,7 @@ export default function PhotosPage(){
     reader.readAsDataURL(file);
   }
 
-  const load=useCallback(async(opts?:{silent?:boolean})=>{
+  const load=useCallback(async(opts?:{silent?:boolean}):Promise<any[]|null>=>{
     if(!opts?.silent) setLoading(true);
     try{
       setLoadError('');
@@ -246,7 +315,8 @@ export default function PhotosPage(){
       const d=await r.json();
       setPhotos(d.photos||[]);
       signedAt.current=Date.now();
-    }catch{ if(!opts?.silent){setPhotos([]);setLoadError('Failed to load. Please try again.');} }
+      return (d.photos||[]) as any[];
+    }catch{ if(!opts?.silent){setPhotos([]);setLoadError('Failed to load. Please try again.');} return null; }
     finally{ if(!opts?.silent) setLoading(false); }
   },[projectId]);
 
@@ -337,7 +407,8 @@ export default function PhotosPage(){
     return()=>window.removeEventListener('saguaro:outbox-synced',synced);
   },[projectId,softReload,refreshWaiting]);
   function openUpload(){
-    setUploadAlbum(filterAlbum!=='All'&&filterAlbum!==FILES_ALBUM&&filterAlbum!==VIDEO_ALBUM?filterAlbum:'General');
+    const inView=view==='albums'?(openAlbum||'All'):filterAlbum;
+    setUploadAlbum(inView!=='All'&&inView!==FILES_ALBUM&&inView!==VIDEO_ALBUM?inView:'General');
     setUploadOpen(true);
   }
   function addFiles(files:FileList|File[]){
@@ -545,48 +616,40 @@ export default function PhotosPage(){
   }
 
   const today=new Date();
-  const inThisMonth=(p:any)=>{
-    if(!p.taken_at) return false;
-    const d=new Date(p.taken_at);
-    return d.getFullYear()===today.getFullYear()&&d.getMonth()===today.getMonth();
-  };
+  const inThisMonth=(p:any)=>matchesPhotoFilter(p,{thisMonth:true,now:today});
   const thisMonth=photos.filter(inThisMonth).length;
   const albums=Array.from(new Set(photos.map((p:any)=>p.album).filter(Boolean))) as string[];
-  const issueCount=photos.filter((p:any)=>p.album==='Issues'||(Array.isArray(p.tags)&&p.tags.some((t:string)=>t.toLowerCase().includes('issue')))).length;
+  /* Albums a photo can be filed to: the standard set plus every name this job
+     already uses. Video and From Files are system groupings, not destinations. */
+  const albumOptions=[...ALBUMS, ...albums.filter(a=>!ALBUMS.includes(a)&&a!==VIDEO_ALBUM&&a!==FILES_ALBUM).sort((a,b)=>a.localeCompare(b))];
+  const issueCount=photos.filter(isIssuePhoto).length;
+  const geoCount=photos.filter((p:any)=>!!photoGeo(p)).length;
   const videoCount=photos.filter(isVideo).length;
   const lastPhoto=photos.reduce<any>((m,p)=>(p.taken_at&&(!m||p.taken_at>m.taken_at)?p:m),null);
+  const uploaderList=uploadersOf(photos);
 
-  const filtered=photos.filter((p:any)=>{
-    const ms=!search||(p.title||'').toLowerCase().includes(search.toLowerCase())
-      ||(p.location||'').toLowerCase().includes(search.toLowerCase())
-      ||(Array.isArray(p.tags)&&p.tags.some((t:string)=>t.toLowerCase().includes(search.toLowerCase())));
-    const ma=filterAlbum==='All'||p.album===filterAlbum;
-    const mp=periodFilter==='all'||inThisMonth(p);
-    return ms&&ma&&mp;
-  });
+  /* Every filter but the album: the Albums view counts its tiles from this, so
+     a search narrows the albums too. */
+  const baseFilter:PhotoFilter={ search, from:dateFrom, to:dateTo, uploader, hasLocation:hasLoc, issuesOnly, thisMonth:periodFilter==='month', now:today };
+  const effectiveAlbum = view==='albums' ? (openAlbum||'All') : filterAlbum;
+  const filtered=photos.filter((p:any)=>matchesPhotoFilter(p,{...baseFilter, album:effectiveAlbum}));
 
-  // Group by date (default) or album for display
-  const [groupBy,setGroupBy]=useState<'date'|'album'>('date');
-  const grouped:Record<string,any[]>={};
-  const ordered:any[]=[]; // the visible order — what ← / → step through
-  if(filterAlbum==='All'){
-    const src=groupBy==='date'
-      ?[...filtered].sort((a,b)=>String(b.taken_at||'').localeCompare(String(a.taken_at||'')))
-      :filtered;
-    for(const p of src){
-      const key=groupBy==='album'
-        ?(p.album||'General')
-        :(p.taken_at&&!isNaN(new Date(p.taken_at).getTime())?new Date(p.taken_at).toLocaleDateString('en-US',{weekday:'short',month:'short',day:'numeric',year:'numeric'}):'No date');
-      if(!grouped[key]) grouped[key]=[];
-      grouped[key].push(p);
-    }
-    for(const k of Object.keys(grouped)) ordered.push(...grouped[k]);
-  } else {
-    ordered.push(...filtered);
-  }
+  // The visible order — what ← / → and the lightbox step through.
+  const ordered:any[]=[];
+  const months = view==='timeline' ? groupByMonth(filtered).map(m=>({ ...m, days: groupByDay(m.items) })) : [];
+  const clusters = view==='map' ? clusterByLocation(filtered) : [];
+  const noGeo = view==='map' ? filtered.filter((p:any)=>!photoGeo(p)).length : 0;
+  const albumTiles = view==='albums' && !openAlbum
+    ? albumSummaries(photos.filter((p:any)=>matchesPhotoFilter(p,baseFilter)), [...ALBUMS, VIDEO_ALBUM, FILES_ALBUM])
+    : [];
+  if(view==='timeline') for(const m of months) for(const d of m.days) ordered.push(...d.items);
+  else if(view==='map') for(const c of clusters) ordered.push(...c.items);
+  // Album tiles have no grid; the viewer still steps through what the filters show.
+  else ordered.push(...groupByDay(filtered).flatMap(g=>g.items));
 
-  const filtersActive = !!search || filterAlbum!=='All' || periodFilter!=='all';
-  const clearFilters = () => { setSearch(''); setFilterAlbum('All'); setPeriodFilter('all'); };
+  const moreActive=[dateFrom,dateTo,uploader].filter(Boolean).length+(hasLoc?1:0)+(issuesOnly?1:0);
+  const filtersActive = !!search || filterAlbum!=='All' || periodFilter!=='all' || moreActive>0;
+  const clearFilters = () => { setSearch(''); setFilterAlbum('All'); setPeriodFilter('all'); setDateFrom(''); setDateTo(''); setUploader(''); setHasLoc(false); setIssuesOnly(false); };
 
   // ← / → step through the visible photos; Esc closes the viewer. Ignored while
   // typing, while the composer is open, and while the crop editor is up.
@@ -611,7 +674,7 @@ export default function PhotosPage(){
     // eslint-disable-next-line react-hooks/exhaustive-deps
   },[selIndex]);
   useEffect(()=>{
-    if(mode!=='view'||!selected||editingPhoto||lightboxOpen||uploadOpen) return;
+    if(mode!=='view'||!selected||editingPhoto||lightboxOpen||uploadOpen||markup) return;
     const onKey=(e:KeyboardEvent)=>{
       const t=e.target as HTMLElement|null;
       if(t&&(t.tagName==='INPUT'||t.tagName==='TEXTAREA'||t.tagName==='SELECT'||t.isContentEditable)) return;
@@ -622,22 +685,190 @@ export default function PhotosPage(){
     window.addEventListener('keydown',onKey);
     return ()=>window.removeEventListener('keydown',onKey);
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  },[mode, selected, editingPhoto, stepTo, lightboxOpen, uploadOpen]);
+  },[mode, selected, editingPhoto, stepTo, lightboxOpen, uploadOpen, markup]);
 
   // ── Stat tiles: each opens the gallery filtered to that slice ──
   const stats: StatItem[] = loading
     ? [
         { label:'Photos & Video', value:'—', sub:'Loading…', icon:<Images size={15}/> },
         { label:'This Month', value:'—', sub:'Loading…', icon:<CalendarBlank size={15}/> },
-        { label:'Issues Tagged', value:'—', sub:'Loading…', icon:<WarningCircle size={15}/> },
+        { label:'Issues', value:'—', sub:'Loading…', icon:<WarningCircle size={15}/> },
+        { label:'With Location', value:'—', sub:'Loading…', icon:<MapPin size={15}/> },
         { label:'Last Added', value:'—', sub:'Loading…', icon:<Camera size={15}/> },
       ]
     : [
-        { label:'Photos & Video', value:photos.length, icon: videoCount>0 ? <VideoCamera size={15}/> : <Images size={15}/>, sub: filtersActive ? 'Click to show everything' : videoCount>0 ? `${videoCount} video${videoCount===1?'':'s'} · ${albums.length} album${albums.length===1?'':'s'}` : albums.length>0 ? `${albums.length} album${albums.length===1?'':'s'} in use` : 'No albums yet', onClick: filtersActive ? clearFilters : undefined },
-        { label:'This Month', value:thisMonth, icon:<CalendarBlank size={15}/>, tone: thisMonth>0 ? 'good' : 'default', sub: periodFilter==='month' ? 'Filtered — click to clear' : 'Added since the 1st', onClick: () => setPeriodFilter(p => (p==='month' ? 'all' : 'month')), active: periodFilter==='month' },
-        { label:'Issues Tagged', value:issueCount, icon:<WarningCircle size={15}/>, tone: issueCount>0 ? 'bad' : 'default', sub: filterAlbum==='Issues' ? 'Filtered — click to clear' : issueCount>0 ? 'Flagged for follow-up' : 'Clean so far', onClick: () => setFilterAlbum(a => (a==='Issues' ? 'All' : 'Issues')), active: filterAlbum==='Issues' },
-        { label:'Last Added', value: lastPhoto ? fmtDate(lastPhoto.taken_at) : '—', icon:<Camera size={15}/>, sub: lastPhoto ? `${isVideo(lastPhoto)?'Video':'Photo'} · ${lastPhoto.title || 'Most recent capture'}` : 'Nothing documented yet', onClick: lastPhoto ? () => viewPhoto(lastPhoto) : undefined },
+        { label:'Photos & Video', value:photos.length, icon: videoCount>0 ? <VideoCamera size={15}/> : <Images size={15}/>, sub: filtersActive ? `${filtered.length} showing — click for all` : videoCount>0 ? `${videoCount} video${videoCount===1?'':'s'} · ${albums.length} album${albums.length===1?'':'s'}` : albums.length>0 ? `${albums.length} album${albums.length===1?'':'s'} in use` : 'No albums yet', onClick: filtersActive ? clearFilters : undefined },
+        { label:'This Month', value:thisMonth, icon:<CalendarBlank size={15}/>, tone: thisMonth>0 ? 'good' : 'default', sub: periodFilter==='month' ? 'Filtered — click to clear' : 'Since the 1st', onClick: () => setPeriodFilter(p => (p==='month' ? 'all' : 'month')), active: periodFilter==='month' },
+        { label:'Issues', value:issueCount, icon:<WarningCircle size={15}/>, tone: issueCount>0 ? 'bad' : 'default', sub: issuesOnly ? 'Filtered — click to clear' : issueCount>0 ? 'Issues album, tag or flag' : 'Clean so far', onClick: () => setIssuesOnly(v=>!v), active: issuesOnly },
+        { label:'With Location', value:geoCount, icon:<MapPin size={15}/>, sub: hasLoc ? 'Filtered — click to clear' : geoCount>0 ? `${photos.length-geoCount} without GPS` : 'No GPS stamps yet', onClick: geoCount>0||hasLoc ? () => setHasLoc(v=>!v) : undefined, active: hasLoc },
+        { label:'Last Added', value: lastPhoto ? fmtDate(lastPhoto.taken_at) : '—', icon:<Camera size={15}/>, sub: lastPhoto ? `${isVideo(lastPhoto)?'Video':'Photo'} · ${lastPhoto.title || 'Most recent capture'}` : 'Nothing documented yet', onClick: lastPhoto ? () => openPhoto(lastPhoto) : undefined },
       ];
+
+  /* ── Select mode ── */
+  const byId=(id:string)=>photos.find((p:any)=>String(p.id)===id);
+  const pickedRows=[...picked].map(byId).filter(Boolean) as any[];
+  const togglePick=(p:any)=>{
+    setPicking(true);
+    setPicked(prev=>{ const n=new Set(prev); const k=String(p.id); if(n.has(k)) n.delete(k); else n.add(k); return n; });
+  };
+  const endPicking=()=>{ setPicking(false); setPicked(new Set()); setTargetAlbum(null); };
+  const allVisiblePicked=ordered.length>0&&ordered.every((p:any)=>picked.has(String(p.id)));
+  const pickAllVisible=()=>setPicked(allVisiblePicked?new Set():new Set(ordered.map((p:any)=>String(p.id))));
+  // Escape leaves select mode (when no viewer / dialog is on top).
+  useEffect(()=>{
+    if(!picking||lightboxOpen||markup||albumDlg||sendTargets) return;
+    const onKey=(e:KeyboardEvent)=>{ if(e.key==='Escape'){ e.preventDefault(); endPicking(); } };
+    window.addEventListener('keydown',onKey);
+    return ()=>window.removeEventListener('keydown',onKey);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  },[picking,lightboxOpen,markup,albumDlg,sendTargets]);
+
+  /** Photos rows this screen may re-file (library images and videos are not photos rows). */
+  const fileable=(p:any)=>!isFromFiles(p)&&!isVideo(p);
+  /** What the job-move API takes for a row; null for a read-only library image. */
+  const moveItemOf=(p:any):MoveItem|null=>isVideo(p)&&p.file_id?{kind:'file',id:String(p.file_id)}:isFromFiles(p)?null:{kind:'photo',id:String(p.id)};
+
+  async function bulkDownload(){
+    const rows=pickedRows.filter(p=>p.url);
+    if(!rows.length) return;
+    setBulkBusy('download');
+    try{
+      const r=await saveMediaMany(rows.map(p=>({url:p.url,title:p.title,kind:isVideo(p)?'video':'image'})),(d,t)=>setBulkBusy(`download:${d}/${t}`));
+      if(r.result==='cancelled'&&!r.failed) return;
+      showToast(r.failed?`${r.saved} saved, ${r.failed} couldn't be downloaded.`:`${r.saved} saved.`, r.failed?'bad':undefined);
+    }catch(e){ console.error('[photos] bulk download',e); showToast("Couldn't save those — check your connection.",'bad'); }
+    finally{ setBulkBusy(''); }
+  }
+
+  /** Re-file photos into an album (PUT /api/photos/[id] { album }), four at a time. */
+  async function fileInto(rows:any[], album:string):Promise<{ok:number;bad:number}>{
+    const h=await getAuthHeaders();
+    let ok=0,bad=0;
+    for(let i=0;i<rows.length;i+=4){
+      const res=await Promise.all(rows.slice(i,i+4).map(p=>fetch(`/api/photos/${p.id}`,{method:'PUT',headers:{...h,'Content-Type':'application/json'},body:JSON.stringify({album})}).then(r=>r.ok,()=>false)));
+      for(const r of res) r?ok++:bad++;
+    }
+    return {ok,bad};
+  }
+  async function moveToAlbum(album:string){
+    const rows=pickedRows.filter(fileable);
+    const skipped=pickedRows.length-rows.length;
+    if(!rows.length){ showToast('Videos and Files & Media images keep their own album.','bad'); return false; }
+    setBulkBusy('move');
+    try{
+      const {ok,bad}=await fileInto(rows,album);
+      const tail=[bad?`${bad} didn't save`:'',skipped?`${skipped} skipped (video or Files & Media)`:''].filter(Boolean).join(', ');
+      showToast(`${ok} moved to ${album}.${tail?` ${tail}.`:''}`, bad?'bad':undefined);
+      await load({silent:true});
+      endPicking();
+      return true;
+    }finally{ setBulkBusy(''); }
+  }
+  async function bulkDelete(){
+    const rows=pickedRows.filter(p=>!isFromFiles(p)||(isVideo(p)&&p.file_id));
+    const skipped=pickedRows.length-rows.length;
+    if(!rows.length){ showToast('Files & Media images are deleted in Files & Media.','bad'); return; }
+    if(!(await confirmDialog({ title:`Delete ${rows.length} item${rows.length===1?'':'s'}?`, message:`This removes ${rows.length===1?'it':'them'} from the job for everyone.${skipped?` ${skipped} Files & Media image${skipped===1?'':'s'} will be left alone.`:''}`, danger:true }))) return;
+    setBulkBusy('delete');
+    try{
+      const h=await getAuthHeaders();
+      let ok=0,denied=0,bad=0;
+      for(const p of rows){
+        const r=await fetch(isVideo(p)&&p.file_id?`/api/files/${p.file_id}`:`/api/photos/${p.id}`,{method:'DELETE',headers:h}).catch(()=>null);
+        if(r?.ok) ok++; else if(r?.status===403) denied++; else bad++;
+      }
+      if(selected&&picked.has(String(selected.id))) closePanel();
+      showToast([`${ok} deleted.`, denied?`${denied} need full Documents access.`:'', bad?`${bad} failed.`:''].filter(Boolean).join(' '), denied||bad?'bad':undefined);
+      endPicking();
+      await load({silent:true});
+    }finally{ setBulkBusy(''); }
+  }
+  function bulkSend(){
+    const items=pickedRows.map(moveItemOf).filter(Boolean) as MoveItem[];
+    const skipped=pickedRows.length-items.length;
+    if(!items.length){ showToast('Files & Media images move from Files & Media.','bad'); return; }
+    if(items.length>100){ showToast('Send at most 100 at once — pick fewer.','bad'); return; }
+    if(skipped) showToast(`${skipped} Files & Media image${skipped===1?'':'s'} will stay — move ${skipped===1?'it':'them'} from Files & Media.`);
+    setSendTargets({items, what: items.length===1?'this item':`${items.length} items`, bulk:true});
+  }
+
+  /* ── Albums: an album is the `album` column on each photo, so New and Rename re-file photos ── */
+  async function submitAlbumDlg(){
+    if(!albumDlg) return;
+    setAlbumErr('');
+    const name=cleanAlbumName(albumDlg.mode==='move'&&albumDlg.choice!=='__new'?albumDlg.choice:albumDlg.name);
+    if(!name){ setAlbumErr('Give the album a name.'); return; }
+    if(name===VIDEO_ALBUM||name===FILES_ALBUM){ setAlbumErr(`"${name}" is filled automatically — pick another name.`); return; }
+    if(albumDlg.mode==='new'){
+      setAlbumDlg(null);
+      setTargetAlbum(name); setPicking(true); setPicked(new Set()); setView('timeline'); setOpenAlbum(null);
+      showToast(`Pick photos for ${name}, then Add to Album.`);
+      return;
+    }
+    if(albumDlg.mode==='move'){ if(await moveToAlbum(name)) setAlbumDlg(null); return; }
+    // rename
+    const from=albumDlg.from||'General';
+    if(name===from){ setAlbumDlg(null); return; }
+    const rows=photos.filter((p:any)=>fileable(p)&&(p.album||'General')===from);
+    if(!rows.length){ setAlbumErr('Nothing in this album can be renamed here.'); return; }
+    setBulkBusy('rename');
+    try{
+      const {ok,bad}=await fileInto(rows,name);
+      showToast(bad?`${ok} renamed, ${bad} didn't save — try again.`:`Renamed to ${name}.`, bad?'bad':undefined);
+      setAlbumDlg(null);
+      await load({silent:true});
+      setOpenAlbum(name);
+    }finally{ setBulkBusy(''); }
+  }
+
+  /* ── Markup: the marked-up image is a NEW photo; the original is never touched ── */
+  const markupSaved=useRef<any>(null);
+  async function saveMarkup(photo:any, blob:Blob):Promise<boolean>{
+    try{
+      const h=await getAuthHeaders();
+      const base=(photo.title||'Photo').replace(/ \(marked up\)$/,'');
+      const album=photo.album&&photo.album!==FILES_ALBUM&&photo.album!==VIDEO_ALBUM?photo.album:'General';
+      const fd=new FormData();
+      fd.append('projectId',projectId);
+      fd.append('file',blob,`${titleFromFileName(base).replace(/\s+/g,'-').slice(0,60)||'photo'}-marked-up.jpg`);
+      fd.append('category',album);
+      fd.append('caption',`${base} (marked up)`);
+      const g=photoGeo(photo);
+      if(g) fd.append('location',`${g.lat},${g.lng}`);
+      const up=await fetch('/api/photos/upload',{method:'POST',headers:h,body:fd});
+      if(!up.ok) throw await errorFrom(up,"The marked-up photo didn't save. Try again.");
+      const newId=(await up.json().catch(()=>null))?.photo?.id;
+      if(newId){
+        const meta=await fetch(`/api/photos/${newId}`,{method:'PUT',headers:{...h,'Content-Type':'application/json'},body:JSON.stringify({
+          title:`${base} (marked up)`, description:photo.description||photo.caption||'', album,
+          taken_at:photo.taken_at||new Date().toISOString(), tags:photoTags(photo), location:photo.location||'',
+        })});
+        if(!meta.ok) showToast('Saved, but the title and details did not copy over — edit them on the new photo.','bad');
+        else showToast('Saved as a new photo. The original is unchanged.');
+      } else showToast('Saved as a new photo. The original is unchanged.');
+      const fresh=await load({silent:true});
+      markupSaved.current=newId&&fresh?fresh.find((p:any)=>p.id===newId)||null:null;
+      return true;
+    }catch(e){
+      console.error('[photos] markup save',e);
+      showToast(humanError(e,"The marked-up photo didn't save. Try again."),'bad');
+      return false;
+    }
+  }
+  function startMarkup(photo:any, fromViewer:boolean){
+    if(!photo?.url||isVideo(photo)) return;
+    if(fromViewer){ setLightboxOpen(false); }
+    setMarkup({photo,reopen:fromViewer});
+  }
+  function closeMarkup(){
+    const m=markup;
+    const saved=markupSaved.current;
+    markupSaved.current=null;
+    setMarkup(null);
+    // Back to the viewer it came from — on the new marked-up photo once saved.
+    if(m?.reopen){ viewPhoto(saved||m.photo); setLightboxFromTap(true); setLightboxOpen(true); }
+    else if(saved) viewPhoto(saved);
+  }
 
   // A tap opens the lightbox only; the details card waits for its Details button.
   const detailOpen = !!selected && mode!=='create' && !(lightboxOpen && lightboxFromTap);
@@ -656,13 +887,32 @@ export default function PhotosPage(){
     <PhotoCard
       key={photo.id}
       photo={photo}
-      selected={selected?.id===photo.id&&mode!=='create'}
-      onClick={()=>openPhoto(photo)}
+      selected={!picking&&selected?.id===photo.id&&mode!=='create'}
+      picking={picking}
+      picked={picked.has(String(photo.id))}
+      onPick={()=>togglePick(photo)}
+      onClick={()=>picking?togglePick(photo):openPhoto(photo)}
       onInfo={()=>viewPhoto(photo)}
       onEdit={(id,url)=>setEditingPhoto({id,url})}
       onStale={resign}
     />
   );
+
+  /** Timeline: jump straight to a month; the rail marks the month in view. */
+  const [monthInView,setMonthInView]=useState('');
+  const monthKeys=months.map(m=>m.key).join('|');
+  useEffect(()=>{
+    if(view!=='timeline'||typeof IntersectionObserver==='undefined') return;
+    const els=Array.from(document.querySelectorAll<HTMLElement>('[data-ph-month]'));
+    if(!els.length) return;
+    const io=new IntersectionObserver((entries)=>{
+      const top=entries.filter(e=>e.isIntersecting).sort((a,b)=>a.boundingClientRect.top-b.boundingClientRect.top)[0];
+      if(top) setMonthInView((top.target as HTMLElement).dataset.phMonth||'');
+    },{rootMargin:'-60px 0px -60% 0px'});
+    els.forEach(el=>io.observe(el));
+    return ()=>io.disconnect();
+  },[view,monthKeys]);
+  const jumpTo=(key:string)=>{ document.getElementById(`ph-m-${key}`)?.scrollIntoView({behavior:'smooth',block:'start'}); setMonthInView(key); };
 
   // ── Gallery body: loading / error / empty / no-match / tiles — each distinct ──
   let galleryBody: React.ReactNode;
@@ -697,37 +947,113 @@ export default function PhotosPage(){
         action={<Button icon={<Plus size={15} weight="bold"/>} onClick={openUpload}>Add Photos &amp; Video</Button>}
       />
     );
+  } else if (view==='albums' && !openAlbum) {
+    galleryBody = albumTiles.length===0 ? (
+      <EmptyState icon={<FolderOpen size={22}/>} title="No albums match these filters" action={<Button onClick={clearFilters}>Clear Filters</Button>}/>
+    ) : (
+      <div className="phAlbumGrid">
+        {albumTiles.map(a=>(
+          <AlbumTile key={a.name} name={a.name} count={a.count} latest={a.latest} cover={a.cover} onOpen={()=>{ setOpenAlbum(a.name); setPicked(new Set()); }} onStale={resign}/>
+        ))}
+      </div>
+    );
   } else if (filtered.length===0) {
     galleryBody = (
       <EmptyState
         icon={<Camera size={22}/>}
-        title="No photos match these filters"
-        text="Clear the search, album, or month filter to see more."
-        action={<Button onClick={clearFilters}>Clear Filters</Button>}
+        title={view==='albums' ? `Nothing in ${openAlbum} matches` : 'No photos match these filters'}
+        action={filtersActive ? <Button onClick={clearFilters}>Clear Filters</Button> : view==='albums' ? <Button onClick={()=>setOpenAlbum(null)}>All Albums</Button> : undefined}
       />
     );
-  } else if (filterAlbum==='All') {
+  } else if (view==='map') {
+    galleryBody = clusters.length===0 ? (
+      <EmptyState icon={<MapPin size={22}/>} title="No GPS on these photos" text={`${noGeo} photo${noGeo===1?'':'s'} without a location stamp. Photos added from a phone are stamped where they were taken.`}/>
+    ) : (
+      <div className="phGallery">
+        {clusters.map((c,i)=>{
+          const ds=c.items.map((p:any)=>p.taken_at).filter(Boolean).sort();
+          const span=ds.length?(fmtDate(ds[0])===fmtDate(ds[ds.length-1])?fmtDate(ds[0]):`${fmtDate(ds[0])} – ${fmtDate(ds[ds.length-1])}`):'';
+          const f={lat:c.lat,lng:c.lng};
+          return (
+            <div key={c.key} className="phGeo">
+              <div className="phGeoHead">
+                <MapPin size={16} weight="fill"/>
+                <strong>Spot {i+1}</strong>
+                <span>{c.items.length} item{c.items.length===1?'':'s'}</span>
+                {span && <span>· {span}</span>}
+                <a className="k-link" href={fixMapUrl(f)} target="_blank" rel="noopener noreferrer">{fixLabel(f)} · Open in Maps</a>
+              </div>
+              <div className="phGrid">{c.items.map(card)}</div>
+            </div>
+          );
+        })}
+        {noGeo>0 && <div className="phMuted" style={{fontSize:'var(--fs-sm)'}}>{noGeo} more without a location stamp — see Timeline.</div>}
+      </div>
+    );
+  } else if (view==='albums') {
     galleryBody = (
       <div className="phGallery">
-        {Object.entries(grouped).map(([group,groupPhotos])=>(
-          <div key={group}>
-            <div className="phGroupHead">
-              {groupBy==='album' ? <Badge tone={albumBadge(group).tone}>{group}</Badge> : <span>{group}</span>}
-              <small>{groupPhotos.length}</small>
-            </div>
-            <div className="phGrid">{groupPhotos.map(card)}</div>
-          </div>
-        ))}
+        <div className="phGrid">{ordered.map(card)}</div>
       </div>
     );
   } else {
     galleryBody = (
       <div className="phGallery">
-        <div className="phGrid">{filtered.map(card)}</div>
+        {months.map(m=>(
+          <section key={m.key} id={`ph-m-${m.key}`} data-ph-month={m.key} className="phMonth">
+            <div className="phMonthHead">{m.label}<small>{m.items.length}</small></div>
+            {m.days.map(d=>(
+              <div key={d.key}>
+                <div className="phGroupHead"><span>{d.label}</span><small>{d.items.length}</small></div>
+                <div className="phGrid">{d.items.map(card)}</div>
+              </div>
+            ))}
+          </section>
+        ))}
       </div>
     );
   }
 
+  /** The lightbox's details panel: everything about the photo, plus its actions. */
+  const lightboxDetails = (it:LightboxItem) => {
+    const p=ordered.find((x:any)=>String(x.id)===it.id);
+    if(!p) return null;
+    const fix=photoGeo(p);
+    const ro=isFromFiles(p)&&!isVideo(p);
+    const linked:[string,React.ReactNode][]=[];
+    if(p.punch_list_item_id) linked.push(['Punch Item', <a key="pl" className="k-link" href={`/app/projects/${projectId}/punch-list`}>Open Punch List</a>]);
+    if(p.drawing_sheet_number||p.drawing_sheet_id) linked.push(['Drawing', <a key="dw" className="k-link" href={`/app/projects/${projectId}/drawings`}>{p.drawing_sheet_number?`Sheet ${p.drawing_sheet_number}`:'Open Drawings'}</a>]);
+    const tags=photoTags(p);
+    return (
+      <div className="phPanel">
+        <h2>{p.title||'Untitled'}</h2>
+        <div className="phBadges">
+          <Badge tone={albumBadge(p.album).tone} dot>{albumBadge(p.album).label}</Badge>
+          {isIssuePhoto(p) && p.album!=='Issues' && <Badge tone="overdue">Issue</Badge>}
+          {ro && <Badge tone="closed">Read-Only</Badge>}
+        </div>
+        {(p.description||p.caption) && <div className="phProse">{p.description||p.caption}</div>}
+        <DetailList items={[
+          ['Taken', fmtDate(p.taken_at)],
+          ['Uploaded By', p.taken_by || ''],
+          ['Location', p.location || ''],
+          ...(fix ? [['GPS', <a key="gps" className="k-link" href={fixMapUrl(fix)} target="_blank" rel="noopener noreferrer">{fixLabel(fix)}</a>] as [string, React.ReactNode]] : []),
+          ...(isVideo(p) && p.duration_seconds ? [['Length', fmtDuration(p.duration_seconds)] as [string,string]] : []),
+          ...linked,
+          ['Source', isVideo(p) ? 'Video library' : ro ? 'Files & Media' : 'Site Photos'],
+        ]}/>
+        {tags.length>0 && (
+          <div className="phBadges">{tags.map(t=><Badge key={t} tone={t.toLowerCase().includes('issue')?'overdue':'neutral'}>{t}</Badge>)}</div>
+        )}
+        <div className="phActions">
+          {!isVideo(p) && p.url && <Button icon={<Scribble size={16}/>} onClick={()=>startMarkup(p,true)}>Mark Up</Button>}
+          {!ro && !isVideo(p) && <Button icon={<PencilSimple size={16}/>} onClick={()=>{ setLightboxOpen(false); setLightboxFromTap(false); openEdit(p); }}>Edit Details</Button>}
+          {!ro && !isVideo(p) && p.url && <Button icon={<Crop size={16}/>} onClick={()=>{ setLightboxOpen(false); setLightboxFromTap(false); viewPhoto(p); setEditingPhoto({id:p.id,url:p.url}); }}>Crop / Rotate</Button>}
+          {ro && <Button icon={<FolderOpen size={16}/>} href={`/app/projects/${projectId}/files`}>Manage in Files &amp; Media</Button>}
+        </div>
+      </div>
+    );
+  };
   const detailWorkspace = detailOpen && (
     <div ref={detailRef} className="phDetailCq" style={{ scrollMarginTop: 84 }}>
       <div className="phDetail">
@@ -814,6 +1140,11 @@ export default function PhotosPage(){
                     Edit / Crop / Rotate
                   </Button>
                 )}
+                {!isVideo(selected) && selected.url && (
+                  <Button icon={<Scribble size={16}/>} onClick={()=>startMarkup(selected,false)} title="Draw on a copy — the original stays as it is">
+                    Mark Up (Saves a Copy)
+                  </Button>
+                )}
                 <div className="phActionsRow">
                   {selected.url && (
                     <Button icon={isVideo(selected)?<Play size={16}/>:<ArrowsOut size={16}/>} onClick={()=>setLightboxOpen(true)}>
@@ -855,6 +1186,24 @@ export default function PhotosPage(){
           onSent={(name)=>{ setSendOpen(false); closePanel(); showToast(`Sent to ${name}.`); softReload(); }}
         />
       )}
+      {sendTargets && (
+        <SendToJobDialog
+          open
+          fromProjectId={projectId}
+          what={sendTargets.what}
+          items={sendTargets.items}
+          onClose={()=>setSendTargets(null)}
+          onSent={(name)=>{ const n=sendTargets.items.length; setSendTargets(null); endPicking(); if(selected&&sendTargets.items.some(i=>i.id===String(selected.id)||i.id===String(selected.file_id))) closePanel(); showToast(`${n} sent to ${name}.`); softReload(); }}
+        />
+      )}
+      {markup && (
+        <PhotoMarkup
+          src={markup.photo.url}
+          title={`Mark up — ${markup.photo.title||'Photo'}`}
+          onClose={closeMarkup}
+          onSave={(blob)=>saveMarkup(markup.photo,blob)}
+        />
+      )}
 
       <MediaUploadPanel
         open={uploadOpen}
@@ -873,7 +1222,7 @@ export default function PhotosPage(){
         )}
       >
         <Field label="Album for these photos" hint="Videos go to the Video album.">
-          <Select value={uploadAlbum} onChange={e=>setUploadAlbum(e.target.value)} options={ALBUMS}/>
+          <Select value={uploadAlbum} onChange={e=>setUploadAlbum(e.target.value)} options={albumOptions}/>
         </Field>
       </MediaUploadPanel>
 
@@ -882,6 +1231,15 @@ export default function PhotosPage(){
           items={lightboxItems}
           index={Math.max(0, selIndex)}
           onIndex={(i)=>{ const next=ordered[i]; if(next) viewPhoto(next); }}
+          details={lightboxDetails}
+          actions={(it)=>{
+            const p=ordered.find((x:any)=>String(x.id)===it.id);
+            return p&&!isVideo(p)&&p.url ? (
+              <button type="button" className="zlBtn" aria-label="Mark up this photo" title="Mark up (saves a new photo)" onClick={()=>startMarkup(p,true)}>
+                <Scribble size={19}/><span className="zlHideSm">Mark Up</span>
+              </button>
+            ) : null;
+          }}
           onClose={()=>{ setLightboxOpen(false); if(lightboxFromTap){ setLightboxFromTap(false); closePanel(); } }}
           onInfo={()=>{ setLightboxOpen(false); setLightboxFromTap(false); }}
           onMediaError={()=>load({silent:true})}
@@ -956,48 +1314,141 @@ export default function PhotosPage(){
         <SubInbox projectId={projectId} focus={inboxFocus} onChanged={()=>load({silent:true})} onToast={(m,t)=>showToast(m,t)}/>
 
         {!loading && !loadError && photos.length>0 && (
-          <Toolbar
-            search={search}
-            onSearch={setSearch}
-            placeholder="Search by title, location, or tag…"
-            filters={
-              <>
-                <Select
-                  aria-label="Album"
-                  value={filterAlbum}
-                  onChange={e=>setFilterAlbum(e.target.value)}
-                  style={{ width:'auto', minWidth:150 }}
-                  options={[{ value:'All', label:'All Albums' }, ...ALBUMS, ...(albums.includes(VIDEO_ALBUM)?[VIDEO_ALBUM]:[]), ...(albums.includes(FILES_ALBUM)?[FILES_ALBUM]:[])]}
-                />
-                {filtersActive && <Button variant="ghost" size="sm" onClick={clearFilters}>Clear</Button>}
-              </>
-            }
-            actions={
-              <>
-                {filterAlbum==='All' && (
-                  <div className="phTabs">
-                    <Tabs
-                      value={groupBy}
-                      onChange={k=>setGroupBy(k as 'date'|'album')}
-                      tabs={[{ key:'date', label:'By Date' }, { key:'album', label:'By Album' }]}
+          <>
+            <div className="phViews">
+              <Tabs
+                value={view}
+                onChange={k=>{ setView(k as 'timeline'|'albums'|'map'); setOpenAlbum(null); }}
+                tabs={[
+                  { key:'timeline', label:'Timeline' },
+                  { key:'albums', label:'Albums', count: albumSummaries(photos).length },
+                  { key:'map', label:'Location', count: geoCount },
+                ]}
+              />
+              <span className="phSpacer"/>
+              {picking
+                ? <Button variant="ghost" size="sm" icon={<X size={15}/>} onClick={endPicking}>Done Selecting</Button>
+                : <Button size="sm" icon={<CheckSquare size={15}/>} onClick={()=>setPicking(true)}>Select</Button>}
+            </div>
+            <Toolbar
+              search={search}
+              onSearch={setSearch}
+              placeholder="Search title, description, tag, person…"
+              filters={
+                <>
+                  {view!=='albums' && (
+                    <Select
+                      aria-label="Album"
+                      value={filterAlbum}
+                      onChange={e=>setFilterAlbum(e.target.value)}
+                      style={{ width:'auto', minWidth:150 }}
+                      options={[{ value:'All', label:'All Albums' }, ...albumOptions, ...(albums.includes(VIDEO_ALBUM)?[VIDEO_ALBUM]:[]), ...(albums.includes(FILES_ALBUM)?[FILES_ALBUM]:[])]}
                     />
-                  </div>
+                  )}
+                  <Button size="sm" className="phToggle" aria-pressed={showMore||moreActive>0} icon={<Funnel size={15}/>} onClick={()=>setShowMore(v=>!v)}>
+                    {moreActive>0?`Filters · ${moreActive}`:'Filters'}
+                  </Button>
+                  <Button size="sm" className="phToggle" aria-pressed={issuesOnly} icon={<WarningCircle size={15}/>} onClick={()=>setIssuesOnly(v=>!v)}>Issues</Button>
+                  {filtersActive && <Button variant="ghost" size="sm" onClick={clearFilters}>Clear</Button>}
+                </>
+              }
+              actions={<span className="phMuted" style={{ fontSize:'var(--fs-sm)' }}>{view==='albums'&&!openAlbum?`${albumTiles.length} albums`:`${filtered.length} of ${photos.length}`}</span>}
+            />
+            {showMore && (
+              <div className="phMore">
+                <label>From<DateInput value={dateFrom} max={dateTo||undefined} onChange={e=>setDateFrom(e.target.value)} aria-label="From date"/></label>
+                <label>To<DateInput value={dateTo} min={dateFrom||undefined} onChange={e=>setDateTo(e.target.value)} aria-label="To date"/></label>
+                {uploaderList.length>0 && (
+                  <label>Uploaded By
+                    <Select value={uploader} onChange={e=>setUploader(e.target.value)} options={[{value:'',label:'Anyone'}, ...uploaderList]} aria-label="Uploaded by"/>
+                  </label>
                 )}
-                <span className="phMuted" style={{ fontSize:'var(--fs-sm)' }}>{filtered.length} of {photos.length}</span>
-              </>
-            }
-          />
+                <Button size="sm" className="phToggle" aria-pressed={hasLoc} icon={<MapPin size={15}/>} onClick={()=>setHasLoc(v=>!v)}>Has Location</Button>
+              </div>
+            )}
+            {view==='timeline' && months.length>1 && (
+              <nav className="phJump" aria-label="Jump to month">
+                {months.map(m=>(
+                  <button key={m.key} type="button" className="phChip" aria-current={monthInView===m.key?'true':undefined} onClick={()=>jumpTo(m.key)}>
+                    {m.label}<small>{m.items.length}</small>
+                  </button>
+                ))}
+              </nav>
+            )}
+            {view==='albums' && (
+              <div className="phViews">
+                {openAlbum ? (
+                  <>
+                    <Button variant="ghost" size="sm" icon={<CaretLeft size={15}/>} onClick={()=>{ setOpenAlbum(null); setPicked(new Set()); }}>All Albums</Button>
+                    <Badge tone={albumBadge(openAlbum).tone}>{openAlbum}</Badge>
+                    <span className="phSpacer"/>
+                    {openAlbum!==VIDEO_ALBUM && openAlbum!==FILES_ALBUM && (
+                      <Button size="sm" icon={<PencilLine size={15}/>} onClick={()=>{ setAlbumErr(''); setAlbumDlg({mode:'rename',from:openAlbum,name:openAlbum,choice:''}); }}>Rename Album</Button>
+                    )}
+                  </>
+                ) : (
+                  <>
+                    <span className="phSpacer"/>
+                    <Button size="sm" icon={<FolderSimplePlus size={15}/>} onClick={()=>{ setAlbumErr(''); setAlbumDlg({mode:'new',name:'',choice:''}); }}>New Album</Button>
+                  </>
+                )}
+              </div>
+            )}
+          </>
         )}
 
         <div className="phCq">
-          <div className="phSplit" data-open={detailOpen?'true':'false'}>
+          <div className="phSplit" data-open={detailOpen&&!picking?'true':'false'}>
             <div className="phList">
               <Card flush>{galleryBody}</Card>
+              {picking && (
+                <div className="phBulk" role="toolbar" aria-label="Selected items">
+                  <strong>{picked.size} selected{targetAlbum?` for ${targetAlbum}`:''}</strong>
+                  <Button size="sm" icon={allVisiblePicked?<Square size={15}/>:<CheckCircle size={15}/>} onClick={pickAllVisible} disabled={!ordered.length||(view==='albums'&&!openAlbum)}>{allVisiblePicked?'Select None':'Select All'}</Button>
+                  {targetAlbum ? (
+                    <Button variant="primary" size="sm" icon={<FolderSimplePlus size={15}/>} disabled={!picked.size||!!bulkBusy} onClick={()=>moveToAlbum(targetAlbum)}>
+                      {bulkBusy==='move'?'Adding…':`Add to ${targetAlbum}`}
+                    </Button>
+                  ) : (
+                    <>
+                      <Button size="sm" icon={<DownloadSimple size={15}/>} disabled={!picked.size||!!bulkBusy} onClick={bulkDownload}>
+                        {bulkBusy.startsWith('download')?`Saving ${bulkBusy.split(':')[1]||''}…`:'Download'}
+                      </Button>
+                      <Button size="sm" icon={<FolderOpen size={15}/>} disabled={!picked.size||!!bulkBusy} onClick={()=>{ setAlbumErr(''); setAlbumDlg({mode:'move',name:'',choice:albumOptions[0]}); }}>Move to Album</Button>
+                      <Button size="sm" icon={<PaperPlaneTilt size={15}/>} disabled={!picked.size||!!bulkBusy} onClick={bulkSend}>Send to Job</Button>
+                      <Button variant="danger" size="sm" icon={<Trash size={15}/>} disabled={!picked.size||!!bulkBusy} onClick={bulkDelete}>{bulkBusy==='delete'?'Deleting…':'Delete'}</Button>
+                    </>
+                  )}
+                  <Button variant="ghost" size="sm" onClick={endPicking}>Cancel</Button>
+                </div>
+              )}
             </div>
-            {detailWorkspace}
+            {!picking && detailWorkspace}
           </div>
         </div>
       </PageShell>
+
+      <FormModal
+        open={!!albumDlg}
+        onClose={()=>{ if(!bulkBusy) setAlbumDlg(null); }}
+        size="sm"
+        title={albumDlg?.mode==='rename' ? 'Rename Album' : albumDlg?.mode==='move' ? `Move ${picked.size} to Album` : 'New Album'}
+        onSubmit={submitAlbumDlg}
+        submitLabel={albumDlg?.mode==='rename' ? 'Rename' : albumDlg?.mode==='move' ? 'Move' : 'Pick Photos'}
+        busy={!!bulkBusy}
+        error={albumErr||null}
+      >
+        {albumDlg?.mode==='move' && (
+          <Field label="Album">
+            <Select value={albumDlg.choice} onChange={e=>setAlbumDlg(d=>d&&({...d,choice:e.target.value}))} options={[...albumOptions, {value:'__new',label:'New album…'}]}/>
+          </Field>
+        )}
+        {(albumDlg?.mode!=='move' || albumDlg?.choice==='__new') && (
+          <Field label="Album name" hint={albumDlg?.mode==='rename' ? `Every photo in ${albumDlg.from} moves to the new name.` : undefined}>
+            <Input autoFocus value={albumDlg?.name||''} maxLength={60} onChange={e=>setAlbumDlg(d=>d&&({...d,name:e.target.value}))} placeholder="e.g. Level 2 Framing"/>
+          </Field>
+        )}
+      </FormModal>
 
       {/* ── Composer: add / edit ─────────────────────────────────── */}
       <FormModal
@@ -1042,7 +1493,7 @@ export default function PhotosPage(){
             <Input value={form.title} onChange={e=>setForm(f=>({...f,title:e.target.value}))} placeholder="e.g. Foundation pour complete"/>
           </Field>
           <Field label="Album" hint={mode==='create'&&auto.album ? 'Matched your current album filter.' : undefined}>
-            <Select value={form.album} onChange={e=>setForm(f=>({...f,album:e.target.value}))} options={ALBUMS}/>
+            <Select value={form.album} onChange={e=>setForm(f=>({...f,album:e.target.value}))} options={albumOptions.includes(form.album)?albumOptions:[...albumOptions,form.album]}/>
           </Field>
           <Field label="Date Taken" hint={mode==='create'&&auto.date ? 'Defaulted to today.' : undefined}>
             <div className="phDateInput"><SaguaroDatePicker value={form.taken_at} onChange={v=>setForm(f=>({...f,taken_at:v}))} style={DATE_INPUT_STYLE}/></div>
@@ -1078,9 +1529,27 @@ export default function PhotosPage(){
   );
 }
 
-function PhotoCard({photo,selected,onClick,onInfo,onEdit,onStale}:{
-  photo:any;selected:boolean;onClick:()=>void;onInfo?:()=>void;onEdit?:(id:string,url:string)=>void;onStale?:()=>void;
+function PhotoCard({photo,selected,picking=false,picked=false,onPick,onClick,onInfo,onEdit,onStale}:{
+  photo:any;selected:boolean;picking?:boolean;picked?:boolean;onPick?:()=>void;onClick:()=>void;onInfo?:()=>void;onEdit?:(id:string,url:string)=>void;onStale?:()=>void;
 }){
+  /* Long-press (a finger held ~half a second) selects, like the iPhone Photos
+     app; the click that follows the press is swallowed. */
+  const press=useRef<{t:number;x:number;y:number}|null>(null);
+  const longPressed=useRef(false);
+  const cancelPress=()=>{ if(press.current){ window.clearTimeout(press.current.t); press.current=null; } };
+  const onPointerDown=(e:React.PointerEvent)=>{
+    if(e.pointerType==='mouse'||!onPick) return;
+    longPressed.current=false;
+    cancelPress();
+    const t=window.setTimeout(()=>{ press.current=null; longPressed.current=true; onPick(); try{ navigator.vibrate?.(15); }catch(err){ console.debug('[photos] vibrate', err); } },480);
+    press.current={t,x:e.clientX,y:e.clientY};
+  };
+  const onPointerMove=(e:React.PointerEvent)=>{
+    const p=press.current;
+    if(p&&Math.hypot(e.clientX-p.x,e.clientY-p.y)>10) cancelPress();
+  };
+  useEffect(()=>cancelPress,[]);
+  const click=()=>{ if(longPressed.current){ longPressed.current=false; return; } onClick(); };
   const src=isVideo(photo)?photo.thumbnail_url:(photo.thumbnail_url||photo.url);
   const [missing,setMissing]=useState(!photo.url);
   // A dead link is usually an expired signature: ask for fresh links once,
@@ -1096,11 +1565,13 @@ function PhotoCard({photo,selected,onClick,onInfo,onEdit,onStale}:{
     ? new Date(photo.taken_at).toLocaleDateString('en-US',{month:'short',day:'numeric'}) : '';
   const more=[photo.location, photo.taken_by].filter(Boolean).join(' · ');
   return(
-    <div className="phTile" data-sel={selected?'true':undefined} role="button" tabIndex={0}
-      onClick={onClick}
+    <div className="phTile" data-sel={selected?'true':undefined} data-picking={picking?'true':undefined} data-picked={picked?'true':undefined} role="button" tabIndex={0}
+      onClick={click}
+      onPointerDown={onPointerDown} onPointerMove={onPointerMove} onPointerUp={cancelPress} onPointerCancel={cancelPress}
+      onContextMenu={e=>{ if(press.current||longPressed.current) e.preventDefault(); }}
       onKeyDown={e=>{ if(e.target!==e.currentTarget) return; if(e.key==='Enter'||e.key===' '){ e.preventDefault(); onClick(); } }}
-      aria-label={`Open ${photo.title||'photo'}`}
-      aria-pressed={selected}
+      aria-label={picking?`${picked?'Deselect':'Select'} ${photo.title||'photo'}`:`Open ${photo.title||'photo'}`}
+      aria-pressed={picking?picked:selected}
       title={[photo.title||'Untitled', when, more].filter(Boolean).join(' · ')}>
       <div className="phThumb" data-missing={missing?'true':undefined}>
         {!missing ? (
@@ -1114,6 +1585,12 @@ function PhotoCard({photo,selected,onClick,onInfo,onEdit,onStale}:{
           <span><Images size={18}/> No image</span>
         )}
         {isVideo(photo) && !missing && photo.thumbnail_url && <div className="phPlay"><span><Play size={16} weight="fill"/></span></div>}
+        {onPick && (
+          <button type="button" className="phCheck" aria-label={`${picked?'Deselect':'Select'} ${photo.title||'photo'}`} aria-pressed={picked}
+            onClick={(e)=>{ e.stopPropagation(); onPick(); }}>
+            {picked ? <CheckSquare size={20} weight="fill"/> : <Square size={20}/>}
+          </button>
+        )}
         {(onInfo || (photo.url && onEdit && !isFromFiles(photo))) && (
           <div className="phTileTools">
             {onInfo && (
@@ -1138,5 +1615,30 @@ function PhotoCard({photo,selected,onClick,onInfo,onEdit,onStale}:{
         {more && <div className="phCapMore">{more}</div>}
       </div>
     </div>
+  );
+}
+
+/** An album: its newest picture as the cover (whole, never cropped), the name and count under it. */
+function AlbumTile({name,count,latest,cover,onOpen,onStale}:{
+  name:string;count:number;latest:Date|null;cover:any|null;onOpen:()=>void;onStale?:()=>void;
+}){
+  const src=cover?(cover.thumbnail_url||(isVideo(cover)?null:cover.url)):null;
+  const [missing,setMissing]=useState(!src);
+  const retried=useRef(false);
+  useEffect(()=>{ retried.current=false; setMissing(!src); },[src]);
+  const badge=albumBadge(name);
+  return(
+    <button type="button" className="phTile" onClick={onOpen} aria-label={`Open album ${name}, ${count} item${count===1?'':'s'}`}>
+      <div className="phThumb" data-missing={missing?'true':undefined}>
+        {!missing && src
+          // eslint-disable-next-line @next/next/no-img-element
+          ? <img src={src} alt="" loading="lazy" decoding="async" onError={()=>{ if(!retried.current&&onStale){ retried.current=true; onStale(); return; } setMissing(true); }}/>
+          : <span>{name===VIDEO_ALBUM?<VideoCamera size={18}/>:<FolderOpen size={18}/>} {count} item{count===1?'':'s'}</span>}
+      </div>
+      <div className="phCap">
+        <div className="phCapTitle">{badge.tone!=='neutral'?<Badge tone={badge.tone}>{name}</Badge>:name}</div>
+        <div className="phCapMeta"><span>{count} item{count===1?'':'s'}</span>{latest && <span>· {latest.toLocaleDateString('en-US',{month:'short',day:'numeric'})}</span>}</div>
+      </div>
+    </button>
   );
 }
