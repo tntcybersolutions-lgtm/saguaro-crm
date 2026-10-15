@@ -8,7 +8,7 @@
  * amounts read defensively, and a CSV a spreadsheet cannot execute.
  */
 import { describe, test, expect } from '@jest/globals';
-import { buildLevelingGrid, parseLineAmounts, parseAlternates, toLevelingCsv, median } from './bid-leveling';
+import { buildLevelingGrid, parseLineAmounts, parseAlternates, toLevelingCsv, median, normalizeBidSheet, readBidLines, parseBond, moneyToCents } from './bid-leveling';
 import type { ScopeLine, Bidder } from './bidleveling';
 
 const lines: ScopeLine[] = [
@@ -128,5 +128,93 @@ describe('bid leveling grid', () => {
     expect(rows.find((r) => r.startsWith('Finish'))).toBe('Finish,12000.00,10000.00,Excluded (plug 12000.00),14000.00');
     expect(csv).toContain(`"'=HYPERLINK(""x""), finish by others"`);
     expect(rows.find((r) => r.startsWith('Leveled total'))).toBe('Leveled total,,30000.00,34000.00,40500.00');
+  });
+});
+
+describe('bidder price sheet: portal writer ⇄ leveling reader', () => {
+  const ids = ['L1', 'L2', 'L3', 'L4'];
+  const names = { L1: 'Framing', L2: 'Board', L3: 'Finish', L4: 'Cleanup' };
+
+  test('round trip: what the portal stores is what leveling reads', () => {
+    const r = normalizeBidSheet({
+      lines: [
+        { itemId: 'L1', status: 'priced', amount: 12500.555 },
+        { itemId: 'L2', status: 'included', amount: 999 },
+        { itemId: 'L3', status: 'excluded' },
+      ],
+      alternates: [{ label: 'Level 5 finish', amount: 4200, kind: 'add' }, { label: '', amount: '' }, { label: 'Owner-supplied board', amount: '1,500', kind: 'deduct' }],
+      bond: { status: 'priced', amount: 1800 },
+    }, ids, names);
+    expect(r.ok).toBe(true);
+    if (!r.ok) return;
+    expect(r.linesTotalCents).toBe(1_250_056);
+    expect(r.pricedLineCount).toBe(1);
+    expect(r.bondIncluded).toBe(false);
+    /* Every package line is stored; the one not mentioned is Not quoted. */
+    expect(r.unitPriceItems!.lines.map((l) => l.status)).toEqual(['priced', 'included', 'excluded', 'not_quoted']);
+    expect(r.unitPriceItems!.linesTotal).toBe(12500.56);
+
+    /* Through JSON, as the jsonb column stores it. */
+    const stored = JSON.parse(JSON.stringify(r.unitPriceItems));
+    expect(parseLineAmounts(stored, ids)).toEqual({
+      L1: { amountCents: 1_250_056 },
+      L2: { amountCents: null, status: 'included' },
+      L3: { amountCents: null, status: 'excluded' },
+      L4: { amountCents: null, status: 'not_quoted' },
+    });
+    expect(readBidLines(stored, ids)).toEqual([
+      { itemId: 'L1', status: 'priced', amount: 12500.56 },
+      { itemId: 'L2', status: 'included', amount: null },
+      { itemId: 'L3', status: 'excluded', amount: null },
+      { itemId: 'L4', status: 'not_quoted', amount: null },
+    ]);
+    expect(parseBond(stored)).toEqual({ status: 'priced', amountCents: 180_000 });
+    expect(parseAlternates({ alternate_amounts: JSON.parse(JSON.stringify(r.alternateAmounts)) })).toEqual([
+      { key: 'Alt 1', description: 'Level 5 finish', valueCents: 420_000, kind: 'add' },
+      { key: 'Alt 2', description: 'Owner-supplied board', valueCents: 150_000, kind: 'deduct' },
+    ]);
+  });
+
+  test('a stored not-quoted line levels as a gap, an included one does not', () => {
+    const r = normalizeBidSheet({ lines: [{ itemId: 'L1', status: 'priced', amount: 100 }, { itemId: 'L2', status: 'included' }] }, ['L1', 'L2', 'L3']);
+    expect(r.ok).toBe(true);
+    if (!r.ok) return;
+    const amounts = parseLineAmounts(r.unitPriceItems, ['L1', 'L2', 'L3']);
+    expect(amounts.L3.status).toBe('not_quoted');
+    expect(amounts.L2.status).toBe('included');
+  });
+
+  test('server validation: known lines only, numbers ≥ 0, no repeats', () => {
+    const bad = (input: Parameters<typeof normalizeBidSheet>[0]) => {
+      const r = normalizeBidSheet(input, ids, names);
+      return r.ok ? null : r.error;
+    };
+    expect(bad({ lines: [{ itemId: 'OTHER-PACKAGE', status: 'priced', amount: 5 }] })).toMatch(/not part of this bid package/);
+    expect(bad({ lines: [{ itemId: 'L1', status: 'priced', amount: -5 }] })).toMatch(/Framing/);
+    expect(bad({ lines: [{ itemId: 'L1', status: 'priced', amount: 'abc' }] })).toMatch(/Framing/);
+    expect(bad({ lines: [{ itemId: 'L1', status: 'priced', amount: Infinity }] })).toMatch(/Framing/);
+    expect(bad({ lines: [{ itemId: 'L1', status: 'priced' }] })).toMatch(/Framing/);
+    expect(bad({ lines: [{ itemId: 'L1', status: 'priced', amount: 1e11 }] })).toMatch(/Framing/);
+    expect(bad({ lines: [{ itemId: 'L1', status: 'maybe' }] })).toMatch(/Framing/);
+    expect(bad({ lines: [{ itemId: 'L1', status: 'included' }, { itemId: 'L1', status: 'excluded' }] })).toMatch(/twice/);
+    expect(bad({ lines: 'L1=5' })).toMatch(/list/);
+    expect(bad({ alternates: [{ label: 'Upgrade', amount: 0 }] })).toMatch(/above 0/);
+    expect(bad({ alternates: [{ label: '', amount: 50 }] })).toMatch(/Describe/);
+    expect(bad({ bond: { status: 'priced', amount: 0 } })).toMatch(/bond price/);
+    expect(bad({ bond: { status: 'free' } })).toMatch(/bond/);
+    expect(bad({ alternates: Array.from({ length: 11 }, (_, i) => ({ label: `A${i}`, amount: 1 })) })).toMatch(/Up to/);
+  });
+
+  test('a $0 priced line is Included; no sheet stores nothing', () => {
+    const r = normalizeBidSheet({ lines: [{ itemId: 'L1', status: 'priced', amount: 0 }] }, ids);
+    expect(r.ok && r.unitPriceItems!.lines[0]).toEqual({ itemId: 'L1', status: 'included', amount: null });
+    const none = normalizeBidSheet({}, ids);
+    expect(none.ok && none.unitPriceItems).toBeNull();
+    expect(none.ok && none.alternateAmounts).toEqual([]);
+    const inc = normalizeBidSheet({ bond: { status: 'included' } }, ids);
+    expect(inc.ok && inc.bondIncluded).toBe(true);
+    expect(moneyToCents('$1,250.50')).toBe(125_050);
+    expect(moneyToCents('-1')).toBeNull();
+    expect(moneyToCents('')).toBeNull();
   });
 });

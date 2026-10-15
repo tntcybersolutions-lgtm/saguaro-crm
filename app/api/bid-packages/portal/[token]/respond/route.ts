@@ -7,6 +7,7 @@ import { onBidSubmitted } from '@/lib/triggers';
 import { logActivity, money } from '@/lib/activity';
 import { bidRefusal, deadlineZone } from '@/lib/bid-deadline';
 import { inviteState } from '@/lib/bid-invite-state';
+import { normalizeBidSheet, moneyToCents } from '@/lib/bid-leveling';
 
 /**
  * POST /api/bid-packages/portal/[token]/respond
@@ -107,8 +108,44 @@ export async function POST(req: NextRequest, { params }: { params: Promise<{ tok
       return NextResponse.json({ success: true, action: 'declined' });
     }
 
-    const amount = Number(body.amount ?? body.base_amount ?? 0) || 0;
+    /* The line-item price sheet, validated against THIS package's own lines
+       (lib/bid-leveling normalizeBidSheet — the same module the leveling
+       grid reads it back through). A bid without a sheet is still accepted
+       as a single total, as before. */
+    const { data: itemRows, error: itemErr } = await db
+      .from('bid_package_items').select('id, description, title')
+      .eq('bid_package_id', inv.bid_package_id).eq('tenant_id', tenantId);
+    if (itemErr) throw itemErr;
+    const items = (itemRows || []) as Record<string, any>[];
+    const sheet = normalizeBidSheet(
+      { lines: body.lines, alternates: body.alternates, bond: body.bond },
+      items.map((i) => String(i.id)),
+      Object.fromEntries(items.map((i) => [String(i.id), String(i.description || i.title || 'a scope line')])),
+    );
+    if (!sheet.ok) return NextResponse.json({ error: sheet.error }, { status: 400 });
+
+    /* Base bid: the sum of the priced lines unless the bidder states another
+       figure — and a figure that differs from their own lines needs a reason,
+       or the GC is left guessing which number is the bid. */
+    const statedCents = body.amount != null || body.base_amount != null ? moneyToCents(body.amount ?? body.base_amount) : null;
+    if ((body.amount != null || body.base_amount != null) && statedCents == null) {
+      return NextResponse.json({ error: 'The bid amount must be a number of 0 or more.' }, { status: 400 });
+    }
+    const baseCents = statedCents ?? sheet.linesTotalCents;
+    const amount = baseCents / 100;
     if (amount <= 0) return NextResponse.json({ error: 'A bid amount is required.' }, { status: 400 });
+    const totalNote = typeof body.totalNote === 'string' ? body.totalNote.trim().slice(0, 1000) : '';
+    const differs = sheet.pricedLineCount > 0 && baseCents !== sheet.linesTotalCents;
+    if (differs && !totalNote) {
+      return NextResponse.json({ error: 'Your bid amount differs from the sum of your line prices. Add a note explaining the difference.' }, { status: 400 });
+    }
+    const unitPriceItems = sheet.unitPriceItems
+      ? { ...sheet.unitPriceItems, ...(differs ? { totalNote } : {}) }
+      : null;
+    const clarifications = [
+      differs ? `Base bid ${money(amount)} differs from line total ${money(sheet.linesTotalCents / 100)}: ${totalNote}` : '',
+      typeof body.clarifications === 'string' ? body.clarifications.trim() : '',
+    ].filter(Boolean).join('\n') || null;
 
     const row = {
       tenant_id: tenantId,
@@ -129,9 +166,14 @@ export async function POST(req: NextRequest, { params }: { params: Promise<{ tok
       scope_notes: body.notes || null,
       inclusions: body.inclusions || null,
       exclusions: body.exclusions || null,
-      clarifications: body.clarifications || null,
+      clarifications,
       schedule_days: body.scheduleDays != null ? Number(body.scheduleDays) : null,
-      bid_bond_submitted: body.bidBond === true,
+      /* "Bond in base" — what every leveling reader takes this column to mean. */
+      bid_bond_submitted: body.bidBond === true || sheet.bondIncluded,
+      /* A revision replaces the whole sheet, so a sheet-less resubmit clears
+         the old lines rather than leaving prices the bidder took back. */
+      unit_price_items: unitPriceItems,
+      alternate_amounts: sheet.alternateAmounts.length ? sheet.alternateAmounts : null,
       status: 'submitted',
       submitted_at: now,
       received_at: now,

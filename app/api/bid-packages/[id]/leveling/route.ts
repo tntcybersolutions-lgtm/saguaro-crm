@@ -5,7 +5,7 @@ import { must, tryWrite } from '@/lib/db-write';
 import { apiError } from '@/lib/api-error';
 import { bidAmount } from '@/lib/bid-amount';
 import { inviteState, isPending } from '@/lib/bid-invite-state';
-import { parseLineAmounts, parseAlternates } from '@/lib/bid-leveling';
+import { parseLineAmounts, parseAlternates, parseBond } from '@/lib/bid-leveling';
 
 /**
  * Bid leveling — comparing bids that are not comparable.
@@ -52,7 +52,7 @@ export async function GET(req: NextRequest, { params }: { params: Promise<{ id: 
 
     const { data: pkg } = await db
       .from('bid_packages')
-      .select('id, name, trade, project_id, estimated_value, budget_estimate, status, leveling_complete, leveling_completed_at, bid_due_date, due_date')
+      .select('id, name, trade, project_id, estimated_value, budget_estimate, status, leveling_complete, leveling_completed_at, bid_due_date, due_date, requires_bond')
       .eq('id', id)
       .eq('tenant_id', user.tenantId)
       .maybeSingle();
@@ -98,6 +98,9 @@ export async function GET(req: NextRequest, { params }: { params: Promise<{ id: 
         awarded: b.is_awarded === true || String(b.status || '').toLowerCase() === 'awarded',
         lineAmounts: parseLineAmounts(b.unit_price_items, lineIds),
         alternates: parseAlternates(b),
+        /* The bidder's bond quote from the portal price sheet: included in
+           base, a separate price in cents, or not offered. */
+        bondQuote: parseBond(b.unit_price_items),
       }))
       .sort((a, b) => a.adjusted - b.adjusted);
 
@@ -120,6 +123,7 @@ export async function GET(req: NextRequest, { params }: { params: Promise<{ id: 
         id: p.id, name: p.name, trade: p.trade,
         budget: budget || null,
         levelingComplete: !!p.leveling_complete,
+        bondRequired: p.requires_bond === true,
         status: p.status || null,
         levelingCompletedAt: p.leveling_completed_at || null,
         dueDate: p.bid_due_date || p.due_date || null,

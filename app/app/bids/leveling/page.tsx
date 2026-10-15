@@ -184,6 +184,7 @@ function BidLevelingBoard() {
       setScopeLines(lines);
 
       setPkgStatus(d.package?.status || null);
+      const bondRequired = d.package?.bondRequired === true;
       const suggested = d.analysis?.suggested || {};
       setBidders((d.bids || []).map((b: any) => {
         const ai = suggested[b.id];
@@ -193,8 +194,15 @@ function BidLevelingBoard() {
         /* Per-line prices the submission itself carried (unit_price_items),
            keyed to this package's lines by the API. A stated status wins over
            the AI reading; a priced line with no status is included. */
-        const amounts = (b.lineAmounts || {}) as Record<string, { amountCents: number | null; status?: ScopeStatus }>;
+        const amounts = (b.lineAmounts || {}) as Record<string, { amountCents: number | null; status?: ScopeStatus | 'not_quoted' }>;
         for (const [lineId, a] of Object.entries(amounts)) {
+          /* The bidder said they did not quote it: off the bid entirely, so
+             the engine levels it as a gap (Not quoted + median plug). */
+          if (a.status === 'not_quoted') {
+            const at = scope.findIndex((x) => x.scopeLineId === lineId);
+            if (at >= 0) scope.splice(at, 1);
+            continue;
+          }
           const cur = scope.find((x) => x.scopeLineId === lineId);
           if (cur) {
             if (a.amountCents) cur.valueCents = a.amountCents;
@@ -210,8 +218,18 @@ function BidLevelingBoard() {
           baseBidCents: Math.round(Number(b.base || 0) * 100),
           scope,
           alternates: Array.isArray(b.alternates) ? b.alternates : [],
-          adjustments: b.gap ? { carryCents: Math.round(Number(b.gap) * 100), note: 'Scope gap' } : undefined,
-          bondIncluded: !!b.bond,
+          /* A separately priced bond is carried in the leveled total only when
+             the package requires a bond; otherwise it is not part of the job. */
+          adjustments: (() => {
+            const carryCents = b.gap ? Math.round(Number(b.gap) * 100) : 0;
+            const bondCents = bondRequired && b.bondQuote?.status === 'priced' ? Number(b.bondQuote.amountCents) || 0 : 0;
+            return carryCents || bondCents
+              ? { ...(carryCents ? { carryCents } : {}), ...(bondCents ? { bondCents } : {}), note: carryCents ? 'Scope gap' : 'Bond' }
+              : undefined;
+          })(),
+          bondIncluded: b.bondQuote?.status === 'included' ? true
+            : b.bondQuote?.status === 'priced' || b.bondQuote?.status === 'not_offered' ? false
+              : !!b.bond,
           ...(typeof b.insuranceMeets === 'boolean' ? { insuranceMeets: b.insuranceMeets } : {}),
           note: b.exclusions || undefined,
         } as Bidder;
