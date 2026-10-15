@@ -4,8 +4,8 @@
  *
  * Anatomy: crumbs → title (Application #N) → StatRow (contract position) →
  * Tabs (1. Period · 2. Schedule of Values) → workspace: the step's form on the
- * left, a 320–384px rail (the prior application, what the system automates,
- * the live G702 summary) on the right. Phone: stacked. The form keeps
+ * left, a 320–384px rail (the prior application and the live G702 summary)
+ * on the right. Phone: stacked. The form keeps
  * layout.formMaxWidth; the SOV sheet runs full width.
  *
  * The screen walks in knowing the project: contract money, approved COs, the
@@ -23,13 +23,12 @@ import { useParams } from 'next/navigation';
 import { useUnsavedGuard } from '@/lib/useUnsavedGuard';
 import UnsavedGuardModal from '@/components/UnsavedGuardModal';
 import SaguaroDatePicker from '../../../../../../components/SaguaroDatePicker';
-import { ArrowLeft, ArrowRight, Plus, X, Info } from '@phosphor-icons/react';
+import { ArrowLeft, ArrowRight, Plus, X, WarningCircle } from '@phosphor-icons/react';
 import { useProjectContext } from '@/lib/hooks/useProjectContext';
 import {
-  PageShell, Card, StatRow, Button, Tabs, Field, Input, FormGrid,
+  PageShell, Card, StatRow, Button, Tabs, Field, Input, FormGrid, ItemList, ItemRow, Callout,
   type StatItem,
 } from '@/components/ui/kit';
-import { FlowSteps, InsightRow, AutoChip } from '@/components/ui/premium';
 import { layout } from '@/lib/design-tokens';
 
 const money = new Intl.NumberFormat('en-US', { style: 'currency', currency: 'USD', minimumFractionDigits: 2, maximumFractionDigits: 2 });
@@ -72,14 +71,10 @@ const CSS = `
   .pnRail { order: 0; position: sticky; top: 16px; }
 }
 .pnForm { max-width: ${layout.formMaxWidth}px; }
-.pnNote { display: flex; gap: 10px; align-items: flex-start; font-size: var(--fs-sm); color: var(--text-secondary); line-height: 1.55; }
-.pnOk { font-size: var(--fs-sm); color: var(--text-secondary); line-height: 1.55; }
-.pnOk b { color: var(--text-primary); }
 .pnBarLabel { display: flex; justify-content: space-between; font-size: var(--fs-xs); color: var(--text-tertiary); margin: 10px 0 6px; }
 .pnBarLabel b { color: var(--text-primary); font-variant-numeric: tabular-nums; }
 .pnBarTrack { height: 6px; border-radius: 3px; background: rgba(255,255,255,0.08); overflow: hidden; }
 .pnBarFill { height: 100%; border-radius: 3px; background: var(--status-ongoing); }
-.pnBanner { padding: 10px 14px; border-radius: var(--radius-sm); border: 1px solid rgba(74,222,128,.35); background: rgba(74,222,128,.08); font-size: var(--fs-sm); color: var(--text-primary); }
 .pnTableWrap { overflow-x: auto; }
 .pnTable { width: 100%; border-collapse: collapse; font-size: var(--fs-sm); }
 .pnTable th { position: sticky; top: 0; z-index: 1; background: rgba(21,23,28,0.88); text-align: left; padding: 8px 10px; font-size: 12px; font-weight: 700; color: var(--text-tertiary); border-bottom: 1px solid var(--border-default); white-space: nowrap; }
@@ -93,12 +88,10 @@ const CSS = `
 .pnTable .k-input[data-num] { text-align: right; width: 110px; }
 .pnNeg { color: var(--status-overdue); }
 .pnStrong { color: var(--text-primary); font-weight: 700; }
-.pnRule { height: 1px; background: var(--border-subtle); margin: 8px 0; }
-.pnDue { display: flex; justify-content: space-between; align-items: center; margin-top: 12px; padding-top: 12px; border-top: 1px solid var(--border-default); }
+.pnDue { display: flex; justify-content: space-between; align-items: center; padding: 12px var(--sp-4); border-top: 1px solid var(--border-default); }
 .pnDue > span { font-size: var(--fs-sm); font-weight: 800; color: var(--text-primary); }
 .pnDue > b { font-size: var(--fs-lg); font-weight: 800; color: var(--status-ongoing); font-variant-numeric: tabular-nums; }
 .pnBtns { display: flex; gap: 8px; flex-wrap: wrap; }
-.pnInlineErr { display: flex; align-items: center; gap: 8px; flex-wrap: wrap; font-size: var(--fs-sm); color: var(--status-overdue); padding: 10px 14px; border: 1px solid rgba(248,113,113,.35); border-radius: var(--radius-sm); background: rgba(248,113,113,.08); }
 .pnMuted { color: var(--text-tertiary); }
 .pnDateInput { width: 100%; }
 @media (max-width: 640px) {
@@ -170,7 +163,10 @@ export default function NewPayAppPage() {
           setRolledForward(true);
         }
         if(seed.retainagePercent!=null && !draftRestoredRef.current){ seederSetRetRef.current = true; setRetainagePct(String(seed.retainagePercent)); }
-      }catch{}
+      }catch(e){
+        // The seeder only pre-fills; the GC can still build the SOV by hand.
+        console.error('[pay-apps/new] seed failed', e);
+      }
     })();
   },[projectId]);
 
@@ -242,7 +238,6 @@ export default function NewPayAppPage() {
   const revised     = money?.revisedContract || (contractSumNum + coTotal);
   const lastApp     = money?.lastPayApp;
   const sovScheduled= lines.reduce((s,l)=>s+(l.scheduledValue||0),0);
-  const subCount    = (ctx?.subs||[]).length;
 
   /** POST the application — shared by the page buttons and the guard's
    *  "Save & leave". Returns true on success; never navigates itself. */
@@ -315,18 +310,19 @@ export default function NewPayAppPage() {
   ];
 
   const liveSummary = (
-    <Card title="Live G702 Summary" subtitle="Matches the saved application to the cent.">
-      <InsightRow label="Original Contract" value={fmt(contractSumNum)}/>
-      {coTotal!==0 && <InsightRow label="Approved COs" value={fmtSigned(coTotal)}/>}
-      {coTotal!==0 && <InsightRow label="Contract to Date" value={fmt(contractSumNum+coTotal)}/>}
-      <div className="pnRule"/>
-      <InsightRow label="Prev Completed" value={fmt(prevTotal)}/>
-      <InsightRow label="This Period" value={fmt(thisPeriodTotal)}/>
-      <InsightRow label="Materials Stored" value={fmt(matsTotal)}/>
-      <InsightRow label="Total Completed" value={fmt(totalCompleted)}/>
-      <InsightRow label={`Retainage (${pct}%)`} value={fmt(retainageAmt)}/>
-      <InsightRow label="Balance to Finish" value={fmt(Math.max(0,(contractSumNum+coTotal)-totalCompleted))}/>
-      <div className="pnDue"><span>Payment Due</span><b>{fmt(paymentDue)}</b></div>
+    <Card title="Live G702 summary" subtitle="Matches the saved application to the cent." flush>
+      <ItemList>
+        <ItemRow title="Original contract" value={fmt(contractSumNum)}/>
+        {coTotal!==0 && <ItemRow title="Approved COs" value={fmtSigned(coTotal)}/>}
+        {coTotal!==0 && <ItemRow title="Contract to date" value={fmt(contractSumNum+coTotal)}/>}
+        <ItemRow title="Previous completed" value={fmt(prevTotal)}/>
+        <ItemRow title="This period" value={fmt(thisPeriodTotal)}/>
+        <ItemRow title="Materials stored" value={fmt(matsTotal)}/>
+        <ItemRow title="Total completed" value={fmt(totalCompleted)}/>
+        <ItemRow title={`Retainage (${pct}%)`} value={fmt(retainageAmt)}/>
+        <ItemRow title="Balance to finish" value={fmt(Math.max(0,(contractSumNum+coTotal)-totalCompleted))}/>
+      </ItemList>
+      <div className="pnDue"><span>Payment due</span><b>{fmt(paymentDue)}</b></div>
     </Card>
   );
 
@@ -338,7 +334,7 @@ export default function NewPayAppPage() {
           { label:'Projects', href:'/app/projects' },
           { label: ctx?.project?.name || 'Project', href:`/app/projects/${projectId}/overview` },
           { label:'Pay Applications', href:`/app/projects/${projectId}/pay-apps` },
-          { label:`New #${appLabel}` },
+          { label:'New' },
         ]}
         title={`Application #${appLabel}`}
         subtitle="AIA G702/G703 — Application and Certificate for Payment."
@@ -353,7 +349,7 @@ export default function NewPayAppPage() {
         <Tabs value={String(step)} onChange={k=>setStep(Number(k))} tabs={[{ key:'1', label:'1. Period & Contract' }, { key:'2', label:'2. Schedule of Values', count: lines.length }]} />
 
         {error && (
-          <div className="pnInlineErr" role="alert"><Info size={15}/> {error}<Button size="sm" variant="ghost" onClick={()=>setError('')}>Dismiss</Button></div>
+          <Callout tone="danger" icon={<WarningCircle size={18}/>} title="The application didn't save" text={error} actions={<Button size="sm" variant="ghost" onClick={()=>setError('')}>Dismiss</Button>}/>
         )}
 
         <div className="pnCq">
@@ -364,34 +360,31 @@ export default function NewPayAppPage() {
                   <Card title="Billing Period" subtitle="The dates and contract figures that print on the G702.">
                     <div className="pnForm">
                       <FormGrid cols={2}>
-                        <Field label="Period From" required hint={<>{auto.period && <AutoChip/>} {lastApp ? `Suggested — App #${lastApp.appNumber} billed through ${fmtDate(lastApp.periodTo)}.` : 'Defaulted to the first of the month.'}</>}>
+                        <Field label="Period From" required hint={lastApp ? `App #${lastApp.appNumber} billed through ${fmtDate(lastApp.periodTo)}.` : auto.period ? 'Defaulted to the first of the month.' : undefined}>
                           <div className="pnDateInput"><SaguaroDatePicker value={periodFrom} onChange={v=>{setTouched(true);setPeriodFrom(v);}} style={DATE_INPUT_STYLE}/></div>
                         </Field>
-                        <Field label="Period To" required hint={auto.period ? <><AutoChip/> Defaulted to month end — adjust freely.</> : undefined}>
+                        <Field label="Period To" required hint={auto.period ? 'Defaulted to month end.' : undefined}>
                           <div className="pnDateInput"><SaguaroDatePicker value={periodTo} onChange={v=>{setTouched(true);setPeriodTo(v);}} style={DATE_INPUT_STYLE}/></div>
                         </Field>
-                        <Field label="Original Contract Sum ($)" hint={<>{auto.sum && <AutoChip/>} {coTotal>0
-                          ? <>G702 line 1. With {money?.approvedCoCount} approved CO{money?.approvedCoCount===1?'':'s'} ({fmt(coTotal)}), contract sum to date is <b>{fmt(revised)}</b> — change orders print on line 2 automatically.</>
-                          : <>G702 line 1 — pulled from the project contract. Approved change orders print on line 2 automatically.</>}</>}>
+                        <Field label="Original Contract Sum ($)" hint={coTotal>0
+                          ? <>G702 line 1. With {money?.approvedCoCount} approved CO{money?.approvedCoCount===1?'':'s'} ({fmt(coTotal)}), contract sum to date is <b>{fmt(revised)}</b>.</>
+                          : auto.sum ? 'G702 line 1 — from the project contract.' : 'G702 line 1.'}>
                           <Input type="number" value={contractSum} onChange={e=>{setTouched(true);setContractSum(e.target.value);}} placeholder="0" min="0"/>
                         </Field>
-                        <Field label="Retainage %" hint={<>{auto.ret && <AutoChip/>} {lastApp ? `Carried from App #${lastApp.appNumber}.` : 'From project contract terms.'}</>}>
+                        <Field label="Retainage %" hint={lastApp ? `Carried from App #${lastApp.appNumber}.` : auto.ret ? 'From project contract terms.' : undefined}>
                           <Input type="number" value={retainagePct} onChange={e=>{setTouched(true);setRetainagePct(e.target.value);}} placeholder="10" min="0" max="100"/>
                         </Field>
                       </FormGrid>
                     </div>
                   </Card>
 
-                  <Card title="Schedule of Values" subtitle={rolledForward ? 'Rolled forward — ready for this period’s work.' : 'Built in step 2.'}>
+                  <Card title="Schedule of Values" subtitle={rolledForward ? `${lines.length} lines rolled forward from App #${lastApp?.appNumber ?? '—'}` : 'First application — built in step 2.'}>
                     {rolledForward ? (
                       <>
-                        <div className="pnOk"><b>{lines.length} lines rolled forward</b> from App #{lastApp?.appNumber ?? '—'} — scheduled values and completed-to-date are pre-filled. In step 2 you only enter <b>this period&apos;s work</b>.</div>
                         <div className="pnBarLabel"><span>Billed {fmt(prevTotal)} of {fmt(sovScheduled)} scheduled</span><b>{sovScheduled>0?Math.round((prevTotal/sovScheduled)*100):0}%</b></div>
                         <div className="pnBarTrack"><div className="pnBarFill" style={{width:`${sovScheduled>0?Math.min(100,(prevTotal/sovScheduled)*100):0}%`}}/></div>
                       </>
-                    ) : (
-                      <div className="pnNote"><Info size={17} style={{flexShrink:0,marginTop:1}}/><span>First application on this project — build the schedule of values in step 2. It rolls forward automatically on every application after this one.</span></div>
-                    )}
+                    ) : null}
                     <div className="pnBtns" style={{marginTop:16}}>
                       <Button icon={<ArrowRight size={15} weight="bold"/>} onClick={()=>setStep(2)}>Next: Schedule of Values</Button>
                     </div>
@@ -401,10 +394,7 @@ export default function NewPayAppPage() {
 
               {step===2 && (
                 <>
-                  {rolledForward && (
-                    <div className="pnBanner">Rolled forward from App #{lastApp?.appNumber ?? '—'} — scheduled values and completed-to-date are pre-filled. Just enter this period&apos;s work.</div>
-                  )}
-                  <Card title="Schedule of Values (G703)" subtitle="Retainage and payment due compute themselves." flush actions={<Button size="sm" icon={<Plus size={13} weight="bold"/>} onClick={addLine}>Add Row</Button>}>
+                  <Card title="Schedule of Values (G703)" subtitle={rolledForward ? `Rolled forward from App #${lastApp?.appNumber ?? '—'} — enter this period's work.` : 'Retainage and payment due compute themselves.'} flush actions={<Button size="sm" icon={<Plus size={13} weight="bold"/>} onClick={addLine}>Add Row</Button>}>
                     <div className="pnTableWrap">
                       <table className="pnTable k-table-skin">
                         <thead>
@@ -466,30 +456,20 @@ export default function NewPayAppPage() {
 
             <aside className="pnRail" aria-label="Pay application context">
               {step===2 && liveSummary}
-              <Card title={lastApp ? `Last Application — #${lastApp.appNumber}` : 'First Application'}>
+              <Card title={lastApp ? `Last application — #${lastApp.appNumber}` : 'First application'} flush={!!lastApp}>
                 {lastApp ? (
-                  <>
-                    <InsightRow label="Period" value={`${fmtDate(lastApp.periodFrom)} – ${fmtDate(lastApp.periodTo)}`}/>
-                    <InsightRow label="Status" value={String(lastApp.status||'—').replace(/_/g,' ').replace(/\b\w/g,(c:string)=>c.toUpperCase())}/>
-                    <InsightRow label="Completed & Stored" value={fmt(lastApp.totalCompletedStored)}/>
-                    <InsightRow label="Payment Certified" value={fmt(lastApp.currentPaymentDue)} strong/>
-                  </>
+                  <ItemList>
+                    <ItemRow title="Period" value={`${fmtDate(lastApp.periodFrom)} – ${fmtDate(lastApp.periodTo)}`}/>
+                    <ItemRow title="Status" value={String(lastApp.status||'—').replace(/_/g,' ').replace(/\b\w/g,(c:string)=>c.toUpperCase())}/>
+                    <ItemRow title="Completed & stored" value={fmt(lastApp.totalCompletedStored)}/>
+                    <ItemRow title="Payment certified" value={<strong>{fmt(lastApp.currentPaymentDue)}</strong>}/>
+                  </ItemList>
                 ) : (
                   <div className="pnMuted" style={{fontSize:'var(--fs-sm)',lineHeight:1.6}}>
-                    This is the first pay application on {ctx?.project?.name || 'this project'}. Everything you enter here rolls forward automatically next month.
+                    No earlier application on {ctx?.project?.name || 'this project'}.
                   </div>
                 )}
               </Card>
-              {step===1 && (
-                <Card title="After You Submit">
-                  <FlowSteps title="" steps={[
-                    {title:'Owner Receives the G702/G703', desc:'A signed application packet goes out for one-click owner approval.'},
-                    {title:'Lien Waivers Auto-Generate', desc: subCount>0 ? `Conditional waivers for all ${subCount} subs, each sized to their share of this period.` : 'Conditional waivers for every sub on the job, sized to their share of this period.'},
-                    {title:'Payment Is Waiver-Gated', desc:'Mark-paid is blocked until required waivers are signed — then unconditional waivers issue automatically.'},
-                    {title:'Money Flows to the Ledger', desc:'Paid-to-date, retainage held, and the prime contract update themselves.'},
-                  ]}/>
-                </Card>
-              )}
             </aside>
           </div>
         </div>
