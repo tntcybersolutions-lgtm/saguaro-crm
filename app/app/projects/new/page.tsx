@@ -1,25 +1,32 @@
 'use client';
+/**
+ * New Project — the job intake form.
+ *
+ * Name and address are the only required fields; everything else is seeded
+ * from the kind of job and the tenant's own portfolio (numbering sequence,
+ * owner/architect contact book, house retainage and jurisdiction).
+ *
+ * Writes  POST /api/projects/create   then fires POST /api/autopilot/run
+ * Lands   /app/projects/:id/takeoff ("Create & add drawings") or /overview.
+ */
 import React, { useState, useEffect, useRef } from 'react';
 import { useRouter } from 'next/navigation';
 import { useUnsavedGuard } from '@/lib/useUnsavedGuard';
 import { PHASE_CHOICES, type ProjectPhase } from '@/lib/project-phase';
 import UnsavedGuardModal from '@/components/UnsavedGuardModal';
-import SaguaroDatePicker from '../../../../components/SaguaroDatePicker';
-import { PremiumSurface, ModuleHero, SectionCard, StatStrip, FlowSteps, InsightRow, AutoChip, goldButtonStyle, ghostButtonStyle, railStyle } from '@/components/ui/premium';
 import { PROJECT_TEMPLATES, templateByKey } from '@/lib/project-templates';
-import SetupStepper from '@/components/projects/SetupStepper';
 import ProjectPreview from '@/components/projects/ProjectPreview';
 import { BUILDING_TYPES } from '@/lib/contractor-trades';
 import { SECTORS } from '@/lib/taxonomy';
-import { Plus, Buildings, MapPin, CalendarBlank, UsersThree, Sparkle, CurrencyDollar, ShieldCheck, Stack } from '@phosphor-icons/react';
+import { Buildings, MapPin, UsersThree, Sparkle, CurrencyDollar, ShieldCheck, Hash, Scales, WarningCircle, ArrowRight, Stack } from '@phosphor-icons/react';
 import { useProjects } from '@/lib/hooks/useProjects';
 import Suggest from '@/components/ui/Suggest';
 import { stateFromAddress } from '@/lib/us-state';
+import {
+  PageShell, StatRow, Card, Button, Badge, Field, Input, Select, Textarea, DateInput, FormGrid,
+  DetailList, Callout, type StatItem,
+} from '@/components/ui/kit';
 
-const GOLD='var(--brand-primary)',DARK='var(--bg-surface-2)',BORDER='rgba(255,255,255,0.12)',DIM='var(--text-secondary)',TEXT='var(--text-primary)';
-const INPUT_STYLE = {width:'100%',padding:'10px 12px',background:DARK,border:`1px solid ${BORDER}`,borderRadius:8,color:TEXT,fontSize:13,outline:'none'};
-const SELECT_STYLE = {...INPUT_STYLE,cursor:'pointer'};
-const HINT:React.CSSProperties = {fontSize:12,color:'var(--c-text-2)',marginTop:6,lineHeight:1.45};
 const fmt = (n:number) => '$'+(Number(n)||0).toLocaleString('en-US',{maximumFractionDigits:0});
 const fmtDate = (d?:string|null) => d ? new Date(d+'T00:00:00').toLocaleDateString('en-US',{month:'short',day:'numeric',year:'numeric'}) : '—';
 const todayIso = () => { const d = new Date(); return `${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,'0')}-${String(d.getDate()).padStart(2,'0')}`; };
@@ -52,19 +59,40 @@ const CATEGORY_BY_BUILDING_TYPE: Record<string,string> = {
   'Civil / Infrastructure':'industrial','Other':'commercial',
 };
 
+const CONTRACT_TYPES = ['Lump Sum GMP','Cost Plus Fixed Fee','Cost Plus Percentage','Unit Price','Design-Build'];
+
 // ── Procore-style SECTOR differentiation: one prominent choice that filters
 //    building types, derives the category, and pre-sets compliance flags
 //    (Government/Education/Infrastructure -> prevailing wage + public agency).
 //    The sector list itself lives in the single taxonomy module (@/lib/taxonomy
 //    SECTORS) so every sector picker platform-wide shares one source.
 
-const FIELD = ({label,auto,hint,children}:{label:string,auto?:boolean,hint?:React.ReactNode,children:React.ReactNode}) => (
-  <div style={{marginBottom:16}}>
-    <label style={{display:'block',fontSize:12,fontWeight:700,color:DIM, marginBottom:6}}>{label}{auto && <AutoChip/>}</label>
-    {children}
-    {hint && <div style={HINT}>{hint}</div>}
-  </div>
-);
+/* Choice tiles (kind of job, where is this job): slate until chosen, then the
+   one yellow edge — the selected item. Tokens only. */
+const NP_CSS = `
+.npSplit { display: grid; grid-template-columns: minmax(0, 1fr); gap: 16px; align-items: start; min-width: 0; }
+.npSplit > * { min-width: 0; }
+.npMain { display: flex; flex-direction: column; gap: 16px; min-width: 0; }
+.npCols { display: grid; grid-template-columns: minmax(0, 1fr); gap: 16px; align-items: start; }
+.npCols > div { display: flex; flex-direction: column; gap: 16px; min-width: 0; }
+.npRail { display: flex; flex-direction: column; gap: 16px; }
+@media (min-width: 1100px) {
+  .npSplit { grid-template-columns: minmax(0, 1fr) 340px; }
+  .npRail { position: sticky; top: 80px; }
+}
+@media (min-width: 900px) { .npCols { grid-template-columns: minmax(0, 1fr) minmax(0, 1fr); } }
+.npTiles { display: grid; grid-template-columns: repeat(auto-fit, minmax(min(100%, 230px), 1fr)); gap: 12px; }
+.npTile { all: unset; box-sizing: border-box; display: flex; flex-direction: column; gap: 6px; padding: 14px 16px; border-radius: var(--radius-md, 12px); border: 1px solid var(--border-default); background: var(--bg-surface-2); cursor: pointer; min-height: 44px; }
+.npTile:hover { border-color: var(--border-strong, var(--border-default)); background: var(--bg-row-hover, var(--bg-surface-2)); }
+.npTile:focus-visible { outline: 2px solid var(--focus-ring); outline-offset: 2px; }
+.npTile[aria-pressed="true"] { border-color: var(--brand-primary); box-shadow: inset 0 0 0 1px var(--brand-primary); }
+.npTileTitle { font-size: 14px; font-weight: 800; color: var(--text-primary); }
+.npTileText { font-size: 13px; line-height: 1.45; color: var(--text-secondary); }
+.npTileTags { display: flex; flex-wrap: wrap; gap: 6px; margin-top: 4px; }
+.npChips { display: flex; flex-wrap: wrap; gap: 6px; }
+.npFoot { display: flex; gap: 10px; align-items: center; flex-wrap: wrap; }
+.npFootNote { font-size: 13px; color: var(--text-secondary); }
+`;
 
 export default function NewProjectPage() {
   const router = useRouter();
@@ -154,13 +182,14 @@ export default function NewProjectPage() {
   const [saving, setSaving] = useState(false);
   const [error, setError] = useState('');
 
-  // Which fields the system filled in (AUTO chips) vs. what the GC typed.
+  // Which fields the system filled in vs. what the GC typed.
   const [auto, setAuto] = useState<{num?:boolean;cat?:boolean;ret?:boolean;start?:boolean;state?:boolean;ownerEmail?:boolean;archEmail?:boolean}>({cat:true,ret:true,start:true,state:true});
 
   // This page has no projectId, so /api/project-context does not apply. The
   // portfolio itself is the context: numbering sequence, owner/architect
   // contact book, and house defaults (retainage, jurisdiction) all seed from
   // the projects the tenant already has.
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
   const [pf, setPf] = useState<any>(null);
 
   const { projects: portfolioProjects, loading: portfolioLoading, error: portfolioError } = useProjects();
@@ -174,6 +203,7 @@ export default function NewProjectPage() {
       setProjectNumber(prev=>{ if(!prev){ setAuto(a=>({...a,num:true})); return fallback; } return prev; });
       return;
     }
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
     const list:any[] = portfolioProjects as any[];
     // Next project number — continue this year's sequence (e.g. 2026-007).
     let maxSeq = 0;
@@ -213,8 +243,8 @@ export default function NewProjectPage() {
 
   /* ── Unsaved-work protection (R14): dirty once the GC has entered anything
    *    beyond the seeded defaults (project number / retainage / jurisdiction /
-   *    start date arm only after a manual edit clears their AUTO flag). The
-   *    draft covers the whole intake form, AUTO chips included. ── */
+   *    start date arm only after a manual edit clears their auto flag). The
+   *    draft covers the whole intake form, auto flags included. ── */
   const createDirty =
     !!name.trim() || !!sector || !!buildingType || !!description.trim() || !!address.trim() ||
     !!budget.trim() || !!owner.trim() || !!ownerEmail.trim() || !!arch.trim() || !!archEmail.trim() ||
@@ -309,7 +339,7 @@ export default function NewProjectPage() {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify({ projectId: d.projectId }),
-        }).catch(() => {});
+        }).catch((e) => console.error('[projects/new] autopilot kick-off failed', e));
         guard.clearDraft();
         router.push(`/app/projects/${d.projectId}/${nextRef.current === 'takeoff' ? 'takeoff' : 'overview'}`);
         return true;
@@ -319,6 +349,7 @@ export default function NewProjectPage() {
         return false;
       }
     } catch (err) {
+      console.error('[projects/new] create failed', err);
       setError('Network error — please try again.');
       setSaving(false);
       return false;
@@ -326,12 +357,10 @@ export default function NewProjectPage() {
   }
 
   /* Name and address are the only required fields — the page has always said
-     so. Everything else is pre-seeded, so it starts collapsed: five cards of
-     inputs when two matter is why this reads as heavy. */
+     so. Everything else is pre-seeded, so it starts collapsed. */
   const [showDetails, setShowDetails] = useState(false);
   /* Where the GC lands after Create. "and add drawings" goes straight to
-     takeoff, which is the actual next thing on a real job — the old flow
-     dropped everyone on Overview and left them to find it. */
+     takeoff, which is the actual next thing on a real job. */
   const nextRef = useRef<'overview' | 'takeoff'>('overview');
 
   async function create(e: React.FormEvent) {
@@ -345,57 +374,50 @@ export default function NewProjectPage() {
   const ownerNames = Object.keys(pf?.owners||{});
   const archNames = Object.keys(pf?.archs||{});
 
+  const stats: StatItem[] = [
+    { label:'Project number', value: projectNumber || `${year}-001`, sub: pf?.total>0 ? `Next in your ${year} sequence` : `First in the ${year} sequence`, icon:<Hash size={15}/> },
+    { label:'This contract', value: budgetNum>0 ? fmt(budgetNum) : '—', tone: budgetNum>0 ? 'good' : 'default', sub: contractType, icon:<CurrencyDollar size={15}/> },
+    { label:'Retainage', value: `${Number(retainage)||10}%`, sub: pf?.retMode && auto.ret ? 'Your portfolio standard' : 'Default — editable', icon:<Scales size={15}/> },
+    { label:'Jurisdiction', value: stateJurisdiction || '—', sub:'Lien waiver + wage rules', icon:<MapPin size={15}/> },
+  ];
+
   return (
-    <PremiumSurface>
-      <style>{`
-        .npSeg:active{transform:translateY(1px)!important;filter:brightness(.94)!important}
-        @media (prefers-reduced-motion: reduce){.npSeg:active{transform:none!important}}
-      `}</style>
-      <ModuleHero
-        eyebrow="New Project"
-        eyebrowIcon={<Plus size={13} weight="fill" color="var(--text-secondary)" />}
-        title="Create"
-        accent="New Project"
-        subtitle="Type only what the system can't already know."
-      />
+    <PageShell
+      crumbs={[{ label:'Projects', href:'/app/projects' }, { label:'New project' }]}
+      title="New project"
+      subtitle="Name and address are all it needs. Everything else is pre-filled and editable."
+      actions={
+        <>
+          <Button variant="ghost" onClick={()=>guard.requestClose(()=>router.back())}>Cancel</Button>
+          <Button type="submit" form="np-form" disabled={submitDisabled} onClick={() => { nextRef.current = 'overview'; }}>
+            {saving?'Creating…':'Create without drawings'}
+          </Button>
+          <Button variant="primary" type="submit" form="np-form" data-tour="create-project-submit" icon={<ArrowRight size={15} weight="bold"/>}
+            disabled={submitDisabled} onClick={() => { nextRef.current = 'takeoff'; }}>
+            {saving?'Creating…':'Create & add drawings'}
+          </Button>
+        </>
+      }
+    >
+      <style dangerouslySetInnerHTML={{ __html: NP_CSS }} />
 
-      {/* Portfolio snapshot — what the system already knows before you type */}
-      {pf && (
-        <StatStrip items={[
-          {href: '/app/projects/new', label:'Project Number', value: projectNumber || `${year}-001`, sub: pf.total>0 ? `Next in your ${year} sequence` : `First in the ${year} sequence`},
-          {href: '/app/projects/new', label:'This Contract', value: budgetNum>0 ? fmt(budgetNum) : '—', accent: budgetNum>0 ? 'var(--success)' : undefined, sub: contractType},
-          {href: '/app/projects/new', label:'Retainage', value: `${Number(retainage)||10}%`, sub: pf.retMode && auto.ret ? 'Your portfolio standard' : 'Default — editable'},
-          {href: '/app/projects/new', label:'Jurisdiction', value: stateJurisdiction || '—', sub:'Lien waiver + wage rules'},
-        ]}/>
-      )}
+      {pf && <StatRow items={stats}/>}
 
-      {/* Where you are, what is left, and that nothing is hidden. */}
-      <SetupStepper
-        active={!templateKey ? 1 : !(name.trim() && address.trim()) ? 2 : 3}
-        steps={[
-          { n: 1, title: 'Kind of Job', hint: tpl ? tpl.name : 'Sets retainage, folders and CSI spread', done: Boolean(templateKey) },
-          { n: 2, title: 'Name and Place', hint: name.trim() && address.trim() ? `${name.trim()} · ${stateJurisdiction}` : 'The only two required fields', done: Boolean(name.trim() && address.trim()) },
-          { n: 3, title: 'Add Drawings', hint: 'Priced, budgeted and packaged for you', done: false },
-        ]}
-      />
-
-      {error&&<div style={{background:'rgba(248,113,113,.1)',border:'1px solid rgba(248,113,113,.3)',borderRadius:10,padding:'12px 16px',marginBottom:20,fontSize:13,color:'var(--danger)'}}>{error}</div>}
+      {error && <Callout tone="danger" icon={<WarningCircle size={18}/>} title="The project wasn't created" text={error}/>}
 
       {/* What kind of job. One choice that furnishes the rest — retainage, the
           contract type, the CSI spread the budget expects, and the folders the
-          documents land in. Every one of them stays editable below; this is a
-          starting point, not a lock. */}
-      <div style={{ marginBottom: 18 }}>
-        <div style={{ fontSize: 12, fontWeight: 800, color: 'var(--text-primary)', marginBottom: 10 }}>
-          Step 1 · What Kind of Job Is This?
-        </div>
-        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(230px, 1fr))', gap: 12 }}>
+          documents land in. Every one of them stays editable below. */}
+      <Card title="Kind of job" icon={<Stack size={18}/>}
+        subtitle={tpl ? `Creates ${tpl.folders.length} document folders — ${tpl.folders.slice(0, 5).join(', ')}${tpl.folders.length > 5 ? ` and ${tpl.folders.length - 5} more` : ''}` : undefined}>
+        <div className="npTiles">
           {PROJECT_TEMPLATES.map((t) => {
             const on = templateKey === t.key;
             return (
               <button
                 key={t.key}
                 type="button"
+                className="npTile"
                 data-tour={`job-type-${t.key}`}
                 onClick={() => {
                   setTemplateKey(t.key);
@@ -404,242 +426,156 @@ export default function NewProjectPage() {
                   setContractType(t.contractType);
                 }}
                 aria-pressed={on}
-                style={{
-                  textAlign: 'left', cursor: 'pointer', padding: '15px 16px', borderRadius: 14,
-                  background: on ? 'var(--brand-primary-08)' : 'rgba(255,255,255,0.03)',
-                  border: on ? '1px solid color-mix(in srgb, var(--brand-primary) 65%, transparent)' : '1px solid rgba(255,255,255,0.10)',
-                  boxShadow: on ? '0 0 0 3px var(--brand-primary-08)' : 'none',
-                  transition: 'background .15s, border-color .15s, box-shadow .15s',
-                }}
               >
-                <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 6 }}>
-                  <span style={{
-                    width: 15, height: 15, borderRadius: 999, flexShrink: 0,
-                    border: on ? '5px solid var(--brand-primary)' : '1.5px solid rgba(255,255,255,0.30)',
-                    background: on ? '#1A1206' : 'transparent',
-                  }} />
-                  <span style={{ fontSize: 14, fontWeight: 800, color: on ? 'var(--brand-primary)' : 'var(--text-primary)' }}>{t.name}</span>
-                </div>
-                <div style={{ fontSize: 12, lineHeight: 1.5, color: 'var(--c-text-2)', marginBottom: 8 }}>{t.blurb}</div>
-                <div style={{ fontSize: 12, lineHeight: 1.45, color: 'var(--c-text-2)', fontStyle: 'italic' }}>{t.example}</div>
-                <div style={{ display: 'flex', flexWrap: 'wrap', gap: 6, marginTop: 10 }}>
+                <span className="npTileTitle">{t.name}</span>
+                <span className="npTileText">{t.blurb}</span>
+                <span className="npTileTags">
                   {[
                     `${t.retainagePct}% Retainage`,
                     t.contractType,
                     `${t.divisions.length} CSI Divisions`,
                     `${t.folders.length} Folders`,
-                  ].map((chip) => (
-                    <span key={chip} style={{
-                      fontSize: 12, fontWeight: 700, padding: '2px 7px', borderRadius: 6,
-                      background: 'rgba(255,255,255,0.06)', color: 'var(--c-text-2)',
-                    }}>{chip}</span>
-                  ))}
-                </div>
+                  ].map((chip) => <Badge key={chip}>{chip}</Badge>)}
+                </span>
               </button>
             );
           })}
         </div>
-        {tpl && (
-          <div style={{ marginTop: 10, fontSize: 12, color: 'var(--c-text-2)' }}>
-            Creates {tpl.folders.length} document folders — {tpl.folders.slice(0, 5).join(', ')}
-            {tpl.folders.length > 5 ? ` and ${tpl.folders.length - 5} more` : ''}. All of it editable afterwards.
-          </div>
-        )}
-      </div>
+      </Card>
 
-      <form onSubmit={create}>
-        <div className="pmSplit" style={railStyle(340, { gap:16,alignItems:'start' })}>
-          {/* Form columns */}
-          <div>
-            <div style={{display:'grid',gridTemplateColumns:'1fr 1fr',gap:16}}>
+      <form id="np-form" onSubmit={create}>
+        <div className="npSplit">
+          <div className="npMain">
+            <div className="npCols">
               <div>
-                <SectionCard title="Step 2 · Name and Location" icon={<Buildings size={17} weight="duotone" color="var(--text-secondary)" />} style={{marginBottom:16}}>
-                {showDetails && (
-                  <FIELD label="Sector" hint={sectorDef?.flags ? 'Public-sector work — prevailing wage and public-agency compliance pre-set below.' : 'Filters building types, derives the category, and pre-sets compliance for public work.'}>
-                    <div style={{display:'flex',flexWrap:'wrap' as const,gap:5,background:'rgba(255,255,255,0.04)',borderRadius:10,padding:4,border:'1px solid rgba(255,255,255,0.08)'}}>
-                      {SECTORS.map(s=>{
-                        const active = sector===s.key;
-                        return (
-                          <button type="button" key={s.key} onClick={()=>pickSector(s.key)} className="pmBtn npSeg"
-                            style={{padding:'6px 12px',borderRadius:7,border:'none',cursor:'pointer',fontWeight:800,fontSize:12,whiteSpace:'nowrap' as const,
-                              background:active?`var(--brand-primary)`:'transparent',color:active?'var(--on-brand)':DIM,transition:'all .15s',
-                              boxShadow:active?'0 2px 10px color-mix(in srgb, var(--brand-primary) 28%, transparent), inset 0 1px 0 rgba(255,255,255,0.35)':'none'}}>
-                            {s.label}
+                <Card title="Name and location" icon={<Buildings size={18}/>}>
+                  <FormGrid cols={1}>
+                    {/* WHERE IS THIS JOB? — the first thing asked, because the
+                        answer decides everything the product shows next.
+                        See lib/project-phase. */}
+                    <Field label="Where is this job?" hint="Decides which steps the project shows first. Switch it the day you win.">
+                      <div className="npTiles" role="group" aria-label="Where is this job?">
+                        {PHASE_CHOICES.map((c) => (
+                          <button key={c.value} type="button" className="npTile" onClick={() => setPhase(c.value)} aria-pressed={phase === c.value}>
+                            <span className="npTileTitle">{c.title}</span>
+                            <span className="npTileText">{c.detail}</span>
                           </button>
-                        );
-                      })}
-                    </div>
-                  </FIELD>
-                )}
-                  {/* WHERE IS THIS JOB? — the first thing asked, because the
-                      answer decides everything the product shows next. Users
-                      kept asking "where do we start", and the reason was that
-                      the journey rail taught one order (which assumed you had
-                      already won) while the nav taught another. One question
-                      resolves it. See lib/project-phase. */}
-                  <FIELD label="Where Is This Job?" hint="Decides which steps the project shows you first. You can switch it the day you win.">
-                    <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(210px, 1fr))', gap: 10 }}>
-                      {PHASE_CHOICES.map((c) => {
-                        const on = phase === c.value;
-                        return (
-                          <button
-                            key={c.value}
-                            type="button"
-                            onClick={() => setPhase(c.value)}
-                            aria-pressed={on}
-                            style={{
-                              textAlign: 'left', padding: '12px 14px', borderRadius: 10, cursor: 'pointer',
-                              background: on ? 'var(--brand-primary-12)' : 'rgba(255,255,255,0.03)',
-                              border: `1px solid ${on ? 'color-mix(in srgb, var(--brand-primary) 55%, transparent)' : 'rgba(255,255,255,0.12)'}`,
-                              boxShadow: on ? '0 0 14px var(--brand-primary-12)' : 'none',
-                              transition: 'background .15s, border-color .15s',
-                            }}
-                          >
-                            <div style={{ fontSize: 14, fontWeight: 800, color: on ? 'var(--brand-primary-strong)' : 'var(--text-primary)', marginBottom: 3 }}>{c.title}</div>
-                            <div style={{ fontSize: 12, color: 'var(--text-secondary)', lineHeight: 1.45 }}>{c.detail}</div>
-                          </button>
-                        );
-                      })}
-                    </div>
-                  </FIELD>
-                  <FIELD label="Project Name"><input data-tour="project-name" value={name} onChange={e=>setName(e.target.value)} required placeholder="e.g. Riverdale Medical Pavilion" style={INPUT_STYLE}/></FIELD>
-                {/* Number, building type, category and description are all seeded or
-                    optional. Two fields is the promise; these are here when wanted. */}
-                {showDetails && (<>
-                  <FIELD label="Project Number" auto={auto.num} hint={pf?.total>0 ? `Continues your ${year} sequence — prints on G702s, subcontracts and transmittals.` : 'Year-based sequence — prints on G702s, subcontracts and transmittals.'}>
-                    <input value={projectNumber} onChange={e=>{setProjectNumber(e.target.value);setAuto(a=>({...a,num:false}));}} placeholder={`${year}-001`} style={INPUT_STYLE}/>
-                  </FIELD>
-                  <FIELD label="Building Type" hint={sectorDef ? `Showing ${sectorBts.length} ${sectorDef.label} building types — feeds takeoff assemblies, budget templates and bid intelligence.` : 'Feeds takeoff assemblies, budget templates and bid intelligence.'}>
-                    <select value={buildingType} onChange={e=>onBuildingTypeChange(e.target.value)} style={SELECT_STYLE}>
-                      <option value="">Select building type…</option>
-                      {sectorBts.map(t=><option key={t} value={t}>{t}</option>)}
-                    </select>
-                  </FIELD>
-                  <FIELD label="Category" auto={auto.cat} hint="Set by the kind of job, refined by building type — drives reporting and bid history matching.">
-                    <select value={type} onChange={e=>{setType(e.target.value);setCatTouched(true);setAuto(a=>({...a,cat:false}));}} style={SELECT_STYLE}>
-                      {PROJECT_CATEGORIES.map(c=><option key={c.value} value={c.value}>{c.label}</option>)}
-                    </select>
-                  </FIELD>
-                  <FIELD label="Description"><textarea value={description} onChange={e=>setDescription(e.target.value)} rows={3} placeholder="Brief project description…" style={{...INPUT_STYLE,resize:'vertical' as const}}/></FIELD>
-                </>)}
-                </SectionCard>
-
-                <SectionCard title="Location" icon={<MapPin size={17} weight="duotone" color="var(--text-secondary)" />} style={{marginBottom:16}}>
-                  <FIELD label="Project Address"><input data-tour="project-address" value={address} onChange={e=>setAddress(e.target.value)} required placeholder="123 Main St, Phoenix, AZ 85001" style={INPUT_STYLE}/></FIELD>
-                {/* Defaults to the portfolio standard; only matters if it differs. */}
-                {showDetails && (
-                  <FIELD label="State Jurisdiction" auto={auto.state} hint="Sets statutory lien-waiver forms, preliminary notice deadlines and wage rules.">
-                    <input value={stateJurisdiction} onChange={e=>{setJurisdictionTouched(true);setStateJurisdiction(e.target.value.toUpperCase());setAuto(a=>({...a,state:false}));}} maxLength={2} placeholder="AZ" style={{...INPUT_STYLE,width:90}}/>
-                  </FIELD>
-                )}
-                </SectionCard>
+                        ))}
+                      </div>
+                    </Field>
+                    {showDetails && (
+                      <Field label="Sector" hint={sectorDef?.flags ? 'Public work — prevailing wage and public-agency compliance pre-set below.' : 'Filters building types and pre-sets compliance for public work.'}>
+                        <div className="npChips" role="group" aria-label="Sector">
+                          {SECTORS.map(s=>(
+                            <button type="button" key={s.key} className="k-chip" aria-pressed={sector===s.key} onClick={()=>pickSector(s.key)}>{s.label}</button>
+                          ))}
+                        </div>
+                      </Field>
+                    )}
+                    <Field label="Project name" required>
+                      <Input data-tour="project-name" value={name} onChange={e=>setName(e.target.value)} required placeholder="e.g. Riverdale Medical Pavilion"/>
+                    </Field>
+                    {/* Number, building type, category and description are all seeded or
+                        optional. Two fields is the promise; these are here when wanted. */}
+                    {showDetails && (<>
+                      <Field label="Project number" hint={auto.num ? (pf?.total>0 ? `Continues your ${year} sequence.` : 'Year-based sequence.') : 'Prints on G702s, subcontracts and transmittals.'}>
+                        <Input value={projectNumber} onChange={e=>{setProjectNumber(e.target.value);setAuto(a=>({...a,num:false}));}} placeholder={`${year}-001`}/>
+                      </Field>
+                      <Field label="Building type" hint={sectorDef ? `${sectorBts.length} ${sectorDef.label} building types.` : undefined}>
+                        <Select value={buildingType} onChange={e=>onBuildingTypeChange(e.target.value)} placeholder="Select building type…" options={[...sectorBts]}/>
+                      </Field>
+                      <Field label="Category" hint={auto.cat ? 'Set by the kind of job, refined by building type.' : undefined}>
+                        <Select value={type} onChange={e=>{setType(e.target.value);setCatTouched(true);setAuto(a=>({...a,cat:false}));}} options={PROJECT_CATEGORIES}/>
+                      </Field>
+                      <Field label="Description">
+                        <Textarea value={description} onChange={e=>setDescription(e.target.value)} rows={3} placeholder="Brief project description…"/>
+                      </Field>
+                    </>)}
+                    <Field label="Project address" required>
+                      <Input data-tour="project-address" value={address} onChange={e=>setAddress(e.target.value)} required placeholder="123 Main St, Phoenix, AZ 85001"/>
+                    </Field>
+                    {/* Defaults to the portfolio standard; only matters if it differs. */}
+                    {showDetails && (
+                      <Field label="State jurisdiction" hint="Sets lien-waiver forms, preliminary notice deadlines and wage rules.">
+                        <Input value={stateJurisdiction} onChange={e=>{setJurisdictionTouched(true);setStateJurisdiction(e.target.value.toUpperCase());setAuto(a=>({...a,state:false}));}} maxLength={2} placeholder="AZ" style={{width:90}}/>
+                      </Field>
+                    )}
+                  </FormGrid>
+                </Card>
 
                 {showDetails && (
-                <SectionCard title="Compliance" icon={<ShieldCheck size={17} weight="duotone" color="var(--text-secondary)" />}>
-                  <FIELD label="Prevailing Wage" hint="Davis-Bacon or state law turns on certified payroll (WH-347) tracking for every sub.">
-                    <select value={prevailingWage} onChange={e=>setPrevailingWage(e.target.value)} style={SELECT_STYLE}>
-                      <option>No</option><option>Yes — Davis-Bacon</option><option>Yes — State Law</option>
-                    </select>
-                  </FIELD>
-                  <FIELD label="Public Project" hint="Public-agency work flags bond requirements and statutory retainage rules.">
-                    <select value={publicProject} onChange={e=>setPublicProject(e.target.value)} style={SELECT_STYLE}>
-                      <option>No — Private</option><option>Yes — Public Agency</option>
-                    </select>
-                  </FIELD>
-                </SectionCard>
+                  <Card title="Compliance" icon={<ShieldCheck size={18}/>}>
+                    <FormGrid cols={1}>
+                      <Field label="Prevailing wage" hint="Turns on certified payroll (WH-347) tracking for every sub.">
+                        <Select value={prevailingWage} onChange={e=>setPrevailingWage(e.target.value)} options={['No','Yes — Davis-Bacon','Yes — State Law']}/>
+                      </Field>
+                      <Field label="Public project" hint="Flags bond requirements and statutory retainage rules.">
+                        <Select value={publicProject} onChange={e=>setPublicProject(e.target.value)} options={['No — Private','Yes — Public Agency']}/>
+                      </Field>
+                    </FormGrid>
+                  </Card>
                 )}
               </div>
 
-              <div>
-                {showDetails && (<>
-                <SectionCard title="Contract & Money" icon={<CurrencyDollar size={17} weight="duotone" color="var(--text-secondary)" />} style={{marginBottom:16}}>
-                  <FIELD label="Contract Value" hint={budgetNum>0 ? <>Reads as <b style={{color:TEXT}}>{fmt(budgetNum)}</b> — seeds the budget and prints as G702 line 1.</> : 'Seeds the budget and prints as G702 line 1 — refine after buyout.'}>
-                    <input value={budget} onChange={e=>setBudget(e.target.value)} placeholder="$1,250,000" style={INPUT_STYLE}/>
-                  </FIELD>
-                  <div style={{display:'grid',gridTemplateColumns:'1fr 1fr',gap:16}}>
-                    <FIELD label="Contract Type">
-                      <select value={contractType} onChange={e=>setContractType(e.target.value)} style={SELECT_STYLE}>
-                        {['Lump Sum GMP','Cost Plus Fixed Fee','Cost Plus Percentage','Unit Price','Design-Build'].map(t=><option key={t}>{t}</option>)}
-                      </select>
-                    </FIELD>
-                    <FIELD label="Retainage %" auto={auto.ret} hint={pf?.retMode && auto.ret ? `Your standard across ${pf.total} project${pf.total===1?'':'s'} — held on every pay app.` : 'Industry default — held on every pay app, editable per contract.'}>
-                      <input type="number" value={retainage} onChange={e=>{setRetainage(e.target.value);setAuto(a=>({...a,ret:false}));}} min="0" max="20" style={INPUT_STYLE}/>
-                    </FIELD>
-                  </div>
-                  <div style={{fontSize:12,fontWeight:700,color:DIM, margin:'2px 0 10px',display:'flex',alignItems:'center',gap:6}}>
-                    <CalendarBlank size={14} weight="duotone" color="var(--text-secondary)"/> Contract Milestones
-                  </div>
-                  <div style={{display:'grid',gridTemplateColumns:'1fr 1fr',gap:16}}>
-                    <FIELD label="Award Date"><SaguaroDatePicker value={awardDate} onChange={setAwardDate} style={INPUT_STYLE}/></FIELD>
-                    <FIELD label="Notice to Proceed"><SaguaroDatePicker value={ntpDate} onChange={setNtpDate} style={INPUT_STYLE}/></FIELD>
-                    <FIELD label="Start Date" auto={auto.start} hint="Defaulted to today — adjust freely.">
-                      <SaguaroDatePicker value={startDate} onChange={v=>{setStartDate(v);setAuto(a=>({...a,start:false}));}} style={INPUT_STYLE}/>
-                    </FIELD>
-                    <FIELD label="Substantial Completion"><SaguaroDatePicker value={subDate} onChange={setSubDate} style={INPUT_STYLE}/></FIELD>
-                    <FIELD label="Final Completion"><SaguaroDatePicker value={finalDate} onChange={setFinalDate} style={INPUT_STYLE}/></FIELD>
-                  </div>
-                </SectionCard>
+              {showDetails && (
+                <div>
+                  <Card title="Contract & money" icon={<CurrencyDollar size={18}/>}>
+                    <FormGrid cols={2}>
+                      <Field label="Contract value" span hint={budgetNum>0 ? <>Reads as <b style={{color:'var(--text-primary)'}}>{fmt(budgetNum)}</b> — seeds the budget and prints as G702 line 1.</> : 'Seeds the budget and prints as G702 line 1.'}>
+                        <Input value={budget} onChange={e=>setBudget(e.target.value)} placeholder="$1,250,000"/>
+                      </Field>
+                      <Field label="Contract type">
+                        <Select value={contractType} onChange={e=>setContractType(e.target.value)} options={CONTRACT_TYPES}/>
+                      </Field>
+                      <Field label="Retainage %" hint={pf?.retMode && auto.ret ? `Your standard across ${pf.total} project${pf.total===1?'':'s'}.` : undefined}>
+                        <Input type="number" value={retainage} onChange={e=>{setRetainage(e.target.value);setAuto(a=>({...a,ret:false}));}} min="0" max="20"/>
+                      </Field>
+                      <Field label="Award date"><DateInput value={awardDate} onChange={e=>setAwardDate(e.target.value)}/></Field>
+                      <Field label="Notice to proceed"><DateInput value={ntpDate} onChange={e=>setNtpDate(e.target.value)}/></Field>
+                      <Field label="Start date" hint={auto.start ? 'Defaulted to today.' : undefined}>
+                        <DateInput value={startDate} onChange={e=>{setStartDate(e.target.value);setAuto(a=>({...a,start:false}));}}/>
+                      </Field>
+                      <Field label="Substantial completion"><DateInput value={subDate} onChange={e=>setSubDate(e.target.value)}/></Field>
+                      <Field label="Final completion"><DateInput value={finalDate} onChange={e=>setFinalDate(e.target.value)}/></Field>
+                    </FormGrid>
+                  </Card>
 
-                <SectionCard title="Team & Contacts" icon={<UsersThree size={17} weight="duotone" color="var(--text-secondary)" />}>
-                  <FIELD label="Owner Name" hint={ownerNames.length>0 ? `${ownerNames.length} owner${ownerNames.length===1?'':'s'} on file — start typing to reuse.` : 'Owner approvals and pay-app routing start here.'}>
-                    <Suggest value={owner} onChange={e=>onOwnerChange(e.target.value)} placeholder="Desert Health Partners LLC" style={INPUT_STYLE} options={ownerNames} />
-                  </FIELD>
-                  <FIELD label="Owner Email" auto={auto.ownerEmail} hint={auto.ownerEmail ? 'Pulled from a prior project with this owner.' : 'G702 packets route here for one-click approval.'}>
-                    <input value={ownerEmail} onChange={e=>{setOwnerEmail(e.target.value);setAuto(a=>({...a,ownerEmail:false}));}} placeholder="owner@example.com" style={INPUT_STYLE}/>
-                  </FIELD>
-                  <FIELD label="Architect / Designer" hint={archNames.length>0 ? `${archNames.length} on file — start typing to reuse.` : undefined}>
-                    <Suggest value={arch} onChange={e=>onArchChange(e.target.value)} placeholder="Sonoran Architecture Group" style={INPUT_STYLE} options={archNames} />
-                  </FIELD>
-                  <FIELD label="Architect Email" auto={auto.archEmail} hint={auto.archEmail ? 'Pulled from a prior project with this architect.' : undefined}>
-                    <input value={archEmail} onChange={e=>{setArchEmail(e.target.value);setAuto(a=>({...a,archEmail:false}));}} placeholder="arch@example.com" style={INPUT_STYLE}/>
-                  </FIELD>
-                </SectionCard>
-                </>)}
-              </div>
-            </div>
-
-            <div style={{marginTop:18,marginBottom:10}}>
-              <div style={{fontSize:12,fontWeight:800, color: 'var(--text-primary)',marginBottom:6}}>
-                Step 3 · Add Your Drawings
-              </div>
-              <div style={{fontSize:13,color:'var(--c-text-2)',lineHeight:1.5,maxWidth:560}}>
-                Drop the plan set on the next screen and Saguaro measures every trade, prices it, and writes
-                your budget and bid packages from it. You can skip it and add plans later.
-              </div>
-            </div>
-
-            <div style={{display:'flex',gap:12,alignItems:'center',marginTop:6,flexWrap:'wrap' as const}}>
-              <button type="submit" data-tour="create-project-submit" onClick={() => { nextRef.current = 'takeoff'; }}
-                disabled={submitDisabled} className="pmBtn"
-                style={{...goldButtonStyle,padding:'13px 32px',fontSize:15,cursor:submitDisabled?'not-allowed':'pointer',opacity:submitDisabled?0.6:1}}>
-                {saving?'Creating…':'Create & Add Drawings →'}
-              </button>
-
-              <button type="submit" onClick={() => { nextRef.current = 'overview'; }}
-                disabled={submitDisabled}
-                style={{padding:'13px 26px',background:'transparent',border:'1px solid rgba(255,255,255,0.18)',
-                        borderRadius:10,color:'var(--c-text-2)',fontWeight:700,fontSize:14,minHeight:44,
-                        cursor:submitDisabled?'not-allowed':'pointer',opacity:submitDisabled?0.6:1}}>
-                {saving?'Creating…':'Create Without Drawings'}
-              </button>
-
-
-              <button type="button" onClick={() => setShowDetails(v => !v)}
-                style={{padding:'13px 20px',background:'transparent',border:'1px solid rgba(255,255,255,0.14)',
-                        borderRadius:10,color:'var(--c-text-2)',fontWeight:600,fontSize:13,minHeight:44,cursor:'pointer'}}>
-                {showDetails ? 'Hide Contract Details' : 'Add Contract Details'}
-              </button>
-              <button type="button" onClick={()=>guard.requestClose(()=>router.back())} className="pmBtn" style={{...ghostButtonStyle,padding:'13px 20px'}}>
-                Cancel
-              </button>
-              {submitDisabled && !saving && (
-                <span style={{fontSize:12,color:'var(--c-text-2)'}}>Name and address are required — everything else is pre-seeded or optional.</span>
+                  <Card title="Team & contacts" icon={<UsersThree size={18}/>}>
+                    <FormGrid cols={1}>
+                      <Field label="Owner name" hint={ownerNames.length>0 ? `${ownerNames.length} owner${ownerNames.length===1?'':'s'} on file — start typing to reuse.` : undefined}>
+                        <Suggest className="k-input" value={owner} onChange={e=>onOwnerChange(e.target.value)} placeholder="Desert Health Partners LLC" options={ownerNames} />
+                      </Field>
+                      <Field label="Owner email" hint={auto.ownerEmail ? 'From a prior project with this owner.' : 'G702 packets route here for approval.'}>
+                        <Input type="email" value={ownerEmail} onChange={e=>{setOwnerEmail(e.target.value);setAuto(a=>({...a,ownerEmail:false}));}} placeholder="owner@example.com"/>
+                      </Field>
+                      <Field label="Architect / designer" hint={archNames.length>0 ? `${archNames.length} on file — start typing to reuse.` : undefined}>
+                        <Suggest className="k-input" value={arch} onChange={e=>onArchChange(e.target.value)} placeholder="Sonoran Architecture Group" options={archNames} />
+                      </Field>
+                      <Field label="Architect email" hint={auto.archEmail ? 'From a prior project with this architect.' : undefined}>
+                        <Input type="email" value={archEmail} onChange={e=>{setArchEmail(e.target.value);setAuto(a=>({...a,archEmail:false}));}} placeholder="arch@example.com"/>
+                      </Field>
+                    </FormGrid>
+                  </Card>
+                </div>
               )}
             </div>
+
+            <div className="npFoot">
+              <Button variant="primary" type="submit" icon={<ArrowRight size={15} weight="bold"/>} disabled={submitDisabled} onClick={() => { nextRef.current = 'takeoff'; }}>
+                {saving?'Creating…':'Create & add drawings'}
+              </Button>
+              <Button type="submit" disabled={submitDisabled} onClick={() => { nextRef.current = 'overview'; }}>
+                {saving?'Creating…':'Create without drawings'}
+              </Button>
+              <Button variant="ghost" onClick={() => setShowDetails(v => !v)}>
+                {showDetails ? 'Hide contract details' : 'Add contract details'}
+              </Button>
+              {submitDisabled && !saving && <span className="npFootNote">Name and address are required.</span>}
+            </div>
           </div>
 
-          {/* Context rail — the job assembling itself, then what that means */}
-          <div style={{position:'sticky' as const,top:80,display:'flex',flexDirection:'column',gap:16}}>
+          {/* Context rail — the job assembling itself */}
+          <aside className="npRail" aria-label="Project preview">
             <ProjectPreview
               name={name}
               address={address}
@@ -651,38 +587,20 @@ export default function NewProjectPage() {
               folders={tpl?.folders ?? []}
               divisionCount={tpl?.divisions.length ?? 0}
             />
-            <SectionCard flat title="What Gets Created" icon={<Stack size={17} weight="duotone" color="var(--text-secondary)" />} bodyStyle={{padding:'6px 20px 20px'}}>
-              <FlowSteps title="" steps={[
-                {title:'Project Workspace', desc:'Overview, directory, documents, daily logs and photo feed — live the moment you hit Create.'},
-                {title:'Budget & Bid Packages', desc:'CSI-coded budget lines and trade bid packages — sub awards commit dollars automatically.'},
-                {title:'Schedule & Field Tools', desc:'Baseline schedule plus RFIs, submittals, punch lists and safety checklists, wired to this project.'},
-                {title:'Billing — G702 Pay Apps', desc:'AIA G702/G703 applications with retainage math and automatic lien waivers for every sub.'},
+            <Card title="Smart defaults" icon={<Sparkle size={18}/>}>
+              <DetailList items={[
+                ['Project number', projectNumber||null],
+                ['Category', PROJECT_CATEGORIES.find(c=>c.value===type)?.label||type],
+                ['Retainage', `${Number(retainage)||10}%`],
+                ['Start date', fmtDate(startDate)],
+                ['Jurisdiction', stateJurisdiction||null],
               ]}/>
-            </SectionCard>
-
-            <SectionCard flat title="Smart Defaults" icon={<Sparkle size={17} weight="duotone" color="var(--text-secondary)" />}>
-              <InsightRow label="Project Number" value={projectNumber||'—'} accent={GOLD} strong/>
-              <InsightRow label="Category" value={PROJECT_CATEGORIES.find(c=>c.value===type)?.label||type}/>
-              <InsightRow label="Retainage" value={`${Number(retainage)||10}%`}/>
-              <InsightRow label="Start Date" value={fmtDate(startDate)}/>
-              <InsightRow label="Jurisdiction" value={stateJurisdiction||'—'}/>
-              <div style={{fontSize:12,color:'var(--c-text-2)',lineHeight:1.5,marginTop:10,paddingTop:10,borderTop:'1px solid rgba(255,255,255,0.08)'}}>
-                Auto chips mark what Saguaro pre-filled. Every value stays editable — nothing locks until you create the project.
-              </div>
-            </SectionCard>
-
-            <div style={{background:'var(--bg-surface-2)',border:'1px solid var(--border-default)',borderRadius:12,padding:'14px 18px',fontSize:13,color:DIM,display:'flex',gap:10,alignItems:'flex-start'}}>
-              <Sparkle size={16} weight="fill" color="var(--text-secondary)" style={{flexShrink:0,marginTop:2}}/>
-              <div>
-                <strong style={{color:TEXT}}>AI Auto-Build on First Award:</strong> when the first bid is awarded, Saguaro automatically creates 24 schedule tasks, a CSI-coded budget, sub packages, a safety plan, QC checkpoints and the contact directory.
-              </div>
-            </div>
-          </div>
+            </Card>
+          </aside>
         </div>
-
-        </form>
+      </form>
 
       <UnsavedGuardModal guard={guard} />
-    </PremiumSurface>
+    </PageShell>
   );
 }
