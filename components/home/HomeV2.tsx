@@ -20,6 +20,7 @@ import useSWR from 'swr';
 import { useRouter, useSearchParams } from 'next/navigation';
 import { FlatStyles, Brief, NumberStrip, RowSkeleton } from '@/components/ui/flat';
 import { useProjects } from '@/lib/hooks/useProjects';
+import type { JobHealth } from '@/lib/job-health';
 import type { TickerItem, TickerSummary } from '@/lib/home/ticker';
 import type { Metric, QueueItem, ScheduleEntry, HomeView, DataState } from '@/lib/home/rank';
 import type { FlatHome } from '@/lib/home/flat-build';
@@ -75,6 +76,12 @@ function HomeInner() {
   const sp = useSearchParams();
   const router = useRouter();
   const { projects } = useProjects();
+  /* Health per job from the Jobs list, so Home's rows carry the same ring and order. */
+  const healthById = React.useMemo(() => {
+    const m = new Map<string, JobHealth>();
+    for (const p of projects as unknown as { id: string; health?: JobHealth }[]) if (p.health) m.set(p.id, p.health);
+    return m;
+  }, [projects]);
   const qs = new URLSearchParams();
   for (const k of ['view', 'scope', 'project']) { const v = sp.get(k); if (v) qs.set(k, v); }
   const key = `/api/home${qs.toString() ? '?' + qs.toString() : ''}`;
@@ -176,7 +183,7 @@ function HomeInner() {
         }))} />
       ) : null,
       bidding: f?.bidding ? <BiddingSection sec={f.bidding} onRetry={retry} /> : null,
-      jobs: f?.jobs ? <JobsSection sec={f.jobs} onRetry={retry} /> : null,
+      jobs: f?.jobs ? <JobsSection sec={f.jobs} onRetry={retry} health={healthById} /> : null,
       money: f?.money ? <MoneySection sec={f.money} onRetry={retry} /> : null,
       attention: (
         <AttentionSection items={data.queue.items} total={data.queue.total} restricted={data.queue.state === 'restricted'}

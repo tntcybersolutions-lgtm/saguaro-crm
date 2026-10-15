@@ -52,6 +52,9 @@ import JobColorPicker from '@/components/project/JobColorPicker';
 import ProjectOwnershipCard from '@/components/projects/ProjectOwnershipCard';
 import { coTotal } from '@/lib/change-order-amount';
 import { architectName, ownerName } from '@/lib/project-parties';
+import { useProjects } from '@/lib/hooks/useProjects';
+import type { JobHealth } from '@/lib/job-health';
+import { HealthRing, ScheduleBar, ItemDots, OverUnder, JOB_HEALTH_CSS } from '@/components/jobs/JobHealthParts';
 
 /* ── Fetchers ─────────────────────────────────────────────────────────── */
 
@@ -148,6 +151,9 @@ export default function JobPage() {
     projectId ? `/api/projects/${projectId}/tools` : null, toolsFetcher, { revalidateOnFocus: false, keepPreviousData: true },
   );
   const { ctx, error: ctxError, revalidate: reloadCtx } = useProjectContext(projectId);
+  /* Health comes from the Jobs list (same SWR key), so this job shows the same ring as its row there. */
+  const { projects: allJobs } = useProjects();
+  const health = (allJobs as unknown as { id: string; health?: JobHealth }[]).find((j) => j.id === projectId)?.health ?? null;
 
   const [showMore, setShowMore] = useState(false);
   useEffect(() => { try { setShowMore(localStorage.getItem('sag_all_tools') === '1'); } catch { /* private mode: starts folded */ } }, []);
@@ -168,7 +174,7 @@ export default function JobPage() {
   const p = data?.project ?? tr?.project ?? null;
   const retryAll = () => { void reloadAgg(); void reloadTools(); };
 
-  const css = <><FlatStyles /><style dangerouslySetInnerHTML={{ __html: CSS }} /></>;
+  const css = <><FlatStyles /><style dangerouslySetInnerHTML={{ __html: JOB_HEALTH_CSS + CSS }} /></>;
 
   if (notFound) {
     return (
@@ -476,6 +482,27 @@ export default function JobPage() {
         )}
       </header>
 
+      {health && (
+        <section className="jx-health" aria-label="Job health">
+          <HealthRing health={health} size={84} />
+          <div className="jx-health-body">
+            <ul className="jx-reasons">
+              {health.reasons.slice(0, 3).map((r) => <li key={r} data-good={r.startsWith('Nothing') || undefined}>{r}</li>)}
+            </ul>
+            <div className="jx-health-sched">
+              <ScheduleBar health={health} />
+              <small data-late={health.schedule.behind || undefined}>
+                {health.schedule.workPct == null && health.schedule.timePct == null ? 'No schedule dates yet'
+                  : [health.schedule.workPct != null ? `${health.schedule.workPct}% done` : null,
+                     health.schedule.daysLate > 0 ? `${health.schedule.daysLate} days late` : health.schedule.timePct != null ? `${health.schedule.timePct}% of time used` : null].filter(Boolean).join(' · ')}
+              </small>
+            </div>
+            <div className="jx-health-dots"><ItemDots health={health} /></div>
+          </div>
+          <div className="jx-health-ou"><span className="jx-health-k">Over / under</span><OverUnder health={health} /></div>
+        </section>
+      )}
+
       <div className="jx-money" aria-busy={moneyState === 'loading' || undefined}>
         <NumberStrip items={[
           { value: moneyState === 'ok' ? (contract > 0 ? fmtMoneyShort(contract) : 'Not set') : moneyState === 'failed' ? '—' : <i className="jx-skel-val" />, label: 'Contract' },
@@ -521,6 +548,21 @@ function JobSkeleton({ css }: { css: React.ReactNode }) {
 /* Injected with dangerouslySetInnerHTML (tools/check-style-escapes.mjs), so the
    server and client text match. */
 const CSS = `
+.jx-health{display:grid;grid-template-columns:auto minmax(0,1fr) auto;gap:20px;align-items:center;padding:16px 0 18px;margin:4px 0 8px;border-top:1px solid var(--fl-line);border-bottom:1px solid var(--fl-line)}
+.jx-health-body{display:flex;flex-direction:column;gap:10px;min-width:0}
+.jx-reasons{list-style:none;margin:0;padding:0;display:flex;flex-direction:column;gap:4px}
+.jx-reasons li{font-size:14px;font-weight:600;color:var(--text-primary);display:flex;gap:8px;align-items:center}
+.jx-reasons li::before{content:"";width:7px;height:7px;border-radius:50%;background:var(--danger);flex:none}
+.jx-reasons li[data-good]::before{background:var(--success)}
+.jx-health-sched{display:grid;grid-template-columns:minmax(120px,360px) auto;gap:12px;align-items:center}
+.jx-health-sched small{font-size:13px;color:var(--text-secondary);white-space:nowrap}
+.jx-health-sched small[data-late]{color:var(--danger);font-weight:600}
+.jx-health-dots .jh-dots{display:flex;flex-wrap:wrap;gap:8px 18px}
+.jx-health-dots .jh-dot-l{display:inline;font-size:12px;font-weight:600;color:var(--text-secondary)}
+.jx-health-ou{display:flex;flex-direction:column;align-items:flex-end;gap:4px}
+.jx-health-k{font-size:12px;font-weight:700;letter-spacing:.06em;text-transform:uppercase;color:var(--text-tertiary)}
+.jx-health-ou .jh-ou b{font-size:20px;font-weight:800}
+@media (max-width:640px){.jx-health{grid-template-columns:auto minmax(0,1fr);gap:14px}.jx-health-ou{grid-column:1 / -1;flex-direction:row;justify-content:space-between;align-items:center}.jx-health-sched{grid-template-columns:1fr;gap:6px}}
 .jx{color:var(--fl-text);background:var(--bg-base);min-height:calc(100vh - 120px)}
 .jx-head{margin-bottom:var(--head-gap)}
 .jx-title{display:flex;align-items:center;flex-wrap:wrap;gap:8px 12px;min-width:0}
