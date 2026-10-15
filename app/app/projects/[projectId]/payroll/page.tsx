@@ -1,22 +1,34 @@
 'use client';
+/**
+ * Certified Payroll — the DOL WH-347 for one week on the job: an editable money
+ * grid (hours by day, rates, gross, every deduction column, net) with totals and
+ * export, the Davis-Bacon rate assist, an import from the field time clock, the
+ * Statement of Compliance and the filed history.
+ *
+ * Reads  GET  /api/payroll/list?projectId=      (filed WH-347s)
+ *        GET  /api/projects/:id                  (prevailing-wage flag, state, county)
+ *        GET  /api/prevailing-wage?state=&county= (classification rates)
+ *        GET  /api/projects/:id/timesheets        (clocked field time)
+ * Writes POST /api/payroll/generate               (builds the WH-347 PDF)
+ */
 import React, { useState, useEffect } from 'react';
 import { useProjectContext } from '@/lib/hooks/useProjectContext';
 import { useParams } from 'next/navigation';
-import { XCircle, FileText, ShieldCheck, Clock, CalendarBlank, UserPlus, Table as TableIcon, SealCheck, ClockCounterClockwise } from '@phosphor-icons/react';
-import SaguaroDatePicker from '../../../../../components/SaguaroDatePicker';
-import { PremiumSurface, ModuleHero, SectionCard, PremiumEmpty, StatStrip, goldButtonStyle, ghostButtonStyle, goldOutlineButtonStyle, secondaryButtonStyle } from '@/components/ui/premium';
+import {
+  XCircle, FileText, ShieldCheck, Clock, CalendarBlank, UserPlus, PencilSimple, Scales, CurrencyDollar,
+  Wallet, ClockCounterClockwise, WarningCircle,
+} from '@phosphor-icons/react';
+import {
+  PageShell, StatRow, Button, Card, DataTable, EmptyState, Badge, Callout, Toolbar, FormModal, Field, Input,
+  DateInput, FormGrid, Toast, useToast, type Column, type StatItem, type BadgeTone,
+} from '@/components/ui/kit';
 import { SUB_TRADES_BY_DIVISION } from '@/lib/construction-intelligence';
 import { leaveOf } from '@/lib/leave-entry';
-
 import { inAppFileClick } from '@/lib/media-save';
-const GOLD='var(--brand-primary)',DARK='var(--bg-base)',RAISED='var(--bg-surface)',BORDER='rgba(255,255,255,0.12)',DIM='var(--text-secondary)',TEXT='var(--text-primary)',GREEN='var(--success)',RED='var(--danger)';
-const fmt = (n: number) => '$' + n.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
-const fmt0 = (n: number) => '$' + (Number(n) || 0).toLocaleString('en-US', { maximumFractionDigits: 0 });
 
-const inp: React.CSSProperties = {
-  width: '100%', padding: '8px 11px', background: DARK,
-  border: `1px solid ${BORDER}`, borderRadius: 6, color: TEXT, fontSize: 12, outline: 'none',
-};
+const fmt = (n: number) => '$' + (Number(n) || 0).toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+const fmt0 = (n: number) => '$' + (Number(n) || 0).toLocaleString('en-US', { maximumFractionDigits: 0 });
+const hrs = (n: number) => String(Math.round((Number(n) || 0) * 100) / 100);
 
 const DAYS = ['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun'] as const;
 type Day = typeof DAYS[number];
@@ -103,8 +115,12 @@ const defaultEmployee = (): Employee => ({
   overtime: false,
 });
 
+function calcHours(emp: Employee): number {
+  return Object.values(emp.hours).reduce((s, h) => s + h, 0);
+}
+
 function calcGross(emp: Employee): number {
-  const totalHours = Object.values(emp.hours).reduce((s, h) => s + h, 0);
+  const totalHours = calcHours(emp);
   const regularHours = Math.min(totalHours, 40);
   const otHours = Math.max(0, totalHours - 40);
   const otRate = emp.otRate || emp.hourlyRate * 1.5;
@@ -120,11 +136,20 @@ function calcNet(emp: Employee): number {
   return Math.max(0, calcGross(emp) - calcTotalDeductions(emp));
 }
 
-const statusCfg: Record<string, { color: string; bg: string }> = {
-  submitted: { color: 'var(--text-primary)',      bg: 'var(--brand-primary-12)' },
-  draft:     { color: DIM,       bg: 'rgba(148,163,184,.1)' },
-  certified: { color: 'var(--success)', bg: 'rgba(74,222,128,.12)' },
+const STATUS_TONE: Record<string, BadgeTone> = { submitted: 'under_contract', draft: 'neutral', certified: 'completed' };
+const statusLabel = (s: string) => { const t = s || 'draft'; return t.charAt(0).toUpperCase() + t.slice(1); };
+const fileUrl = (u: string) => `/api/files/open?u=${encodeURIComponent(u || '')}`;
+const shortDate = (iso: string) => {
+  if (!iso) return '—';
+  const d = new Date(String(iso).slice(0, 10) + 'T12:00:00');
+  return Number.isNaN(d.getTime()) ? iso : d.toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' });
 };
+
+/* Grid cells hold inputs: arrow keys and Enter belong to the field (number
+   steppers, select options), not to the table's row-to-row keyboard nav. */
+const keepKeys = { onKeyDown: (e: React.KeyboardEvent) => e.stopPropagation() };
+const NUM_W = 84;
+const DAY_W = 58;
 
 export default function PayrollPage() {
   const params = useParams();
@@ -132,33 +157,39 @@ export default function PayrollPage() {
 
   const [weekEndingDate, setWeekEndingDate] = useState('');
   const [employees, setEmployees] = useState<Employee[]>([defaultEmployee()]);
-  const [showAddEmployee, setShowAddEmployee] = useState(false);
+  // Add / edit employee modal. editId null = adding a new row.
+  const [empModalOpen, setEmpModalOpen] = useState(false);
+  const [editId, setEditId] = useState<string | null>(null);
   const [newEmp, setNewEmp] = useState<Employee>(defaultEmployee());
   const [complianceAgreed, setComplianceAgreed] = useState(false);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
   const [success, setSuccess] = useState('');
+  const [generatedUrl, setGeneratedUrl] = useState<string | null>(null);
   const [records, setRecords] = useState<PayrollRecord[]>([]);
   const [recordsLoading, setRecordsLoading] = useState(true);
+  const { toast, show } = useToast(6000);
 
   // Prevailing-wage context for this project (Davis-Bacon rate assist).
   const [pw, setPw] = useState<PwContext | null>(null);
   const [pwRates, setPwRates] = useState<PwRate[]>([]);
-  const [pwNote, setPwNote] = useState('');
 
   // Project intelligence snapshot + clocked field time — the screen walks in
   // knowing the project and the hours the crew already logged.
   const { ctx } = useProjectContext(pid);
   const [timeEntries, setTimeEntries] = useState<any[]>([]);
 
-  useEffect(() => { loadRecords(); loadPrevailingWage(); loadTimesheets(); }, [pid]);
+  useEffect(() => { loadRecords(); loadPrevailingWage(); loadTimesheets(); }, [pid]); // eslint-disable-line react-hooks/exhaustive-deps
 
   async function loadTimesheets() {
     try {
       const r = await fetch(`/api/projects/${pid}/timesheets`);
       const d = await r.json() as any;
       setTimeEntries(Array.isArray(d.entries) ? d.entries : []);
-    } catch { setTimeEntries([]); }
+    } catch (e) {
+      console.error('[payroll] timesheets', e);
+      setTimeEntries([]);
+    }
   }
 
   async function loadPrevailingWage() {
@@ -167,20 +198,21 @@ export default function PayrollPage() {
       const d = (await r.json()) as { project?: { prevailing_wage?: boolean; state?: string | null; county?: string | null; davis_bacon_wage_decision?: string | null } };
       const p = d.project;
       if (!p || !p.prevailing_wage) { setPw(null); return; }
-      const ctx: PwContext = {
+      const pctx: PwContext = {
         state: (p.state || '').toUpperCase(),
         county: p.county || '',
         wageDecision: p.davis_bacon_wage_decision || '',
       };
-      setPw(ctx);
-      if (ctx.state) {
-        const qs = new URLSearchParams({ state: ctx.state });
-        if (ctx.county) qs.set('county', ctx.county);
+      setPw(pctx);
+      if (pctx.state) {
+        const qs = new URLSearchParams({ state: pctx.state });
+        if (pctx.county) qs.set('county', pctx.county);
         const rr = await fetch(`/api/prevailing-wage?${qs.toString()}`);
         const dd = (await rr.json()) as { rates?: PwRate[] };
         setPwRates(dd.rates || []);
       }
-    } catch {
+    } catch (e) {
+      console.error('[payroll] prevailing wage', e);
       setPw(null);
       setPwRates([]);
     }
@@ -203,23 +235,26 @@ export default function PayrollPage() {
     const emp = employees.find((e) => e.id === empId);
     if (!emp) return;
     const r = findPwRate(emp.classification);
-    if (!r) { setPwNote(`No prevailing wage rate found for "${emp.classification}" in ${pw?.state || ''}${pw?.county ? ' / ' + pw.county : ''}.`); return; }
+    if (!r) { show(`No prevailing wage rate found for "${emp.classification}" in ${pw?.state || ''}${pw?.county ? ' / ' + pw.county : ''}.`, 'bad'); return; }
     setEmployees((prev) => prev.map((e) => e.id === empId
       ? { ...e, hourlyRate: r.total, otRate: Math.round(r.total * 1.5 * 100) / 100 }
       : e));
-    setPwNote(`Applied ${r.classification}: base ${fmt(r.base)} + fringe ${fmt(r.fringe)} = ${fmt(r.total)}/hr.`);
+    show(`Applied ${r.classification}: base ${fmt(r.base)} + fringe ${fmt(r.fringe)} = ${fmt(r.total)}/hr.`);
   }
 
   /** Apply prevailing rates to every employee whose classification matches. */
   function applyPwRateAll() {
+    // Counted from the current rows, not inside the state updater (which React
+    // may run later, or twice in Strict Mode, and miscount).
     let applied = 0, missed = 0;
-    setEmployees((prev) => prev.map((e) => {
+    const next = employees.map((e) => {
       const r = findPwRate(e.classification);
       if (!r) { missed++; return e; }
       applied++;
       return { ...e, hourlyRate: r.total, otRate: Math.round(r.total * 1.5 * 100) / 100 };
-    }));
-    setPwNote(`Applied prevailing wage to ${applied} employee${applied === 1 ? '' : 's'}${missed ? ` (${missed} without a matching classification)` : ''}.`);
+    });
+    setEmployees(next);
+    show(`Applied prevailing wage to ${applied} employee${applied === 1 ? '' : 's'}${missed ? ` (${missed} without a matching classification)` : ''}.`, applied ? 'good' : 'bad');
   }
 
   async function loadRecords() {
@@ -228,7 +263,8 @@ export default function PayrollPage() {
       const r = await fetch(`/api/payroll/list?projectId=${pid}`);
       const d = await r.json() as any;
       setRecords(d.records || []);
-    } catch {
+    } catch (e) {
+      console.error('[payroll] list', e);
       setRecords([]);
     } finally {
       setRecordsLoading(false);
@@ -279,17 +315,13 @@ export default function PayrollPage() {
       const base = blankOnly ? [] : prev.filter(e => e.name);
       return [...base, ...imported.filter(im => !base.some(e => e.name.toLowerCase() === im.name.toLowerCase()))];
     });
-    setSuccess('Imported ' + imported.length + ' employee' + (imported.length === 1 ? '' : 's') + ' (' + weekClockedHours.toFixed(1) + ' hrs) from the field time clock — set rates and deductions, then generate.');
-    setTimeout(() => setSuccess(''), 6000);
+    show('Imported ' + imported.length + ' employee' + (imported.length === 1 ? '' : 's') + ' (' + weekClockedHours.toFixed(1) + ' hrs) from the field time clock — set rates and deductions, then generate.');
   }
 
-  const totalWeekHours = employees.reduce((s, e) => s + Object.values(e.hours).reduce((h, v) => h + v, 0), 0);
+  const totalWeekHours = employees.reduce((s, e) => s + calcHours(e), 0);
   const totalWeekGross = employees.reduce((s, e) => s + calcGross(e), 0);
   const totalWeekNet = employees.reduce((s, e) => s + calcNet(e), 0);
-  const totalWeekFica = employees.reduce((s, e) => s + (e.fica || 0), 0);
-  const totalWeekFedWH = employees.reduce((s, e) => s + (e.fedWH || 0), 0);
-  const totalWeekStateWH = employees.reduce((s, e) => s + (e.stateWH || 0), 0);
-  const totalWeekOther = employees.reduce((s, e) => s + (e.deductions || 0), 0);
+  const totalWeekDeductions = employees.reduce((s, e) => s + calcTotalDeductions(e), 0);
 
   function updateEmpHours(empId: string, day: Day, val: number) {
     setEmployees(prev => prev.map(e => e.id === empId ? { ...e, hours: { ...e.hours, [day]: val } } : e));
@@ -303,11 +335,28 @@ export default function PayrollPage() {
     setEmployees(prev => prev.filter(e => e.id !== empId));
   }
 
+  function openAddEmployee() {
+    setEditId(null);
+    setNewEmp(defaultEmployee());
+    setEmpModalOpen(true);
+  }
+
+  function openEditEmployee(emp: Employee) {
+    setEditId(emp.id);
+    setNewEmp({ ...emp, hours: { ...emp.hours } });
+    setEmpModalOpen(true);
+  }
+
   function addEmployee() {
     if (!newEmp.name) return;
-    setEmployees(prev => [...prev, { ...newEmp, id: 'emp-' + Date.now() }]);
+    if (editId) {
+      setEmployees(prev => prev.map(e => e.id === editId ? { ...newEmp, id: editId } : e));
+    } else {
+      setEmployees(prev => [...prev, { ...newEmp, id: 'emp-' + Date.now() }]);
+    }
     setNewEmp(defaultEmployee());
-    setShowAddEmployee(false);
+    setEditId(null);
+    setEmpModalOpen(false);
   }
 
   async function handleGenerate() {
@@ -346,357 +395,339 @@ export default function PayrollPage() {
       if (d.error) {
         setError(d.error);
       } else {
-        setSuccess('WH-347 generated.' + (d.downloadUrl ? ' Download: ' + d.downloadUrl : ' Check history below.'));
+        setSuccess('WH-347 generated for the week ending ' + shortDate(weekEndingDate) + '.');
+        setGeneratedUrl(d.downloadUrl || null);
         setWeekEndingDate('');
         setEmployees([defaultEmployee()]);
         setComplianceAgreed(false);
         await loadRecords();
       }
-    } catch {
+    } catch (e) {
+      console.error('[payroll] generate', e);
       setError('Request failed. Check your connection and try again.');
     }
     setLoading(false);
   }
 
+  const base = `/app/projects/${pid}`;
+
+  const stats: StatItem[] = [
+    { label: 'Filed to date', value: recordsLoading ? '—' : String(records.length), sub: grossFiled > 0 ? fmt0(grossFiled) + ' gross certified' : 'No WH-347s yet', icon: <ClockCounterClockwise size={15} /> },
+    { label: 'This week', value: totalWeekHours.toFixed(1) + ' hrs', sub: `${employees.length} employee${employees.length === 1 ? '' : 's'}`, icon: <CalendarBlank size={15} /> },
+    {
+      label: 'Field time clock',
+      value: weekEndingDate ? weekClockedHours.toFixed(1) + ' hrs' : String(timeEntries.length),
+      sub: weekEndingDate ? weekClockedNames.length + ' employee' + (weekClockedNames.length === 1 ? '' : 's') + ' clocked this week' : 'entries on this job',
+      tone: weekEndingDate && weekEntries.length > 0 && Math.abs(weekClockedHours - totalWeekHours) > 0.01 ? 'warn' : 'default',
+      icon: <Clock size={15} />,
+      href: `${base}/timesheets`,
+    },
+    { label: 'Gross wages', value: fmt(totalWeekGross), sub: `${fmt(totalWeekDeductions)} withheld`, icon: <CurrencyDollar size={15} /> },
+    { label: 'Net wages', value: fmt(totalWeekNet), sub: 'After deductions', tone: totalWeekNet > 0 ? 'good' : 'default', icon: <Wallet size={15} /> },
+  ];
+
+  const numCell = (emp: Employee, field: 'hourlyRate' | 'otRate' | 'fica' | 'fedWH' | 'stateWH' | 'deductions', label: string, step = 0.01) => (
+    <Input
+      type="number" min={0} step={step} inputMode="decimal"
+      value={emp[field]}
+      onChange={e => updateEmp(emp.id, field, Number(e.target.value))}
+      aria-label={`${emp.name || 'Employee'} ${label}`} title={label}
+      style={{ width: NUM_W, textAlign: 'right' }}
+      {...keepKeys}
+    />
+  );
+  const money = (key: 'fica' | 'fedWH' | 'stateWH' | 'deductions', header: string, label: string): Column<Employee> => ({
+    key, header, align: 'right', sortable: false, groupable: false, phone: 'hide', total: 'sum', format: fmt,
+    accessor: (e) => e[key] || 0, render: (e) => numCell(e, key, label),
+  });
+
+  const weekColumns: Column<Employee>[] = [
+    {
+      key: 'name', header: 'Employee', primary: true, phone: 'show', sortable: false, groupable: false, accessor: (e) => e.name,
+      render: (e) => <Input value={e.name} onChange={ev => updateEmp(e.id, 'name', ev.target.value)} placeholder="Name" aria-label="Employee name" style={{ minWidth: 150 }} {...keepKeys} />,
+    },
+    {
+      key: 'classification', header: 'Class', sortable: false, phone: 'hide', accessor: (e) => e.classification,
+      render: (e) => (
+        <select className="k-select" value={e.classification} onChange={ev => updateEmp(e.id, 'classification', ev.target.value)} aria-label={`${e.name || 'Employee'} classification`} style={{ minWidth: 150 }} {...keepKeys}>
+          <ClassificationOptions current={e.classification} />
+        </select>
+      ),
+    },
+    { key: 'hourlyRate', header: 'Reg $', align: 'right', sortable: false, groupable: false, phone: 'hide', accessor: (e) => e.hourlyRate, render: (e) => numCell(e, 'hourlyRate', 'Regular rate') },
+    { key: 'otRate', header: 'OT $', align: 'right', sortable: false, groupable: false, phone: 'hide', accessor: (e) => e.otRate, render: (e) => numCell(e, 'otRate', 'Overtime rate') },
+    ...DAYS.map((day): Column<Employee> => ({
+      key: `day_${day}`, header: day, align: 'right', sortable: false, groupable: false, phone: 'hide', total: 'sum', format: hrs,
+      accessor: (e) => e.hours[day],
+      render: (e) => (
+        <Input
+          type="number" min={0} max={24} step={0.5} inputMode="decimal"
+          value={e.hours[day]}
+          onChange={ev => updateEmpHours(e.id, day, Number(ev.target.value))}
+          aria-label={`${e.name || 'Employee'} ${day} hours`}
+          style={{ width: DAY_W, textAlign: 'center', paddingLeft: 4, paddingRight: 4 }}
+          {...keepKeys}
+        />
+      ),
+    })),
+    {
+      key: 'hours', header: 'Hrs', align: 'right', sortable: false, groupable: false, phone: 'show', total: 'sum', format: (n) => n.toFixed(1),
+      accessor: (e) => calcHours(e),
+      render: (e) => { const h = calcHours(e); return <strong style={{ color: h > 40 ? 'var(--warning)' : 'var(--text-primary)' }}>{h.toFixed(1)}</strong>; },
+    },
+    { key: 'gross', header: 'Gross', align: 'right', sortable: false, groupable: false, phone: 'show', total: 'sum', format: fmt, accessor: (e) => calcGross(e), render: (e) => <strong style={{ color: 'var(--text-primary)' }}>{fmt(calcGross(e))}</strong> },
+    money('fica', 'FICA', 'FICA withheld'),
+    money('fedWH', 'Fed WH', 'Federal withholding'),
+    money('stateWH', 'St WH', 'State withholding'),
+    money('deductions', 'Other', 'Other deductions'),
+    { key: 'net', header: 'Net', align: 'right', sortable: false, groupable: false, phone: 'show', total: 'sum', format: fmt, accessor: (e) => calcNet(e), render: (e) => <strong style={{ color: 'var(--success)' }}>{fmt(calcNet(e))}</strong> },
+    {
+      key: 'overtime', header: 'OT', align: 'center', sortable: false, groupable: false, phone: 'hide', accessor: (e) => (e.overtime ? 'Yes' : 'No'),
+      render: (e) => <input type="checkbox" checked={e.overtime} onChange={ev => updateEmp(e.id, 'overtime', ev.target.checked)} title="OT eligible" aria-label={`${e.name || 'Employee'} OT eligible`} style={{ width: 18, height: 18, cursor: 'pointer', accentColor: 'var(--brand-primary)' }} {...keepKeys} />,
+    },
+  ];
+
+  const historyColumns: Column<PayrollRecord>[] = [
+    { key: 'week_ending', header: 'Week ending', primary: true, phone: 'show', groupable: false, render: (r) => shortDate(r.week_ending) },
+    { key: 'employee_count', header: 'Employees', align: 'right', groupable: false, accessor: (r) => Number(r.employee_count) || 0 },
+    { key: 'total_gross', header: 'Total gross', align: 'right', phone: 'show', total: 'sum', format: fmt, accessor: (r) => Number(r.total_gross) || 0, render: (r) => fmt(Number(r.total_gross) || 0) },
+    { key: 'status', header: 'Status', phone: 'show', render: (r) => <Badge tone={STATUS_TONE[r.status] || 'neutral'} dot>{statusLabel(r.status)}</Badge> },
+    {
+      key: 'pdf_url', header: 'WH-347', sortable: false, groupable: false, phone: 'show', accessor: (r) => (r.pdf_url ? fileUrl(r.pdf_url) : ''),
+      render: (r) => r.pdf_url ? (
+        <a
+          className="k-btn k-btn-secondary k-btn-sm"
+          href={fileUrl(r.pdf_url)} target="_blank" rel="noopener noreferrer"
+          onClick={(e) => { e.stopPropagation(); inAppFileClick(fileUrl(r.pdf_url || ''), 'WH-347 certified payroll', setError)(e); }}
+        >
+          <FileText size={14} />PDF
+        </a>
+      ) : <span style={{ color: 'var(--text-tertiary)' }}>—</span>,
+    },
+  ];
+
+  const pwPlace = pw ? `${pw.state}${pw.county ? ` · ${pw.county} County` : ' · statewide'}${pw.wageDecision ? ` · ${pw.wageDecision}` : ''}` : '';
+
   return (
-    <PremiumSurface>
+    <PageShell
+      crumbs={[
+        { label: 'Projects', href: '/app/projects' },
+        { label: ctx?.project?.name || 'Project', href: `${base}/overview` },
+        { label: 'Certified Payroll' },
+      ]}
+      title="Certified Payroll"
+      subtitle="DOL WH-347 for Davis-Bacon and prevailing wage work."
+      actions={
+        <>
+          <Button icon={<UserPlus size={15} />} onClick={openAddEmployee}>Add employee</Button>
+          <Button variant="primary" icon={<FileText size={15} weight="bold" />} onClick={handleGenerate} disabled={loading}>
+            {loading ? 'Generating…' : 'Generate WH-347'}
+          </Button>
+        </>
+      }
+    >
+      <StatRow items={stats} />
 
-      {/* Header */}
-      <ModuleHero
-        eyebrow={ctx?.project?.name || 'Certified Payroll'}
-        eyebrowIcon={<ShieldCheck size={13} weight="fill" color="var(--text-secondary)" />}
-        title="Certified"
-        accent="Payroll"
-        subtitle="DOL WH-347 — Davis-Bacon & prevailing wage compliance"
-        actions={
-          <button
-            onClick={handleGenerate}
-            disabled={loading}
-            className="pmBtn"
-            style={{ ...goldButtonStyle, cursor: loading ? 'wait' : 'pointer', opacity: loading ? 0.7 : 1 }}>
-            <FileText size={15} weight="bold" /> {loading ? 'Generating…' : 'Generate WH-347'}
-          </button>
-        }
-      />
-
-      {/* One summary: WH-347s filed, this week's hours against the field clock, and this week's wages */}
-      <StatStrip items={[
-        {href: `/app/projects/${pid}/payroll`,  label: 'Filed to Date', value: String(records.length), sub: grossFiled > 0 ? fmt0(grossFiled) + ' gross certified' : 'No WH-347s yet' },
-        {href: `/app/projects/${pid}/payroll`,  label: 'Current Week Hours', value: totalWeekHours.toFixed(1) + ' hrs', sub: `${employees.length} employee${employees.length === 1 ? '' : 's'}` },
-        {href: `/app/projects/${pid}/timesheets`,  label: 'Field Time Clock', value: weekEndingDate ? weekClockedHours.toFixed(1) + ' hrs' : timeEntries.length + ' entries', sub: weekEndingDate ? weekClockedNames.length + ' employee' + (weekClockedNames.length === 1 ? '' : 's') + ' clocked this week' : 'Pick a week ending to match' },
-        {href: `/app/projects/${pid}/payroll`,  label: 'Gross Wages This Week', value: fmt(totalWeekGross), sub: 'Before deductions' },
-        {href: `/app/projects/${pid}/payroll`,  label: 'Net Wages This Week', value: fmt(totalWeekNet), sub: 'After deductions' },
-      ]} />
-
-      {/* Messages */}
-      {error && <div style={{ background: 'rgba(248,113,113,.1)', border: '1px solid rgba(248,113,113,.3)', borderRadius: 8, padding: '10px 16px', marginBottom: 20, fontSize: 13, color: 'var(--danger)' }}>{error}</div>}
-      {success && <div style={{ background: 'rgba(74,222,128,.08)', border: '1px solid rgba(74,222,128,.3)', borderRadius: 8, padding: '10px 16px', marginBottom: 20, fontSize: 13, color: 'var(--success)' }}>{success}</div>}
+      {error && (
+        <Callout tone="danger" icon={<WarningCircle size={18} />} title={error} actions={<Button size="sm" variant="ghost" onClick={() => setError('')}>Dismiss</Button>} />
+      )}
+      {success && (
+        <Callout
+          tone="success"
+          icon={<ShieldCheck size={18} />}
+          title={success}
+          text={generatedUrl ? undefined : 'It is listed under Filed WH-347s below.'}
+          actions={
+            <>
+              {generatedUrl && (
+                <a className="k-btn k-btn-secondary k-btn-sm" href={fileUrl(generatedUrl)} target="_blank" rel="noopener noreferrer" onClick={inAppFileClick(fileUrl(generatedUrl), 'WH-347 certified payroll', setError)}>
+                  <FileText size={14} />Open PDF
+                </a>
+              )}
+              <Button size="sm" variant="ghost" onClick={() => { setSuccess(''); setGeneratedUrl(null); }}>Dismiss</Button>
+            </>
+          }
+        />
+      )}
 
       {/* Prevailing Wage assist — only when the project is flagged prevailing-wage */}
       {pw && (
-        <div style={{ background: 'var(--bg-surface-2)', border: `1px solid var(--brand-primary-25)`, borderRadius: 10, padding: '12px 16px', marginBottom: 20 }}>
-          <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 16, flexWrap: 'wrap' }}>
-            <div style={{ fontSize: 13, color: DIM }}>
-              <span style={{ fontWeight: 700, color: 'var(--text-primary)' }}>Prevailing wage project</span>
-              {' — '}
-              {pw.state}{pw.county ? ` · ${pw.county} County` : ' · statewide'}
-              {pw.wageDecision ? ` · ${pw.wageDecision}` : ''}
-              {pwRates.length > 0
-                ? <span style={{ color: DIM }}>{'. '}{pwRates.length} classifications available.</span>
-                : <span style={{ color: 'var(--warning)' }}>{'. '}No determination on file for this state/county.</span>}
-            </div>
-            {pwRates.length > 0 && (
-              <button
-                onClick={applyPwRateAll}
-                style={{ padding: '7px 16px', background: `var(--brand-primary)`, border: 'none', borderRadius: 7, color: 'var(--on-brand)', fontSize: 12, fontWeight: 800, cursor: 'pointer', whiteSpace: 'nowrap' }}>
-                Apply Prevailing Rates
-              </button>
-            )}
-          </div>
-          {pwRates.length > 0 && (
-            <div style={{ fontSize: 12, color: 'var(--warning)', marginTop: 8, lineHeight: 1.5, borderTop: `1px solid var(--brand-primary-18)`, paddingTop: 8 }}>
-              <strong style={{ color: 'var(--text-primary)' }}>Sample / reference rates.</strong> Applied rates are Davis-Bacon-style samples for planning — not an official determination. Verify against the official{' '}
-              <a href="https://sam.gov/content/wage-determinations" target="_blank" rel="noopener noreferrer" style={{ color: 'var(--link)', fontWeight: 700 }}>SAM.gov (WDOL)</a>{' '}
-              determination for this project before certifying. Rows marked <span style={{ color: 'var(--warning)', fontWeight: 800 }}>custom</span> are your own entered determination.
-            </div>
-          )}
-        </div>
+        <Callout
+          tone={pwRates.length > 0 ? 'info' : 'warning'}
+          icon={<Scales size={18} />}
+          title={`Prevailing wage project · ${pwPlace}`}
+          text={pwRates.length > 0 ? (
+            <>
+              {pwRates.length} classifications available. These are sample reference rates, not an official determination — verify against the official{' '}
+              <a className="k-link" href="https://sam.gov/content/wage-determinations" target="_blank" rel="noopener noreferrer">SAM.gov (WDOL)</a>{' '}
+              determination before certifying.
+            </>
+          ) : 'No determination on file for this state/county.'}
+          actions={pwRates.length > 0 ? <Button size="sm" icon={<Scales size={14} />} onClick={applyPwRateAll}>Apply prevailing rates</Button> : undefined}
+        />
       )}
-      {pwNote && <div style={{ background: 'var(--bg-surface-2)', border: '1px solid var(--border-default)', borderRadius: 8, padding: '9px 16px', marginBottom: 20, fontSize: 13, color: 'var(--warning)' }}>{pwNote}</div>}
 
       {/* Field time clock rollup — import instead of retyping hours */}
       {weekEndingDate && weekEntries.length > 0 && (
-        <div style={{ background: 'rgba(74,222,128,.07)', border: '1px solid rgba(74,222,128,.3)', borderRadius: 10, padding: '12px 16px', marginBottom: 20, display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 16, flexWrap: 'wrap' }}>
-          <div style={{ fontSize: 13, color: DIM }}>
-            <span style={{ fontWeight: 700, color: 'var(--success)' }}>{weekClockedHours.toFixed(1)} hrs clocked in the field</span>
-            {' — '}{weekEntries.length} time {weekEntries.length === 1 ? 'entry' : 'entries'} from {weekClockedNames.length} employee{weekClockedNames.length === 1 ? '' : 's'} fall in the 7 days ending {weekEndingDate}. Import them below instead of retyping.
-          </div>
-          <button onClick={importFromTimesheets} className="pmBtn" style={{ ...goldOutlineButtonStyle, padding: '8px 16px', fontSize: 13, whiteSpace: 'nowrap' }}>
-            <Clock size={15} weight="bold" /> Import Clocked Hours
-          </button>
-        </div>
+        <Callout
+          tone="success"
+          icon={<Clock size={18} />}
+          title={`${weekClockedHours.toFixed(1)} hrs clocked in the field`}
+          text={`${weekEntries.length} time ${weekEntries.length === 1 ? 'entry' : 'entries'} from ${weekClockedNames.length} employee${weekClockedNames.length === 1 ? '' : 's'} in the 7 days ending ${shortDate(weekEndingDate)}.`}
+          actions={<Button size="sm" icon={<Clock size={14} weight="bold" />} onClick={importFromTimesheets}>Import clocked hours</Button>}
+        />
       )}
       {weekEndingDate && weekEntries.length === 0 && timeEntries.length > 0 && (
-        <div style={{ background: 'rgba(255,255,255,0.03)', border: `1px solid ${BORDER}`, borderRadius: 10, padding: '10px 16px', marginBottom: 20, fontSize: 13, color: DIM }}>
-          No field time entries fall in the 7 days ending {weekEndingDate} — {timeEntries.length} exist on this project overall. Enter hours manually below.
-        </div>
+        <Callout
+          tone="info"
+          icon={<Clock size={18} />}
+          title={`No field time in the 7 days ending ${shortDate(weekEndingDate)}`}
+          text={`${timeEntries.length} ${timeEntries.length === 1 ? 'entry exists' : 'entries exist'} on this job overall. Enter hours in the grid.`}
+        />
       )}
 
-      {/* Week Ending */}
-      <SectionCard
-        title="Pay Period"
-        icon={<CalendarBlank size={17} weight="duotone" color="var(--text-secondary)" />}
-        style={{ marginBottom: 20 }}
-      >
-        <div style={{ display: 'flex', alignItems: 'flex-end', gap: 20, flexWrap: 'wrap' }}>
-          <div style={{ flex: 1, maxWidth: 240 }}>
-            <label style={{ display: 'block', fontSize: 12, fontWeight: 700, color: DIM, marginBottom: 5 }}>Week Ending Date *</label>
-            <SaguaroDatePicker value={weekEndingDate} onChange={setWeekEndingDate} style={inp} />
-          </div>
-          <button
-            onClick={() => setShowAddEmployee(!showAddEmployee)}
-            className="pmBtn"
-            style={showAddEmployee ? { ...ghostButtonStyle } : { ...secondaryButtonStyle }}>
-            {showAddEmployee ? 'Cancel' : <><UserPlus size={15} weight="bold" /> Add Employee</>}
-          </button>
-        </div>
-      </SectionCard>
-
-      {/* Add Employee Form */}
-      {showAddEmployee && (
-        <SectionCard
-          title="Add Employee"
-          icon={<UserPlus size={17} weight="duotone" color="var(--text-secondary)" />}
-          style={{ marginBottom: 20 }}
-        >
-          <div style={{ display: 'grid', gridTemplateColumns: '2fr 1fr 2fr 1fr 1fr', gap: 12, marginBottom: 14 }}>
-            {[
-              { label: 'Full Name *', el: <input value={newEmp.name} onChange={e => setNewEmp(p => ({ ...p, name: e.target.value }))} placeholder="John Smith" style={inp} /> },
-              { label: 'Last 4 SSN', el: <input value={newEmp.last4ssn} onChange={e => setNewEmp(p => ({ ...p, last4ssn: e.target.value }))} placeholder="1234" maxLength={4} style={inp} /> },
-              { label: 'Classification', el: <select value={newEmp.classification} onChange={e => setNewEmp(p => ({ ...p, classification: e.target.value }))} style={inp}><ClassificationOptions current={newEmp.classification} /></select> },
-              { label: 'Reg Rate ($)', el: <input type="number" value={newEmp.hourlyRate} onChange={e => setNewEmp(p => ({ ...p, hourlyRate: Number(e.target.value) }))} placeholder="28.50" style={{ ...inp, textAlign: 'right' }} /> },
-              { label: 'OT Rate ($)', el: <input type="number" value={newEmp.otRate} onChange={e => setNewEmp(p => ({ ...p, otRate: Number(e.target.value) }))} placeholder="42.75" style={{ ...inp, textAlign: 'right' }} /> },
-            ].map(({ label, el }) => (
-              <div key={label}>
-                <label style={{ display: 'block', fontSize: 12, fontWeight: 700, color: DIM, marginBottom: 5 }}>{label}</label>
-                {el}
-              </div>
-            ))}
-          </div>
-          <div style={{ marginBottom: 14 }}>
-            <label style={{ display: 'block', fontSize: 12, fontWeight: 700, color: DIM, marginBottom: 8 }}>Daily Hours</label>
-            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(7,1fr)', gap: 8 }}>
-              {DAYS.map(day => (
-                <div key={day}>
-                  <div style={{ fontSize: 12, color: DIM, fontWeight: 700, textAlign: 'center', marginBottom: 4 }}>{day}</div>
-                  <input type="number" min={0} max={24} step={0.5} value={newEmp.hours[day]} onChange={e => setNewEmp(p => ({ ...p, hours: { ...p.hours, [day]: Number(e.target.value) } }))} style={{ ...inp, textAlign: 'center', padding: '6px 4px' }} />
-                </div>
-              ))}
-            </div>
-          </div>
-          <div style={{ marginBottom: 14 }}>
-            <label style={{ display: 'block', fontSize: 12, fontWeight: 700, color: DIM, marginBottom: 8 }}>Deductions ($) — Actual Amounts Withheld</label>
-            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(4,1fr)', gap: 12 }}>
-              {[
-                { label: 'FICA', key: 'fica' as const },
-                { label: 'Fed W/H', key: 'fedWH' as const },
-                { label: 'State W/H', key: 'stateWH' as const },
-                { label: 'Other', key: 'deductions' as const },
-              ].map(({ label, key }) => (
-                <div key={key}>
-                  <div style={{ fontSize: 12, color: DIM, fontWeight: 700, marginBottom: 4 }}>{label}</div>
-                  <input type="number" min={0} step={0.01} value={newEmp[key]} onChange={e => setNewEmp(p => ({ ...p, [key]: Number(e.target.value) }))} style={{ ...inp, textAlign: 'right' }} />
-                </div>
-              ))}
-            </div>
-          </div>
-          <div style={{ display: 'flex', gap: 20, marginBottom: 16, alignItems: 'center' }}>
-            <label style={{ display: 'flex', alignItems: 'center', gap: 8, cursor: 'pointer' }}>
-              <input type="checkbox" checked={newEmp.overtime} onChange={e => setNewEmp(p => ({ ...p, overtime: e.target.checked }))} style={{ width: 16, height: 16, accentColor: GOLD }} />
-              <span style={{ fontSize: 13, color: TEXT }}>OT Eligible (1.5× After 40h)</span>
-            </label>
-          </div>
-          <button onClick={addEmployee} className="pmBtn" style={{ ...goldButtonStyle }}>Add to Payroll</button>
-        </SectionCard>
-      )}
-
-      {/* Employee Table */}
-      {employees.length > 0 && (
-        <SectionCard
-          title="Employee Hours — Current Week"
-          icon={<TableIcon size={17} weight="duotone" color="var(--text-secondary)" />}
-          flush
-          style={{ marginBottom: 20 }}
-        >
-          <div style={{ overflowX: 'auto' }}>
-            <table className="k-table" style={{ width: '100%', borderCollapse: 'collapse' }}>
-              <thead>
-                <tr style={{ background: 'var(--bg-surface-2)' }}>
-                  {['Employee', 'Class', 'Reg $', 'OT $', ...DAYS, 'Hrs', 'Gross', 'FICA', 'Fed WH', 'St WH', 'Other', 'Net', 'OT', ''].map(h => (
-                    <th key={h + Math.random()} style={{ padding: '9px 8px', textAlign: 'left', fontSize: 12, fontWeight: 700, color: DIM, borderBottom: `1px solid ${BORDER}`, whiteSpace: 'nowrap' }}>{h}</th>
-                  ))}
-                </tr>
-              </thead>
-              <tbody>
-                {employees.map((emp, idx) => {
-                  const totalHours = Object.values(emp.hours).reduce((s, h) => s + h, 0);
-                  const gross = calcGross(emp);
-                  const net = calcNet(emp);
-                  return (
-                    <tr key={emp.id} style={{ background: idx % 2 === 0 ? 'transparent' : 'rgba(0,0,0,.02)', borderBottom: `1px solid rgba(203,213,225,.5)` }}>
-                      <td style={{ padding: '7px 8px', minWidth: 140 }}>
-                        <input value={emp.name} onChange={e => updateEmp(emp.id, 'name', e.target.value)} placeholder="Name" style={{ ...inp, fontSize: 12 }} />
-                      </td>
-                      <td style={{ padding: '7px 6px', minWidth: 120 }}>
-                        <select value={emp.classification} onChange={e => updateEmp(emp.id, 'classification', e.target.value)} style={{ ...inp, fontSize: 12 }}>
-                          <ClassificationOptions current={emp.classification} />
-                        </select>
-                      </td>
-                      <td style={{ padding: '7px 6px', width: 70 }}>
-                        <input type="number" value={emp.hourlyRate} onChange={e => updateEmp(emp.id, 'hourlyRate', Number(e.target.value))} style={{ ...inp, fontSize: 12, textAlign: 'right', width: 60 }} />
-                      </td>
-                      <td style={{ padding: '7px 6px', width: 70 }}>
-                        <input type="number" value={emp.otRate} onChange={e => updateEmp(emp.id, 'otRate', Number(e.target.value))} style={{ ...inp, fontSize: 12, textAlign: 'right', width: 60 }} />
-                      </td>
-                      {DAYS.map(day => (
-                        <td key={day} style={{ padding: '7px 4px', width: 48 }}>
-                          <input type="number" min={0} max={24} step={0.5} value={emp.hours[day]} onChange={e => updateEmpHours(emp.id, day, Number(e.target.value))} style={{ ...inp, fontSize: 12, textAlign: 'center', padding: '5px 3px', width: 40 }} />
-                        </td>
-                      ))}
-                      <td style={{ padding: '7px 8px', color: totalHours > 40 ? 'var(--warning)' : TEXT, fontWeight: 700, textAlign: 'right', whiteSpace: 'nowrap' }}>{totalHours.toFixed(1)}</td>
-                      <td style={{ padding: '7px 8px', color: 'var(--text-primary)', fontWeight: 700, whiteSpace: 'nowrap' }}>{fmt(gross)}</td>
-                      <td style={{ padding: '7px 6px', width: 64 }}>
-                        <input type="number" min={0} step={0.01} value={emp.fica} onChange={e => updateEmp(emp.id, 'fica', Number(e.target.value))} title="FICA withheld" style={{ ...inp, fontSize: 12, textAlign: 'right', width: 56 }} />
-                      </td>
-                      <td style={{ padding: '7px 6px', width: 64 }}>
-                        <input type="number" min={0} step={0.01} value={emp.fedWH} onChange={e => updateEmp(emp.id, 'fedWH', Number(e.target.value))} title="Federal withholding" style={{ ...inp, fontSize: 12, textAlign: 'right', width: 56 }} />
-                      </td>
-                      <td style={{ padding: '7px 6px', width: 64 }}>
-                        <input type="number" min={0} step={0.01} value={emp.stateWH} onChange={e => updateEmp(emp.id, 'stateWH', Number(e.target.value))} title="State withholding" style={{ ...inp, fontSize: 12, textAlign: 'right', width: 56 }} />
-                      </td>
-                      <td style={{ padding: '7px 6px', width: 64 }}>
-                        <input type="number" min={0} step={0.01} value={emp.deductions} onChange={e => updateEmp(emp.id, 'deductions', Number(e.target.value))} title="Other deductions" style={{ ...inp, fontSize: 12, textAlign: 'right', width: 56 }} />
-                      </td>
-                      <td style={{ padding: '7px 8px', color: 'var(--success)', fontWeight: 700, whiteSpace: 'nowrap' }}>{fmt(net)}</td>
-                      <td style={{ padding: '7px 8px', textAlign: 'center' }}>
-                        <input type="checkbox" checked={emp.overtime} onChange={e => updateEmp(emp.id, 'overtime', e.target.checked)} title="OT eligible" style={{ cursor: 'pointer', accentColor: GOLD }} />
-                      </td>
-                      <td style={{ padding: '7px 5px', whiteSpace: 'nowrap' }}>
-                        {pw && pwRates.length > 0 && (
-                          <button onClick={() => applyPwRate(emp.id)} title="Apply prevailing wage rate for this classification" style={{ background: 'none', border: `1px solid var(--brand-primary-35)`, color: 'var(--text-primary)', cursor: 'pointer', fontSize: 12, fontWeight: 800, padding: '2px 6px', borderRadius: 4, marginRight: 4 }}>PW</button>
-                        )}
-                        <button onClick={() => removeEmp(emp.id)} title="Remove" style={{ background: 'none', border: 'none', color: 'var(--danger)', cursor: 'pointer', fontSize: 13, padding: '2px 4px', display: 'inline-flex', alignItems: 'center' }}><XCircle size={15} weight="regular" color="var(--danger)" /></button>
-                      </td>
-                    </tr>
-                  );
-                })}
-              </tbody>
-              <tfoot>
-                <tr style={{ background: 'var(--bg-surface-2)', borderTop: `2px solid ${BORDER}` }}>
-                  <td colSpan={4} style={{ padding: '10px 8px', fontWeight: 800, fontSize: 12, color: TEXT }}>Totals</td>
-                  {DAYS.map(day => (
-                    <td key={day} style={{ padding: '10px 4px', fontWeight: 700, color: 'var(--text-primary)', textAlign: 'center', fontSize: 12 }}>
-                      {employees.reduce((s, e) => s + e.hours[day], 0)}
-                    </td>
-                  ))}
-                  <td style={{ padding: '10px 8px', fontWeight: 800, color: 'var(--text-primary)', textAlign: 'right' }}>{totalWeekHours.toFixed(1)}</td>
-                  <td style={{ padding: '10px 8px', fontWeight: 800, color: 'var(--text-primary)', whiteSpace: 'nowrap' }}>{fmt(totalWeekGross)}</td>
-                  <td style={{ padding: '10px 6px', fontWeight: 700, color: DIM, textAlign: 'right', fontSize: 12, whiteSpace: 'nowrap' }}>{fmt(totalWeekFica)}</td>
-                  <td style={{ padding: '10px 6px', fontWeight: 700, color: DIM, textAlign: 'right', fontSize: 12, whiteSpace: 'nowrap' }}>{fmt(totalWeekFedWH)}</td>
-                  <td style={{ padding: '10px 6px', fontWeight: 700, color: DIM, textAlign: 'right', fontSize: 12, whiteSpace: 'nowrap' }}>{fmt(totalWeekStateWH)}</td>
-                  <td style={{ padding: '10px 6px', fontWeight: 700, color: DIM, textAlign: 'right', fontSize: 12, whiteSpace: 'nowrap' }}>{fmt(totalWeekOther)}</td>
-                  <td style={{ padding: '10px 8px', fontWeight: 800, color: 'var(--success)', whiteSpace: 'nowrap' }}>{fmt(totalWeekNet)}</td>
-                  <td colSpan={2} />
-                </tr>
-              </tfoot>
-            </table>
-          </div>
-        </SectionCard>
-      )}
-
-      {/* Statement of Compliance */}
-      <SectionCard
-        title="Statement of Compliance"
-        icon={<SealCheck size={17} weight="duotone" color={complianceAgreed ? 'var(--success)' : GOLD} />}
-        accent={complianceAgreed ? 'var(--success)' : GOLD}
-        style={{ marginBottom: 20 }}
-      >
-        <div style={{ fontSize: 13, color: DIM, lineHeight: 1.6, marginBottom: 14 }}>
-          I hereby certify that the payroll records shown for the week ending above are correct and complete, that the wage rates are not less than those determined by the Secretary of Labor under the Davis-Bacon Act, and that the classifications set forth therein are proper. This certification is required under the Davis-Bacon and related acts.
-        </div>
-        <label style={{ display: 'flex', alignItems: 'center', gap: 12, cursor: 'pointer' }}>
-          <input type="checkbox" id="compliance" checked={complianceAgreed} onChange={e => setComplianceAgreed(e.target.checked)} style={{ width: 18, height: 18, accentColor: GOLD }} />
-          <span style={{ fontSize: 13, color: TEXT, fontWeight: 600 }}>I certify this payroll is accurate and compliant with prevailing wage requirements</span>
-        </label>
-      </SectionCard>
-
-      <button
-        onClick={handleGenerate}
-        disabled={loading}
-        className="pmBtn"
-        style={{
-          ...goldButtonStyle,
-          padding: '12px 32px',
-          marginBottom: 32,
-          ...(complianceAgreed ? {} : { background: 'var(--brand-primary-18)', color: DIM, boxShadow: 'none' }),
-          cursor: complianceAgreed && !loading ? 'pointer' : 'not-allowed',
-          opacity: loading ? 0.7 : 1,
-        }}>
-        <FileText size={16} weight="bold" /> {loading ? 'Generating WH-347…' : 'Generate WH-347 PDF'}
-      </button>
-
-      {/* Payroll History */}
-      <SectionCard
-        title="Payroll History"
-        icon={<ClockCounterClockwise size={17} weight="duotone" color="var(--text-secondary)" />}
+      <Card
+        title="Week's hours and wages"
+        subtitle="Regular rate to 40 hrs, then the OT rate (1.5× when blank)."
         flush
-      >
-        {recordsLoading ? (
-          <div style={{ padding: 32, textAlign: 'center', color: DIM, fontSize: 13 }}>Loading records…</div>
-        ) : records.length === 0 ? (
-          <PremiumEmpty
-            icon={<FileText size={30} weight="duotone" color="var(--text-secondary)" />}
-            title="No payroll records yet"
-            description={pw
-              ? `This project is flagged prevailing wage (${pw.state}${pw.county ? ' · ' + pw.county + ' County' : ''}) — a certified WH-347 is due for every week your crew works. Pick the week ending above, import clocked hours, and generate the first one.`
-              : timeEntries.length > 0
-                ? `Your crew has ${timeEntries.length} field time ${timeEntries.length === 1 ? 'entry' : 'entries'} on this project — pick a week ending above and import them to file the first WH-347.`
-                : 'Generate your first WH-347 above — weekly certified payroll is required on Davis-Bacon and most public work.'}
+        actions={
+          <Toolbar
+            filters={
+              <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
+                <label className="k-label" htmlFor="payroll-week-ending" style={{ whiteSpace: 'nowrap' }}>Week ending<span className="k-req">*</span></label>
+                <DateInput id="payroll-week-ending" value={weekEndingDate} onChange={e => setWeekEndingDate(e.target.value)} style={{ width: 170 }} />
+              </div>
+            }
           />
-        ) : (
-          <table className="k-table" style={{ width: '100%', borderCollapse: 'collapse' }}>
-            <thead>
-              <tr style={{ background: 'var(--bg-surface-2)' }}>
-                {['Week Ending', '# Employees', 'Total Gross', 'Status', 'Download'].map(h => (
-                  <th key={h} style={{ padding: '10px 16px', textAlign: 'left', fontSize: 12, fontWeight: 700, color: DIM, borderBottom: `1px solid ${BORDER}` }}>{h}</th>
-                ))}
-              </tr>
-            </thead>
-            <tbody>
-              {records.map(record => {
-                const sc = statusCfg[record.status] || statusCfg.draft;
-                return (
-                  <tr key={record.id} style={{ borderBottom: `1px solid rgba(203,213,225,.5)` }}>
-                    <td style={{ padding: '12px 16px', color: TEXT, fontWeight: 600 }}>{record.week_ending}</td>
-                    <td style={{ padding: '12px 16px', color: DIM }}>{record.employee_count}</td>
-                    <td style={{ padding: '12px 16px', color: TEXT }}>{fmt(record.total_gross)}</td>
-                    <td style={{ padding: '12px 16px' }}>
-                      <span style={{ fontSize: 12, fontWeight: 700, padding: '2px 8px', borderRadius: 4, background: sc.bg, color: sc.color }}>{record.status.charAt(0).toUpperCase() + record.status.slice(1)}</span>
-                    </td>
-                    <td style={{ padding: '12px 16px' }}>
-                      {record.pdf_url ? (
-                        <a href={`/api/files/open?u=${encodeURIComponent(record.pdf_url || '')}`} target="_blank" rel="noopener noreferrer" onClick={inAppFileClick(`/api/files/open?u=${encodeURIComponent(record.pdf_url || '')}`, 'WH-347 certified payroll', setError)} style={{ background: 'none', border: `1px solid ${BORDER}`, borderRadius: 5, color: 'var(--link)', fontSize: 12, padding: '3px 10px', textDecoration: 'none', fontWeight: 700 }}><span style={{ display: 'inline-flex', verticalAlign: 'middle', marginRight: 4 }}><FileText size={13} weight="regular" color="var(--text-secondary)" /></span>WH-347 PDF</a>
-                      ) : (
-                        <span style={{ fontSize: 12, color: DIM }}>—</span>
-                      )}
-                    </td>
-                  </tr>
-                );
-              })}
-            </tbody>
-          </table>
-        )}
-      </SectionCard>
-    </PremiumSurface>
+        }
+      >
+        <DataTable<Employee>
+          tableId="project-payroll-week"
+          exportName={`payroll-week${weekEndingDate ? '-' + weekEndingDate : ''}`}
+          columns={weekColumns}
+          rows={employees}
+          rowKey={(e) => e.id}
+          rowActions={(e) => [
+            { label: 'Apply prevailing rate', icon: <Scales size={14} />, onClick: () => applyPwRate(e.id), hidden: !(pw && pwRates.length > 0) },
+            { label: 'Edit details', icon: <PencilSimple size={14} />, onClick: () => openEditEmployee(e) },
+            { label: 'Remove', icon: <XCircle size={14} />, tone: 'danger', onClick: () => removeEmp(e.id) },
+          ]}
+          empty={
+            <EmptyState
+              icon={<UserPlus size={22} />}
+              title="No employees on this week"
+              text={weekEntries.length > 0 ? 'Import the clocked hours or add a line.' : 'Add a line for each worker on the job.'}
+              action={<Button icon={<UserPlus size={15} />} onClick={openAddEmployee}>Add employee</Button>}
+            />
+          }
+        />
+      </Card>
+
+      {/* Statement of Compliance — the certification the WH-347 carries */}
+      <Card
+        title="Statement of Compliance"
+        icon={<ShieldCheck size={17} color={complianceAgreed ? 'var(--success)' : undefined} />}
+        actions={complianceAgreed ? <Badge tone="completed" dot>Certified</Badge> : <Badge tone="lead" dot>Not certified</Badge>}
+      >
+        <div style={{ display: 'flex', flexDirection: 'column', gap: 14 }}>
+          <p style={{ margin: 0, fontSize: 13, color: 'var(--text-secondary)', lineHeight: 1.6 }}>
+            I hereby certify that the payroll records shown for the week ending above are correct and complete, that the wage rates are not less than those determined by the Secretary of Labor under the Davis-Bacon Act, and that the classifications set forth therein are proper. This certification is required under the Davis-Bacon and related acts.
+          </p>
+          <label style={{ display: 'flex', alignItems: 'center', gap: 12, cursor: 'pointer', minHeight: 44 }}>
+            <input type="checkbox" id="compliance" checked={complianceAgreed} onChange={e => setComplianceAgreed(e.target.checked)} style={{ width: 20, height: 20, flexShrink: 0, accentColor: 'var(--brand-primary)' }} />
+            <span style={{ fontSize: 14, color: 'var(--text-primary)', fontWeight: 600 }}>I certify this payroll is accurate and compliant with prevailing wage requirements</span>
+          </label>
+          <div>
+            <Button icon={<FileText size={15} weight="bold" />} onClick={handleGenerate} disabled={loading}>
+              {loading ? 'Generating WH-347…' : 'Generate WH-347 PDF'}
+            </Button>
+          </div>
+        </div>
+      </Card>
+
+      <Card title="Filed WH-347s" icon={<ClockCounterClockwise size={17} />} flush>
+        <DataTable<PayrollRecord>
+          tableId="project-payroll-history"
+          exportName="certified-payroll-history"
+          columns={historyColumns}
+          rows={records}
+          loading={recordsLoading}
+          rowKey={(r) => r.id}
+          defaultSort={{ key: 'week_ending', dir: 'desc' }}
+          empty={
+            <EmptyState
+              icon={<FileText size={22} />}
+              title="No WH-347s filed yet"
+              text={pw
+                ? `This job is prevailing wage (${pw.state}${pw.county ? ' · ' + pw.county + ' County' : ''}) — one is due for every week the crew works.`
+                : timeEntries.length > 0
+                  ? `The crew has ${timeEntries.length} field time ${timeEntries.length === 1 ? 'entry' : 'entries'} on this job — pick a week ending and import them.`
+                  : 'Weekly certified payroll is required on Davis-Bacon and most public work.'}
+            />
+          }
+        />
+      </Card>
+
+      <FormModal
+        open={empModalOpen}
+        onClose={() => { setEmpModalOpen(false); setEditId(null); }}
+        title={editId ? 'Edit employee' : 'Add employee'}
+        subtitle={weekEndingDate ? `Week ending ${shortDate(weekEndingDate)}` : undefined}
+        onSubmit={addEmployee}
+        submitLabel={editId ? 'Save employee' : 'Add to payroll'}
+      >
+        <FormGrid cols={2}>
+          <Field label="Full name" required>
+            <Input value={newEmp.name} onChange={e => setNewEmp(p => ({ ...p, name: e.target.value }))} placeholder="Full legal name" required autoFocus />
+          </Field>
+          <Field label="Last 4 SSN">
+            <Input value={newEmp.last4ssn} onChange={e => setNewEmp(p => ({ ...p, last4ssn: e.target.value }))} placeholder="1234" maxLength={4} inputMode="numeric" />
+          </Field>
+          <Field label="Classification">
+            <select className="k-select" value={newEmp.classification} onChange={e => setNewEmp(p => ({ ...p, classification: e.target.value }))}>
+              <ClassificationOptions current={newEmp.classification} />
+            </select>
+          </Field>
+          <Field label="OT eligible">
+            <label style={{ display: 'flex', alignItems: 'center', gap: 10, cursor: 'pointer', minHeight: 44 }}>
+              <input type="checkbox" checked={newEmp.overtime} onChange={e => setNewEmp(p => ({ ...p, overtime: e.target.checked }))} style={{ width: 18, height: 18, accentColor: 'var(--brand-primary)' }} />
+              <span style={{ fontSize: 14, color: 'var(--text-primary)' }}>1.5× after 40 hrs</span>
+            </label>
+          </Field>
+          <Field label="Regular rate ($/hr)">
+            <Input type="number" min={0} step={0.01} inputMode="decimal" value={newEmp.hourlyRate} onChange={e => setNewEmp(p => ({ ...p, hourlyRate: Number(e.target.value) }))} placeholder="28.50" style={{ textAlign: 'right' }} />
+          </Field>
+          <Field label="OT rate ($/hr)" hint="Blank or 0 uses 1.5× the regular rate.">
+            <Input type="number" min={0} step={0.01} inputMode="decimal" value={newEmp.otRate} onChange={e => setNewEmp(p => ({ ...p, otRate: Number(e.target.value) }))} placeholder="42.75" style={{ textAlign: 'right' }} />
+          </Field>
+        </FormGrid>
+        <div className="k-label" style={{ margin: '20px 0 8px' }}>Daily hours</div>
+        <FormGrid cols={4}>
+          {DAYS.map(day => (
+            <Field key={day} label={day}>
+              <Input type="number" min={0} max={24} step={0.5} inputMode="decimal" value={newEmp.hours[day]} onChange={e => setNewEmp(p => ({ ...p, hours: { ...p.hours, [day]: Number(e.target.value) } }))} style={{ textAlign: 'center' }} />
+            </Field>
+          ))}
+        </FormGrid>
+        <div className="k-label" style={{ margin: '20px 0 8px' }}>Deductions ($) — actual amounts withheld</div>
+        <FormGrid cols={4}>
+          {([
+            { label: 'FICA', key: 'fica' as const },
+            { label: 'Fed W/H', key: 'fedWH' as const },
+            { label: 'State W/H', key: 'stateWH' as const },
+            { label: 'Other', key: 'deductions' as const },
+          ]).map(({ label, key }) => (
+            <Field key={key} label={label}>
+              <Input type="number" min={0} step={0.01} inputMode="decimal" value={newEmp[key]} onChange={e => setNewEmp(p => ({ ...p, [key]: Number(e.target.value) }))} style={{ textAlign: 'right' }} />
+            </Field>
+          ))}
+        </FormGrid>
+        <div style={{ marginTop: 16, fontSize: 13, color: 'var(--text-secondary)' }}>
+          {calcHours(newEmp).toFixed(1)} hrs · gross <strong style={{ color: 'var(--text-primary)' }}>{fmt(calcGross(newEmp))}</strong> · net <strong style={{ color: 'var(--success)' }}>{fmt(calcNet(newEmp))}</strong>
+        </div>
+      </FormModal>
+
+      <Toast message={toast?.message ?? null} tone={toast?.tone} />
+    </PageShell>
   );
 }

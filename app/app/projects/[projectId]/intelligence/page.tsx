@@ -1,17 +1,20 @@
 'use client';
+/**
+ * Project Intelligence — the job's live numbers (contract, billed, paid, open
+ * items) beside an AI chat grounded in this project's own records.
+ *
+ * Reads  /api/project-context (useProjectContext) for the numbers and questions
+ * Writes POST /api/ai/chat  { messages, projectId, context: 'project_intelligence' } — SSE stream
+ */
 import { useState, useRef, useEffect, useCallback } from 'react';
 import { useProjectContext } from '@/lib/hooks/useProjectContext';
 import { useParams } from 'next/navigation';
 import ErrorBoundary from '../../../../../components/ErrorBoundary';
-import { Brain, ArrowRight } from '@phosphor-icons/react';
-import { PremiumSurface, ModuleHero, SectionCard, StatStrip, InsightRow, AutoChip } from '@/components/ui/premium';
+import {
+  Brain, ArrowRight, FileText, Receipt, Wallet, Question, Swap, ListChecks, Stack, CalendarCheck, ChatCircleText, Sparkle,
+} from '@phosphor-icons/react';
+import { PageShell, StatRow, Button, Card, Input, ItemList, ItemRow, DetailList, type StatItem } from '@/components/ui/kit';
 
-const GOLD = 'var(--brand-primary)';
-const SOFT_BORDER = 'rgba(255,255,255,0.08)';
-const SURFACE = 'linear-gradient(160deg, rgba(255,255,255,0.045), rgba(255,255,255,0.012))';
-const DIM = 'var(--text-secondary)';
-const TEXT = 'var(--text-primary)';
-const GREEN = 'var(--success)';
 const fmtMoney = (n: number) => '$' + (Number(n) || 0).toLocaleString('en-US', { maximumFractionDigits: 0 });
 
 interface Message {
@@ -32,6 +35,38 @@ const QUICK_QUESTIONS = [
   "How should I handle a change order dispute?",
   "What OSHA requirements apply to my site?",
 ];
+
+const PAGE_CSS = `
+.intelGrid { display: grid; grid-template-columns: minmax(0, 1fr) 340px; gap: var(--section-gap); align-items: start; }
+.intelRail { display: flex; flex-direction: column; gap: var(--section-gap); min-width: 0; }
+.intelChat { display: flex; flex-direction: column; height: max(460px, calc(100vh - 380px)); }
+.intelMsgs { flex: 1; overflow-y: auto; padding: 20px; display: flex; flex-direction: column; gap: 14px; }
+.intelRow { display: flex; gap: 8px; align-items: flex-end; }
+.intelRow[data-role="user"] { justify-content: flex-end; }
+.intelBubble { max-width: 78%; padding: 12px 16px; font-size: 14px; line-height: 1.6; white-space: pre-wrap; word-break: break-word; color: var(--text-primary); border: 1px solid var(--border-default); }
+.intelRow[data-role="assistant"] .intelBubble { background: var(--bg-surface); border-radius: 16px 16px 16px 4px; color: var(--text-secondary); }
+.intelRow[data-role="user"] .intelBubble { background: var(--bg-surface-2); border-radius: 16px 16px 4px 16px; }
+.intelAvatar { width: 28px; height: 28px; border-radius: 50%; flex-shrink: 0; display: inline-flex; align-items: center; justify-content: center; background: var(--bg-surface-2); border: 1px solid var(--border-default); color: var(--text-secondary); }
+.intelCaret { display: inline-block; width: 2px; height: 14px; margin-left: 2px; vertical-align: middle; background: var(--text-primary); animation: intelBlink 0.8s infinite; }
+@keyframes intelBlink { 0%, 50% { opacity: 1; } 51%, 100% { opacity: 0; } }
+.intelCompose { display: flex; gap: 10px; align-items: center; padding: 12px 16px; border-top: 1px solid var(--border-subtle); }
+.intelCompose .k-input { flex: 1; font-size: 16px; }
+.intelMeter { display: flex; gap: 2px; height: 14px; border-radius: 4px; overflow: hidden; background: var(--bg-surface-2); }
+.intelMeter > span { display: block; height: 100%; }
+.intelMeter > span:first-child { border-radius: 4px 0 0 4px; }
+.intelLegend { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 8px; margin-top: 12px; }
+.intelLegend > div { display: flex; flex-direction: column; gap: 2px; min-width: 0; }
+.intelLegend .lbl { display: inline-flex; align-items: center; gap: 6px; font-size: 12px; font-weight: 600; color: var(--text-tertiary); }
+.intelLegend .sw { width: 10px; height: 10px; border-radius: 3px; flex-shrink: 0; }
+.intelLegend .val { font-size: 15px; font-weight: 700; color: var(--text-primary); font-variant-numeric: tabular-nums; }
+.intelBar { position: relative; display: block; width: 72px; height: 6px; border-radius: 3px; background: var(--bg-surface-2); }
+.intelBar > span { position: absolute; left: 0; top: 0; bottom: 0; border-radius: 3px; background: var(--text-tertiary); }
+@media (max-width: 960px) {
+  .intelGrid { grid-template-columns: 1fr; }
+  .intelChat { height: max(420px, calc(100vh - 260px)); }
+  .intelBubble { max-width: 88%; }
+}
+`;
 
 function IntelligenceChat() {
   const params = useParams();
@@ -69,7 +104,7 @@ function IntelligenceChat() {
   const abortRef = useRef<AbortController | null>(null);
 
   useEffect(() => {
-    messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
+    messagesEndRef.current?.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
   }, [messages]);
 
   const sendMessage = useCallback(async (content: string) => {
@@ -154,7 +189,10 @@ function IntelligenceChat() {
                 m.id === assistantId ? { ...m, isStreaming: false } : m
               ));
             }
-          } catch {}
+          } catch (parseErr) {
+            // A keep-alive or non-JSON SSE line: skip it, keep streaming.
+            console.debug('[intelligence] skipped stream line', parseErr);
+          }
         }
       }
 
@@ -195,7 +233,7 @@ function IntelligenceChat() {
         <span key={li}>
           {parts.map((part, pi) => {
             if (part.startsWith('**') && part.endsWith('**')) {
-              return <strong key={pi} style={{ color: TEXT }}>{part.slice(2, -2)}</strong>;
+              return <strong key={pi} style={{ color: 'var(--text-primary)' }}>{part.slice(2, -2)}</strong>;
             }
             return <span key={pi}>{part}</span>;
           })}
@@ -205,134 +243,168 @@ function IntelligenceChat() {
     });
   };
 
+  const base = `/app/projects/${projectId}`;
+  const revised = Number(ctx?.money?.revisedContract) || 0;
+  const billed = Number(ctx?.money?.billedToDate) || 0;
+  const paid = Number(ctx?.money?.paidToDate) || 0;
+  const unpaid = Math.max(0, billed - paid);
+  const left = Math.max(0, revised - billed);
+  const openRfis = Number(ctx?.counts?.openRfis) || 0;
+  const pendingCos = Number(ctx?.money?.pendingCoCount) || 0;
+  const approvedCos = Number(ctx?.money?.approvedCoCount) || 0;
+  const pct = (n: number) => (revised > 0 ? Math.min(100, Math.max(0, (n / revised) * 100)) : 0);
+
+  const stats: StatItem[] = ctx ? [
+    { label: 'Revised contract', value: fmtMoney(revised), sub: `${approvedCos} approved CO${approvedCos === 1 ? '' : 's'}`, icon: <FileText size={15} />, href: `${base}/contracts` },
+    { label: 'Billed to date', value: fmtMoney(billed), sub: `${Number(ctx.money?.billedPct) || 0}% of revised`, icon: <Receipt size={15} />, href: `${base}/pay-apps` },
+    { label: 'Paid to date', value: fmtMoney(paid), sub: `Retainage ${Number(ctx.money?.retainagePct) || 0}%`, tone: paid > 0 ? 'good' : 'default', icon: <Wallet size={15} /> },
+    { label: 'Open RFIs', value: String(openRfis), sub: `${Number(ctx.counts?.openSubmittals) || 0} open submittal${(Number(ctx.counts?.openSubmittals) || 0) === 1 ? '' : 's'}`, tone: openRfis > 5 ? 'bad' : 'default', icon: <Question size={15} />, href: `${base}/rfis` },
+    { label: 'Pending COs', value: String(pendingCos), sub: `${(ctx.subs || []).length} sub${(ctx.subs || []).length === 1 ? '' : 's'} on the job`, tone: pendingCos > 0 ? 'warn' : 'default', icon: <Swap size={15} />, href: `${base}/change-orders` },
+  ] : [];
+
+  // Open work on the job, ranked by count — each row opens its tool.
+  const openItems = ctx ? [
+    { key: 'rfis', label: 'Open RFIs', n: openRfis, href: `${base}/rfis`, icon: <Question size={16} /> },
+    { key: 'submittals', label: 'Open submittals', n: Number(ctx.counts?.openSubmittals) || 0, href: `${base}/submittals`, icon: <Stack size={16} /> },
+    { key: 'punch', label: 'Open punch items', n: Number(ctx.counts?.openPunch) || 0, href: `${base}/punch-list`, icon: <ListChecks size={16} /> },
+    { key: 'cos', label: 'Pending change orders', n: pendingCos, href: `${base}/change-orders`, icon: <Swap size={16} /> },
+    { key: 'tasks', label: 'Schedule tasks', n: Number(ctx.counts?.scheduleTasks) || 0, href: `${base}/schedule`, icon: <CalendarCheck size={16} /> },
+  ].sort((a, b) => b.n - a.n) : [];
+  const maxOpen = Math.max(1, ...openItems.map((o) => o.n));
+
+  const segs = [
+    { key: 'paid', label: 'Paid', value: paid, color: 'var(--success)' },
+    { key: 'unpaid', label: 'Billed, unpaid', value: unpaid, color: 'var(--warning)' },
+    { key: 'left', label: 'Left to bill', value: left, color: 'var(--border-strong)' },
+  ];
+
   return (
-    <PremiumSurface>
-      <ModuleHero
-        eyebrow="Project Intelligence"
-        eyebrowIcon={<Brain size={13} weight="fill" color="var(--text-secondary)" />}
-        title="Saguaro"
-        accent="Intelligence"
-        subtitle="Ask about this project — grounded in its own records."
-      />
+    <PageShell
+      crumbs={[
+        { label: 'Projects', href: '/app/projects' },
+        { label: ctx?.project?.name || 'Project', href: `${base}/overview` },
+        { label: 'Intelligence' },
+      ]}
+      title="Intelligence"
+      subtitle="Ask about this job — answers come from its own records."
+      actions={
+        <Button icon={<Sparkle size={15} />} onClick={() => sendMessage(QUICK_QUESTIONS[0])} disabled={isLoading}>
+          What needs my attention?
+        </Button>
+      }
+    >
+      <style>{PAGE_CSS}</style>
 
       {/* What the AI already knows - live numbers from the project snapshot */}
-      {ctx && (
-        <StatStrip items={[
-          {href: `/app/projects/${projectId}/contracts`,  label: 'Revised Contract', value: fmtMoney(Number(ctx.money?.revisedContract) || 0), sub: `${Number(ctx.money?.approvedCoCount) || 0} approved CO${(Number(ctx.money?.approvedCoCount) || 0) === 1 ? '' : 's'}` },
-          {href: `/app/projects/${projectId}/intelligence`,  label: 'Billed to Date', value: fmtMoney(Number(ctx.money?.billedToDate) || 0), sub: `${Number(ctx.money?.billedPct) || 0}% of revised` },
-          {href: `/app/projects/${projectId}/intelligence`,  label: 'Paid to Date', value: fmtMoney(Number(ctx.money?.paidToDate) || 0), accent: GREEN, sub: `Retainage ${Number(ctx.money?.retainagePct) || 0}%` },
-          {href: `/app/projects/${projectId}/rfis`,  label: 'Open RFIs', value: String(Number(ctx.counts?.openRfis) || 0), accent: (Number(ctx.counts?.openRfis) || 0) > 5 ? 'var(--danger)' : undefined, sub: `${Number(ctx.counts?.openSubmittals) || 0} open submittal${(Number(ctx.counts?.openSubmittals) || 0) === 1 ? '' : 's'}` },
-          {href: `/app/projects/${projectId}/punch-list`,  label: 'Open Punch', value: String(Number(ctx.counts?.openPunch) || 0), sub: `${Number(ctx.counts?.scheduleTasks) || 0} schedule tasks` },
-          {href: `/app/projects/${projectId}/change-orders`,  label: 'Pending COs', value: String(Number(ctx.money?.pendingCoCount) || 0), accent: (Number(ctx.money?.pendingCoCount) || 0) > 0 ? 'var(--warning)' : undefined, sub: `${(ctx.subs || []).length} sub${(ctx.subs || []).length === 1 ? '' : 's'} on the job` },
-        ]} />
-      )}
+      {ctx && <StatRow items={stats} />}
 
-      <SectionCard flush bodyStyle={{ padding: 0 }}>
-        <div style={{ display: 'flex', height: ctx ? 'calc(100vh - 396px)' : 'calc(100vh - 300px)', minHeight: 480, overflow: 'hidden', borderRadius: 18 }}>
-          {/* Sidebar */}
-          <div style={{ width: 260, background: 'rgba(255,255,255,0.015)', borderRight: `1px solid ${SOFT_BORDER}`, padding: '20px 16px', overflowY: 'auto', flexShrink: 0 }}>
-            <div style={{ display: 'flex', alignItems: 'center', gap: '8px', marginBottom: '20px' }}>
-              <div style={{ width: '32px', height: '32px', background: 'var(--bg-surface-2)', border: '1px solid var(--border-default)', borderRadius: '8px', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: '16px' }}><Brain size={18} weight="bold" color="var(--on-brand)" /></div>
-              <div>
-                <div style={{ color: TEXT, fontWeight: 700, fontSize: '13px' }}>Saguaro Intelligence</div>
-                <div style={{ color: DIM, fontSize: '12px' }}>AI Construction Expert</div>
-              </div>
-            </div>
-
-            <div style={{ width: '8px', height: '8px', borderRadius: '50%', background: 'var(--success)', marginBottom: '20px', display: 'inline-block' }} />
-            <span style={{ fontSize: '12px', color: DIM, marginLeft: '6px' }}>Online</span>
-
-            {ctx && (
-              <div style={{ marginBottom: 16, padding: '10px 12px', background: 'var(--bg-surface-2)', border: '1px solid var(--border-default)', borderRadius: 8 }}>
-                <div style={{ fontSize: '12px', fontWeight: 700, color: DIM, marginBottom: 6 }}>Context Loaded</div>
-                <InsightRow label="Project" value={ctx.project?.name || '-'} />
-                <InsightRow label="Complete" value={`${Number(ctx.project?.percentComplete) || 0}%`} />
-                <InsightRow label="Budget Lines" value={String(Number(ctx.budget?.lineCount) || 0)} />
-                <InsightRow label="Bid Packages" value={String((ctx.bidPackages || []).length)} />
-                {ctx.recent?.lastDailyLogDate && <InsightRow label="Last Daily Log" value={new Date(ctx.recent.lastDailyLogDate).toLocaleDateString('en-US', { month: 'short', day: 'numeric' })} />}
-              </div>
-            )}
-            {smartQuestions.length > 0 && (
-              <>
-                <div style={{ fontSize: '12px', fontWeight: 700, color: DIM, marginBottom: '10px', marginTop: '8px' }}>From This Project<AutoChip /></div>
-                {smartQuestions.map(q => (
-                  <button key={q} onClick={() => sendMessage(q)}
-                    style={{ display: 'block', width: '100%', textAlign: 'left', padding: '7px 10px', marginBottom: '6px', background: 'var(--bg-surface-2)', border: '1px solid var(--border-default)', borderRadius: '6px', color: 'var(--text-primary)', fontSize: '12px', cursor: 'pointer', transition: 'background 0.15s' }}
-                    onMouseEnter={e => (e.currentTarget as HTMLButtonElement).style.background = 'var(--bg-hover)'}
-                    onMouseLeave={e => (e.currentTarget as HTMLButtonElement).style.background = 'var(--bg-surface-2)'}
-                  >{q}</button>
-                ))}
-              </>
-            )}
-            <div style={{ fontSize: '12px', fontWeight: 700, color: DIM, marginBottom: '10px', marginTop: '8px' }}>Quick Questions</div>
-            {QUICK_QUESTIONS.map(q => (
-              <button key={q} onClick={() => sendMessage(q)}
-                style={{ display: 'block', width: '100%', textAlign: 'left', padding: '7px 10px', marginBottom: '6px', background: 'var(--bg-surface-2)', border: '1px solid var(--border-default)', borderRadius: '6px', color: 'var(--text-primary)', fontSize: '12px', cursor: 'pointer', transition: 'background 0.15s' }}
-                onMouseEnter={e => (e.currentTarget as HTMLButtonElement).style.background = 'var(--bg-hover)'}
-                onMouseLeave={e => (e.currentTarget as HTMLButtonElement).style.background = 'var(--bg-surface-2)'}
-              >{q}</button>
-            ))}
-
-            <div style={{ marginTop: '24px', fontSize: '12px', fontWeight: 700, color: DIM, marginBottom: '8px' }}>Expertise</div>
-            {['CSI MasterFormat', 'AIA Contracts', 'Lien Law (AZ/CA/TX)', 'Davis-Bacon / WH-347', 'OSHA 29 CFR 1926', 'Change Orders & Claims', 'Pay Application Process', 'Construction Finance'].map(item => (
-              <div key={item} style={{ fontSize: '12px', color: DIM, padding: '4px 0', borderBottom: `1px solid ${SOFT_BORDER}` }}>{item}</div>
-            ))}
-          </div>
-
-          {/* Chat area */}
-          <div style={{ flex: 1, display: 'flex', flexDirection: 'column', minWidth: 0 }}>
-            <div style={{ flex: 1, overflowY: 'auto', padding: '24px', display: 'flex', flexDirection: 'column', gap: '16px' }}>
+      <div className="intelGrid">
+        <Card flush title="Saguaro Intelligence" icon={<Brain size={17} />} subtitle={ctx?.project?.name ? `Grounded in ${ctx.project.name}` : 'Grounded in this project'}>
+          <div className="intelChat">
+            <div className="intelMsgs" aria-live="polite">
               {messages.map(msg => (
-                <div key={msg.id} style={{ display: 'flex', justifyContent: msg.role === 'user' ? 'flex-end' : 'flex-start' }}>
-                  {msg.role === 'assistant' && (
-                    <div style={{ width: '28px', height: '28px', borderRadius: '50%', background: 'var(--bg-surface-2)', border: '1px solid var(--border-default)', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: '12px', marginRight: '8px', flexShrink: 0, alignSelf: 'flex-end', fontWeight: 900, color: 'var(--on-brand)' }}>S</div>
-                  )}
-                  <div style={{
-                    maxWidth: '78%',
-                    background: msg.role === 'user' ? 'var(--bg-surface-2)' : SURFACE,
-                    color: TEXT,
-                    padding: '12px 16px',
-                    borderRadius: msg.role === 'user' ? '16px 16px 4px 16px' : '16px 16px 16px 4px',
-                    fontSize: '13px', lineHeight: '1.6',
-                    whiteSpace: 'pre-wrap' as const, wordBreak: 'break-word' as const,
-                    border: msg.role === 'assistant' ? `1px solid ${SOFT_BORDER}` : '1px solid var(--border-strong)',
-                    boxShadow: 'none',
-                  }}>
+                <div key={msg.id} className="intelRow" data-role={msg.role}>
+                  {msg.role === 'assistant' && <span className="intelAvatar" aria-hidden><Brain size={15} /></span>}
+                  <div className="intelBubble">
                     {renderContent(msg.content)}
-                    {msg.isStreaming && (
-                      <span style={{ display: 'inline-block', width: '2px', height: '14px', background: TEXT, marginLeft: '2px', animation: 'blink 0.8s infinite', verticalAlign: 'middle' }} />
-                    )}
+                    {msg.isStreaming && <span className="intelCaret" />}
                   </div>
                 </div>
               ))}
               {isLoading && messages[messages.length - 1]?.isStreaming === false && (
-                <div style={{ alignSelf: 'flex-start', padding: '12px 16px', borderRadius: '10px', background: SURFACE, border: `1px solid ${SOFT_BORDER}`, color: 'var(--text-primary)', fontSize: '18px', letterSpacing: '4px' }}>●●●</div>
+                <div className="intelRow" data-role="assistant"><div className="intelBubble" style={{ letterSpacing: 4 }}>●●●</div></div>
               )}
               <div ref={messagesEndRef} />
             </div>
 
-            <div style={{ padding: '12px 20px', borderTop: `1px solid ${SOFT_BORDER}`, display: 'flex', gap: '10px', alignItems: 'center', background: 'rgba(255,255,255,0.015)' }}>
-              <input
+            <div className="intelCompose">
+              <Input
                 ref={inputRef}
                 value={input}
                 onChange={e => setInput(e.target.value)}
                 onKeyDown={handleKeyDown}
                 placeholder="Ask about costs, schedules, lien waivers, change orders…"
+                aria-label="Ask Saguaro Intelligence"
                 disabled={isLoading}
-                style={{ flex: 1, background: 'rgba(255,255,255,0.04)', border: `1px solid ${SOFT_BORDER}`, borderRadius: '10px', padding: '10px 14px', color: TEXT, fontSize: '16px', outline: 'none' }}
               />
-              <button type="button" onClick={() => sendMessage(input)} disabled={isLoading || !input.trim()} className="k-btn k-btn-primary">
+              <Button variant="primary" onClick={() => sendMessage(input)} disabled={isLoading || !input.trim()}>
                 {isLoading ? '…' : <>Ask <ArrowRight size={14} weight="bold" /></>}
-              </button>
+              </Button>
             </div>
           </div>
-        </div>
-      </SectionCard>
+        </Card>
 
-      <style>{`
-        @keyframes blink { 0%, 50% { opacity: 1; } 51%, 100% { opacity: 0; } }
-      `}</style>
-    </PremiumSurface>
+        <div className="intelRail">
+          {ctx && revised > 0 && (
+            <Card title="Contract billed" subtitle={`${Math.round(pct(billed))}% of ${fmtMoney(revised)}`}>
+              <div className="intelMeter" role="img" aria-label={`Paid ${fmtMoney(paid)}, billed unpaid ${fmtMoney(unpaid)}, left to bill ${fmtMoney(left)} of ${fmtMoney(revised)}`}>
+                {segs.filter((s) => s.value > 0).map((s) => (
+                  <span key={s.key} title={`${s.label}: ${fmtMoney(s.value)} (${Math.round(pct(s.value))}%)`} style={{ width: `${pct(s.value)}%`, background: s.color }} />
+                ))}
+              </div>
+              <div className="intelLegend">
+                {segs.map((s) => (
+                  <div key={s.key}>
+                    <span className="lbl"><span className="sw" style={{ background: s.color }} />{s.label}</span>
+                    <span className="val">{fmtMoney(s.value)}</span>
+                  </div>
+                ))}
+              </div>
+            </Card>
+          )}
+
+          {ctx && (
+            <Card title="Open on this job" flush>
+              <ItemList>
+                {openItems.map((o) => (
+                  <ItemRow
+                    key={o.key}
+                    icon={o.icon}
+                    tone={o.n > 0 && (o.key === 'cos' || (o.key === 'rfis' && o.n > 5)) ? 'warning' : 'neutral'}
+                    title={o.label}
+                    href={o.href}
+                    value={
+                      <span style={{ display: 'inline-flex', alignItems: 'center', gap: 10 }}>
+                        <span className="intelBar" aria-hidden><span style={{ width: `${(o.n / maxOpen) * 100}%` }} /></span>
+                        <strong style={{ minWidth: 24, textAlign: 'right', color: 'var(--text-primary)' }}>{o.n}</strong>
+                      </span>
+                    }
+                  />
+                ))}
+              </ItemList>
+            </Card>
+          )}
+
+          <Card title="Ask about" flush>
+            <ItemList>
+              {[...smartQuestions, ...QUICK_QUESTIONS].map((q, i) => (
+                <ItemRow
+                  key={q}
+                  icon={<ChatCircleText size={16} />}
+                  tone={i < smartQuestions.length ? 'warning' : 'neutral'}
+                  title={q}
+                  onClick={() => sendMessage(q)}
+                />
+              ))}
+            </ItemList>
+          </Card>
+
+          {ctx && (
+            <Card title="Context loaded">
+              <DetailList items={[
+                ['Project', ctx.project?.name || '—'],
+                ['Complete', `${Number(ctx.project?.percentComplete) || 0}%`],
+                ['Budget lines', String(Number(ctx.budget?.lineCount) || 0)],
+                ['Bid packages', String((ctx.bidPackages || []).length)],
+                ...(ctx.recent?.lastDailyLogDate
+                  ? [['Last daily log', new Date(ctx.recent.lastDailyLogDate).toLocaleDateString('en-US', { month: 'short', day: 'numeric' })] as [string, string]]
+                  : []),
+              ]} />
+            </Card>
+          )}
+        </div>
+      </div>
+    </PageShell>
   );
 }
 
