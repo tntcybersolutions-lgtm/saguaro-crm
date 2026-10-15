@@ -152,7 +152,7 @@ export default function IndustryLandingPage({ industry }: Props) {
             }}>
               Start Free Trial
             </Link>
-            <Link href="/sandbox" style={{
+            <Link href="/signup" style={{
               padding: '10px 22px',
               background: 'transparent',
               border: '1px solid rgba(255,255,255,0.14)',
@@ -363,7 +363,7 @@ export default function IndustryLandingPage({ industry }: Props) {
             }}>
               Start Free Trial
             </Link>
-            <Link href="/sandbox" style={{
+            <Link href="/signup" style={{
               padding: '10px 22px',
               background: 'transparent',
               border: '1px solid rgba(255,255,255,0.14)',
@@ -385,7 +385,7 @@ export default function IndustryLandingPage({ industry }: Props) {
         <div style={{ display: 'flex', justifyContent: 'center', gap: '24px', flexWrap: 'wrap', marginBottom: '16px' }}>
           <Link href="/pricing" style={{ color: DIM, fontSize: '13px', textDecoration: 'none' }}>Pricing</Link>
           <Link href="/compare/procore" style={{ color: DIM, fontSize: '13px', textDecoration: 'none' }}>vs Procore</Link>
-          <Link href="/sandbox" style={{ color: DIM, fontSize: '13px', textDecoration: 'none' }}>AI Takeoff Demo</Link>
+          <Link href="/signup" style={{ color: DIM, fontSize: '13px', textDecoration: 'none' }}>AI Takeoff Demo</Link>
           <Link href="/get-the-app" style={{ color: DIM, fontSize: '13px', textDecoration: 'none' }}>Field App</Link>
           <Link href="/privacy" style={{ color: DIM, fontSize: '13px', textDecoration: 'none' }}>Privacy</Link>
           <Link href="/terms" style={{ color: DIM, fontSize: '13px', textDecoration: 'none' }}>Terms</Link>

@@ -271,7 +271,7 @@ export default function CityLandingPage({ city }: { city: City }) {
             }}>
               Start Free Trial
             </Link>
-            <Link href="/sandbox" style={{
+            <Link href="/signup" style={{
               display: 'inline-flex', alignItems: 'center', gap: '8px',
               padding: '11px 24px', background: 'transparent',
               border: '1px solid rgba(255,255,255,0.14)', borderRadius: '8px',
@@ -436,7 +436,7 @@ export default function CityLandingPage({ city }: { city: City }) {
             }}>
               Start Free Trial
             </Link>
-            <Link href="/sandbox" style={{
+            <Link href="/signup" style={{
               display: 'inline-flex', alignItems: 'center', gap: '6px',
               padding: '11px 24px', background: 'transparent',
               border: '1px solid rgba(255,255,255,0.14)', borderRadius: '8px',
