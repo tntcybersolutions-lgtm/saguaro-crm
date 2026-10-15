@@ -1,28 +1,25 @@
 'use client';
-
-import { useState, useEffect, useCallback } from 'react';
+/**
+ * Network › Config — device-ready configuration from manufacturer templates:
+ * pick a template, fill its variables, generate, then copy, download or apply
+ * the result to a device on the job.
+ *
+ * Reads  GET   /api/network/projects?projectId=
+ *        GET   /api/network/config-templates?manufacturer=
+ *        GET   /api/network/devices?networkProjectId=
+ * Writes POST  /api/network/generate-config   { template_id, variables }
+ *        PATCH /api/network/devices/:id        { config_id, config_content }
+ */
+import React, { useState, useEffect, useCallback } from 'react';
 import { useParams } from 'next/navigation';
-import Link from 'next/link';
-import { Gear, Stack, Terminal, Copy, DownloadSimple, CaretRight } from '@phosphor-icons/react';
+import { useProjectContext } from '@/lib/hooks/useProjectContext';
 import {
-  PremiumSurface,
-  ModuleHero,
-  SectionCard,
-  StatStrip,
-  PremiumEmpty,
-  goldButtonStyle,
-  ghostButtonStyle,
-  goldOutlineButtonStyle,
-} from '@/components/ui/premium';
-import { ModuleSkeleton } from '@/components/ui/PageSkeleton';
-
-const BASE = 'var(--bg-surface-2)';
-const GOLD = 'var(--brand-primary)';
-const GREEN = 'var(--success)';
-const RED = 'var(--danger)';
-const BORDER = 'rgba(255,255,255,0.12)';
-const DIM = 'var(--text-secondary)';
-const TEXT = 'var(--text-primary)';
+  PageShell, StatRow, Badge, Button, Card, Tabs, EmptyState, Select, Field, Input, FormGrid,
+  ItemList, ItemRow, Toast, useToast,
+  type StatItem,
+} from '@/components/ui/kit';
+import { Gear, Stack, Terminal, Copy, DownloadSimple, Devices, Factory, WarningCircle, Lightning } from '@phosphor-icons/react';
+import NetworkTabs, { networkCrumbs, networkHref } from '../_components/NetworkTabs';
 
 interface ConfigTemplate {
   id: string;
@@ -44,20 +41,21 @@ interface Device {
 
 const MANUFACTURER_TABS = ['All', 'Cisco', 'Ubiquiti', 'Meraki', 'Aruba', 'Fortinet'];
 
-const inputStyle: React.CSSProperties = {
-  width: '100%', padding: '10px 12px', background: BASE, color: TEXT,
-  border: `1px solid ${BORDER}`, borderRadius: 8, fontSize: 13, outline: 'none',
-};
-const labelStyle: React.CSSProperties = {
-  color: DIM, fontSize: 12, fontWeight: 600, display: 'block', marginBottom: 4,
-};
+const CSS = `
+.netCfg { display: grid; grid-template-columns: minmax(0, 1fr); gap: var(--section-gap); align-items: start; }
+@media (min-width: 900px) { .netCfg { grid-template-columns: 320px minmax(0, 1fr); } }
+.netCfgOut { background: var(--bg-surface-2); border: 1px solid var(--border-default); border-radius: var(--radius-sm); padding: 16px; color: var(--success); font-size: 12px; font-family: var(--font-mono, monospace); line-height: 1.6; overflow: auto; max-height: 400px; white-space: pre-wrap; word-break: break-all; margin: 0; }
+`;
 
 export default function ConfigGeneratorPage() {
   const { projectId } = useParams() as { projectId: string };
+  const { ctx } = useProjectContext(projectId);
+  const { toast, show } = useToast();
   const [networkProjectId, setNetworkProjectId] = useState('');
   const [templates, setTemplates] = useState<ConfigTemplate[]>([]);
   const [devices, setDevices] = useState<Device[]>([]);
   const [loading, setLoading] = useState(true);
+  const [loadError, setLoadError] = useState('');
   const [activeTab, setActiveTab] = useState('All');
   const [selectedTemplate, setSelectedTemplate] = useState<ConfigTemplate | null>(null);
   const [variableValues, setVariableValues] = useState<Record<string, string>>({});
@@ -68,6 +66,7 @@ export default function ConfigGeneratorPage() {
 
   const fetchData = useCallback(async () => {
     setLoading(true);
+    setLoadError('');
     try {
       const npRes = await fetch(`/api/network/projects?projectId=${projectId}`);
       const npData = await npRes.json();
@@ -81,7 +80,9 @@ export default function ConfigGeneratorPage() {
       const [tmplData, devData] = await Promise.all([tmplRes.json(), devRes.json()]);
       setTemplates(tmplData.templates || []);
       setDevices(devData.devices || []);
-    } catch { /* */ }
+    } catch (e) {
+      setLoadError(e instanceof Error ? e.message : "Couldn't load templates");
+    }
     setLoading(false);
   }, [projectId, activeTab]);
 
@@ -117,9 +118,10 @@ export default function ConfigGeneratorPage() {
   };
 
   const copyToClipboard = () => {
-    navigator.clipboard.writeText(generatedConfig);
-    setCopied(true);
-    setTimeout(() => setCopied(false), 2000);
+    navigator.clipboard.writeText(generatedConfig).then(
+      () => { setCopied(true); setTimeout(() => setCopied(false), 2000); },
+      () => show("Couldn't copy to the clipboard", 'bad'),
+    );
   };
 
   const downloadConfig = () => {
@@ -135,238 +137,134 @@ export default function ConfigGeneratorPage() {
   const applyToDevice = async () => {
     if (!applyDevice || !selectedTemplate) return;
     try {
-      await fetch(`/api/network/devices/${applyDevice}`, {
+      const res = await fetch(`/api/network/devices/${applyDevice}`, {
         method: 'PATCH',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ config_id: selectedTemplate.id, config_content: generatedConfig }),
       });
-      setApplyDevice('');
-    } catch { /* */ }
+      if (res.ok) { setApplyDevice(''); show('Config applied to device'); }
+      else show("Couldn't apply the config", 'bad');
+    } catch {
+      show("Couldn't apply the config", 'bad');
+    }
   };
 
-  const filteredTemplates = activeTab === 'All' ? templates : templates.filter(t => t.manufacturer.toLowerCase() === activeTab.toLowerCase());
+  const filteredTemplates = activeTab === 'All' ? templates : templates.filter(t => (t.manufacturer || '').toLowerCase() === activeTab.toLowerCase());
+  const matchingDevices = selectedTemplate ? devices.filter(d =>
+    (d.manufacturer || '').toLowerCase() === (selectedTemplate.manufacturer || '').toLowerCase() ||
+    d.device_type === selectedTemplate.device_type,
+  ) : [];
 
-  if (loading) {
-    return (
-      <PremiumSurface>
-        <ModuleSkeleton kpis={4} rows={5} />
-      </PremiumSurface>
-    );
-  }
+  const stats: StatItem[] = [
+    { label: 'Templates', value: loading ? '—' : String(filteredTemplates.length), sub: activeTab === 'All' ? 'All manufacturers' : `${activeTab} library`, icon: <Stack size={15} /> },
+    { label: 'Manufacturers', value: String(MANUFACTURER_TABS.length - 1), sub: 'Template libraries', icon: <Factory size={15} /> },
+    { label: 'Job devices', value: loading ? '—' : String(devices.length), sub: 'Ready to receive config', icon: <Devices size={15} />, href: networkHref(projectId, 'devices') },
+    { label: 'Selected', value: selectedTemplate ? selectedTemplate.name : '—', sub: selectedTemplate ? selectedTemplate.manufacturer : 'Pick a template', icon: <Gear size={15} /> },
+  ];
 
   return (
-    <PremiumSurface>
-      {/* Breadcrumb */}
-      <div style={{ display: 'flex', alignItems: 'center', gap: 6, fontSize: 12, marginBottom: 14 }}>
-        <Link href={`/app/projects/${projectId}/network`} style={{ color: 'var(--c-text-2)', textDecoration: 'none' }}>Network</Link>
-        <CaretRight size={11} color="rgba(255,255,255,0.42)" />
-        <span style={{ color: TEXT }}>Config Generator</span>
-      </div>
+    <PageShell
+      crumbs={networkCrumbs(projectId, ctx?.project?.name, 'Config')}
+      title="Config generator"
+      subtitle="Device-ready config from manufacturer templates."
+    >
+      <style>{CSS}</style>
+      <NetworkTabs projectId={projectId} value="config" />
 
-      {/* Header */}
-      <ModuleHero
-        eyebrow="Network"
-        eyebrowIcon={<Gear size={13} weight="fill" color="var(--text-secondary)" />}
-        title="Config"
-        accent="Generator"
-        subtitle="Device-ready config from manufacturer templates."
-      />
+      {loadError ? (
+        <EmptyState icon={<WarningCircle size={22} />} title="Couldn't load templates" text={loadError} action={<Button onClick={fetchData}>Try again</Button>} />
+      ) : (
+        <>
+          <StatRow items={stats} />
+          <div className="netCfg">
+            <Card title="Template library" icon={<Stack size={16} />} flush>
+              <div style={{ padding: '0 12px' }}>
+                <Tabs tabs={MANUFACTURER_TABS.map(t => ({ key: t, label: t }))} value={activeTab} onChange={setActiveTab} />
+              </div>
+              {loading ? (
+                <EmptyState title="Loading templates…" />
+              ) : filteredTemplates.length === 0 ? (
+                <EmptyState icon={<Stack size={22} />} title="No templates found" text="No configuration templates match this manufacturer." />
+              ) : (
+                <ItemList>
+                  {filteredTemplates.map(tmpl => (
+                    <ItemRow
+                      key={tmpl.id}
+                      icon={<Terminal size={16} />}
+                      title={tmpl.name}
+                      desc={`${tmpl.manufacturer} · ${(tmpl.device_type || '').replace(/_/g, ' ')}${tmpl.description ? ` · ${tmpl.description}` : ''}`}
+                      value={selectedTemplate?.id === tmpl.id ? <Badge tone="gold">Selected</Badge> : undefined}
+                      onClick={() => selectTemplate(tmpl)}
+                    />
+                  ))}
+                </ItemList>
+              )}
+            </Card>
 
-      {/* Generator intelligence — live counts from the data already fetched */}
-      {(templates.length > 0 || devices.length > 0) && (
-        <StatStrip items={[
-          {href: `/app/projects/${projectId}/network/config`,  label: 'Templates', value: String(filteredTemplates.length), sub: activeTab === 'All' ? 'All manufacturers' : `${activeTab} library` },
-          {href: `/app/projects/${projectId}/network/config`,  label: 'Manufacturers', value: String(MANUFACTURER_TABS.length - 1), sub: 'Vetted template libraries' },
-          {href: `/app/projects/${projectId}/network/devices`,  label: 'Project Devices', value: String(devices.length), sub: 'Ready to receive config' },
-          {href: `/app/projects/${projectId}/network/config`,  label: 'Selected', value: selectedTemplate ? selectedTemplate.name : '—', sub: selectedTemplate ? selectedTemplate.manufacturer : 'Pick a template to begin' },
-        ]} />
-      )}
+            <Card
+              title={selectedTemplate ? selectedTemplate.name : 'Configuration'}
+              subtitle={selectedTemplate ? selectedTemplate.description : undefined}
+              icon={<Terminal size={16} />}
+            >
+              {!selectedTemplate ? (
+                <EmptyState icon={<Gear size={22} />} title="Select a template to begin" text="Pick one from the library to generate device-ready config." />
+              ) : (
+                <div style={{ display: 'flex', flexDirection: 'column', gap: 16 }}>
+                  {selectedTemplate.variables && Object.keys(selectedTemplate.variables).length > 0 && (
+                    <FormGrid cols={2}>
+                      {Object.entries(selectedTemplate.variables).map(([key, variable]) => (
+                        <Field key={key} label={variable.label || key} required={variable.required}>
+                          {variable.options ? (
+                            <Select value={variableValues[key] || ''} onChange={e => setVariableValues({ ...variableValues, [key]: e.target.value })}
+                              placeholder="Select…" options={variable.options} />
+                          ) : variable.type === 'boolean' ? (
+                            <Select value={variableValues[key] || 'false'} onChange={e => setVariableValues({ ...variableValues, [key]: e.target.value })}
+                              options={[{ value: 'true', label: 'Yes' }, { value: 'false', label: 'No' }]} />
+                          ) : (
+                            <Input
+                              type={variable.type === 'number' ? 'number' : 'text'}
+                              value={variableValues[key] || ''}
+                              onChange={e => setVariableValues({ ...variableValues, [key]: e.target.value })}
+                              placeholder={variable.default || ''}
+                            />
+                          )}
+                        </Field>
+                      ))}
+                    </FormGrid>
+                  )}
 
-      <div style={{ display: 'grid', gridTemplateColumns: '320px 1fr', gap: 20, minHeight: '60vh' }}>
-        {/* Left Panel - Template Library */}
-        <SectionCard title="Template Library" icon={<Stack size={17} weight="duotone" color="var(--text-secondary)" />}>
-          {/* Manufacturer Tabs */}
-          <div style={{ display: 'flex', gap: 4, flexWrap: 'wrap', marginBottom: 14 }}>
-            {MANUFACTURER_TABS.map(tab => (
-              <button
-                key={tab}
-                onClick={() => setActiveTab(tab)}
-                style={{
-                  padding: '4px 10px', border: `1px solid ${activeTab === tab ? GOLD : BORDER}`,
-                  borderRadius: 6, background: activeTab === tab ? 'var(--brand-primary-08)' : 'transparent',
-                  color: activeTab === tab ? GOLD : DIM, fontSize: 12, fontWeight: 600, cursor: 'pointer',
-                }}
-              >{tab}</button>
-            ))}
-          </div>
-
-          {/* Template List */}
-          <div style={{ display: 'flex', flexDirection: 'column', gap: 6 }}>
-            {filteredTemplates.length === 0 ? (
-              <PremiumEmpty
-                icon={<Stack size={30} weight="duotone" color="var(--text-secondary)" />}
-                title="No templates found"
-                description="No configuration templates match this manufacturer."
-                compact
-              />
-            ) : (
-              filteredTemplates.map(tmpl => (
-                <button
-                  key={tmpl.id}
-                  onClick={() => selectTemplate(tmpl)}
-                  style={{
-                    padding: '10px 12px', background: selectedTemplate?.id === tmpl.id ? 'var(--brand-primary-08)' : 'rgba(255,255,255,0.03)',
-                    border: `1px solid ${selectedTemplate?.id === tmpl.id ? 'var(--brand-primary-25)' : BORDER}`,
-                    borderRadius: 8, cursor: 'pointer', textAlign: 'left',
-                  }}
-                >
-                  <div style={{ color: TEXT, fontSize: 13, fontWeight: 600 }}>{tmpl.name}</div>
-                  <div style={{ color: DIM, fontSize: 12, marginTop: 2 }}>
-                    {tmpl.manufacturer} &middot; {tmpl.device_type?.replace(/_/g, ' ')}
+                  <div>
+                    <Button variant="primary" icon={<Lightning size={15} weight="fill" />} onClick={generateConfig} disabled={generating}>
+                      {generating ? 'Generating…' : 'Generate config'}
+                    </Button>
                   </div>
-                  {tmpl.description && <div style={{ color: DIM, fontSize: 12, marginTop: 4, lineHeight: 1.4 }}>{tmpl.description}</div>}
-                </button>
-              ))
-            )}
-          </div>
-        </SectionCard>
 
-        {/* Right Panel - Generator */}
-        <SectionCard
-          title={selectedTemplate ? selectedTemplate.name : 'Configuration Generator'}
-          subtitle={selectedTemplate ? selectedTemplate.description : undefined}
-          icon={<Terminal size={17} weight="duotone" color="var(--text-secondary)" />}
-        >
-          {!selectedTemplate ? (
-            <PremiumEmpty
-              icon={<Gear size={34} weight="duotone" color="var(--text-secondary)" />}
-              title="Select a template to begin"
-              description="Choose a configuration template from the library on the left to start generating device-ready config."
-            />
-          ) : (
-            <>
-              {/* Variable Inputs */}
-              {selectedTemplate.variables && Object.keys(selectedTemplate.variables).length > 0 && (
-                <div style={{ marginBottom: 16 }}>
-                  <div style={{ color: DIM, fontSize: 12, fontWeight: 700, marginBottom: 8 }}>Configuration Variables</div>
-                  <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(200px, 1fr))', gap: 12 }}>
-                    {Object.entries(selectedTemplate.variables).map(([key, variable]) => (
-                      <div key={key}>
-                        <label style={labelStyle}>
-                          {variable.label || key}
-                          {variable.required && <span style={{ color: RED }}> *</span>}
-                        </label>
-                        {variable.options ? (
-                          <select
-                            value={variableValues[key] || ''}
-                            onChange={e => setVariableValues({ ...variableValues, [key]: e.target.value })}
-                            style={inputStyle}
-                          >
-                            <option value="">Select…</option>
-                            {variable.options.map(opt => <option key={opt} value={opt}>{opt}</option>)}
-                          </select>
-                        ) : variable.type === 'boolean' ? (
-                          <select
-                            value={variableValues[key] || 'false'}
-                            onChange={e => setVariableValues({ ...variableValues, [key]: e.target.value })}
-                            style={inputStyle}
-                          >
-                            <option value="true">Yes</option>
-                            <option value="false">No</option>
-                          </select>
-                        ) : (
-                          <input
-                            type={variable.type === 'number' ? 'number' : 'text'}
-                            value={variableValues[key] || ''}
-                            onChange={e => setVariableValues({ ...variableValues, [key]: e.target.value })}
-                            placeholder={variable.default || ''}
-                            style={inputStyle}
-                          />
-                        )}
+                  {generatedConfig && (
+                    <>
+                      <div style={{ display: 'flex', alignItems: 'center', gap: 8, flexWrap: 'wrap' }}>
+                        <span style={{ fontSize: 13, fontWeight: 700, color: 'var(--text-secondary)', marginRight: 'auto' }}>Generated configuration</span>
+                        <Button size="sm" icon={<Copy size={14} />} onClick={copyToClipboard}>{copied ? 'Copied!' : 'Copy'}</Button>
+                        <Button size="sm" icon={<DownloadSimple size={14} />} onClick={downloadConfig}>Download .conf</Button>
                       </div>
-                    ))}
-                  </div>
+                      <pre className="netCfgOut">{generatedConfig}</pre>
+                      <div style={{ display: 'flex', gap: 8, alignItems: 'flex-end', flexWrap: 'wrap' }}>
+                        <div style={{ flex: '1 1 220px', minWidth: 0 }}>
+                          <Field label="Apply to device">
+                            <Select value={applyDevice} onChange={e => setApplyDevice(e.target.value)} placeholder="Select device…"
+                              options={matchingDevices.map(d => ({ value: d.id, label: `${d.hostname} (${d.manufacturer} ${d.device_type})` }))} />
+                          </Field>
+                        </div>
+                        <Button onClick={applyToDevice} disabled={!applyDevice}>Apply</Button>
+                      </div>
+                    </>
+                  )}
                 </div>
               )}
-
-              <button
-                onClick={generateConfig}
-                disabled={generating}
-                className="pmBtn"
-                style={{ ...goldButtonStyle, opacity: generating ? 0.5 : 1, cursor: generating ? 'not-allowed' : 'pointer', marginBottom: 16 }}
-              >
-                {generating ? 'Generating…' : 'Generate Config'}
-              </button>
-
-              {/* Generated Config Output */}
-              {generatedConfig && (
-                <div>
-                  <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 8 }}>
-                    <div style={{ color: DIM, fontSize: 12, fontWeight: 700 }}>Generated Configuration</div>
-                    <div style={{ display: 'flex', gap: 8 }}>
-                      <button
-                        onClick={copyToClipboard}
-                        style={{
-                          display: 'inline-flex', alignItems: 'center', gap: 6,
-                          padding: '7px 13px', borderRadius: 10, fontSize: 12, fontWeight: 700, cursor: 'pointer',
-                          background: copied ? 'rgba(74,222,128,0.14)' : 'rgba(255,255,255,0.04)',
-                          color: copied ? GREEN : 'rgba(255,255,255,0.82)',
-                          border: `1px solid ${copied ? 'rgba(74,222,128,0.4)' : 'rgba(255,255,255,0.08)'}`,
-                        }}
-                      >
-                        <Copy size={13} weight="bold" />{copied ? 'Copied!' : 'Copy'}
-                      </button>
-                      <button
-                        onClick={downloadConfig}
-                        style={{ ...ghostButtonStyle, padding: '7px 13px', borderRadius: 10, fontSize: 12 }}
-                      >
-                        <DownloadSimple size={13} weight="bold" /> Download .conf
-                      </button>
-                    </div>
-                  </div>
-                  <pre style={{
-                    background: BASE, border: `1px solid ${BORDER}`, borderRadius: 8,
-                    padding: 16, color: GREEN, fontSize: 12, fontFamily: 'monospace',
-                    lineHeight: 1.6, overflow: 'auto', maxHeight: 400,
-                    whiteSpace: 'pre-wrap', wordBreak: 'break-all',
-                  }}>
-                    {generatedConfig}
-                  </pre>
-
-                  {/* Apply to Device */}
-                  <div style={{ marginTop: 16, display: 'flex', gap: 8, alignItems: 'flex-end' }}>
-                    <div style={{ flex: 1 }}>
-                      <label style={labelStyle}>Apply to Device</label>
-                      <select value={applyDevice} onChange={e => setApplyDevice(e.target.value)} style={inputStyle}>
-                        <option value="">Select device…</option>
-                        {devices.filter(d =>
-                          d.manufacturer.toLowerCase() === selectedTemplate.manufacturer.toLowerCase() ||
-                          d.device_type === selectedTemplate.device_type
-                        ).map(d => (
-                          <option key={d.id} value={d.id}>{d.hostname} ({d.manufacturer} {d.device_type})</option>
-                        ))}
-                      </select>
-                    </div>
-                    <button
-                      onClick={applyToDevice}
-                      disabled={!applyDevice}
-                      className="pmBtn"
-                      style={{
-                        ...(applyDevice ? goldOutlineButtonStyle : ghostButtonStyle),
-                        padding: '10px 18px',
-                        opacity: applyDevice ? 1 : 0.6,
-                        cursor: applyDevice ? 'pointer' : 'default',
-                      }}
-                    >
-                      Apply
-                    </button>
-                  </div>
-                </div>
-              )}
-            </>
-          )}
-        </SectionCard>
-      </div>
-    </PremiumSurface>
+            </Card>
+          </div>
+        </>
+      )}
+      <Toast message={toast?.message ?? null} tone={toast?.tone} />
+    </PageShell>
   );
 }

@@ -1,12 +1,21 @@
 'use client';
-import React, { useState, useEffect, useCallback } from 'react';
+/**
+ * Project Autopilot — the alerts the deterministic checks raised on this job
+ * (overdue RFIs, expiring insurance, unsigned lien waivers, stale change
+ * orders), what each check found, and the money they guard.
+ *
+ * Reads  GET  /api/autopilot/alerts?projectId=
+ * Writes POST /api/autopilot/run      { projectId }           (lib/autopilot/scan)
+ *        POST /api/autopilot/dismiss  { alertId, projectId }
+ */
+import React, { useState, useEffect, useCallback, useMemo } from 'react';
 import { useProjectContext } from '@/lib/hooks/useProjectContext';
 import { useParams } from 'next/navigation';
-import { Badge, Btn, Table, T } from '@/components/ui/shell';
 import {
-  PremiumSurface, ModuleHero, SectionCard, PremiumEmpty, StatStrip, FlowSteps, InsightRow, goldButtonStyle, secondaryButtonStyle, railStyle
-} from '@/components/ui/premium';
-import { Bell, CheckCircle, Sparkle, Lightning, ListChecks, ClockCounterClockwise } from '@phosphor-icons/react';
+  PageShell, StatRow, Button, Card, Badge, Toolbar, Select, DataTable, EmptyState, ItemList, ItemRow, DetailList,
+  Toast, useToast, type Column, type StatItem, type BadgeTone,
+} from '@/components/ui/kit';
+import { Bell, CheckCircle, Lightning, WarningOctagon, Warning, Question, ShieldWarning, Signature, Swap, UsersThree, X } from '@phosphor-icons/react';
 
 interface Alert {
   id: string;
@@ -17,28 +26,33 @@ interface Alert {
   status: string;
 }
 
-const SEVERITY_BADGE: Record<string, 'red' | 'amber' | 'gold' | 'blue' | 'muted'> = {
-  critical: 'red',
-  high: 'amber',
-  medium: 'gold',
-  low: 'blue',
-  info: 'muted',
+const SEVERITY_TONE: Record<string, BadgeTone> = {
+  critical: 'overdue',
+  high: 'lead',
+  medium: 'under_contract',
+  low: 'neutral',
+  info: 'closed',
 };
-
-// Palette aligned with the dashboard kit (desert-dusk semantic accents).
-const RED = 'var(--danger)';
-const AMBER = 'var(--warning)';
-const GREEN = 'var(--success)';
+const SEVERITY_RANK: Record<string, number> = { critical: 1, high: 2, medium: 3, low: 4, info: 5 };
+const cap = (s: string) => { const t = (s || '').replace(/_/g, ' '); return t.charAt(0).toUpperCase() + t.slice(1); };
 
 // The four deterministic checks the project-scoped engine runs
-// (lib/autopilot/scan, via /api/autopilot/run), in execution order — rendered as the pipeline rail.
+// (lib/autopilot/scan, via /api/autopilot/run), in execution order.
 const SCAN_RULES = [
-  { title: 'Overdue RFIs', desc: 'Open RFIs past their response-due date.', match: (a: Alert) => /rfi/i.test(a.alert_type) },
-  { title: 'Expiring Insurance', desc: 'Active certificates expiring within 30 days.', match: (a: Alert) => /insurance/i.test(a.alert_type) },
-  { title: 'Pending Lien Waivers', desc: 'Waivers still awaiting signature.', match: (a: Alert) => /waiver/i.test(a.alert_type) },
-  { title: 'Stale Change Orders', desc: 'COs sitting in pending for more than 14 days.', match: (a: Alert) => /change order/i.test(a.alert_type) },
+  { key: 'rfi', title: 'Overdue RFIs', desc: 'Open RFIs past their response-due date.', icon: <Question size={16} />, match: (a: Alert) => /rfi/i.test(a.alert_type) },
+  { key: 'insurance', title: 'Expiring Insurance', desc: 'Active certificates expiring within 30 days.', icon: <ShieldWarning size={16} />, match: (a: Alert) => /insurance/i.test(a.alert_type) },
+  { key: 'waiver', title: 'Pending Lien Waivers', desc: 'Waivers still awaiting signature.', icon: <Signature size={16} />, match: (a: Alert) => /waiver/i.test(a.alert_type) },
+  { key: 'co', title: 'Stale Change Orders', desc: 'COs sitting in pending for more than 14 days.', icon: <Swap size={16} />, match: (a: Alert) => /change order/i.test(a.alert_type) },
 ];
 const fmtM = (n: unknown) => '$' + (Number(n) || 0).toLocaleString('en-US', { maximumFractionDigits: 0 });
+
+const PAGE_CSS = `
+.apGrid { display: grid; grid-template-columns: minmax(0, 1fr) 340px; gap: var(--section-gap); align-items: start; }
+.apRail { display: flex; flex-direction: column; gap: var(--section-gap); min-width: 0; }
+@media (max-width: 960px) { .apGrid { grid-template-columns: 1fr; } }
+`;
+
+type SevFilter = 'all' | 'critical' | 'high' | 'medium' | 'low' | 'info';
 
 export default function AutopilotPage() {
   const params = useParams();
@@ -46,8 +60,11 @@ export default function AutopilotPage() {
   const [alerts, setAlerts] = useState<Alert[]>([]);
   const [loading, setLoading] = useState(true);
   const [running, setRunning] = useState(false);
-  const [toast, setToast] = useState('');
   const [dismissingId, setDismissingId] = useState<string | null>(null);
+  const [search, setSearch] = useState('');
+  const [sev, setSev] = useState<SevFilter>('all');
+  const [rule, setRule] = useState<string>('all');
+  const { toast, show } = useToast(5000);
 
   // Project intelligence — one snapshot on mount; the page walks in already
   // knowing what Autopilot is watching (RFIs, COs, subs, invoices, schedule).
@@ -60,7 +77,8 @@ export default function AutopilotPage() {
       const res = await fetch(`/api/autopilot/alerts?projectId=${projectId}`);
       const data = await res.json();
       setAlerts(data.alerts ?? []);
-    } catch {
+    } catch (e) {
+      console.error('[autopilot] alerts', e);
       setAlerts([]);
     } finally {
       setLoading(false);
@@ -71,7 +89,7 @@ export default function AutopilotPage() {
 
   async function runScan() {
     setRunning(true);
-    // Walk the pipeline rail while the engine runs its checks server-side.
+    // Walk the check list while the engine runs its checks server-side.
     setScanStage(0);
     const ticker = setInterval(() => setScanStage(s => Math.min(s + 1, SCAN_RULES.length - 1)), 550);
     try {
@@ -86,15 +104,15 @@ export default function AutopilotPage() {
       });
       const data = await res.json().catch(() => ({}));
       if (!res.ok) throw new Error(data.error || 'scan failed');
-      setToast(data.summary || data.message || 'Autopilot scan complete.');
+      show(data.summary || data.message || 'Autopilot scan complete.');
       await fetchAlerts();
-    } catch {
-      setToast('Could not run the Autopilot scan. Please try again.');
+    } catch (e) {
+      console.error('[autopilot] run', e);
+      show('Could not run the Autopilot scan. Please try again.', 'bad');
     } finally {
       clearInterval(ticker);
       setScanStage(-1);
       setRunning(false);
-      setTimeout(() => setToast(''), 5000);
     }
   }
 
@@ -108,132 +126,156 @@ export default function AutopilotPage() {
         body: JSON.stringify({ alertId, projectId }),
       });
       if (!res.ok) throw new Error('dismiss failed');
-    } catch {
-      setToast('Could not dismiss the alert. Please try again.');
-      setTimeout(() => setToast(''), 4000);
+    } catch (e) {
+      console.error('[autopilot] dismiss', e);
+      show('Could not dismiss the alert. Please try again.', 'bad');
       fetchAlerts();
     } finally {
       setDismissingId(null);
     }
   }
 
-  const activeAlerts = alerts.filter(a => a.status !== 'dismissed');
+  const activeAlerts = useMemo(() => alerts.filter(a => a.status !== 'dismissed'), [alerts]);
   const criticalCount = activeAlerts.filter(a => a.severity === 'critical').length;
   const highCount = activeAlerts.filter(a => a.severity === 'high').length;
   const ruleCounts = SCAN_RULES.map(r => activeAlerts.filter(a => r.match(a)).length);
+
+  const shown = useMemo(() => {
+    const q = search.trim().toLowerCase();
+    const r = SCAN_RULES.find((x) => x.key === rule);
+    return activeAlerts.filter((a) => {
+      if (sev !== 'all' && a.severity !== sev) return false;
+      if (r && !r.match(a)) return false;
+      if (!q) return true;
+      return [a.alert_type, a.message, a.severity, a.status].some((v) => String(v || '').toLowerCase().includes(q));
+    });
+  }, [activeAlerts, search, sev, rule]);
 
   // What the engine watches on this project — from the live context snapshot.
   // DB numerics can round-trip as strings, so everything goes through Number().
   const counts = ctx?.counts;
   const money = ctx?.money;
   const pendingCos = Number(money?.pendingCoCount) || 0;
+  const base = `/app/projects/${projectId}`;
+  const filtered = sev !== 'all' || rule !== 'all' || search.trim() !== '';
+  const clearFilters = () => { setSearch(''); setSev('all'); setRule('all'); };
 
-  const scanButton = (
-    <button
-      onClick={runScan}
-      disabled={running}
-      className="pmBtn"
-      style={{ ...goldButtonStyle, opacity: running ? 0.6 : 1, cursor: running ? 'not-allowed' : 'pointer' }}
-    >
-      <Lightning size={15} weight="fill" />
-      {running ? 'Scanning…' : 'Run Autopilot Scan'}
-    </button>
-  );
+  const stats: StatItem[] = [
+    { label: 'Active alerts', value: loading ? '—' : String(activeAlerts.length), sub: 'Open on this job', icon: <Bell size={15} />, onClick: clearFilters, active: !filtered },
+    { label: 'Critical', value: loading ? '—' : String(criticalCount), sub: 'Need immediate action', tone: criticalCount ? 'bad' : 'default', icon: <WarningOctagon size={15} />, onClick: () => { setRule('all'); setSev('critical'); }, active: sev === 'critical' && rule === 'all' },
+    { label: 'High', value: loading ? '—' : String(highCount), sub: 'Review soon', tone: highCount ? 'warn' : 'default', icon: <Warning size={15} />, onClick: () => { setRule('all'); setSev('high'); }, active: sev === 'high' && rule === 'all' },
+    ...(ctx ? [
+      { label: 'Open RFIs', value: String(Number(counts?.openRfis) || 0), sub: 'Checked for overdue responses', icon: <Question size={15} />, href: `${base}/rfis` },
+      { label: 'Subs on the job', value: String((ctx?.subs || []).length), sub: 'Insurance + waivers tracked', icon: <UsersThree size={15} />, href: `${base}/subs` },
+    ] as StatItem[] : []),
+  ];
+
+  const columns: Column<Alert>[] = [
+    { key: 'severity', header: 'Severity', phone: 'show', groupable: false, width: 120, accessor: (a) => SEVERITY_RANK[a.severity] ?? 9, render: (a) => <Badge tone={SEVERITY_TONE[a.severity] || 'neutral'} dot>{cap(a.severity)}</Badge> },
+    { key: 'alert_type', header: 'Check', primary: true, phone: 'show' },
+    { key: 'message', header: 'Message', phone: 'show', render: (a) => <span style={{ color: 'var(--text-secondary)' }}>{a.message || '—'}</span> },
+    { key: 'date', header: 'Date', groupable: false, accessor: (a) => a.date || '', render: (a) => (a.date ? new Date(a.date).toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' }) : '—') },
+    { key: 'status', header: 'Status', render: (a) => <Badge tone={a.status === 'resolved' ? 'completed' : 'lead'} dot>{cap(a.status || 'active')}</Badge> },
+  ];
 
   return (
-    <PremiumSurface>
-      {/* Header */}
-      <ModuleHero
-        eyebrow={ctx?.project?.name || 'AI Monitoring'}
-        eyebrowIcon={<Sparkle size={13} weight="fill" color="var(--text-secondary)" />}
-        title="Project"
-        accent="Autopilot"
-        subtitle="Deterministic checks on live project data. Re-scans every 6 hours."
-        actions={scanButton}
-      />
+    <PageShell
+      crumbs={[
+        { label: 'Projects', href: '/app/projects' },
+        { label: ctx?.project?.name || 'Project', href: `${base}/overview` },
+        { label: 'Autopilot' },
+      ]}
+      title="Autopilot"
+      subtitle="Deterministic checks on live job data. Re-scans every 6 hours."
+      actions={
+        <Button variant="primary" icon={<Lightning size={15} weight="fill" />} onClick={runScan} disabled={running}>
+          {running ? 'Scanning…' : 'Run Autopilot scan'}
+        </Button>
+      }
+    >
+      <style>{PAGE_CSS}</style>
+      <StatRow items={stats} />
 
-      {/* One summary row: the alerts this page is for, then the live surface
-          the checks watch (RFIs; subs' insurance + waivers). Pending COs sit
-          in the "What These Checks Guard" rail below, so they are not repeated. */}
-      <StatStrip items={[
-        { href: `/app/projects/${projectId}/autopilot`, label: 'Active Alerts', value: String(activeAlerts.length), sub: activeAlerts.length === 1 ? '1 open on this project' : `${activeAlerts.length} open on this project` },
-        { href: `/app/projects/${projectId}/autopilot`, label: 'Critical', value: String(criticalCount), accent: criticalCount ? RED : undefined, sub: 'Need immediate action' },
-        { href: `/app/projects/${projectId}/autopilot`, label: 'High', value: String(highCount), accent: highCount ? AMBER : undefined, sub: 'Review soon' },
-        ...(ctx ? [
-          { href: `/app/projects/${projectId}/rfis`, label: 'Open RFIs', value: String(Number(counts?.openRfis) || 0), sub: 'Checked for overdue responses' },
-          { href: `/app/projects/${projectId}/subs`, label: 'Subs on the Job', value: String((ctx?.subs || []).length), sub: 'Insurance + waivers tracked' },
-        ] : []),
-      ]} />
-
-      {toast && (
-        <div style={{ marginBottom: 20, padding: '10px 14px', background: T.greenDim, border: `1px solid rgba(74,222,128,0.3)`, borderRadius: 10, color: T.green, fontSize: 13 }}>
-          {toast}
+      <div className="apGrid">
+        <div style={{ display: 'flex', flexDirection: 'column', gap: 'var(--sp-3)', minWidth: 0 }}>
+          {!loading && activeAlerts.length > 0 && (
+            <Toolbar
+              search={search}
+              onSearch={setSearch}
+              placeholder="Search alerts…"
+              filters={
+                <>
+                  <Select aria-label="Severity" value={sev} onChange={(e) => setSev(e.target.value as SevFilter)} style={{ width: 'auto', minWidth: 150 }}
+                    options={[{ value: 'all', label: 'All severities' }, ...['critical', 'high', 'medium', 'low', 'info'].map((s) => ({ value: s, label: cap(s) }))]} />
+                  <Select aria-label="Check" value={rule} onChange={(e) => setRule(e.target.value)} style={{ width: 'auto', minWidth: 180 }}
+                    options={[{ value: 'all', label: 'All checks' }, ...SCAN_RULES.map((r) => ({ value: r.key, label: r.title }))]} />
+                </>
+              }
+            />
+          )}
+          <DataTable<Alert>
+            tableId="project-autopilot"
+            exportName="autopilot-alerts"
+            columns={columns}
+            rows={shown}
+            loading={loading}
+            rowKey={(a) => a.id}
+            defaultSort={{ key: 'severity', dir: 'asc' }}
+            rowActions={(a) => [
+              { label: dismissingId === a.id ? '…' : 'Dismiss', icon: <X size={14} />, inline: true, disabled: dismissingId === a.id, onClick: () => dismissAlert(a.id) },
+            ]}
+            empty={
+              activeAlerts.length === 0 ? (
+                <EmptyState
+                  icon={<CheckCircle size={22} />}
+                  title="No active alerts on this job"
+                  text="All four checks came back clean."
+                  action={<Button icon={<Lightning size={15} />} onClick={runScan} disabled={running}>{running ? 'Scanning…' : 'Run a scan now'}</Button>}
+                />
+              ) : (
+                <EmptyState title="Nothing matches" text="Change the search or the filters." action={<Button onClick={clearFilters}>Clear filters</Button>} />
+              )
+            }
+          />
         </div>
-      )}
 
-      {/* Alerts + scan-pipeline rail */}
-      <div className="pmSplit" style={railStyle(320, { gap: 18, alignItems: 'start' })}>
-      <SectionCard
-        icon={<Bell size={17} weight="duotone" color="var(--text-secondary)" />}
-        title="Project Alerts"
-        subtitle="Issues detected by Autopilot on this project"
-        action={<span style={{ fontSize: 12, color: T.muted }}>{activeAlerts.length} active</span>}
-        flush
-      >
-        {loading ? (
-          <div style={{ textAlign: 'center', padding: 40, color: T.muted }}>Loading alerts…</div>
-        ) : activeAlerts.length === 0 ? (
-          <PremiumEmpty
-            icon={<CheckCircle size={30} weight="duotone" color={GREEN} />}
-            title="No Active Alerts on This Project"
-            description="All four checks came back clean — RFIs answered on time, insurance current, lien waivers signed, and change orders moving. Autopilot re-scans automatically every 6 hours; run one now after any big change."
-            action={<button onClick={runScan} disabled={running} className="pmBtn" style={{ ...secondaryButtonStyle, opacity: running ? 0.6 : 1 }}>{running ? 'Scanning…' : 'Run a Scan Now'}</button>}
-          />
-        ) : (
-          <Table
-            headers={['Severity', 'Alert Type', 'Message', 'Date', 'Status', 'Actions']}
-            rows={activeAlerts.map(a => [
-              <Badge key="sev" label={a.severity} color={SEVERITY_BADGE[a.severity] || 'muted'} />,
-              <span key="type" style={{ fontWeight: 600 }}>{a.alert_type}</span>,
-              <span key="msg" style={{ fontSize: 13 }}>{a.message}</span>,
-              <span key="dt" style={{ color: T.muted, whiteSpace: 'nowrap' }}>{a.date ? new Date(a.date).toLocaleDateString() : '—'}</span>,
-              <Badge key="st" label={a.status || 'active'} color={a.status === 'resolved' ? 'green' : 'amber'} />,
-              <Btn key="act" size="sm" variant="ghost" onClick={() => dismissAlert(a.id)} disabled={dismissingId === a.id}>
-                {dismissingId === a.id ? '…' : 'Dismiss'}
-              </Btn>,
-            ])}
-          />
-        )}
-      </SectionCard>
+        <div className="apRail">
+          <Card title="Checks" subtitle={running ? 'Running checks…' : 'Runs automatically every 6 hours'} flush>
+            <ItemList>
+              {SCAN_RULES.map((r, i) => {
+                const n = ruleCounts[i];
+                const state = running ? (scanStage === i ? 'Checking…' : scanStage > i ? 'Done' : 'Queued') : n > 0 ? `${n} alert${n === 1 ? '' : 's'}` : 'Clear';
+                return (
+                  <ItemRow
+                    key={r.key}
+                    icon={r.icon}
+                    tone={!running && n > 0 ? 'warning' : !running ? 'success' : 'neutral'}
+                    title={r.title}
+                    desc={r.desc}
+                    value={<strong style={{ color: !running && n > 0 ? 'var(--warning)' : 'var(--text-secondary)', whiteSpace: 'nowrap' }}>{state}</strong>}
+                    onClick={!running && n > 0 ? () => { setSev('all'); setRule(r.key); } : undefined}
+                  />
+                );
+              })}
+            </ItemList>
+          </Card>
 
-      {/* Context rail — each check, its live output, and the money it guards */}
-      <div style={{ display: 'flex', flexDirection: 'column', gap: 16 }}>
-        <SectionCard flat
-          title="Scan Pipeline"
-          subtitle={running ? 'Running checks…' : 'Runs automatically every 6 hours'}
-          icon={<ListChecks size={17} weight="duotone" color="var(--text-secondary)" />}
-        >
-          <FlowSteps title="" steps={SCAN_RULES.map((r, i) => ({
-            title: r.title + (running ? '' : ruleCounts[i] > 0 ? ` — ${ruleCounts[i]} alert${ruleCounts[i] === 1 ? '' : 's'}` : ' — Clear'),
-            desc: running && scanStage === i ? 'Checking now…' : r.desc,
-            done: running ? scanStage > i : true,
-          }))} />
-        </SectionCard>
-        {ctx && (
-          <SectionCard flat title="What These Checks Guard" icon={<ClockCounterClockwise size={17} weight="duotone" color="var(--text-secondary)" />}>
-            <InsightRow label="Revised Contract" value={fmtM(money?.revisedContract)} strong />
-            <InsightRow label="Billed to Date" value={`${fmtM(money?.billedToDate)} · ${Number(money?.billedPct) || 0}%`} />
-            <InsightRow label="Paid to Date" value={fmtM(money?.paidToDate)} accent={GREEN} />
-            {pendingCos > 0 && <InsightRow label="Pending COs" value={String(pendingCos)} accent={AMBER} />}
-            {Number(counts?.openPunch) > 0 && <InsightRow label="Open Punch" value={String(Number(counts?.openPunch) || 0)} />}
-            {Number(ctx?.schedule?.criticalCount) > 0 && <InsightRow label="Critical-Path Tasks" value={String(Number(ctx?.schedule?.criticalCount) || 0)} accent={RED} />}
-            <div style={{ fontSize: 12, color: 'var(--c-text-2)', marginTop: 8, lineHeight: 1.5 }}>
-              An unanswered RFI, a lapsed cert, or a stale CO puts this money at risk — that is what the alerts on the left protect.
-            </div>
-          </SectionCard>
-        )}
+          {ctx && (
+            <Card title="What these checks guard">
+              <DetailList items={[
+                ['Revised contract', fmtM(money?.revisedContract)],
+                ['Billed to date', `${fmtM(money?.billedToDate)} · ${Number(money?.billedPct) || 0}%`],
+                ['Paid to date', fmtM(money?.paidToDate)],
+                ...(pendingCos > 0 ? [['Pending COs', <span key="pco" style={{ color: 'var(--warning)', fontWeight: 700 }}>{pendingCos}</span>] as [string, React.ReactNode]] : []),
+                ...(Number(counts?.openPunch) > 0 ? [['Open punch', String(Number(counts?.openPunch) || 0)] as [string, React.ReactNode]] : []),
+                ...(Number(ctx?.schedule?.criticalCount) > 0 ? [['Critical-path tasks', <span key="cp" style={{ color: 'var(--danger)', fontWeight: 700 }}>{Number(ctx?.schedule?.criticalCount) || 0}</span>] as [string, React.ReactNode]] : []),
+              ]} />
+            </Card>
+          )}
+        </div>
       </div>
-      </div>
-    </PremiumSurface>
+
+      <Toast message={toast?.message ?? null} tone={toast?.tone} />
+    </PageShell>
   );
 }

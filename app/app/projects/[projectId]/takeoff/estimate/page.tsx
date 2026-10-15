@@ -1,30 +1,72 @@
 'use client';
+/**
+ * Takeoff estimate — sheet-by-sheet quantities, edited in place, priced live,
+ * with the markup stack and the PDF / Excel exports. On the kit.
+ *
+ *   takeoffs   GET  /api/takeoff-projects/list?project_id=   POST /api/takeoff-projects/create
+ *   one        GET / PATCH /api/takeoff-projects/[id]          (totals + markups)
+ *   sheets     POST /api/takeoff-projects/[id]/sheets
+ *   lines      GET / POST /api/takeoff-projects/[id]/line-items, PATCH / DELETE …/line-items/[lineId]
+ *   assemblies GET  /api/takeoff-assemblies/list
+ */
 
-import { Suspense, useState, useEffect, useCallback, useRef, useMemo, type CSSProperties } from 'react';
-import { useParams } from 'next/navigation';
-import Link from 'next/link';
-import { useDragReorder } from '../../../../../../components/DragHandle';
-import BulkActionBar from '../../../../../../components/BulkActionBar';
-import PresenceIndicator from '../../../../../../components/PresenceIndicator';
+import { Suspense, useState, useEffect, useCallback, useRef, useMemo } from 'react';
+import { useParams, useRouter } from 'next/navigation';
 import {
-  CaretUp, CaretDown, FileText, Trash, XCircle,
+  CaretUp, CaretDown, FileText, Trash, X, ArrowLeft, Tag, ChartLineUp,
   Calculator, Cube, Users, Plus, Stack, ListNumbers,
   SlidersHorizontal, FilePdf, MicrosoftExcelLogo,
 } from '@phosphor-icons/react';
 import {
-  PremiumSurface, ModuleHero, StatCard, SectionCard, PremiumEmpty,
-  goldButtonStyle, ghostButtonStyle, secondaryButtonStyle
-} from '@/components/ui/premium';
+  PageShell, Card, StatRow, Badge, Button, EmptyState, Field, Input, Textarea, Select, FormGrid,
+  type StatItem,
+} from '@/components/ui/kit';
 import { SHEET_DISCIPLINES } from '@/lib/construction-intelligence';
 
 import { inAppFileClick } from '@/lib/media-save';
 import { useToast } from '@/components/Toast';
-const GOLD = 'var(--brand-primary)';
-const DARK = 'var(--bg-base)';
-const RAISED = 'var(--bg-surface-2)';
-const BORDER = 'rgba(255,255,255,0.12)';
-const DIM = 'var(--text-secondary)';
-const TEXT = 'var(--text-primary)';
+
+const CSS = `
+.teWs > .k-page { max-width: none; }
+.teGrid { display: grid; grid-template-columns: minmax(0, 1fr); gap: 16px; align-items: start; }
+@media (min-width: 1000px) {
+  .teGrid { grid-template-columns: minmax(250px, 300px) minmax(0, 1fr); }
+  .teGrid[data-detail="true"] { grid-template-columns: minmax(250px, 300px) minmax(0, 1fr) minmax(260px, 320px); }
+}
+.teSide { display: flex; flex-direction: column; gap: 16px; min-width: 0; }
+.teScroll { overflow-y: auto; }
+.tePanel { display: flex; flex-direction: column; gap: 10px; padding: 14px 16px; border-bottom: 1px solid var(--border-subtle); background: var(--bg-surface-2); }
+.teBtns { display: flex; gap: 8px; flex-wrap: wrap; }
+.teSheet { all: unset; box-sizing: border-box; display: flex; align-items: center; gap: 10px; width: 100%; min-height: 56px; padding: 10px 16px; cursor: pointer; border-bottom: 1px solid var(--border-subtle); border-left: 3px solid transparent; }
+.teSheet:hover { background: var(--bg-row-hover); }
+.teSheet:focus-visible { outline: 2px solid var(--focus-ring); outline-offset: -2px; }
+.teSheet[aria-current="true"] { background: var(--brand-primary-08); border-left-color: var(--brand-primary); }
+.teThumb { width: 40px; height: 40px; flex-shrink: 0; border-radius: var(--radius-sm); background: var(--bg-surface-2); border: 1px solid var(--border-default); display: inline-flex; align-items: center; justify-content: center; color: var(--text-tertiary); overflow: hidden; }
+.teThumb img { width: 40px; height: 40px; object-fit: cover; }
+.teSheetText { flex: 1; min-width: 0; display: flex; flex-direction: column; gap: 4px; }
+.teSheetName { font-size: var(--fs-sm); font-weight: 700; color: var(--text-primary); overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.teSheetMeta { display: flex; align-items: center; gap: 6px; font-size: var(--fs-xs); color: var(--text-secondary); }
+.teMoney { font-variant-numeric: tabular-nums; white-space: nowrap; font-weight: 700; color: var(--text-primary); }
+.teMuted { color: var(--text-tertiary); }
+.teTable tbody tr { cursor: pointer; }
+.teTable tbody tr[data-selected="true"] td { background: var(--brand-primary-08); }
+.teTable .teAddRow td { background: var(--bg-surface-2); cursor: default; }
+.teTable .k-input { min-height: 34px; }
+.teCell { all: unset; box-sizing: border-box; cursor: text; display: inline-block; min-width: 30px; padding: 3px 6px; border-radius: var(--radius-sm); color: var(--text-primary); }
+.teCell:hover, .teCell:focus-visible { background: var(--bg-surface-2); outline: 1px solid var(--border-default); }
+.teCellInput { min-height: 30px; padding: 3px 6px; }
+.teFoot td { font-weight: 700; color: var(--text-primary); border-top: 1px solid var(--border-default); }
+.tePricing { display: flex; align-items: flex-end; gap: 20px; flex-wrap: wrap; }
+.tePricing .k-form-grid { flex: 1 1 320px; }
+.teFigure { display: flex; flex-direction: column; gap: 4px; }
+.teFigure span { font-size: var(--fs-xs); color: var(--text-secondary); font-weight: 700; }
+.teFigure strong { font-size: 18px; font-weight: 800; color: var(--text-primary); font-variant-numeric: tabular-nums; }
+@media (max-width: 640px) {
+  .teWs .k-btn, .teWs .k-input, .teWs select.k-select { min-height: 44px; }
+  .teWs .k-input, .teWs select.k-select, .teWs .k-textarea { font-size: 16px; }
+  .teSheet { min-height: 56px; }
+}
+`;
 
 interface Project {
   id: string;
@@ -118,6 +160,7 @@ const emptyLineItem: Omit<LineItem, 'id' | 'takeoff_project_id'> = {
 function EstimatePage() {
   const { showToast } = useToast();
   const { projectId } = useParams() as { projectId: string };
+  const router = useRouter();
 
   const [project, setProject] = useState<Project | null>(null);
   const [takeoffProjects, setTakeoffProjects] = useState<TakeoffProject[]>([]);
@@ -449,475 +492,361 @@ function EstimatePage() {
     if (editRef.current) editRef.current.focus();
   }, [editingCell]);
 
-  // Shared control-surface styles for inline inputs / selects sitting on cards.
-  const fieldStyle: CSSProperties = {
-    background: DARK, color: TEXT, border: `1px solid ${BORDER}`, borderRadius: 8,
-    padding: '9px 11px', fontSize: 13, width: '100%', boxSizing: 'border-box', outline: 'none',
+  const base = `/app/projects/${projectId}`;
+  const disciplineOptions = SHEET_DISCIPLINES.includes(newSheetDiscipline) ? SHEET_DISCIPLINES : [newSheetDiscipline, ...SHEET_DISCIPLINES];
+  const marginTone = grossMargin > 20 ? 'var(--success)' : grossMargin > 10 ? 'var(--warning)' : 'var(--danger)';
+
+  const stats: StatItem[] = [
+    { label: 'Total Cost', value: currency(grandTotal), sub: 'Material + labor', icon: <Calculator size={15} /> },
+    { label: 'Material', value: currency(totalMaterial), sub: 'Rolled up', icon: <Cube size={15} /> },
+    { label: 'Labor', value: currency(totalLabor), sub: `${totalLaborHrs.toFixed(1)} hrs rolled up`, icon: <Users size={15} /> },
+    { label: 'Sell Price', value: currency(sellPrice), sub: `×${markupMultiplier.toFixed(2)} markup`, icon: <Tag size={15} /> },
+    { label: 'Gross Margin', value: `${grossMargin.toFixed(1)}%`, tone: grossMargin > 20 ? 'good' : grossMargin > 10 ? 'warn' : 'bad', sub: 'Of the sell price', icon: <ChartLineUp size={15} /> },
+  ];
+
+  const editable = (item: LineItem, field: string, value: string | number, width?: number) => {
+    const isEditing = editingCell?.rowId === item.id && editingCell?.field === field;
+    if (isEditing) {
+      return (
+        <input
+          ref={editRef}
+          className="k-input teCellInput"
+          value={editValue}
+          onClick={e => e.stopPropagation()}
+          onChange={e => setEditValue(e.target.value)}
+          onBlur={() => { if (escapedRef.current) { escapedRef.current = false; return; } saveInlineEdit(item, field, editValue); }}
+          onKeyDown={e => {
+            // Enter → blur so onBlur is the SINGLE commit path (no double PATCH);
+            // Escape → cancel without saving.
+            if (e.key === 'Enter') { e.preventDefault(); e.currentTarget.blur(); }
+            if (e.key === 'Escape') { escapedRef.current = true; setEditingCell(null); }
+          }}
+          style={{ width: width || 80 }}
+        />
+      );
+    }
+    return (
+      <button
+        type="button"
+        className="teCell"
+        title="Click to edit"
+        onClick={e => { e.stopPropagation(); setEditingCell({ rowId: item.id, field }); setEditValue(String(value)); }}
+      >
+        {typeof value === 'number' && (field === 'unit_cost' || field === 'extended_cost') ? currency(value) : (value === '' || value == null ? '—' : value)}
+      </button>
+    );
   };
-  const smallGoldBtn: CSSProperties = { ...goldButtonStyle, padding: '7px 13px', fontSize: 13, borderRadius: 10 };
 
   return (
-    <PremiumSurface>
+    <div className="teWs">
+      <style dangerouslySetInnerHTML={{ __html: CSS }} />
+      <PageShell
+        crumbs={[
+          { label: 'Projects', href: '/app/projects' },
+          { label: project?.name || 'Project', href: `${base}/overview` },
+          /* No href: the Back button below navigates client-side so an
+             in-flight cell save is never aborted by a full page unload. */
+          { label: 'Takeoff' },
+          { label: 'Estimate' },
+        ]}
+        title="Takeoff Estimate"
+        subtitle={project?.name ? `${project.name} · sheet-by-sheet quantities and live cost.` : 'Sheet-by-sheet quantities and live cost.'}
+        actions={
+          <>
+            {/* Client-side nav, deliberately: a full-page <a> unload ABORTED any
+                in-flight cell-save PATCH and dropped the 400ms-debounced edit. */}
+            <Button variant="ghost" icon={<ArrowLeft size={15} />} onClick={() => router.push(`${base}/takeoff`)}>Project Takeoff</Button>
+            <Select
+              aria-label="Takeoff"
+              value={selectedTakeoff?.id || ''}
+              onChange={e => {
+                const tp = takeoffProjects.find(t => t.id === e.target.value);
+                if (tp) selectTakeoff(tp);
+              }}
+              style={{ width: 'auto', minWidth: 200 }}
+              options={[{ value: '', label: 'Select Takeoff' }, ...takeoffProjects.map(tp => ({ value: tp.id, label: tp.name }))]}
+            />
+            <Button variant="primary" icon={<Plus size={15} weight="bold" />} onClick={createTakeoff}>New Takeoff</Button>
+          </>
+        }
+      >
+        <StatRow items={stats} />
 
-      {/* HEADER */}
-      <div style={{ marginBottom: 10 }}>
-        {/* Client-side nav, deliberately: a full-page <a> unload ABORTED any
-            in-flight cell-save PATCH and dropped the 400ms-debounced edit the
-            user just typed (review finding). And the label names where it
-            actually goes — the project takeoff, not the global Studio. */}
-        <Link href={`/app/projects/${projectId}/takeoff`} style={{ color: 'var(--c-text-2)', fontSize: 13, textDecoration: 'none', fontWeight: 600 }}>
-          ← Back to Project Takeoff
-        </Link>
-      </div>
-      <ModuleHero
-        eyebrow="Takeoff Estimate"
-        eyebrowIcon={<Calculator size={13} weight="fill" color="var(--text-secondary)" />}
-        title={project?.name || 'Loading…'}
-        subtitle="Sheet-by-sheet quantity takeoff and live cost estimating."
-        actions={<>
-          <select
-            value={selectedTakeoff?.id || ''}
-            onChange={e => {
-              const tp = takeoffProjects.find(t => t.id === e.target.value);
-              if (tp) selectTakeoff(tp);
-            }}
-            style={{
-              background: DARK, color: TEXT, border: `1px solid ${BORDER}`, borderRadius: 12,
-              padding: '10px 14px', fontSize: 14, fontWeight: 700, minWidth: 200, cursor: 'pointer',
-            }}
-          >
-            <option value="" disabled>Select Takeoff</option>
-            {takeoffProjects.map(tp => (
-              <option key={tp.id} value={tp.id}>{tp.name}</option>
-            ))}
-          </select>
-          <button onClick={createTakeoff} style={goldButtonStyle} className="pmBtn">
-            <Plus size={15} weight="bold" /> New Takeoff
-          </button>
-        </>}
-      />
-
-      {/* KPI ROW */}
-      <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(180px, 1fr))', gap: 12, marginBottom: 24 }}>
-        <StatCard icon={<Calculator size={19} weight="duotone" color="var(--text-secondary)" />} label="Total Cost" value={currency(grandTotal)} accent={GOLD} sub="Material + labor" delay={0.02}  href={`/app/projects/${projectId}/takeoff/estimate`}/>
-        <StatCard icon={<Cube size={19} weight="duotone" color="var(--warning)" />} label="Material" value={currency(totalMaterial)} accent="var(--warning)" sub="Rolled up" delay={0.06}  href={`/app/projects/${projectId}/takeoff/estimate`}/>
-        <StatCard icon={<Users size={19} weight="duotone" color="var(--success)" />} label="Labor" value={currency(totalLabor)} accent="var(--success)" sub="Rolled up" delay={0.10}  href={`/app/projects/${projectId}/takeoff/estimate`}/>
-      </div>
-
-      {/* WORKSPACE */}
-      <div style={{ display: 'flex', flexWrap: 'wrap', gap: 16, alignItems: 'flex-start' }}>
-
-        {/* LEFT COLUMN — Sheets + Assembly Library */}
-        <div style={{ flex: '1 1 260px', minWidth: 250, maxWidth: 340, display: 'flex', flexDirection: 'column', gap: 16 }}>
-
-          {/* Sheets */}
-          <SectionCard
-            title="Sheets"
-            icon={<Stack size={17} weight="duotone" color="var(--text-secondary)" />}
-            flush
-            action={
-              <button onClick={() => setAddingSheet(true)} style={{ ...secondaryButtonStyle, padding: '7px 13px', fontSize: 13 }} className="pmBtn">
-                <Plus size={13} weight="bold" /> Add Sheet
-              </button>
-            }
-          >
-            {addingSheet && (
-              <div style={{ padding: 14, borderBottom: `1px solid rgba(255,255,255,0.06)`, display: 'flex', flexDirection: 'column', gap: 8 }}>
-                <input
-                  placeholder="Sheet name"
-                  value={newSheetName}
-                  onChange={e => setNewSheetName(e.target.value)}
-                  onKeyDown={e => e.key === 'Enter' && addSheet()}
-                  style={fieldStyle}
-                />
-                <select
-                  value={newSheetDiscipline}
-                  onChange={e => setNewSheetDiscipline(e.target.value)}
-                  style={fieldStyle}
-                >
-                  {(SHEET_DISCIPLINES.includes(newSheetDiscipline) ? SHEET_DISCIPLINES : [newSheetDiscipline, ...SHEET_DISCIPLINES]).map(d => <option key={d} value={d}>{d}</option>)}
-                </select>
-                {sheetError && (
-                  <div style={{ fontSize: 12, lineHeight: 1.45, color: 'var(--danger)', background: 'rgba(248,113,113,0.10)', border: '1px solid rgba(248,113,113,0.28)', borderRadius: 8, padding: '7px 10px' }}>
-                    {sheetError}
+        <div className="teGrid" data-detail={rightOpen && selectedItem && detailDraft ? 'true' : 'false'}>
+          {/* LEFT — Sheets + Assembly Library */}
+          <div className="teSide">
+            <Card
+              title="Sheets"
+              icon={<Stack size={17} />}
+              flush
+              actions={<Button size="sm" icon={<Plus size={13} weight="bold" />} onClick={() => setAddingSheet(true)}>Add Sheet</Button>}
+            >
+              {addingSheet && (
+                <form className="tePanel" onSubmit={e => { e.preventDefault(); void addSheet(); }}>
+                  <Field label="Sheet name">
+                    <Input placeholder="e.g. A-101 Floor Plan" value={newSheetName} onChange={e => setNewSheetName(e.target.value)} autoFocus />
+                  </Field>
+                  <Field label="Discipline">
+                    <Select value={newSheetDiscipline} onChange={e => setNewSheetDiscipline(e.target.value)} options={disciplineOptions} />
+                  </Field>
+                  {sheetError && <span className="k-error" role="alert">{sheetError}</span>}
+                  <div className="teBtns">
+                    <Button type="submit" variant="primary" size="sm">Save</Button>
+                    <Button variant="ghost" size="sm" onClick={() => { setAddingSheet(false); setNewSheetName(''); setSheetError(null); }}>Cancel</Button>
                   </div>
-                )}
-                <div style={{ display: 'flex', gap: 8 }}>
-                  <button onClick={addSheet} style={{ ...smallGoldBtn, flex: 1 }} className="pmBtn">Save</button>
-                  <button onClick={() => { setAddingSheet(false); setNewSheetName(''); setSheetError(null); }} style={{ ...ghostButtonStyle, flex: 1, padding: '7px 13px', fontSize: 13, borderRadius: 10 }} className="pmBtn">Cancel</button>
-                </div>
-              </div>
-            )}
-            <div style={{ maxHeight: 360, overflowY: 'auto' }}>
-              {sheets.length === 0 && (
-                <div style={{ padding: 22, textAlign: 'center', color: DIM, fontSize: 13 }}>No sheets yet. Add one to begin.</div>
+                </form>
               )}
-              {sheets.map(s => (
-                <div
-                  key={s.id}
-                  onClick={() => selectSheet(s)}
-                  style={{
-                    padding: '10px 16px',
-                    cursor: 'pointer',
-                    borderBottom: `1px solid rgba(255,255,255,0.06)`,
-                    background: selectedSheet?.id === s.id ? 'var(--brand-primary-12)' : 'transparent',
-                    borderLeft: selectedSheet?.id === s.id ? `3px solid ${GOLD}` : '3px solid transparent',
-                    display: 'flex',
-                    alignItems: 'center',
-                    gap: 10,
-                    transition: 'background 0.15s',
-                  }}
-                >
-                  <div style={{
-                    width: 40, height: 40, borderRadius: 6, background: DARK, border: `1px solid ${BORDER}`,
-                    display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 12, color: DIM, flexShrink: 0,
-                  }}>
-                    {s.thumbnail_url ? <img src={s.thumbnail_url} alt="" style={{ width: 40, height: 40, borderRadius: 6, objectFit: 'cover' }} /> : 'PDF'}
-                  </div>
-                  <div style={{ flex: 1, minWidth: 0 }}>
-                    <div style={{ fontSize: 13, fontWeight: 700, color: selectedSheet?.id === s.id ? GOLD : TEXT, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{s.name}</div>
-                    <div style={{ display: 'flex', alignItems: 'center', gap: 6, marginTop: 3 }}>
-                      <span style={{ fontSize: 12, padding: '2px 8px', borderRadius: 999, background: 'var(--bg-surface-2)', border: '1px solid var(--border-default)', color: 'var(--text-secondary)', fontWeight: 700 }}>{s.discipline}</span>
-                      {s.sheet_number && <span style={{ fontSize: 12, color: DIM }}>{s.sheet_number}</span>}
-                    </div>
-                  </div>
-                </div>
-              ))}
-            </div>
-          </SectionCard>
-
-          {/* Assembly Library */}
-          <SectionCard
-            title="Assembly Library"
-            icon={<Cube size={17} weight="duotone" color="var(--text-secondary)" />}
-            flush
-            action={
-              <button
-                onClick={() => setAssemblyOpen(!assemblyOpen)}
-                style={{ ...ghostButtonStyle, padding: '6px 10px', borderRadius: 10 }}
-                className="pmBtn"
-                aria-label={assemblyOpen ? 'Collapse assembly library' : 'Expand assembly library'}
-              >
-                {assemblyOpen ? <CaretUp size={15} weight="bold" color={DIM} /> : <CaretDown size={15} weight="bold" color={DIM} />}
-              </button>
-            }
-          >
-            {assemblyOpen && (
-              <div style={{ maxHeight: 220, overflowY: 'auto' }}>
-                {assemblies.length === 0 && (
-                  <div style={{ padding: 16, textAlign: 'center', color: DIM, fontSize: 12 }}>No assemblies found.</div>
-                )}
-                {assemblies.map(a => (
-                  <div
-                    key={a.id}
-                    onClick={() => applyAssembly(a)}
-                    style={{
-                      padding: '10px 16px', cursor: 'pointer', borderBottom: `1px solid rgba(255,255,255,0.06)`,
-                      fontSize: 13, display: 'flex', justifyContent: 'space-between', alignItems: 'center',
-                    }}
+              <div className="teScroll" style={{ maxHeight: 360 }}>
+                {sheets.length === 0 && <EmptyState title="No sheets yet" text="Add one to begin." />}
+                {sheets.map(s => (
+                  <button
+                    key={s.id}
+                    type="button"
+                    className="teSheet"
+                    aria-current={selectedSheet?.id === s.id ? 'true' : undefined}
+                    onClick={() => selectSheet(s)}
                   >
-                    <div>
-                      <div style={{ fontWeight: 600, color: TEXT }}>{a.name}</div>
-                      <div style={{ fontSize: 12, color: DIM }}>{a.unit}</div>
-                    </div>
-                    <div style={{ color: 'var(--text-primary)', fontWeight: 700, fontSize: 13 }}>{currency(a.total_cost)}</div>
-                  </div>
+                    <span className="teThumb" aria-hidden>
+                      {s.thumbnail_url ? <img src={s.thumbnail_url} alt="" /> : <FileText size={18} />}
+                    </span>
+                    <span className="teSheetText">
+                      <span className="teSheetName">{s.name}</span>
+                      <span className="teSheetMeta">
+                        <Badge tone="neutral">{s.discipline}</Badge>
+                        {s.sheet_number && <span>{s.sheet_number}</span>}
+                      </span>
+                    </span>
+                  </button>
                 ))}
               </div>
-            )}
-          </SectionCard>
-        </div>
+            </Card>
 
-        {/* MAIN AREA */}
-        <div style={{ flex: '2 1 440px', minWidth: 0 }}>
-          {!selectedSheet ? (
-            <SectionCard flat flush>
-              <PremiumEmpty
-                icon={<FileText size={30} weight="duotone" color="var(--text-secondary)" />}
-                title="Select or Add a Sheet to Begin"
-                description="Choose a sheet from the left, or add a new one to start capturing quantities and line-item costs."
-              />
-            </SectionCard>
-          ) : (
-            <SectionCard
-              title="Line Items"
-              subtitle={`${selectedSheet.name} · ${selectedSheet.discipline}`}
-              icon={<ListNumbers size={17} weight="duotone" color="var(--text-secondary)" />}
+            <Card
+              title="Assembly Library"
+              icon={<Cube size={17} />}
               flush
-              action={
-                <button onClick={() => setAddingRow(true)} style={{ ...secondaryButtonStyle, padding: '7px 13px', fontSize: 13 }} className="pmBtn">
-                  <Plus size={13} weight="bold" /> Add Line Item
-                </button>
+              actions={
+                <Button
+                  variant="ghost"
+                  size="sm"
+                  icon={assemblyOpen ? <CaretUp size={15} weight="bold" /> : <CaretDown size={15} weight="bold" />}
+                  onClick={() => setAssemblyOpen(!assemblyOpen)}
+                  aria-label={assemblyOpen ? 'Collapse assembly library' : 'Expand assembly library'}
+                />
               }
             >
-              {/* Sheet Viewer Placeholder */}
-              <div style={{
-                height: 240, background: RAISED, borderBottom: `1px solid rgba(255,255,255,0.06)`,
-                display: 'flex', alignItems: 'center', justifyContent: 'center', flexDirection: 'column', gap: 8,
-              }}>
-                <div style={{ fontSize: 14, color: DIM }}>Sheet Viewer</div>
-                <div style={{ fontSize: 18, fontWeight: 700, color: TEXT }}>{selectedSheet.name}</div>
-                <div style={{ fontSize: 12, color: DIM }}>PDF viewer will be rendered here</div>
-              </div>
+              {assemblyOpen && (
+                <div className="teScroll" style={{ maxHeight: 220 }}>
+                  {assemblies.length === 0 && <EmptyState title="No assemblies found" />}
+                  {assemblies.map(a => (
+                    <button key={a.id} type="button" className="teSheet" onClick={() => applyAssembly(a)} title="Start a line item from this assembly">
+                      <span className="teSheetText">
+                        <span className="teSheetName">{a.name}</span>
+                        <span className="teSheetMeta"><span>{a.unit}</span></span>
+                      </span>
+                      <span className="teMoney">{currency(a.total_cost)}</span>
+                    </button>
+                  ))}
+                </div>
+              )}
+            </Card>
+          </div>
 
-              {/* Line Items Table */}
-              <div style={{ padding: 16 }}>
+          {/* MAIN — the sheet's line items, edited in place */}
+          <div style={{ minWidth: 0 }}>
+            {!selectedSheet ? (
+              <Card flush>
+                <EmptyState
+                  icon={<FileText size={22} />}
+                  title="Select or add a sheet to begin"
+                  text="Pick a sheet on the left to capture quantities and line-item costs."
+                  action={<Button icon={<Plus size={15} weight="bold" />} onClick={() => setAddingSheet(true)}>Add Sheet</Button>}
+                />
+              </Card>
+            ) : (
+              <Card
+                title="Line Items"
+                subtitle={`${selectedSheet.name} · ${selectedSheet.discipline}`}
+                icon={<ListNumbers size={17} />}
+                flush
+                actions={<Button size="sm" icon={<Plus size={13} weight="bold" />} onClick={() => setAddingRow(true)}>Add Line Item</Button>}
+              >
                 <div style={{ overflowX: 'auto' }}>
-                  <table className="k-table-skin" style={{ width: '100%', borderCollapse: 'collapse' }}>
+                  <table className="k-table-skin teTable">
                     <thead>
                       <tr>
-                        {['#', 'CSI Code', 'Description', 'Qty', 'Unit', 'Unit Cost', 'Extended', 'Labor Hrs', 'Actions'].map(h => (
-                          <th key={h} style={{ textAlign: 'left', padding: '8px 10px', borderBottom: `2px solid ${BORDER}`, color: DIM, fontSize: 12, whiteSpace: 'nowrap' }}>{h}</th>
+                        {['#', 'CSI Code', 'Description', 'Qty', 'Unit', 'Unit Cost', 'Extended', 'Labor Hrs', ''].map((h, i) => (
+                          <th key={i} style={{ textAlign: ['Qty', 'Unit Cost', 'Extended', 'Labor Hrs'].includes(h) ? 'right' : 'left' }} aria-label={h || 'Actions'}>{h}</th>
                         ))}
                       </tr>
                     </thead>
                     <tbody>
-                      {lineItems.map((item, idx) => {
-                        const editable = (field: string, value: string | number, width?: number) => {
-                          const isEditing = editingCell?.rowId === item.id && editingCell?.field === field;
-                          if (isEditing) {
-                            return (
-                              <input
-                                ref={editRef}
-                                value={editValue}
-                                onChange={e => setEditValue(e.target.value)}
-                                onBlur={() => { if (escapedRef.current) { escapedRef.current = false; return; } saveInlineEdit(item, field, editValue); }}
-                                onKeyDown={e => {
-                                  // Enter → blur so onBlur is the SINGLE commit path (no double PATCH);
-                                  // Escape → cancel without saving.
-                                  if (e.key === 'Enter') { e.preventDefault(); e.currentTarget.blur(); }
-                                  if (e.key === 'Escape') { escapedRef.current = true; setEditingCell(null); }
-                                }}
-                                style={{ background: DARK, color: TEXT, border: `1px solid ${GOLD}`, borderRadius: 3, padding: '3px 6px', width: width || 80, fontSize: 13 }}
-                              />
-                            );
-                          }
-                          return (
-                            <span
-                              onClick={() => { setEditingCell({ rowId: item.id, field }); setEditValue(String(value)); }}
-                              style={{ cursor: 'pointer', padding: '2px 4px', borderRadius: 3, display: 'inline-block', minWidth: 30 }}
-                              onMouseEnter={e => (e.currentTarget.style.background = RAISED)}
-                              onMouseLeave={e => (e.currentTarget.style.background = 'transparent')}
-                            >
-                              {typeof value === 'number' && (field === 'unit_cost' || field === 'extended_cost') ? currency(value) : value}
-                            </span>
-                          );
-                        };
-                        return (
-                          <tr
-                            key={item.id}
-                            onClick={() => { setSelectedItem(item); setDetailDraft({ ...item }); setRightOpen(true); }}
-                            style={{
-                              borderBottom: `1px solid rgba(255,255,255,0.06)`,
-                              background: selectedItem?.id === item.id ? 'var(--brand-primary-08)' : 'transparent',
-                              cursor: 'pointer',
-                            }}
-                          >
-                            <td style={{ padding: '8px 10px', color: DIM }}>{idx + 1}</td>
-                            <td style={{ padding: '8px 10px' }}>{editable('csi_code', item.csi_code, 100)}</td>
-                            <td style={{ padding: '8px 10px' }}>{editable('description', item.description, 200)}</td>
-                            <td style={{ padding: '8px 10px' }}>{editable('quantity', item.quantity, 60)}</td>
-                            <td style={{ padding: '8px 10px' }}>{editable('unit', item.unit, 50)}</td>
-                            <td style={{ padding: '8px 10px' }}>{editable('unit_cost', item.unit_cost, 80)}</td>
-                            <td style={{ padding: '8px 10px', color: 'var(--text-primary)', fontWeight: 600 }}>{currency(num(item.quantity) * num(item.unit_cost))}</td>
-                            <td style={{ padding: '8px 10px' }}>{editable('labor_hours', item.labor_hours, 60)}</td>
-                            <td style={{ padding: '8px 10px' }}>
-                              <button
-                                onClick={e => { e.stopPropagation(); deleteLineItem(item.id); }}
-                                style={{ background: 'transparent', color: 'var(--danger)', border: 'none', cursor: 'pointer', fontSize: 16, padding: '2px 6px' }}
-                                title="Delete"
-                              >
-                                <span style={{ display: 'inline-flex', verticalAlign: 'middle' }}><Trash size={16} weight="regular" color="var(--danger)" /></span>
-                              </button>
-                            </td>
-                          </tr>
-                        );
-                      })}
+                      {lineItems.length === 0 && !addingRow && (
+                        <tr><td colSpan={9}><EmptyState title="No line items on this sheet" action={<Button size="sm" icon={<Plus size={13} weight="bold" />} onClick={() => setAddingRow(true)}>Add Line Item</Button>} /></td></tr>
+                      )}
+                      {lineItems.map((item, idx) => (
+                        <tr
+                          key={item.id}
+                          data-selected={selectedItem?.id === item.id ? 'true' : undefined}
+                          onClick={() => { setSelectedItem(item); setDetailDraft({ ...item }); setRightOpen(true); }}
+                        >
+                          <td className="teMuted">{idx + 1}</td>
+                          <td>{editable(item, 'csi_code', item.csi_code, 100)}</td>
+                          <td>{editable(item, 'description', item.description, 200)}</td>
+                          <td style={{ textAlign: 'right' }}>{editable(item, 'quantity', item.quantity, 60)}</td>
+                          <td>{editable(item, 'unit', item.unit, 50)}</td>
+                          <td style={{ textAlign: 'right' }}>{editable(item, 'unit_cost', item.unit_cost, 80)}</td>
+                          <td style={{ textAlign: 'right' }} className="teMoney">{currency(num(item.quantity) * num(item.unit_cost))}</td>
+                          <td style={{ textAlign: 'right' }}>{editable(item, 'labor_hours', item.labor_hours, 60)}</td>
+                          <td style={{ textAlign: 'right' }}>
+                            <Button
+                              variant="ghost"
+                              size="sm"
+                              icon={<Trash size={15} />}
+                              aria-label="Delete line item"
+                              title="Delete"
+                              onClick={e => { e.stopPropagation(); deleteLineItem(item.id); }}
+                            />
+                          </td>
+                        </tr>
+                      ))}
                       {/* Add Row */}
                       {addingRow && (
-                        <tr style={{ borderBottom: `1px solid rgba(255,255,255,0.06)`, background: 'var(--bg-surface-2)' }}>
-                          <td style={{ padding: '8px 10px', color: DIM }}>+</td>
-                          <td style={{ padding: '8px 10px' }}>
-                            <input value={newRow.csi_code} onChange={e => setNewRow(r => ({ ...r, csi_code: e.target.value }))} placeholder="CSI Code" style={{ background: DARK, color: TEXT, border: `1px solid ${BORDER}`, borderRadius: 3, padding: '3px 6px', width: 100, fontSize: 13 }} />
-                          </td>
-                          <td style={{ padding: '8px 10px' }}>
-                            <input value={newRow.description} onChange={e => setNewRow(r => ({ ...r, description: e.target.value }))} placeholder="Description" style={{ background: DARK, color: TEXT, border: `1px solid ${BORDER}`, borderRadius: 3, padding: '3px 6px', width: 200, fontSize: 13 }} />
-                          </td>
-                          <td style={{ padding: '8px 10px' }}>
-                            <input type="number" value={newRow.quantity || ''} onChange={e => setNewRow(r => ({ ...r, quantity: num(e.target.value) }))} placeholder="0" style={{ background: DARK, color: TEXT, border: `1px solid ${BORDER}`, borderRadius: 3, padding: '3px 6px', width: 60, fontSize: 13 }} />
-                          </td>
-                          <td style={{ padding: '8px 10px' }}>
-                            <input value={newRow.unit} onChange={e => setNewRow(r => ({ ...r, unit: e.target.value }))} style={{ background: DARK, color: TEXT, border: `1px solid ${BORDER}`, borderRadius: 3, padding: '3px 6px', width: 50, fontSize: 13 }} />
-                          </td>
-                          <td style={{ padding: '8px 10px' }}>
-                            <input type="number" value={newRow.unit_cost || ''} onChange={e => setNewRow(r => ({ ...r, unit_cost: num(e.target.value) }))} placeholder="0.00" style={{ background: DARK, color: TEXT, border: `1px solid ${BORDER}`, borderRadius: 3, padding: '3px 6px', width: 80, fontSize: 13 }} />
-                          </td>
-                          <td style={{ padding: '8px 10px', color: 'var(--text-primary)', fontWeight: 600 }}>{currency(num(newRow.quantity) * num(newRow.unit_cost))}</td>
-                          <td style={{ padding: '8px 10px' }}>
-                            <input type="number" value={newRow.labor_hours || ''} onChange={e => setNewRow(r => ({ ...r, labor_hours: num(e.target.value) }))} placeholder="0" style={{ background: DARK, color: TEXT, border: `1px solid ${BORDER}`, borderRadius: 3, padding: '3px 6px', width: 60, fontSize: 13 }} />
-                          </td>
-                          <td style={{ padding: '8px 10px', display: 'flex', gap: 4 }}>
-                            <button onClick={addLineItem} style={{ background: GOLD, color: 'var(--on-brand)', border: 'none', borderRadius: 3, padding: '4px 8px', fontSize: 12, fontWeight: 600, cursor: 'pointer' }}>Save</button>
-                            <button onClick={() => { setAddingRow(false); setNewRow({ ...emptyLineItem }); }} style={{ background: RAISED, color: DIM, border: `1px solid ${BORDER}`, borderRadius: 3, padding: '4px 8px', fontSize: 12, cursor: 'pointer' }}>Cancel</button>
+                        <tr className="teAddRow">
+                          <td className="teMuted">+</td>
+                          <td><Input aria-label="CSI code" value={newRow.csi_code} onChange={e => setNewRow(r => ({ ...r, csi_code: e.target.value }))} placeholder="CSI Code" style={{ width: 100 }} /></td>
+                          <td><Input aria-label="Description" value={newRow.description} onChange={e => setNewRow(r => ({ ...r, description: e.target.value }))} placeholder="Description" style={{ width: 200 }} /></td>
+                          <td><Input aria-label="Quantity" type="number" value={newRow.quantity || ''} onChange={e => setNewRow(r => ({ ...r, quantity: num(e.target.value) }))} placeholder="0" style={{ width: 70 }} /></td>
+                          <td><Input aria-label="Unit" value={newRow.unit} onChange={e => setNewRow(r => ({ ...r, unit: e.target.value }))} style={{ width: 60 }} /></td>
+                          <td><Input aria-label="Unit cost" type="number" value={newRow.unit_cost || ''} onChange={e => setNewRow(r => ({ ...r, unit_cost: num(e.target.value) }))} placeholder="0.00" style={{ width: 90 }} /></td>
+                          <td style={{ textAlign: 'right' }} className="teMoney">{currency(num(newRow.quantity) * num(newRow.unit_cost))}</td>
+                          <td><Input aria-label="Labor hours" type="number" value={newRow.labor_hours || ''} onChange={e => setNewRow(r => ({ ...r, labor_hours: num(e.target.value) }))} placeholder="0" style={{ width: 70 }} /></td>
+                          <td>
+                            <div className="teBtns">
+                              <Button variant="primary" size="sm" onClick={addLineItem}>Save</Button>
+                              <Button variant="ghost" size="sm" onClick={() => { setAddingRow(false); setNewRow({ ...emptyLineItem }); }}>Cancel</Button>
+                            </div>
                           </td>
                         </tr>
                       )}
                     </tbody>
                     <tfoot>
-                      <tr style={{ borderTop: `2px solid ${BORDER}` }}>
-                        <td colSpan={3} style={{ padding: '10px', fontWeight: 700, color: DIM, textAlign: 'right' }}>Totals</td>
-                        <td style={{ padding: '10px', fontWeight: 700, color: TEXT }}>{lineItems.reduce((s, i) => s + num(i.quantity), 0)}</td>
-                        <td style={{ padding: '10px' }}></td>
-                        <td style={{ padding: '10px' }}></td>
-                        <td style={{ padding: '10px', fontWeight: 700, color: 'var(--text-primary)' }}>{currency(totalExtended)}</td>
-                        <td style={{ padding: '10px', fontWeight: 700, color: TEXT }}>{totalLaborHrs.toFixed(1)}</td>
-                        <td></td>
+                      <tr className="teFoot">
+                        <td colSpan={3} style={{ textAlign: 'right' }}>Totals</td>
+                        <td style={{ textAlign: 'right' }}>{lineItems.reduce((s, i) => s + num(i.quantity), 0)}</td>
+                        <td />
+                        <td />
+                        <td style={{ textAlign: 'right' }}>{currency(totalExtended)}</td>
+                        <td style={{ textAlign: 'right' }}>{totalLaborHrs.toFixed(1)}</td>
+                        <td />
                       </tr>
                     </tfoot>
                   </table>
                 </div>
-              </div>
-            </SectionCard>
+              </Card>
+            )}
+          </div>
+
+          {/* RIGHT — the selected line's full record */}
+          {rightOpen && selectedItem && detailDraft && (
+            <div className="teSide">
+              <Card
+                title="Item Details"
+                icon={<SlidersHorizontal size={17} />}
+                actions={<Button variant="ghost" size="sm" icon={<X size={16} />} aria-label="Close item details" onClick={() => setRightOpen(false)} />}
+              >
+                <form className="teForm" onSubmit={e => { e.preventDefault(); void saveDetail(); }}>
+                  <FormGrid cols={1}>
+                    {[
+                      { label: 'Description', field: 'description', type: 'text' },
+                      { label: 'CSI Code', field: 'csi_code', type: 'text' },
+                      { label: 'Division', field: 'division', type: 'text' },
+                      { label: 'Quantity', field: 'quantity', type: 'number' },
+                      { label: 'Unit', field: 'unit', type: 'text' },
+                      { label: 'Material Cost', field: 'material_cost', type: 'number' },
+                      { label: 'Labor Cost', field: 'labor_cost', type: 'number' },
+                      { label: 'Labor Hours', field: 'labor_hours', type: 'number' },
+                      { label: 'Crew Size', field: 'crew_size', type: 'number' },
+                      { label: 'Duration (Days)', field: 'duration', type: 'number' },
+                    ].map(({ label, field, type }) => (
+                      <Field key={field} label={label}>
+                        <Input
+                          type={type}
+                          value={(detailDraft as unknown as Record<string, unknown>)[field] as string | number || ''}
+                          onChange={e => setDetailDraft(d => d ? { ...d, [field]: type === 'number' ? num(e.target.value) : e.target.value } : d)}
+                        />
+                      </Field>
+                    ))}
+                    <Field label="Notes">
+                      <Textarea value={detailDraft.notes || ''} onChange={e => setDetailDraft(d => d ? { ...d, notes: e.target.value } : d)} rows={3} />
+                    </Field>
+                    <Field label="Subcontractor">
+                      <Input value={detailDraft.subcontractor || ''} onChange={e => setDetailDraft(d => d ? { ...d, subcontractor: e.target.value } : d)} placeholder="Assign subcontractor" />
+                    </Field>
+                  </FormGrid>
+                  <div className="teBtns" style={{ marginTop: 14 }}>
+                    <Button type="submit" variant="primary">Save</Button>
+                    <Button variant="ghost" onClick={() => { setDetailDraft(selectedItem ? { ...selectedItem } : null); }}>Cancel</Button>
+                  </div>
+                </form>
+              </Card>
+            </div>
           )}
         </div>
 
-        {/* RIGHT PANEL */}
-        {rightOpen && selectedItem && detailDraft && (
-          <div style={{ flex: '1 1 260px', minWidth: 250, maxWidth: 320 }}>
-            <SectionCard
-              title="Item Details"
-              icon={<SlidersHorizontal size={17} weight="duotone" color="var(--text-secondary)" />}
-              flush
-              action={
-                <button onClick={() => setRightOpen(false)} style={{ ...ghostButtonStyle, padding: '6px 10px', borderRadius: 10 }} className="pmBtn" aria-label="Close item details">
-                  <XCircle size={16} weight="regular" color={DIM} />
-                </button>
-              }
-            >
-              <div style={{ padding: 16, display: 'flex', flexDirection: 'column', gap: 12 }}>
+        {/* PRICING & MARKUP */}
+        <div style={{ marginTop: 16 }}>
+          <Card
+            title="Pricing & Markup"
+            icon={<SlidersHorizontal size={17} />}
+            actions={
+              <>
+                {selectedTakeoff && (
+                  <>
+                    <a
+                      className="k-btn k-btn-secondary k-btn-sm"
+                      href={`/api/takeoff-projects/${selectedTakeoff.id}/export/pdf`}
+                      target="_blank"
+                      onClick={inAppFileClick(`/api/takeoff-projects/${selectedTakeoff.id}/export/pdf`, 'Takeoff estimate', (m) => showToast(m, 'error'))}
+                      rel="noopener noreferrer"
+                    >
+                      <FilePdf size={15} /> Export PDF
+                    </a>
+                    <a
+                      className="k-btn k-btn-secondary k-btn-sm"
+                      href={`/api/takeoff-projects/${selectedTakeoff.id}/export/excel`}
+                      target="_blank"
+                      onClick={inAppFileClick(`/api/takeoff-projects/${selectedTakeoff.id}/export/excel`, 'Takeoff estimate', (m) => showToast(m, 'error'))}
+                      rel="noopener noreferrer"
+                    >
+                      <MicrosoftExcelLogo size={15} /> Export Excel
+                    </a>
+                  </>
+                )}
+              </>
+            }
+          >
+            <div className="tePricing">
+              <div className="teFigure"><span>Grand Total</span><strong>{currency(grandTotal)}</strong></div>
+              <FormGrid cols={3}>
                 {[
-                  { label: 'Description', field: 'description', type: 'text' },
-                  { label: 'CSI Code', field: 'csi_code', type: 'text' },
-                  { label: 'Division', field: 'division', type: 'text' },
-                  { label: 'Quantity', field: 'quantity', type: 'number' },
-                  { label: 'Unit', field: 'unit', type: 'text' },
-                  { label: 'Material Cost', field: 'material_cost', type: 'number' },
-                  { label: 'Labor Cost', field: 'labor_cost', type: 'number' },
-                  { label: 'Labor Hours', field: 'labor_hours', type: 'number' },
-                  { label: 'Crew Size', field: 'crew_size', type: 'number' },
-                  { label: 'Duration (Days)', field: 'duration', type: 'number' },
-                ].map(({ label, field, type }) => (
-                  <div key={field}>
-                    <label style={{ fontSize: 12, color: DIM, display: 'block', marginBottom: 4, fontWeight: 700 }}>{label}</label>
-                    <input
-                      type={type}
-                      value={(detailDraft as unknown as Record<string, unknown>)[field] as string | number || ''}
-                      onChange={e => setDetailDraft(d => d ? { ...d, [field]: type === 'number' ? num(e.target.value) : e.target.value } : d)}
-                      style={fieldStyle}
-                    />
-                  </div>
+                  { label: 'Overhead %', value: overhead, setter: setOverhead },
+                  { label: 'Profit %', value: profit, setter: setProfit },
+                  { label: 'Contingency %', value: contingency, setter: setContingency },
+                ].map(({ label, value, setter }) => (
+                  <Field key={label} label={label}>
+                    <Input type="number" inputMode="decimal" value={value || ''} onChange={e => setter(num(e.target.value))} />
+                  </Field>
                 ))}
-                <div>
-                  <label style={{ fontSize: 12, color: DIM, display: 'block', marginBottom: 4, fontWeight: 700 }}>Notes</label>
-                  <textarea
-                    value={detailDraft.notes || ''}
-                    onChange={e => setDetailDraft(d => d ? { ...d, notes: e.target.value } : d)}
-                    rows={3}
-                    style={{ ...fieldStyle, resize: 'vertical' }}
-                  />
-                </div>
-                <div>
-                  <label style={{ fontSize: 12, color: DIM, display: 'block', marginBottom: 4, fontWeight: 700 }}>Subcontractor</label>
-                  <input
-                    value={detailDraft.subcontractor || ''}
-                    onChange={e => setDetailDraft(d => d ? { ...d, subcontractor: e.target.value } : d)}
-                    placeholder="Assign subcontractor"
-                    style={fieldStyle}
-                  />
-                </div>
-                <div style={{ display: 'flex', gap: 8, marginTop: 4, paddingTop: 14, borderTop: `1px solid rgba(255,255,255,0.06)` }}>
-                  <button onClick={saveDetail} style={{ ...smallGoldBtn, flex: 1, padding: '9px 16px', fontSize: 13 }} className="pmBtn">Save</button>
-                  <button onClick={() => { setDetailDraft(selectedItem ? { ...selectedItem } : null); }} style={{ ...ghostButtonStyle, flex: 1, padding: '9px 16px', fontSize: 13, borderRadius: 10 }} className="pmBtn">Cancel</button>
-                </div>
-              </div>
-            </SectionCard>
-          </div>
-        )}
-      </div>
-
-      {/* PRICING & MARKUP */}
-      <div style={{ marginTop: 24 }}>
-        <SectionCard title="Pricing & Markup" icon={<SlidersHorizontal size={17} weight="duotone" color="var(--text-secondary)" />}>
-          <div style={{ display: 'flex', alignItems: 'center', gap: 20, flexWrap: 'wrap' }}>
-            <div style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
-              <span style={{ fontSize: 12, color: DIM }}>Grand Total:</span>
-              <span style={{ fontSize: 18, fontWeight: 800, color: 'var(--text-primary)', fontVariantNumeric: 'tabular-nums' }}>{currency(grandTotal)}</span>
+              </FormGrid>
+              <div className="teFigure"><span>Sell Price</span><strong>{currency(sellPrice)}</strong></div>
+              <div className="teFigure"><span>Gross Margin</span><strong style={{ color: marginTone }}>{grossMargin.toFixed(1)}%</strong></div>
+              <Button variant="primary" onClick={saveProjectTotals} disabled={saving}>{saving ? 'Saving…' : 'Save'}</Button>
             </div>
-            <div style={{ height: 22, width: 1, background: BORDER }}></div>
-            <div style={{ display: 'flex', alignItems: 'center', gap: 12, flexWrap: 'wrap' }}>
-              {[
-                { label: 'Overhead %', value: overhead, setter: setOverhead },
-                { label: 'Profit %', value: profit, setter: setProfit },
-                { label: 'Contingency %', value: contingency, setter: setContingency },
-              ].map(({ label, value, setter }) => (
-                <div key={label} style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
-                  <span style={{ fontSize: 12, color: DIM }}>{label}</span>
-                  <input
-                    type="number"
-                    value={value || ''}
-                    onChange={e => setter(num(e.target.value))}
-                    style={{ background: DARK, color: TEXT, border: `1px solid ${BORDER}`, borderRadius: 8, padding: '6px 8px', width: 58, fontSize: 12, textAlign: 'center', outline: 'none' }}
-                  />
-                </div>
-              ))}
-            </div>
-            <div style={{ height: 22, width: 1, background: BORDER }}></div>
-            <div style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
-              <span style={{ fontSize: 12, color: DIM }}>Sell Price:</span>
-              <span style={{ fontSize: 18, fontWeight: 800, color: 'var(--warning)', fontVariantNumeric: 'tabular-nums' }}>{currency(sellPrice)}</span>
-            </div>
-            <div style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
-              <span style={{ fontSize: 12, color: DIM }}>Gross Margin:</span>
-              <span style={{ fontSize: 15, fontWeight: 800, color: grossMargin > 20 ? 'var(--success)' : grossMargin > 10 ? 'var(--warning)' : 'var(--danger)' }}>{grossMargin.toFixed(1)}%</span>
-            </div>
-            <div style={{ marginLeft: 'auto', display: 'flex', gap: 10, flexWrap: 'wrap' }}>
-              {selectedTakeoff && (
-                <>
-                  <a
-                    href={`/api/takeoff-projects/${selectedTakeoff.id}/export/pdf`}
-                    target="_blank"
-                    onClick={inAppFileClick(`/api/takeoff-projects/${selectedTakeoff.id}/export/pdf`, 'Takeoff estimate', (m) => showToast(m, 'error'))}
-                    rel="noopener noreferrer"
-                    style={{ ...ghostButtonStyle, padding: '9px 15px', fontSize: 13, borderRadius: 10 }}
-                    className="pmBtn"
-                  >
-                    <FilePdf size={15} weight="duotone" /> Export PDF
-                  </a>
-                  <a
-                    href={`/api/takeoff-projects/${selectedTakeoff.id}/export/excel`}
-                    target="_blank"
-                    onClick={inAppFileClick(`/api/takeoff-projects/${selectedTakeoff.id}/export/excel`, 'Takeoff estimate', (m) => showToast(m, 'error'))}
-                    rel="noopener noreferrer"
-                    style={{ ...ghostButtonStyle, padding: '9px 15px', fontSize: 13, borderRadius: 10 }}
-                    className="pmBtn"
-                  >
-                    <MicrosoftExcelLogo size={15} weight="duotone" /> Export Excel
-                  </a>
-                </>
-              )}
-              <button
-                onClick={saveProjectTotals}
-                disabled={saving}
-                style={{ ...goldButtonStyle, padding: '9px 20px', opacity: saving ? 0.6 : 1, cursor: saving ? 'not-allowed' : 'pointer' }}
-                className="pmBtn"
-              >
-                {saving ? 'Saving…' : 'Save'}
-              </button>
-            </div>
-          </div>
-        </SectionCard>
-      </div>
-    </PremiumSurface>
+          </Card>
+        </div>
+      </PageShell>
+    </div>
   );
 }
 

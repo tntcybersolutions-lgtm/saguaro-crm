@@ -1,22 +1,25 @@
 'use client';
-
-import { useState, useEffect, useCallback } from 'react';
+/**
+ * Network › Cables — the cable schedule: every run's label, type,
+ * terminations, length, pathway and certification result. Untested runs
+ * carry Pass / Fail on the row.
+ *
+ * Reads  GET   /api/network/projects?projectId=  →  GET /api/network/cables?networkProjectId=
+ * Writes POST  /api/network/cables
+ *        PATCH /api/network/cables/:id   { tested, test_result, tested_at }
+ */
+import React, { useState, useEffect, useCallback } from 'react';
 import { useParams } from 'next/navigation';
-import Link from 'next/link';
-import { CheckCircle, Square, XCircle, Plus, PlugsConnected, ListChecks, Gauge, Percent } from '@phosphor-icons/react';
-import { PremiumSurface, ModuleHero, StatCard, SectionCard, PremiumEmpty, goldButtonStyle, ghostButtonStyle, secondaryButtonStyle } from '@/components/ui/premium';
-import { ModuleSkeleton } from '@/components/ui/PageSkeleton';
+import { useProjectContext } from '@/lib/hooks/useProjectContext';
+import {
+  PageShell, StatRow, Badge, Button, Toolbar, DataTable, EmptyState, Select, Field, Input, Textarea,
+  FormGrid, FormModal, Toast, useToast,
+  type Column, type StatItem,
+} from '@/components/ui/kit';
+import { CheckCircle, Square, XCircle, Plus, PlugsConnected, ListChecks, Gauge, Percent, WarningCircle } from '@phosphor-icons/react';
 import { useUnsavedGuard, useComposerDirty } from '@/lib/useUnsavedGuard';
 import UnsavedGuardModal from '@/components/UnsavedGuardModal';
-
-const BASE = 'var(--bg-surface-2)';
-const GOLD = 'var(--brand-primary)';
-const GREEN = 'var(--success)';
-const BLUE = 'var(--brand-primary)';
-const RED = 'var(--danger)';
-const BORDER = 'rgba(255,255,255,0.12)';
-const DIM = 'var(--text-secondary)';
-const TEXT = 'var(--text-primary)';
+import NetworkTabs, { networkCrumbs } from '../_components/NetworkTabs';
 
 interface CableRun {
   id: string;
@@ -40,43 +43,30 @@ interface CableRun {
 
 const CABLE_TYPES = ['cat5e', 'cat6', 'cat6a', 'fiber_sm', 'fiber_mm', 'coax_rg6', 'coax_rg59', 'speaker', 'hdmi', 'usb'];
 
-const TYPE_COLORS: Record<string, { bg: string; text: string }> = {
-  cat5e: { bg: 'var(--brand-primary-12)', text: BLUE },
-  cat6: { bg: `color-mix(in srgb, ${GREEN} 13%, transparent)`, text: GREEN },
-  cat6a: { bg: 'var(--brand-primary-12)', text: GOLD },
-  fiber_sm: { bg: '#F9731620', text: 'var(--warning)' },
-  fiber_mm: { bg: '#8B5CF620', text: 'var(--warning)' },
-  coax_rg6: { bg: '#6B728020', text: 'var(--status-closed)' },
-  coax_rg59: { bg: '#6B728020', text: 'var(--status-closed)' },
-  speaker: { bg: '#14B8A620', text: 'var(--success)' },
-  hdmi: { bg: `color-mix(in srgb, ${RED} 13%, transparent)`, text: RED },
-  usb: { bg: '#EC489920', text: 'var(--warning)' },
-};
-
 const CABLE_LABELS: Record<string, string> = {
   cat5e: 'Cat5e', cat6: 'Cat6', cat6a: 'Cat6a', fiber_sm: 'Fiber SM', fiber_mm: 'Fiber MM',
   coax_rg6: 'Coax RG6', coax_rg59: 'Coax RG59', speaker: 'Speaker', hdmi: 'HDMI', usb: 'USB',
 };
-const cableLabel = (t: string) => CABLE_LABELS[t] || t.replace(/_/g, ' ');
+const cableLabel = (t: string) => CABLE_LABELS[t] || (t || '').replace(/_/g, ' ');
 
-const inputStyle: React.CSSProperties = {
-  width: '100%', padding: '10px 12px', background: BASE, color: TEXT,
-  border: `1px solid ${BORDER}`, borderRadius: 8, fontSize: 13, outline: 'none',
-};
-const labelStyle: React.CSSProperties = {
-  color: DIM, fontSize: 12, fontWeight: 600, display: 'block', marginBottom: 4,
-};
+const mono: React.CSSProperties = { fontFamily: 'var(--font-mono, monospace)' };
+const fmtFt = (n: number) => `${(Number(n) || 0).toLocaleString('en-US')} ft`;
 
 export default function CableSchedulePage() {
   const { projectId } = useParams() as { projectId: string };
+  const { ctx } = useProjectContext(projectId);
+  const { toast, show } = useToast();
   const [networkProjectId, setNetworkProjectId] = useState('');
   const [cables, setCables] = useState<CableRun[]>([]);
   const [loading, setLoading] = useState(true);
+  const [loadError, setLoadError] = useState('');
   const [showForm, setShowForm] = useState(false);
   const [saving, setSaving] = useState(false);
+  const [formError, setFormError] = useState('');
   const [filterType, setFilterType] = useState('');
   const [filterTested, setFilterTested] = useState('');
   const [filterFloor, setFilterFloor] = useState('');
+  const [search, setSearch] = useState('');
   const [markingId, setMarkingId] = useState('');
 
   const emptyForm = {
@@ -85,9 +75,8 @@ export default function CableSchedulePage() {
   };
   const [form, setForm] = useState(emptyForm);
 
-  /* ── Unsaved-work guard: the composer holds real typing, so leaving the
-   *    page (sidebar, field nav, ⌘K, back) confirms first and the draft is
-   *    kept on this device either way. ── */
+  /* Unsaved-work guard: the composer holds real typing, so leaving the page
+   * confirms first and the draft is kept on this device either way. */
   const composerDirty = useComposerDirty(showForm, form);
   const guard = useUnsavedGuard({
     dirty: composerDirty,
@@ -99,6 +88,7 @@ export default function CableSchedulePage() {
 
   const fetchData = useCallback(async () => {
     setLoading(true);
+    setLoadError('');
     try {
       const npRes = await fetch(`/api/network/projects?projectId=${projectId}`);
       const npData = await npRes.json();
@@ -107,7 +97,9 @@ export default function CableSchedulePage() {
       const res = await fetch(`/api/network/cables?networkProjectId=${npData.networkProject.id}`);
       const data = await res.json();
       setCables(data.cables || []);
-    } catch { /* */ }
+    } catch (e) {
+      setLoadError(e instanceof Error ? e.message : "Couldn't load cable runs");
+    }
     setLoading(false);
   }, [projectId]);
 
@@ -116,6 +108,7 @@ export default function CableSchedulePage() {
   const handleSubmit = async (): Promise<boolean> => {
     if (!form.label || !networkProjectId) return false;
     setSaving(true);
+    setFormError('');
     try {
       const res = await fetch('/api/network/cables', {
         method: 'POST',
@@ -128,9 +121,14 @@ export default function CableSchedulePage() {
         fetchData();
         guard.clearDraft();
         setSaving(false);
+        show('Cable run saved');
         return true;
       }
-    } catch { /* */ }
+      const j = await res.json().catch(() => ({}));
+      setFormError(j.error || "Couldn't save the cable run.");
+    } catch (e) {
+      setFormError(e instanceof Error ? e.message : "Couldn't save the cable run.");
+    }
     setSaving(false);
     return false;
   };
@@ -138,13 +136,17 @@ export default function CableSchedulePage() {
   const markTested = async (cableId: string, result: string) => {
     setMarkingId(cableId);
     try {
-      await fetch(`/api/network/cables/${cableId}`, {
+      const res = await fetch(`/api/network/cables/${cableId}`, {
         method: 'PATCH',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ tested: true, test_result: result, tested_at: new Date().toISOString() }),
       });
+      if (res.ok) show(result === 'pass' ? 'Marked passed' : 'Marked failed');
+      else show("Couldn't record the test result", 'bad');
       fetchData();
-    } catch { /* */ }
+    } catch {
+      show("Couldn't record the test result", 'bad');
+    }
     setMarkingId('');
   };
 
@@ -152,7 +154,10 @@ export default function CableSchedulePage() {
     if (filterType && c.cable_type !== filterType) return false;
     if (filterTested === 'tested' && !c.tested) return false;
     if (filterTested === 'untested' && c.tested) return false;
+    if (filterTested === 'failed' && c.test_result !== 'fail') return false;
     if (filterFloor && c.floor !== +filterFloor) return false;
+    const q = search.trim().toLowerCase();
+    if (q && ![c.label, c.from_location, c.to_location, c.from_port, c.to_port, c.pathway].some(v => String(v || '').toLowerCase().includes(q))) return false;
     return true;
   });
 
@@ -163,209 +168,137 @@ export default function CableSchedulePage() {
   const passRate = testedCount > 0 ? Math.round((passCount / testedCount) * 100) : 0;
   const floors = [...new Set(cables.map(c => c.floor))].sort();
 
-  if (loading) {
-    return (
-      <PremiumSurface>
-        <ModuleSkeleton kpis={5} rows={5} />
-      </PremiumSurface>
-    );
-  }
+  const stats: StatItem[] = [
+    { label: 'Total runs', value: loading ? '—' : String(totalRuns), sub: 'Cable runs', icon: <ListChecks size={15} />, onClick: () => setFilterTested(''), active: filterTested === '' },
+    { label: 'Tested', value: loading ? '—' : `${testedCount}/${totalRuns}`, sub: loading ? undefined : `${totalRuns - testedCount} untested`, icon: <Gauge size={15} />, onClick: () => setFilterTested('tested'), active: filterTested === 'tested' },
+    { label: 'Passed', value: loading ? '—' : String(passCount), sub: 'Passed tests', tone: passCount ? 'good' : 'default', icon: <CheckCircle size={15} /> },
+    { label: 'Failed', value: loading ? '—' : String(failCount), sub: 'Failed tests', tone: failCount > 0 ? 'bad' : 'default', icon: <XCircle size={15} />, onClick: () => setFilterTested('failed'), active: filterTested === 'failed' },
+    { label: 'Pass rate', value: loading ? '—' : `${passRate}%`, sub: 'Of tested', tone: testedCount === 0 ? 'default' : passRate >= 95 ? 'good' : passRate >= 80 ? 'warn' : 'bad', icon: <Percent size={15} /> },
+  ];
+
+  const columns: Column<CableRun>[] = [
+    { key: 'label', header: 'Label', primary: true, phone: 'show', render: (c) => <span style={mono}>{c.label}</span>, groupable: false },
+    { key: 'cable_type', header: 'Type', accessor: (c) => cableLabel(c.cable_type), render: (c) => <Badge>{cableLabel(c.cable_type)}</Badge> },
+    { key: 'from', header: 'From', accessor: (c) => `${c.from_location || ''}${c.from_port ? ` (${c.from_port})` : ''}`, render: (c) => (c.from_location || c.from_port) ? `${c.from_location || ''}${c.from_port ? ` (${c.from_port})` : ''}` : '—', groupable: false },
+    { key: 'to', header: 'To', accessor: (c) => `${c.to_location || ''}${c.to_port ? ` (${c.to_port})` : ''}`, render: (c) => (c.to_location || c.to_port) ? `${c.to_location || ''}${c.to_port ? ` (${c.to_port})` : ''}` : '—', groupable: false },
+    { key: 'length_ft', header: 'Length', align: 'right', total: 'sum', format: fmtFt, accessor: (c) => Number(c.length_ft) || 0, render: (c) => (c.length_ft ? fmtFt(c.length_ft) : '—') },
+    { key: 'pathway', header: 'Pathway', render: (c) => c.pathway || '—' },
+    { key: 'floor', header: 'Floor', hidden: true, align: 'right' },
+    { key: 'tested', header: 'Tested', align: 'center', accessor: (c) => (c.tested ? 'Yes' : 'No'), render: (c) => (
+      <span style={{ display: 'inline-flex', verticalAlign: 'middle', color: c.tested ? 'var(--success)' : 'var(--text-secondary)' }} aria-label={c.tested ? 'Tested' : 'Not tested'}>
+        {c.tested ? <CheckCircle size={18} weight="fill" /> : <Square size={18} />}
+      </span>
+    ) },
+    { key: 'test_result', header: 'Result', phone: 'show', accessor: (c) => c.test_result || '', render: (c) => c.test_result
+      ? <Badge tone={c.test_result === 'pass' ? 'ongoing' : 'overdue'} dot>{c.test_result === 'pass' ? 'Pass' : c.test_result === 'fail' ? 'Fail' : c.test_result}</Badge>
+      : '—' },
+  ];
+
+  const set = <K extends keyof typeof form>(k: K, v: (typeof form)[K]) => setForm({ ...form, [k]: v });
+  const openForm = () => { setFormError(''); setShowForm(true); };
 
   return (
-    <PremiumSurface>
-      <div style={{ marginBottom: 12 }}>
-        <Link href={`/app/projects/${projectId}/network`} style={{ color: DIM, fontSize: 12, textDecoration: 'none' }}>Network →</Link>
-        <span style={{ color: TEXT, fontSize: 12, marginLeft: 4 }}>Cables</span>
-      </div>
+    <PageShell
+      crumbs={networkCrumbs(projectId, ctx?.project?.name, 'Cables')}
+      title="Cable schedule"
+      subtitle="Every cable run, its terminations, pathway and test result."
+      actions={<Button variant="primary" icon={<Plus size={15} weight="bold" />} onClick={openForm}>Add cable run</Button>}
+    >
+      <NetworkTabs projectId={projectId} value="cables" />
+      {!loadError && <StatRow items={stats} />}
 
-      {/* Header */}
-      <ModuleHero
-        eyebrow="Network"
-        eyebrowIcon={<PlugsConnected size={13} weight="fill" color="var(--text-secondary)" />}
-        title="Cable"
-        accent="Schedule"
-        subtitle="Track every cable run, its terminations, pathway, and test results."
-        actions={
-          <button onClick={() => setShowForm(!showForm)} style={showForm ? ghostButtonStyle : goldButtonStyle} className="pmBtn">
-            {showForm ? 'Cancel' : <><Plus size={15} weight="bold" /> Add Cable Run</>}
-          </button>
-        }
-      />
-
-      {/* Summary Stats */}
-      <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(180px, 1fr))', gap: 12, marginBottom: 24 }}>
-        <StatCard icon={<ListChecks size={19} weight="duotone" color="var(--text-secondary)" />} label="Total Runs" value={String(totalRuns)} accent={BLUE} sub="Cable runs" delay={0.02}  href={`/app/projects/${projectId}/network/cables`}/>
-        <StatCard icon={<Gauge size={19} weight="duotone" color={GREEN} />} label="Tested" value={`${testedCount}/${totalRuns}`} accent={GREEN} sub="Tested" delay={0.06}  href={`/app/projects/${projectId}/network/cables`}/>
-        <StatCard icon={<CheckCircle size={19} weight="duotone" color={GREEN} />} label="Passed" value={String(passCount)} accent={GREEN} sub="Passed tests" delay={0.10}  href={`/app/projects/${projectId}/network/cables`}/>
-        <StatCard icon={<XCircle size={19} weight="duotone" color={failCount > 0 ? RED : GREEN} />} label="Failed" value={String(failCount)} accent={failCount > 0 ? RED : GREEN} sub="Failed tests" delay={0.14}  href={`/app/projects/${projectId}/network/cables`}/>
-        <StatCard icon={<Percent size={19} weight="duotone" color={passRate >= 95 ? GREEN : passRate >= 80 ? 'var(--warning)' : RED} />} label="Pass Rate" value={`${passRate}%`} accent={passRate >= 95 ? GREEN : passRate >= 80 ? 'var(--warning)' : RED} sub="Of tested" delay={0.18}  href={`/app/projects/${projectId}/network/cables`}/>
-      </div>
-
-      {/* Add Form */}
-      {showForm && (
-        <SectionCard title="Add Cable Run" icon={<Plus size={17} weight="bold" color="var(--text-secondary)" />} style={{ marginBottom: 24 }}>
-          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(180px, 1fr))', gap: 12 }}>
-            <div>
-              <label style={labelStyle}>Label *</label>
-              <input value={form.label} onChange={e => setForm({ ...form, label: e.target.value })} placeholder="D-101" style={inputStyle} />
-            </div>
-            <div>
-              <label style={labelStyle}>Cable Type</label>
-              <select value={form.cable_type} onChange={e => setForm({ ...form, cable_type: e.target.value })} style={inputStyle}>
-                {CABLE_TYPES.map(t => <option key={t} value={t}>{cableLabel(t)}</option>)}
-              </select>
-            </div>
-            <div>
-              <label style={labelStyle}>From Location</label>
-              <input value={form.from_location} onChange={e => setForm({ ...form, from_location: e.target.value })} placeholder="MDF Patch Panel A" style={inputStyle} />
-            </div>
-            <div>
-              <label style={labelStyle}>To Location</label>
-              <input value={form.to_location} onChange={e => setForm({ ...form, to_location: e.target.value })} placeholder="Office 101 Wall Jack" style={inputStyle} />
-            </div>
-            <div>
-              <label style={labelStyle}>From Port</label>
-              <input value={form.from_port} onChange={e => setForm({ ...form, from_port: e.target.value })} placeholder="PP-A-01" style={inputStyle} />
-            </div>
-            <div>
-              <label style={labelStyle}>To Port</label>
-              <input value={form.to_port} onChange={e => setForm({ ...form, to_port: e.target.value })} placeholder="WJ-101" style={inputStyle} />
-            </div>
-            <div>
-              <label style={labelStyle}>Length (ft)</label>
-              <input type="number" value={form.length_ft} onChange={e => setForm({ ...form, length_ft: +e.target.value })} style={inputStyle} />
-            </div>
-            <div>
-              <label style={labelStyle}>Pathway</label>
-              <input value={form.pathway} onChange={e => setForm({ ...form, pathway: e.target.value })} placeholder="Ceiling plenum" style={inputStyle} />
-            </div>
-            <div>
-              <label style={labelStyle}>Floor</label>
-              <input type="number" value={form.floor} onChange={e => setForm({ ...form, floor: +e.target.value })} style={inputStyle} />
-            </div>
-          </div>
-          <div style={{ marginTop: 12 }}>
-            <label style={labelStyle}>Notes</label>
-            <textarea value={form.notes} onChange={e => setForm({ ...form, notes: e.target.value })} rows={2} style={{ ...inputStyle, resize: 'vertical' }} />
-          </div>
-          <button onClick={handleSubmit} disabled={saving || !form.label} className="pmBtn" style={{
-            ...goldButtonStyle, marginTop: 16,
-            opacity: saving || !form.label ? 0.5 : 1,
-            cursor: saving || !form.label ? 'not-allowed' : 'pointer',
-          }}>
-            {saving ? 'Saving…' : 'Save Cable Run'}
-          </button>
-        </SectionCard>
+      {!loadError && cables.length > 0 && (
+        <Toolbar
+          search={search}
+          onSearch={setSearch}
+          placeholder="Search label, location or port…"
+          filters={
+            <>
+              <Select aria-label="Cable type" value={filterType} onChange={e => setFilterType(e.target.value)} style={{ width: 'auto', minWidth: 150 }}
+                options={[{ value: '', label: 'All types' }, ...CABLE_TYPES.map(t => ({ value: t, label: cableLabel(t) }))]} />
+              <Select aria-label="Tested" value={filterTested} onChange={e => setFilterTested(e.target.value)} style={{ width: 'auto', minWidth: 140 }}
+                options={[{ value: '', label: 'All' }, { value: 'tested', label: 'Tested' }, { value: 'untested', label: 'Untested' }, { value: 'failed', label: 'Failed' }]} />
+              {floors.length > 1 && (
+                <Select aria-label="Floor" value={filterFloor} onChange={e => setFilterFloor(e.target.value)} style={{ width: 'auto', minWidth: 120 }}
+                  options={[{ value: '', label: 'All floors' }, ...floors.map(f => ({ value: String(f), label: `Floor ${f}` }))]} />
+              )}
+            </>
+          }
+        />
       )}
 
-      {/* Filters */}
-      <div style={{ display: 'flex', gap: 12, marginBottom: 16, flexWrap: 'wrap' }}>
-        <select value={filterType} onChange={e => setFilterType(e.target.value)} style={{ ...inputStyle, width: 150, flex: 'none' }}>
-          <option value="">All Types</option>
-          {CABLE_TYPES.map(t => <option key={t} value={t}>{cableLabel(t)}</option>)}
-        </select>
-        <select value={filterTested} onChange={e => setFilterTested(e.target.value)} style={{ ...inputStyle, width: 140, flex: 'none' }}>
-          <option value="">All</option>
-          <option value="tested">Tested</option>
-          <option value="untested">Untested</option>
-        </select>
-        {floors.length > 1 && (
-          <select value={filterFloor} onChange={e => setFilterFloor(e.target.value)} style={{ ...inputStyle, width: 120, flex: 'none' }}>
-            <option value="">All Floors</option>
-            {floors.map(f => <option key={f} value={f}>Floor {f}</option>)}
-          </select>
-        )}
-        <div style={{ color: DIM, fontSize: 12, display: 'flex', alignItems: 'center' }}>{filteredCables.length} run{filteredCables.length !== 1 ? 's' : ''}</div>
-      </div>
+      {loadError ? (
+        <EmptyState icon={<WarningCircle size={22} />} title="Couldn't load cable runs" text={loadError} action={<Button onClick={fetchData}>Try again</Button>} />
+      ) : (
+        <DataTable<CableRun>
+          tableId="project-network-cables"
+          exportName="cable-schedule"
+          columns={columns}
+          rows={filteredCables}
+          loading={loading}
+          rowKey={(c) => c.id}
+          defaultSort={{ key: 'label', dir: 'asc' }}
+          rowActions={(c) => [
+            { label: 'Pass', icon: <CheckCircle size={14} />, inline: true, hidden: c.tested, disabled: markingId === c.id, onClick: () => markTested(c.id, 'pass') },
+            { label: 'Fail', icon: <XCircle size={14} />, inline: true, tone: 'danger', hidden: c.tested, disabled: markingId === c.id, onClick: () => markTested(c.id, 'fail') },
+          ]}
+          empty={
+            cables.length === 0 ? (
+              <EmptyState icon={<PlugsConnected size={22} />} title="No cable runs yet" text="Add the first run to start this job's cable schedule."
+                action={<Button variant="primary" icon={<Plus size={15} weight="bold" />} onClick={openForm}>Add cable run</Button>} />
+            ) : (
+              <EmptyState title="No cable runs match your filters" text="Clear or change the filters to see more runs."
+                action={<Button onClick={() => { setSearch(''); setFilterType(''); setFilterTested(''); setFilterFloor(''); }}>Clear filters</Button>} />
+            )
+          }
+        />
+      )}
 
-      {/* Cable Table */}
-      <SectionCard title="Cable Runs" icon={<ListChecks size={17} weight="duotone" color="var(--text-secondary)" />} flush>
-        {filteredCables.length === 0 ? (
-          <PremiumEmpty
-            icon={<PlugsConnected size={30} weight="duotone" color="var(--text-secondary)" />}
-            title={cables.length === 0 ? 'No cable runs yet' : 'No cable runs match your filters'}
-            description={cables.length === 0
-              ? 'Add your first cable run to start building this project’s cable schedule.'
-              : 'Try clearing or adjusting the filters above to see more runs.'}
-            action={cables.length === 0
-              ? <button onClick={() => setShowForm(true)} style={secondaryButtonStyle} className="pmBtn"><Plus size={15} weight="bold" /> Add Cable Run</button>
-              : undefined}
-          />
-        ) : (
-        <div style={{ overflowX: 'auto', WebkitOverflowScrolling: 'touch' as const }}>
-        <table className="k-table" style={{ width: '100%', borderCollapse: 'collapse' }}>
-          <thead>
-            <tr>
-              {['Label', 'Type', 'From', 'To', 'Length', 'Pathway', 'Tested', 'Result', 'Actions'].map(col => (
-                <th key={col} style={{ padding: '12px 14px', textAlign: 'left', color: DIM, fontSize: 12, fontWeight: 700, borderBottom: `1px solid ${BORDER}`, whiteSpace: 'nowrap' }}>{col}</th>
-              ))}
-            </tr>
-          </thead>
-          <tbody>
-            {filteredCables.map(cable => {
-                const tc = TYPE_COLORS[cable.cable_type] || TYPE_COLORS.cat6;
-                return (
-                  <tr key={cable.id}>
-                    <td style={{ padding: '10px 12px', borderBottom: `1px solid ${BORDER}`, color: TEXT, fontSize: 13, fontWeight: 700, fontFamily: 'monospace' }}>{cable.label}</td>
-                    <td style={{ padding: '10px 12px', borderBottom: `1px solid ${BORDER}` }}>
-                      <span style={{ fontSize: 12, padding: '3px 10px', borderRadius: 10, fontWeight: 600, background: tc.bg, color: tc.text }}>{cableLabel(cable.cable_type)}</span>
-                    </td>
-                    <td style={{ padding: '10px 12px', borderBottom: `1px solid ${BORDER}`, color: TEXT, fontSize: 12 }}>
-                      {cable.from_location}{cable.from_port ? ` (${cable.from_port})` : ''}
-                    </td>
-                    <td style={{ padding: '10px 12px', borderBottom: `1px solid ${BORDER}`, color: TEXT, fontSize: 12 }}>
-                      {cable.to_location}{cable.to_port ? ` (${cable.to_port})` : ''}
-                    </td>
-                    <td style={{ padding: '10px 12px', borderBottom: `1px solid ${BORDER}`, color: DIM, fontSize: 12 }}>{cable.length_ft ? `${cable.length_ft} ft` : '—'}</td>
-                    <td style={{ padding: '10px 12px', borderBottom: `1px solid ${BORDER}`, color: DIM, fontSize: 12 }}>{cable.pathway || '—'}</td>
-                    <td style={{ padding: '10px 12px', borderBottom: `1px solid ${BORDER}`, fontSize: 16, textAlign: 'center' }}>
-                      <span style={{ display: 'inline-flex', verticalAlign: 'middle' }}>
-                        {cable.tested
-                          ? <CheckCircle size={18} weight="fill" color={GREEN} />
-                          : <Square size={18} weight="regular" color={DIM} />}
-                      </span>
-                    </td>
-                    <td style={{ padding: '10px 12px', borderBottom: `1px solid ${BORDER}` }}>
-                      {cable.test_result ? (
-                        <span style={{
-                          fontSize: 12, padding: '3px 10px', borderRadius: 10, fontWeight: 600,
-                          background: cable.test_result === 'pass' ? `color-mix(in srgb, ${GREEN} 13%, transparent)` : `color-mix(in srgb, ${RED} 13%, transparent)`,
-                          color: cable.test_result === 'pass' ? GREEN : RED,
-                          textTransform: 'capitalize',
-                        }}>{cable.test_result}</span>
-                      ) : <span style={{ color: DIM, fontSize: 12 }}>—</span>}
-                    </td>
-                    <td style={{ padding: '10px 12px', borderBottom: `1px solid ${BORDER}` }}>
-                      {!cable.tested && (
-                        <div style={{ display: 'flex', gap: 4 }}>
-                          <button
-                            onClick={() => markTested(cable.id, 'pass')}
-                            disabled={markingId === cable.id}
-                            style={{
-                              padding: '4px 10px', background: `color-mix(in srgb, ${GREEN} 8%, transparent)`, color: GREEN, border: `1px solid color-mix(in srgb, ${GREEN} 19%, transparent)`,
-                              borderRadius: 6, fontSize: 12, fontWeight: 600, cursor: 'pointer',
-                            }}
-                          >Pass</button>
-                          <button
-                            onClick={() => markTested(cable.id, 'fail')}
-                            disabled={markingId === cable.id}
-                            style={{
-                              padding: '4px 10px', background: `color-mix(in srgb, ${RED} 8%, transparent)`, color: RED, border: `1px solid color-mix(in srgb, ${RED} 19%, transparent)`,
-                              borderRadius: 6, fontSize: 12, fontWeight: 600, cursor: 'pointer',
-                            }}
-                          >Fail</button>
-                        </div>
-                      )}
-                    </td>
-                  </tr>
-                );
-              })}
-          </tbody>
-        </table>
-        </div>
-        )}
-      </SectionCard>
-    <UnsavedGuardModal guard={guard} />
-    </PremiumSurface>
+      <FormModal
+        open={showForm}
+        onClose={() => setShowForm(false)}
+        title="Add cable run"
+        onSubmit={async () => { await handleSubmit(); }}
+        submitLabel="Save cable run"
+        busy={saving}
+        error={formError}
+      >
+        <FormGrid cols={3}>
+          <Field label="Label" required>
+            <Input required value={form.label} onChange={e => set('label', e.target.value)} placeholder="D-101" />
+          </Field>
+          <Field label="Cable type">
+            <Select value={form.cable_type} onChange={e => set('cable_type', e.target.value)} options={CABLE_TYPES.map(t => ({ value: t, label: cableLabel(t) }))} />
+          </Field>
+          <Field label="Floor">
+            <Input type="number" value={form.floor} onChange={e => set('floor', +e.target.value)} />
+          </Field>
+          <Field label="From location">
+            <Input value={form.from_location} onChange={e => set('from_location', e.target.value)} placeholder="MDF Patch Panel A" />
+          </Field>
+          <Field label="To location">
+            <Input value={form.to_location} onChange={e => set('to_location', e.target.value)} placeholder="Office 101 Wall Jack" />
+          </Field>
+          <Field label="Length (ft)">
+            <Input type="number" value={form.length_ft} onChange={e => set('length_ft', +e.target.value)} />
+          </Field>
+          <Field label="From port">
+            <Input value={form.from_port} onChange={e => set('from_port', e.target.value)} placeholder="PP-A-01" />
+          </Field>
+          <Field label="To port">
+            <Input value={form.to_port} onChange={e => set('to_port', e.target.value)} placeholder="WJ-101" />
+          </Field>
+          <Field label="Pathway">
+            <Input value={form.pathway} onChange={e => set('pathway', e.target.value)} placeholder="Ceiling plenum" />
+          </Field>
+          <Field label="Notes" span>
+            <Textarea value={form.notes} onChange={e => set('notes', e.target.value)} rows={2} />
+          </Field>
+        </FormGrid>
+      </FormModal>
+
+      <UnsavedGuardModal guard={guard} />
+      <Toast message={toast?.message ?? null} tone={toast?.tone} />
+    </PageShell>
   );
 }

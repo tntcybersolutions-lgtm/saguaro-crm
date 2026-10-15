@@ -1,19 +1,26 @@
 'use client';
-
-import { useState, useEffect, useCallback, useRef } from 'react';
+/**
+ * Network › AI Wizard — describe the site, let the AI draft the network
+ * (VLANs, equipment, IP scheme, firewall, SSIDs, cable estimate), then apply
+ * the whole design to the job's network module.
+ *
+ * Reads  GET  /api/network/projects?projectId=
+ * Writes POST /api/ai/network-wizard        (SSE stream, or JSON fallback)
+ *        POST /api/network/wizard/apply     { network_project_id, result }
+ */
+import React, { useState, useEffect, useRef } from 'react';
 import { useParams } from 'next/navigation';
-import Link from 'next/link';
-import { Robot, Laptop, Phone, Printer, VideoCamera, WifiHigh, Plug, Gear, CheckCircle, SlidersHorizontal, Sparkle, TreeStructure, Package, Globe, ShieldCheck, Path, Ruler, CurrencyDollar } from '@phosphor-icons/react';
-import { PremiumSurface, ModuleHero, SectionCard, StatCard, goldButtonStyle } from '@/components/ui/premium';
-
-const BASE = 'var(--bg-surface-2)';
-const GOLD = 'var(--brand-primary)';
-const GREEN = 'var(--success)';
-const BLUE = 'var(--brand-primary)';
-const RED = 'var(--danger)';
-const BORDER = 'rgba(255,255,255,0.12)';
-const DIM = 'var(--text-secondary)';
-const TEXT = 'var(--text-primary)';
+import { useProjectContext } from '@/lib/hooks/useProjectContext';
+import {
+  PageShell, StatRow, Badge, Button, Card, DataTable, Field, Input, Select, FormGrid, FormSection,
+  ItemList, ItemRow, Callout, Toast, useToast,
+  type Column, type StatItem,
+} from '@/components/ui/kit';
+import {
+  Robot, Gear, CheckCircle, SlidersHorizontal, Sparkle, TreeStructure, Package, Globe, ShieldCheck, Path, Ruler,
+  CurrencyDollar, WifiHigh, WarningCircle,
+} from '@phosphor-icons/react';
+import NetworkTabs, { networkCrumbs } from '../_components/NetworkTabs';
 
 interface WizardResult {
   vlans: Array<{ vlan_id: number; name: string; subnet: string; gateway: string; purpose: string }>;
@@ -25,6 +32,9 @@ interface WizardResult {
   total_equipment_cost: number;
   summary: string;
 }
+
+type Indexed<T> = T & { _i: number };
+const indexed = <T,>(rows: T[] | undefined): Indexed<T>[] => (rows || []).map((r, i) => ({ ...r, _i: i }));
 
 const SITE_TYPES = [
   { value: 'commercial_office', label: 'Commercial Office' },
@@ -39,17 +49,32 @@ const SITE_TYPES = [
 ];
 
 const MANUFACTURERS = ['cisco', 'ubiquiti', 'meraki', 'aruba', 'fortinet'];
+const cap = (s: string) => { const t = (s || '').replace(/_/g, ' '); return t.charAt(0).toUpperCase() + t.slice(1); };
+const fmt$ = (n: number) => new Intl.NumberFormat('en-US', { style: 'currency', currency: 'USD', maximumFractionDigits: 0 }).format(Number(n) || 0);
+const mono: React.CSSProperties = { fontFamily: 'var(--font-mono, monospace)' };
 
-const inputStyle: React.CSSProperties = {
-  width: '100%', padding: '10px 12px', background: BASE, color: TEXT,
-  border: `1px solid ${BORDER}`, borderRadius: 8, fontSize: 13, outline: 'none',
-};
-const labelStyle: React.CSSProperties = {
-  color: DIM, fontSize: 12, fontWeight: 600, display: 'block', marginBottom: 4,
-};
+const COUNT_FIELDS = [
+  { key: 'workstations', label: 'Workstations' },
+  { key: 'phones', label: 'VoIP phones' },
+  { key: 'printers', label: 'Printers' },
+  { key: 'cameras', label: 'Cameras' },
+  { key: 'access_points', label: 'Access points' },
+  { key: 'iot_devices', label: 'IoT devices' },
+] as const;
+
+const CSS = `
+.netWizStream { max-height: 400px; overflow: auto; }
+.netWizStream pre { color: var(--text-primary); font-size: 13px; white-space: pre-wrap; font-family: inherit; line-height: 1.6; margin: 0; }
+.netWizChecks { display: flex; gap: 16px; flex-wrap: wrap; grid-column: 1 / -1; }
+.netWizChecks label { display: flex; align-items: center; gap: 8px; color: var(--text-primary); font-size: 14px; cursor: pointer; min-height: 44px; }
+@keyframes netWizSpin { from { transform: rotate(0deg); } to { transform: rotate(360deg); } }
+.netWizSpin { display: inline-flex; animation: netWizSpin 1s linear infinite; }
+`;
 
 export default function NetworkWizardPage() {
   const { projectId } = useParams() as { projectId: string };
+  const { ctx } = useProjectContext(projectId);
+  const { toast, show } = useToast();
   const [networkProjectId, setNetworkProjectId] = useState('');
   const [generating, setGenerating] = useState(false);
   const [result, setResult] = useState<WizardResult | null>(null);
@@ -79,7 +104,7 @@ export default function NetworkWizardPage() {
     fetch(`/api/network/projects?projectId=${projectId}`)
       .then(r => r.json())
       .then(d => { if (d.networkProject) setNetworkProjectId(d.networkProject.id); })
-      .catch(() => {});
+      .catch(() => { /* no module yet — Apply stays unavailable until one exists */ });
   }, [projectId]);
 
   const generateDesign = async () => {
@@ -139,7 +164,7 @@ export default function NetworkWizardPage() {
         }
         if (streamRef.current) streamRef.current.scrollTop = streamRef.current.scrollHeight;
       }
-    } catch (err) {
+    } catch {
       setStreamText('Error generating design. Please try again.');
     }
     setGenerating(false);
@@ -149,311 +174,198 @@ export default function NetworkWizardPage() {
     if (!result || !networkProjectId) return;
     setApplying(true);
     try {
-      await fetch('/api/network/wizard/apply', {
+      const res = await fetch('/api/network/wizard/apply', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ network_project_id: networkProjectId, result }),
       });
-      setApplied(true);
-    } catch { /* */ }
+      if (res.ok) { setApplied(true); show('Design applied to the job'); }
+      else show("Couldn't apply the design", 'bad');
+    } catch {
+      show("Couldn't apply the design", 'bad');
+    }
     setApplying(false);
   };
 
-  const fmt$ = (n: number) => new Intl.NumberFormat('en-US', { style: 'currency', currency: 'USD', maximumFractionDigits: 0 }).format(n);
+  const num = (k: keyof typeof form) => form[k] as number;
+
+  const vlanCols: Column<Indexed<WizardResult['vlans'][number]>>[] = [
+    { key: 'vlan_id', header: 'VLAN', width: 90, phone: 'show', render: (v) => <strong style={mono}>{v.vlan_id}</strong>, groupable: false },
+    { key: 'name', header: 'Name', primary: true, phone: 'show' },
+    { key: 'subnet', header: 'Subnet', phone: 'show', render: (v) => <span style={mono}>{v.subnet}</span> },
+    { key: 'gateway', header: 'Gateway', render: (v) => <span style={mono}>{v.gateway}</span> },
+    { key: 'purpose', header: 'Purpose', render: (v) => <Badge>{cap(v.purpose)}</Badge> },
+  ];
+  const equipCols: Column<Indexed<WizardResult['equipment'][number]>>[] = [
+    { key: 'type', header: 'Type', primary: true, phone: 'show', accessor: (e) => cap(e.type) },
+    { key: 'manufacturer', header: 'Manufacturer', accessor: (e) => cap(e.manufacturer) },
+    { key: 'model', header: 'Model' },
+    { key: 'quantity', header: 'Qty', align: 'right', total: 'sum', phone: 'show' },
+    { key: 'unit_cost', header: 'Unit cost', align: 'right', format: fmt$, render: (e) => fmt$(e.unit_cost) },
+    { key: 'total_cost', header: 'Total', align: 'right', total: 'sum', format: fmt$, phone: 'show', render: (e) => <strong>{fmt$(e.total_cost)}</strong> },
+  ];
+  const ipCols: Column<Indexed<WizardResult['ip_scheme'][number]>>[] = [
+    { key: 'vlan', header: 'VLAN', primary: true, phone: 'show' },
+    { key: 'subnet', header: 'Subnet', phone: 'show', render: (r) => <span style={mono}>{r.subnet}</span> },
+    { key: 'gateway', header: 'Gateway', render: (r) => <span style={mono}>{r.gateway}</span> },
+    { key: 'dhcp_range', header: 'DHCP range', render: (r) => <span style={mono}>{r.dhcp_range}</span> },
+    { key: 'reserved', header: 'Reserved' },
+  ];
+
+  const cableStats: StatItem[] = result?.cable_estimate ? [
+    { label: 'Cat6 runs', value: String(result.cable_estimate.cat6_runs), icon: <Path size={15} /> },
+    { label: 'Cat6a runs', value: String(result.cable_estimate.cat6a_runs), icon: <Path size={15} /> },
+    { label: 'Fiber runs', value: String(result.cable_estimate.fiber_runs), icon: <Path size={15} /> },
+    { label: 'Total length', value: `${result.cable_estimate.total_length_ft?.toLocaleString()} ft`, icon: <Ruler size={15} /> },
+    { label: 'Est. cost', value: fmt$(result.cable_estimate.estimated_cost || 0), icon: <CurrencyDollar size={15} /> },
+  ] : [];
+
+  const applyButton = (
+    <Button
+      variant={applied ? 'secondary' : 'primary'}
+      icon={applied ? <CheckCircle size={15} weight="fill" /> : <CheckCircle size={15} />}
+      onClick={applyAll}
+      disabled={applying || applied || !networkProjectId}
+    >
+      {applied ? 'Applied to project' : applying ? 'Applying…' : 'Apply all to project'}
+    </Button>
+  );
 
   return (
-    <PremiumSurface>
-      {/* Breadcrumb */}
-      <div style={{ marginBottom: 14 }}>
-        <Link href={`/app/projects/${projectId}/network`} style={{ color: DIM, fontSize: 12, textDecoration: 'none' }}>Network →</Link>
-        <span style={{ color: TEXT, fontSize: 12, marginLeft: 4 }}>AI Wizard</span>
-      </div>
+    <PageShell
+      crumbs={networkCrumbs(projectId, ctx?.project?.name, 'AI Wizard')}
+      title="AI network wizard"
+      subtitle="Describe the site and get a complete network design."
+    >
+      <style>{CSS}</style>
+      <NetworkTabs projectId={projectId} value="wizard" />
 
-      {/* Header */}
-      <ModuleHero
-        eyebrow="AI Wizard"
-        eyebrowIcon={<Robot size={13} weight="fill" color="var(--text-secondary)" />}
-        title="AI Network"
-        accent="Wizard"
-        subtitle="Describe your site and let AI design your complete network infrastructure."
-      />
+      <Card title="Site information" icon={<SlidersHorizontal size={16} />}>
+        <FormGrid cols={4}>
+          <Field label="Site type">
+            <Select value={form.site_type} onChange={e => setForm({ ...form, site_type: e.target.value })} options={SITE_TYPES} />
+          </Field>
+          <Field label="Square footage">
+            <Input type="number" value={form.square_footage} onChange={e => setForm({ ...form, square_footage: +e.target.value })} />
+          </Field>
+          <Field label="Floors">
+            <Input type="number" value={form.floor_count} onChange={e => setForm({ ...form, floor_count: +e.target.value })} />
+          </Field>
+          <Field label="Manufacturer">
+            <Select value={form.manufacturer} onChange={e => setForm({ ...form, manufacturer: e.target.value })} options={MANUFACTURERS.map(m => ({ value: m, label: m.charAt(0).toUpperCase() + m.slice(1) }))} />
+          </Field>
 
-      {/* Input Form */}
-      <SectionCard title="Site Information" icon={<SlidersHorizontal size={17} weight="duotone" color="var(--text-secondary)" />} style={{ marginBottom: 24 }}>
-        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(180px, 1fr))', gap: 12 }}>
-          <div>
-            <label style={labelStyle}>Site Type</label>
-            <select value={form.site_type} onChange={e => setForm({ ...form, site_type: e.target.value })} style={inputStyle}>
-              {SITE_TYPES.map(s => <option key={s.value} value={s.value}>{s.label}</option>)}
-            </select>
-          </div>
-          <div>
-            <label style={labelStyle}>Square Footage</label>
-            <input type="number" value={form.square_footage} onChange={e => setForm({ ...form, square_footage: +e.target.value })} style={inputStyle} />
-          </div>
-          <div>
-            <label style={labelStyle}>Floors</label>
-            <input type="number" value={form.floor_count} onChange={e => setForm({ ...form, floor_count: +e.target.value })} style={inputStyle} />
-          </div>
-          <div>
-            <label style={labelStyle}>Manufacturer</label>
-            <select value={form.manufacturer} onChange={e => setForm({ ...form, manufacturer: e.target.value })} style={inputStyle}>
-              {MANUFACTURERS.map(m => <option key={m} value={m}>{m.charAt(0).toUpperCase() + m.slice(1)}</option>)}
-            </select>
-          </div>
-        </div>
-
-        <h4 style={{ color: DIM, fontSize: 12, fontWeight: 700, margin: '16px 0 8px' }}>Device Counts</h4>
-        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(140px, 1fr))', gap: 12 }}>
-          {[
-            { key: 'workstations', label: 'Workstations', icon: <Laptop size={14} weight="regular" color={DIM} style={{ verticalAlign: 'middle' }} /> },
-            { key: 'phones', label: 'VoIP Phones', icon: <Phone size={14} weight="regular" color={DIM} style={{ verticalAlign: 'middle' }} /> },
-            { key: 'printers', label: 'Printers', icon: <Printer size={14} weight="regular" color={DIM} style={{ verticalAlign: 'middle' }} /> },
-            { key: 'cameras', label: 'Cameras', icon: <VideoCamera size={14} weight="regular" color={DIM} style={{ verticalAlign: 'middle' }} /> },
-            { key: 'access_points', label: 'Access Points', icon: <WifiHigh size={14} weight="regular" color={DIM} style={{ verticalAlign: 'middle' }} /> },
-            { key: 'iot_devices', label: 'IoT Devices', icon: <Plug size={14} weight="regular" color={DIM} style={{ verticalAlign: 'middle' }} /> },
-          ].map(item => (
-            <div key={item.key}>
-              <label style={labelStyle}>{item.icon} {item.label}</label>
-              <input
-                type="number"
-                value={(form as Record<string, unknown>)[item.key] as number}
-                onChange={e => setForm({ ...form, [item.key]: +e.target.value })}
-                style={inputStyle}
-              />
-            </div>
+          <FormSection>Device counts</FormSection>
+          {COUNT_FIELDS.map(item => (
+            <Field key={item.key} label={item.label}>
+              <Input type="number" value={num(item.key)} onChange={e => setForm({ ...form, [item.key]: +e.target.value })} />
+            </Field>
           ))}
-        </div>
 
-        <h4 style={{ color: DIM, fontSize: 12, fontWeight: 700, margin: '16px 0 8px' }}>Features</h4>
-        <div style={{ display: 'flex', gap: 16, flexWrap: 'wrap' }}>
-          <label style={{ display: 'flex', alignItems: 'center', gap: 8, color: TEXT, fontSize: 13, cursor: 'pointer' }}>
-            <input type="checkbox" checked={form.guest_wifi} onChange={e => setForm({ ...form, guest_wifi: e.target.checked })} />
-            Guest WiFi
-          </label>
-          <label style={{ display: 'flex', alignItems: 'center', gap: 8, color: TEXT, fontSize: 13, cursor: 'pointer' }}>
-            <input type="checkbox" checked={form.voip} onChange={e => setForm({ ...form, voip: e.target.checked })} />
-            VoIP System
-          </label>
-        </div>
-
-        <h4 style={{ color: DIM, fontSize: 12, fontWeight: 700, margin: '16px 0 8px' }}>Budget Range (Optional)</h4>
-        <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 12, maxWidth: 400 }}>
-          <div>
-            <label style={labelStyle}>Min ($)</label>
-            <input type="number" value={form.budget_min} onChange={e => setForm({ ...form, budget_min: +e.target.value })} placeholder="0" style={inputStyle} />
+          <FormSection>Features</FormSection>
+          <div className="netWizChecks">
+            <label><input type="checkbox" checked={form.guest_wifi} onChange={e => setForm({ ...form, guest_wifi: e.target.checked })} /> Guest WiFi</label>
+            <label><input type="checkbox" checked={form.voip} onChange={e => setForm({ ...form, voip: e.target.checked })} /> VoIP system</label>
           </div>
-          <div>
-            <label style={labelStyle}>Max ($)</label>
-            <input type="number" value={form.budget_max} onChange={e => setForm({ ...form, budget_max: +e.target.value })} placeholder="0" style={inputStyle} />
-          </div>
+
+          <FormSection>Budget range (optional)</FormSection>
+          <Field label="Min ($)">
+            <Input type="number" value={form.budget_min} onChange={e => setForm({ ...form, budget_min: +e.target.value })} placeholder="0" />
+          </Field>
+          <Field label="Max ($)">
+            <Input type="number" value={form.budget_max} onChange={e => setForm({ ...form, budget_max: +e.target.value })} placeholder="0" />
+          </Field>
+        </FormGrid>
+        <div style={{ marginTop: 16 }}>
+          <Button
+            variant={result ? 'secondary' : 'primary'}
+            icon={generating ? <span className="netWizSpin"><Gear size={15} /></span> : <Robot size={15} />}
+            onClick={generateDesign}
+            disabled={generating}
+          >
+            {generating ? 'Generating network design…' : result ? 'Regenerate design' : 'Generate network design'}
+          </Button>
         </div>
+      </Card>
 
-        <button onClick={generateDesign} disabled={generating} className="pmBtn" style={{
-          ...goldButtonStyle,
-          marginTop: 20, padding: '12px 28px', fontSize: 14,
-          opacity: generating ? 0.6 : 1, cursor: generating ? 'default' : 'pointer',
-        }}>
-          {generating ? (
-            <>
-              <span style={{ display: 'inline-flex', animation: 'spin 1s linear infinite' }}><Gear size={16} weight="regular" color="var(--on-brand)" /></span>
-              Generating Network Design…
-            </>
-          ) : (
-            <>
-              <Robot size={16} weight="regular" color="var(--on-brand)" />
-              Generate Network Design
-            </>
-          )}
-        </button>
-      </SectionCard>
-
-      {/* Streaming Output */}
       {streamText && !result && (
-        <SectionCard flat
-          title="AI is designing your network…"
-          icon={<Robot size={17} weight="duotone" color="var(--text-secondary)" />}
-          flush
-          style={{ marginBottom: 24 }}
-        >
-          <div ref={streamRef} style={{ maxHeight: 400, overflow: 'auto', padding: 20 }}>
-            <pre style={{ color: TEXT, fontSize: 13, whiteSpace: 'pre-wrap', fontFamily: 'system-ui', lineHeight: 1.6, margin: 0 }}>{streamText}</pre>
-          </div>
-        </SectionCard>
+        <Card title={generating ? 'AI is designing your network…' : 'Design output'} icon={<Robot size={16} />}>
+          <div ref={streamRef} className="netWizStream"><pre>{streamText}</pre></div>
+        </Card>
       )}
 
-      {/* Results */}
       {result && (
         <>
-          {/* Summary */}
           {result.summary && (
-            <SectionCard flat title="Design Summary" icon={<Sparkle size={17} weight="duotone" color="var(--text-secondary)" />} style={{ marginBottom: 16 }}>
-              <div style={{ color: TEXT, fontSize: 14, lineHeight: 1.6 }}>{result.summary}</div>
-            </SectionCard>
+            <Card title="Design summary" icon={<Sparkle size={16} />}>
+              <div style={{ color: 'var(--text-primary)', fontSize: 14, lineHeight: 1.6 }}>{result.summary}</div>
+            </Card>
           )}
 
-          {/* VLAN Plan */}
           {result.vlans && result.vlans.length > 0 && (
-            <SectionCard title="VLAN Plan" icon={<TreeStructure size={17} weight="duotone" color="var(--text-secondary)" />} style={{ marginBottom: 16 }}>
-              <div style={{ overflow: 'auto' }}>
-                <table className="k-table" style={{ width: '100%', borderCollapse: 'collapse' }}>
-                  <thead>
-                    <tr>
-                      {['VLAN', 'Name', 'Subnet', 'Gateway', 'Purpose'].map(h => (
-                        <th key={h} style={{ padding: '8px 12px', textAlign: 'left', color: DIM, fontSize: 12, fontWeight: 700, borderBottom: `1px solid ${BORDER}` }}>{h}</th>
-                      ))}
-                    </tr>
-                  </thead>
-                  <tbody>
-                    {result.vlans.map((v, i) => (
-                      <tr key={i}>
-                        <td style={{ padding: '8px 12px', borderBottom: `1px solid ${BORDER}`, color: TEXT, fontFamily: 'monospace', fontWeight: 700 }}>{v.vlan_id}</td>
-                        <td style={{ padding: '8px 12px', borderBottom: `1px solid ${BORDER}`, color: TEXT }}>{v.name}</td>
-                        <td style={{ padding: '8px 12px', borderBottom: `1px solid ${BORDER}`, color: DIM, fontFamily: 'monospace' }}>{v.subnet}</td>
-                        <td style={{ padding: '8px 12px', borderBottom: `1px solid ${BORDER}`, color: DIM, fontFamily: 'monospace' }}>{v.gateway}</td>
-                        <td style={{ padding: '8px 12px', borderBottom: `1px solid ${BORDER}` }}>
-                          <span style={{ fontSize: 12, padding: '2px 8px', borderRadius: 8, background: 'var(--bg-surface-2)', color: 'var(--text-primary)', textTransform: 'capitalize' }}>{v.purpose}</span>
-                        </td>
-                      </tr>
-                    ))}
-                  </tbody>
-                </table>
-              </div>
-            </SectionCard>
+            <Card title="VLAN plan" icon={<TreeStructure size={16} />} flush>
+              <DataTable tableId="project-network-wizard-vlans" exportName="wizard-vlan-plan" columns={vlanCols} rows={indexed(result.vlans)} rowKey={(r) => r._i} defaultSort={{ key: 'vlan_id', dir: 'asc' }} />
+            </Card>
           )}
 
-          {/* Equipment List */}
           {result.equipment && result.equipment.length > 0 && (
-            <SectionCard
-              title="Equipment List"
-              icon={<Package size={17} weight="duotone" color="var(--text-secondary)" />}
-              action={<span style={{ color: 'var(--text-primary)', fontSize: 14, fontWeight: 800 }}>Total: {fmt$(result.total_equipment_cost || 0)}</span>}
-              style={{ marginBottom: 16 }}
-            >
-              <div style={{ overflow: 'auto' }}>
-                <table className="k-table" style={{ width: '100%', borderCollapse: 'collapse' }}>
-                  <thead>
-                    <tr>
-                      {['Type', 'Manufacturer', 'Model', 'Qty', 'Unit Cost', 'Total'].map(h => (
-                        <th key={h} style={{ padding: '8px 12px', textAlign: 'left', color: DIM, fontSize: 12, fontWeight: 700, borderBottom: `1px solid ${BORDER}` }}>{h}</th>
-                      ))}
-                    </tr>
-                  </thead>
-                  <tbody>
-                    {result.equipment.map((eq, i) => (
-                      <tr key={i}>
-                        <td style={{ padding: '8px 12px', borderBottom: `1px solid ${BORDER}`, color: TEXT, textTransform: 'capitalize' }}>{eq.type?.replace(/_/g, ' ')}</td>
-                        <td style={{ padding: '8px 12px', borderBottom: `1px solid ${BORDER}`, color: DIM, textTransform: 'capitalize' }}>{eq.manufacturer}</td>
-                        <td style={{ padding: '8px 12px', borderBottom: `1px solid ${BORDER}`, color: DIM }}>{eq.model}</td>
-                        <td style={{ padding: '8px 12px', borderBottom: `1px solid ${BORDER}`, color: TEXT, fontWeight: 700 }}>{eq.quantity}</td>
-                        <td style={{ padding: '8px 12px', borderBottom: `1px solid ${BORDER}`, color: DIM }}>{fmt$(eq.unit_cost)}</td>
-                        <td style={{ padding: '8px 12px', borderBottom: `1px solid ${BORDER}`, color: GREEN, fontWeight: 700 }}>{fmt$(eq.total_cost)}</td>
-                      </tr>
-                    ))}
-                  </tbody>
-                </table>
-              </div>
-            </SectionCard>
+            <Card title="Equipment list" subtitle={`Total: ${fmt$(result.total_equipment_cost || 0)}`} icon={<Package size={16} />} flush>
+              <DataTable tableId="project-network-wizard-equipment" exportName="wizard-equipment" columns={equipCols} rows={indexed(result.equipment)} rowKey={(r) => r._i} />
+            </Card>
           )}
 
-          {/* IP Addressing */}
           {result.ip_scheme && result.ip_scheme.length > 0 && (
-            <SectionCard title="IP Addressing Scheme" icon={<Globe size={17} weight="duotone" color="var(--text-secondary)" />} style={{ marginBottom: 16 }}>
-              <div style={{ overflow: 'auto' }}>
-                <table className="k-table" style={{ width: '100%', borderCollapse: 'collapse' }}>
-                  <thead>
-                    <tr>
-                      {['VLAN', 'Subnet', 'Gateway', 'DHCP Range', 'Reserved'].map(h => (
-                        <th key={h} style={{ padding: '8px 12px', textAlign: 'left', color: DIM, fontSize: 12, fontWeight: 700, borderBottom: `1px solid ${BORDER}` }}>{h}</th>
-                      ))}
-                    </tr>
-                  </thead>
-                  <tbody>
-                    {result.ip_scheme.map((ip, i) => (
-                      <tr key={i}>
-                        <td style={{ padding: '8px 12px', borderBottom: `1px solid ${BORDER}`, color: TEXT }}>{ip.vlan}</td>
-                        <td style={{ padding: '8px 12px', borderBottom: `1px solid ${BORDER}`, color: TEXT, fontFamily: 'monospace' }}>{ip.subnet}</td>
-                        <td style={{ padding: '8px 12px', borderBottom: `1px solid ${BORDER}`, color: DIM, fontFamily: 'monospace' }}>{ip.gateway}</td>
-                        <td style={{ padding: '8px 12px', borderBottom: `1px solid ${BORDER}`, color: DIM, fontFamily: 'monospace' }}>{ip.dhcp_range}</td>
-                        <td style={{ padding: '8px 12px', borderBottom: `1px solid ${BORDER}`, color: DIM }}>{ip.reserved}</td>
-                      </tr>
-                    ))}
-                  </tbody>
-                </table>
-              </div>
-            </SectionCard>
+            <Card title="IP addressing scheme" icon={<Globe size={16} />} flush>
+              <DataTable tableId="project-network-wizard-ip" exportName="wizard-ip-scheme" columns={ipCols} rows={indexed(result.ip_scheme)} rowKey={(r) => r._i} />
+            </Card>
           )}
 
-          {/* Firewall Summary */}
           {result.firewall_rules && result.firewall_rules.length > 0 && (
-            <SectionCard flat title="Firewall Rules" icon={<ShieldCheck size={17} weight="duotone" color="var(--text-secondary)" />} style={{ marginBottom: 16 }}>
-              {result.firewall_rules.map((rule, i) => (
-                <div key={i} style={{ display: 'flex', gap: 8, alignItems: 'center', padding: '6px 0', borderBottom: i < result.firewall_rules.length - 1 ? `1px solid ${BORDER}` : 'none' }}>
-                  <span style={{
-                    fontSize: 12, padding: '2px 8px', borderRadius: 8, fontWeight: 700,
-                    background: rule.action === 'allow' ? `color-mix(in srgb, ${GREEN} 8%, transparent)` : `color-mix(in srgb, ${RED} 8%, transparent)`,
-                    color: rule.action === 'allow' ? GREEN : RED, textTransform: 'capitalize',
-                  }}>{rule.action}</span>
-                  <span style={{ color: TEXT, fontSize: 12 }}>{rule.name}</span>
-                  <span style={{ color: DIM, fontSize: 12 }}>{rule.source} → {rule.destination} ({rule.protocol}/{rule.port})</span>
-                </div>
-              ))}
-            </SectionCard>
+            <Card title="Firewall rules" icon={<ShieldCheck size={16} />} flush>
+              <ItemList>
+                {result.firewall_rules.map((rule, i) => (
+                  <ItemRow
+                    key={i}
+                    icon={<ShieldCheck size={16} />}
+                    tone={rule.action === 'allow' ? 'success' : 'danger'}
+                    title={rule.name}
+                    desc={`${rule.source} → ${rule.destination} (${rule.protocol}/${rule.port})`}
+                    value={<Badge tone={rule.action === 'allow' ? 'ongoing' : 'overdue'}>{cap(rule.action)}</Badge>}
+                  />
+                ))}
+              </ItemList>
+            </Card>
           )}
 
-          {/* WiFi SSIDs */}
           {result.wifi_ssids && result.wifi_ssids.length > 0 && (
-            <SectionCard flat title="WiFi SSID Recommendations" icon={<WifiHigh size={17} weight="duotone" color="var(--text-secondary)" />} style={{ marginBottom: 16 }}>
-              {result.wifi_ssids.map((ssid, i) => (
-                <div key={i} style={{ display: 'flex', gap: 12, alignItems: 'center', padding: '8px 0', borderBottom: i < result.wifi_ssids.length - 1 ? `1px solid ${BORDER}` : 'none' }}>
-                  <span style={{ display: 'inline-flex' }}><WifiHigh size={18} weight="regular" color={TEXT} /></span>
-                  <div style={{ flex: 1 }}>
-                    <span style={{ color: TEXT, fontSize: 13, fontWeight: 600 }}>{ssid.ssid}</span>
-                    <div style={{ display: 'flex', gap: 6, marginTop: 2 }}>
-                      <span style={{ fontSize: 12, padding: '1px 6px', borderRadius: 6, background: `color-mix(in srgb, ${GREEN} 8%, transparent)`, color: GREEN }}>{ssid.security}</span>
-                      <span style={{ fontSize: 12, padding: '1px 6px', borderRadius: 6, background: 'rgba(255,255,255,0.06)', color: DIM }}>VLAN {ssid.vlan}</span>
-                      <span style={{ fontSize: 12, padding: '1px 6px', borderRadius: 6, background: 'rgba(255,255,255,0.06)', color: DIM }}>{ssid.band}</span>
-                    </div>
-                  </div>
-                  <span style={{ color: DIM, fontSize: 12 }}>{ssid.purpose}</span>
-                </div>
-              ))}
-            </SectionCard>
+            <Card title="WiFi SSID recommendations" icon={<WifiHigh size={16} />} flush>
+              <ItemList>
+                {result.wifi_ssids.map((ssid, i) => (
+                  <ItemRow
+                    key={i}
+                    icon={<WifiHigh size={16} />}
+                    title={ssid.ssid}
+                    desc={`${ssid.security} · VLAN ${ssid.vlan} · ${ssid.band}`}
+                    value={ssid.purpose}
+                  />
+                ))}
+              </ItemList>
+            </Card>
           )}
 
-          {/* Cable Estimate */}
           {result.cable_estimate && (
-            <SectionCard flat title="Cable Estimate" icon={<Path size={17} weight="duotone" color="var(--text-secondary)" />} style={{ marginBottom: 24 }}>
-              <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(180px, 1fr))', gap: 12 }}>
-                <StatCard icon={<Path size={19} weight="duotone" color="var(--text-secondary)" />} label="Cat6 Runs" value={String(result.cable_estimate.cat6_runs)}  href={`/app/projects/${projectId}/network/cables`}/>
-                <StatCard icon={<Path size={19} weight="duotone" color="var(--text-secondary)" />} label="Cat6a Runs" value={String(result.cable_estimate.cat6a_runs)}  href={`/app/projects/${projectId}/network/cables`}/>
-                <StatCard icon={<Path size={19} weight="duotone" color="var(--text-secondary)" />} label="Fiber Runs" value={String(result.cable_estimate.fiber_runs)} accent={BLUE}  href={`/app/projects/${projectId}/network/cables`}/>
-                <StatCard icon={<Ruler size={19} weight="duotone" color="var(--text-secondary)" />} label="Total Length" value={`${result.cable_estimate.total_length_ft?.toLocaleString()} ft`}  href={`/app/projects/${projectId}/network/wizard`}/>
-                <StatCard icon={<CurrencyDollar size={19} weight="duotone" color={GREEN} />} label="Est. Cost" value={fmt$(result.cable_estimate.estimated_cost || 0)} accent={GREEN}  href={`/app/projects/${projectId}/network/wizard`}/>
-              </div>
-            </SectionCard>
+            <Card title="Cable estimate" icon={<Path size={16} />}>
+              <StatRow items={cableStats} />
+            </Card>
           )}
 
-          {/* Apply All Button */}
-          <div style={{ textAlign: 'center', marginBottom: 32 }}>
-            <button onClick={applyAll} disabled={applying || applied} className="pmBtn" style={{
-              ...goldButtonStyle,
-              padding: '14px 40px', fontSize: 15,
-              ...(applied ? { background: `color-mix(in srgb, ${GREEN} 13%, transparent)`, color: GREEN, border: `1px solid ${GREEN}`, boxShadow: 'none' } : {}),
-              opacity: applying ? 0.6 : 1,
-              cursor: applying || applied ? 'default' : 'pointer',
-            }}>
-              {applied ? (
-                <span style={{ display: 'inline-flex', alignItems: 'center', gap: 6, verticalAlign: 'middle' }}>
-                  <CheckCircle size={16} weight="fill" color={GREEN} /> Applied to Project
-                </span>
-              ) : applying ? 'Applying…' : 'Apply All to Project'}
-            </button>
-          </div>
+          {!networkProjectId && (
+            <Callout tone="warning" icon={<WarningCircle size={16} />} title="Set up the network module first" text="Apply needs this job's network module. Set it up from the Network overview." />
+          )}
+          <div>{applyButton}</div>
         </>
       )}
-
-      <style>{`@keyframes spin { from { transform: rotate(0deg); } to { transform: rotate(360deg); } }`}</style>
-    </PremiumSurface>
+      <Toast message={toast?.message ?? null} tone={toast?.tone} />
+    </PageShell>
   );
 }

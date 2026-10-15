@@ -1,12 +1,13 @@
 'use client';
 import React, { useState, useEffect, useCallback } from 'react';
-import { useSort, useSortedRows, SortTh, SortBar } from '@/components/ui/sort';
 import { useProjectContext } from '@/lib/hooks/useProjectContext';
 import { useParams } from 'next/navigation';
-import { Table, T } from '@/components/ui/shell';
-import { PremiumSurface, ModuleHero, SectionCard, PremiumEmpty, StatStrip, FlowStrip, goldButtonStyle } from '@/components/ui/premium';
+import {
+  PageShell, Card, StatRow, Button, DataTable, EmptyState,
+  type Column, type StatItem,
+} from '@/components/ui/kit';
 import { toCents, toDollars, extend, sumCents, addCents } from '@/lib/calc';
-import { Package, Ruler, Rows, Receipt, DownloadSimple, Stack } from '@phosphor-icons/react';
+import { Package, Ruler, Rows, Receipt, DownloadSimple, Stack, Calculator, Cube, Users, Scales, ChartLineUp, Handshake, Wallet, UsersThree } from '@phosphor-icons/react';
 import { CSI_DIVISIONS, classifyToCSI } from '@/lib/construction-intelligence';
 
 interface EstimateLine {
@@ -31,10 +32,8 @@ const fmt = (n: number) => '$' + n.toLocaleString('en-US', { minimumFractionDigi
 const fmt0 = (n: number) => '$' + (Number(n) || 0).toLocaleString('en-US', { maximumFractionDigits: 0 });
 const fmtSigned = (n: number) => (Number(n) < 0 ? '-' : '+') + '$' + Math.abs(Number(n) || 0).toLocaleString('en-US', { maximumFractionDigits: 0 });
 
-const EST_COLS: { key: string; label: string; budgetOnly?: boolean }[] = [
-  { key: 'div', label: 'Div' }, { key: 'name', label: 'Division' }, { key: 'count', label: 'Items' }, { key: 'total', label: 'Estimate' }, { key: 'pct', label: '% of Materials' },
-  { key: 'budget', label: 'Budget', budgetOnly: true }, { key: 'variance', label: 'Variance', budgetOnly: true },
-];
+type RollupRow = { div: string; name: string; total: number; count: number; budget: number };
+type LineRow = EstimateLine & { key: string };
 
 export default function EstimatePage() {
   const params = useParams();
@@ -125,15 +124,7 @@ export default function EstimatePage() {
   }
   const rollup = Array.from(rollupMap.entries())
     .map(([div, r]) => ({ div, name: CSI_DIVISIONS[div]?.name || 'Uncategorized', total: toDollars(r.cents), count: r.count, budget: budgetByDiv.get(div) || 0 }))
-    .sort((a, b) => a.div.localeCompare(b.div));
-  const estSort = useSort(null);
-  const estSortValue = useCallback((r: (typeof rollup)[number], key: string): unknown => {
-    if (key === 'pct') return takeoff && takeoff.material_cost > 0 ? r.total / takeoff.material_cost : 0;
-    if (key === 'variance') return r.budget > 0 ? r.total - r.budget : null;
-    if (key === 'budget') return r.budget > 0 ? r.budget : null;
-    return (r as unknown as Record<string, unknown>)[key];
-  }, [takeoff]);
-  const sortedRollup = useSortedRows(rollup, estSort.sort, estSortValue);
+    .sort((a, b) => a.div.localeCompare(b.div)) as RollupRow[];
   const estBudgetDelta = takeoff ? takeoff.total_cost - budgetOriginal : 0;
   const matBudgetDelta = takeoff ? takeoff.material_cost - budgetOriginal : 0;
   const impliedMargin = takeoff ? revisedContract - takeoff.total_cost : 0;
@@ -160,214 +151,157 @@ export default function EstimatePage() {
     setExporting(false);
   }
 
-  return (
-    <PremiumSurface>
-      {loading ? (
-        <div style={{ textAlign: 'center', padding: 60, color: T.muted }}>Loading estimate data…</div>
-      ) : !takeoff ? (
-        <>
-          <ModuleHero
-            eyebrow={ctx?.project?.name || 'Estimating'}
-            eyebrowIcon={<Ruler size={13} weight="fill" color="var(--text-secondary)" />}
-            title="Project"
-            accent="Estimate"
-            subtitle="From the latest takeoff, rolled up by CSI division."
+  const base = `/app/projects/${projectId}`;
+  const crumbs = [
+    { label: 'Projects', href: '/app/projects' },
+    { label: ctx?.project?.name || 'Project', href: `${base}/overview` },
+    { label: 'Estimate' },
+  ];
+  const varianceColor = (n: number) => (n > 0 ? 'var(--danger)' : 'var(--success)');
+  const hasBudget = budgetLineCount > 0;
+  const approvedCos = Number(money?.approvedCoCount) || 0;
+
+  if (loading) {
+    return (
+      <PageShell crumbs={crumbs} title="Estimate" subtitle="From the latest takeoff, rolled up by CSI division.">
+        <StatRow items={['Estimate Total', 'Material Cost', 'Labor Cost', 'Est. vs. Budget', 'Implied Margin'].map(label => ({ label, value: '—', sub: 'Loading…' }))} />
+        <Card title="CSI Division Rollup" icon={<Stack size={17} />} flush>
+          <DataTable<RollupRow> columns={[{ key: 'div', header: 'Div' }, { key: 'name', header: 'Division', primary: true }, { key: 'total', header: 'Estimate', align: 'right' }]} rows={[]} rowKey={r => r.div} loading toolbar={false} />
+        </Card>
+      </PageShell>
+    );
+  }
+
+  if (!takeoff) {
+    const ctxStats: StatItem[] = ctx ? [
+      { label: 'Original Contract', value: fmt0(originalContract), sub: 'What the estimate answers to', icon: <Handshake size={15} />, href: `${base}/contracts` },
+      { label: 'Revised Contract', value: fmt0(revisedContract), sub: `${approvedCos} approved CO${approvedCos === 1 ? '' : 's'}`, icon: <Receipt size={15} />, href: `${base}/contracts` },
+      { label: 'Project Budget', value: fmt0(budgetOriginal), sub: budgetLineCount > 0 ? `${budgetLineCount} CSI-coded lines` : 'No budget lines yet', icon: <Wallet size={15} />, href: `${base}/budget` },
+      { label: 'Bid Packages', value: String(bidPackages.length), sub: awardedPkgs.length > 0 ? `${awardedPkgs.length} awarded · ${fmt0(awardedTotal)}` : 'None awarded yet', icon: <Package size={15} />, href: `${base}/bid-packages` },
+      { label: 'Subs on the Job', value: String((ctx?.subs || []).length), sub: 'Ready to price scopes', icon: <UsersThree size={15} />, href: `${base}/subs` },
+    ] : [];
+    return (
+      <PageShell
+        crumbs={crumbs}
+        title="Estimate"
+        subtitle="From the latest takeoff, rolled up by CSI division."
+        actions={<Button variant="primary" icon={<Ruler size={15} />} href={`${base}/takeoff`}>Go to Takeoff</Button>}
+      >
+        {ctx && <StatRow items={ctxStats} />}
+        <Card flush>
+          <EmptyState
+            icon={<Package size={22} />}
+            title="No takeoff data yet"
+            text={budgetOriginal > 0
+              ? `The budget carries ${fmt0(budgetOriginal)} across ${budgetLineCount} CSI line${budgetLineCount === 1 ? '' : 's'}. Run a takeoff and the estimate rolls up against it here.`
+              : 'Run a blueprint takeoff and the estimate rolls up by CSI division here.'}
+            action={<Button icon={<Ruler size={15} />} href={`${base}/takeoff`}>Go to Takeoff</Button>}
           />
-          {ctx && (
-            <StatStrip items={[
-              {href: `/app/projects/${projectId}/contracts`,  label: 'Original Contract', value: fmt0(originalContract), sub: 'The number the estimate answers to' },
-              {href: `/app/projects/${projectId}/contracts`,  label: 'Revised Contract', value: fmt0(revisedContract), sub: (Number(money?.approvedCoCount) || 0) + ' approved CO' + ((Number(money?.approvedCoCount) || 0) === 1 ? '' : 's') },
-              {href: `/app/projects/${projectId}/budget`,  label: 'Project Budget', value: fmt0(budgetOriginal), sub: budgetLineCount > 0 ? budgetLineCount + ' CSI-coded lines' : 'No budget lines yet' },
-              {href: `/app/projects/${projectId}/bid-packages`,  label: 'Bid Packages', value: String(bidPackages.length), sub: awardedPkgs.length > 0 ? awardedPkgs.length + ' awarded · ' + fmt0(awardedTotal) : 'None awarded yet' },
-              {href: `/app/projects/${projectId}/subs`,  label: 'Subs on the Job', value: String((ctx?.subs || []).length), sub: 'Ready to price scopes' },
-            ]} />
-          )}
-          <SectionCard flush>
-            <div>
-              <PremiumEmpty
-                icon={<Package size={30} weight="duotone" color="var(--text-secondary)" />}
-                title="No Takeoff Data Yet"
-                description={budgetOriginal > 0
-                  ? `The budget already carries ${fmt0(budgetOriginal)} across ${budgetLineCount} CSI line${budgetLineCount === 1 ? '' : 's'} — run a blueprint takeoff and the estimate rolls up division-by-division right against it.`
-                  : 'Run a blueprint analysis and the AI extracts quantities, prices them, and rolls the estimate up by CSI division here.'}
-                action={
-                  <a href={`/app/projects/${projectId}/takeoff`} style={goldButtonStyle} className="pmBtn">Go to Takeoff</a>
-                }
-              />
-              {ctx && (
-                <div style={{ padding: '0 20px 16px' }}>
-                  <FlowStrip steps={[
-                    { title: 'Upload Plans in Takeoff', desc: 'AI extracts CSI-coded quantities' },
-                    { title: 'Lines Price Themselves', desc: 'Unit costs extend' },
-                    { title: 'Divisions Roll Up Here' },
-                    { title: 'Estimate Meets Budget', desc: budgetLineCount > 0 ? `Against your ${budgetLineCount}-line budget` : 'Seed the budget from it' },
-                  ]} />
-                </div>
-              )}
+        </Card>
+      </PageShell>
+    );
+  }
+
+  const perSf = takeoff.square_footage > 0 ? takeoff.total_cost / takeoff.square_footage : null;
+  const stats: StatItem[] = [
+    { label: 'Estimate Total', value: fmt0(takeoff.total_cost), sub: perSf != null ? `${fmt(perSf)} / SF · ${takeoff.square_footage.toLocaleString()} SF` : `${takeoff.materials.length} lines · ${rollup.length} division${rollup.length === 1 ? '' : 's'}`, icon: <Calculator size={15} /> },
+    { label: 'Material Cost', value: fmt(takeoff.material_cost), icon: <Cube size={15} /> },
+    { label: 'Labor Cost', value: fmt(takeoff.labor_cost), sub: 'Carried outside the division rollup', icon: <Users size={15} /> },
+    ...(ctx ? [
+      { label: 'Est. vs. Budget', value: budgetOriginal > 0 ? fmtSigned(estBudgetDelta) : '—', tone: budgetOriginal > 0 ? (estBudgetDelta > 0 ? 'bad' : 'good') : 'default', sub: budgetOriginal > 0 ? (estBudgetDelta > 0 ? 'Estimate runs over the budget' : 'Estimate fits inside the budget') : 'Seed the budget to compare', icon: <Scales size={15} />, href: `${base}/budget` } as StatItem,
+      { label: 'Implied Margin', value: revisedContract > 0 ? fmt0(impliedMargin) : '—', tone: revisedContract > 0 ? (impliedMargin >= 0 ? 'good' : 'bad') : 'default', sub: revisedContract > 0 ? `${Math.round((impliedMargin / revisedContract) * 100)}% of revised contract` : 'Set the contract to see margin', icon: <ChartLineUp size={15} /> } as StatItem,
+    ] : []),
+  ];
+
+  const rollupCols: Column<RollupRow>[] = [
+    { key: 'div', header: 'Div', width: 64, groupable: false, render: r => <span style={{ fontFamily: 'monospace', fontWeight: 700, color: 'var(--text-primary)' }}>{r.div}</span> },
+    {
+      key: 'name', header: 'Division', primary: true, phone: 'show',
+      render: r => {
+        const pct = takeoff.material_cost > 0 ? (r.total / takeoff.material_cost) * 100 : 0;
+        return (
+          <div style={{ minWidth: 160 }}>
+            {r.name}
+            <div style={{ marginTop: 5, height: 4, width: '100%', maxWidth: 220, borderRadius: 999, background: 'var(--bg-surface-2)', overflow: 'hidden' }}>
+              <div style={{ height: '100%', width: Math.min(100, pct) + '%', borderRadius: 999, background: 'var(--chart-1)' }} />
             </div>
-          </SectionCard>
-        </>
-      ) : (
+          </div>
+        );
+      },
+    },
+    { key: 'count', header: 'Items', align: 'right', total: 'sum' },
+    { key: 'total', header: 'Estimate', align: 'right', phone: 'show', total: 'sum', format: fmt, render: r => <strong>{fmt(r.total)}</strong> },
+    { key: 'pct', header: '% of Materials', align: 'right', accessor: r => (takeoff.material_cost > 0 ? r.total / takeoff.material_cost : 0), render: r => `${(takeoff.material_cost > 0 ? (r.total / takeoff.material_cost) * 100 : 0).toFixed(1)}%` },
+  ];
+  if (hasBudget) {
+    rollupCols.push(
+      { key: 'budget', header: 'Budget', align: 'right', accessor: r => (r.budget > 0 ? r.budget : null), total: () => fmt(budgetOriginal), render: r => (r.budget > 0 ? fmt(r.budget) : '—') },
+      {
+        key: 'variance', header: 'Variance', align: 'right', phone: 'show', accessor: r => (r.budget > 0 ? r.total - r.budget : null),
+        total: () => <span style={{ color: varianceColor(matBudgetDelta) }}>{fmtSigned(matBudgetDelta)}</span>,
+        render: r => r.budget > 0
+          ? <span style={{ fontWeight: 700, color: varianceColor(r.total - r.budget) }}>{fmtSigned(r.total - r.budget)}</span>
+          : <span style={{ color: 'var(--text-tertiary)' }}>Not budgeted</span>,
+      },
+    );
+  }
+
+  const lineRows: LineRow[] = takeoff.materials.map((m, i) => ({ ...m, key: String(i) }));
+  const lineCols: Column<LineRow>[] = [
+    { key: 'csi_code', header: 'CSI Code', width: 110, render: m => <span style={{ fontFamily: 'monospace', fontWeight: 600, color: 'var(--text-primary)' }}>{m.csi_code || '—'}</span> },
+    { key: 'description', header: 'Description', primary: true, phone: 'show' },
+    { key: 'quantity', header: 'Quantity', align: 'right', render: m => m.quantity.toLocaleString() },
+    { key: 'unit', header: 'Unit' },
+    { key: 'unit_cost', header: 'Unit Cost', align: 'right', render: m => fmt(m.unit_cost) },
+    { key: 'total', header: 'Total', align: 'right', phone: 'show', total: 'sum', format: fmt, render: m => <strong>{fmt(m.total)}</strong> },
+  ];
+
+  return (
+    <PageShell
+      crumbs={crumbs}
+      title="Estimate"
+      subtitle={`From the latest takeoff — ${takeoff.materials.length} line${takeoff.materials.length === 1 ? '' : 's'} across ${rollup.length} CSI division${rollup.length === 1 ? '' : 's'}.`}
+      actions={
         <>
-          <ModuleHero
-            eyebrow={ctx?.project?.name || 'Estimating'}
-            eyebrowIcon={<Ruler size={13} weight="fill" color="var(--text-secondary)" />}
-            title="Project"
-            accent="Estimate"
-            subtitle={`Priced from the latest blueprint takeoff — ${takeoff.materials.length} line${takeoff.materials.length === 1 ? '' : 's'} across ${rollup.length} CSI division${rollup.length === 1 ? '' : 's'}`}
-            actions={
-              <button
-                onClick={exportCSV}
-                disabled={exporting}
-                className="pmBtn"
-                style={{ ...goldButtonStyle, opacity: exporting ? 0.6 : 1, cursor: exporting ? 'not-allowed' : 'pointer' }}
-              >
-                <DownloadSimple size={15} weight="bold" /> {exporting ? 'Exporting…' : 'Export CSV'}
-              </button>
-            }
-          />
+          <Button icon={<DownloadSimple size={15} />} onClick={exportCSV} disabled={exporting}>{exporting ? 'Exporting…' : 'Export CSV'}</Button>
+          <Button variant="primary" icon={<Ruler size={15} />} href={`${base}/takeoff`}>Open Takeoff</Button>
+        </>
+      }
+    >
+      <StatRow items={stats} />
 
-          {/* One summary: the estimate's own money, then how it sits against the budget and contract */}
-          <StatStrip items={[
-            {href: `/app/projects/${projectId}/estimate`,  label: 'Estimate Total', value: fmt0(takeoff.total_cost), sub: takeoff.materials.length + ' lines · ' + rollup.length + ' division' + (rollup.length === 1 ? '' : 's') },
-            {href: `/app/projects/${projectId}/estimate`,  label: 'Material Cost', value: fmt(takeoff.material_cost) },
-            {href: `/app/projects/${projectId}/estimate`,  label: 'Labor Cost', value: fmt(takeoff.labor_cost) },
-            {href: `/app/projects/${projectId}/estimate`,  label: 'Cost per SF', value: takeoff.square_footage > 0 ? fmt(takeoff.total_cost / takeoff.square_footage) : 'N/A', sub: takeoff.square_footage > 0 ? `${takeoff.square_footage.toLocaleString()} SF` : undefined },
-            ...(ctx ? [
-              {href: `/app/projects/${projectId}/budget`,  label: 'Est. vs. Budget', value: budgetOriginal > 0 ? fmtSigned(estBudgetDelta) : '—', accent: budgetOriginal > 0 ? (estBudgetDelta > 0 ? 'var(--danger)' : 'var(--success)') : undefined, sub: budgetOriginal > 0 ? (estBudgetDelta > 0 ? 'Estimate runs over the budget' : 'Estimate fits inside the budget') : 'Seed the budget to compare' },
-              {href: `/app/projects/${projectId}/estimate`,  label: 'Implied Margin', value: revisedContract > 0 ? fmt0(impliedMargin) : '—', accent: revisedContract > 0 ? (impliedMargin >= 0 ? 'var(--success)' : 'var(--danger)') : undefined, sub: revisedContract > 0 ? Math.round((impliedMargin / revisedContract) * 100) + '% of revised contract' : 'Set the contract to see margin' },
-            ] : []),
-          ]} />
-
-          {/* Division Rollup — canonical MasterFormat, tied to the budget */}
-          {rollup.length > 0 && (
-            <SectionCard
-              title="CSI Division Rollup"
-              subtitle={budgetLineCount > 0 ? 'Estimate vs. budget by MasterFormat division' : 'Material lines grouped by canonical MasterFormat division'}
-              icon={<Stack size={17} weight="duotone" color="var(--text-secondary)" />}
-              action={<a href={`/app/projects/${projectId}/budget`} style={{ fontSize: 12, fontWeight: 700, color: 'var(--link)', textDecoration: 'none' }}>{budgetLineCount > 0 ? 'Open Budget' : 'Seed the Budget'}</a>}
-              flush
-              style={{ marginBottom: 24 }}
-            >
-              <div style={{ overflowX: 'auto' }}>
-                <SortBar columns={EST_COLS.filter(c => budgetLineCount > 0 || !c.budgetOnly)} sort={estSort.sort} onChange={estSort.setSort} />
-                <table className="k-table" style={{ width: '100%', borderCollapse: 'collapse' }}>
-                  <thead>
-                    <tr>
-                      {EST_COLS.filter(c => budgetLineCount > 0 || !c.budgetOnly).map(c => (
-                        <SortTh key={c.key} col={c.key} label={c.label} sort={estSort.sort} onSort={estSort.cycle} align={c.key === 'div' || c.key === 'name' ? 'left' : 'right'} style={{ padding: '9px 14px', fontSize: 12, fontWeight: 700, color: T.muted, borderBottom: '1px solid rgba(255,255,255,0.12)', whiteSpace: 'nowrap' }} />
-                      ))}
-                    </tr>
-                  </thead>
-                  <tbody>
-                    {sortedRollup.map(r => {
-                      const pctOfMat = takeoff.material_cost > 0 ? (r.total / takeoff.material_cost) * 100 : 0;
-                      const variance = r.total - r.budget;
-                      return (
-                        <tr key={r.div} style={{ borderBottom: '1px solid rgba(255,255,255,0.06)' }}>
-                          <td style={{ padding: '9px 14px', color: 'var(--text-primary)', fontWeight: 700, fontFamily: 'monospace' }}>{r.div}</td>
-                          <td style={{ padding: '9px 14px', color: T.white, fontWeight: 600, minWidth: 180 }}>
-                            {r.name}
-                            <div style={{ marginTop: 5, height: 4, width: '100%', maxWidth: 220, borderRadius: 999, background: 'rgba(255,255,255,0.07)', overflow: 'hidden' }}>
-                              <div style={{ height: '100%', width: Math.min(100, pctOfMat) + '%', borderRadius: 999, background: 'var(--chart-1)' }} />
-                            </div>
-                          </td>
-                          <td style={{ padding: '9px 14px', textAlign: 'right', color: T.muted }}>{r.count}</td>
-                          <td style={{ padding: '9px 14px', textAlign: 'right', color: T.white, fontWeight: 700, whiteSpace: 'nowrap' }}>{fmt(r.total)}</td>
-                          <td style={{ padding: '9px 14px', textAlign: 'right', color: T.muted, whiteSpace: 'nowrap' }}>{pctOfMat.toFixed(1)}%</td>
-                          {budgetLineCount > 0 && (
-                            <>
-                              <td style={{ padding: '9px 14px', textAlign: 'right', color: r.budget > 0 ? T.white : T.muted, whiteSpace: 'nowrap' }}>{r.budget > 0 ? fmt(r.budget) : '—'}</td>
-                              <td style={{ padding: '9px 14px', textAlign: 'right', fontWeight: 700, whiteSpace: 'nowrap', color: r.budget > 0 ? (variance > 0 ? 'var(--danger)' : 'var(--success)') : T.muted }}>{r.budget > 0 ? fmtSigned(variance) : 'Not budgeted'}</td>
-                            </>
-                          )}
-                        </tr>
-                      );
-                    })}
-                  </tbody>
-                  <tfoot>
-                    <tr style={{ borderTop: '2px solid rgba(255,255,255,0.12)' }}>
-                      <td colSpan={2} style={{ padding: '10px 14px', fontWeight: 800, fontSize: 12, color: T.white, letterSpacing: 0.3 }}>All Divisions — Materials</td>
-                      <td style={{ padding: '10px 14px', textAlign: 'right', color: T.muted }}>{takeoff.materials.length}</td>
-                      <td style={{ padding: '10px 14px', textAlign: 'right', fontWeight: 800, color: 'var(--text-primary)', whiteSpace: 'nowrap' }}>{fmt(takeoff.material_cost)}</td>
-                      <td style={{ padding: '10px 14px', textAlign: 'right', color: T.muted }}>100%</td>
-                      {budgetLineCount > 0 && (
-                        <>
-                          <td style={{ padding: '10px 14px', textAlign: 'right', fontWeight: 700, color: T.white, whiteSpace: 'nowrap' }}>{fmt(budgetOriginal)}</td>
-                          <td style={{ padding: '10px 14px', textAlign: 'right', fontWeight: 800, whiteSpace: 'nowrap', color: matBudgetDelta > 0 ? 'var(--danger)' : 'var(--success)' }}>{fmtSigned(matBudgetDelta)}</td>
-                        </>
-                      )}
-                    </tr>
-                  </tfoot>
-                </table>
-              </div>
-              <div style={{ padding: '10px 14px', borderTop: '1px solid rgba(255,255,255,0.08)', fontSize: 12, color: 'var(--c-text-2)', lineHeight: 1.5 }}>
-                Labor of {fmt(takeoff.labor_cost)} is carried outside the division rollup — grand total {fmt(takeoff.total_cost)}.{budgetLineCount > 0 ? ' Division budgets come from the project budget lines; variance is estimate minus budget.' : ' Seed the project budget to see division-by-division variance here.'}
-              </div>
-            </SectionCard>
-          )}
-
-          {/* Line Items Table */}
-          <SectionCard flat
-            title="Line Items"
-            icon={<Rows size={17} weight="duotone" color="var(--text-secondary)" />}
-            action={<span style={{ fontSize: 12, color: T.muted }}>{takeoff.materials.length} items</span>}
+      {/* Division Rollup — canonical MasterFormat, tied to the budget */}
+      {rollup.length > 0 && (
+        <div style={{ marginBottom: 16 }}>
+          <Card
+            title="CSI Division Rollup"
+            icon={<Stack size={17} />}
+            subtitle={`Labor of ${fmt(takeoff.labor_cost)} sits outside the rollup — grand total ${fmt(takeoff.total_cost)}.`}
+            actions={<Button size="sm" variant="ghost" href={`${base}/budget`}>{hasBudget ? 'Open Budget' : 'Seed the Budget'}</Button>}
             flush
           >
-            <Table
-              headers={['CSI Code', 'Description', 'Quantity', 'Unit', 'Unit Cost', 'Total']}
-              rows={takeoff.materials.map(m => [
-                <span key="c" style={{ color: 'var(--text-primary)', fontWeight: 600, fontFamily: 'monospace' }}>{m.csi_code}</span>,
-                m.description,
-                <span key="q" style={{ color: T.white }}>{m.quantity.toLocaleString()}</span>,
-                <span key="u" style={{ color: T.muted }}>{m.unit}</span>,
-                <span key="uc" style={{ color: T.muted }}>{fmt(m.unit_cost)}</span>,
-                <span key="t" style={{ fontWeight: 600, color: T.white }}>{fmt(m.total)}</span>,
-              ])}
+            <DataTable<RollupRow>
+              tableId="project-estimate-rollup"
+              exportName="estimate-divisions"
+              columns={rollupCols}
+              rows={rollup}
+              rowKey={r => r.div}
+              defaultSort={{ key: 'div', dir: 'asc' }}
             />
-          </SectionCard>
-
-          {/* Summary Footer */}
-          <SectionCard flat
-            title="Estimate Summary"
-            icon={<Receipt size={17} weight="duotone" color="var(--text-secondary)" />}
-            style={{ marginTop: 20 }}
-          >
-            <div style={{ display: 'flex', justifyContent: 'flex-end', gap: 32, flexWrap: 'wrap' }}>
-              <div style={{ textAlign: 'right' }}>
-                <div style={{ fontSize: 12, fontWeight: 600, color: T.muted, marginBottom: 4 }}>Material Cost</div>
-                <div style={{ fontSize: 18, fontWeight: 700, color: T.white }}>{fmt(takeoff.material_cost)}</div>
-              </div>
-              <div style={{ textAlign: 'right' }}>
-                <div style={{ fontSize: 12, fontWeight: 600, color: T.muted, marginBottom: 4 }}>Labor Cost</div>
-                <div style={{ fontSize: 18, fontWeight: 700, color: T.white }}>{fmt(takeoff.labor_cost)}</div>
-              </div>
-              <div style={{ textAlign: 'right', paddingLeft: 24, borderLeft: `1px solid ${T.border}` }}>
-                <div style={{ fontSize: 12, fontWeight: 600, color: 'var(--text-primary)', marginBottom: 4 }}>Total</div>
-                <div style={{ fontSize: 22, fontWeight: 800, color: T.white }}>{fmt(takeoff.total_cost)}</div>
-              </div>
-              {takeoff.square_footage > 0 && (
-                <div style={{ textAlign: 'right' }}>
-                  <div style={{ fontSize: 12, fontWeight: 600, color: T.muted, marginBottom: 4 }}>Cost per SF</div>
-                  <div style={{ fontSize: 18, fontWeight: 700, color: 'var(--text-primary)' }}>{fmt(takeoff.total_cost / takeoff.square_footage)}</div>
-                </div>
-              )}
-              {budgetOriginal > 0 && (
-                <div style={{ textAlign: 'right', paddingLeft: 24, borderLeft: `1px solid ${T.border}` }}>
-                  <div style={{ fontSize: 12, fontWeight: 600, color: T.muted, marginBottom: 4 }}>vs. Budget</div>
-                  <div style={{ fontSize: 18, fontWeight: 700, color: estBudgetDelta > 0 ? 'var(--danger)' : 'var(--success)' }}>{fmtSigned(estBudgetDelta)}</div>
-                </div>
-              )}
-              {revisedContract > 0 && (
-                <div style={{ textAlign: 'right' }}>
-                  <div style={{ fontSize: 12, fontWeight: 600, color: T.muted, marginBottom: 4 }}>Implied Margin</div>
-                  <div style={{ fontSize: 18, fontWeight: 700, color: impliedMargin >= 0 ? 'var(--success)' : 'var(--danger)' }}>{fmt0(impliedMargin)}</div>
-                </div>
-              )}
-            </div>
-          </SectionCard>
-        </>
+          </Card>
+        </div>
       )}
-    </PremiumSurface>
+
+      <Card title="Line Items" icon={<Rows size={17} />} subtitle={`${takeoff.materials.length} item${takeoff.materials.length === 1 ? '' : 's'}`} flush>
+        <DataTable<LineRow>
+          tableId="project-estimate-lines"
+          exportName="estimate-lines"
+          columns={lineCols}
+          rows={lineRows}
+          rowKey={m => m.key}
+          empty={<EmptyState title="No line items on this takeoff" action={<Button href={`${base}/takeoff`}>Open Takeoff</Button>} />}
+        />
+      </Card>
+    </PageShell>
   );
 }

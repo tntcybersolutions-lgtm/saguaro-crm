@@ -1,19 +1,27 @@
 'use client';
+/**
+ * Cash Flow — the six-month forecast: receivables against payables per month,
+ * the running balance, retainage release, and the live contract / budget money.
+ *
+ * Reads  GET /api/projects/:id/cash-flow   (projection: project, periods, summary)
+ *        /api/project-context              (live contract + budget snapshot)
+ * The projection's own $0 figures defer to the live snapshot, so the screen
+ * never shows dead $0 space on a job that has real contract money.
+ */
 import React, { useState, useEffect, Suspense } from 'react';
 import { useProjectContext } from '@/lib/hooks/useProjectContext';
 import { useParams } from 'next/navigation';
-import {
-  PremiumSurface, ModuleHero, SectionCard, PremiumEmpty, StatStrip, InsightRow,
-  goldButtonStyle, goldOutlineButtonStyle,
-} from '@/components/ui/premium';
 import { ModuleSkeleton } from '@/components/ui/PageSkeleton';
 import {
-  ChartLineUp, ChartBar, Wallet,
-  Table as TableIcon, Buildings, WarningCircle, CaretDown, ArrowsClockwise,
+  PageShell, StatRow, Button, Card, DataTable, DetailList, EmptyState, Callout, ItemList, ItemRow,
+  Toast, useToast, type Column, type StatItem,
+} from '@/components/ui/kit';
+import {
+  ChartLineUp, ChartBar, Wallet, Buildings, WarningCircle, ArrowsClockwise,
+  ArrowDownLeft, ArrowUpRight, Scales, CalendarBlank, HandCoins,
 } from '@phosphor-icons/react';
 
-const GOLD = 'var(--brand-primary)', DARK = 'var(--bg-base)', RAISED = 'var(--bg-surface)', BORDER = 'rgba(255,255,255,0.12)', DIM = 'var(--text-secondary)', TEXT = 'var(--text-primary)';
-const GREEN = 'var(--success)', RED = 'var(--danger)';
+const GREEN = 'var(--success)', RED = 'var(--danger)', DIM = 'var(--text-secondary)';
 
 const fmt = (n: number) => '$' + (n || 0).toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
 const fmtK = (n: number) => {
@@ -22,6 +30,8 @@ const fmtK = (n: number) => {
   if (abs >= 1_000) return (n < 0 ? '-' : '') + '$' + (abs / 1_000).toFixed(0) + 'K';
   return fmt(n);
 };
+const fmt0 = (n: number) => '$' + (Number(n) || 0).toLocaleString('en-US', { maximumFractionDigits: 0 });
+const money = (n: number, color?: string) => <span style={{ color, fontWeight: 600 }}>{fmt(n)}</span>;
 
 interface LineItem {
   type: 'receivable' | 'payable' | 'retainage';
@@ -66,36 +76,32 @@ interface CashFlowData {
   summary: Summary;
 }
 
+type PeriodRow = Period & { idx: number };
+
 function CashFlowContent() {
   const { projectId } = useParams<{ projectId: string }>();
   const [data, setData] = useState<CashFlowData | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
   const [expandedRow, setExpandedRow] = useState<number | null>(null);
-  const [toast, setToast] = useState<{ msg: string; ok: boolean } | null>(null);
   const [generating, setGenerating] = useState(false);
+  const { toast, show } = useToast(4000);
 
   // Live project money snapshot (/api/project-context) — so this screen never
   // renders $0 dead space when the project has real contract money.
   const { ctx } = useProjectContext(projectId);
 
-  const money = ctx?.money;
+  const m = ctx?.money;
   const budget = ctx?.budget;
-  const ctxOriginal = Number(money?.originalContract) || 0;
-  const ctxCoTotal = Number(money?.approvedCoTotal) || 0;
-  const ctxRevised = Number(money?.revisedContract) || (ctxOriginal + ctxCoTotal);
-  const ctxBilled = Number(money?.billedToDate) || 0;
-  const ctxPaid = Number(money?.paidToDate) || 0;
+  const ctxOriginal = Number(m?.originalContract) || 0;
+  const ctxCoTotal = Number(m?.approvedCoTotal) || 0;
+  const ctxRevised = Number(m?.revisedContract) || (ctxOriginal + ctxCoTotal);
+  const ctxBilled = Number(m?.billedToDate) || 0;
+  const ctxPaid = Number(m?.paidToDate) || 0;
   const ctxOutstanding = Math.max(0, ctxBilled - ctxPaid);
   const budgetOriginal = Number(budget?.original) || 0;
   const budgetCommitted = Number(budget?.committed) || 0;
   const budgetActual = Number(budget?.actual) || 0;
-  const fmt0 = (n: number) => '$' + (Number(n) || 0).toLocaleString('en-US', { maximumFractionDigits: 0 });
-
-  function showToast(msg: string, ok = true) {
-    setToast({ msg, ok });
-    setTimeout(() => setToast(null), 4000);
-  }
 
   async function loadData() {
     setLoading(true);
@@ -106,14 +112,17 @@ function CashFlowContent() {
       const d = await r.json();
       // DB numerics can round-trip as strings — coerce every money field once
       // on ingest so chart math and totals never string-concat dollars.
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
       const num = (x: any) => Number(x) || 0;
       if (d && d.project) {
         d.project = { ...d.project, contract_amount: num(d.project.contract_amount), adjusted_contract: num(d.project.adjusted_contract), retainage_pct: num(d.project.retainage_pct), total_billed: num(d.project.total_billed), remaining_to_bill: num(d.project.remaining_to_bill), total_retainage_held: num(d.project.total_retainage_held) };
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
         d.periods = (d.periods || []).map((per: any) => ({ ...per, receivables: num(per.receivables), payables: num(per.payables), retainage_release: num(per.retainage_release), net: num(per.net), running_balance: num(per.running_balance), line_items: (per.line_items || []).map((li: any) => ({ ...li, amount: num(li.amount) })) }));
         d.summary = { ...(d.summary || {}), total_receivables: num(d.summary?.total_receivables), total_payables: num(d.summary?.total_payables), net_cash_flow: num(d.summary?.net_cash_flow), retainage_due: num(d.summary?.retainage_due), danger_zone: !!d.summary?.danger_zone };
       }
       setData(d);
-    } catch {
+    } catch (e) {
+      console.error('[cash-flow] load failed', e);
       setError('Unable to generate cash flow projection.');
     } finally {
       setLoading(false);
@@ -129,38 +138,49 @@ function CashFlowContent() {
     setGenerating(true);
     await loadData();
     setGenerating(false);
-    showToast('Projection refreshed with the latest data.');
+    show('Projection refreshed with the latest data.');
   }
 
-  if (loading) {
+  const base = `/app/projects/${projectId}`;
+  const crumbs = [
+    { label: 'Projects', href: '/app/projects' },
+    { label: ctx?.project?.name || 'Project', href: `${base}/overview` },
+    { label: 'Cash flow' },
+  ];
+  const refresh = (
+    <Button variant="primary" icon={<ArrowsClockwise size={15} weight="bold" />} onClick={handleGenerate} disabled={generating || loading}>
+      {generating ? 'Refreshing…' : 'Generate projection'}
+    </Button>
+  );
+
+  if (loading && !data) {
     return (
-      <PremiumSurface>
-        <ModuleSkeleton kpis={4} rows={6} />
-      </PremiumSurface>
+      <PageShell crumbs={crumbs} title="Cash flow" subtitle="Six-month forecast of receivables, payables and retainage." actions={refresh}>
+        <StatRow items={['Net cash flow (6 mo)', 'Receivables (30 days)', 'Payables (30 days)', 'Retainage due'].map((label) => ({ label, value: '—' }))} />
+        <ModuleSkeleton hero={false} kpis={0} rows={6} />
+      </PageShell>
     );
   }
 
   if (error || !data) {
     return (
-      <PremiumSurface>
+      <PageShell crumbs={crumbs} title="Cash flow" subtitle="Six-month forecast of receivables, payables and retainage." actions={refresh}>
         {ctx && (
-          <StatStrip items={[
-            {href: `/app/projects/${projectId}/contracts`,  label: 'Revised Contract', value: fmt0(ctxRevised), sub: (Number(money?.approvedCoCount) || 0) + ' approved COs' },
-            {href: `/app/projects/${projectId}/cash-flow`,  label: 'Billed to Date', value: fmt0(ctxBilled), sub: (Number(money?.billedPct) || 0) + '% of revised' },
-            {href: `/app/projects/${projectId}/cash-flow`,  label: 'Collected', value: fmt0(ctxPaid), accent: GREEN, sub: 'Paid on the contract' },
-            {href: `/app/projects/${projectId}/cash-flow`,  label: 'Outstanding AR', value: fmt0(ctxOutstanding), accent: ctxOutstanding > 0 ? undefined : GREEN, sub: 'Billed, not collected' },
+          <StatRow items={[
+            { label: 'Revised contract', value: fmt0(ctxRevised), sub: (Number(m?.approvedCoCount) || 0) + ' approved COs', href: `${base}/contracts`, icon: <Buildings size={15} /> },
+            { label: 'Billed to date', value: fmt0(ctxBilled), sub: (Number(m?.billedPct) || 0) + '% of revised', icon: <ChartLineUp size={15} /> },
+            { label: 'Collected', value: fmt0(ctxPaid), tone: 'good', sub: 'Paid on the contract', icon: <HandCoins size={15} /> },
+            { label: 'Outstanding AR', value: fmt0(ctxOutstanding), tone: ctxOutstanding > 0 ? 'default' : 'good', sub: 'Billed, not collected', icon: <Wallet size={15} /> },
           ]} />
         )}
-        <SectionCard>
-          <PremiumEmpty
-            tone="error"
-            icon={<WarningCircle size={30} weight="duotone" color={RED} />}
-            title="Couldn't Generate Cash Flow"
-            description={error || (ctx ? 'The projection did not return — the live contract money above is still current. Retry to rebuild the 6-month forecast.' : 'No data available.')}
-            action={<button onClick={loadData} style={goldOutlineButtonStyle} className="pmBtn">Retry</button>}
-          />
-        </SectionCard>
-      </PremiumSurface>
+        <EmptyState
+          icon={<WarningCircle size={22} />}
+          title="Couldn't generate the cash flow"
+          text={error || (ctx ? 'The projection did not return. The live contract money above is still current.' : 'No data available.')}
+          action={<Button onClick={loadData}>Try again</Button>}
+        />
+        <Toast message={toast?.message ?? null} tone={toast?.tone} />
+      </PageShell>
     );
   }
 
@@ -178,324 +198,159 @@ function CashFlowContent() {
     1
   );
 
-  // The page's one summary row: the forecast. The live contract money
-  // (contract, billed, collected, AR, committed, cost) is not repeated here —
-  // it sits in the Budget & Collections and Contract Position panels below.
-  const kpis = [
-    { label: 'Net Cash Flow (6mo)', value: fmt(summary.net_cash_flow), sub: summary.danger_zone ? 'Goes negative — review' : 'Incl. retainage release', accent: summary.net_cash_flow >= 0 ? GREEN : RED, href: `/app/projects/${projectId}/cash-flow` },
-    { label: 'Expected Receivables (30d)', value: fmt(Number(periods[0]?.receivables) || 0), sub: periods[0]?.month, href: `/app/projects/${projectId}/cash-flow` },
-    { label: 'Scheduled Payables (30d)', value: fmt(Number(periods[0]?.payables) || 0), sub: periods[0]?.month, href: `/app/projects/${projectId}/cash-flow` },
-    { label: 'Retainage Due', value: fmt(summary.retainage_due), sub: 'Held at ' + (Number(project.retainage_pct) || 0) + '%', href: `/app/projects/${projectId}/cash-flow` },
+  // The page's one summary row: the forecast. The live contract money sits in
+  // the Budget & collections and Contract position cards below.
+  const kpis: StatItem[] = [
+    { label: 'Net cash flow (6 mo)', value: fmt(summary.net_cash_flow), sub: summary.danger_zone ? 'Goes negative — review' : 'Incl. retainage release', tone: summary.net_cash_flow >= 0 ? 'good' : 'bad', icon: <ChartLineUp size={15} /> },
+    { label: 'Receivables (30 days)', value: fmt(Number(periods[0]?.receivables) || 0), sub: periods[0]?.month, icon: <ArrowDownLeft size={15} /> },
+    { label: 'Payables (30 days)', value: fmt(Number(periods[0]?.payables) || 0), sub: periods[0]?.month, icon: <ArrowUpRight size={15} /> },
+    { label: 'Retainage due', value: fmt(summary.retainage_due), sub: 'Held at ' + (Number(project.retainage_pct) || 0) + '%', icon: <Scales size={15} /> },
   ];
 
+  const rows: PeriodRow[] = periods.map((p, idx) => ({ ...p, idx }));
+  const columns: Column<PeriodRow>[] = [
+    { key: 'month', header: 'Period', primary: true, sortable: false, render: p => <span style={{ color: p.running_balance < 0 ? RED : undefined }}>{p.month}</span> },
+    { key: 'receivables', header: 'Receivables', align: 'right', sortable: false, format: fmt, total: () => money(summary.total_receivables, GREEN), render: p => money(p.receivables, GREEN) },
+    { key: 'payables', header: 'Payables', align: 'right', sortable: false, format: fmt, total: () => money(summary.total_payables, RED), render: p => money(p.payables, RED) },
+    { key: 'net', header: 'Net', align: 'right', sortable: false, phone: 'show', format: fmt, total: () => money(summary.net_cash_flow, summary.net_cash_flow >= 0 ? GREEN : RED), render: p => <strong style={{ color: p.net >= 0 ? GREEN : RED }}>{fmt(p.net)}</strong> },
+    { key: 'running_balance', header: 'Running balance', align: 'right', sortable: false, phone: 'show', total: () => '—', render: p => <strong style={{ color: p.running_balance < 0 ? RED : undefined }}>{fmt(p.running_balance)}</strong> },
+  ];
+  const open = expandedRow != null ? periods[expandedRow] : null;
+  const variance = budgetOriginal - budgetActual;
+
   return (
-    <PremiumSurface>
-      {/* Toast */}
-      {toast && (
-        <div style={{
-          position: 'fixed', top: 24, right: 24, zIndex: 9999,
-          background: toast.ok ? 'var(--success)' : 'var(--danger)',
-          color: 'var(--text-primary)', padding: '12px 24px', borderRadius: 8,
-          border: `1px solid ${toast.ok ? GREEN : RED}`,
-          fontSize: 13, fontWeight: 600, boxShadow: '0 4px 20px rgba(0,0,0,.5)',
-        }}>
-          {toast.msg}
-        </div>
-      )}
+    <PageShell
+      crumbs={crumbs}
+      title="Cash flow"
+      subtitle={<>{project.name} · Contract {fmt(adjContract)}{ctxCoTotal !== 0 ? <> · {Number(m?.approvedCoCount) || 0} approved COs</> : null}</>}
+      actions={refresh}
+    >
+      <StatRow items={kpis} />
 
-      {/* Danger zone pulse animation */}
       {summary.danger_zone && (
-        <style>{`
-          @keyframes dangerPulse {
-            0%, 100% { box-shadow: 0 0 0 0 rgba(248,113,113,0.4); }
-            50% { box-shadow: 0 0 20px 4px rgba(248,113,113,0.6); }
-          }
-        `}</style>
+        <Callout tone="danger" icon={<WarningCircle size={18} weight="fill" />} title="Cash goes negative" text="The running balance drops below zero in a projected month. Review payment schedules." />
       )}
 
-      {/* Header */}
-      <ModuleHero
-        eyebrow="Financial"
-        eyebrowIcon={<ChartLineUp size={13} weight="fill" color="var(--text-secondary)" />}
-        title="Cash Flow"
-        accent="Forecast"
-        subtitle={<>{project.name} &middot; Contract: {fmt(adjContract)}{ctxCoTotal !== 0 ? <> &middot; {Number(money?.approvedCoCount) || 0} approved COs</> : null}</>}
-        actions={
-          <button
-            onClick={handleGenerate}
-            disabled={generating}
-            className="pmBtn"
-            style={{ ...goldButtonStyle, cursor: generating ? 'wait' : 'pointer', opacity: generating ? 0.6 : 1 }}
-          >
-            <ArrowsClockwise size={15} weight="bold" />
-            {generating ? 'Refreshing…' : 'Generate Projection'}
-          </button>
-        }
-      />
-
-      <StatStrip items={kpis} />
-
-      {/* Danger Zone Banner */}
-      {summary.danger_zone && (
-        <div style={{
-          background: 'rgba(248,113,113,0.12)', border: `1px solid ${RED}`, borderRadius: 12,
-          padding: '14px 20px', marginBottom: 20, display: 'flex', alignItems: 'center', gap: 12,
-          animation: 'dangerPulse 2s ease-in-out infinite',
-        }}>
-          <WarningCircle size={22} weight="fill" color="var(--danger)" />
-          <div>
-            <div style={{ color: 'var(--danger)', fontWeight: 700, fontSize: 14 }}>Negative Cash Flow Detected</div>
-            <div style={{ color: DIM, fontSize: 12 }}>Running balance goes negative in projected periods. Review payment schedules.</div>
-          </div>
-        </div>
-      )}
-
-      {/* Cash Flow Chart */}
-      <SectionCard flat
-        title="6-Month Cash Flow Projection"
-        icon={<ChartBar size={17} weight="duotone" color="var(--text-secondary)" />}
-        style={{ marginBottom: 24 }}
-      >
-        {/* Chart legend */}
-        <div style={{ display: 'flex', gap: 20, marginBottom: 16, fontSize: 12, color: DIM }}>
+      {/* Cash flow chart */}
+      <Card title="6-month projection" icon={<ChartBar size={18} />}>
+        <div style={{ display: 'flex', gap: 20, marginBottom: 16, fontSize: 12, color: DIM, flexWrap: 'wrap' }}>
           <span><span style={{ display: 'inline-block', width: 10, height: 10, borderRadius: 2, background: GREEN, marginRight: 6, verticalAlign: 'middle' }} />Receivables</span>
           <span><span style={{ display: 'inline-block', width: 10, height: 10, borderRadius: 2, background: RED, marginRight: 6, verticalAlign: 'middle' }} />Payables</span>
           <span><span style={{ display: 'inline-block', width: 10, height: 10, borderRadius: 2, background: 'var(--info)', marginRight: 6, verticalAlign: 'middle' }} />Net</span>
         </div>
 
-        {/* Bars */}
-        <div style={{ display: 'flex', gap: 8, alignItems: 'flex-end', height: 200, paddingBottom: 30, position: 'relative' as const }}>
+        <div style={{ display: 'flex', gap: 8, alignItems: 'flex-end', height: 200, paddingBottom: 30, position: 'relative', overflowX: 'auto' }}>
           {/* Zero line */}
-          <div style={{
-            position: 'absolute' as const, bottom: 30, left: 0, right: 0,
-            height: 1, background: BORDER,
-          }} />
+          <div style={{ position: 'absolute', bottom: 30, left: 0, right: 0, height: 1, background: 'var(--border-default)' }} />
 
           {periods.map((period, i) => {
             const recHeight = maxVal > 0 ? (period.receivables / maxVal) * 150 : 0;
             const payHeight = maxVal > 0 ? (period.payables / maxVal) * 150 : 0;
-            const netPct = maxVal > 0 ? (Math.abs(period.net) / maxVal) * 150 : 0;
             const isNegNet = period.net < 0;
             const isDanger = period.running_balance < 0;
 
             return (
-              <div key={i} style={{ flex: 1, display: 'flex', flexDirection: 'column' as const, alignItems: 'center', position: 'relative' as const }}>
+              <button
+                key={i}
+                type="button"
+                onClick={() => setExpandedRow(expandedRow === i ? null : i)}
+                aria-pressed={expandedRow === i}
+                aria-label={`${period.month}: net ${fmt(period.net)}`}
+                style={{ all: 'unset', cursor: 'pointer', flex: 1, minWidth: 52, display: 'flex', flexDirection: 'column', alignItems: 'center', position: 'relative' }}
+              >
                 <div style={{ display: 'flex', gap: 3, alignItems: 'flex-end', height: 160 }}>
-                  {/* Receivables bar */}
-                  <div style={{
-                    width: 24, height: Math.max(recHeight, 4), borderRadius: '4px 4px 0 0',
-                    background: `linear-gradient(180deg, ${GREEN}, rgba(74,222,128,0.45))`,
-                    transition: 'height 0.4s ease',
-                  }} title={`Receivables: ${fmt(period.receivables)}`} />
-
-                  {/* Payables bar */}
-                  <div style={{
-                    width: 24, height: Math.max(payHeight, 4), borderRadius: '4px 4px 0 0',
-                    background: `linear-gradient(180deg, ${RED}, rgba(248,113,113,0.45))`,
-                    transition: 'height 0.4s ease',
-                  }} title={`Payables: ${fmt(period.payables)}`} />
+                  <div style={{ width: 24, height: Math.max(recHeight, 4), borderRadius: '4px 4px 0 0', background: `linear-gradient(180deg, ${GREEN}, color-mix(in srgb, ${GREEN} 45%, transparent))`, transition: 'height 0.4s ease' }} title={`Receivables: ${fmt(period.receivables)}`} />
+                  <div style={{ width: 24, height: Math.max(payHeight, 4), borderRadius: '4px 4px 0 0', background: `linear-gradient(180deg, ${RED}, color-mix(in srgb, ${RED} 45%, transparent))`, transition: 'height 0.4s ease' }} title={`Payables: ${fmt(period.payables)}`} />
                 </div>
-
-                {/* Net indicator */}
-                <div style={{
-                  width: 52, height: 4, borderRadius: 2, marginTop: 4,
-                  background: isNegNet ? RED : 'var(--info)',
-                  boxShadow: isDanger ? `0 0 8px ${RED}` : 'none',
-                }} title={`Net: ${fmt(period.net)}`} />
-
-                {/* Month label */}
-                <div style={{
-                  fontSize: 12, color: isDanger ? 'var(--danger)' : DIM, fontWeight: isDanger ? 700 : 500,
-                  marginTop: 6, textAlign: 'center' as const,
-                }}>
-                  {period.month}
-                </div>
-
-                {/* Amount labels */}
-                <div style={{ fontSize: 12, color: DIM, textAlign: 'center' as const, marginTop: 2 }}>
-                  {fmtK(period.net)}
-                </div>
-              </div>
+                <div style={{ width: 52, height: 4, borderRadius: 2, marginTop: 4, background: isNegNet ? RED : 'var(--info)', boxShadow: isDanger ? `0 0 8px ${RED}` : 'none' }} title={`Net: ${fmt(period.net)}`} />
+                <div style={{ fontSize: 12, color: isDanger ? RED : expandedRow === i ? 'var(--text-primary)' : DIM, fontWeight: isDanger || expandedRow === i ? 700 : 500, marginTop: 6, textAlign: 'center' }}>{period.month}</div>
+                <div style={{ fontSize: 12, color: DIM, textAlign: 'center', marginTop: 2 }}>{fmtK(period.net)}</div>
+              </button>
             );
           })}
         </div>
-      </SectionCard>
+      </Card>
 
-      {/* Detail Table */}
-      <SectionCard
-        title="Period Detail"
-        icon={<TableIcon size={17} weight="duotone" color="var(--text-secondary)" />}
-        flush
-        style={{ marginBottom: 24 }}
-      >
-        {/* Table header */}
-        <div style={{
-          display: 'grid', gridTemplateColumns: '160px 1fr 1fr 1fr 1fr 40px',
-          padding: '10px 20px', borderBottom: `1px solid ${BORDER}`,
-          fontSize: 12, fontWeight: 700, color: DIM,
-        }}>
-          <div>Period</div>
-          <div style={{ textAlign: 'right' as const }}>Receivables</div>
-          <div style={{ textAlign: 'right' as const }}>Payables</div>
-          <div style={{ textAlign: 'right' as const }}>Net</div>
-          <div style={{ textAlign: 'right' as const }}>Running Balance</div>
-          <div />
-        </div>
+      {/* Period detail — tap a month for its line items */}
+      <DataTable<PeriodRow>
+        tableId="project-cash-flow"
+        exportName="cash-flow"
+        columns={columns}
+        rows={rows}
+        loading={loading}
+        rowKey={p => p.idx}
+        rowStyle={p => (p.running_balance < 0 ? { background: 'color-mix(in srgb, var(--danger) 8%, transparent)' } : undefined)}
+        isSelected={p => p.idx === expandedRow}
+        onRowClick={p => setExpandedRow(expandedRow === p.idx ? null : p.idx)}
+        empty={<EmptyState icon={<CalendarBlank size={22} />} title="No projected periods" text="Bill a pay application or schedule a commitment payment and the months fill in." />}
+      />
 
-        {/* Table rows */}
-        {periods.map((period, i) => {
-          const isExpanded = expandedRow === i;
-          const isDanger = period.running_balance < 0;
-
-          return (
-            <React.Fragment key={i}>
-              <div
-                onClick={() => setExpandedRow(isExpanded ? null : i)}
-                style={{
-                  display: 'grid', gridTemplateColumns: '160px 1fr 1fr 1fr 1fr 40px',
-                  padding: '14px 20px', borderBottom: `1px solid rgba(255,255,255,0.08)`,
-                  cursor: 'pointer', fontSize: 13,
-                  background: isDanger ? 'rgba(248,113,113,0.08)' : 'transparent',
-                  transition: 'background 0.2s',
-                }}
-                onMouseEnter={(e) => { if (!isDanger) e.currentTarget.style.background = 'var(--bg-row-hover)'; }}
-                onMouseLeave={(e) => { if (!isDanger) e.currentTarget.style.background = 'transparent'; }}
-              >
-                <div style={{ color: TEXT, fontWeight: 600 }}>{period.month}</div>
-                <div style={{ textAlign: 'right' as const, color: GREEN, fontWeight: 600 }}>{fmt(period.receivables)}</div>
-                <div style={{ textAlign: 'right' as const, color: RED, fontWeight: 600 }}>{fmt(period.payables)}</div>
-                <div style={{
-                  textAlign: 'right' as const, fontWeight: 700,
-                  color: period.net >= 0 ? GREEN : RED,
-                }}>
-                  {fmt(period.net)}
-                </div>
-                <div style={{
-                  textAlign: 'right' as const, fontWeight: 700,
-                  color: isDanger ? 'var(--danger)' : TEXT,
-                }}>
-                  {fmt(period.running_balance)}
-                </div>
-                <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', color: DIM, transition: 'transform 0.2s', transform: isExpanded ? 'rotate(180deg)' : 'rotate(0deg)' }}>
-                  <CaretDown size={14} weight="bold" />
-                </div>
-              </div>
-
-              {/* Expanded line items */}
-              {isExpanded && (
-                <div style={{
-                  background: 'var(--bg-surface-2)', borderBottom: `1px solid rgba(255,255,255,0.08)`,
-                  padding: '12px 20px 12px 40px',
-                }}>
-                  {period.line_items.length === 0 ? (
-                    <div style={{ fontSize: 12, color: DIM, fontStyle: 'italic' as const }}>No detailed line items for this period.</div>
-                  ) : (
-                    period.line_items.map((item, j) => (
-                      <div key={j} style={{
-                        display: 'flex', justifyContent: 'space-between', alignItems: 'center',
-                        padding: '6px 0', borderBottom: j < period.line_items.length - 1 ? `1px solid rgba(255,255,255,0.08)` : 'none',
-                      }}>
-                        <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
-                          <div style={{
-                            width: 8, height: 8, borderRadius: '50%',
-                            background: item.type === 'receivable' ? GREEN : item.type === 'retainage' ? 'var(--info)' : RED,
-                          }} />
-                          <span style={{ fontSize: 12, color: TEXT }}>{item.label}</span>
-                        </div>
-                        <span style={{
-                          fontSize: 12, fontWeight: 600,
-                          color: item.amount >= 0 ? GREEN : RED,
-                        }}>
-                          {item.amount >= 0 ? '+' : ''}{fmt(item.amount)}
-                        </span>
-                      </div>
-                    ))
-                  )}
-                  {period.retainage_release > 0 && (
-                    <div style={{
-                      marginTop: 8, padding: '8px 12px', background: 'var(--bg-surface-2)',
-                      borderRadius: 6, border: '1px solid var(--border-default)',
-                      fontSize: 12, color: 'var(--text-primary)',
-                    }}>
-                      Retainage release scheduled: {fmt(period.retainage_release)}
-                    </div>
-                  )}
-                </div>
+      {open && (
+        <Card
+          title={`${open.month} detail`}
+          subtitle={`Net ${fmt(open.net)} · running balance ${fmt(open.running_balance)}`}
+          icon={<CalendarBlank size={18} />}
+          actions={<Button size="sm" variant="ghost" onClick={() => setExpandedRow(null)}>Close</Button>}
+          flush
+        >
+          {open.line_items.length === 0 && !(open.retainage_release > 0) ? (
+            <EmptyState title="No detailed line items for this period" />
+          ) : (
+            <ItemList>
+              {open.line_items.map((item, j) => (
+                <ItemRow
+                  key={j}
+                  icon={item.type === 'receivable' ? <ArrowDownLeft size={16} /> : item.type === 'retainage' ? <Scales size={16} /> : <ArrowUpRight size={16} />}
+                  tone={item.type === 'receivable' ? 'success' : item.type === 'retainage' ? 'info' : 'danger'}
+                  title={item.label}
+                  value={<span style={{ color: item.amount >= 0 ? GREEN : RED, fontWeight: 700 }}>{item.amount >= 0 ? '+' : ''}{fmt(item.amount)}</span>}
+                />
+              ))}
+              {open.retainage_release > 0 && (
+                <ItemRow icon={<Scales size={16} />} tone="info" title="Retainage release scheduled" value={<strong>{fmt(open.retainage_release)}</strong>} />
               )}
-            </React.Fragment>
-          );
-        })}
-
-        {/* Summary footer */}
-        <div style={{
-          display: 'grid', gridTemplateColumns: '160px 1fr 1fr 1fr 1fr 40px',
-          padding: '14px 20px', background: 'var(--bg-surface-2)',
-          borderTop: '2px solid var(--border-strong)',
-          fontSize: 13, fontWeight: 800,
-        }}>
-          <div style={{ color: 'var(--text-primary)' }}>Total</div>
-          <div style={{ textAlign: 'right' as const, color: GREEN }}>{fmt(summary.total_receivables)}</div>
-          <div style={{ textAlign: 'right' as const, color: RED }}>{fmt(summary.total_payables)}</div>
-          <div style={{ textAlign: 'right' as const, color: summary.net_cash_flow >= 0 ? GREEN : RED }}>
-            {fmt(summary.net_cash_flow)}
-          </div>
-          <div style={{ textAlign: 'right' as const, color: TEXT }}>—</div>
-          <div />
-        </div>
-      </SectionCard>
+            </ItemList>
+          )}
+        </Card>
+      )}
 
       {/* Live budget + collections — committed vs actual from the project snapshot */}
       {ctx && (
-        <SectionCard flat title="Budget & Collections" icon={<Wallet size={17} weight="duotone" color="var(--text-secondary)" />} subtitle={`${Number(budget?.lineCount) || 0} budget lines — committed vs actual, plus what the owner still owes`} style={{ marginBottom: 24 }}>
-          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(230px, 1fr))', gap: '0 40px' }}>
-            <div>
-              <InsightRow label="Budget (Original)" value={fmt0(budgetOriginal)} />
-              <InsightRow label="Committed" value={fmt0(budgetCommitted)} />
-              <InsightRow label="Actual Cost to Date" value={fmt0(budgetActual)} accent={budgetCommitted > 0 && budgetActual > budgetCommitted ? RED : undefined} />
-              <InsightRow label="Budget Variance" value={(budgetOriginal - budgetActual >= 0 ? '+' : '-') + fmt0(Math.abs(budgetOriginal - budgetActual))} accent={budgetOriginal - budgetActual >= 0 ? GREEN : RED} strong />
-            </div>
-            <div>
-              <InsightRow label="Billed to Date" value={`${fmt0(ctxBilled)} (${Number(money?.billedPct) || 0}%)`} />
-              <InsightRow label="Collected" value={fmt0(ctxPaid)} accent={GREEN} />
-              <InsightRow label="Outstanding AR" value={fmt0(ctxOutstanding)} accent={ctxOutstanding > 0 ? undefined : GREEN} strong />
-              <InsightRow label="Pay Applications" value={`${Number(money?.payAppCount) || 0}${money?.lastPayApp ? ' — last #' + money.lastPayApp.appNumber : ''}`} />
-            </div>
+        <Card title="Budget & collections" icon={<Wallet size={18} />} subtitle={`${Number(budget?.lineCount) || 0} budget lines — committed vs actual, plus what the owner still owes`}>
+          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(min(100%, 260px), 1fr))', gap: '0 40px' }}>
+            <DetailList items={[
+              ['Budget (original)', fmt0(budgetOriginal)],
+              ['Committed', fmt0(budgetCommitted)],
+              ['Actual cost to date', <span key="a" style={{ color: budgetCommitted > 0 && budgetActual > budgetCommitted ? RED : undefined }}>{fmt0(budgetActual)}</span>],
+              ['Budget variance', <strong key="v" style={{ color: variance >= 0 ? GREEN : RED }}>{(variance >= 0 ? '+' : '-') + fmt0(Math.abs(variance))}</strong>],
+            ]} />
+            <DetailList items={[
+              ['Billed to date', `${fmt0(ctxBilled)} (${Number(m?.billedPct) || 0}%)`],
+              ['Collected', <span key="c" style={{ color: GREEN }}>{fmt0(ctxPaid)}</span>],
+              ['Outstanding AR', <strong key="o" style={{ color: ctxOutstanding > 0 ? undefined : GREEN }}>{fmt0(ctxOutstanding)}</strong>],
+              ['Pay applications', `${Number(m?.payAppCount) || 0}${m?.lastPayApp ? ' — last #' + m.lastPayApp.appNumber : ''}`],
+            ]} />
           </div>
-        </SectionCard>
+        </Card>
       )}
 
-      {/* Project context card */}
-      <SectionCard flat title="Contract Position" icon={<Buildings size={17} weight="duotone" color="var(--text-secondary)" />}>
-        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(160px, 1fr))', gap: 20 }}>
-          <div>
-            <div style={{ fontSize: 12, color: DIM, fontWeight: 600, marginBottom: 4 }}>Adjusted Contract</div>
-            <div style={{ fontSize: 16, fontWeight: 700, color: TEXT }}>{fmt(adjContract)}</div>
-          </div>
-          <div>
-            <div style={{ fontSize: 12, color: DIM, fontWeight: 600, marginBottom: 4 }}>Billed to Date</div>
-            <div style={{ fontSize: 16, fontWeight: 700, color: TEXT }}>{fmt(billedToDate)}</div>
-          </div>
-          <div>
-            <div style={{ fontSize: 12, color: DIM, fontWeight: 600, marginBottom: 4 }}>Remaining to Bill</div>
-            <div style={{ fontSize: 16, fontWeight: 700, color: 'var(--text-primary)' }}>{fmt(remainingToBill)}</div>
-          </div>
-          <div>
-            <div style={{ fontSize: 12, color: DIM, fontWeight: 600, marginBottom: 4 }}>Retainage Held ({project.retainage_pct}%)</div>
-            <div style={{ fontSize: 16, fontWeight: 700, color: 'var(--text-primary)' }}>{fmt(project.total_retainage_held)}</div>
-          </div>
-        </div>
-      </SectionCard>
-    </PremiumSurface>
+      <Card title="Contract position" icon={<Buildings size={18} />}>
+        <DetailList items={[
+          ['Adjusted contract', fmt(adjContract)],
+          ['Billed to date', fmt(billedToDate)],
+          ['Remaining to bill', fmt(remainingToBill)],
+          [`Retainage held (${project.retainage_pct}%)`, fmt(project.total_retainage_held)],
+        ]} />
+      </Card>
+
+      <Toast message={toast?.message ?? null} tone={toast?.tone} />
+    </PageShell>
   );
 }
 
 export default function CashFlowPage() {
   return (
-    <Suspense fallback={
-      <PremiumSurface>
-        <ModuleSkeleton kpis={4} rows={6} />
-      </PremiumSurface>
-    }>
+    <Suspense fallback={<ModuleSkeleton kpis={4} rows={6} />}>
       <CashFlowContent />
     </Suspense>
   );

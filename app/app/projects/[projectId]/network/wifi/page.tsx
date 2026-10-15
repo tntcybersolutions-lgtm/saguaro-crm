@@ -1,23 +1,25 @@
 'use client';
-
-import { useState, useEffect, useCallback } from 'react';
+/**
+ * Network › WiFi — SSIDs and access points for the job, plus the hand-off to
+ * Signal Studio (where coverage is actually designed) and its saved designs.
+ *
+ * Reads  GET  /api/network/projects?projectId=  →  GET /api/network/wifi | /api/network/access-points ?networkProjectId=
+ *        GET  /api/heatmap/designs?projectId=    (saved Signal Studio designs)
+ * Writes POST /api/network/wifi                  { ...ssid, enabled: true }
+ *        POST /api/network/access-points         { ...ap, status: 'planned' }
+ */
+import React, { useState, useEffect, useCallback } from 'react';
 import { useParams } from 'next/navigation';
-import Link from 'next/link';
-import { WifiHigh, Broadcast, UsersThree, MapTrifold, Plus, ArrowUpRight } from '@phosphor-icons/react';
-import { PremiumSurface, ModuleHero, SectionCard, StatCard, PremiumEmpty, goldButtonStyle, ghostButtonStyle, secondaryButtonStyle } from '@/components/ui/premium';
-import { ModuleSkeleton } from '@/components/ui/PageSkeleton';
-
+import { useProjectContext } from '@/lib/hooks/useProjectContext';
+import {
+  PageShell, StatRow, Badge, Button, Card, Toolbar, DataTable, EmptyState, Select, Field, Input,
+  FormGrid, FormModal, ItemList, ItemRow, Toast, useToast,
+  type Column, type BadgeTone, type StatItem,
+} from '@/components/ui/kit';
+import { WifiHigh, Broadcast, UsersThree, MapTrifold, Plus, ArrowUpRight, WarningCircle } from '@phosphor-icons/react';
 import { useUnsavedGuard, useComposerDirty } from '@/lib/useUnsavedGuard';
 import UnsavedGuardModal from '@/components/UnsavedGuardModal';
-
-const BASE = 'var(--bg-surface-2)';
-const GOLD = 'var(--brand-primary)';
-const GREEN = 'var(--success)';
-const BLUE = 'var(--brand-primary)';
-const RED = 'var(--danger)';
-const BORDER = 'rgba(255,255,255,0.12)';
-const DIM = 'var(--text-secondary)';
-const TEXT = 'var(--text-primary)';
+import NetworkTabs, { networkCrumbs } from '../_components/NetworkTabs';
 
 interface WifiNetwork {
   id: string;
@@ -64,39 +66,32 @@ interface SavedDesign {
 const SECURITY_TYPES = ['wpa3_enterprise', 'wpa3_personal', 'wpa2_enterprise', 'wpa2_personal', 'open'];
 const BANDS = ['2.4ghz', '5ghz', 'dual', '6ghz'];
 
-const SECURITY_COLORS: Record<string, { bg: string; text: string }> = {
-  wpa3_enterprise: { bg: `color-mix(in srgb, ${GREEN} 13%, transparent)`, text: GREEN },
-  wpa3_personal: { bg: `color-mix(in srgb, ${GREEN} 8%, transparent)`, text: GREEN },
-  wpa2_enterprise: { bg: 'var(--brand-primary-12)', text: BLUE },
-  wpa2_personal: { bg: 'var(--brand-primary-08)', text: BLUE },
-  open: { bg: `color-mix(in srgb, ${RED} 13%, transparent)`, text: RED },
+const SECURITY_TONE: Record<string, BadgeTone> = {
+  wpa3_enterprise: 'ongoing', wpa3_personal: 'ongoing', wpa2_enterprise: 'neutral', wpa2_personal: 'neutral', open: 'overdue',
 };
-
 const SECURITY_LABELS: Record<string, string> = {
   wpa3_enterprise: 'WPA3 Enterprise', wpa3_personal: 'WPA3 Personal',
   wpa2_enterprise: 'WPA2 Enterprise', wpa2_personal: 'WPA2 Personal', open: 'Open',
 };
-const securityLabel = (s: string) => SECURITY_LABELS[s] || s.replace(/_/g, ' ');
+const securityLabel = (s: string) => SECURITY_LABELS[s] || (s || '').replace(/_/g, ' ');
 const BAND_LABELS: Record<string, string> = { '2.4ghz': '2.4 GHz', '5ghz': '5 GHz', dual: 'Dual', '6ghz': '6 GHz' };
 const bandLabel = (b: string) => BAND_LABELS[b] || b;
-
-const inputStyle: React.CSSProperties = {
-  width: '100%', padding: '10px 12px', background: BASE, color: TEXT,
-  border: `1px solid ${BORDER}`, borderRadius: 8, fontSize: 13, outline: 'none',
-};
-const labelStyle: React.CSSProperties = {
-  color: DIM, fontSize: 12, fontWeight: 600, display: 'block', marginBottom: 4,
-};
+const apTone = (s: string): BadgeTone => (s === 'online' ? 'ongoing' : s === 'offline' ? 'overdue' : 'closed');
+const cap = (s: string) => (s ? s.charAt(0).toUpperCase() + s.slice(1) : 'Planned');
 
 export default function WifiManagerPage() {
   const { projectId } = useParams() as { projectId: string };
+  const { ctx } = useProjectContext(projectId);
+  const { toast, show } = useToast();
   const [networkProjectId, setNetworkProjectId] = useState('');
   const [networks, setNetworks] = useState<WifiNetwork[]>([]);
   const [aps, setAps] = useState<AccessPoint[]>([]);
   const [loading, setLoading] = useState(true);
+  const [loadError, setLoadError] = useState('');
   const [showSsidForm, setShowSsidForm] = useState(false);
   const [showApForm, setShowApForm] = useState(false);
   const [saving, setSaving] = useState(false);
+  const [formError, setFormError] = useState('');
   const [selectedFloor, setSelectedFloor] = useState(1);
   // Saved Signal Studio designs for this project — real engine runs, listed by name.
   const [designs, setDesigns] = useState<SavedDesign[]>([]);
@@ -112,9 +107,8 @@ export default function WifiManagerPage() {
     coverage_radius: 80, channel: 1, power_dbm: 20,
   };
   const [apForm, setApForm] = useState(emptyApForm);
-  /* ── Unsaved-work guard: either composer holds real typing, so leaving this
-   *    module (sidebar, ⌘K, breadcrumb, back) confirms first and the draft is
-   *    kept on this device either way. ── */
+  /* Unsaved-work guard: either composer holds real typing, so leaving this
+   * module confirms first and the draft is kept on this device either way. */
   const composerDraft = { ssidForm, apForm };
   const composerDirty = useComposerDirty(showSsidForm || showApForm, composerDraft);
   const guard = useUnsavedGuard({
@@ -132,6 +126,7 @@ export default function WifiManagerPage() {
 
   const fetchData = useCallback(async () => {
     setLoading(true);
+    setLoadError('');
     try {
       const npRes = await fetch(`/api/network/projects?projectId=${projectId}`);
       const npData = await npRes.json();
@@ -144,26 +139,28 @@ export default function WifiManagerPage() {
       const [wifiData, apData] = await Promise.all([wifiRes.json(), apRes.json()]);
       setNetworks(wifiData.networks || []);
       setAps(apData.accessPoints || []);
-    } catch { /* */ }
+    } catch (e) {
+      setLoadError(e instanceof Error ? e.message : "Couldn't load WiFi");
+    }
     setLoading(false);
   }, [projectId]);
 
   useEffect(() => { fetchData(); }, [fetchData]);
 
-  // Saved Signal Studio designs — independent of the network-module setup, so the
-  // hand-off card can surface them even before this module has data.
+  // Saved Signal Studio designs — independent of the network-module setup.
   useEffect(() => {
     let cancelled = false;
     fetch(`/api/heatmap/designs?projectId=${projectId}`)
       .then(r => (r.ok ? r.json() : null))
       .then(d => { if (!cancelled && Array.isArray(d?.designs)) setDesigns(d.designs); })
-      .catch(() => {});
+      .catch(() => { /* optional list — the hand-off row still renders without it */ });
     return () => { cancelled = true; };
   }, [projectId]);
 
   const handleSsidSubmit = async (): Promise<boolean> => {
     if (!ssidForm.ssid || !networkProjectId) return false;
     setSaving(true);
+    setFormError('');
     try {
       const res = await fetch('/api/network/wifi', {
         method: 'POST',
@@ -176,9 +173,14 @@ export default function WifiManagerPage() {
         fetchData();
         guard.clearDraft();
         setSaving(false);
+        show('SSID saved');
         return true;
       }
-    } catch { /* */ }
+      const j = await res.json().catch(() => ({}));
+      setFormError(j.error || "Couldn't save the SSID.");
+    } catch (e) {
+      setFormError(e instanceof Error ? e.message : "Couldn't save the SSID.");
+    }
     setSaving(false);
     return false;
   };
@@ -186,6 +188,7 @@ export default function WifiManagerPage() {
   const handleApSubmit = async (): Promise<boolean> => {
     if (!apForm.name || !networkProjectId) return false;
     setSaving(true);
+    setFormError('');
     try {
       const res = await fetch('/api/network/access-points', {
         method: 'POST',
@@ -198,314 +201,202 @@ export default function WifiManagerPage() {
         fetchData();
         guard.clearDraft();
         setSaving(false);
+        show('Access point saved');
         return true;
       }
-    } catch { /* */ }
+      const j = await res.json().catch(() => ({}));
+      setFormError(j.error || "Couldn't save the access point.");
+    } catch (e) {
+      setFormError(e instanceof Error ? e.message : "Couldn't save the access point.");
+    }
     setSaving(false);
     return false;
   };
 
   const totalClients = networks.reduce((sum, n) => sum + (n.client_count ?? 0), 0);
-  const floorApCount = aps.filter(a => a.floor === selectedFloor).length;
+  const floorAps = aps.filter(a => a.floor === selectedFloor);
+  const studioHref = `/app/signal-studio?projectId=${projectId}`;
 
-  if (loading) {
-    return <PremiumSurface><ModuleSkeleton kpis={4} rows={5} /></PremiumSurface>;
-  }
+  const openSsid = () => { setFormError(''); setShowSsidForm(true); };
+  const openAp = () => { setFormError(''); setApForm({ ...apForm, floor: selectedFloor }); setShowApForm(true); };
+
+  const stats: StatItem[] = [
+    { label: 'WiFi networks', value: loading ? '—' : String(networks.length), sub: networks.length === 1 ? '1 SSID configured' : `${networks.length} SSIDs configured`, icon: <WifiHigh size={15} /> },
+    { label: 'Access points', value: loading ? '—' : String(aps.length), sub: `${floorAps.length} on floor ${selectedFloor}`, icon: <Broadcast size={15} /> },
+    { label: 'Connected clients', value: loading ? '—' : String(totalClients), sub: 'Across all SSIDs', tone: totalClients > 0 ? 'good' : 'default', icon: <UsersThree size={15} /> },
+  ];
+
+  const ssidColumns: Column<WifiNetwork>[] = [
+    { key: 'ssid', header: 'SSID', primary: true, phone: 'show', render: (n) => <>{n.ssid}{n.hidden && <span style={{ color: 'var(--text-secondary)', fontWeight: 400, marginLeft: 8 }}>(Hidden)</span>}</> },
+    { key: 'security_type', header: 'Security', phone: 'show', accessor: (n) => securityLabel(n.security_type), render: (n) => <Badge tone={SECURITY_TONE[n.security_type] || 'neutral'}>{securityLabel(n.security_type)}</Badge> },
+    { key: 'vlan_name', header: 'VLAN', render: (n) => n.vlan_name || '—' },
+    { key: 'band', header: 'Band', accessor: (n) => bandLabel(n.band), render: (n) => bandLabel(n.band) },
+    { key: 'client_isolation', header: 'Isolation', accessor: (n) => (n.client_isolation ? 'Isolated' : ''), render: (n) => (n.client_isolation ? 'Isolated' : '—') },
+    { key: 'bandwidth_limit_mbps', header: 'Limit', align: 'right', render: (n) => (n.bandwidth_limit_mbps > 0 ? `${n.bandwidth_limit_mbps} Mbps` : '—') },
+    { key: 'client_count', header: 'Clients', align: 'right', total: 'sum', phone: 'show', accessor: (n) => n.client_count ?? 0 },
+  ];
+
+  const apColumns: Column<AccessPoint>[] = [
+    { key: 'name', header: 'Access point', primary: true, phone: 'show' },
+    { key: 'model', header: 'Model', render: (a) => a.model || 'Unknown' },
+    { key: 'channel', header: 'Channel', align: 'right', phone: 'show', render: (a) => `Ch ${a.channel}` },
+    { key: 'power_dbm', header: 'Power', align: 'right', render: (a) => `${a.power_dbm} dBm` },
+    { key: 'status', header: 'Status', phone: 'show', accessor: (a) => cap(a.status), render: (a) => <Badge tone={apTone(a.status)} dot>{cap(a.status)}</Badge> },
+  ];
 
   return (
-    <PremiumSurface>
-      {/* Breadcrumb */}
-      <div style={{ marginBottom: 14 }}>
-        <Link href={`/app/projects/${projectId}/network`} style={{ color: DIM, fontSize: 12, textDecoration: 'none' }}>Network →</Link>
-        <span style={{ color: TEXT, fontSize: 12, marginLeft: 4 }}>WiFi</span>
-      </div>
+    <PageShell
+      crumbs={networkCrumbs(projectId, ctx?.project?.name, 'WiFi')}
+      title="WiFi"
+      subtitle="SSIDs, access points and the hand-off to Signal Studio."
+      actions={
+        <>
+          <Button icon={<ArrowUpRight size={15} />} href={studioHref}>Open Signal Studio</Button>
+          <Button icon={<Broadcast size={15} />} onClick={openAp}>Add AP</Button>
+          <Button variant="primary" icon={<Plus size={15} weight="bold" />} onClick={openSsid}>Add SSID</Button>
+        </>
+      }
+    >
+      <NetworkTabs projectId={projectId} value="wifi" />
 
-      {/* Header */}
-      <ModuleHero
-        eyebrow="Network"
-        eyebrowIcon={<WifiHigh size={13} weight="fill" color="var(--text-secondary)" />}
-        title="WiFi"
-        accent="Manager"
-        subtitle="SSIDs, access points, and hand-off to Signal Studio."
-        actions={
-          <button onClick={() => setShowSsidForm(!showSsidForm)} style={goldButtonStyle} className="pmBtn">
-            <Plus size={15} weight="bold" /> Add SSID
-          </button>
-        }
-      />
+      {loadError ? (
+        <EmptyState icon={<WarningCircle size={22} />} title="Couldn't load WiFi" text={loadError} action={<Button onClick={fetchData}>Try again</Button>} />
+      ) : (
+        <>
+          <StatRow items={stats} />
 
-      {/* KPI Row */}
-      <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(180px, 1fr))', gap: 12, marginBottom: 24 }}>
-        <StatCard
-          icon={<WifiHigh size={19} weight="duotone" color="var(--text-secondary)" />}
-          label="WiFi Networks" value={String(networks.length)} accent={GOLD}
-          sub={networks.length === 1 ? '1 SSID configured' : `${networks.length} SSIDs configured`}
-         href={`/app/projects/${projectId}/network/wifi`}/>
-        <StatCard
-          icon={<Broadcast size={19} weight="duotone" color="var(--text-secondary)" />}
-          label="Access Points" value={String(aps.length)} accent={BLUE}
-          sub={`${floorApCount} on floor ${selectedFloor}`}
-         href={`/app/projects/${projectId}/network/wifi`}/>
-        <StatCard
-          icon={<UsersThree size={19} weight="duotone" color={GREEN} />}
-          label="Connected Clients" value={String(totalClients)} accent={totalClients > 0 ? GREEN : undefined}
-          sub="Across all SSIDs"
-         href={`/app/projects/${projectId}/network/wifi`}/>
-      </div>
+          <Card title="WiFi networks" icon={<WifiHigh size={16} />} flush>
+            <DataTable<WifiNetwork>
+              tableId="project-network-wifi-ssids"
+              exportName="wifi-networks"
+              columns={ssidColumns}
+              rows={networks}
+              loading={loading}
+              rowKey={(n) => n.id}
+              defaultSort={{ key: 'ssid', dir: 'asc' }}
+              empty={<EmptyState icon={<WifiHigh size={22} />} title="No SSIDs configured yet" text="Add the first wireless network to plan coverage and access."
+                action={<Button icon={<Plus size={15} weight="bold" />} onClick={openSsid}>Add SSID</Button>} />}
+            />
+          </Card>
 
-      {/* Add SSID Form */}
-      {showSsidForm && (
-        <div style={{ marginBottom: 24 }}>
-          <SectionCard title="Add WiFi Network (SSID)" icon={<WifiHigh size={17} weight="duotone" color="var(--text-secondary)" />}>
-            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(180px, 1fr))', gap: 12 }}>
-              <div>
-                <label style={labelStyle}>SSID Name *</label>
-                <input value={ssidForm.ssid} onChange={e => setSsidForm({ ...ssidForm, ssid: e.target.value })} placeholder="Corporate-WiFi" style={inputStyle} />
-              </div>
-              <div>
-                <label style={labelStyle}>Security</label>
-                <select value={ssidForm.security_type} onChange={e => setSsidForm({ ...ssidForm, security_type: e.target.value })} style={inputStyle}>
-                  {SECURITY_TYPES.map(s => <option key={s} value={s}>{securityLabel(s)}</option>)}
-                </select>
-              </div>
-              <div>
-                <label style={labelStyle}>Password</label>
-                <input type="password" value={ssidForm.password} onChange={e => setSsidForm({ ...ssidForm, password: e.target.value })} style={inputStyle} />
-              </div>
-              <div>
-                <label style={labelStyle}>VLAN ID</label>
-                <input value={ssidForm.vlan_id} onChange={e => setSsidForm({ ...ssidForm, vlan_id: e.target.value })} placeholder="10" style={inputStyle} />
-              </div>
-              <div>
-                <label style={labelStyle}>Band</label>
-                <select value={ssidForm.band} onChange={e => setSsidForm({ ...ssidForm, band: e.target.value })} style={inputStyle}>
-                  {BANDS.map(b => <option key={b} value={b}>{bandLabel(b)}</option>)}
-                </select>
-              </div>
-              <div>
-                <label style={labelStyle}>Bandwidth Limit (Mbps)</label>
-                <input type="number" value={ssidForm.bandwidth_limit_mbps} onChange={e => setSsidForm({ ...ssidForm, bandwidth_limit_mbps: +e.target.value })} placeholder="0 = unlimited" style={inputStyle} />
-              </div>
-              <div style={{ display: 'flex', flexDirection: 'column', gap: 8, justifyContent: 'flex-end' }}>
-                <label style={{ display: 'flex', alignItems: 'center', gap: 8, color: TEXT, fontSize: 13, cursor: 'pointer' }}>
-                  <input type="checkbox" checked={ssidForm.hidden} onChange={e => setSsidForm({ ...ssidForm, hidden: e.target.checked })} />
-                  Hidden SSID
-                </label>
-                <label style={{ display: 'flex', alignItems: 'center', gap: 8, color: TEXT, fontSize: 13, cursor: 'pointer' }}>
-                  <input type="checkbox" checked={ssidForm.client_isolation} onChange={e => setSsidForm({ ...ssidForm, client_isolation: e.target.checked })} />
-                  Client Isolation
-                </label>
-              </div>
+          <Card title="Coverage design" icon={<MapTrifold size={16} />} flush>
+            <ItemList>
+              <ItemRow
+                icon={<Broadcast size={16} />}
+                title="Design this floor in Signal Studio"
+                desc="RF propagation over your real floor plan: walls, materials, AP placement, and a priced bid."
+                action={<Button size="sm" icon={<ArrowUpRight size={14} />} href={studioHref}>Open</Button>}
+              />
+              {designs.map(d => (
+                <ItemRow
+                  key={d.id}
+                  icon={<MapTrifold size={16} />}
+                  title={d.name}
+                  desc={`${d.device_count} device${d.device_count === 1 ? '' : 's'}${typeof d.coverage_percent === 'number' ? ` · ${Math.round(d.coverage_percent)}% predicted coverage` : ''} · updated ${new Date(d.updated_at).toLocaleDateString()}`}
+                />
+              ))}
+            </ItemList>
+          </Card>
+
+          <Card
+            title="Access points"
+            subtitle={`${floorAps.length} on floor ${selectedFloor}`}
+            icon={<Broadcast size={16} />}
+            actions={<Button size="sm" icon={<Plus size={14} />} onClick={openAp}>Add AP</Button>}
+            flush
+          >
+            <div style={{ padding: '0 16px 8px' }}>
+              <Toolbar filters={
+                <Select aria-label="Floor" value={String(selectedFloor)} onChange={e => setSelectedFloor(+e.target.value)} style={{ width: 'auto', minWidth: 120 }}
+                  options={[1, 2, 3, 4, 5].map(f => ({ value: String(f), label: `Floor ${f}` }))} />
+              } />
             </div>
-            <button onClick={handleSsidSubmit} disabled={saving || !ssidForm.ssid} className="pmBtn" style={{
-              ...goldButtonStyle, marginTop: 16,
-              opacity: saving || !ssidForm.ssid ? 0.5 : 1,
-              cursor: saving || !ssidForm.ssid ? 'not-allowed' : 'pointer',
-            }}>
-              {saving ? 'Saving…' : 'Save SSID'}
-            </button>
-          </SectionCard>
-        </div>
+            <DataTable<AccessPoint>
+              tableId="project-network-wifi-aps"
+              exportName="access-points"
+              columns={apColumns}
+              rows={floorAps}
+              loading={loading}
+              rowKey={(a) => a.id}
+              defaultSort={{ key: 'name', dir: 'asc' }}
+              empty={aps.length === 0
+                ? <EmptyState icon={<Broadcast size={22} />} title="No access points logged yet" text="Track installed APs here, or design the placement first in Signal Studio."
+                    action={<Button icon={<ArrowUpRight size={15} />} href={studioHref}>Open Signal Studio</Button>} />
+                : <EmptyState title={`No access points on floor ${selectedFloor}`} text="Pick another floor or add one here." />}
+            />
+          </Card>
+        </>
       )}
 
-      {/* WiFi Networks List */}
-      <div style={{ marginBottom: 24 }}>
-        <SectionCard title="WiFi Networks" icon={<WifiHigh size={17} weight="duotone" color="var(--text-secondary)" />}>
-          {networks.length === 0 ? (
-            <PremiumEmpty
-              icon={<WifiHigh size={30} weight="duotone" color="var(--text-secondary)" />}
-              title="No SSIDs configured yet"
-              description="Add your first wireless network to start planning coverage and access."
-              action={<button onClick={() => setShowSsidForm(true)} style={secondaryButtonStyle} className="pmBtn"><Plus size={15} weight="bold" /> Add SSID</button>}
-              compact
-            />
-          ) : (
-            <div style={{ display: 'grid', gap: 8 }}>
-              {networks.map(net => {
-                const sc = SECURITY_COLORS[net.security_type] || SECURITY_COLORS.wpa2_personal;
-                return (
-                  <div key={net.id} style={{
-                    display: 'flex', alignItems: 'center', gap: 12, padding: '12px 16px',
-                    background: 'rgba(255,255,255,0.03)', borderRadius: 10, border: `1px solid ${BORDER}`,
-                  }}>
-                    <span style={{ fontSize: 22, display: 'inline-flex', alignItems: 'center' }}><WifiHigh size={22} weight="regular" color={TEXT} /></span>
-                    <div style={{ flex: 1 }}>
-                      <div style={{ color: TEXT, fontSize: 14, fontWeight: 700 }}>
-                        {net.ssid}
-                        {net.hidden && <span style={{ fontSize: 12, color: DIM, marginLeft: 8 }}>(Hidden)</span>}
-                      </div>
-                      <div style={{ display: 'flex', gap: 8, marginTop: 4, flexWrap: 'wrap' }}>
-                        <span style={{
-                          fontSize: 12, padding: '2px 8px', borderRadius: 8, fontWeight: 600,
-                          background: sc.bg, color: sc.text,
-                        }}>{securityLabel(net.security_type)}</span>
-                        {net.vlan_name && <span style={{ fontSize: 12, padding: '2px 8px', borderRadius: 8, background: 'rgba(255,255,255,0.06)', color: DIM }}>VLAN: {net.vlan_name}</span>}
-                        <span style={{ fontSize: 12, padding: '2px 8px', borderRadius: 8, background: 'rgba(255,255,255,0.06)', color: DIM }}>{bandLabel(net.band)}</span>
-                        {net.client_isolation && <span style={{ fontSize: 12, padding: '2px 8px', borderRadius: 8, background: 'var(--bg-surface-2)', color: 'var(--text-primary)' }}>Isolated</span>}
-                        {net.bandwidth_limit_mbps > 0 && <span style={{ fontSize: 12, padding: '2px 8px', borderRadius: 8, background: 'rgba(255,255,255,0.06)', color: DIM }}>{net.bandwidth_limit_mbps} Mbps</span>}
-                      </div>
-                    </div>
-                    <div style={{ textAlign: 'right' }}>
-                      <div style={{ color: TEXT, fontSize: 18, fontWeight: 700 }}>{net.client_count ?? 0}</div>
-                      <div style={{ color: DIM, fontSize: 12 }}>Clients</div>
-                    </div>
-                  </div>
-                );
-              })}
-            </div>
-          )}
-        </SectionCard>
-      </div>
-
-      {/* Signal Studio hand-off — coverage design lives in the real engine, not a sketch */}
-      <div style={{ marginBottom: 24 }}>
-        <SectionCard
-          title="Coverage Design"
-          icon={<MapTrifold size={17} weight="duotone" color="var(--text-secondary)" />}
-        >
-          <div style={{
-            display: 'flex', flexWrap: 'wrap', alignItems: 'center', gap: 16,
-            padding: '18px 20px', borderRadius: 12, border: '1px solid var(--border-default)',
-            background: 'var(--bg-surface-2)',
-          }}>
-            <div style={{
-              width: 46, height: 46, borderRadius: 12, flexShrink: 0,
-              display: 'flex', alignItems: 'center', justifyContent: 'center',
-              background: 'var(--bg-surface-2)', border: '1px solid var(--border-default)',
-            }}>
-              <Broadcast size={24} weight="duotone" color="var(--text-secondary)" />
-            </div>
-            <div style={{ flex: 1, minWidth: 220 }}>
-              <div style={{ color: TEXT, fontSize: 15, fontWeight: 800 }}>Design this floor in Signal Studio</div>
-              <div style={{ color: DIM, fontSize: 13, marginTop: 3, lineHeight: 1.5 }}>
-                Physics-based RF propagation over your real floor plan — walls, materials, AP placement, and a priced bid when you approve.
-              </div>
-            </div>
-            <Link href={`/app/signal-studio?projectId=${projectId}`} className="pmBtn" style={{ ...secondaryButtonStyle, textDecoration: 'none' }}>
-              Open Signal Studio <ArrowUpRight size={15} weight="bold" />
-            </Link>
-          </div>
-
-          {designs.length > 0 && (
-            <div style={{ marginTop: 14 }}>
-              <div style={{ color: DIM, fontSize: 12, fontWeight: 700, marginBottom: 8 }}>
-                Saved Designs for This Project
-              </div>
-              <div style={{ display: 'grid', gap: 6 }}>
-                {designs.map(d => (
-                  <div key={d.id} style={{
-                    display: 'flex', alignItems: 'center', gap: 12, padding: '10px 14px',
-                    background: 'rgba(255,255,255,0.03)', borderRadius: 10, border: `1px solid ${BORDER}`,
-                  }}>
-                    <MapTrifold size={16} weight="duotone" color="var(--text-secondary)" />
-                    <div style={{ flex: 1, minWidth: 0 }}>
-                      <div style={{ color: TEXT, fontSize: 13, fontWeight: 700, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{d.name}</div>
-                      <div style={{ color: DIM, fontSize: 12, marginTop: 2 }}>
-                        {d.device_count} device{d.device_count === 1 ? '' : 's'}
-                        {typeof d.coverage_percent === 'number' ? ` · ${Math.round(d.coverage_percent)}% predicted coverage` : ''}
-                        {` · updated ${new Date(d.updated_at).toLocaleDateString()}`}
-                      </div>
-                    </div>
-                  </div>
-                ))}
-              </div>
-            </div>
-          )}
-        </SectionCard>
-      </div>
-
-      {/* Access Points — inventory only; placement + coverage modeling happen in Signal Studio */}
-      <SectionCard
-        title="Access Points"
-        icon={<Broadcast size={17} weight="duotone" color="var(--text-secondary)" />}
-        action={
-          <div style={{ display: 'flex', gap: 8, alignItems: 'center' }}>
-            <select value={selectedFloor} onChange={e => setSelectedFloor(+e.target.value)} style={{ ...inputStyle, width: 120 }}>
-              {[1, 2, 3, 4, 5].map(f => <option key={f} value={f}>Floor {f}</option>)}
-            </select>
-            <button
-              onClick={() => { setApForm({ ...apForm, floor: selectedFloor }); setShowApForm(!showApForm); }}
-              style={{
-                padding: '8px 14px', background: 'rgba(255,255,255,0.05)',
-                color: TEXT, border: `1px solid ${BORDER}`,
-                borderRadius: 8, fontSize: 12, fontWeight: 600, cursor: 'pointer',
-              }}
-            >
-              {showApForm ? 'Close Form' : 'Add AP'}
-            </button>
-          </div>
-        }
+      <FormModal
+        open={showSsidForm}
+        onClose={() => setShowSsidForm(false)}
+        title="Add WiFi network (SSID)"
+        onSubmit={async () => { await handleSsidSubmit(); }}
+        submitLabel="Save SSID"
+        busy={saving}
+        error={formError}
       >
-        {/* Add AP Form */}
-        {showApForm && (
-          <div style={{ marginBottom: 16, padding: 16, background: 'rgba(255,255,255,0.03)', borderRadius: 10, border: `1px solid ${BORDER}` }}>
-            <h4 style={{ color: TEXT, fontSize: 14, fontWeight: 700, margin: '0 0 12px' }}>Configure Access Point</h4>
-            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(150px, 1fr))', gap: 12 }}>
-              <div>
-                <label style={labelStyle}>AP Name *</label>
-                <input value={apForm.name} onChange={e => setApForm({ ...apForm, name: e.target.value })} placeholder="AP-F1-01" style={inputStyle} />
-              </div>
-              <div>
-                <label style={labelStyle}>Model</label>
-                <input value={apForm.model} onChange={e => setApForm({ ...apForm, model: e.target.value })} placeholder="U6-Pro" style={inputStyle} />
-              </div>
-              <div>
-                <label style={labelStyle}>Floor</label>
-                <input type="number" min={1} value={apForm.floor} onChange={e => setApForm({ ...apForm, floor: +e.target.value })} style={inputStyle} />
-              </div>
-              <div>
-                <label style={labelStyle}>Channel</label>
-                <input type="number" value={apForm.channel} onChange={e => setApForm({ ...apForm, channel: +e.target.value })} style={inputStyle} />
-              </div>
-              <div>
-                <label style={labelStyle}>Power (dBm)</label>
-                <input type="number" value={apForm.power_dbm} onChange={e => setApForm({ ...apForm, power_dbm: +e.target.value })} style={inputStyle} />
-              </div>
-            </div>
-            <div style={{ display: 'flex', gap: 8, marginTop: 12 }}>
-              <button onClick={handleApSubmit} disabled={saving || !apForm.name} className="pmBtn" style={{
-                ...goldButtonStyle,
-                opacity: saving || !apForm.name ? 0.5 : 1,
-                cursor: saving || !apForm.name ? 'not-allowed' : 'pointer',
-              }}>
-                {saving ? 'Saving…' : 'Save AP'}
-              </button>
-              <button onClick={() => setShowApForm(false)} style={ghostButtonStyle} className="pmBtn">Cancel</button>
-            </div>
-          </div>
-        )}
+        <FormGrid cols={3}>
+          <Field label="SSID name" required>
+            <Input required value={ssidForm.ssid} onChange={e => setSsidForm({ ...ssidForm, ssid: e.target.value })} placeholder="Corporate-WiFi" />
+          </Field>
+          <Field label="Security">
+            <Select value={ssidForm.security_type} onChange={e => setSsidForm({ ...ssidForm, security_type: e.target.value })} options={SECURITY_TYPES.map(s => ({ value: s, label: securityLabel(s) }))} />
+          </Field>
+          <Field label="Password">
+            <Input type="password" value={ssidForm.password} onChange={e => setSsidForm({ ...ssidForm, password: e.target.value })} />
+          </Field>
+          <Field label="VLAN ID">
+            <Input value={ssidForm.vlan_id} onChange={e => setSsidForm({ ...ssidForm, vlan_id: e.target.value })} placeholder="10" />
+          </Field>
+          <Field label="Band">
+            <Select value={ssidForm.band} onChange={e => setSsidForm({ ...ssidForm, band: e.target.value })} options={BANDS.map(b => ({ value: b, label: bandLabel(b) }))} />
+          </Field>
+          <Field label="Bandwidth limit (Mbps)">
+            <Input type="number" value={ssidForm.bandwidth_limit_mbps} onChange={e => setSsidForm({ ...ssidForm, bandwidth_limit_mbps: +e.target.value })} placeholder="0 = unlimited" />
+          </Field>
+          <label style={{ display: 'flex', alignItems: 'center', gap: 8, color: 'var(--text-primary)', fontSize: 14, cursor: 'pointer', minHeight: 44 }}>
+            <input type="checkbox" checked={ssidForm.hidden} onChange={e => setSsidForm({ ...ssidForm, hidden: e.target.checked })} />
+            Hidden SSID
+          </label>
+          <label style={{ display: 'flex', alignItems: 'center', gap: 8, color: 'var(--text-primary)', fontSize: 14, cursor: 'pointer', minHeight: 44 }}>
+            <input type="checkbox" checked={ssidForm.client_isolation} onChange={e => setSsidForm({ ...ssidForm, client_isolation: e.target.checked })} />
+            Client isolation
+          </label>
+        </FormGrid>
+      </FormModal>
 
-        {/* AP List */}
-        {aps.length > 0 ? (
-          <div>
-            <div style={{ color: DIM, fontSize: 12, fontWeight: 600, marginBottom: 8 }}>Access Points ({aps.filter(a => a.floor === selectedFloor).length} on Floor {selectedFloor})</div>
-            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(200px, 1fr))', gap: 8 }}>
-              {aps.filter(a => a.floor === selectedFloor).map(ap => (
-                <div key={ap.id} style={{
-                  padding: '10px 12px', background: 'rgba(255,255,255,0.03)', borderRadius: 10, border: `1px solid ${BORDER}`,
-                }}>
-                  <div style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
-                    <div style={{ width: 8, height: 8, borderRadius: '50%', background: ap.status === 'online' ? GREEN : ap.status === 'offline' ? RED : 'var(--status-closed)' }} />
-                    <span style={{ color: TEXT, fontSize: 13, fontWeight: 600 }}>{ap.name}</span>
-                  </div>
-                  <div style={{ color: DIM, fontSize: 12, marginTop: 4 }}>
-                    {ap.model || 'Unknown'} &middot; Ch {ap.channel} &middot; {ap.power_dbm}dBm
-                  </div>
-                </div>
-              ))}
-            </div>
-          </div>
-        ) : (
-          <PremiumEmpty
-            icon={<Broadcast size={30} weight="duotone" color="var(--text-secondary)" />}
-            title="No access points logged yet"
-            description="Track installed APs here, or design the placement first in Signal Studio."
-            action={<Link href={`/app/signal-studio?projectId=${projectId}`} className="pmBtn" style={{ ...secondaryButtonStyle, textDecoration: 'none' }}><ArrowUpRight size={15} weight="bold" /> Open Signal Studio</Link>}
-            compact
-          />
-        )}
-      </SectionCard>
+      <FormModal
+        open={showApForm}
+        onClose={() => setShowApForm(false)}
+        title="Configure access point"
+        onSubmit={async () => { await handleApSubmit(); }}
+        submitLabel="Save AP"
+        busy={saving}
+        error={formError}
+      >
+        <FormGrid cols={3}>
+          <Field label="AP name" required>
+            <Input required value={apForm.name} onChange={e => setApForm({ ...apForm, name: e.target.value })} placeholder="AP-F1-01" />
+          </Field>
+          <Field label="Model">
+            <Input value={apForm.model} onChange={e => setApForm({ ...apForm, model: e.target.value })} placeholder="U6-Pro" />
+          </Field>
+          <Field label="Floor">
+            <Input type="number" min={1} value={apForm.floor} onChange={e => setApForm({ ...apForm, floor: +e.target.value })} />
+          </Field>
+          <Field label="Channel">
+            <Input type="number" value={apForm.channel} onChange={e => setApForm({ ...apForm, channel: +e.target.value })} />
+          </Field>
+          <Field label="Power (dBm)">
+            <Input type="number" value={apForm.power_dbm} onChange={e => setApForm({ ...apForm, power_dbm: +e.target.value })} />
+          </Field>
+        </FormGrid>
+      </FormModal>
+
       <UnsavedGuardModal guard={guard} />
-    </PremiumSurface>
+      <Toast message={toast?.message ?? null} tone={toast?.tone} />
+    </PageShell>
   );
 }

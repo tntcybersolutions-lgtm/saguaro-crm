@@ -1,12 +1,12 @@
 'use client';
 /**
- * Bid Packages — solicit, level and award sub bids. Pass 4 on the kit.
+ * Bid Packages — solicit, level and award sub bids, on the kit.
  *
- * Anatomy: title + one primary action (Create Bid Package) → StatRow (the
- * procurement picture: packages, awards, invites vs responses, budget) →
- * workspace split: the package register (kit DataTable with leveling
- * columns) on the left, the award pipeline + procurement snapshot rail on the
- * right. The four-step wizard opens in a FormModal with its own footer.
+ * Anatomy: title + one primary action (Create Bid Package) → StatRow (each
+ * status tile filters the register) → Toolbar (search + status) → workspace
+ * split: the package register (kit DataTable with leveling columns) on the
+ * left, the procurement snapshot rail on the right. The four-step wizard opens
+ * in a FormModal with its own footer.
  *
  * Every read / write is the one this screen already used:
  *   list      GET  /api/bid-packages/list?projectId=   (leveling rides on the payload)
@@ -16,19 +16,18 @@
  *
  * Awards stay W-9 / COI gated server-side; nothing here auto-awards.
  */
-import React, { useState, useEffect, useRef } from 'react';
+import React, { useState, useEffect, useRef, useMemo } from 'react';
 import { useProjectContext } from '@/lib/hooks/useProjectContext';
 import { humanError } from '@/lib/errors';
 import { useParams, useRouter } from 'next/navigation';
 import SaguaroDatePicker from '../../../../../components/SaguaroDatePicker';
 import { toCents, toDollars, sumCents, extend } from '@/lib/calc';
-import { X, Plus, ArrowLeft, ArrowRight, Package, FileText, Trophy, Tray, ArrowSquareOut, Scales } from '@phosphor-icons/react';
+import { X, Plus, ArrowLeft, ArrowRight, Package, FileText, Trophy, Tray, ArrowSquareOut, Scales, PaperPlaneTilt, HourglassMedium, EnvelopeOpen } from '@phosphor-icons/react';
 import {
-  PageShell, Card, StatRow, Badge, Button, DataTable, EmptyState,
+  PageShell, Card, StatRow, Badge, Button, DataTable, EmptyState, Toolbar,
   FormModal, Field, Input, Textarea, Select, FormGrid, DetailList,
   type Column, type Action, type BadgeTone, type StatItem,
 } from '@/components/ui/kit';
-import { FlowSteps, InsightRow, AutoChip } from '@/components/ui/premium';
 import { SUB_TRADES, SUB_TRADES_BY_DIVISION } from '@/lib/construction-intelligence';
 import NudgeRing from '@/components/intelligence/NudgeRing';
 import { ANCHOR_BID_DECISION } from '@/lib/suggestions';
@@ -66,6 +65,9 @@ function statusBadge(s: string): { label: string; tone: BadgeTone } {
   return { label: 'Draft', tone: 'neutral' };
 }
 const STATUS_RANK: Record<string, number> = { closed: 0, open: 1, sent: 1, draft: 2, awarded: 3 };
+type StatusFilter = 'all' | 'open' | 'closed' | 'awarded' | 'draft';
+const matchesStatus = (s: string, f: StatusFilter) =>
+  f === 'all' ? true : f === 'open' ? (s === 'open' || s === 'sent') : f === 'draft' ? !['open', 'sent', 'closed', 'awarded'].includes(s) : s === f;
 
 // ─── Wizard Types ─────────────────────────────────────────────────────────────
 
@@ -128,7 +130,7 @@ const CSS = `
 .bpCq { container: bpws / inline-size; min-width: 0; }
 .bpSplit { display: grid; grid-template-columns: minmax(0, 1fr); gap: 16px; align-items: start; min-width: 0; }
 .bpSplit > * { min-width: 0; }
-@container bpws (min-width: 1080px) { .bpSplit { grid-template-columns: minmax(340px, 1fr) clamp(${layout.detailRailMin}px, 30%, ${layout.detailRailMax}px); } }
+@container bpws (min-width: 1080px) { .bpSplit[data-rail="true"] { grid-template-columns: minmax(340px, 1fr) clamp(${layout.detailRailMin}px, 30%, ${layout.detailRailMax}px); } }
 .bpRail { position: sticky; top: 16px; display: flex; flex-direction: column; gap: 16px; }
 .bpList .k-table th:first-child, .bpList .k-table td:first-child { position: sticky; left: 0; z-index: 1; background: var(--bg-solid); }
 .bpList .k-table th:first-child { background: var(--bg-solid-2); z-index: 3; }
@@ -453,7 +455,7 @@ function WizardModal({ projectId, ctx, open, onClose, onCreated }: { projectId: 
           <Field label="Instructions to Bidders" hint="How to bid, what to include, where questions go — the first page of the jacket every sub opens.">
             <Textarea value={w.instructions} onChange={e => setField('instructions', e.target.value)} placeholder="Bid on the attached form. Price alternates separately. Send questions through the portal by…" rows={3} />
           </Field>
-          <Field label="Bid Due Date" hint={<>{w.dueDate === defaultDue() && <AutoChip />} Defaulted two weeks out — subs typically need 10–15 business days to price a scope. Adjust freely.</>}>
+          <Field label="Bid Due Date" hint={w.dueDate === defaultDue() ? 'Defaulted two weeks out.' : undefined}>
             <SaguaroDatePicker value={w.dueDate} onChange={v => setField('dueDate', v)} style={DATE_INPUT_STYLE} />
           </Field>
           <label className="bpCheck">
@@ -466,7 +468,6 @@ function WizardModal({ projectId, ctx, open, onClose, onCreated }: { projectId: 
       {/* ── STEP 2 ── */}
       {step === 2 && (
         <div>
-          <div className="bpHint" style={{ marginBottom: 12 }}>Add line items for this bid package. Subs will price against these when submitting.</div>
           <div style={{ overflowX: 'auto' }}>
             <table className="bpLines k-table-skin">
               <thead><tr><th style={{ width: '45%' }}>Description</th><th>Qty</th><th>Unit</th><th>Unit Price</th><th aria-label="Remove" /></tr></thead>
@@ -493,7 +494,6 @@ function WizardModal({ projectId, ctx, open, onClose, onCreated }: { projectId: 
       {/* ── STEP 3 ── */}
       {step === 3 && (
         <div>
-          <div className="bpHint" style={{ marginBottom: 14 }}>Suggested subs for <b>{w.trade}</b>, matched from your roster by trade. Pre-checked = recommended.</div>
           {w.suggestedSubs.length === 0 && (
             <div className="bpHint" style={{ padding: '16px 0', textAlign: 'center' }}>{subsLoading ? 'Matching your roster to this trade…' : 'No roster subs matched this trade — subs you add by email below get the same portal link and pricing form.'}</div>
           )}
@@ -580,6 +580,8 @@ export default function BidPackagesPage() {
   const [loadError, setLoadError] = useState('');
   const [showWizard, setShowWizard] = useState(false);
   const [wizardKey, setWizardKey] = useState(0);
+  const [search, setSearch] = useState('');
+  const [statusFilter, setStatusFilter] = useState<StatusFilter>('all');
   const listRef = useRef<HTMLDivElement>(null);
 
   // The screen walks in knowing the project: budget, roster, award history —
@@ -674,23 +676,32 @@ export default function BidPackagesPage() {
     return { det, invited, responded, low, spread, budgetEst, awardedAmt, awardedTo, dueRaw, due, isAwarded };
   };
 
+  const pickStatus = (f: StatusFilter) => setStatusFilter(prev => (prev === f ? 'all' : f));
   const stats: StatItem[] = loading
-    ? ['Packages', 'Awarded', 'Invited / Responded', 'Awarded via Bids', 'Budget', 'Sub Roster'].map(label => ({ label, value: '—', sub: 'Loading…' }))
+    ? ['Packages', 'Open for Bids', 'Award Pending', 'Awarded', 'Bids In'].map(label => ({ label, value: '—', sub: 'Loading…' }))
     : [
-        { label: 'Packages', value: packages.length, sub: `${openCount} open · ${closedCount} awaiting award` },
-        { label: 'Awarded', value: totalAwarded, tone: totalAwarded > 0 ? 'good' : 'default', sub: 'Contracts placed' },
-        { label: 'Invited / Responded', value: `${totalInvited} / ${totalSubmissions}`, tone: totalSubmissions > 0 ? 'good' : 'default', sub: 'Invites out vs bids in' },
-        { label: 'Awarded via Bids', value: fmt(awardedTotal), sub: `${totalAwarded} package${totalAwarded === 1 ? '' : 's'} placed` },
-        { label: 'Budget', value: fmt(budgetOriginal), sub: budgetOriginal > 0 ? `${fmt(budgetCommitted)} committed · ${Math.round((budgetCommitted / budgetOriginal) * 100)}%` : `${Number(ctx?.budget?.lineCount) || 0} budget lines`, href: `/app/projects/${projectId}/budget` },
-        { label: 'Sub Roster', value: rosterCount, sub: rosterCount > 0 ? 'Ready to invite' : 'Invite by email works too', href: `/app/projects/${projectId}/subs` },
+        { label: 'Packages', value: packages.length, sub: `${packages.filter(p => matchesStatus(p.status, 'draft')).length} draft`, icon: <Package size={15} />, onClick: () => setStatusFilter('all'), active: statusFilter === 'all' },
+        { label: 'Open for Bids', value: openCount, sub: 'Out with the subs', icon: <PaperPlaneTilt size={15} />, onClick: () => pickStatus('open'), active: statusFilter === 'open' },
+        { label: 'Award Pending', value: closedCount, tone: closedCount > 0 ? 'warn' : 'default', sub: closedCount > 0 ? 'Bidding closed — your call' : 'None waiting', icon: <HourglassMedium size={15} />, onClick: () => pickStatus('closed'), active: statusFilter === 'closed' },
+        { label: 'Awarded', value: fmt(awardedTotal), tone: totalAwarded > 0 ? 'good' : 'default', sub: `${totalAwarded} package${totalAwarded === 1 ? '' : 's'} placed`, icon: <Trophy size={15} />, onClick: () => pickStatus('awarded'), active: statusFilter === 'awarded' },
+        { label: 'Bids In', value: `${totalSubmissions} / ${totalInvited}`, tone: totalSubmissions > 0 ? 'good' : 'default', sub: 'Bids received of invites out', icon: <EnvelopeOpen size={15} /> },
       ];
 
+  const shown = useMemo(() => {
+    const q = search.trim().toLowerCase();
+    return packages.filter(p => {
+      if (!matchesStatus(p.status, statusFilter)) return false;
+      if (!q) return true;
+      return [p.trade, p.name].some(v => String(v || '').toLowerCase().includes(q));
+    });
+  }, [packages, search, statusFilter]);
+
   const columns: Column<BidPackageRow>[] = [
-    { key: 'name', header: 'Package', accessor: p => (p.trade || '').toLowerCase(), render: p => <div className="bpPkg"><span>{p.trade || 'General'}</span><span title={p.name}>{p.name || 'Untitled Package'}</span></div> },
+    { key: 'name', header: 'Package', primary: true, phone: 'show', accessor: p => (p.trade || '').toLowerCase(), render: p => <div className="bpPkg"><span>{p.trade || 'General'}</span><span title={p.name}>{p.name || 'Untitled Package'}</span></div> },
     { key: 'status', phone: 'show', header: 'Status', accessor: p => STATUS_RANK[p.status] ?? 9, render: p => { const b = statusBadge(p.status); return <Badge tone={b.tone} dot>{b.label}</Badge>; } },
     { key: 'due', phone: 'show', header: 'Bids Due', accessor: p => p.bid_due_date || (p as any).due_date || '', render: p => { const r = rowOf(p); return <span className="bpDue" data-tone={r.due != null && !r.isAwarded ? (r.due < 0 ? 'late' : r.due <= 3 ? 'soon' : undefined) : undefined}>{fmtDue(r.dueRaw)}{r.due != null && !r.isAwarded ? ` · ${r.due < 0 ? `${Math.abs(r.due)}d overdue` : r.due === 0 ? 'due today' : `${r.due}d left`}` : ''}</span>; } },
     { key: 'responses', phone: 'hide', header: 'Invited / Responded', accessor: p => rowOf(p).responded, align: 'right', render: p => { const r = rowOf(p); return <span className="bpMoney">{r.invited} / <span style={{ color: r.responded > 0 ? 'var(--status-ongoing)' : 'var(--text-tertiary)' }}>{r.responded}</span></span>; } },
-    { key: 'low', phone: 'show', header: 'Low Bid / Award', accessor: p => { const r = rowOf(p); return r.isAwarded ? r.awardedAmt : (r.low ?? 0); }, align: 'right', render: p => { const r = rowOf(p); const who = r.isAwarded ? r.awardedTo : r.det?.lowWho; return <div style={{ textAlign: 'right' }}><span className="bpMoney" style={{ color: r.isAwarded ? 'var(--status-ongoing)' : undefined }}>{r.isAwarded && r.awardedAmt > 0 ? fmt(r.awardedAmt) : r.low != null ? fmt(r.low) : '—'}</span>{who && <span className="bpSub" style={{ marginLeft: 'auto' }}>{who}</span>}</div>; } },
+    { key: 'low', phone: 'show', header: 'Low Bid / Award', accessor: p => { const r = rowOf(p); return r.isAwarded ? r.awardedAmt : (r.low ?? 0); }, align: 'right', total: 'sum', format: fmt, render: p => { const r = rowOf(p); const who = r.isAwarded ? r.awardedTo : r.det?.lowWho; return <div style={{ textAlign: 'right' }}><span className="bpMoney" style={{ color: r.isAwarded ? 'var(--status-ongoing)' : undefined }}>{r.isAwarded && r.awardedAmt > 0 ? fmt(r.awardedAmt) : r.low != null ? fmt(r.low) : '—'}</span>{who && <span className="bpSub" style={{ marginLeft: 'auto' }}>{who}</span>}</div>; } },
     { key: 'spread', phone: 'hide', header: 'Spread', accessor: p => rowOf(p).spread ?? -1, render: p => { const r = rowOf(p); return r.spread != null ? <span title={r.spread <= 10 ? 'Tight — market agrees' : r.spread <= 25 ? 'Level scope before award' : 'Wide — check scope gaps'}><Badge tone={spreadTone(r.spread)}>{Math.round(r.spread)}%</Badge></span> : <span className="bpMuted">{r.responded === 1 ? 'Needs 2 bids' : '—'}</span>; } },
     { key: 'vsBudget', phone: 'hide', header: 'vs Budget', accessor: p => { const r = rowOf(p); return r.budgetEst > 0 && r.low != null ? r.low - r.budgetEst : 0; }, align: 'right', render: p => { const r = rowOf(p); if (r.budgetEst > 0 && r.low != null) return <span className="bpVs bpMoney" data-tone={r.low <= r.budgetEst ? 'under' : 'over'}>{r.low <= r.budgetEst ? '' : '+'}{fmt(r.low - r.budgetEst)}</span>; if (r.budgetEst > 0) return <span className="bpMuted" title="Budget estimate">{fmt(r.budgetEst)}</span>; return <span className="bpMuted">—</span>; } },
   ];
@@ -721,20 +732,23 @@ export default function BidPackagesPage() {
       <EmptyState
         icon={<Package size={22} />}
         title="No bid packages yet"
-        text={`A bid package sends one trade's scope to ${rosterCount > 0 ? `your ${rosterCount}-sub roster` : 'your subs'} with a portal link. Bids come back priced against your line items, leveling flags the spread, and the award is compliance-gated (W-9 + COI) before it books committed cost as a draft subcontract PO.`}
-        action={<Button icon={<Plus size={15} weight="bold" />} onClick={() => { setWizardKey(k => k + 1); setShowWizard(true); }}>Create Bid Package</Button>}
+        text={rosterCount > 0 ? `Send one trade's scope to your ${rosterCount}-sub roster and level the bids here.` : "Send one trade's scope to your subs and level the bids here."}
+        action={<Button variant="primary" icon={<Plus size={15} weight="bold" />} onClick={() => { setWizardKey(k => k + 1); setShowWizard(true); }}>Create Bid Package</Button>}
       />
     );
   } else {
     listBody = (
       <DataTable
+        tableId="project-bid-packages"
+        exportName="bid-packages"
         columns={columns}
-        rows={packages}
+        rows={shown}
         rowKey={p => p.id}
         loading={loading}
         defaultSort={{ key: 'status', dir: 'asc' }}
         onRowClick={p => router.push(`/app/projects/${projectId}/bid-packages/${p.id}`)}
         rowActions={rowActions}
+        empty={<EmptyState title="Nothing matches" text="Change the search or the status filter." action={<Button onClick={() => { setSearch(''); setStatusFilter('all'); }}>Clear filters</Button>} />}
       />
     );
   }
@@ -749,41 +763,55 @@ export default function BidPackagesPage() {
           { label: 'Bid Packages' },
         ]}
         title="Bid Packages"
-        subtitle="Solicit, level, and award sub bids — same scope, same page. Awards are W-9 and COI gated."
+        subtitle="Solicit, level and award sub bids."
         actions={<Button variant="primary" icon={<Plus size={15} weight="bold" />} onClick={() => { setWizardKey(k => k + 1); setShowWizard(true); }}>Create Bid Package</Button>}
       >
         {!loadError && <StatRow items={stats} />}
 
+        {!loading && !loadError && packages.length > 0 && (
+          <Toolbar
+            search={search}
+            onSearch={setSearch}
+            placeholder="Search by trade or package…"
+            filters={
+              <Select
+                aria-label="Status"
+                value={statusFilter}
+                onChange={e => setStatusFilter(e.target.value as StatusFilter)}
+                style={{ width: 'auto', minWidth: 170 }}
+                options={[
+                  { value: 'all', label: 'All statuses' },
+                  { value: 'draft', label: 'Draft' },
+                  { value: 'open', label: 'Open for bids' },
+                  { value: 'closed', label: 'Award pending' },
+                  { value: 'awarded', label: 'Awarded' },
+                ]}
+              />
+            }
+          />
+        )}
+
         <div className="bpCq">
-          <div className="bpSplit">
+          <div className="bpSplit" data-rail={ctx ? 'true' : 'false'}>
             {/* NudgeRing pulses the register when the suggestion engine flags a
                 closed package on THIS project still awaiting an award decision. */}
             <NudgeRing anchorId={ANCHOR_BID_DECISION} projectId={projectId} radius={16} style={{ minWidth: 0 }}>
               <div className="bpList" ref={listRef}><Card flush>{listBody}</Card></div>
             </NudgeRing>
 
-            {/* Context rail — the pipeline this module actually enforces */}
-            <aside className="bpRail" aria-label="Award pipeline and procurement snapshot">
-              <Card title="Award Pipeline" subtitle="What has to happen before committed cost books.">
-                <FlowSteps title="" steps={[
-                  { title: 'Package Out to Subs', desc: rosterCount > 0 ? `Invites go to your roster (${rosterCount} subs) or any email — each gets a portal link.` : 'Invites go out by email — each sub gets a portal link.', done: totalInvited > 0 || packages.length > 0 },
-                  { title: 'Bids Come Back Priced', desc: 'Subs price your line items in the portal; responses land here in real time.', done: totalSubmissions > 0 },
-                  { title: 'Level the Spread', desc: 'Side-by-side leveling flags scope gaps — a wide spread usually means someone missed scope.', done: Object.values(detail).some(d => d.spread != null) },
-                  { title: 'Compliance Gate at Award', desc: 'Award is blocked if the winning sub has no W-9 on file or an expired COI — proceeding anyway requires an explicit override.', done: totalAwarded > 0 },
-                  { title: 'Award Writes Committed Cost', desc: 'The winning amount books as a draft subcontract PO automatically — no re-keying into the budget.', done: totalAwarded > 0 },
-                ]} />
-              </Card>
-              {ctx && (
+            {ctx && (
+              <aside className="bpRail" aria-label="Procurement snapshot">
                 <Card title="Procurement Snapshot">
-                  <InsightRow label="Project Budget" value={fmt(budgetOriginal)} />
-                  <InsightRow label="Committed to Date" value={fmt(budgetCommitted)} />
-                  <InsightRow label="Awarded via Bids" value={fmt(awardedTotal)} accent={awardedTotal > 0 ? 'var(--brand-primary)' : undefined} strong />
-                  <InsightRow label="Open Packages" value={String(openCount)} />
-                  <InsightRow label="Bids Received" value={String(totalSubmissions)} accent={totalSubmissions > 0 ? 'var(--status-ongoing)' : undefined} />
-                  {rosterCount > 0 && <InsightRow label="Subs on Roster" value={String(rosterCount)} />}
+                  <DetailList items={[
+                    ['Project budget', <a key="b" className="k-link" href={`/app/projects/${projectId}/budget`}>{fmt(budgetOriginal)}</a>],
+                    ['Committed to date', budgetOriginal > 0 ? `${fmt(budgetCommitted)} · ${Math.round((budgetCommitted / budgetOriginal) * 100)}%` : fmt(budgetCommitted)],
+                    ['Awarded via bids', fmt(awardedTotal)],
+                    ['Bids received', String(totalSubmissions)],
+                    ['Subs on roster', <a key="r" className="k-link" href={`/app/projects/${projectId}/subs`}>{rosterCount}</a>],
+                  ]} />
                 </Card>
-              )}
-            </aside>
+              </aside>
+            )}
           </div>
         </div>
       </PageShell>
