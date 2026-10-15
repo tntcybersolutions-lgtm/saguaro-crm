@@ -126,10 +126,10 @@ export async function GET(req: NextRequest) {
 
       // Quick actions (deep links for widget buttons)
       actions: [
-        { label: 'Daily Log', url: '/field/log', icon: 'doc' },
-        { label: 'Take Photo', url: '/field/photos', icon: 'camera' },
-        { label: 'Clock In', url: '/field/clock', icon: 'clock' },
-        { label: 'Punch List', url: '/field/punch', icon: 'check' },
+        { label: 'Daily Log', url: '/app/daily-logs', icon: 'doc' },
+        { label: 'Take Photo', url: '/app/projects', icon: 'camera' },
+        { label: 'Clock In', url: '/app/time', icon: 'clock' },
+        { label: 'Punch List', url: '/app/my-work', icon: 'check' },
       ],
     });
   } catch {

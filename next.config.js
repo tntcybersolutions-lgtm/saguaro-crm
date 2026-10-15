@@ -63,6 +63,13 @@ const nextConfig = {
       // Nothing links to it; send it to the one real price list.
       { source: '/marketing.html', destination: '/pricing', permanent: false },
       { source: '/api/marketing', destination: '/pricing', permanent: false },
+      // Links already sitting in people's inboxes pointed at pages that never
+      // existed. Send them somewhere real instead of a 404.
+      { source: '/app/settings/team', destination: '/app/people?tab=access', permanent: false },
+      { source: '/app/projects/:projectId/documents', destination: '/app/projects/:projectId/files', permanent: false },
+      { source: '/portals/lien-waiver/:token', destination: '/portals/sub/login', permanent: false },
+      { source: '/portals/sub/:id/lien-waiver', destination: '/portals/sub/login', permanent: false },
+      { source: '/app/insurance', destination: '/app/compliance', permanent: false },
       /* The project index used to redirect() inside a server component, which
          answered HTTP 200 carrying <meta http-equiv="refresh" content="1;...">
          — a one-second blank frame on every entry into a job. Next degrades

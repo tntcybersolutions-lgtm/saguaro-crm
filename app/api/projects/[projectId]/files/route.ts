@@ -145,7 +145,7 @@ export async function GET(req: NextRequest, { params }: { params: { projectId: s
         source: 'generated',
         source_id: g.id,
         read_only: true,
-        open_href: `/app/projects/${params.projectId}/documents`,
+        open_href: `/app/projects/${params.projectId}/files`,
         file_name: g.title || String(g.doc_type || 'Document').replace(/[-_]+/g, ' '),
         file_url: g.pdf_url,
         kind: 'pdf',

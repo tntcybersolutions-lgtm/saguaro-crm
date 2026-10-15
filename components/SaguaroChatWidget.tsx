@@ -61,7 +61,7 @@ const QUICK_ACTION_MAP: Record<string, { label: string; icon: string; descriptio
   'lien waiver': { label: 'Lien Waivers', icon: '🔒', description: 'Manage lien waivers', hrefTemplate: '/app/projects/{id}/lien-waivers' },
   'change order': { label: 'Change Orders', icon: '🔄', description: 'View change orders', hrefTemplate: '/app/projects/{id}/change-orders' },
   'autopilot': { label: 'Open Autopilot', icon: '🤖', description: 'View all alerts & deadlines', hrefTemplate: '/app/autopilot' },
-  'bid package': { label: 'Bid Packages', icon: '📦', description: 'Manage bid packages', hrefTemplate: '/app/bid-packages' },
+  'bid package': { label: 'Bid Packages', icon: '📦', description: 'Manage bid packages', hrefTemplate: '/app/bids' },
   'reports': { label: 'Reports', icon: '📊', description: 'View all reports', hrefTemplate: '/app/reports' },
 };
 

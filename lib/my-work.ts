@@ -305,7 +305,7 @@ export function rfiItems(rows: RfiRow[], ctx: BuildCtx, me: { id: string; email:
       title: lower(r.status) === 'draft' ? `Send ${label}` : ours ? `Answer ${label}` : `Get an answer on ${label}`,
       meta: join(r.subject || null, ctx.job(r.project_id), day ? dueText(day, ctx.today) : null),
       day, now: false, tone: dueTone(day, ctx.today), amount: null,
-      href: r.project_id ? `/app/projects/${r.project_id}/rfis` : '/app/rfis', action: null, done: null,
+      href: r.project_id ? `/app/projects/${r.project_id}/rfis` : '/app/projects', action: null, done: null,
     };
   });
 }
@@ -331,7 +331,7 @@ export function submittalItems(rows: SubmittalRow[], ctx: BuildCtx): MyWorkItem[
       key: `submittal:${r.id}`, source: 'submittals' as const, projectId: r.project_id,
       title, meta: join(r.title || null, ctx.job(r.project_id), dueText(day, ctx.today)),
       day, now: false, tone: dueTone(day, ctx.today), amount: null,
-      href: r.project_id ? `/app/projects/${r.project_id}/submittals` : '/app/submittals', action: null, done: null,
+      href: r.project_id ? `/app/projects/${r.project_id}/submittals` : '/app/projects', action: null, done: null,
     };
   });
 }
@@ -347,7 +347,7 @@ export function punchItems(rows: PunchRow[], ctx: BuildCtx): MyWorkItem[] {
       title: r.title || r.description || 'Punch item',
       meta: join('Punch', r.location || null, ctx.job(r.project_id), day ? dueText(day, ctx.today) : null),
       day, now: false, tone: dueTone(day, ctx.today), amount: null,
-      href: r.project_id ? `/app/projects/${r.project_id}/punch-list` : '/app/punch-list', action: null,
+      href: r.project_id ? `/app/projects/${r.project_id}/punch-list` : '/app/projects', action: null,
       done: { kind: 'punch' as const, id: r.id },
     };
   });
@@ -365,7 +365,7 @@ export function todoItems(rows: TodoRow[], ctx: BuildCtx): MyWorkItem[] {
       title: r.title || r.description || 'To-do',
       meta: join('To-do', ctx.job(r.project_id), high ? 'high priority' : null, day ? dueText(day, ctx.today) : null),
       day, now: false, tone: dueTone(day, ctx.today, high ? 'amber' : 'grey'), amount: null,
-      href: r.project_id ? `/app/projects/${r.project_id}/todos` : '/app/todos', action: null,
+      href: r.project_id ? `/app/projects/${r.project_id}/todos` : '/app/projects', action: null,
       done: { kind: 'todo' as const, id: r.id },
     };
   });
@@ -381,7 +381,7 @@ export function issueItems(rows: IssueRow[], ctx: BuildCtx): MyWorkItem[] {
       title: r.title || 'Field issue',
       meta: join(r.issue_number ? `Field issue ${r.issue_number}` : 'Field issue', ctx.job(r.project_id), day ? dueText(day, ctx.today) : null),
       day, now: false, tone: dueTone(day, ctx.today), amount: null,
-      href: r.project_id ? `/app/projects/${r.project_id}/safety` : '/app/safety', action: null, done: null,
+      href: r.project_id ? `/app/projects/${r.project_id}/safety` : '/app/projects', action: null, done: null,
     };
   });
 }
@@ -401,7 +401,7 @@ export function inspectionItems(rows: InspectionRow[], ctx: BuildCtx, horizonDay
     const type = (r.inspection_type || 'Inspection').replace(/\s+inspection$/i, '');
     const who = r.inspector_name || r.inspector || r.agency || null;
     const base = { source: 'inspections' as const, projectId: r.project_id, amount: null, action: null, done: null };
-    const href = r.project_id ? `/app/projects/${r.project_id}/inspections?inspection=${r.id}` : '/app/inspections';
+    const href = r.project_id ? `/app/projects/${r.project_id}/inspections?inspection=${r.id}` : '/app/projects';
     const outcome = inspectionOutcome(r);
     if (outcome === 'failed') {
       const re = toDay(r.re_inspection_date);
@@ -519,7 +519,7 @@ export function payAppItems(rows: PayAppRow[], ctx: BuildCtx): MyWorkItem[] {
     if (r.payment_received_at) continue;
     const n = r.app_number != null && String(r.app_number).trim() ? String(r.app_number).trim() : '';
     const amount = num(r.current_payment_due) ?? num(r.net_payment_due);
-    const href = r.project_id ? `/app/projects/${r.project_id}/pay-apps/${r.id}` : '/app/pay-apps';
+    const href = r.project_id ? `/app/projects/${r.project_id}/pay-apps/${r.id}` : '/app/projects';
     const base = { key: `pay-app:${r.id}`, source: 'pay_apps' as const, projectId: r.project_id, amount, href, action: null, done: null, now: true };
     if (st === 'submitted' || st === 'under_review') {
       const since = dayOfValue(r.submitted_at, ctx.zone);
@@ -542,7 +542,7 @@ export function tmItems(rows: TmRow[], ctx: BuildCtx): MyWorkItem[] {
     title: `Approve T&M ${r.ticket_number ? `ticket ${r.ticket_number}` : 'ticket'}`,
     meta: join(r.description || null, num(r.total) ? money(r.total) : null, ctx.job(r.project_id)),
     day: null, now: true, tone: 'amber' as const, amount: num(r.total),
-    href: r.project_id ? `/app/projects/${r.project_id}/tm-tickets` : '/app/tm-tickets', action: null, done: null,
+    href: r.project_id ? `/app/projects/${r.project_id}/tm-tickets` : '/app/projects', action: null, done: null,
   }));
 }
 

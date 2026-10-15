@@ -206,7 +206,7 @@ export async function onPayAppApproved(payAppId: string): Promise<void> {
         const w = waiver as any;
         await sendLienWaiverRequest(
           sub.email, sub.company, project.name, waiverAmount,
-          `${APP_URL}/portals/lien-waiver/${w.token}`
+          `${APP_URL}/portals/sub/login`
         );
       }
     }
@@ -996,7 +996,7 @@ export async function onSubstantialCompletion(projectId: string): Promise<void> 
       p.tenant_id, null, 'document_generated',
       `G704 Substantial Completion Certificate generated`,
       `Project ${p.name} marked substantially complete. G704 auto-generated.`,
-      `${APP_URL}/app/projects/${projectId}/documents`, projectId
+      `${APP_URL}/app/projects/${projectId}/files`, projectId
     );
     await dispatchWebhookEvent(p.tenant_id, 'project.substantial_completion', {
       id: projectId,
