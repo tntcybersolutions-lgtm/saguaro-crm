@@ -1,8 +1,18 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { createServerClient, getUser } from '@/lib/supabase-server';
+import { apiError } from '@/lib/api-error';
+
+/**
+ * GET /api/submittals/list?projectId= → { submittals }
+ *
+ * Each row also carries `bic_since`: the moment its ball in court last moved,
+ * from the change-history trigger (audit_logs). That read is non-fatal — when
+ * it fails or a row has no recorded handoff, `bic_since` is null and the
+ * screen falls back to the row's own phase date.
+ */
 export async function GET(req: NextRequest) {
   const user = await getUser(req);
-  if (!user) return NextResponse.json({ submittals: [] }, { status: 401 });
+  if (!user) return NextResponse.json({ error: 'Unauthorized', submittals: [] }, { status: 401 });
   const { searchParams } = new URL(req.url);
   const projectId = searchParams.get('projectId');
   try {
@@ -11,8 +21,26 @@ export async function GET(req: NextRequest) {
     if (projectId) query = query.eq('project_id', projectId);
     const { data, error } = await query;
     if (error) throw error;
-    return NextResponse.json({ submittals: data || [] });
-  } catch {
-    return NextResponse.json({ submittals: [] }, { status: 500 });
+    const rows = (data || []) as Record<string, any>[];
+
+    const since = new Map<string, string>();
+    if (projectId && rows.length) {
+      const { data: hist, error: hErr } = await db
+        .from('audit_logs')
+        .select('entity_id, created_at')
+        .eq('tenant_id', user.tenantId)
+        .eq('project_id', projectId)
+        .eq('entity_type', 'submittals')
+        .not('changes->ball_in_court', 'is', null)
+        .order('created_at', { ascending: false })
+        .limit(5000);
+      if (hErr) console.error('[submittals/list] ball-in-court history read failed', hErr);
+      for (const h of (hist || []) as { entity_id: string | null; created_at: string }[]) {
+        if (h.entity_id && !since.has(String(h.entity_id))) since.set(String(h.entity_id), h.created_at);
+      }
+    }
+    return NextResponse.json({ submittals: rows.map((r) => ({ ...r, bic_since: since.get(String(r.id)) || null })) });
+  } catch (e) {
+    return apiError('submittals/list', e, "Couldn't load the submittal log. Please try again.");
   }
 }

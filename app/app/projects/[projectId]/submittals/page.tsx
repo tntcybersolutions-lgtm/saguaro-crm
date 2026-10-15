@@ -24,9 +24,9 @@ import SaguaroDatePicker from '@/components/SaguaroDatePicker';
 import { humanError } from '@/lib/errors';
 import { useParams } from 'next/navigation';
 import { getAuthHeaders } from '@/lib/supabase-browser';
-import { Plus, Clipboard, X, CaretRight, ClipboardText, WarningCircle, PencilSimple, Trash, UserSwitch, ArrowClockwise, ArrowSquareOut, Stack, HourglassMedium, MagnifyingGlass, CalendarX } from '@phosphor-icons/react';
+import { Plus, Clipboard, X, CaretRight, ClipboardText, WarningCircle, PencilSimple, Trash, UserSwitch, ArrowClockwise, ArrowSquareOut, Stack, HourglassMedium, MagnifyingGlass, CalendarX, Compass } from '@phosphor-icons/react';
 import {
-  PageShell, Card, StatRow, Badge, Button, Toolbar, DataTable, EmptyState, RowActions,
+  PageShell, Card, StatRow, Badge, Avatar, Button, Toolbar, DataTable, EmptyState, RowActions,
   FormModal, Field, Input, Textarea, Select, FormGrid, DetailList, Toast, useToast, Callout,
   type Column, type Action, type BadgeTone, type StatItem,
 } from '@/components/ui/kit';
@@ -35,6 +35,8 @@ import { useUnsavedGuard, useComposerDirty } from '@/lib/useUnsavedGuard';
 import UnsavedGuardModal from '@/components/UnsavedGuardModal';
 import { layout } from '@/lib/design-tokens';
 import { localDay } from '@/lib/calendar-day';
+import WorkflowChain from '@/components/submittals/WorkflowChain';
+import { ballHolder, isWithDesign } from '@/lib/submittal-workflow';
 
 const STATUSES=['pending','submitted','under_review','approved','rejected','revise_resubmit'];
 const STATUS_LABELS:Record<string,string>={
@@ -57,7 +59,7 @@ function statusBadge(s:string|null|undefined): { label:string; tone:BadgeTone } 
   return { label: STATUS_LABELS[k] || k.replace(/_/g,' ').replace(/\b\w/g,(c)=>c.toUpperCase()) || 'Pending', tone:'neutral' };
 }
 const BIC_OPTIONS=['Contractor','Architect','Owner','Engineer'];
-type StatusFilter = 'all' | 'overdue' | (typeof STATUSES)[number];
+type StatusFilter = 'all' | 'overdue' | 'with_design' | (typeof STATUSES)[number];
 
 const isoDate=(d:Date)=>`${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,'0')}-${String(d.getDate()).padStart(2,'0')}`;
 /** Date-only values parse at local noon ('T12:00:00') so they never shift a day under UTC. */
@@ -105,8 +107,11 @@ const CSS = `
 .sbSection + .sbSection { margin-top: 20px; padding-top: 20px; border-top: 1px solid var(--border-subtle); }
 .sbSectionTitle { font-size: var(--fs-sm); font-weight: 700; color: var(--text-tertiary); }
 .sbProse { font-size: var(--fs-md); line-height: 1.6; color: var(--text-secondary); white-space: pre-wrap; overflow-wrap: anywhere; max-width: ${layout.readingMaxWidth}; }
-.sbFlow { display: flex; align-items: center; gap: 4px; flex-wrap: wrap; }
-.sbFlow > svg { color: var(--text-tertiary); }
+.sbBic { display: inline-flex; align-items: center; gap: 8px; min-width: 0; }
+.sbBicText { display: flex; flex-direction: column; min-width: 0; line-height: 1.25; }
+.sbBicText > span:first-child { color: var(--text-primary); font-weight: 600; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; max-width: 140px; }
+.sbBicText > span + span { font-size: var(--fs-xs); color: var(--text-tertiary); font-weight: 700; }
+.sbBic[data-late="true"] .sbBicText > span + span { color: var(--danger); }
 .sbActions { display: flex; flex-direction: column; gap: 8px; }
 .sbActions .k-btn { width: 100%; justify-content: flex-start; }
 .sbActionsRow { display: flex; gap: 8px; align-items: center; }
@@ -302,6 +307,7 @@ export default function SubmittalsPage(){
     return !!(s.due_date&&s.due_date.substring(0,10)<today&&s.status!=='approved'&&s.status!=='rejected');
   }
   const overdue=submittals.filter(isOverdue).length;
+  const withDesign=submittals.filter(isWithDesign).length;
 
   // Canonical CSI spec-section options + the live sub roster for the create panel.
   const specOptions=Object.entries(CSI_DIVISIONS).map(([code,d])=>`${code} — ${d.name}`);
@@ -313,7 +319,7 @@ export default function SubmittalsPage(){
       ||(s.title||'').toLowerCase().includes(search.toLowerCase())
       ||(s.spec_section||'').toLowerCase().includes(search.toLowerCase())
       ||(s.trade||'').toLowerCase().includes(search.toLowerCase());
-    const mst=filterStatus==='all'||(filterStatus==='overdue'?isOverdue(s):s.status===filterStatus);
+    const mst=filterStatus==='all'||(filterStatus==='overdue'?isOverdue(s):filterStatus==='with_design'?isWithDesign(s):s.status===filterStatus);
     const mb=filterBIC==='all'||s.ball_in_court===filterBIC;
     return ms&&mst&&mb;
   });
@@ -335,12 +341,14 @@ export default function SubmittalsPage(){
         { label:'Total', value:'—', sub:'Loading…', icon:<Stack size={15}/> },
         { label:'Pending', value:'—', sub:'Loading…', icon:<HourglassMedium size={15}/> },
         { label:'Under Review', value:'—', sub:'Loading…', icon:<MagnifyingGlass size={15}/> },
+        { label:'With Architect', value:'—', sub:'Loading…', icon:<Compass size={15}/> },
         { label:'Overdue', value:'—', sub:'Loading…', icon:<CalendarX size={15}/> },
       ]
     : [
         { label:'Total', value:total, sub: filtersActive ? 'Click to show everything' : 'Submittals on the log', icon:<Stack size={15}/>, onClick: filtersActive ? clearFilters : undefined },
         { label:'Pending', value:pending, sub: filterStatus==='pending' ? 'Filtered — click to clear' : 'Awaiting submission', icon:<HourglassMedium size={15}/>, onClick:()=>toggleStatus('pending'), active: filterStatus==='pending' },
         { label:'Under Review', value:underReview, tone: underReview>0 ? 'warn' : 'default', sub: filterStatus==='under_review' ? 'Filtered — click to clear' : 'With the reviewer', icon:<MagnifyingGlass size={15}/>, onClick:()=>toggleStatus('under_review'), active: filterStatus==='under_review' },
+        { label:'With Architect', value:withDesign, tone: withDesign>0 ? 'warn' : 'default', sub: filterStatus==='with_design' ? 'Filtered — click to clear' : withDesign>0 ? 'Ball with the A/E or owner' : 'None out for review', icon:<Compass size={15}/>, onClick:()=>toggleStatus('with_design'), active: filterStatus==='with_design' },
         { label:'Overdue', value:overdue, tone: overdue>0 ? 'bad' : 'default', sub: filterStatus==='overdue' ? 'Filtered — click to clear' : overdue>0 ? 'Past required date' : 'None overdue', icon:<CalendarX size={15}/>, onClick:()=>toggleStatus('overdue'), active: filterStatus==='overdue' },
       ];
 
@@ -350,12 +358,21 @@ export default function SubmittalsPage(){
   const titleCol: Column<any> = { key:'title', header:'Title', primary:true, phone:'show', accessor:s=>s.title||'', render:s=><div className="sbTitle"><span title={s.title}>{s.title||'—'}</span>{s.trade&&<span>{s.trade}</span>}</div> };
   const specCol: Column<any> = { key:'spec_section', phone:'hide', header:'Spec Section', accessor:s=>s.spec_section||'', render:s=>s.spec_section?<span className="sbMuted">{s.spec_section}</span>:<span className="sbMuted">—</span> };
   const statusCol: Column<any> = { key:'status', phone:'show', header:'Status', accessor:s=>statusBadge(s.status).label, render:s=>{const b=statusBadge(s.status);return <span className="sbBadges"><Badge tone={b.tone}>{b.label}</Badge>{isOverdue(s)&&<Badge tone="overdue">Overdue</Badge>}</span>;} };
-  const bicCol: Column<any> = { key:'ball_in_court', phone:'show', header:'Ball in Court', accessor:s=>s.ball_in_court||'', render:s=>s.ball_in_court?<Badge tone="neutral">{s.ball_in_court}</Badge>:<span className="sbMuted">—</span> };
+  const bicCol: Column<any> = { key:'ball_in_court', phone:'show', header:'Ball in Court', accessor:s=>s.ball_in_court||'', render:s=>{
+    const h = ballHolder(s, today);
+    if (!h) return <span className="sbMuted">—</span>;
+    return (
+      <span className="sbBic" data-late={h.overdue?'true':undefined}>
+        <Avatar name={h.label} mark={h.initials} size={28} tone={h.overdue ? 'var(--danger)' : undefined}/>
+        <span className="sbBicText"><span>{h.label}</span>{h.daysHeld!=null&&<span>{h.daysHeld===0?'Today':`${h.daysHeld}d held`}</span>}</span>
+      </span>
+    );
+  } };
   const dueCol: Column<any> = { key:'due_date', phone:'show', header:'Required', accessor:s=>s.due_date?String(s.due_date).slice(0,10):'', render:s=><span className={isOverdue(s)?'sbLate':undefined}>{s.due_date?fmtDate(s.due_date):'—'}</span> };
   const revCol: Column<any> = { key:'revision_number', phone:'hide', header:'Rev.', accessor:s=>Number(s.revision_number)||0, align:'right', render:s=><span className="sbMuted">R{s.revision_number??0}</span> };
   const tradeCol: Column<any> = { key:'trade', header:'Trade', hidden:true, phone:'hide', accessor:s=>s.trade||'' };
   const submittedCol: Column<any> = { key:'submitted_at', header:'Submitted', hidden:true, phone:'hide', accessor:s=>s.submitted_at?String(s.submitted_at).slice(0,10):'', render:s=>s.submitted_at?fmtDate(s.submitted_at):'—' };
-  const columns: Column<any>[] = detailOpen ? [numCol, titleCol, statusCol, dueCol] : [numCol, titleCol, specCol, statusCol, bicCol, dueCol, revCol, tradeCol, submittedCol];
+  const columns: Column<any>[] = detailOpen ? [numCol, titleCol, statusCol, bicCol] : [numCol, titleCol, specCol, statusCol, bicCol, dueCol, revCol, tradeCol, submittedCol];
 
   /** The record's verbs — shared by the row overflow and the rail. */
   function subActions(s:any): Action[] {
@@ -383,15 +400,8 @@ export default function SubmittalsPage(){
             actions={<Button variant="ghost" size="sm" icon={<X size={16}/>} aria-label="Close details" title="Close details" onClick={closePanel}/>}
           >
             <div className="sbSection">
-              <div className="sbSectionTitle">Status Workflow</div>
-              <div className="sbFlow">
-                {STATUSES.map((s,i)=>(
-                  <React.Fragment key={s}>
-                    {i>0&&<CaretRight size={12}/>}
-                    <Badge tone={selected.status===s ? statusBadge(s).tone : 'neutral'}>{STATUS_LABELS[s]}</Badge>
-                  </React.Fragment>
-                ))}
-              </div>
+              <div className="sbSectionTitle">Approval Workflow</div>
+              <WorkflowChain submittal={selected} entityId={selected.id} architectName={ctx?.project?.architectName || null}/>
             </div>
             <div className="sbSection">
               <div className="sbSectionTitle">Notes</div>
