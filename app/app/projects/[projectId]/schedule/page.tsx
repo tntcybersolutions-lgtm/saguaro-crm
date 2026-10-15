@@ -1,918 +1,811 @@
 'use client';
+/**
+ * Project Schedule — tasks on a Gantt timeline, or as a sortable list.
+ *
+ * Anatomy: title + one primary action (Add Task) → StatRow (Tasks Complete and
+ * Delayed filter the views) → Tabs (Gantt / List) + Toolbar → the timeline or
+ * the DataTable, with a task detail card beside it (stacked on phones).
+ *
+ * Every write goes through a route this screen already used:
+ *   list     GET    /api/schedule/list?projectId=
+ *   create   POST   /api/schedule/create
+ *   update   PUT    /api/schedule/[id]          (edit, quick % / status)
+ *   delete   DELETE /api/schedule/[id]
+ *   baseline POST   /api/projects/[id]/schedule/baseline
+ */
 import React, { useState, useEffect, useCallback, useRef } from 'react';
-import { useSort, useSortedRows, SortTh, SortBar } from '@/components/ui/sort';
+import { useParams } from 'next/navigation';
 import { jobBarStyle } from '@/lib/project-colors';
 import { useProjectColor } from '@/lib/hooks/useProjectColor';
 import { confirmDialog } from '@/lib/ui/async-dialog';
 import { useProjectContext } from '@/lib/hooks/useProjectContext';
 import SaguaroDatePicker from '@/components/SaguaroDatePicker';
 import { humanError } from '@/lib/errors';
-import { useParams } from 'next/navigation';
 import { getAuthHeaders } from '@/lib/supabase-browser';
-import { SkeletonKPI, SkeletonRow } from '@/components/ui/Skeleton';
-import { WarningCircle, CalendarBlank, X, Plus, TrendUp, CheckCircle, Clock, ListChecks, Flag } from '@phosphor-icons/react';
-import { PremiumSurface, ModuleHero, StatCard, SectionCard, PremiumEmpty, StatStrip, FlowSteps, FlowStrip, AutoChip, goldButtonStyle, ghostButtonStyle, goldOutlineButtonStyle, secondaryButtonStyle } from '@/components/ui/premium';
+import { SkeletonRow } from '@/components/ui/Skeleton';
+import {
+  PageShell, Card, StatRow, Badge, Button, Tabs, Toolbar, DataTable, EmptyState, Select,
+  FormModal, Field, Input, Textarea, FormGrid, DetailList, Toast, useToast,
+  type Column, type Action, type BadgeTone, type StatItem,
+} from '@/components/ui/kit';
+import {
+  WarningCircle, CalendarBlank, X, Plus, TrendUp, CheckCircle, Clock, Flag,
+  PencilSimple, Trash, ArrowClockwise, Eye, ChartLineDown,
+} from '@phosphor-icons/react';
 import { SUB_TRADES, SUB_TRADES_BY_DIVISION } from '@/lib/construction-intelligence';
-import { moduleAccent } from '@/lib/ui/app-accent';
 import { useUnsavedGuard, useComposerDirty } from '@/lib/useUnsavedGuard';
 import UnsavedGuardModal from '@/components/UnsavedGuardModal';
 import Suggest from '@/components/ui/Suggest';
 import { localDay } from '@/lib/calendar-day';
 import { baselineSummary, finishVariance, varianceLabel } from '@/lib/schedule-baseline';
 
-const GOLD='var(--brand-primary)',DARK='var(--bg-base)',RAISED='var(--bg-surface)',BORDER='rgba(255,255,255,0.12)',DIM='var(--text-secondary)',TEXT='var(--text-primary)';
-const GREEN='var(--success)',RED='var(--danger)',ORANGE='var(--warning)';
+const STATUSES = ['not_started', 'in_progress', 'completed', 'delayed', 'on_hold'];
+const STATUS_LABELS: Record<string, string> = {
+  not_started: 'Not Started', in_progress: 'In Progress',
+  completed: 'Completed', delayed: 'Delayed', on_hold: 'On Hold',
+};
+/** Progress-fill colour per status — status tokens only, never the brand yellow. */
+const STATUS_FILL: Record<string, string> = {
+  not_started: 'var(--text-tertiary)', in_progress: 'var(--status-ongoing)',
+  completed: 'var(--status-completed)', delayed: 'var(--status-overdue)', on_hold: 'var(--status-lead)',
+};
+const STATUS_TONE: Record<string, BadgeTone> = {
+  not_started: 'neutral', in_progress: 'ongoing', completed: 'completed', delayed: 'overdue', on_hold: 'lead',
+};
+const PHASES = ['Pre-Construction', 'Foundation', 'Framing', 'MEP Rough', 'Insulation',
+  'Drywall', 'Finishes', 'MEP Trim', 'Punch List', 'Closeout', 'Other'];
 
-const STATUSES=['not_started','in_progress','completed','delayed','on_hold'];
-const STATUS_LABELS:Record<string,string>={
-  not_started:'Not Started',in_progress:'In Progress',
-  completed:'Completed',delayed:'Delayed',on_hold:'On Hold',
-};
-const STATUS_COLORS:Record<string,string>={
-  not_started:DIM,in_progress:GOLD,completed:GREEN,delayed:RED,on_hold:ORANGE,
-};
-const PHASES=['Pre-Construction','Foundation','Framing','MEP Rough','Insulation',
-  'Drywall','Finishes','MEP Trim','Punch List','Closeout','Other'];
-
-const inp:React.CSSProperties={
-  width:'100%',padding:'9px 12px',background:'var(--bg-surface-2)',
-  border:'1px solid rgba(255,255,255,0.12)',borderRadius:7,color:'var(--text-primary)',
-  fontSize:13,outline:'none',boxSizing:'border-box',
-};
-const EMPTY:Record<string,any>={
-  name:'',phase:'',trade:'',start_date:'',end_date:'',
-  pct_complete:0,status:'not_started',predecessor:'',predecessor_id:'',assigned_to:'',notes:'',
+const EMPTY: Record<string, any> = {
+  name: '', phase: '', trade: '', start_date: '', end_date: '',
+  pct_complete: 0, status: 'not_started', predecessor: '', predecessor_id: '', assigned_to: '', notes: '',
 };
 // Canonical trade taxonomy — CSI division groups plus the specialty markets outside them.
-const DIVISION_TRADE_SET=new Set(SUB_TRADES_BY_DIVISION.flatMap(d=>d.trades));
-const EXTRA_TRADES=SUB_TRADES.filter(t=>!DIVISION_TRADE_SET.has(t));
-const HINT:React.CSSProperties={fontSize:12,color:'var(--c-text-2)',marginTop:5,lineHeight:1.45};
+const DIVISION_TRADE_SET = new Set(SUB_TRADES_BY_DIVISION.flatMap(d => d.trades));
+const EXTRA_TRADES = SUB_TRADES.filter(t => !DIVISION_TRADE_SET.has(t));
 
-function Field({label,children}:{label:React.ReactNode;children:React.ReactNode}){
-  return(
-    <div>
-      <label style={{display:'block',fontSize:12,fontWeight:700,color:DIM,
-        marginBottom:5}}>{label}</label>
-      {children}
-    </div>
+const DATE_INPUT_STYLE: React.CSSProperties = {
+  width: '100%', minHeight: 40, padding: '8px 12px', fontSize: 16,
+  background: 'var(--bg-surface-2)', border: '1px solid var(--border-default)',
+  borderRadius: 'var(--radius-sm)', color: 'var(--text-primary)',
+};
+
+function daysBetween(a: string, b: string) {
+  return Math.max(1, Math.round((new Date(b).getTime() - new Date(a).getTime()) / 86400000));
+}
+
+function addDaysISO(ymd: string, days: number) {
+  const [y, m, d] = ymd.split('-').map(Number);
+  const dt = new Date(y, (m || 1) - 1, (d || 1) + days);
+  return `${dt.getFullYear()}-${String(dt.getMonth() + 1).padStart(2, '0')}-${String(dt.getDate()).padStart(2, '0')}`;
+}
+
+function fmtShort(d?: string | null) {
+  return d ? new Date(String(d).slice(0, 10) + 'T00:00:00').toLocaleDateString('en-US', { month: 'short', day: 'numeric' }) : '—';
+}
+function fmtDate(d?: string | null) {
+  return d ? new Date(String(d).slice(0, 10) + 'T00:00:00').toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' }) : '—';
+}
+
+const CSS = `
+.schCq { container: schws / inline-size; min-width: 0; }
+.schSplit { display: grid; grid-template-columns: minmax(0, 1fr); gap: 16px; align-items: start; min-width: 0; }
+.schSplit > * { min-width: 0; }
+@container schws (min-width: 1020px) {
+  .schSplit[data-open="true"] { grid-template-columns: minmax(0, 1fr) clamp(320px, 30%, 400px); }
+  .schSplit[data-open="true"] .schDetail { position: sticky; top: 16px; }
+}
+.schGantt { overflow-x: auto; }
+.schGrid { min-width: 700px; }
+.schRow { display: grid; grid-template-columns: 200px minmax(0, 1fr); align-items: center; min-height: 38px; border-bottom: 1px solid var(--border-subtle); }
+.schRow[role="button"] { cursor: pointer; }
+.schRow[role="button"]:hover { background: var(--bg-row-hover); }
+.schRow[role="button"]:focus-visible { outline: 2px solid var(--border-interactive); outline-offset: -2px; }
+.schRow[data-sel="true"] { background: var(--brand-primary-08); box-shadow: inset 3px 0 0 var(--brand-primary); }
+.schHead { min-height: 30px; border-bottom: 1px solid var(--border-default); }
+.schLabel { padding: 0 12px; font-size: 13px; font-weight: 600; color: var(--text-primary); overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.schLabel[data-done="true"] { color: var(--text-secondary); text-decoration: line-through; }
+.schTrack { position: relative; height: 26px; margin-right: 12px; }
+.schTrack[data-base="true"] { height: 32px; }
+.schHead .schTrack { height: 30px; }
+.schWeek { position: absolute; top: 8px; font-size: 12px; color: var(--text-tertiary); white-space: nowrap; transform: translateX(-50%); }
+.schToday { position: absolute; top: 0; bottom: 0; width: 2px; background: color-mix(in srgb, var(--text-primary) 55%, transparent); z-index: 1; pointer-events: none; }
+.schTodayTag { position: absolute; top: 6px; transform: translateX(-50%); font-size: 12px; font-weight: 700; color: var(--text-primary); background: var(--bg-surface-2); border: 1px solid var(--border-default); border-radius: var(--radius-pill); padding: 0 6px; white-space: nowrap; z-index: 2; }
+.schBar { position: absolute; top: 5px; height: 16px; border-radius: 3px; box-sizing: border-box; overflow: hidden; }
+.schFill { height: 100%; opacity: .85; transition: width .3s; }
+.schPct { position: absolute; inset: 0 4px; font-size: 12px; font-weight: 700; color: var(--text-primary); line-height: 16px; overflow: hidden; white-space: nowrap; text-overflow: ellipsis; }
+.schBase { position: absolute; top: 24px; height: 4px; border-radius: 2px; background: color-mix(in srgb, var(--text-primary) 45%, transparent); }
+.schVar { position: absolute; top: 5px; font-size: 12px; font-weight: 800; line-height: 16px; white-space: nowrap; }
+.schMeter { display: flex; align-items: center; gap: 8px; }
+.schMeterTrack { width: 60px; height: 6px; background: var(--bg-surface-2); border-radius: 3px; overflow: hidden; flex-shrink: 0; }
+.schMeterTrack[data-big="true"] { width: 100%; height: 10px; border-radius: 5px; }
+.schMeterFill { height: 100%; border-radius: inherit; transition: width .3s; }
+.schMuted { color: var(--text-tertiary); }
+.schSection { display: flex; flex-direction: column; gap: 10px; }
+.schSection + .schSection { margin-top: 18px; padding-top: 18px; border-top: 1px solid var(--border-subtle); }
+.schSectionTitle { font-size: var(--fs-sm); font-weight: 700; color: var(--text-tertiary); }
+.schQuick { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 6px; }
+.schQuick .k-btn { justify-content: center; }
+.schProse { font-size: var(--fs-md); line-height: 1.6; color: var(--text-secondary); white-space: pre-wrap; overflow-wrap: anywhere; }
+.schSeeds { display: flex; align-items: center; gap: 8px; flex-wrap: wrap; justify-content: center; }
+.schForm { display: flex; flex-direction: column; gap: 16px; }
+@media (max-width: 640px) {
+  .schRow { grid-template-columns: 140px minmax(0, 1fr); }
+  .schWs .k-btn, .schWs .k-stat, .schWs select.k-select, .schWs .k-input { min-height: 44px; }
+}
+`;
+
+/* ── Gantt timeline ─────────────────────────────────────────────── */
+function GanttChart({ tasks, jobHex, selectedId, onSelect }: { tasks: any[]; jobHex: string; selectedId?: string | null; onSelect: (t: any) => void }) {
+  const withDates = tasks.filter(t =>
+    t.start_date && t.end_date
+    && !Number.isNaN(Date.parse(t.start_date))
+    && !Number.isNaN(Date.parse(t.end_date))
   );
-}
-
-function daysBetween(a:string,b:string){
-  return Math.max(1,Math.round((new Date(b).getTime()-new Date(a).getTime())/86400000));
-}
-
-function addDaysISO(ymd:string,days:number){
-  const [y,m,d]=ymd.split('-').map(Number);
-  const dt=new Date(y,(m||1)-1,(d||1)+days);
-  return `${dt.getFullYear()}-${String(dt.getMonth()+1).padStart(2,'0')}-${String(dt.getDate()).padStart(2,'0')}`;
-}
-
-function fmtShort(d?:string|null){
-  return d?new Date(String(d).slice(0,10)+'T00:00:00').toLocaleDateString('en-US',{month:'short',day:'numeric'}):'—';
-}
-
-/* ── Gantt bar chart ────────────────────────────────────────────── */
-function GanttChart({tasks, jobHex}:{tasks:any[]; jobHex:string}){
-  const withDates = tasks.filter(t=>
-    t.start_date&&t.end_date
-    &&!Number.isNaN(Date.parse(t.start_date))
-    &&!Number.isNaN(Date.parse(t.end_date))
-  );
-  if(!withDates.length) return(
-    <div style={{padding:40,textAlign:'center',color:DIM,fontSize:13}}>
-      Add tasks with start &amp; end dates to see the Gantt chart.
-    </div>
+  if (!withDates.length) return (
+    <EmptyState icon={<CalendarBlank size={22} />} title="No dated tasks" text="Give a task a start and end date and it draws here." />
   );
 
-  const allDates = withDates.flatMap(t=>[t.start_date,t.end_date,t.baseline_start,t.baseline_end].filter((d:any)=>typeof d==='string'&&!Number.isNaN(Date.parse(d))));
+  const allDates = withDates.flatMap(t => [t.start_date, t.end_date, t.baseline_start, t.baseline_end].filter((d: any) => typeof d === 'string' && !Number.isNaN(Date.parse(d))));
   /* Calendar days, counted as days: new Date('YYYY-MM-DD') is UTC midnight,
      so the padding and week steps move in UTC days and labels read in UTC —
      mixing in local setDate/toLocaleDateString labelled every week one day
      early in the US. Only "today" is local: this device's day. */
-  const minDate  = new Date(allDates.reduce((m,d)=>d<m?d:m));
-  const maxDate  = new Date(allDates.reduce((m,d)=>d>m?d:m));
-  // Add padding
-  minDate.setUTCDate(minDate.getUTCDate()-2);
-  maxDate.setUTCDate(maxDate.getUTCDate()+5);
-  const ymd = (d:Date) => d.toISOString().split('T')[0]; // a UTC-midnight calendar day
+  const minDate = new Date(allDates.reduce((m, d) => d < m ? d : m));
+  const maxDate = new Date(allDates.reduce((m, d) => d > m ? d : m));
+  minDate.setUTCDate(minDate.getUTCDate() - 2);
+  maxDate.setUTCDate(maxDate.getUTCDate() + 5);
+  const ymd = (d: Date) => d.toISOString().split('T')[0]; // a UTC-midnight calendar day
   const totalDays = daysBetween(ymd(minDate), ymd(maxDate));
+  const pct = (date: string) => Math.max(0, Math.min(100, daysBetween(ymd(minDate), date) / totalDays * 100));
 
-  function pct(date:string){
-    return Math.max(0,Math.min(100,
-      daysBetween(ymd(minDate),date)/totalDays*100
-    ));
-  }
-
-  // Generate week markers
-  const markers:Date[]=[];
-  const cur=new Date(minDate);
-  while(cur<=maxDate){
+  const markers: Date[] = [];
+  const cur = new Date(minDate);
+  while (cur <= maxDate) {
     markers.push(new Date(cur));
-    cur.setUTCDate(cur.getUTCDate()+7);
+    cur.setUTCDate(cur.getUTCDate() + 7);
   }
 
-  const today=localDay();
-  const todayPct=pct(today);
+  const today = localDay();
+  const todayInRange = today >= ymd(minDate) && today <= ymd(maxDate);
+  const todayPct = pct(today);
 
-  return(
-    <div style={{overflow:'auto'}}>
-      {/* Week header */}
-      <div style={{display:'flex',borderBottom:`1px solid ${BORDER}`,paddingBottom:6,marginBottom:4,
-        paddingLeft:200,fontSize:12,color:DIM,position:'relative',minWidth:700}}>
-        {markers.map(m=>(
-          <div key={m.toISOString()} style={{
-            position:'absolute',
-            left:`calc(200px + ${pct(ymd(m))}%)`,
-            fontSize:12,color:DIM,whiteSpace:'nowrap',transform:'translateX(-50%)',
-          }}>
-            {m.toLocaleDateString('en-US',{month:'short',day:'numeric',timeZone:'UTC'})}
+  return (
+    <div className="schGantt">
+      <div className="schGrid">
+        <div className="schRow schHead" aria-hidden>
+          <div className="schLabel schMuted" style={{ fontSize: 12, fontWeight: 700 }}>Task</div>
+          <div className="schTrack">
+            {markers.map(m => (
+              <div key={m.toISOString()} className="schWeek" style={{ left: `${pct(ymd(m))}%` }}>
+                {m.toLocaleDateString('en-US', { month: 'short', day: 'numeric', timeZone: 'UTC' })}
+              </div>
+            ))}
+            {todayInRange && <div className="schTodayTag" style={{ left: `${todayPct}%` }}>Today</div>}
           </div>
-        ))}
-        &nbsp;
-      </div>
+        </div>
 
-      {/* Rows */}
-      {withDates.map(task=>{
-        const left=pct(task.start_date);
-        const width=Math.max(.5,pct(task.end_date)-left);
-        const color=STATUS_COLORS[task.status]||DIM;
-        const isDone=task.status==='completed';
-        return(
-          <div key={task.id} style={{display:'flex',alignItems:'center',
-            minHeight:36,borderBottom:`1px solid rgba(255,255,255,0.08)`,minWidth:700}}>
-            {/* Label */}
-            <div style={{width:200,flexShrink:0,paddingRight:12,
-              fontSize:12,fontWeight:600,color:isDone?DIM:TEXT,
-              overflow:'hidden',textOverflow:'ellipsis',whiteSpace:'nowrap',
-              textDecoration:isDone?'line-through':'none'}}>
-              {task.name}
-            </div>
-            {/* Bar area */}
-            <div style={{flex:1,position:'relative',height:task.baseline_end?30:24}}>
-              {/* Baseline: where this task was planned, under the bar. */}
-              {task.baseline_start&&task.baseline_end&&(
-                <div title={`Baseline ${fmtShort(task.baseline_start)} – ${fmtShort(task.baseline_end)}`} style={{position:'absolute',
-                  left:`${pct(task.baseline_start)}%`,width:`${Math.max(.5,pct(task.baseline_end)-pct(task.baseline_start))}%`,
-                  top:22,height:4,borderRadius:2,background:'rgba(255,255,255,0.45)'}}/>
-              )}
-              {(()=>{const v=finishVariance(task);return v!==null&&v!==0?(
-                <div style={{position:'absolute',left:`calc(${Math.min(96,pct(task.end_date))}% + 4px)`,top:4,
-                  fontSize:12,fontWeight:800,lineHeight:'16px',whiteSpace:'nowrap',color:v>0?RED:GREEN}}>{varianceLabel(v)}</div>
-              ):null;})()}
-              {/* Today line */}
-              <div style={{position:'absolute',left:`${todayPct}%`,top:0,bottom:0,
-                width:1,background:'var(--bg-surface-2)',zIndex:1}}/>
-              {/* Bar background */}
-              <div style={{position:'absolute',left:`${left}%`,width:`${width}%`,
-                top:4,height:16,borderRadius:3,boxSizing:'border-box',
-                ...jobBarStyle(jobHex),border:`1px solid color-mix(in srgb, ${jobHex} 40%, transparent)`,borderLeft:`3px solid ${jobHex}`}}>
-                {/* Progress fill */}
-                <div style={{
-                  height:'100%',borderRadius:2,
-                  background:color,opacity:.8,
-                  width:`${task.pct_complete??0}%`,
-                  transition:'width .3s',
-                }}/>
-                {/* Label on bar */}
-                {width>8&&(
-                  <div style={{position:'absolute',top:0,left:4,right:4,
-                    fontSize:12,fontWeight:700,color:'var(--text-primary)',
-                    lineHeight:'16px',overflow:'hidden',whiteSpace:'nowrap',
-                    textOverflow:'ellipsis',textShadow:'0 1px 2px rgba(0,0,0,.6)'}}>
-                    {task.pct_complete??0}%
-                  </div>
+        {withDates.map(task => {
+          const left = pct(task.start_date);
+          const width = Math.max(.5, pct(task.end_date) - left);
+          const fill = STATUS_FILL[task.status] || 'var(--text-tertiary)';
+          const isDone = task.status === 'completed';
+          const hasBase = !!(task.baseline_start && task.baseline_end);
+          const v = finishVariance(task);
+          return (
+            <div
+              key={task.id}
+              className="schRow"
+              role="button"
+              tabIndex={0}
+              data-sel={task.id === selectedId ? 'true' : undefined}
+              aria-label={`${task.name}, ${fmtShort(task.start_date)} to ${fmtShort(task.end_date)}, ${task.pct_complete ?? 0}% complete`}
+              onClick={() => onSelect(task)}
+              onKeyDown={e => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); onSelect(task); } }}
+            >
+              <div className="schLabel" data-done={isDone ? 'true' : undefined} title={task.name}>{task.name}</div>
+              <div className="schTrack" data-base={hasBase ? 'true' : undefined}>
+                {/* Baseline: where this task was planned, under the bar. */}
+                {hasBase && (
+                  <div className="schBase" title={`Baseline ${fmtShort(task.baseline_start)} – ${fmtShort(task.baseline_end)}`}
+                    style={{ left: `${pct(task.baseline_start)}%`, width: `${Math.max(.5, pct(task.baseline_end) - pct(task.baseline_start))}%` }} />
                 )}
+                {v !== null && v !== 0 && (
+                  <div className="schVar" style={{ left: `calc(${Math.min(96, pct(task.end_date))}% + 4px)`, color: v > 0 ? 'var(--danger)' : 'var(--success)' }}>{varianceLabel(v)}</div>
+                )}
+                {todayInRange && <div className="schToday" style={{ left: `${todayPct}%` }} />}
+                <div className="schBar" style={{
+                  left: `${left}%`, width: `${width}%`,
+                  ...jobBarStyle(jobHex), border: `1px solid color-mix(in srgb, ${jobHex} 40%, transparent)`, borderLeft: `3px solid ${jobHex}`,
+                }}>
+                  <div className="schFill" style={{ background: fill, width: `${task.pct_complete ?? 0}%` }} />
+                  {width > 8 && <div className="schPct">{task.pct_complete ?? 0}%</div>}
+                </div>
               </div>
             </div>
-          </div>
-        );
-      })}
+          );
+        })}
+      </div>
     </div>
   );
 }
 
-const TASK_COLS = [
-  { key: 'name', label: 'Task' }, { key: 'phase', label: 'Phase' }, { key: 'start_date', label: 'Start' }, { key: 'end_date', label: 'End' },
-  { key: 'duration', label: 'Duration' }, { key: 'status', label: 'Status' }, { key: 'pct_complete', label: '% Done' }, { key: 'assigned_to', label: 'Assigned' },
-];
+function Meter({ pct, status, big }: { pct: number; status: string; big?: boolean }) {
+  const fill = STATUS_FILL[status] || 'var(--text-tertiary)';
+  return (
+    <div className="schMeterTrack" data-big={big ? 'true' : undefined}>
+      <div className="schMeterFill" style={{ width: `${pct}%`, background: fill }} />
+    </div>
+  );
+}
 
-export default function SchedulePage(){
-  const {projectId}=useParams() as {projectId:string};
+export default function SchedulePage() {
+  const { projectId } = useParams() as { projectId: string };
   const jobHex = useProjectColor(projectId);
-  const [tasks,setTasks]=useState<any[]>([]);
-  const [loading,setLoading]=useState(true);
-  const [loadError,setLoadError]=useState('');
-  const [selected,setSelected]=useState<any>(null);
-  const [mode,setMode]=useState<'view'|'edit'|'create'|null>(null);
-  const [form,setForm]=useState<Record<string,any>>({...EMPTY});
+  const [tasks, setTasks] = useState<any[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [loadError, setLoadError] = useState('');
+  const [selected, setSelected] = useState<any>(null);
+  const [mode, setMode] = useState<'view' | 'edit' | 'create' | null>(null);
+  const [form, setForm] = useState<Record<string, any>>({ ...EMPTY });
+  const detailRef = useRef<HTMLDivElement>(null);
 
   /* ── Unsaved-work guard: the composer holds real typing, so leaving this
    *    module (sidebar, field nav, ⌘K, breadcrumb, back) confirms first, and
    *    the draft is kept on this device either way. ── */
-  const composerDirty = useComposerDirty(mode==='create'||mode==='edit', form);
+  const composerDirty = useComposerDirty(mode === 'create' || mode === 'edit', form);
   const guard = useUnsavedGuard({
     dirty: composerDirty,
     draftKey: `schedule:${projectId}`,
-    draftData: mode==='create'?form:undefined,
-    restoreDraft: (d) => { setForm(d as Record<string,any>); setMode('create'); setSelected(null); },
+    draftData: mode === 'create' ? form : undefined,
+    restoreDraft: (d) => { setForm(d as Record<string, any>); setMode('create'); setSelected(null); },
     onSave: () => save(),
   });
-  const [saving,setSaving]=useState(false);
-  const [deleting,setDeleting]=useState(false);
-  const [toast,setToast]=useState<{msg:string;type:'success'|'error'}|null>(null);
-  const [viewMode,setViewMode]=useState<'gantt'|'list'>('gantt');
-  const [baselining,setBaselining]=useState(false);
-  const [search,setSearch]=useState('');
-  const [filterStatus,setFilterStatus]=useState('all');
-  const [filterPhase,setFilterPhase]=useState('all');
+  const [saving, setSaving] = useState(false);
+  const [deleting, setDeleting] = useState(false);
+  const { toast, show } = useToast(4000);
+  const [viewMode, setViewMode] = useState<'gantt' | 'list'>('gantt');
+  const [baselining, setBaselining] = useState(false);
+  const [search, setSearch] = useState('');
+  const [filterStatus, setFilterStatus] = useState('all');
+  const [filterPhase, setFilterPhase] = useState('all');
   // SmartCreate: the add flow walks in knowing the project — /api/project-context snapshot.
   const { ctx } = useProjectContext(projectId);
-  const [duration,setDuration]=useState('');
-  const [auto,setAuto]=useState<{start?:boolean;end?:boolean}>({});
+  const [duration, setDuration] = useState('');
+  const [auto, setAuto] = useState<{ start?: boolean; end?: boolean }>({});
 
-  const showToast=(msg:string,type:'success'|'error'='success')=>{
-    setToast({msg,type}); setTimeout(()=>setToast(null),4000);
-  };
+  const showToast = (msg: string, type: 'success' | 'error' = 'success') => show(msg, type === 'error' ? 'bad' : 'good');
 
-  const load=useCallback(async()=>{
+  const load = useCallback(async () => {
     setLoading(true);
-    try{
+    try {
       setLoadError('');
-      const h=await getAuthHeaders();
-      const r=await fetch(`/api/schedule/list?projectId=${projectId}`,{headers:h});
+      const h = await getAuthHeaders();
+      const r = await fetch(`/api/schedule/list?projectId=${projectId}`, { headers: h });
       if (!r.ok) throw new Error('Failed to load data');
-      const d=await r.json();
-      setTasks(d.tasks||[]);
-    }catch{setTasks([]);setLoadError('Failed to load. Please try again.');}
-    finally{setLoading(false);}
-  },[projectId]);
+      const d = await r.json();
+      setTasks(d.tasks || []);
+    } catch (e) {
+      console.error(e);
+      setTasks([]);
+      setLoadError('Failed to load. Please try again.');
+    } finally { setLoading(false); }
+  }, [projectId]);
 
   // Background revalidate — reconciles server truth after an optimistic write
   // without flipping the schedule back into its loading state.
-  const revalidate=useCallback(async()=>{
-    try{
-      const h=await getAuthHeaders();
-      const r=await fetch(`/api/schedule/list?projectId=${projectId}`,{headers:h});
-      if(!r.ok) return;
-      const d=await r.json();
-      setTasks(d.tasks||[]);
-    }catch{/* background refresh — keep the optimistic rows */}
-  },[projectId]);
+  const revalidate = useCallback(async () => {
+    try {
+      const h = await getAuthHeaders();
+      const r = await fetch(`/api/schedule/list?projectId=${projectId}`, { headers: h });
+      if (!r.ok) return;
+      const d = await r.json();
+      setTasks(d.tasks || []);
+    } catch { /* background refresh — keep the optimistic rows */ }
+  }, [projectId]);
 
-  useEffect(()=>{load();},[load]);
+  useEffect(() => { load(); }, [load]);
 
-  // Dead-space kill (spec 4.1): an empty schedule auto-opens the create panel —
+  // Dead-space kill (spec 4.1): an empty schedule auto-opens the create form —
   // the composer is the zero state. One-shot per visit so Cancel sticks.
-  // Not on a phone: there the panel is a full-screen sheet, and opening it
-  // unasked hid the whole page (and its Gantt / List / Add Task) on arrival.
-  // The empty state's Add Task button is one tap away instead.
-  const autoOpenedRef=useRef(false);
-  useEffect(()=>{
-    if(!loading&&!loadError&&tasks.length===0&&mode===null&&!autoOpenedRef.current){
-      autoOpenedRef.current=true;
-      const phone=typeof window!=='undefined'&&window.matchMedia('(max-width: 767px)').matches;
-      if(!phone) openCreate();
+  // Not on a phone: there the form is a full-screen sheet, and opening it
+  // unasked hid the whole page on arrival. The empty state's Add Task is one tap away.
+  const autoOpenedRef = useRef(false);
+  useEffect(() => {
+    if (!loading && !loadError && tasks.length === 0 && mode === null && !autoOpenedRef.current) {
+      autoOpenedRef.current = true;
+      const phone = typeof window !== 'undefined' && window.matchMedia('(max-width: 767px)').matches;
+      if (!phone) openCreate();
     }
-  },[loading,loadError,tasks.length,mode]);
-  // Escape closes the task panel (on a phone it covers the whole screen).
-  useEffect(()=>{
-    if(mode===null) return;
-    const onKey=(e:KeyboardEvent)=>{ if(e.key==='Escape'&&!e.defaultPrevented){ setSelected(null); setMode(null); } };
-    window.addEventListener('keydown',onKey);
-    return ()=>window.removeEventListener('keydown',onKey);
-  },[mode]);
+  }, [loading, loadError, tasks.length, mode]); // eslint-disable-line react-hooks/exhaustive-deps
+  // Escape closes the task detail card (the create/edit modal handles its own Escape).
+  useEffect(() => {
+    if (mode !== 'view') return;
+    const onKey = (e: KeyboardEvent) => { if (e.key === 'Escape' && !e.defaultPrevented) { setSelected(null); setMode(null); } };
+    window.addEventListener('keydown', onKey);
+    return () => window.removeEventListener('keydown', onKey);
+  }, [mode]);
 
-  function openCreate(){setForm({...EMPTY});setDuration('');setAuto({});setMode('create');setSelected(null);}
-  function openEdit(task:any){
-    setForm({name:task.name||'',phase:task.phase||'',trade:task.trade||'',
-      start_date:task.start_date||'',end_date:task.end_date||'',
-      pct_complete:task.pct_complete??0,status:task.status||'not_started',
-      predecessor:task.predecessor||'',predecessor_id:task.predecessor_id||'',
-      assigned_to:task.assigned_to||'',notes:task.notes||''});
-    setDuration(task.start_date&&task.end_date?String(daysBetween(task.start_date,task.end_date)):'');
+  function openCreate() { setForm({ ...EMPTY }); setDuration(''); setAuto({}); setMode('create'); setSelected(null); }
+  function openEdit(task: any) {
+    setForm({
+      name: task.name || '', phase: task.phase || '', trade: task.trade || '',
+      start_date: task.start_date || '', end_date: task.end_date || '',
+      pct_complete: task.pct_complete ?? 0, status: task.status || 'not_started',
+      predecessor: task.predecessor || '', predecessor_id: task.predecessor_id || '',
+      assigned_to: task.assigned_to || '', notes: task.notes || '',
+    });
+    setDuration(task.start_date && task.end_date ? String(daysBetween(task.start_date, task.end_date)) : '');
     setAuto({});
-    setSelected(task);setMode('edit');
+    setSelected(task); setMode('edit');
   }
-  function viewTask(task:any){setSelected(task);setMode('view');}
-  function closePanel(){setSelected(null);setMode(null);}
+  function viewTask(task: any) {
+    setSelected(task); setMode('view');
+    // Stacked layouts: bring the detail into view instead of leaving it below the fold.
+    requestAnimationFrame(() => {
+      const el = detailRef.current;
+      if (el && el.getBoundingClientRect().top > window.innerHeight * 0.6) el.scrollIntoView({ behavior: 'smooth', block: 'start' });
+    });
+  }
+  function closePanel() { setSelected(null); setMode(null); }
+  /** Every close path for the create/edit modal (X, Cancel, Esc, backdrop) runs through the guard. */
+  function closeComposer() {
+    const back = mode === 'edit' && selected ? selected : null;
+    guard.requestClose(() => { if (back) { setMode('view'); } else closePanel(); });
+  }
 
   // SmartCreate wiring: duration drives the end date; a predecessor drives the start.
-  function setStartDate(v:string){
-    const d=Number(duration)||0;
-    const end=v&&d>0?addDaysISO(v,d):form.end_date;
-    setForm(f=>({...f,start_date:v,end_date:end}));
-    setAuto(a=>({...a,start:false,end:!!(v&&d>0)}));
+  function setStartDate(v: string) {
+    const d = Number(duration) || 0;
+    const end = v && d > 0 ? addDaysISO(v, d) : form.end_date;
+    setForm(f => ({ ...f, start_date: v, end_date: end }));
+    setAuto(a => ({ ...a, start: false, end: !!(v && d > 0) }));
   }
-  function setDurationDays(v:string){
+  function setDurationDays(v: string) {
     setDuration(v);
-    const d=Number(v)||0;
-    if(form.start_date&&d>0){
-      setForm(f=>({...f,end_date:addDaysISO(f.start_date,d)}));
-      setAuto(a=>({...a,end:true}));
+    const d = Number(v) || 0;
+    if (form.start_date && d > 0) {
+      setForm(f => ({ ...f, end_date: addDaysISO(f.start_date, d) }));
+      setAuto(a => ({ ...a, end: true }));
     }
   }
-  function setEndDate(v:string){
-    if(form.start_date&&v) setDuration(String(daysBetween(form.start_date,v)));
-    setForm(f=>({...f,end_date:v}));
-    setAuto(a=>({...a,end:false}));
+  function setEndDate(v: string) {
+    if (form.start_date && v) setDuration(String(daysBetween(form.start_date, v)));
+    setForm(f => ({ ...f, end_date: v }));
+    setAuto(a => ({ ...a, end: false }));
   }
-  function setPredecessorTask(id:string){
-    const pred=tasks.find((t:any)=>t.id===id);
-    const patch:Record<string,any>={predecessor_id:id,predecessor:pred?.name||''};
-    if(pred?.end_date&&!form.start_date){
+  function setPredecessorTask(id: string) {
+    const pred = tasks.find((t: any) => t.id === id);
+    const patch: Record<string, any> = { predecessor_id: id, predecessor: pred?.name || '' };
+    if (pred?.end_date && !form.start_date) {
       // A task follows its predecessor — default to starting the day after it ends.
-      patch.start_date=addDaysISO(pred.end_date,1);
-      const d=Number(duration)||0;
-      if(d>0) patch.end_date=addDaysISO(patch.start_date,d);
-      setAuto({start:true,end:d>0});
+      patch.start_date = addDaysISO(pred.end_date, 1);
+      const d = Number(duration) || 0;
+      if (d > 0) patch.end_date = addDaysISO(patch.start_date, d);
+      setAuto({ start: true, end: d > 0 });
     }
-    setForm(f=>({...f,...patch}));
+    setForm(f => ({ ...f, ...patch }));
   }
 
   async function save(): Promise<boolean> {
-    if(!form.name.trim()){showToast('Task name is required.','error');return false;}
+    if (!form.name.trim()) { showToast('Task name is required.', 'error'); return false; }
     // Optimistic save (house pattern: budget saveEdit) — tasks patch and the
-    // panel closes instantly; the network settles in the background.
-    const snapshot={...form,pct_complete:Number(form.pct_complete)||0};
-    const prevMode=mode,prevSelected=selected;
+    // modal closes instantly; the network settles in the background.
+    const snapshot = { ...form, pct_complete: Number(form.pct_complete) || 0 };
+    const prevMode = mode, prevSelected = selected;
     setSaving(true);
-    try{
-      const h=await getAuthHeaders();
-      if(mode==='create'){
-        const tempId=`temp-${Date.now()}`;
-        setTasks(prev=>[...prev,{id:tempId,...snapshot,project_id:projectId}]);
+    try {
+      const h = await getAuthHeaders();
+      if (mode === 'create') {
+        const tempId = `temp-${Date.now()}`;
+        setTasks(prev => [...prev, { id: tempId, ...snapshot, project_id: projectId }]);
         closePanel();
         showToast('Task added.');
-        const r=await fetch('/api/schedule/create',{
-          method:'POST',
-          headers:{...h,'Content-Type':'application/json'},
-          body:JSON.stringify({...form,projectId}),
+        const r = await fetch('/api/schedule/create', {
+          method: 'POST',
+          headers: { ...h, 'Content-Type': 'application/json' },
+          body: JSON.stringify({ ...form, projectId }),
         });
-        if(!r.ok){setTasks(prev=>prev.filter((t:any)=>t.id!==tempId));throw new Error(await r.text());}
-        const d=await r.json();
-        if(d.task) setTasks(prev=>prev.map((t:any)=>t.id===tempId?d.task:t));
+        if (!r.ok) { setTasks(prev => prev.filter((t: any) => t.id !== tempId)); throw new Error(await r.text()); }
+        const d = await r.json();
+        if (d.task) setTasks(prev => prev.map((t: any) => t.id === tempId ? d.task : t));
         revalidate();
-      }else if(mode==='edit'&&selected){
-        const prevTask=selected;
-        setTasks(prev=>prev.map((t:any)=>t.id===prevTask.id?{...t,...snapshot}:t));
+      } else if (mode === 'edit' && selected) {
+        const prevTask = selected;
+        setTasks(prev => prev.map((t: any) => t.id === prevTask.id ? { ...t, ...snapshot } : t));
         closePanel();
         showToast('Task updated.');
-        const r=await fetch(`/api/schedule/${prevTask.id}`,{
-          method:'PUT',
-          headers:{...h,'Content-Type':'application/json'},
-          body:JSON.stringify({...form,pct_complete:Number(form.pct_complete)||0}),
+        const r = await fetch(`/api/schedule/${prevTask.id}`, {
+          method: 'PUT',
+          headers: { ...h, 'Content-Type': 'application/json' },
+          body: JSON.stringify({ ...form, pct_complete: Number(form.pct_complete) || 0 }),
         });
-        if(!r.ok){setTasks(prev=>prev.map((t:any)=>t.id===prevTask.id?prevTask:t));throw new Error(await r.text());}
+        if (!r.ok) { setTasks(prev => prev.map((t: any) => t.id === prevTask.id ? prevTask : t)); throw new Error(await r.text()); }
         revalidate();
       }
       guard.clearDraft();
       return true;
-    }catch(e:any){
-      console.error(e);showToast(humanError(e,'Save failed. Please try again.'),'error');
-      // Rollback already applied — reopen the panel with the input intact.
-      setForm(snapshot);setMode(prevMode);setSelected(prevSelected);
-    }
-    finally{setSaving(false);}
+    } catch (e: any) {
+      console.error(e); showToast(humanError(e, 'Save failed. Please try again.'), 'error');
+      // Rollback already applied — reopen the form with the input intact.
+      setForm(snapshot); setMode(prevMode); setSelected(prevSelected);
+    } finally { setSaving(false); }
     return false;
   }
 
   /* Set Baseline: today's dates become the plan the Gantt measures slip against. */
-  async function setBaseline(){
-    const again=tasks.some((t:any)=>t.baseline_end);
-    if(again&&!(await confirmDialog({ title:'Replace the baseline?', message:"Every task's current dates become the new baseline. The old baseline is not kept.", danger:true }))) return;
+  async function setBaseline() {
+    const again = tasks.some((t: any) => t.baseline_end);
+    if (again && !(await confirmDialog({ title: 'Replace the baseline?', message: "Every task's current dates become the new baseline. The old baseline is not kept.", danger: true }))) return;
     setBaselining(true);
-    try{
-      const h=await getAuthHeaders();
-      const r=await fetch(`/api/projects/${projectId}/schedule/baseline`,{method:'POST',headers:h});
-      const j=await r.json().catch(()=>({}));
-      if(!r.ok) throw new Error(j.error||'Could not set the baseline.');
-      showToast(`Baseline set for ${j.baselined} task${j.baselined===1?'':'s'} — slips now show on the Gantt.`);
+    try {
+      const h = await getAuthHeaders();
+      const r = await fetch(`/api/projects/${projectId}/schedule/baseline`, { method: 'POST', headers: h });
+      const j = await r.json().catch(() => ({}));
+      if (!r.ok) throw new Error(j.error || 'Could not set the baseline.');
+      showToast(`Baseline set for ${j.baselined} task${j.baselined === 1 ? '' : 's'} — slips now show on the Gantt.`);
       await revalidate();
-    }catch(e:any){showToast(humanError(e,'Could not set the baseline.'),'error');}
-    finally{setBaselining(false);}
+    } catch (e: any) { showToast(humanError(e, 'Could not set the baseline.'), 'error'); }
+    finally { setBaselining(false); }
   }
 
-  async function deleteTask(task:any){
-    if(!(await confirmDialog({ title: 'Please confirm', message: `Delete task "${task.name}"?`, danger: true }))) return;
-    // Optimistic remove — the task leaves and the panel closes instantly;
+  async function deleteTask(task: any) {
+    if (!(await confirmDialog({ title: 'Please confirm', message: `Delete task "${task.name}"?`, danger: true }))) return;
+    // Optimistic remove — the task leaves and the detail closes instantly;
     // rollback restores the exact list on failure.
-    const prevTasks=tasks;
-    setTasks(prev=>prev.filter((t:any)=>t.id!==task.id));
-    showToast('Task deleted.');closePanel();
+    const prevTasks = tasks;
+    setTasks(prev => prev.filter((t: any) => t.id !== task.id));
+    showToast('Task deleted.'); closePanel();
     setDeleting(true);
-    try{
-      const h=await getAuthHeaders();
-      const dr=await fetch(`/api/schedule/${task.id}`,{method:'DELETE',headers:h});
+    try {
+      const h = await getAuthHeaders();
+      const dr = await fetch(`/api/schedule/${task.id}`, { method: 'DELETE', headers: h });
       if (!dr.ok) throw new Error('Delete failed');
       revalidate();
-    }catch{setTasks(prevTasks);showToast('Delete failed.','error');}
-    finally{setDeleting(false);}
+    } catch (e) { console.error(e); setTasks(prevTasks); showToast('Delete failed.', 'error'); }
+    finally { setDeleting(false); }
   }
 
-  async function updatePct(task:any,pct:number){
-    const newStatus=pct===100?'completed':pct>0?'in_progress':'not_started';
-    const prevPct=task.pct_complete??0,prevStatus=task.status;
+  async function updatePct(task: any, pct: number) {
+    const newStatus = pct === 100 ? 'completed' : pct > 0 ? 'in_progress' : 'not_started';
+    const prevPct = task.pct_complete ?? 0, prevStatus = task.status;
     // Optimistic patch (house pattern: budget saveEdit) — the bar and the open
-    // panel move instantly; rollback + toast if the server disagrees.
-    setTasks(prev=>prev.map((t:any)=>t.id===task.id?{...t,pct_complete:pct,status:newStatus}:t));
-    setSelected((s:any)=>s?.id===task.id?{...s,pct_complete:pct,status:newStatus}:s);
-    try{
-      const h=await getAuthHeaders();
-      const pr=await fetch(`/api/schedule/${task.id}`,{
-        method:'PUT',
-        headers:{...h,'Content-Type':'application/json'},
-        body:JSON.stringify({pct_complete:pct,status:newStatus}),
+    // detail move instantly; rollback + toast if the server disagrees.
+    setTasks(prev => prev.map((t: any) => t.id === task.id ? { ...t, pct_complete: pct, status: newStatus } : t));
+    setSelected((s: any) => s?.id === task.id ? { ...s, pct_complete: pct, status: newStatus } : s);
+    try {
+      const h = await getAuthHeaders();
+      const pr = await fetch(`/api/schedule/${task.id}`, {
+        method: 'PUT',
+        headers: { ...h, 'Content-Type': 'application/json' },
+        body: JSON.stringify({ pct_complete: pct, status: newStatus }),
       });
       if (!pr.ok) throw new Error('Update failed');
       revalidate();
-    }catch(e:any){
-      setTasks(prev=>prev.map((t:any)=>t.id===task.id?{...t,pct_complete:prevPct,status:prevStatus}:t));
-      setSelected((s:any)=>s?.id===task.id?{...s,pct_complete:prevPct,status:prevStatus}:s);
-      console.error(e);showToast(humanError(e,'Something went wrong. Please try again.'),'error');
+    } catch (e: any) {
+      setTasks(prev => prev.map((t: any) => t.id === task.id ? { ...t, pct_complete: prevPct, status: prevStatus } : t));
+      setSelected((s: any) => s?.id === task.id ? { ...s, pct_complete: prevPct, status: prevStatus } : s);
+      console.error(e); showToast(humanError(e, 'Something went wrong. Please try again.'), 'error');
     }
   }
 
-  const phases=Array.from(new Set(tasks.map((t:any)=>t.phase).filter(Boolean)));
-  const filtered=tasks.filter((t:any)=>{
-    const ms=!search||(t.name||'').toLowerCase().includes(search.toLowerCase())
-      ||(t.phase||'').toLowerCase().includes(search.toLowerCase());
-    const mst=filterStatus==='all'||t.status===filterStatus;
-    const mp=filterPhase==='all'||t.phase===filterPhase;
-    return ms&&mst&&mp;
+  const phases = Array.from(new Set(tasks.map((t: any) => t.phase).filter(Boolean))) as string[];
+  const filtered = tasks.filter((t: any) => {
+    const ms = !search || (t.name || '').toLowerCase().includes(search.toLowerCase())
+      || (t.phase || '').toLowerCase().includes(search.toLowerCase());
+    const mst = filterStatus === 'all' || t.status === filterStatus;
+    const mp = filterPhase === 'all' || t.phase === filterPhase;
+    return ms && mst && mp;
   });
-  const taskSort = useSort(null);
-  const taskSortValue = useCallback((t: any, key: string): unknown => {
-    if (key === 'duration') return t.start_date && t.end_date ? daysBetween(t.start_date, t.end_date) : null;
-    if (key === 'pct_complete') return Number(t.pct_complete) || 0;
-    return t?.[key];
-  }, []);
-  const sortedTasks = useSortedRows(filtered, taskSort.sort, taskSortValue);
+  const filtersActive = !!search || filterStatus !== 'all' || filterPhase !== 'all';
+  const clearFilters = () => { setSearch(''); setFilterStatus('all'); setFilterPhase('all'); };
+  const toggleStatus = (s: string) => setFilterStatus(prev => (prev === s ? 'all' : s));
 
-  const today=localDay(); // this device's day, not the UTC day (tomorrow from 7 PM on in Iowa)
-  const allEnds=tasks.filter((t:any)=>t.end_date).map((t:any)=>t.end_date);
-  const projectEnd=allEnds.length?allEnds.reduce((m,d)=>d>m?d:m):'';
-  const daysLeft=projectEnd?Math.max(0,daysBetween(today,projectEnd)):0;
-  const avgPct=tasks.length?Math.round(tasks.reduce((s:number,t:any)=>s+(t.pct_complete??0),0)/tasks.length):0;
-  const delayedCount=tasks.filter((t:any)=>t.status==='delayed').length;
-  const completedCount=tasks.filter((t:any)=>t.status==='completed').length;
+  const today = localDay(); // this device's day, not the UTC day (tomorrow from 7 PM on in Iowa)
+  const allEnds = tasks.filter((t: any) => t.end_date).map((t: any) => t.end_date);
+  const projectEnd = allEnds.length ? allEnds.reduce((m, d) => d > m ? d : m) : '';
+  const daysLeft = projectEnd ? Math.max(0, daysBetween(today, projectEnd)) : 0;
+  const avgPct = tasks.length ? Math.round(tasks.reduce((s: number, t: any) => s + (t.pct_complete ?? 0), 0) / tasks.length) : 0;
+  const delayedCount = tasks.filter((t: any) => t.status === 'delayed').length;
+  const completedCount = tasks.filter((t: any) => t.status === 'completed').length;
+  const base = baselineSummary(tasks);
 
-  return(
-    <div style={{display:'flex',height:'100%',minHeight:0,position:'relative'}}>
-      {toast&&(
-        <div style={{position:'fixed',bottom:24,left:'50%',transform:'translateX(-50%)',zIndex:99999,
-          padding:'12px 20px',borderRadius:8,color:'var(--text-primary)',fontWeight:700,fontSize:14,pointerEvents:'none',
-          background:toast.type==='success'?'rgba(74,222,128,.92)':'rgba(248,113,113,.92)'}}>
-          {toast.msg}
+  const busy = loading || !!loadError;
+  const stats: StatItem[] = [
+    { label: '% Complete', value: busy ? '—' : `${avgPct}%`, sub: busy ? undefined : 'Average across tasks', tone: !busy && avgPct === 100 ? 'good' : 'default', icon: <TrendUp size={15} /> },
+    { label: 'Days Remaining', value: busy ? '—' : daysLeft ? String(daysLeft) : '—', sub: busy ? undefined : projectEnd ? `Ends ${fmtDate(projectEnd)}` : 'No end dates yet', icon: <Clock size={15} /> },
+    { label: 'Tasks Complete', value: busy ? '—' : `${completedCount}/${tasks.length}`, sub: busy ? undefined : filterStatus === 'completed' ? 'Filtered — click to clear' : 'Tasks finished', icon: <CheckCircle size={15} />, onClick: () => toggleStatus('completed'), active: filterStatus === 'completed' },
+    { label: 'Delayed', value: busy ? '—' : String(delayedCount), tone: !busy && delayedCount ? 'bad' : 'default', sub: busy ? undefined : filterStatus === 'delayed' ? 'Filtered — click to clear' : delayedCount ? 'Need attention' : 'On track', icon: <WarningCircle size={15} />, onClick: () => toggleStatus('delayed'), active: filterStatus === 'delayed' },
+    {
+      label: 'Behind Baseline',
+      value: busy ? '—' : base.baselined ? `${base.late}/${base.baselined}` : '—',
+      tone: !busy && base.late > 0 ? 'bad' : !busy && base.baselined ? 'good' : 'default',
+      sub: busy ? undefined : !base.baselined ? 'No baseline set' : base.finishVariance !== null ? `Finish ${varianceLabel(base.finishVariance)} vs baseline` : 'Tasks late vs plan',
+      icon: <ChartLineDown size={15} />,
+    },
+  ];
+
+  const taskActions = (t: any): Action[] => {
+    const temp = String(t.id).startsWith('temp-');
+    return [
+      { label: 'Open details', icon: <Eye size={15} />, onClick: () => viewTask(t) },
+      { label: 'Edit', icon: <PencilSimple size={15} />, onClick: () => openEdit(t), disabled: temp },
+      { label: 'Delete', icon: <Trash size={15} />, onClick: () => { void deleteTask(t); }, tone: 'danger', disabled: temp || deleting },
+    ];
+  };
+
+  const columns: Column<any>[] = [
+    { key: 'name', header: 'Task', primary: true, phone: 'show', accessor: t => (t.name || '').toLowerCase(), render: t => t.name },
+    { key: 'phase', header: 'Phase', render: t => t.phase || '—' },
+    { key: 'start_date', header: 'Start', accessor: t => t.start_date || '', render: t => fmtDate(t.start_date) },
+    { key: 'end_date', header: 'End', phone: 'show', accessor: t => t.end_date || '', render: t => fmtDate(t.end_date) },
+    { key: 'duration', header: 'Duration', align: 'right', accessor: t => (t.start_date && t.end_date ? daysBetween(t.start_date, t.end_date) : null), render: t => (t.start_date && t.end_date ? `${daysBetween(t.start_date, t.end_date)}d` : '—'), groupable: false },
+    { key: 'status', header: 'Status', phone: 'show', accessor: t => STATUS_LABELS[t.status] || t.status || '', render: t => <Badge tone={STATUS_TONE[t.status] || 'neutral'} dot>{STATUS_LABELS[t.status] || t.status}</Badge> },
+    {
+      key: 'pct_complete', header: '% Done', accessor: t => Number(t.pct_complete) || 0, groupable: false,
+      render: t => (
+        <div className="schMeter">
+          <Meter pct={t.pct_complete ?? 0} status={t.status} />
+          <span style={{ fontSize: 12, fontWeight: 700, color: 'var(--text-primary)' }}>{t.pct_complete ?? 0}%</span>
         </div>
-      )}
+      ),
+    },
+    { key: 'assigned_to', header: 'Assigned', render: t => t.assigned_to || '—' },
+    { key: 'trade', header: 'Trade', hidden: true, render: t => t.trade || '—' },
+  ];
 
-      <div style={{flex:1,overflow:'auto',minWidth:0}}>
-        <PremiumSurface>
-          {/* Header */}
-          <ModuleHero
-            eyebrow="Schedule"
-            eyebrowIcon={<CalendarBlank size={13} weight="fill" color={moduleAccent('schedule').hex} />}
-            title="Project"
-            accent="Schedule"
-            subtitle="Tasks, milestones & Gantt timeline"
-            actions={<>
-              {/* View toggle */}
-              <div style={{display:'flex',background:'rgba(255,255,255,0.04)',border:'1px solid rgba(255,255,255,0.08)',borderRadius:12,overflow:'hidden'}}>
-                {(['gantt','list'] as const).map(v=>(
-                  <button key={v} onClick={()=>setViewMode(v)} className="pmBtn"
-                    style={{padding:'9px 16px',background:viewMode===v?'var(--brand-primary-12)':'transparent',
-                      border:'none',color:viewMode===v?GOLD:DIM,fontSize:12,fontWeight:700,
-                      cursor:'pointer'}}>
-                    {v==='gantt'?'Gantt':'List'}
-                  </button>
-                ))}
-              </div>
-              {tasks.length>0&&(
-                <button onClick={setBaseline} disabled={baselining} style={{...goldOutlineButtonStyle,minHeight:44,opacity:baselining?0.7:1}} className="pmBtn">
-                  <Flag size={15} weight="bold" /> {baselining?'Setting…':tasks.some((t:any)=>t.baseline_end)?'Reset Baseline':'Set Baseline'}
-                </button>
-              )}
-              {/* While the New/Edit Task panel is open its submit is the one yellow action. */}
-              <button onClick={openCreate} style={mode==='create'||mode==='edit'?ghostButtonStyle:goldButtonStyle} className="pmBtn">
-                <Plus size={15} weight="bold" /> Add Task
-              </button>
-            </>}
-          />
+  const base_ = `/app/projects/${projectId}`;
+  const seeds = ((ctx?.bidPackages || []) as any[]).filter((b: any) => b.trade).slice(0, 5);
+  const otherTasks = tasks.filter((t: any) => t.id !== selected?.id);
+  const pred = form.predecessor_id ? tasks.find((t: any) => t.id === form.predecessor_id) : null;
+  const next = ctx?.schedule?.nextTasks?.[0];
+  const critical = ctx?.schedule?.criticalCount ?? 0;
+  const composerOpen = mode === 'create' || mode === 'edit';
+  const viewing = mode === 'view' && selected ? selected : null;
 
-          {/* KPIs */}
-          <div style={{display:'grid',gridTemplateColumns:'repeat(auto-fit,minmax(180px,1fr))',gap:12,marginBottom:24}}>
-            {loading||loadError
-              ? Array.from({length:4}).map((_,i)=><SkeletonKPI key={i}/>)
-              : <>
-                  <StatCard icon={<TrendUp size={19} weight="duotone" color={GREEN} />}
-                    label="% Complete" value={`${avgPct}%`} accent={GREEN} sub="Average completion" delay={0.02}  href={`/app/projects/${projectId}/schedule`}/>
-                  <StatCard icon={<Clock size={19} weight="duotone" color={moduleAccent('schedule').hex} />}
-                    label="Days Remaining" value={daysLeft?String(daysLeft):'—'} sub="To project end" delay={0.06}  href={`/app/projects/${projectId}/schedule`}/>
-                  <StatCard icon={<CheckCircle size={19} weight="duotone" color={moduleAccent('schedule').hex} />}
-                    label="Tasks Complete" value={`${completedCount}/${tasks.length}`} accent={GOLD} sub="Tasks finished" delay={0.10}  href={`/app/projects/${projectId}/schedule`}/>
-                  <StatCard icon={<WarningCircle size={19} weight="duotone" color={delayedCount?RED:DIM} />}
-                    label="Delayed" value={String(delayedCount)} accent={delayedCount?RED:undefined}
-                    sub={delayedCount?'Need attention':'On track'} delay={0.14}  href={`/app/projects/${projectId}/schedule`}/>
-                </>}
+  /* ── Main body: loading / error / empty / timeline or list ── */
+  let body: React.ReactNode;
+  if (loading) {
+    body = viewMode === 'list'
+      ? <Card flush><DataTable columns={columns} rows={[]} rowKey={t => t.id} loading tableId="project-schedule" /></Card>
+      : <Card flush>{Array.from({ length: 6 }).map((_, i) => <SkeletonRow key={i} />)}</Card>;
+  } else if (loadError) {
+    body = (
+      <Card>
+        <EmptyState
+          icon={<WarningCircle size={22} />}
+          title="Couldn't load the schedule"
+          text="Check your connection and try again."
+          action={<Button icon={<ArrowClockwise size={15} />} onClick={load}>Try again</Button>}
+        />
+      </Card>
+    );
+  } else if (tasks.length === 0) {
+    body = (
+      <Card>
+        <EmptyState
+          icon={<CalendarBlank size={22} />}
+          title="No tasks yet"
+          text="Add the first task to start the timeline."
+          action={
+            <div className="schSeeds">
+              <Button icon={<Plus size={15} weight="bold" />} onClick={openCreate}>Add Task</Button>
+              {seeds.map((b: any) => (
+                <Button key={b.id} size="sm" variant="ghost" title={`Start a task from the ${b.trade} bid package`}
+                  onClick={() => { openCreate(); setForm(f => ({ ...f, name: b.name || b.trade, trade: b.trade })); }}>
+                  {b.trade}
+                </Button>
+              ))}
+            </div>
+          }
+        />
+      </Card>
+    );
+  } else if (viewMode === 'gantt') {
+    body = (
+      <Card flush>
+        {filtered.length
+          ? <GanttChart tasks={filtered} jobHex={jobHex} selectedId={viewing?.id} onSelect={viewTask} />
+          : <EmptyState title="Nothing matches" text="Change the search or the filters." action={<Button onClick={clearFilters}>Clear filters</Button>} />}
+      </Card>
+    );
+  } else {
+    body = (
+      <Card flush>
+        <DataTable<any>
+          tableId="project-schedule"
+          exportName="schedule"
+          columns={columns}
+          rows={filtered}
+          rowKey={t => t.id}
+          defaultSort={{ key: 'start_date', dir: 'asc' }}
+          onRowClick={viewTask}
+          isSelected={t => t.id === viewing?.id}
+          rowActions={taskActions}
+          empty={<EmptyState title="Nothing matches" text="Change the search or the filters." action={<Button onClick={clearFilters}>Clear filters</Button>} />}
+        />
+      </Card>
+    );
+  }
+
+  const detail = viewing && (
+    <div ref={detailRef} className="schDetail">
+      <Card
+        title={viewing.name}
+        subtitle={viewing.phase || undefined}
+        actions={<Button variant="ghost" size="sm" icon={<X size={16} />} aria-label="Close details" title="Close details" onClick={closePanel} />}
+      >
+        <div className="schSection">
+          <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 8 }}>
+            <Badge tone={STATUS_TONE[viewing.status] || 'neutral'} dot>{STATUS_LABELS[viewing.status] || viewing.status}</Badge>
+            <span style={{ fontSize: 'var(--fs-lg)', fontWeight: 800, color: 'var(--text-primary)', fontVariantNumeric: 'tabular-nums' }}>{viewing.pct_complete ?? 0}%</span>
           </div>
+          <Meter pct={viewing.pct_complete ?? 0} status={viewing.status} big />
+          <div className="schQuick" role="group" aria-label="Set progress">
+            {[25, 50, 75, 100].map(p => (
+              <Button key={p} size="sm" aria-pressed={(viewing.pct_complete ?? 0) === p} onClick={() => updatePct(viewing, p)} disabled={String(viewing.id).startsWith('temp-')}>{p}%</Button>
+            ))}
+          </div>
+        </div>
+        <div className="schSection">
+          <DetailList items={([
+            ['Start Date', viewing.start_date ? fmtDate(viewing.start_date) : null],
+            ['End Date', viewing.end_date ? fmtDate(viewing.end_date) : null],
+            ['Baseline', viewing.baseline_start && viewing.baseline_end ? `${fmtShort(viewing.baseline_start)} – ${fmtShort(viewing.baseline_end)}${finishVariance(viewing) ? ` (${varianceLabel(finishVariance(viewing))})` : ' (on plan)'}` : null],
+            ['Duration', viewing.start_date && viewing.end_date ? `${daysBetween(viewing.start_date, viewing.end_date)} days` : null],
+            ['Trade', viewing.trade],
+            ['Assigned To', viewing.assigned_to],
+            ['Predecessor', tasks.find((t: any) => t.id === viewing.predecessor_id)?.name || viewing.predecessor],
+          ] as [string, React.ReactNode][]).filter(([, v]) => !!v)} />
+        </div>
+        {viewing.notes && (
+          <div className="schSection">
+            <div className="schSectionTitle">Notes</div>
+            <div className="schProse">{viewing.notes}</div>
+          </div>
+        )}
+        <div className="schSection">
+          <div style={{ display: 'flex', gap: 8 }}>
+            <Button icon={<PencilSimple size={15} />} onClick={() => openEdit(viewing)} disabled={String(viewing.id).startsWith('temp-')} style={{ flex: 1 }}>Edit</Button>
+            <Button variant="danger" icon={<Trash size={15} />} onClick={() => deleteTask(viewing)} disabled={deleting || String(viewing.id).startsWith('temp-')}>{deleting ? 'Deleting…' : 'Delete'}</Button>
+          </div>
+        </div>
+      </Card>
+    </div>
+  );
 
-          {/* Gantt view */}
-          {viewMode==='gantt'&&!loading&&!loadError&&tasks.length>0&&(
-            <SectionCard flat title="Timeline" subtitle={(()=>{const b=baselineSummary(tasks);return b.baselined
-                ? <>Today is the yellow line; the thin bar under each task is its baseline. <b style={{color:b.late?RED:GREEN}}>{b.late} of {b.baselined} task{b.baselined===1?'':'s'} late</b>{b.finishVariance!==null&&<> · finish <b style={{color:b.finishVariance>0?RED:GREEN}}>{varianceLabel(b.finishVariance)}</b> vs baseline</>}</>
-                : 'Today is marked with a yellow line. Set a baseline to track slip against the plan.';})()}
-              icon={<CalendarBlank size={17} weight="duotone" color={moduleAccent('schedule').hex} />}
-              style={{marginBottom:20}} bodyStyle={{overflowX:'auto'}}>
-              <GanttChart tasks={filtered.length?filtered:tasks} jobHex={jobHex}/>
-            </SectionCard>
-          )}
+  return (
+    <div className="schWs">
+      <style dangerouslySetInnerHTML={{ __html: CSS }} />
+      <PageShell
+        crumbs={[
+          { label: 'Projects', href: '/app/projects' },
+          { label: ctx?.project?.name || 'Project', href: `${base_}/overview` },
+          { label: 'Schedule' },
+        ]}
+        title="Schedule"
+        subtitle="Tasks, dates and progress on one timeline."
+        actions={
+          <>
+            {tasks.length > 0 && (
+              <Button icon={<Flag size={15} weight="bold" />} onClick={setBaseline} disabled={baselining}>
+                {baselining ? 'Setting…' : tasks.some((t: any) => t.baseline_end) ? 'Reset Baseline' : 'Set Baseline'}
+              </Button>
+            )}
+            <Button variant="primary" icon={<Plus size={15} weight="bold" />} onClick={openCreate}>Add Task</Button>
+          </>
+        }
+      >
+        <StatRow items={stats} />
 
-          {/* Filters (list view) */}
-          {viewMode==='list'&&!loading&&!loadError&&tasks.length>0&&(
-            <div style={{display:'flex',gap:10,marginBottom:18,flexWrap:'wrap'}}>
-              <input value={search} onChange={e=>setSearch(e.target.value)}
-                placeholder="Search tasks…"
-                style={{flex:1,minWidth:180,padding:'10px 12px',background:'rgba(255,255,255,0.04)',
-                  border:'1px solid rgba(255,255,255,0.08)',borderRadius:10,color:TEXT,fontSize:13,outline:'none'}}/>
-              <select value={filterStatus} onChange={e=>setFilterStatus(e.target.value)}
-                style={{padding:'10px 12px',background:'rgba(255,255,255,0.04)',border:'1px solid rgba(255,255,255,0.08)',
-                  borderRadius:10,color:filterStatus!=='all'?TEXT:DIM,fontSize:13,outline:'none'}}>
-                <option value="all">All Statuses</option>
-                {STATUSES.map(s=><option key={s} value={s}>{STATUS_LABELS[s]}</option>)}
-              </select>
-              <select value={filterPhase} onChange={e=>setFilterPhase(e.target.value)}
-                style={{padding:'10px 12px',background:'rgba(255,255,255,0.04)',border:'1px solid rgba(255,255,255,0.08)',
-                  borderRadius:10,color:filterPhase!=='all'?TEXT:DIM,fontSize:13,outline:'none'}}>
-                <option value="all">All Phases</option>
-                {phases.map((p:any)=><option key={p} value={p}>{p}</option>)}
-              </select>
-            </div>
-          )}
-
-          {/* LOADING — skeleton rows, never computed zeros */}
-          {loading&&(
-            <SectionCard flat flush>
-              {Array.from({length:6}).map((_,i)=><SkeletonRow key={i}/>)}
-            </SectionCard>
-          )}
-
-          {/* ERROR — clear block with Retry, never fake/empty data */}
-          {!loading&&loadError&&(
-            <SectionCard>
-              <PremiumEmpty
-                tone="error"
-                icon={<WarningCircle size={30} weight="duotone" color={RED} />}
-                title="Couldn't load schedule"
-                description="We couldn't load the project schedule. Check your connection and try again."
-                action={<button onClick={load} style={goldOutlineButtonStyle} className="pmBtn">Retry</button>}
-              />
-            </SectionCard>
-          )}
-
-          {/* EMPTY — the create panel auto-opens; seed the first tasks from bid-package trades */}
-          {!loading&&!loadError&&tasks.length===0&&(
-            <SectionCard>
-              <div style={{display:'flex',alignItems:'center',justifyContent:'space-between',gap:12,flexWrap:'wrap',marginBottom:12}}>
-                <div style={{fontSize:14,fontWeight:800,color:TEXT}}>
-                  <CalendarBlank size={16} weight="duotone" color="var(--text-secondary)" style={{marginRight:7,verticalAlign:'text-bottom'}} />
-                  No tasks yet
-                  <span style={{fontWeight:400,color:DIM}}>{mode==='create' ? ' — name the first task in the panel; dates chain off predecessors from there.' : ' — add the first task to start the timeline.'}</span>
-                </div>
-                {mode!=='create'&&(
-                  <button onClick={openCreate} style={secondaryButtonStyle} className="pmBtn"><Plus size={15} weight="bold" /> Add Task</button>
-                )}
-              </div>
-              {((ctx?.bidPackages||[]) as any[]).filter((b:any)=>b.trade).length>0&&(
-                <div style={{display:'flex',alignItems:'center',gap:8,flexWrap:'wrap',marginBottom:12}}>
-                  <span style={{fontSize:12,fontWeight:700,color:DIM}}>Seed from Bid Packages:</span>
-                  {((ctx?.bidPackages||[]) as any[]).filter((b:any)=>b.trade).slice(0,5).map((b:any)=>(
-                    <button key={b.id}
-                      onClick={()=>{openCreate();setForm(f=>({...f,name:b.name||b.trade,trade:b.trade}));}}
-                      className="pmBtn"
-                      style={{padding:'5px 12px',background:'var(--bg-surface-2)',border:'1px solid var(--border-default)',
-                        borderRadius:999,color: 'var(--text-primary)',fontSize:12,fontWeight:700,cursor:'pointer'}}>
-                      {b.trade}
-                    </button>
-                  ))}
-                </div>
-              )}
-              <FlowStrip steps={[
-                {title:'Add the Task',desc:'Name is enough to save'},
-                {title:'Chain Predecessors',desc:'Start auto-sets to the day after'},
-                {title:'Gantt Draws Itself',desc:'Today marked in yellow'},
-                {title:'Progress Rolls Up',desc:'% complete feeds the KPIs'},
-              ]} />
-            </SectionCard>
-          )}
-
-          {/* List view */}
-          {!loading&&!loadError&&viewMode==='list'&&filtered.length>0&&(
-            <SectionCard title="Tasks" flush
-              icon={<ListChecks size={17} weight="duotone" color={moduleAccent('schedule').hex} />}
-              action={<span style={{fontSize:12,color:DIM,fontWeight:700}}>{filtered.length} shown</span>}>
-              <div style={{overflowX:'auto'}}>
-              <SortBar columns={TASK_COLS} sort={taskSort.sort} onChange={taskSort.setSort} />
-              <table className="k-table" style={{ width:'100%',borderCollapse:'collapse' }}>
-                <thead>
-                  <tr style={{background:DARK}}>
-                    {TASK_COLS.map(c=>(
-                      <SortTh key={c.key} col={c.key} label={c.label} sort={taskSort.sort} onSort={taskSort.cycle} style={{padding:'10px 14px',fontSize:12,fontWeight:700,color:DIM,borderBottom:`1px solid ${BORDER}`,whiteSpace:'nowrap'}} />
-                    ))}
-                  </tr>
-                </thead>
-                <tbody>
-                  {sortedTasks.map((task:any)=>{
-                    const dur=task.start_date&&task.end_date?daysBetween(task.start_date,task.end_date):null;
-                    const color=STATUS_COLORS[task.status]||DIM;
-                    return(
-                      <tr key={task.id}
-                        onClick={()=>viewTask(task)}
-                        style={{borderBottom:`1px solid rgba(255,255,255,0.08)`,cursor:'pointer',
-                          background:selected?.id===task.id&&mode==='view'?'color-mix(in srgb, var(--brand-primary) 5%, transparent)':''}}
-                        onMouseEnter={e=>e.currentTarget.style.background='color-mix(in srgb, var(--brand-primary) 4%, transparent)'}
-                        onMouseLeave={e=>e.currentTarget.style.background=selected?.id===task.id&&mode==='view'?'color-mix(in srgb, var(--brand-primary) 5%, transparent)':''}>
-                        <td style={{padding:'11px 14px',fontWeight:700,color:TEXT}}>{task.name}</td>
-                        <td style={{padding:'11px 14px',color:DIM}}>{task.phase||'—'}</td>
-                        <td style={{padding:'11px 14px',color:DIM,whiteSpace:'nowrap'}}>{task.start_date||'—'}</td>
-                        <td style={{padding:'11px 14px',color:DIM,whiteSpace:'nowrap'}}>{task.end_date||'—'}</td>
-                        <td style={{padding:'11px 14px',color:DIM}}>{dur?`${dur}d`:'—'}</td>
-                        <td style={{padding:'11px 14px'}}>
-                          <span style={{fontSize:12,fontWeight:700,padding:'3px 8px',borderRadius:20,
-                            background:`color-mix(in srgb, ${color} 13%, transparent)`,color}}>
-                            {STATUS_LABELS[task.status]||task.status}
-                          </span>
-                        </td>
-                        <td style={{padding:'11px 14px'}}>
-                          <div style={{display:'flex',alignItems:'center',gap:8}}>
-                            <div style={{width:60,height:6,background:'rgba(255,255,255,0.12)',borderRadius:3,overflow:'hidden'}}>
-                              <div style={{height:'100%',borderRadius:3,background:color,
-                                width:`${task.pct_complete??0}%`}}/>
-                            </div>
-                            <span style={{fontSize:12,color,fontWeight:700}}>{task.pct_complete??0}%</span>
-                          </div>
-                        </td>
-                        <td style={{padding:'11px 14px',color:DIM}}>{task.assigned_to||'—'}</td>
-                      </tr>
-                    );
-                  })}
-                </tbody>
-              </table>
-              </div>
-            </SectionCard>
-          )}
-        </PremiumSurface>
-      </div>
-
-      {/* Side panel */}
-      {mode!==null&&(
-        <div className="sag-side-panel" role={undefined} style={{width:460,borderLeft:`1px solid ${BORDER}`,background:DARK,
-          overflow:'auto',flexShrink:0,display:'flex',flexDirection:'column'}}>
-          <div style={{padding:'16px 20px',borderBottom:`1px solid ${BORDER}`,
-            display:'flex',alignItems:'center',justifyContent:'space-between'}}>
-            <div style={{fontWeight:800,fontSize:15,color:TEXT}}>
-              {mode==='create'?'New Task':mode==='edit'?'Edit Task':'Task Detail'}
-            </div>
-            <div style={{display:'flex',gap:8}}>
-              {mode==='view'&&selected&&(
+        {!loading && !loadError && tasks.length > 0 && (
+          <>
+            <Tabs
+              tabs={[{ key: 'gantt', label: 'Gantt' }, { key: 'list', label: 'List', count: filtered.length }]}
+              value={viewMode}
+              onChange={k => setViewMode(k as 'gantt' | 'list')}
+            />
+            <Toolbar
+              search={search}
+              onSearch={setSearch}
+              placeholder="Search tasks or phases…"
+              filters={
                 <>
-                  <button onClick={()=>openEdit(selected)}
-                    style={{padding:'6px 14px',background:'var(--bg-surface-2)',
-                      border:'1px solid var(--border-default)',borderRadius:6,
-                      color: 'var(--text-primary)',fontSize:12,fontWeight:700,cursor:'pointer'}}>
-                    Edit
-                  </button>
-                  <button onClick={()=>deleteTask(selected)} disabled={deleting}
-                    style={{padding:'6px 14px',background:'rgba(248,113,113,.1)',
-                      border:`1px solid color-mix(in srgb, ${RED} 27%, transparent)`,borderRadius:6,
-                      color:RED,fontSize:12,fontWeight:700,cursor:'pointer'}}>
-                    {deleting?'…':'Delete'}
-                  </button>
-                </>
-              )}
-              <button onClick={closePanel}
-                style={{padding:'6px 10px',background:'rgba(148,163,184,.1)',
-                  border:`1px solid ${BORDER}`,borderRadius:6,color:DIM,fontSize:12,cursor:'pointer'}}>
-                <X size={14} weight="regular" color={DIM} />
-              </button>
-            </div>
-          </div>
-
-          <div style={{flex:1,overflow:'auto',padding:20}}>
-            {(mode==='create'||mode==='edit')?(
-              <div style={{display:'flex',flexDirection:'column',gap:16}}>
-                {mode==='create'&&ctx&&(
-                  <StatStrip items={[
-                    {href: `/app/projects/${projectId}/schedule`, label:'Tasks',value:String(tasks.length),sub:`${completedCount} complete · ${delayedCount} delayed`},
-                    {href: `/app/projects/${projectId}/schedule`, label:'Critical Path',value:String(ctx.schedule?.criticalCount??0),accent:(ctx.schedule?.criticalCount??0)>0?GOLD:undefined,sub:'Tasks drive the end date'},
-                    {href: `/app/projects/${projectId}/schedule`, label:'Next Milestone',value:ctx.schedule?.nextTasks?.[0]?.name||'—',sub:ctx.schedule?.nextTasks?.[0]?`Starts ${fmtShort(ctx.schedule.nextTasks[0].startDate)}`:'Nothing queued yet'},
-                  ]}/>
-                )}
-                <Field label="Task Name *">
-                  <input value={form.name}
-                    onChange={e=>setForm(f=>({...f,name:e.target.value}))}
-                    style={inp} placeholder="Foundation excavation…"/>
-                </Field>
-
-                <div style={{display:'grid',gridTemplateColumns:'1fr 1fr',gap:12}}>
-                  <Field label="Phase">
-                    <select value={form.phase}
-                      onChange={e=>setForm(f=>({...f,phase:e.target.value}))}
-                      style={{...inp,padding:'9px 10px'}}>
-                      <option value="">— Select Phase —</option>
-                      {PHASES.map(p=><option key={p} value={p}>{p}</option>)}
-                    </select>
-                  </Field>
-                  <Field label="Trade">
-                    <select value={form.trade}
-                      onChange={e=>setForm(f=>({...f,trade:e.target.value}))}
-                      style={{...inp,padding:'9px 10px'}}>
-                      <option value="">— Select Trade —</option>
-                      {SUB_TRADES_BY_DIVISION.map(d=>(
-                        <optgroup key={d.division} label={`Div ${d.division} — ${d.name}`}>
-                          {d.trades.map(t=><option key={t} value={t}>{t}</option>)}
-                        </optgroup>
-                      ))}
-                      <optgroup label="Specialty & Site Markets">
-                        {EXTRA_TRADES.map(t=><option key={t} value={t}>{t}</option>)}
-                      </optgroup>
-                    </select>
-                  </Field>
-                </div>
-
-                <div style={{display:'grid',gridTemplateColumns:'1fr 1fr 1fr',gap:12}}>
-                  <Field label={<>Start{auto.start&&<AutoChip/>}</>}>
-                    <SaguaroDatePicker value={form.start_date}
-                      onChange={v=>setStartDate(v)}
-                      style={inp}/>
-                  </Field>
-                  <Field label="Duration (d)">
-                    <input type="number" min={1} value={duration} placeholder="10"
-                      onChange={e=>setDurationDays(e.target.value)}
-                      style={inp}/>
-                  </Field>
-                  <Field label={<>End{auto.end&&<AutoChip/>}</>}>
-                    <SaguaroDatePicker value={form.end_date}
-                      onChange={v=>setEndDate(v)}
-                      style={inp}/>
-                  </Field>
-                </div>
-                {(auto.start||auto.end)&&(
-                  <div style={{...HINT,marginTop:-8}}>
-                    {auto.start&&<>Start defaulted to the day after the predecessor ends. </>}
-                    {auto.end&&form.start_date&&<>End = start + {Number(duration)||0}d — editing either re-syncs.</>}
-                  </div>
-                )}
-
-                <div style={{display:'grid',gridTemplateColumns:'1fr 1fr',gap:12}}>
-                  <Field label="Status">
-                    <select value={form.status}
-                      onChange={e=>setForm(f=>({...f,status:e.target.value}))}
-                      style={{...inp,padding:'9px 10px'}}>
-                      {STATUSES.map(s=><option key={s} value={s}>{STATUS_LABELS[s]}</option>)}
-                    </select>
-                  </Field>
-                  <Field label="% Complete">
-                    <input type="number" min={0} max={100} value={form.pct_complete}
-                      onChange={e=>setForm(f=>({...f,pct_complete:Number(e.target.value)}))}
-                      style={inp}/>
-                  </Field>
-                </div>
-
-                <Field label="Assigned To">
-                  <Suggest value={form.assigned_to}
-                    onChange={e=>setForm(f=>({...f,assigned_to:e.target.value}))}
-                    style={inp} placeholder="Subcontractor or person" options={((ctx?.subs || []) as { companyName?: string | null }[]).map((s) => s.companyName || '').filter(Boolean)} />
-                  {(ctx?.subs||[]).length>0&&(
-                    <div style={HINT}>{ctx.subs.length} sub{ctx.subs.length===1?'':'s'} on the project roster — start typing to pick one.</div>
+                  <Select aria-label="Status" value={filterStatus} onChange={e => setFilterStatus(e.target.value)} style={{ width: 'auto', minWidth: 160 }}
+                    options={[{ value: 'all', label: 'All Statuses' }, ...STATUSES.map(s => ({ value: s, label: STATUS_LABELS[s] }))]} />
+                  {phases.length > 0 && (
+                    <Select aria-label="Phase" value={filterPhase} onChange={e => setFilterPhase(e.target.value)} style={{ width: 'auto', minWidth: 160 }}
+                      options={[{ value: 'all', label: 'All Phases' }, ...phases]} />
                   )}
-                </Field>
+                  {filtersActive && <Button variant="ghost" size="sm" onClick={clearFilters}>Clear</Button>}
+                </>
+              }
+              actions={<span className="schMuted" style={{ fontSize: 'var(--fs-sm)' }}>{filtered.length} of {tasks.length}</span>}
+            />
+          </>
+        )}
 
-                <Field label="Predecessor">
-                  <select value={form.predecessor_id}
-                    onChange={e=>setPredecessorTask(e.target.value)}
-                    disabled={tasks.filter((t:any)=>t.id!==selected?.id).length===0}
-                    style={{...inp,padding:'9px 10px'}}>
-                    <option value="">None — starts independently</option>
-                    {tasks.filter((t:any)=>t.id!==selected?.id).map((t:any)=>(
-                      <option key={t.id} value={t.id}>{t.name}{t.end_date?` (ends ${fmtShort(t.end_date)})`:''}</option>
-                    ))}
-                  </select>
-                  {form.predecessor_id&&(()=>{
-                    const p=tasks.find((t:any)=>t.id===form.predecessor_id);
-                    if(!p) return null;
-                    return <div style={HINT}>Follows <b style={{color:TEXT}}>{p.name}</b>{p.end_date?<> — ends {fmtShort(p.end_date)}; this task starts the day after.</>:<> — predecessor has no end date yet.</>}</div>;
-                  })()}
-                </Field>
-
-                <Field label="Notes">
-                  <textarea value={form.notes}
-                    onChange={e=>setForm(f=>({...f,notes:e.target.value}))}
-                    rows={3} style={{...inp,resize:'vertical',lineHeight:1.5}}
-                    placeholder="Any additional notes…"/>
-                </Field>
-
-                {mode==='create'&&(
-                  <div style={{background:RAISED,border:`1px solid ${BORDER}`,borderRadius:10,padding:'14px 16px'}}>
-                    <FlowSteps title="After You Add" steps={[
-                      {title:'Task Lands on the Gantt',desc:'The bar plots start to end against the yellow today marker.'},
-                      {title:'Dependency Is Tracked',desc:form.predecessor_id?'Chained finish-to-start behind its predecessor.':'Pick a predecessor to chain it into the build sequence.'},
-                      {title:'Progress Rolls Up',desc:'Its % complete feeds the completion and delayed KPIs above.'},
-                    ]}/>
-                  </div>
-                )}
-
-                <div style={{display:'flex',gap:10,paddingTop:4}}>
-                  <button onClick={save} disabled={saving} className="pmBtn"
-                    style={{...goldButtonStyle,flex:1,padding:'11px 0',opacity:saving?.6:1}}>
-                    {saving?'Saving…':mode==='create'?'Add Task':'Save Changes'}
-                  </button>
-                  <button onClick={closePanel}
-                    style={{padding:'11px 16px',background:'rgba(148,163,184,.1)',
-                      border:`1px solid ${BORDER}`,borderRadius:8,color:DIM,
-                      fontSize:14,cursor:'pointer'}}>
-                    Cancel
-                  </button>
-                </div>
-              </div>
-            ):selected?(
-              <div style={{display:'flex',flexDirection:'column',gap:14}}>
-                {/* Task header */}
-                <div style={{background:RAISED,border:`1px solid ${BORDER}`,borderRadius:10,padding:16}}>
-                  <div style={{fontSize:16,fontWeight:800,color:TEXT,marginBottom:8}}>{selected.name}</div>
-                  <div style={{display:'flex',gap:8,flexWrap:'wrap',marginBottom:12}}>
-                    {selected.phase&&(
-                      <span style={{fontSize:12,fontWeight:700,padding:'3px 9px',borderRadius:20,
-                        background:'var(--bg-surface-2)',color: 'var(--text-primary)'}}>
-                        {selected.phase}
-                      </span>
-                    )}
-                    <span style={{fontSize:12,fontWeight:700,padding:'3px 9px',borderRadius:20,
-                      background:`color-mix(in srgb, ${STATUS_COLORS[selected.status]||DIM} 13%, transparent)`,
-                      color:STATUS_COLORS[selected.status]||DIM}}>
-                      {STATUS_LABELS[selected.status]||selected.status}
-                    </span>
-                  </div>
-                  {/* Progress slider */}
-                  <div style={{marginBottom:8}}>
-                    <div style={{display:'flex',justifyContent:'space-between',marginBottom:4}}>
-                      <span style={{fontSize:12,color:DIM}}>Progress</span>
-                      <span style={{fontSize:12,fontWeight:800,color:STATUS_COLORS[selected.status]||GREEN}}>
-                        {selected.pct_complete??0}%
-                      </span>
-                    </div>
-                    <div style={{background:'rgba(255,255,255,0.12)',borderRadius:4,height:10,overflow:'hidden'}}>
-                      <div style={{height:'100%',borderRadius:4,
-                        background:STATUS_COLORS[selected.status]||GREEN,
-                        width:`${selected.pct_complete??0}%`,transition:'width .3s'}}/>
-                    </div>
-                  </div>
-                  {/* Quick update buttons */}
-                  <div style={{display:'flex',gap:6,flexWrap:'wrap'}}>
-                    {[25,50,75,100].map(pct=>(
-                      <button key={pct} onClick={()=>updatePct(selected,pct)}
-                        style={{flex:1,padding:'6px 0',background:'var(--bg-surface-2)',
-                          border:'1px solid var(--border-default)',borderRadius:6,
-                          color: 'var(--text-primary)',fontSize:12,fontWeight:700,cursor:'pointer'}}>
-                        {pct}%
-                      </button>
-                    ))}
-                  </div>
-                </div>
-
-                <div style={{display:'grid',gridTemplateColumns:'1fr 1fr',gap:10}}>
-                  {[
-                    {l:'Start Date',v:selected.start_date},
-                    {l:'End Date',v:selected.end_date},
-                    {l:'Baseline',v:selected.baseline_start&&selected.baseline_end?`${fmtShort(selected.baseline_start)} – ${fmtShort(selected.baseline_end)}${finishVariance(selected)?` (${varianceLabel(finishVariance(selected))})`:' (on plan)'}`:null},
-                    {l:'Duration',v:selected.start_date&&selected.end_date?
-                      `${daysBetween(selected.start_date,selected.end_date)} days`:null},
-                    {l:'Trade',v:selected.trade},
-                    {l:'Assigned To',v:selected.assigned_to},
-                    {l:'Predecessor',v:tasks.find((t:any)=>t.id===selected.predecessor_id)?.name||selected.predecessor},
-                  ].filter(x=>x.v).map(x=>(
-                    <div key={x.l} style={{background:'var(--bg-surface)',border:`1px solid ${BORDER}`,
-                      borderRadius:8,padding:'10px 12px'}}>
-                      <div style={{fontSize:12,fontWeight:700,color:DIM,
-                        marginBottom:4}}>{x.l}</div>
-                      <div style={{fontSize:13,color:TEXT}}>{x.v}</div>
-                    </div>
-                  ))}
-                </div>
-
-                {selected.notes&&(
-                  <div style={{background:'var(--bg-surface)',border:`1px solid ${BORDER}`,borderRadius:8,padding:'12px 14px'}}>
-                    <div style={{fontSize:12,fontWeight:700,color:DIM,
-                      marginBottom:6}}>Notes</div>
-                    <div style={{fontSize:13,color:TEXT,lineHeight:1.6,whiteSpace:'pre-wrap'}}>{selected.notes}</div>
-                  </div>
-                )}
-              </div>
-            ):null}
+        <div className="schCq">
+          <div className="schSplit" data-open={viewing ? 'true' : 'false'}>
+            <div>{body}</div>
+            {detail}
           </div>
         </div>
-      )}
-      <UnsavedGuardModal guard={guard} />
+      </PageShell>
+
+      <FormModal
+        open={composerOpen}
+        onClose={closeComposer}
+        title={mode === 'create' ? 'New Task' : 'Edit Task'}
+        subtitle={mode === 'create' && ctx
+          ? `${tasks.length} task${tasks.length === 1 ? '' : 's'} · ${completedCount} complete · ${delayedCount} delayed · ${critical} on the critical path${next ? ` · next: ${next.name} starts ${fmtShort(next.startDate)}` : ''}`
+          : mode === 'edit' && selected ? selected.name : undefined}
+        onSubmit={async () => { await save(); }}
+        submitLabel={mode === 'create' ? 'Add Task' : 'Save Changes'}
+        busy={saving}
+      >
+        <div className="schForm">
+          <FormGrid cols={2}>
+            <Field label="Task Name" required span>
+              <Input value={form.name} onChange={e => setForm(f => ({ ...f, name: e.target.value }))} placeholder="Foundation excavation…" required autoFocus />
+            </Field>
+            <Field label="Phase">
+              <Select value={form.phase} onChange={e => setForm(f => ({ ...f, phase: e.target.value }))} placeholder="— Select Phase —" options={PHASES} />
+            </Field>
+            <Field label="Trade">
+              <select className="k-select" value={form.trade} onChange={e => setForm(f => ({ ...f, trade: e.target.value }))}>
+                <option value="">— Select Trade —</option>
+                {SUB_TRADES_BY_DIVISION.map(d => (
+                  <optgroup key={d.division} label={`Div ${d.division} — ${d.name}`}>
+                    {d.trades.map(t => <option key={t} value={t}>{t}</option>)}
+                  </optgroup>
+                ))}
+                <optgroup label="Specialty & Site Markets">
+                  {EXTRA_TRADES.map(t => <option key={t} value={t}>{t}</option>)}
+                </optgroup>
+              </select>
+            </Field>
+          </FormGrid>
+
+          <FormGrid cols={3}>
+            <Field label="Start" hint={auto.start ? 'Day after the predecessor ends.' : undefined}>
+              <div><SaguaroDatePicker value={form.start_date} onChange={v => setStartDate(v)} style={DATE_INPUT_STYLE} /></div>
+            </Field>
+            <Field label="Duration (days)">
+              <Input type="number" min={1} value={duration} placeholder="10" onChange={e => setDurationDays(e.target.value)} />
+            </Field>
+            <Field label="End" hint={auto.end && form.start_date ? `Start + ${Number(duration) || 0}d — editing either re-syncs.` : undefined}>
+              <div><SaguaroDatePicker value={form.end_date} onChange={v => setEndDate(v)} style={DATE_INPUT_STYLE} /></div>
+            </Field>
+          </FormGrid>
+
+          <FormGrid cols={2}>
+            <Field label="Status">
+              <Select value={form.status} onChange={e => setForm(f => ({ ...f, status: e.target.value }))} options={STATUSES.map(s => ({ value: s, label: STATUS_LABELS[s] }))} />
+            </Field>
+            <Field label="% Complete">
+              <Input type="number" min={0} max={100} value={form.pct_complete} onChange={e => setForm(f => ({ ...f, pct_complete: Number(e.target.value) }))} />
+            </Field>
+            <Field label="Assigned To" hint={(ctx?.subs || []).length > 0 ? `${ctx!.subs.length} sub${ctx!.subs.length === 1 ? '' : 's'} on the project roster — start typing to pick one.` : undefined}>
+              <Suggest className="k-input" value={form.assigned_to}
+                onChange={e => setForm(f => ({ ...f, assigned_to: e.target.value }))}
+                placeholder="Subcontractor or person" options={((ctx?.subs || []) as { companyName?: string | null }[]).map((s) => s.companyName || '').filter(Boolean)} />
+            </Field>
+            <Field label="Predecessor" hint={pred ? (pred.end_date ? `Follows ${pred.name} — ends ${fmtShort(pred.end_date)}; this task starts the day after.` : `Follows ${pred.name} — it has no end date yet.`) : undefined}>
+              <Select value={form.predecessor_id} onChange={e => setPredecessorTask(e.target.value)} disabled={otherTasks.length === 0}
+                options={[{ value: '', label: 'None — starts independently' }, ...otherTasks.map((t: any) => ({ value: String(t.id), label: `${t.name}${t.end_date ? ` (ends ${fmtShort(t.end_date)})` : ''}` }))]} />
+            </Field>
+            <Field label="Notes" span>
+              <Textarea value={form.notes} onChange={e => setForm(f => ({ ...f, notes: e.target.value }))} rows={3} placeholder="Any additional notes…" />
+            </Field>
+          </FormGrid>
+        </div>
+      </FormModal>
+
+      {/* Above the FormModal overlay so the unsaved-work prompt is never hidden behind it. */}
+      <div style={{ position: 'relative', zIndex: 10001 }}>
+        <UnsavedGuardModal guard={guard} />
+      </div>
+      <Toast message={toast?.message ?? null} tone={toast?.tone} />
     </div>
   );
 }
