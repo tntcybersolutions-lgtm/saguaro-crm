@@ -68,6 +68,8 @@ interface ProjectInfo {
   total_billed: number;
   remaining_to_bill: number;
   total_retainage_held: number;
+  /** Closed / completed job: only its open items are projected, no run-rate. */
+  closed?: boolean;
 }
 
 interface CashFlowData {
@@ -115,7 +117,7 @@ function CashFlowContent() {
       // eslint-disable-next-line @typescript-eslint/no-explicit-any
       const num = (x: any) => Number(x) || 0;
       if (d && d.project) {
-        d.project = { ...d.project, contract_amount: num(d.project.contract_amount), adjusted_contract: num(d.project.adjusted_contract), retainage_pct: num(d.project.retainage_pct), total_billed: num(d.project.total_billed), remaining_to_bill: num(d.project.remaining_to_bill), total_retainage_held: num(d.project.total_retainage_held) };
+        d.project = { ...d.project, contract_amount: num(d.project.contract_amount), adjusted_contract: num(d.project.adjusted_contract), retainage_pct: num(d.project.retainage_pct), total_billed: num(d.project.total_billed), remaining_to_bill: num(d.project.remaining_to_bill), total_retainage_held: num(d.project.total_retainage_held), closed: !!d.project.closed };
         // eslint-disable-next-line @typescript-eslint/no-explicit-any
         d.periods = (d.periods || []).map((per: any) => ({ ...per, receivables: num(per.receivables), payables: num(per.payables), retainage_release: num(per.retainage_release), net: num(per.net), running_balance: num(per.running_balance), line_items: (per.line_items || []).map((li: any) => ({ ...li, amount: num(li.amount) })) }));
         d.summary = { ...(d.summary || {}), total_receivables: num(d.summary?.total_receivables), total_payables: num(d.summary?.total_payables), net_cash_flow: num(d.summary?.net_cash_flow), retainage_due: num(d.summary?.retainage_due), danger_zone: !!d.summary?.danger_zone };
@@ -201,7 +203,7 @@ function CashFlowContent() {
   // The page's one summary row: the forecast. The live contract money sits in
   // the Budget & collections and Contract position cards below.
   const kpis: StatItem[] = [
-    { label: 'Net cash flow (6 mo)', value: fmt(summary.net_cash_flow), sub: summary.danger_zone ? 'Goes negative — review' : 'Incl. retainage release', tone: summary.net_cash_flow >= 0 ? 'good' : 'bad', icon: <ChartLineUp size={15} /> },
+    { label: 'Net cash flow (6 mo)', value: fmt(summary.net_cash_flow), sub: summary.danger_zone ? 'Goes negative — review' : project.closed ? 'Job closed — open items only' : 'Incl. retainage release', tone: summary.net_cash_flow >= 0 ? 'good' : 'bad', icon: <ChartLineUp size={15} /> },
     { label: 'Receivables (30 days)', value: fmt(Number(periods[0]?.receivables) || 0), sub: periods[0]?.month, icon: <ArrowDownLeft size={15} /> },
     { label: 'Payables (30 days)', value: fmt(Number(periods[0]?.payables) || 0), sub: periods[0]?.month, icon: <ArrowUpRight size={15} /> },
     { label: 'Retainage due', value: fmt(summary.retainage_due), sub: 'Held at ' + (Number(project.retainage_pct) || 0) + '%', icon: <Scales size={15} /> },
