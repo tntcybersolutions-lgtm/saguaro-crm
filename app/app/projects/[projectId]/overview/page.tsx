@@ -57,14 +57,16 @@ import type { JobHealth } from '@/lib/job-health';
 import { HealthRing, ScheduleBar, ItemDots, OverUnder, JOB_HEALTH_CSS } from '@/components/jobs/JobHealthParts';
 import { ArrangeButton, usePanelLayout, type PanelDef } from '@/components/layout/ArrangePanels';
 import JobMonthlyChart from '@/components/jobs/JobMonthlyChart';
+import JobBanner from '@/components/jobs/JobBanner';
+import { daysLeft } from '@/lib/job-banner';
 
-/* The job page's panels, in their standard order. Top: health, money, brief; then the tools column and the side column. */
+/* The job page's panels, in their standard order. Top: the banner (photo, facts, weather, team), health, money, brief; then the tools column and the side column. */
 const JOB_PANELS: PanelDef[] = [
-  { key: 'health', label: 'Job health' }, { key: 'money', label: 'Money' }, { key: 'monthly', label: 'Money by month' }, { key: 'brief', label: "Sage's read" },
+  { key: 'banner', label: 'Photo, weather & team' }, { key: 'health', label: 'Job health' }, { key: 'money', label: 'Money' }, { key: 'monthly', label: 'Money by month' }, { key: 'brief', label: "Sage's read" },
   { key: 'tools', label: 'Tools' }, { key: 'attention', label: 'Needs attention' }, { key: 'upcoming', label: 'Coming up' },
   { key: 'steps', label: 'Steps' }, { key: 'job', label: 'Job details' },
 ];
-const TOP = ['health', 'money', 'monthly', 'brief'];
+const TOP = ['banner', 'health', 'money', 'monthly', 'brief'];
 const SIDE_PANELS = ['attention', 'upcoming', 'steps', 'job'];
 
 /* ── Fetchers ─────────────────────────────────────────────────────────── */
@@ -485,7 +487,28 @@ export default function JobPage() {
     </div>
   ) : null;
 
+  /* The banner carries the job's name when it is the first panel; the plain header steps aside. */
+  const bannerFirst = arrangeState.visible[0] === 'banner';
+  const arrangeBtn = <ArrangeButton panels={JOB_PANELS} state={arrangeState} />;
+  const pctRaw = data?.project?.percent_complete;
+  const bannerPct = pctRaw != null && pctRaw !== '' && Number.isFinite(Number(pctRaw)) ? Number(pctRaw) : health?.schedule.workPct ?? null;
   const topPanels: Record<string, React.ReactNode> = {
+    banner: (
+      <JobBanner
+        projectId={projectId}
+        action={bannerFirst ? arrangeBtn : undefined}
+        facts={{
+          name: p.name || 'Untitled job',
+          number: (pr.project_number || pr.number || p.project_number || null) as string | null,
+          stage: stageLabel(p),
+          stageTone: stage === 'building' ? 'success' : stage === 'bidding' ? 'info' : undefined,
+          address: addr || null,
+          contract: moneyState === 'ok' ? (contract > 0 ? fmtMoneyShort(contract) : 'Not set') : moneyState === 'failed' ? '—' : null,
+          pctComplete: bannerPct,
+          daysLeft: closed ? null : daysLeft(end, today),
+        }}
+      />
+    ),
     health: health && (
         <section className="jx-health" aria-label="Job health">
           <HealthRing health={health} size={84} />
@@ -533,11 +556,11 @@ export default function JobPage() {
   return (
     <div className="k-frame jx">
       {css}
-      <header className="jx-head">
+      {!bannerFirst && <header className="jx-head">
         <div className="jx-title">
           <h1 className="k-title">{p.name || 'Untitled job'}</h1>
           <span className="jx-pill" data-tone={stage === 'building' ? 'success' : stage === 'bidding' ? 'info' : undefined}>{stageLabel(p)}</span>
-          <span style={{ marginLeft: 'auto' }}><ArrangeButton panels={JOB_PANELS} state={arrangeState} /></span>
+          <span style={{ marginLeft: 'auto' }}>{arrangeBtn}</span>
         </div>
         {(addr || when) && (
           <p className="jx-meta">
@@ -545,7 +568,7 @@ export default function JobPage() {
             {when && <span data-late={when.late || undefined}><CalendarBlank size={16} weight="bold" aria-hidden="true" />{when.text}</span>}
           </p>
         )}
-      </header>
+      </header>}
 
       {arrangeState.visible.filter((k) => TOP.includes(k)).map((k) => <React.Fragment key={k}>{topPanels[k]}</React.Fragment>)}
 
