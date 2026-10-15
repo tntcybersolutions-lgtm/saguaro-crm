@@ -650,9 +650,11 @@ export async function sendInviteTeamMember(to: string, inviterName: string, comp
   /* Sent as "<inviter> via Saguaro" with replies going to the inviter: a named
      person the recipient knows reads as trusted, not as bulk mail. */
   const viaName = inviterName && !inviterName.includes('@') ? `${inviterName} via Saguaro` : 'Saguaro Control Systems';
-  return send(to, `You're invited to join ${companyName} on Saguaro Control Systems`, layout(`
+  /* Saguaro's own company is named "Saguaro Control Systems"; don't say it twice. */
+  const onSaguaro = /saguaro/i.test(companyName) ? '' : ' on Saguaro';
+  return send(to, `${inviterName && !inviterName.includes('@') ? inviterName : 'Your team'} invited you to join ${companyName}${onSaguaro}`, layout(`
     ${h(`You've been invited to join ${companyName}`)}
-    ${p(`<strong>${inviterName}</strong> has invited you to collaborate on <strong>${companyName}</strong>'s projects on Saguaro Control Systems.`)}
+    ${p(`<strong>${inviterName}</strong> invited you to work on <strong>${companyName}</strong>'s jobs${onSaguaro}. Set a password and you're in.`)}
     ${table(row('Company', companyName) + row('Your Role', role) + row('Invited By', inviterName))}
     ${p('Saguaro Control Systems is a construction project management platform for GCs and subs — manage projects, documents, bids, and more.')}
     ${btn('Accept Invitation', acceptUrl)}

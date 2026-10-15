@@ -109,7 +109,7 @@ export default function PeopleAccessHub() {
       <PageShell
         crumbs={[{ label: 'Home', href: '/app' }, { label: 'Settings', href: '/app/settings' }, { label: 'People & Access' }]}
         title="People & Access"
-        subtitle="Crew records and role-based access, in one place. Hiding a control is not authorization — the server enforces every permission."
+        subtitle="Your crew, and what each person can see and do."
       >
         {stats && <StatRow items={stats} />}
 
