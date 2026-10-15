@@ -18,7 +18,7 @@
 
 import React from 'react';
 import { createPortal } from 'react-dom';
-import { type Icon as PhosphorIcon, CaretRight, DotsThree, MagnifyingGlass, X, EnvelopeSimple, Phone, User, Buildings, MapPin, CalendarBlank, CurrencyDollar, Flag, Tag, Hash, Note, Info } from '@phosphor-icons/react';
+import { type Icon as PhosphorIcon, CaretRight, CaretDown, BookmarkSimple, Rows, Columns, DownloadSimple, DotsThree, MagnifyingGlass, X, EnvelopeSimple, Phone, User, Buildings, MapPin, CalendarBlank, CurrencyDollar, Flag, Tag, Hash, Note, Info } from '@phosphor-icons/react';
 import { useSortedRows, type SortState, type SortDir } from './premium';
 import { SortBar } from './sort';
 import { STATUS_COLORS, type StatusKind } from '@/lib/status-colors';
@@ -532,10 +532,72 @@ export type Column<T> = {
    *  'show' keeps this column on the card regardless of position; 'hide'
    *  drops it there. Status and money columns should say 'show'. */
   phone?: 'show' | 'hide';
+  /** Starts hidden; people turn it on from Columns. */
+  hidden?: boolean;
+  /** Totals row: 'sum' adds the accessor's numbers, 'count' counts non-empty, or render your own. */
+  total?: 'sum' | 'count' | ((rows: T[]) => React.ReactNode);
+  /** How a total or a sum is shown (money columns pass a currency formatter). */
+  format?: (n: number) => string;
+  /** Offered in "Group by". Defaults to true for text columns that are not the name column. */
+  groupable?: boolean;
 };
 
 const valueOf = <T,>(col: Column<T>, row: T): unknown =>
   col.accessor ? col.accessor(row) : (row as Record<string, unknown> | null | undefined)?.[col.key];
+
+const headerText = (h: React.ReactNode, key: string) => (typeof h === 'string' ? h : key.replace(/_/g, ' '));
+
+/** Plain text for a cell (export, grouping): numbers stay numbers, dates stay ISO. */
+function plainOf(v: unknown): string {
+  if (v == null) return '';
+  if (v instanceof Date) return v.toISOString();
+  if (typeof v === 'object') return '';
+  return String(v);
+}
+
+type GridPrefs = { hidden?: string[]; sort?: SortState; groupBy?: string | null };
+type SavedView = { id: string; name: string; columns: string[] | null; sort_by: string | null; sort_direction: string | null; filters: { groupBy?: string | null } | null; is_default?: boolean };
+
+/** Stable id for a table: the page's route (ids → :id) + its column keys. */
+function autoGridId(keys: string[]): string {
+  if (typeof window === 'undefined') return '';
+  const path = window.location.pathname.replace(/[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}/gi, ':id');
+  return `${path}|${keys.join(',')}`.slice(0, 200);
+}
+function projectFromPath(): string | null {
+  if (typeof window === 'undefined') return null;
+  const m = window.location.pathname.match(/\/projects\/([0-9a-f-]{36})/i);
+  return m ? m[1] : null;
+}
+function readPrefs(id: string): GridPrefs {
+  try { return JSON.parse(window.localStorage.getItem(`saguaro.grid.${id}`) || '{}') as GridPrefs; } catch { return {}; }
+}
+function writePrefs(id: string, p: GridPrefs) {
+  try { window.localStorage.setItem(`saguaro.grid.${id}`, JSON.stringify(p)); } catch { /* private mode */ }
+}
+
+/** A small popover anchored under a toolbar button (columns, views, group). */
+function GridPop({ label, icon, children, count, onOpen }: { label: string; icon?: React.ReactNode; children: (close: () => void) => React.ReactNode; count?: number; onOpen?: () => void }) {
+  const [open, setOpen] = React.useState(false);
+  React.useEffect(() => { if (open) onOpen?.(); /* eslint-disable-next-line react-hooks/exhaustive-deps */ }, [open]);
+  const ref = React.useRef<HTMLDivElement>(null);
+  React.useEffect(() => {
+    if (!open) return;
+    const onDown = (e: MouseEvent) => { if (!ref.current?.contains(e.target as Node)) setOpen(false); };
+    const onKey = (e: KeyboardEvent) => { if (e.key === 'Escape') setOpen(false); };
+    document.addEventListener('mousedown', onDown);
+    document.addEventListener('keydown', onKey);
+    return () => { document.removeEventListener('mousedown', onDown); document.removeEventListener('keydown', onKey); };
+  }, [open]);
+  return (
+    <div className="k-grid-pop" ref={ref}>
+      <button type="button" className="k-grid-btn" aria-haspopup="dialog" aria-expanded={open} onClick={() => setOpen((o) => !o)}>
+        {icon}{label}{count ? <span className="k-grid-count">{count}</span> : null}<CaretDown size={12} weight="bold" />
+      </button>
+      {open && <div className="k-grid-menu" role="dialog" aria-label={label}>{children(() => setOpen(false))}</div>}
+    </div>
+  );
+}
 
 export function DataTable<T>({
   columns,
@@ -548,6 +610,10 @@ export function DataTable<T>({
   loading,
   isSelected,
   rowStyle,
+  tableId,
+  bulkActions,
+  exportName,
+  toolbar,
 }: {
   columns: Column<T>[];
   rows: T[];
@@ -564,8 +630,41 @@ export function DataTable<T>({
   isSelected?: (row: T) => boolean;
   /** Per-row inline style — e.g. rowStripe(project) from components/ui/ProjectColor for the 3px job-colour edge. */
   rowStyle?: (row: T) => React.CSSProperties | undefined;
+  /** Names this table for saved views and remembered columns. Defaults to the route + column keys. */
+  tableId?: string;
+  /** Turns on row checkboxes; the actions act on every checked row. */
+  bulkActions?: (rows: T[]) => Action[];
+  /** File name for Export (no extension). */
+  exportName?: string;
+  /** Show the grid bar (views, group, columns, export). Defaults on for tables with 4+ columns. */
+  toolbar?: boolean;
 }) {
+  const [gridId, setGridId] = React.useState(tableId || '');
   const [sort, setSort] = React.useState<SortState>(defaultSort ?? null);
+  const [hidden, setHidden] = React.useState<Set<string>>(() => new Set(columns.filter((c) => c.hidden).map((c) => c.key)));
+  const [groupBy, setGroupBy] = React.useState<string | null>(null);
+  const [checked, setChecked] = React.useState<Set<string | number>>(new Set());
+  const [views, setViews] = React.useState<SavedView[] | null>(null);
+  const [viewMsg, setViewMsg] = React.useState('');
+  const loadedPrefs = React.useRef(false);
+
+  // Restore this table's remembered columns / sort / grouping once its id is known (client only).
+  React.useEffect(() => {
+    const id = tableId || autoGridId(columns.map((c) => c.key));
+    setGridId(id);
+    const p = readPrefs(id);
+    if (p.hidden) setHidden(new Set(p.hidden.filter((k) => columns.some((c) => c.key === k))));
+    if (p.sort !== undefined) setSort(p.sort ?? null);
+    if (p.groupBy !== undefined) setGroupBy(p.groupBy && columns.some((c) => c.key === p.groupBy) ? p.groupBy : null);
+    loadedPrefs.current = true;
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [tableId]);
+  React.useEffect(() => {
+    if (!gridId || !loadedPrefs.current) return;
+    writePrefs(gridId, { hidden: Array.from(hidden), sort, groupBy });
+  }, [gridId, hidden, sort, groupBy]);
+
+  const visible = React.useMemo(() => columns.filter((c) => !hidden.has(c.key)), [columns, hidden]);
   const byKey = React.useMemo(() => new Map(columns.map((c) => [c.key, c])), [columns]);
   const getValue = React.useCallback((row: T, key: string) => {
     const col = byKey.get(key);
@@ -576,18 +675,237 @@ export function DataTable<T>({
   const cycle = (key: string) =>
     setSort((p) => (!p || p.key !== key ? { key, dir: 'asc' } : p.dir === 'asc' ? { key, dir: 'desc' } : null));
 
-  const colCount = columns.length + (rowActions ? 1 : 0);
-  // Phones hide the header row (rows become cards), so the sort lives in a
-  // control above the list there. Desktop keeps the clickable headers.
-  const sortCols = columns.filter((c) => c.sortable !== false && typeof c.header === 'string').map((c) => ({ key: c.key, label: c.header as string }));
+  const showBar = toolbar ?? columns.length >= 4;
+  const bulk = !!bulkActions;
+  const colCount = visible.length + (rowActions ? 1 : 0) + (bulk ? 1 : 0);
+  const sortCols = visible.filter((c) => c.sortable !== false && typeof c.header === 'string').map((c) => ({ key: c.key, label: c.header as string }));
+  const groupCols = columns.filter((c) => c.groupable ?? (!c.primary && c.align !== 'right' && typeof c.header === 'string'));
+  const hasTotals = visible.some((c) => c.total);
+
+  // Grouping: rows bucketed by the column's plain value, in sorted order.
+  const groups = React.useMemo(() => {
+    if (!groupBy) return null;
+    const col = byKey.get(groupBy);
+    if (!col) return null;
+    const m = new Map<string, T[]>();
+    sorted.forEach((r) => {
+      const k = plainOf(valueOf(col, r)) || '(none)';
+      const list = m.get(k);
+      if (list) list.push(r); else m.set(k, [r]);
+    });
+    return Array.from(m.entries());
+  }, [groupBy, sorted, byKey]);
+
+  const totalCell = (c: Column<T>, list: T[]): React.ReactNode => {
+    if (!c.total) return null;
+    if (typeof c.total === 'function') return c.total(list);
+    if (c.total === 'count') return list.filter((r) => plainOf(valueOf(c, r)) !== '').length.toLocaleString('en-US');
+    const sum = list.reduce((a, r) => { const n = Number(valueOf(c, r)); return Number.isFinite(n) ? a + n : a; }, 0);
+    return c.format ? c.format(sum) : sum.toLocaleString('en-US', { maximumFractionDigits: 2 });
+  };
+
+  const keyOf = (r: T) => rowKey(r);
+  const allChecked = bulk && sorted.length > 0 && sorted.every((r) => checked.has(keyOf(r)));
+  const checkedRows = bulk ? sorted.filter((r) => checked.has(keyOf(r))) : [];
+  React.useEffect(() => {
+    // Drop checks for rows that left the table.
+    if (!bulk || checked.size === 0) return;
+    const live = new Set(rows.map((r) => rowKey(r)));
+    let changed = false;
+    const next = new Set<string | number>();
+    checked.forEach((k) => { if (live.has(k)) next.add(k); else changed = true; });
+    if (changed) setChecked(next);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [rows]);
+
+  // Export exactly what is on screen: visible columns, current sort, every row.
+  const exportCsv = () => {
+    const esc = (v: string) => (/[",\n]/.test(v) ? `"${v.replace(/"/g, '""')}"` : v);
+    const head = visible.map((c) => esc(headerText(c.header, c.key)));
+    const lines = sorted.map((r) => visible.map((c) => esc(plainOf(valueOf(c, r)))).join(','));
+    const blob = new Blob([[head.join(','), ...lines].join('\n')], { type: 'text/csv;charset=utf-8' });
+    const a = document.createElement('a');
+    a.href = URL.createObjectURL(blob);
+    a.download = `${(exportName || document.title.split('—')[0] || 'saguaro-export').trim().replace(/[^\w-]+/g, '-').toLowerCase()}-${new Date().toISOString().slice(0, 10)}.csv`;
+    document.body.appendChild(a); a.click(); a.remove();
+    setTimeout(() => URL.revokeObjectURL(a.href), 1000);
+  };
+
+  const loadViews = React.useCallback(async () => {
+    if (!gridId) return;
+    const pid = projectFromPath();
+    try {
+      const r = await fetch(`/api/saved-views?module=${encodeURIComponent(gridId)}${pid ? `&project_id=${pid}` : ''}`, { credentials: 'include', cache: 'no-store' });
+      const j = await r.json().catch(() => ({}));
+      if (!r.ok) { setViewMsg(j.error || "Couldn't load saved views."); setViews([]); return; }
+      setViews(Array.isArray(j.views) ? j.views : []);
+    } catch { setViewMsg('No connection.'); setViews([]); }
+  }, [gridId]);
+
+  const applyView = (v: SavedView) => {
+    if (Array.isArray(v.columns) && v.columns.length) setHidden(new Set(columns.map((c) => c.key).filter((k) => !v.columns!.includes(k))));
+    setSort(v.sort_by ? { key: v.sort_by, dir: v.sort_direction === 'desc' ? 'desc' : 'asc' } : null);
+    setGroupBy(v.filters?.groupBy && columns.some((c) => c.key === v.filters!.groupBy) ? v.filters.groupBy : null);
+  };
+  const saveView = async () => {
+    const { textPrompt } = await import('@/lib/ui/async-dialog');
+    const name = (await textPrompt({ title: 'Save this view', message: 'Name it so you can come back to these columns, sort and grouping.', placeholder: 'e.g. Overdue by trade' }))?.trim();
+    if (!name) return;
+    const pid = projectFromPath();
+    const r = await fetch('/api/saved-views', {
+      method: 'POST', credentials: 'include', headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ name, module: gridId, project_id: pid, columns: visible.map((c) => c.key), sort_by: sort?.key ?? null, sort_direction: sort?.dir ?? 'asc', filters: { groupBy } }),
+    });
+    const j = await r.json().catch(() => ({}));
+    setViewMsg(r.ok ? `Saved "${name}".` : (j.error || "Couldn't save the view."));
+    await loadViews();
+  };
+  const deleteView = async (v: SavedView) => {
+    const r = await fetch(`/api/saved-views?id=${encodeURIComponent(v.id)}`, { method: 'DELETE', credentials: 'include' });
+    const j = await r.json().catch(() => ({}));
+    setViewMsg(r.ok ? `Removed "${v.name}".` : (j.error || "Couldn't remove the view."));
+    await loadViews();
+  };
+
+  // Keyboard: ↑/↓ move between rows, Enter opens.
+  const onRowKey = (e: React.KeyboardEvent<HTMLTableRowElement>, row: T) => {
+    if (e.key === 'Enter' && onRowClick) { e.preventDefault(); onRowClick(row); return; }
+    if (e.key === 'ArrowDown' || e.key === 'ArrowUp') {
+      e.preventDefault();
+      const tr = e.currentTarget;
+      let sib = (e.key === 'ArrowDown' ? tr.nextElementSibling : tr.previousElementSibling) as HTMLElement | null;
+      while (sib && sib.tabIndex < 0) sib = (e.key === 'ArrowDown' ? sib.nextElementSibling : sib.previousElementSibling) as HTMLElement | null;
+      sib?.focus();
+    }
+  };
+
+  const renderRow = (row: T) => {
+    const k = keyOf(row);
+    return (
+      <tr
+        key={k}
+        style={rowStyle?.(row)}
+        data-clickable={!!onRowClick}
+        data-selected={isSelected?.(row) || checked.has(k) ? 'true' : undefined}
+        aria-selected={isSelected ? !!isSelected(row) : undefined}
+        tabIndex={onRowClick ? 0 : -1}
+        onKeyDown={(e) => onRowKey(e, row)}
+        onClick={onRowClick ? () => onRowClick(row) : undefined}
+      >
+        {bulk && (
+          <td className="k-td-check" onClick={(e) => e.stopPropagation()}>
+            <input type="checkbox" aria-label="Select row" checked={checked.has(k)} onChange={(e) => setChecked((p) => { const n = new Set(p); if (e.target.checked) n.add(k); else n.delete(k); return n; })} />
+          </td>
+        )}
+        {visible.map((c, ci) => {
+          const v = valueOf(c, row);
+          const phone = c.phone ?? (ci < 4 ? 'show' : 'hide');
+          return (
+            <td key={c.key} className={c.primary ? 'k-td-primary' : undefined} style={{ textAlign: c.align }} data-label={typeof c.header === 'string' ? c.header : undefined} data-phone={phone}>
+              {c.render ? c.render(row) : v == null || v === '' ? '—' : String(v)}
+            </td>
+          );
+        })}
+        {rowActions && (
+          <td className="k-td-actions">
+            <RowActions actions={rowActions(row)} />
+          </td>
+        )}
+      </tr>
+    );
+  };
+
+  const totalsRow = (list: T[], label: string, cls: string) => (
+    <tr className={cls}>
+      {bulk && <td />}
+      {visible.map((c, ci) => (
+        <td key={c.key} style={{ textAlign: c.align }} data-phone={ci === 0 || c.total ? 'show' : 'hide'} data-label={typeof c.header === 'string' ? c.header : undefined}>
+          {ci === 0 && !c.total ? label : totalCell(c, list)}
+        </td>
+      ))}
+      {rowActions && <td />}
+    </tr>
+  );
 
   return (
     <div className="k-table-wrap">
+      {showBar && !loading && (
+        <div className="k-grid-bar">
+          <span className="k-grid-n">{sorted.length.toLocaleString('en-US')} {sorted.length === 1 ? 'row' : 'rows'}</span>
+          <div className="k-toolbar-spacer" />
+          {gridId && (
+            <GridPop label="Views" icon={<BookmarkSimple size={14} />} onOpen={() => { setViewMsg(''); void loadViews(); }}>
+              {() => {
+                if (views === null) return <div className="k-grid-note">Loading…</div>;
+                return (
+                  <div className="k-grid-list">
+                    {views.length === 0 && <div className="k-grid-note">No saved views yet.</div>}
+                    {views.map((v) => (
+                      <div key={v.id} className="k-grid-item">
+                        <button type="button" onClick={() => applyView(v)}>{v.name}</button>
+                        <button type="button" className="k-grid-x" aria-label={`Remove view ${v.name}`} onClick={() => void deleteView(v)}><X size={12} /></button>
+                      </div>
+                    ))}
+                    <button type="button" className="k-grid-save" onClick={() => void saveView()}>Save current view…</button>
+                    {viewMsg && <div className="k-grid-note">{viewMsg}</div>}
+                  </div>
+                );
+              }}
+            </GridPop>
+          )}
+          {groupCols.length > 0 && (
+            <GridPop label={groupBy ? `Grouped: ${headerText(byKey.get(groupBy)?.header, groupBy)}` : 'Group'} icon={<Rows size={14} />}>
+              {(close) => (
+                <div className="k-grid-list">
+                  <button type="button" data-on={!groupBy} onClick={() => { setGroupBy(null); close(); }}>No grouping</button>
+                  {groupCols.map((c) => (
+                    <button type="button" key={c.key} data-on={groupBy === c.key} onClick={() => { setGroupBy(c.key); close(); }}>{headerText(c.header, c.key)}</button>
+                  ))}
+                </div>
+              )}
+            </GridPop>
+          )}
+          <GridPop label="Columns" icon={<Columns size={14} />} count={hidden.size || undefined}>
+            {() => (
+              <div className="k-grid-list">
+                {columns.map((c, i) => (
+                  <label key={c.key} className="k-grid-check">
+                    <input
+                      type="checkbox"
+                      checked={!hidden.has(c.key)}
+                      disabled={i === 0}
+                      onChange={(e) => setHidden((p) => { const n = new Set(p); if (e.target.checked) n.delete(c.key); else n.add(c.key); return n; })}
+                    />
+                    {headerText(c.header, c.key)}
+                  </label>
+                ))}
+              </div>
+            )}
+          </GridPop>
+          <button type="button" className="k-grid-btn" onClick={exportCsv} disabled={sorted.length === 0}><DownloadSimple size={14} />Export</button>
+        </div>
+      )}
+      {bulk && checkedRows.length > 0 && (
+        <div className="k-grid-bulk" role="toolbar" aria-label="Bulk actions">
+          <strong>{checkedRows.length} selected</strong>
+          {bulkActions!(checkedRows).filter((a) => !a.hidden).map((a) => (
+            <Button key={a.label} size="sm" variant={a.tone === 'danger' ? 'danger' : 'secondary'} icon={a.icon} disabled={a.disabled} onClick={() => { a.onClick?.(); }}>
+              {a.label}
+            </Button>
+          ))}
+          <button type="button" className="k-grid-btn" onClick={() => setChecked(new Set())}>Clear</button>
+        </div>
+      )}
       <SortBar columns={sortCols} sort={sort} onChange={setSort} />
       <table className="k-table">
         <thead>
           <tr>
-            {columns.map((c) => {
+            {bulk && (
+              <th className="k-td-check">
+                <input type="checkbox" aria-label="Select all rows" checked={allChecked} onChange={(e) => setChecked(e.target.checked ? new Set(sorted.map(keyOf)) : new Set())} />
+              </th>
+            )}
+            {visible.map((c) => {
               const sortable = c.sortable !== false;
               const dir = sort?.key === c.key ? sort.dir : null;
               return (
@@ -619,27 +937,23 @@ export function DataTable<T>({
             <tr>
               <td className="k-table-empty" colSpan={colCount}>{empty ?? 'Nothing here yet.'}</td>
             </tr>
-          ) : (
-            sorted.map((row) => (
-              <tr key={rowKey(row)} style={rowStyle?.(row)} data-clickable={!!onRowClick} data-selected={isSelected?.(row) ? 'true' : undefined} aria-selected={isSelected ? !!isSelected(row) : undefined} onClick={onRowClick ? () => onRowClick(row) : undefined}>
-                {columns.map((c, ci) => {
-                  const v = valueOf(c, row);
-                  const phone = c.phone ?? (ci < 4 ? 'show' : 'hide');
-                  return (
-                    <td key={c.key} className={c.primary ? 'k-td-primary' : undefined} style={{ textAlign: c.align }} data-label={typeof c.header === 'string' ? c.header : undefined} data-phone={phone}>
-                      {c.render ? c.render(row) : v == null || v === '' ? '—' : String(v)}
-                    </td>
-                  );
-                })}
-                {rowActions && (
-                  <td className="k-td-actions">
-                    <RowActions actions={rowActions(row)} />
+          ) : groups ? (
+            groups.map(([label, list]) => (
+              <React.Fragment key={`g-${label}`}>
+                <tr className="k-group-row">
+                  <td colSpan={colCount}>
+                    <strong>{label}</strong><span className="k-grid-count">{list.length}</span>
                   </td>
-                )}
-              </tr>
+                </tr>
+                {list.map(renderRow)}
+                {hasTotals && totalsRow(list, 'Subtotal', 'k-subtotal-row')}
+              </React.Fragment>
             ))
+          ) : (
+            sorted.map(renderRow)
           )}
         </tbody>
+        {hasTotals && !loading && sorted.length > 0 && <tfoot>{totalsRow(sorted, 'Total', 'k-total-row')}</tfoot>}
       </table>
     </div>
   );

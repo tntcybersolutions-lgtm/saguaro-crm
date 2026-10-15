@@ -94,3 +94,26 @@ export async function POST(req: NextRequest) {
     return apiError('saved-views', err, 'Internal server error');
   }
 }
+
+/** DELETE /api/saved-views?id=… — removes one of the signed-in user's own views. */
+export async function DELETE(req: NextRequest) {
+  const user = await getUser(req);
+  if (!user) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
+  const id = req.nextUrl.searchParams.get('id');
+  if (!id) return NextResponse.json({ error: 'id is required' }, { status: 400 });
+  try {
+    const db = createServerClient();
+    const { data, error } = await db
+      .from('saved_views')
+      .delete()
+      .eq('id', id)
+      .eq('tenant_id', user.tenantId)
+      .eq('user_id', user.id)
+      .select('id');
+    if (error) throw error;
+    if (!data || data.length === 0) return NextResponse.json({ error: 'View not found' }, { status: 404 });
+    return NextResponse.json({ ok: true });
+  } catch (err) {
+    return apiError('saved-views', err, "Couldn't remove the view.");
+  }
+}
