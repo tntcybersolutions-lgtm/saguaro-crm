@@ -15,7 +15,8 @@ import {
   PremiumSurface, ModuleHero, StatCard, SectionCard, PremiumEmpty,
   FlowSteps, InsightRow, AutoChip, goldButtonStyle, goldOutlineButtonStyle, railStyle
 } from '@/components/ui/premium';
-import { Button } from '@/components/ui/kit';
+import { Button, DataTable } from '@/components/ui/kit';
+import { confirmDialog } from '@/lib/ui/async-dialog';
 import { CSI_DIVISIONS } from '@/lib/construction-intelligence';
 import { moduleAccent } from '@/lib/ui/app-accent';
 import { useUnsavedGuard, useComposerDirty } from '@/lib/useUnsavedGuard';
@@ -37,6 +38,10 @@ interface BudgetLine {
   pct_complete: number;
   forecast_cost: number;
   category: string;
+  /** Rolled up from this job's commitments, POs and bills (budget API). */
+  direct_costs?: number;
+  projected_cost?: number;
+  committed_source?: 'commitments' | 'entered';
 }
 
 interface AddLineForm {
@@ -543,121 +548,49 @@ export default function BudgetPage() {
           action={<Button icon={<Plus size={15} weight="bold" />} onClick={() => setShowAddForm(true)}>Add Budget Line</Button>}
         />
       ) : (
-      /* Budget Table */
-      <SectionCard title="Cost Breakdown" subtitle={`${lines.length} line item${lines.length !== 1 ? 's' : ''}`} icon={<ChartLineUp size={18} weight="duotone" color={'var(--text-secondary)'} />} flush>
-        <div className="k-table-wrap">
-          <table className="k-table-skin" style={{ width: '100%', borderCollapse: 'collapse' }}>
-            <thead>
-              <tr style={{ background: 'rgba(255,255,255,0.02)' }}>
-                {['Cost Code', 'Description', 'Orig. Budget', 'Approved COs', 'Revised Budget', 'Committed', 'Actual Cost', '% Complete', 'Remaining', 'Cost to Complete', 'Forecast (EAC)', 'Variance', 'Actions'].map(h => (
-                  <th key={h} style={{ padding: '11px 14px', textAlign: h === 'Cost Code' || h === 'Description' || h === 'Actions' ? 'left' : 'right', fontSize: 12, fontWeight: 800, color: 'var(--text-tertiary)', borderBottom: `1px solid ${'var(--border-subtle)'}`, whiteSpace: 'nowrap' }}>{h}</th>
-                ))}
-              </tr>
-            </thead>
-            <tbody>
-              {lines.map((l, li) => {
-                const remaining = toDollars(subCents(toCents(l.revised_budget ?? 0), toCents(l.actual_cost ?? 0)));
-                const costToComplete = toDollars(costToCompleteCentsByLine[li]);
-                const forecast = l.forecast_cost ?? 0;
-                const lineVariance = toDollars(subCents(toCents(l.revised_budget ?? 0), toCents(forecast)));
-                const pct = l.pct_complete ?? 0;
-                const isEditing = editingId === l.id;
-                return (
-                  <tr key={l.id} style={{ borderBottom: `1px solid ${'var(--border-subtle)'}`, background: rowBg(l) }}>
-                    <td style={{ padding: '11px 14px', color: TEXT, fontWeight: 700, fontFamily: 'monospace', whiteSpace: 'nowrap' }}>{l.cost_code}</td>
-                    <td style={{ padding: '11px 14px', color: TEXT, fontWeight: 500, maxWidth: 180, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{l.description}</td>
-                    <td style={{ padding: '11px 14px', textAlign: 'right', color: TEXT }}>
-                      {isEditing ? (
-                        <input
-                          value={editAmount}
-                          onChange={e => setEditAmount(e.target.value)}
-                          type="number"
-                          style={{ width: 110, padding: '4px 8px', background: 'var(--bg-surface-2)', border: '1px solid var(--border-strong)', borderRadius: 6, color: TEXT, fontSize: 14, outline: 'none', textAlign: 'right' }}
-                          autoFocus
-                        />
-                      ) : fmt(l.original_budget)}
-                    </td>
-                    <td style={{ padding: '11px 14px', textAlign: 'right', color: (l.approved_cos ?? 0) > 0 ? 'var(--warning)' : 'var(--text-tertiary)' }}>{(l.approved_cos ?? 0) > 0 ? '+' + fmt(l.approved_cos) : '—'}</td>
-                    <td style={{ padding: '11px 14px', textAlign: 'right', color: TEXT, fontWeight: 600 }}>{fmt(l.revised_budget)}</td>
-                    <td style={{ padding: '11px 14px', textAlign: 'right', color: TEXT }}>{fmt(l.committed_cost)}</td>
-                    <td style={{ padding: '11px 14px', textAlign: 'right', color: (l.actual_cost ?? 0) > (l.revised_budget ?? 0) ? 'var(--danger)' : (l.actual_cost ?? 0) > 0 ? 'var(--warning)' : 'var(--text-tertiary)' }}>{fmt(l.actual_cost)}</td>
-                    <td style={{ padding: '11px 14px', textAlign: 'right' }}>
-                      <div style={{ display: 'flex', alignItems: 'center', gap: 6, justifyContent: 'flex-end' }}>
-                        <div style={{ width: 40, height: 5, background: 'rgba(255,255,255,0.1)', borderRadius: 999 }}>
-                          <div style={{ height: '100%', width: `${Math.min(100, pct)}%`, background: pct >= 100 ? 'var(--success)' : 'var(--info)', borderRadius: 999 }} />
-                        </div>
-                        <span style={{ color: pct >= 100 ? 'var(--success)' : TEXT, fontWeight: 600, whiteSpace: 'nowrap' }}>{pct}%</span>
-                      </div>
-                    </td>
-                    <td style={{ padding: '11px 14px', textAlign: 'right', color: remaining >= 0 ? 'var(--success)' : 'var(--danger)', fontWeight: 600 }}>{fmt(remaining)}</td>
-                    <td style={{ padding: '11px 14px', textAlign: 'right', color: costToComplete < 0 ? 'var(--danger)' : TEXT }}>{fmt(costToComplete)}</td>
-                    <td style={{ padding: '11px 14px', textAlign: 'right', color: forecast > (l.revised_budget ?? 0) ? 'var(--danger)' : TEXT, fontWeight: 600 }}>{fmt(forecast)}</td>
-                    <td style={{ padding: '11px 14px', textAlign: 'right', color: lineVariance >= 0 ? 'var(--success)' : 'var(--danger)', fontWeight: 700 }}>{(lineVariance >= 0 ? '+' : '') + fmt(lineVariance)}</td>
-                    <td style={{ padding: '11px 14px', whiteSpace: 'nowrap', position: 'relative' as const }}>
-                      {isEditing ? (
-                        <div style={{ display: 'flex', gap: 5 }}>
-                          <button onClick={() => saveEdit(l.id)} className="k-btn k-btn-primary k-btn-sm">Save</button>
-                          <button onClick={() => setEditingId(null)} style={{ padding: '3px 8px', background: 'none', border: `1px solid ${'var(--border-subtle)'}`, borderRadius: 4, color: 'var(--text-tertiary)', fontSize: 12, cursor: 'pointer' }}>Cancel</button>
-                        </div>
-                      ) : adjustId === l.id ? (
-                        <div style={{ display: 'flex', alignItems: 'center', gap: 3 }}>
-                          {[-10, -5, 5, 10].map(p => (
-                            <button key={p} onClick={() => handleAdjust(l.id, p)} style={{ padding: '3px 7px', background: p > 0 ? 'rgba(74,222,128,.1)' : 'rgba(248,113,113,.1)', border: `1px solid ${p > 0 ? 'rgba(74,222,128,.25)' : 'rgba(248,113,113,.25)'}`, borderRadius: 4, color: p > 0 ? 'var(--success)' : 'var(--danger)', fontSize: 12, fontWeight: 700, cursor: 'pointer' }}>{p > 0 ? '+' : ''}{p}%</button>
-                          ))}
-                          <button onClick={() => setAdjustId(null)} style={{ padding: '3px 6px', background: 'none', border: 'none', color: 'var(--text-tertiary)', fontSize: 12, cursor: 'pointer' }}>Cancel</button>
-                        </div>
-                      ) : deleteId === l.id ? (
-                        <div style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
-                          <span style={{ fontSize: 12, color: 'var(--danger)', fontWeight: 600 }}>Delete?</span>
-                          <button onClick={() => handleDeleteLine(l.id)} style={{ padding: '3px 8px', background: 'rgba(248,113,113,.15)', border: '1px solid rgba(248,113,113,.3)', borderRadius: 4, color: 'var(--danger)', fontSize: 12, fontWeight: 700, cursor: 'pointer' }}>Yes</button>
-                          <button onClick={() => setDeleteId(null)} style={{ padding: '3px 8px', background: 'none', border: `1px solid ${'var(--border-subtle)'}`, borderRadius: 4, color: 'var(--text-tertiary)', fontSize: 12, cursor: 'pointer' }}>Cancel</button>
-                        </div>
-                      ) : (
-                        <div style={{ display: 'flex', alignItems: 'center', gap: 4 }}>
-                          {copiedId === l.id && <span style={{ fontSize: 12, color: 'var(--success)', fontWeight: 600 }}>Copied!</span>}
-                          <button onClick={() => openMenu(l.id)} style={{ padding: '3px 8px', background: 'rgba(255,255,255,0.04)', border: `1px solid ${'var(--border-subtle)'}`, borderRadius: 6, color: 'var(--text-tertiary)', fontSize: 12, cursor: 'pointer' }}>Actions &#9662;</button>
-                          {menuId === l.id && (
-                            <div style={{ position: 'absolute', top: 36, right: 14, background: 'var(--bg-solid-2)', border: `1px solid ${'var(--border-subtle)'}`, borderRadius: 10, padding: 4, zIndex: 100, minWidth: 150, boxShadow: '0 16px 44px rgba(0,0,0,.6)' }}>
-                              {([
-                                { label: 'Edit Amount', icon: PencilSimple, action: () => { setMenuId(null); setEditingId(l.id); setEditAmount(String(l.original_budget)); } },
-                                { label: 'Adjust %', icon: ChartBar, action: () => { setMenuId(null); setAdjustId(l.id); } },
-                                { label: 'Copy Amount', icon: Copy, action: () => handleCopy(l.id, l.original_budget) },
-                              ] as { label: string; icon: Icon; action: () => void }[]).map(item => (
-                                <div key={item.label} onClick={item.action} style={{ padding: '8px 12px', fontSize: 12, color: TEXT, cursor: 'pointer', borderRadius: 7, display: 'flex', alignItems: 'center', gap: 8 }} onMouseEnter={e => (e.currentTarget.style.background = 'rgba(255,255,255,0.05)')} onMouseLeave={e => (e.currentTarget.style.background = 'transparent')}>
-                                  <item.icon size={14} weight="duotone" color={'var(--text-tertiary)'} />{item.label}
-                                </div>
-                              ))}
-                              <div style={{ height: 1, background: 'var(--border-subtle)', margin: '4px 0' }} />
-                              <div onClick={() => { setMenuId(null); setDeleteId(l.id); }} style={{ padding: '8px 12px', fontSize: 12, color: 'var(--danger)', cursor: 'pointer', borderRadius: 7, display: 'flex', alignItems: 'center', gap: 8 }} onMouseEnter={e => (e.currentTarget.style.background = 'rgba(248,113,113,.08)')} onMouseLeave={e => (e.currentTarget.style.background = 'transparent')}>
-                                <Trash size={14} weight="duotone" color="var(--danger)" />Delete Line
-                              </div>
-                            </div>
-                          )}
-                        </div>
-                      )}
-                    </td>
-                  </tr>
-                );
-              })}
-            </tbody>
-            <tfoot>
-              <tr style={{ background: 'var(--bg-surface-2)', fontWeight: 800 }}>
-                <td colSpan={2} style={{ padding: '13px 14px', color: TEXT, fontWeight: 800 }}>Totals</td>
-                <td style={{ padding: '13px 14px', textAlign: 'right', color: TEXT }}>{fmt(totalOriginal)}</td>
-                <td style={{ padding: '13px 14px', textAlign: 'right', color: totalApprovedCOs > 0 ? 'var(--warning)' : 'var(--text-tertiary)' }}>{totalApprovedCOs > 0 ? '+' + fmt(totalApprovedCOs) : '—'}</td>
-                <td style={{ padding: '13px 14px', textAlign: 'right', color: TEXT }}>{fmt(totalRevised)}</td>
-                <td style={{ padding: '13px 14px', textAlign: 'right', color: TEXT }}>{fmt(totalCommitted)}</td>
-                <td style={{ padding: '13px 14px', textAlign: 'right', color: TEXT }}>{fmt(totalActual)}</td>
-                <td style={{ padding: '13px 14px', textAlign: 'right', color: 'var(--text-tertiary)' }}>{fmtPct(totalActual, totalRevised)}</td>
-                <td style={{ padding: '13px 14px', textAlign: 'right', color: totalRemaining >= 0 ? 'var(--success)' : 'var(--danger)' }}>{fmt(totalRemaining)}</td>
-                <td style={{ padding: '13px 14px', textAlign: 'right', color: totalCostToComplete < 0 ? 'var(--danger)' : TEXT }}>{fmt(totalCostToComplete)}</td>
-                <td style={{ padding: '13px 14px', textAlign: 'right', color: totalForecast > totalRevised ? 'var(--danger)' : 'var(--success)' }}>{fmt(totalForecast)}</td>
-                <td style={{ padding: '13px 14px', textAlign: 'right', color: totalVariance >= 0 ? 'var(--success)' : 'var(--danger)', fontWeight: 800 }}>{(totalVariance >= 0 ? '+' : '') + fmt(totalVariance)}</td>
-                <td />
-              </tr>
-            </tfoot>
-          </table>
-        </div>
+      /* Budget table — the shared grid: views, grouping by division, columns, totals, export. */
+      <SectionCard title="Cost Breakdown" subtitle={`${lines.length} line item${lines.length !== 1 ? 's' : ''} · committed and direct costs roll up from this job's commitments, purchase orders and bills`} icon={<ChartLineUp size={18} weight="duotone" color={'var(--text-secondary)'} />} flush>
+        <DataTable<BudgetLine>
+          tableId="project-budget"
+          exportName="budget"
+          rows={lines}
+          rowKey={l => l.id}
+          rowStyle={l => ({ background: rowBg(l) })}
+          defaultSort={{ key: 'cost_code', dir: 'asc' }}
+          columns={[
+            { key: 'cost_code', header: 'Cost code', primary: true, render: l => <span style={{ fontFamily: 'monospace' }}>{l.cost_code}</span> },
+            { key: 'description', header: 'Description', render: l => <span style={{ display: 'inline-block', maxWidth: 220, overflow: 'hidden', textOverflow: 'ellipsis', verticalAlign: 'bottom' }}>{l.description}</span> },
+            { key: 'division', header: 'Division', accessor: l => { const d = String(l.cost_code || '').trim().slice(0, 2); const name = (CSI_DIVISIONS as Record<string, { name: string }>)[d]?.name; return name ? `${d} · ${name}` : d || '—'; }, hidden: true },
+            { key: 'original_budget', header: 'Original', align: 'right', total: 'sum', format: fmt, phone: 'show', render: l => editingId === l.id ? (
+              <span style={{ display: 'inline-flex', gap: 6, alignItems: 'center' }} onClick={e => e.stopPropagation()}>
+                <input value={editAmount} onChange={e => setEditAmount(e.target.value)} type="number" step="0.01" aria-label="Original budget" autoFocus
+                  onKeyDown={e => { if (e.key === 'Enter') void saveEdit(l.id); if (e.key === 'Escape') setEditingId(null); }}
+                  style={{ width: 120, padding: '6px 8px', background: 'var(--bg-surface-2)', border: '1px solid var(--border-strong)', borderRadius: 6, color: TEXT, fontSize: 15, textAlign: 'right' }} />
+                <button onClick={() => void saveEdit(l.id)} className="k-btn k-btn-primary k-btn-sm">Save</button>
+                <button onClick={() => setEditingId(null)} className="k-btn k-btn-sm">Cancel</button>
+              </span>
+            ) : fmt(l.original_budget) },
+            { key: 'approved_cos', header: 'Approved changes', align: 'right', total: 'sum', format: fmt, render: l => (l.approved_cos ?? 0) !== 0 ? <span style={{ color: 'var(--warning)' }}>{(l.approved_cos > 0 ? '+' : '') + fmt(l.approved_cos)}</span> : '—' },
+            { key: 'revised_budget', header: 'Revised', align: 'right', total: 'sum', format: fmt, phone: 'show', render: l => <strong>{fmt(l.revised_budget)}</strong> },
+            { key: 'committed_cost', header: 'Committed', align: 'right', total: 'sum', format: fmt, render: l => <span title={l.committed_source === 'commitments' ? 'From commitments and purchase orders' : 'Entered on the line'}>{fmt(l.committed_cost)}</span> },
+            { key: 'direct_costs', header: 'Direct costs', align: 'right', total: 'sum', format: fmt, render: l => (l.direct_costs ?? 0) > 0 ? fmt(l.direct_costs) : '—' },
+            { key: 'actual_cost', header: 'Actual', align: 'right', total: 'sum', format: fmt, render: l => <span style={{ color: (l.actual_cost ?? 0) > (l.revised_budget ?? 0) ? 'var(--danger)' : undefined }}>{fmt(l.actual_cost)}</span> },
+            { key: 'pct_complete', header: '% complete', align: 'right', render: l => `${l.pct_complete ?? 0}%` },
+            { key: 'projected_cost', header: 'Projected cost', align: 'right', total: 'sum', format: fmt, hidden: true },
+            { key: 'cost_to_complete', header: 'Cost to complete', align: 'right', accessor: l => toDollars(costToCompleteCentsByLine[lines.indexOf(l)] ?? 0), total: 'sum', format: fmt, render: l => fmt(toDollars(costToCompleteCentsByLine[lines.indexOf(l)] ?? 0)) },
+            { key: 'forecast_cost', header: 'Forecast (EAC)', align: 'right', total: 'sum', format: fmt, render: l => <span style={{ color: (l.forecast_cost ?? 0) > (l.revised_budget ?? 0) ? 'var(--danger)' : undefined, fontWeight: 600 }}>{fmt(l.forecast_cost)}</span> },
+            { key: 'over_under', header: 'Over / under', align: 'right', phone: 'show', accessor: l => (l.revised_budget ?? 0) - (l.forecast_cost ?? 0), total: 'sum', format: n => (n >= 0 ? '+' : '') + fmt(n), render: l => { const v = (l.revised_budget ?? 0) - (l.forecast_cost ?? 0); return <span style={{ color: v >= 0 ? 'var(--success)' : 'var(--danger)', fontWeight: 700 }}>{(v >= 0 ? '+' : '') + fmt(v)}</span>; } },
+          ]}
+          rowActions={l => [
+            { label: 'Edit amount', icon: <PencilSimple size={15} />, onClick: () => { setEditingId(l.id); setEditAmount(String(l.original_budget)); } },
+            { label: 'Raise 5%', icon: <ChartBar size={15} />, onClick: () => void handleAdjust(l.id, 5) },
+            { label: 'Raise 10%', icon: <ChartBar size={15} />, onClick: () => void handleAdjust(l.id, 10) },
+            { label: 'Lower 5%', icon: <ChartBar size={15} />, onClick: () => void handleAdjust(l.id, -5) },
+            { label: 'Lower 10%', icon: <ChartBar size={15} />, onClick: () => void handleAdjust(l.id, -10) },
+            { label: 'Copy amount', icon: <Copy size={15} />, onClick: () => handleCopy(l.id, l.original_budget) },
+            { label: 'Delete line', icon: <Trash size={15} />, tone: 'danger', onClick: () => void (async () => { if (await confirmDialog({ title: `Delete ${l.cost_code}?`, message: 'This budget line comes off the budget.', confirmLabel: 'Delete', danger: true })) await handleDeleteLine(l.id); })() },
+          ]}
+        />
       </SectionCard>
       )}
       {menuId && <div style={{ position: 'fixed', inset: 0, zIndex: 50 }} onClick={() => setMenuId(null)} />}
