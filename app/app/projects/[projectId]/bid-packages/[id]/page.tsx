@@ -1,13 +1,33 @@
 'use client';
-import { Skeleton, SkeletonKPI, SkeletonRow } from '@/components/ui/Skeleton';
-import { StatusPill } from '@/components/ui/Status';
+/**
+ * Bid package — one trade's package: its details and bid form, the bids that
+ * came back (side by side, low bid marked), and every invited sub with the
+ * jacket email's delivery. On the kit.
+ *
+ *   load      GET  /api/bid-packages/[id]
+ *   directory GET  /api/subcontractors
+ *   invite    POST /api/bid-packages/[id]/invite-subs   (409 = jacket gate)
+ *   remind    POST /api/bid-packages/[id]/remind
+ *   revoke    POST /api/bid-packages/[id]/invites/[inviteId]/revoke
+ *   award     POST /api/bid-packages/[id]/award        (compliance hold → override)
+ *   W-9       POST /api/documents/w9-request
+ *   close     POST /api/bid-packages/[id]/close
+ */
 import { confirmDialog } from '@/lib/ui/async-dialog';
 import React, { useState, useEffect, useRef } from 'react';
-import Link from 'next/link';
-import { useParams, useRouter } from 'next/navigation';
+import { useParams } from 'next/navigation';
+import { useProjectContext } from '@/lib/hooks/useProjectContext';
 import { toCents, toDollars, sumCents } from '@/lib/calc';
-import { FolderOpen, Envelope, ArrowLeft, FileText, Lock, Trophy, Star, Plus, CheckCircle, XCircle, CurrencyDollar, UsersThree, Receipt, Scales } from '@phosphor-icons/react';
-import { PremiumSurface, ModuleHero, StatCard, SectionCard, PremiumEmpty, FlowStrip, ghostButtonStyle, goldButtonStyle } from '@/components/ui/premium';
+import {
+  FolderOpen, Envelope, ArrowLeft, FileText, Lock, Trophy, Plus, CheckCircle, XCircle,
+  CurrencyDollar, UsersThree, Receipt, Scales, WarningCircle, ArrowClockwise, Prohibit,
+  CalendarBlank, Hash, Tag,
+} from '@phosphor-icons/react';
+import {
+  PageShell, Card, StatRow, Badge, Button, DataTable, EmptyState, Callout, Field, Input,
+  MetaItem, Toast, useToast,
+  type Column, type BadgeTone, type StatItem,
+} from '@/components/ui/kit';
 import BidPackageDetails from '@/components/BidPackageDetails';
 import BidFormEditor, { toBidFormLines, type BidFormLine } from '@/components/BidFormEditor';
 import JacketPdfButton from '@/components/JacketPdfButton';
@@ -16,11 +36,50 @@ import { inviteState, jacketDelivery, type InviteState, type JacketDelivery } fr
 import { bidAmount } from '@/lib/bid-amount';
 import { isBiddingStatus } from '@/lib/bid-deadline';
 
-const GOLD='var(--brand-primary)',DARK='var(--bg-base)',RAISED='var(--bg-surface)',BORDER='rgba(255,255,255,0.12)',DIM='var(--text-secondary)',TEXT='var(--text-primary)',GREEN='var(--success)',RED='var(--danger)';
-const MUTED='rgba(255,255,255,0.62)';        // section-header meta text
-const HAIR='rgba(255,255,255,0.06)';         // table row hairlines on the dark surface
-const TH_BG='rgba(255,255,255,0.03)';        // table header band
 const fmt = (n:number) => '$'+((n||0).toLocaleString('en-US',{minimumFractionDigits:0,maximumFractionDigits:0}));
+const fmtDay = (iso?: string | null) => {
+  if (!iso) return '—';
+  const d = new Date(iso.length <= 10 ? `${iso}T12:00:00` : iso);
+  return isNaN(d.getTime()) ? '—' : d.toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' });
+};
+
+/** Package status → one badge (same words as the package register). */
+function packageBadge(s: string): { label: string; tone: BadgeTone } {
+  if (isBiddingStatus(s)) return { label: 'Open', tone: 'lead' };
+  if (s === 'closed') return { label: 'Closed — Award Pending', tone: 'under_contract' };
+  if (s === 'awarded') return { label: 'Awarded', tone: 'ongoing' };
+  return { label: 'Draft', tone: 'neutral' };
+}
+
+/** Invite state → one badge. */
+const INVITE_BADGE: Record<InviteState, { label: string; tone: BadgeTone }> = {
+  suggested: { label: 'Suggested', tone: 'neutral' },
+  invited: { label: 'Invited', tone: 'neutral' },
+  viewed: { label: 'Viewed', tone: 'lead' },
+  submitted: { label: 'Bid In', tone: 'ongoing' },
+  declined: { label: 'Declined', tone: 'overdue' },
+  revoked: { label: 'Revoked', tone: 'closed' },
+};
+
+const CSS = `
+.bdWs > .k-page { max-width: none; }
+.bdWho { display: flex; flex-direction: column; gap: 2px; min-width: 0; }
+.bdWho > span:first-child { color: var(--text-primary); font-weight: 700; }
+.bdWho > span + span { color: var(--text-secondary); font-size: var(--fs-xs); overflow-wrap: anywhere; }
+.bdMoney { font-variant-numeric: tabular-nums; white-space: nowrap; font-weight: 700; color: var(--text-primary); }
+.bdMoney[data-low="true"] { color: var(--success); }
+.bdMuted { color: var(--text-tertiary); }
+.bdBadges { display: inline-flex; align-items: center; gap: 6px; flex-wrap: wrap; }
+.bdInvite { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)) auto; gap: 12px; align-items: end; padding: 16px; border-bottom: 1px solid var(--border-subtle); background: var(--bg-surface-2); }
+.bdHint { grid-column: 1 / -1; font-size: var(--fs-sm); color: var(--text-secondary); line-height: 1.5; }
+.bdPanel { padding: 16px; border-bottom: 1px solid var(--border-subtle); }
+.bdGap { margin-bottom: 16px; }
+@media (max-width: 720px) {
+  .bdInvite { grid-template-columns: minmax(0, 1fr); }
+  .bdWs .k-btn, .bdWs .k-input, .bdWs select.k-select { min-height: 44px; }
+  .bdWs .k-input, .bdWs select.k-select { font-size: 16px; }
+}
+`;
 
 // ─── Types ───────────────────────────────────────────────────────────────────
 
@@ -88,33 +147,6 @@ interface BidPackage {
   bid_submissions: BidSubmission[];
 }
 
-/* The invite list: a row per bidder, columns at desktop, stacked on a phone —
-   a seven-column table scrolled sideways at 390px with the actions off screen. */
-const INVITE_CSS = `
-.bpInvHead, .bpInvRow { display: grid; grid-template-columns: minmax(180px, 1.6fr) minmax(100px, .7fr) minmax(150px, 1.1fr) minmax(90px, .6fr) 236px; gap: 12px; align-items: center; padding: 10px 20px; }
-.bpInvHead > :last-child { text-align: right; }
-.bpInvHead { font-size: 12px; font-weight: 700; color: var(--text-secondary); background: rgba(255,255,255,0.03); border-bottom: 1px solid rgba(255,255,255,0.06); }
-.bpInvRow { border-bottom: 1px solid rgba(255,255,255,0.06); font-size: 13px; }
-.bpInvWho { min-width: 0; }
-.bpInvAct { display: flex; gap: 8px; flex-wrap: wrap; justify-content: flex-end; }
-@media (max-width: 720px) {
-  .bpInvHead { display: none; }
-  .bpInvRow { grid-template-columns: minmax(0, 1fr) auto; gap: 8px 12px; padding: 14px 16px; }
-  .bpInvWho { grid-column: 1 / -1; }
-  .bpInvAct { grid-column: 1 / -1; justify-content: flex-start; }
-}
-`;
-
-// ─── Badge ───────────────────────────────────────────────────────────────────
-
-function Badge({ label, color = DIM, bg = 'rgba(148,163,184,.1)' }: { label: string; color?: string; bg?: string }) {
-  return (
-    <span style={{ fontSize: 12, fontWeight: 700, padding: '2px 8px', borderRadius: 4, background: bg, color, letterSpacing: 0.3 }}>
-      {label.replace(/_/g, ' ').replace(/\b\w/g, c => c.toUpperCase())}
-    </span>
-  );
-}
-
 /** The jacket email, as one short line for the invite table. */
 function DeliveryCell({ d }: { d: JacketDelivery }) {
   const date = (iso: string | null) => (iso ? new Date(iso).toLocaleDateString(undefined, { month: 'short', day: 'numeric' }) : '');
@@ -129,16 +161,16 @@ function DeliveryCell({ d }: { d: JacketDelivery }) {
       </span>
     );
   }
-  return <span style={{ color: DIM, fontSize: 12 }}>Not emailed yet</span>;
+  return <span style={{ color: 'var(--text-secondary)', fontSize: 12 }}>Not emailed yet</span>;
 }
 
 // ─── Main Page ────────────────────────────────────────────────────────────────
 
 export default function BidPackageDetailPage() {
   const params = useParams();
-  const router = useRouter();
   const projectId = params['projectId'] as string;
   const id = params['id'] as string;
+  const { ctx } = useProjectContext(projectId);
 
   const [pkg, setPkg] = useState<BidPackage | null>(null);
   const [loading, setLoading] = useState(true);
@@ -155,7 +187,7 @@ export default function BidPackageDetailPage() {
   const [awardNote, setAwardNote] = useState<{ tone: 'ok' | 'warn'; lines: string[] } | null>(null);
   const [awarding, setAwarding] = useState<string | null>(null);
   const [closing, setClosing] = useState(false);
-  const [toast, setToast] = useState<{ msg: string; color: string } | null>(null);
+  const { toast, show } = useToast(4000);
 
   // Invite more subs
   const [showInviteForm, setShowInviteForm] = useState(false);
@@ -206,9 +238,9 @@ export default function BidPackageDetailPage() {
     }
   }, [loading, pkg]);
 
+  /* Children (details, bid form, PDF) report with a colour; danger = a failure. */
   function showToast(msg: string, color: string = 'var(--success)') {
-    setToast({ msg, color });
-    setTimeout(() => setToast(null), 4000);
+    show(msg, color === 'var(--danger)' ? 'bad' : 'good');
   }
 
   async function loadPackage() {
@@ -430,242 +462,237 @@ export default function BidPackageDetailPage() {
 
   // ── Loading / Not Found ──────────────────────────────────────────────────
 
-  if (loading) return (
-    <PremiumSurface>
-      {/* Layout-true shell — back stays live; hero, stats and the invite list
-          paint as skeletons shaped like the real content (house pattern: rfis). */}
-      <button onClick={() => router.push(`/app/projects/${projectId}/bid-packages`)} className="pmBtn" style={{ background: 'none', border: 'none', color: MUTED, fontSize: 13, cursor: 'pointer', padding: 0, marginBottom: 14, display: 'inline-flex', alignItems: 'center', gap: 5 }}>
-        <ArrowLeft size={14} weight="bold" />
-        Bid Packages
-      </button>
-      <div style={{ marginBottom: 24 }}>
-        <Skeleton width={110} height={11} style={{ marginBottom: 12 }} />
-        <Skeleton width={300} height={32} style={{ marginBottom: 10, maxWidth: '70%' }} />
-        <Skeleton width={220} height={13} />
-      </div>
-      <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(180px, 1fr))', gap: 14, marginBottom: 24 }}>
-        <SkeletonKPI /><SkeletonKPI /><SkeletonKPI /><SkeletonKPI />
-      </div>
-      <SectionCard flat title="Invited Subcontractors" icon={<UsersThree size={17} weight="duotone" color="var(--text-secondary)" />} flush>
-        <SkeletonRow />
-        <SkeletonRow />
-        <SkeletonRow />
-        <SkeletonRow />
-      </SectionCard>
-    </PremiumSurface>
+  const base = `/app/projects/${projectId}`;
+  const crumbsBase = [
+    { label: 'Projects', href: '/app/projects' },
+    { label: ctx?.project?.name || 'Project', href: `${base}/overview` },
+    { label: 'Bid Packages', href: `${base}/bid-packages` },
+  ];
+
+  if (loading && !pkg) return (
+    <div className="bdWs">
+      <style dangerouslySetInnerHTML={{ __html: CSS }} />
+      <PageShell crumbs={[...crumbsBase, { label: 'Loading…' }]} title="Bid Package" subtitle="Loading the package…">
+        <StatRow items={['Scope Value', 'Awarded Amount', 'Subs Invited', 'Bids Received'].map(label => ({ label, value: '—', sub: 'Loading…' }))} />
+        <Card title="Invited Subcontractors" icon={<UsersThree size={17} />} flush>
+          <DataTable<InvitedSub>
+            columns={[{ key: 'company_name', header: 'Company', primary: true }, { key: 'status', header: 'Status' }, { key: 'email', header: 'Jacket Email' }, { key: 'bid_amount', header: 'Bid', align: 'right' }]}
+            rows={[]}
+            rowKey={r => r.id}
+            loading
+            toolbar={false}
+          />
+        </Card>
+      </PageShell>
+    </div>
   );
 
   if (!pkg) return (
-    <PremiumSurface>
-      <SectionCard>
-        {notFound || !loadError ? (
-          <PremiumEmpty
-            tone="error"
-            icon={<Envelope size={30} weight="duotone" color="var(--text-secondary)" />}
-            title="Bid Package Not Found"
-            description="This bid package is not on your account. It may have been removed, or the link is out of date."
-            action={
-              <button onClick={() => router.push(`/app/projects/${projectId}/bid-packages`)} style={{ ...ghostButtonStyle, minHeight: 44 }} className="pmBtn">
-                <ArrowLeft size={15} weight="bold" /> Go Back
-              </button>
-            }
-          />
-        ) : (
-          <PremiumEmpty
-            tone="error"
-            icon={<Envelope size={30} weight="duotone" color="var(--text-secondary)" />}
-            title="Couldn't Load This Bid Package"
-            description={`${loadError} Nothing on it has been lost.`}
-            action={
-              <div style={{ display: 'flex', gap: 8, flexWrap: 'wrap', justifyContent: 'center' }}>
-                <button onClick={loadPackage} style={{ ...goldButtonStyle, minHeight: 44 }} className="pmBtn">
-                  Retry
-                </button>
-                <button onClick={() => router.push(`/app/projects/${projectId}/bid-packages`)} style={{ ...ghostButtonStyle, minHeight: 44 }} className="pmBtn">
-                  <ArrowLeft size={15} weight="bold" /> Bid Packages
-                </button>
-              </div>
-            }
-          />
-        )}
-      </SectionCard>
-    </PremiumSurface>
+    <div className="bdWs">
+      <style dangerouslySetInnerHTML={{ __html: CSS }} />
+      <PageShell crumbs={[...crumbsBase, { label: notFound || !loadError ? 'Not Found' : 'Error' }]} title="Bid Package">
+        <Card flush>
+          {notFound || !loadError ? (
+            <EmptyState
+              icon={<Envelope size={22} />}
+              title="Bid package not found"
+              text="It may have been removed, or the link is out of date."
+              action={<Button icon={<ArrowLeft size={15} />} href={`${base}/bid-packages`}>Back to Bid Packages</Button>}
+            />
+          ) : (
+            <EmptyState
+              icon={<WarningCircle size={22} />}
+              title="Couldn't load this bid package"
+              text={`${loadError} Nothing on it has been lost.`}
+              action={
+                <div style={{ display: 'flex', gap: 8, flexWrap: 'wrap', justifyContent: 'center' }}>
+                  <Button icon={<ArrowClockwise size={15} />} onClick={loadPackage}>Try again</Button>
+                  <Button variant="ghost" icon={<ArrowLeft size={15} />} href={`${base}/bid-packages`}>Bid Packages</Button>
+                </div>
+              }
+            />
+          )}
+        </Card>
+      </PageShell>
+    </div>
   );
 
   const issuedOn = pkg.jacket_generated_at
     ? new Date(pkg.jacket_generated_at).toLocaleDateString(undefined, { month: 'short', day: 'numeric' })
     : null;
-  /* 'sent' is what issuing writes — it is open for bids, same as 'open'. */
-  const statusWord = isBiddingStatus(pkg.status) ? 'open' : (pkg.status || 'draft');
+  const pb = packageBadge(pkg.status || 'draft');
   const liveInvites = pkg.invited_subs.filter((s) => s.status !== 'revoked');
 
   const totalSov = toDollars(sumCents(pkg.sov_items.map(i => toCents(i.total))));
   const submittedSubs = liveInvites.filter(s => s.status === 'submitted');
   const submissions = pkg.bid_submissions || [];
+  const bidsIn = submissions.length || submittedSubs.length;
+  const dueRaw = pkg.bid_due_date || pkg.due_date;
+  const canClose = pkg.status !== 'closed' && pkg.status !== 'awarded';
 
-  /* 16px and 44px: smaller text makes iOS zoom the page on focus. */
-  const inp: React.CSSProperties = { padding: '8px 12px', minHeight: 44, background: DARK, border: `1px solid ${BORDER}`, borderRadius: 7, color: TEXT, fontSize: 16, outline: 'none' };
+  /* The low bid: the smallest positive amount on the sheet. Marked in green on
+     the comparison and measured against by every other bid. */
+  const priced = submissions.filter(b => (Number(b.amount) || 0) > 0);
+  const lowAmount = priced.length ? Math.min(...priced.map(b => Number(b.amount) || 0)) : null;
+  const isLow = (b: BidSubmission) => lowAmount != null && priced.length > 0 && (Number(b.amount) || 0) === lowAmount;
 
-  // Header action buttons (Download PDF + optional Close Bidding)
-  const headerActions = (
-    <>
-      {/* The jacket is the deliverable — drawings, specs, bid form and
-          requirements assembled into something a sub can actually work from.
-          The flat PDF stays available beside it, but it is the printed copy of
-          one section, not the package. */}
-      <Link
-        href={`/app/projects/${projectId}/bid-packages/${id}/jacket`}
-        style={{ ...goldButtonStyle, display: 'inline-flex', alignItems: 'center', gap: 7, textDecoration: 'none' }}
-        className="pmBtn"
-      >
-        <FolderOpen size={16} weight="duotone" /> Open Bid Jacket
-      </Link>
-      {/* Download PDF builds the printed jacket from the jacket as it is now.
-          It used to open whatever PDF was stored (most were the snapshot Sage
-          took at creation), and with none stored it posted to a generator
-          that answered 400 every time. */}
-      <JacketPdfButton
-        packageId={id}
-        title={`${pkg.name || pkg.trade || 'Bid package'} — Bid Jacket`}
-        onBuilt={(pdf) => setPkg((cur) => (cur ? { ...cur, jacket_pdf_url: pdf.storedUrl } : cur))}
-        onError={(msg) => showToast(msg, 'var(--danger)')}
-      />
-      {/* LEVELLING BELONGS WHERE THE BIDS ARE.
-          This page lists every bid received and an Award button beside each
-          one, and had no route to the screen that compares them — spread, low
-          bid, gaps, who has not answered. The only link to levelling in the
-          product was on the company bid board, and it pointed at
-          /app/bids/levelling with no ?package=, which is the one argument that
-          page reads; it opens empty without it. So the GC's choice was award
-          from a list of numbers, or find the tool by hand and then pick the
-          package again.
-          Linked through the project-scoped route, which redirects carrying the
-          id, and shown only once a bid exists — there is nothing to level
-          against an empty package. */}
-      {submissions.length > 0 && (
-        <Link
-          href={`/app/projects/${projectId}/bid-packages/${id}/leveling`}
-          style={{ ...ghostButtonStyle, display: 'inline-flex', alignItems: 'center', gap: 7, textDecoration: 'none' }}
-          className="pmBtn"
-        >
-          <Scales size={16} weight="duotone" /> Level {submissions.length} Bid{submissions.length === 1 ? '' : 's'}
-        </Link>
-      )}
-      {pkg.status !== 'closed' && pkg.status !== 'awarded' && (
-        <button onClick={closeBids} disabled={closing} className="pmBtn" style={{ display: 'inline-flex', alignItems: 'center', justifyContent: 'center', gap: 8, padding: '11px 18px', borderRadius: 12, background: 'rgba(248,113,113,.12)', border: '1px solid rgba(248,113,113,.3)', color: 'var(--danger)', fontSize: 14, fontWeight: 800, cursor: 'pointer', opacity: closing ? 0.6 : 1 }}>
-          {closing ? 'Closing…' : <><Lock size={15} weight="bold" /> Close Bidding</>}
-        </button>
-      )}
-    </>
-  );
+  const stats: StatItem[] = [
+    { label: 'Scope Value', value: fmt(totalSov), sub: `${pkg.sov_items.length} bid-form line${pkg.sov_items.length === 1 ? '' : 's'}`, icon: <CurrencyDollar size={15} /> },
+    { label: 'Low Bid', value: lowAmount != null ? fmt(lowAmount) : '—', tone: lowAmount != null ? 'good' : 'default', sub: lowAmount != null && totalSov > 0 ? `${lowAmount <= totalSov ? '' : '+'}${fmt(lowAmount - totalSov)} vs scope value` : bidsIn === 1 ? 'One bid in' : 'No bids yet', icon: <Scales size={15} /> },
+    { label: 'Awarded Amount', value: pkg.awarded_amount ? fmt(pkg.awarded_amount) : 'TBD', tone: pkg.awarded_amount ? 'good' : 'default', sub: pkg.awarded_to || 'Not awarded yet', icon: <Trophy size={15} /> },
+    { label: 'Subs Invited', value: String(liveInvites.length), sub: `${liveInvites.filter((s) => s.status === 'viewed').length} viewed`, icon: <UsersThree size={15} /> },
+    { label: 'Bids Received', value: String(bidsIn), tone: bidsIn > 0 ? 'good' : 'default', sub: liveInvites.length > 0 ? `of ${liveInvites.length} invited` : undefined, icon: <Receipt size={15} /> },
+  ];
+
+  // ── Bid comparison: every bid side by side, low bid marked ──
+  const bidColumns: Column<BidSubmission>[] = [
+    {
+      key: 'sub_name', header: 'Bidder', primary: true, phone: 'show',
+      render: b => <span className="bdWho"><span>{b.sub_name}</span>{b.sub_email && <span>{b.sub_email}</span>}</span>,
+    },
+    {
+      key: 'amount', header: 'Bid Amount', align: 'right', phone: 'show', accessor: b => Number(b.amount) || 0,
+      render: b => <span className="bdMoney" data-low={isLow(b) ? 'true' : undefined}>{fmt(b.amount)}</span>,
+    },
+    {
+      key: 'vs_low', header: 'vs Low', align: 'right', accessor: b => (lowAmount != null ? (Number(b.amount) || 0) - lowAmount : 0),
+      render: b => {
+        if (lowAmount == null || !(Number(b.amount) > 0)) return <span className="bdMuted">—</span>;
+        if (isLow(b)) return <span className="bdMuted">Low</span>;
+        const d = (Number(b.amount) || 0) - lowAmount;
+        return <span className="bdMoney">+{fmt(d)}<span className="bdMuted"> · {lowAmount > 0 ? Math.round((d / lowAmount) * 100) : 0}%</span></span>;
+      },
+    },
+    {
+      key: 'vs_scope', header: 'vs Scope', align: 'right', accessor: b => (totalSov > 0 ? (Number(b.amount) || 0) - totalSov : 0),
+      render: b => totalSov > 0 ? <span className="bdMoney" style={{ color: (Number(b.amount) || 0) > totalSov ? 'var(--danger)' : 'var(--success)' }}>{(Number(b.amount) || 0) > totalSov ? '+' : ''}{fmt((Number(b.amount) || 0) - totalSov)}</span> : <span className="bdMuted">—</span>,
+    },
+    { key: 'submitted_at', header: 'Submitted', accessor: b => b.submitted_at || '', render: b => fmtDay(b.submitted_at?.slice(0, 10)) },
+    {
+      key: 'result', header: 'Result', phone: 'show', accessor: b => (b.awarded ? 0 : isLow(b) ? 1 : 2),
+      render: b => (
+        <span className="bdBadges">
+          {/* The bid row says whether it won — matching on name or amount marked two equal bids both 'Awarded'. */}
+          {b.awarded && <Badge tone="completed"><Trophy size={11} weight="fill" /> Awarded</Badge>}
+          {isLow(b) && <Badge tone="ongoing" dot>Low bid</Badge>}
+          {!b.awarded && !isLow(b) && <span className="bdMuted">—</span>}
+        </span>
+      ),
+    },
+  ];
+
+  // ── Invited subs ──
+  const inviteColumns: Column<InvitedSub>[] = [
+    {
+      key: 'company_name', header: 'Company', primary: true, phone: 'show',
+      render: sub => (
+        <span className="bdWho" data-invite={sub.email} data-status={sub.status} style={{ opacity: sub.status === 'revoked' ? 0.6 : 1 }}>
+          <span>{sub.company_name}</span>
+          <span>{sub.contact_name ? `${sub.contact_name} · ` : ''}{sub.email || '—'}</span>
+        </span>
+      ),
+    },
+    { key: 'status', header: 'Status', phone: 'show', accessor: sub => INVITE_BADGE[sub.status]?.label || sub.status, render: sub => { const b = INVITE_BADGE[sub.status] || { label: sub.status, tone: 'neutral' as BadgeTone }; return <Badge tone={b.tone} dot>{b.label}</Badge>; } },
+    { key: 'delivery', header: 'Jacket Email', accessor: sub => sub.delivery.state, render: sub => <DeliveryCell d={sub.delivery} /> },
+    {
+      key: 'bid_amount', header: 'Bid', align: 'right', phone: 'show', accessor: sub => Number(sub.bid_amount) || 0,
+      render: sub => {
+        const isAwarded = sub.bid_amount != null && pkg.bid_submissions.some((b) => b.awarded && b.sub_email === sub.email);
+        return (
+          <span className="bdBadges" style={{ justifyContent: 'flex-end' }}>
+            <span className={sub.bid_amount ? 'bdMoney' : 'bdMuted'} data-low={sub.bid_amount != null && lowAmount != null && sub.bid_amount === lowAmount ? 'true' : undefined}>{sub.bid_amount ? fmt(sub.bid_amount) : '—'}</span>
+            {isAwarded && <Badge tone="completed"><Trophy size={11} weight="fill" /> Awarded</Badge>}
+          </span>
+        );
+      },
+    },
+  ];
+
+  const toggleInviteForm = () => { setShowInviteForm(!showInviteForm); setGate(null); };
 
   return (
-    <>
-      {/* Toast */}
-      {toast && (
-        /* maxWidth: pinned to the right with no limit, a long message on a
-           phone ran off the left edge of the screen. */
-        <div role="status" style={{ position: 'fixed', top: 20, right: 24, maxWidth: 'calc(100vw - 48px)', zIndex: 9999, background: 'var(--bg-solid-2)', border: `1px solid ${toast.color}`, borderRadius: 10, padding: '12px 20px', color: toast.color, fontSize: 14, fontWeight: 700, boxShadow: '0 4px 24px rgba(0,0,0,.4)' }}>
-          {toast.msg}
-        </div>
-      )}
-
-      <PremiumSurface>
-
-        {/* Back to list */}
-        <button onClick={() => router.push(`/app/projects/${projectId}/bid-packages`)} className="pmBtn" style={{ background: 'none', border: 'none', color: MUTED, fontSize: 13, cursor: 'pointer', padding: 0, marginBottom: 14, display: 'inline-flex', alignItems: 'center', gap: 5 }}>
-          <ArrowLeft size={14} weight="bold" />
-          Bid Packages
-        </button>
-
-        {/* Header */}
-        <ModuleHero
-          eyebrow={pkg.code || 'Bid Package'}
-          eyebrowIcon={<Envelope size={13} weight="fill" color="var(--text-secondary)" />}
-          aux={
-            <Badge
-              label={statusWord}
-              color={statusWord === 'awarded' ? 'var(--success)' : statusWord === 'open' ? GOLD : statusWord === 'closed' ? 'var(--danger)' : DIM}
-              bg={statusWord === 'awarded' ? 'rgba(74,222,128,.12)' : statusWord === 'open' ? 'var(--brand-primary-12)' : statusWord === 'closed' ? 'rgba(248,113,113,.12)' : 'rgba(148,163,184,.1)'}
+    <div className="bdWs">
+      <style dangerouslySetInnerHTML={{ __html: CSS }} />
+      <PageShell
+        crumbs={[...crumbsBase, { label: pkg.name || pkg.trade || 'Bid Package' }]}
+        title={pkg.name || 'Bid Package'}
+        badge={<Badge tone={pb.tone} dot>{pb.label}</Badge>}
+        meta={
+          <>
+            {pkg.code && <MetaItem icon={<Hash size={14} />}>{pkg.code}</MetaItem>}
+            {pkg.trade && <MetaItem icon={<Tag size={14} />}>{pkg.trade}</MetaItem>}
+            <MetaItem icon={<CalendarBlank size={14} />}>Due {dueRaw ? fmtDay(dueRaw.slice(0, 10)) : 'TBD'}</MetaItem>
+            <MetaItem icon={<FolderOpen size={14} />}>{issuedOn ? `Jacket issued v${pkg.jacket_version ?? 1} on ${issuedOn}` : 'Jacket not issued yet'}</MetaItem>
+          </>
+        }
+        actions={
+          <>
+            {/* The jacket is the deliverable — drawings, specs, bid form and
+                requirements assembled into something a sub can work from. Once
+                awarded, the page's one primary step is papering the subcontract. */}
+            <Button variant={pkg.awarded_to ? 'secondary' : 'primary'} icon={<FolderOpen size={15} />} href={`${base}/bid-packages/${id}/jacket`}>Open Bid Jacket</Button>
+            {/* Download PDF builds the printed jacket from the jacket as it is now. */}
+            <JacketPdfButton
+              packageId={id}
+              title={`${pkg.name || pkg.trade || 'Bid package'} — Bid Jacket`}
+              onBuilt={(pdf) => setPkg((cur) => (cur ? { ...cur, jacket_pdf_url: pdf.storedUrl } : cur))}
+              onError={(msg) => showToast(msg, 'var(--danger)')}
             />
-          }
-          title={pkg.name}
-          subtitle={`${pkg.trade ? pkg.trade + ' · ' : ''}Due: ${(pkg.bid_due_date || pkg.due_date)?.slice(0, 10) || 'TBD'}${issuedOn ? ` · Jacket issued v${pkg.jacket_version ?? 1} on ${issuedOn}` : ' · Jacket not issued yet'}`}
-          actions={headerActions}
-        />
-
-        {/* Stats */}
-        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(180px, 1fr))', gap: 14, marginBottom: 24 }}>
-          <StatCard
-            icon={<CurrencyDollar size={19} weight="duotone" color="var(--text-secondary)" />}
-            label="Scope Value" value={fmt(totalSov)}
-           href={`/app/projects/${projectId}/bid-packages`}/>
-          <StatCard
-            icon={<Trophy size={19} weight="duotone" color="var(--text-secondary)" />}
-            label="Awarded Amount"
-            value={pkg.awarded_amount ? fmt(pkg.awarded_amount) : 'TBD'}
-            accent={pkg.awarded_amount ? 'var(--success)' : undefined}
-           href={`/app/projects/${projectId}/bid-packages`}/>
-          <StatCard
-            icon={<UsersThree size={19} weight="duotone" color="var(--text-secondary)" />}
-            label="Subs Invited" value={String(liveInvites.length)}
-           href={`/app/projects/${projectId}/bid-packages`}/>
-          <StatCard
-            icon={<Receipt size={19} weight="duotone" color="var(--text-secondary)" />}
-            label="Bids Received"
-            value={String(submissions.length || submittedSubs.length)}
-            accent={(submissions.length || submittedSubs.length) > 0 ? 'var(--success)' : undefined}
-           href={`/app/projects/${projectId}/bid-packages`}/>
-        </div>
+            {/* Levelling belongs where the bids are — shown once a bid exists. */}
+            {submissions.length > 0 && (
+              <Button icon={<Scales size={15} />} href={`${base}/bid-packages/${id}/leveling`}>
+                Level {submissions.length} Bid{submissions.length === 1 ? '' : 's'}
+              </Button>
+            )}
+            {canClose && (
+              <Button variant="danger" icon={<Lock size={15} />} onClick={closeBids} disabled={closing}>
+                {closing ? 'Closing…' : 'Close Bidding'}
+              </Button>
+            )}
+          </>
+        }
+      >
+        <StatRow items={stats} />
 
         {/* A reload that failed after the page had loaded: say so, keep what is on screen. */}
         {loadError && (
-          <div role="alert" style={{ display: 'flex', alignItems: 'center', gap: 10, flexWrap: 'wrap', marginBottom: 16, padding: '10px 14px', borderRadius: 12, border: '1px solid rgba(248,113,113,.35)', background: 'rgba(248,113,113,.08)', color: TEXT, fontSize: 13 }}>
-            <span style={{ flex: 1, minWidth: 200 }}>{loadError} What is shown may be out of date.</span>
-            <button onClick={loadPackage} className="pmBtn" style={{ ...ghostButtonStyle, minHeight: 44 }}>Retry</button>
+          <div className="bdGap">
+            <Callout tone="danger" icon={<WarningCircle size={18} />} title="Couldn't refresh this package" text={`${loadError} What is shown may be out of date.`} actions={<Button size="sm" icon={<ArrowClockwise size={14} />} onClick={loadPackage}>Retry</Button>} />
           </div>
         )}
 
         {/* What the award did — who was told, who was not. */}
         {awardNote && (
-          <div role="status" data-testid="award-note" style={{ marginBottom: 16, padding: '12px 14px', borderRadius: 12, border: `1px solid ${awardNote.tone === 'ok' ? 'rgba(74,222,128,.35)' : 'var(--brand-primary-35)'}`, background: awardNote.tone === 'ok' ? 'rgba(74,222,128,.08)' : 'var(--brand-primary-08)', display: 'flex', gap: 10, alignItems: 'flex-start' }}>
-            <div style={{ flex: 1, minWidth: 0, fontSize: 13, lineHeight: 1.6, color: TEXT }}>
-              {awardNote.lines.map((l, i) => <div key={i} style={i === 0 ? { fontWeight: 800, color: awardNote.tone === 'ok' ? 'var(--success)' : 'var(--warning)' } : undefined}>{l}</div>)}
-            </div>
-            <button onClick={() => setAwardNote(null)} aria-label="Dismiss" style={{ minHeight: 44, minWidth: 44, background: 'transparent', border: 'none', color: DIM, cursor: 'pointer', marginTop: -10, marginRight: -8 }}><XCircle size={16} weight="bold" /></button>
+          <div className="bdGap" role="status" data-testid="award-note">
+            <Callout
+              tone={awardNote.tone === 'ok' ? 'success' : 'warning'}
+              icon={awardNote.tone === 'ok' ? <CheckCircle size={18} weight="fill" /> : <WarningCircle size={18} weight="fill" />}
+              title={awardNote.lines[0]}
+              text={awardNote.lines.length > 1 ? awardNote.lines.slice(1).map((l, i) => <div key={i}>{l}</div>) : undefined}
+              actions={<Button size="sm" variant="ghost" icon={<XCircle size={14} />} onClick={() => setAwardNote(null)}>Dismiss</Button>}
+            />
           </div>
         )}
 
-        {/* Awarded banner */}
+        {/* Awarded — the award knows the sub, the scope and the amount, and the
+            contract form takes all three: papering it is the next step. */}
         {pkg.awarded_to && (
-          <div style={{ background: 'rgba(74,222,128,.08)', border: '1px solid rgba(74,222,128,.25)', borderRadius: 14, padding: '14px 20px', marginBottom: 20, display: 'flex', alignItems: 'center', gap: 12 }}>
-            <span style={{ fontSize: 20, display: 'inline-flex' }}><Trophy size={20} color="var(--success)" weight="fill" /></span>
-            <div>
-              <div style={{ fontSize: 12, fontWeight: 700, color: 'var(--success)', marginBottom: 3 }}>Awarded To</div>
-              <div style={{ fontSize: 15, fontWeight: 700, color: TEXT }}>{pkg.awarded_to}{pkg.awarded_amount && <span style={{ color: 'var(--success)', marginLeft: 12 }}>{fmt(pkg.awarded_amount)}</span>}</div>
-            </div>
-
-            {/* The award already knows the sub, the scope and the amount, and the
-                contract form takes all three. Awarding used to end at a toast
-                and papering the subcontract was a screen you had to know
-                existed — this is the next step, offered where the award lands. */}
-            <Link
-              href={`/app/projects/${pkg.project_id}/contracts/new/subcontract?bidPackageId=${pkg.id}${pkg.awarded_to_id ? `&subId=${pkg.awarded_to_id}` : ''}`}
-              style={{
-                marginLeft: 'auto', display: 'inline-flex', alignItems: 'center', gap: 8,
-                minHeight: 44, padding: '0 20px', borderRadius: 9,
-                background: GOLD, color: 'var(--on-brand)', fontSize: 14, fontWeight: 800,
-                textDecoration: 'none', whiteSpace: 'nowrap',
-              }}
-            >
-              <FileText size={16} weight="bold" color="var(--on-brand)" /> Paper the Subcontract
-            </Link>
+          <div className="bdGap">
+            <Callout
+              tone="success"
+              icon={<Trophy size={18} weight="fill" />}
+              title={<>Awarded to {pkg.awarded_to}{pkg.awarded_amount ? ` · ${fmt(pkg.awarded_amount)}` : ''}</>}
+              actions={
+                <Button variant="primary" icon={<FileText size={15} />} href={`/app/projects/${pkg.project_id}/contracts/new/subcontract?bidPackageId=${pkg.id}${pkg.awarded_to_id ? `&subId=${pkg.awarded_to_id}` : ''}`}>
+                  Paper the Subcontract
+                </Button>
+              }
+            />
           </div>
         )}
 
         {/* Package details — instructions, scope, due date, insurance and
-            bonding. The jacket's written dividers are made of these, and its
-            empty-divider links land here (?edit=details#package-details). */}
+            bonding. The jacket's empty-divider links land here (?edit=details#package-details). */}
         <BidPackageDetails
           pkg={pkg}
           packageId={id}
@@ -681,305 +708,190 @@ export default function BidPackageDetailPage() {
           onToast={showToast}
         />
 
-        {/* Bid Submissions */}
+        {/* Bid comparison — side by side, low bid marked */}
         {submissions.length > 0 && (
-          <div style={{ marginBottom: 20 }}>
-            <SectionCard
-              title="Bid Submissions"
-              icon={<Receipt size={17} weight="duotone" color="var(--text-secondary)" />}
-              action={<span style={{ fontSize: 12, color: MUTED }}>{submissions.length} received</span>}
-              flush
-            >
+          <div className="bdGap">
+            <Card title="Bid Submissions" icon={<Receipt size={17} />} subtitle={`${submissions.length} received${lowAmount != null ? ` · low ${fmt(lowAmount)}` : ''}`} flush>
               {/* The hold sits with the bids it is holding, and carries both of
                   the ways out that its own wording promises. */}
               {complianceHold && (
-                <div style={{ margin: '14px 20px', padding: '14px 16px', borderRadius: 12, background: 'var(--bg-surface-2)', border: '1px solid var(--border-default)' }}>
-                  <div style={{ display: 'flex', alignItems: 'flex-start', gap: 9 }}>
-                    <Lock size={16} weight="duotone" color="var(--text-secondary)" style={{ flexShrink: 0, marginTop: 1 }} />
-                    <div style={{ minWidth: 0 }}>
-                      <div style={{ color: TEXT, fontWeight: 800, fontSize: 14 }}>
-                        Award to {complianceHold.subName} is on hold
-                      </div>
-                      <div style={{ color: DIM, fontSize: 13, lineHeight: 1.5, marginTop: 3 }}>
-                        {complianceHold.message.replace(/^Compliance hold\s*[—-]\s*/i, '')}
-                      </div>
-                    </div>
-                  </div>
-                  <div style={{ display: 'flex', gap: 8, flexWrap: 'wrap', marginTop: 12 }}>
-                    <button
-                      onClick={() => {
-                        const s = submissions.find(x => x.id === complianceHold.submissionId);
-                        requestW9(complianceHold.subName, s?.sub_email ?? null);
-                      }}
-                      disabled={requestingDocs}
-                      className="pmBtn"
-                      style={{ ...goldButtonStyle, opacity: requestingDocs ? 0.6 : 1 }}
-                    >
-                      {requestingDocs ? 'Requesting…' : 'Request the Documents'}
-                    </button>
-                    <button
-                      onClick={() => awardBid(complianceHold.submissionId, complianceHold.subName, { override: true })}
-                      disabled={!!awarding}
-                      className="pmBtn"
-                      style={{ ...ghostButtonStyle, opacity: awarding ? 0.6 : 1 }}
-                    >
-                      Award Anyway (Override)
-                    </button>
-                    <button
-                      onClick={() => setComplianceHold(null)}
-                      style={{ minHeight: 44, padding: '0 14px', background: 'transparent', border: 'none', color: MUTED, fontSize: 13, fontWeight: 600, cursor: 'pointer' }}
-                    >
-                      Dismiss
-                    </button>
-                  </div>
+                <div className="bdPanel">
+                  <Callout
+                    tone="warning"
+                    icon={<Lock size={18} />}
+                    title={`Award to ${complianceHold.subName} is on hold`}
+                    text={complianceHold.message.replace(/^Compliance hold\s*[—-]\s*/i, '')}
+                    actions={
+                      <>
+                        <Button
+                          size="sm"
+                          icon={<Envelope size={14} />}
+                          disabled={requestingDocs}
+                          onClick={() => {
+                            const s = submissions.find(x => x.id === complianceHold.submissionId);
+                            requestW9(complianceHold.subName, s?.sub_email ?? null);
+                          }}
+                        >
+                          {requestingDocs ? 'Requesting…' : 'Request the Documents'}
+                        </Button>
+                        <Button size="sm" icon={<Trophy size={14} />} disabled={!!awarding} onClick={() => awardBid(complianceHold.submissionId, complianceHold.subName, { override: true })}>
+                          Award Anyway (Override)
+                        </Button>
+                        <Button size="sm" variant="ghost" onClick={() => setComplianceHold(null)}>Dismiss</Button>
+                      </>
+                    }
+                  />
                 </div>
               )}
-              <div style={{ overflowX: 'auto', WebkitOverflowScrolling: 'touch' as const }}>
-                <table className="k-table" style={{ width: '100%', borderCollapse: 'collapse' }}>
-                  <thead>
-                    <tr style={{ background: TH_BG }}>
-                      {['Sub Name', 'Email', 'Bid Amount', 'Submitted', 'Action'].map(h => (
-                        <th key={h} style={{ padding: '10px 16px', textAlign: 'left', fontSize: 12, fontWeight: 700, color: DIM, borderBottom: `1px solid ${HAIR}` }}>{h}</th>
-                      ))}
-                    </tr>
-                  </thead>
-                  <tbody>
-                    {submissions.map(sub => {
-                      /* The bid row says whether it won — matching on name or amount marked two equal bids both 'Awarded'. */
-                      const isAwarded = sub.awarded;
-                      return (
-                        <tr key={sub.id} style={{ borderBottom: `1px solid ${HAIR}`, background: isAwarded ? 'rgba(74,222,128,.06)' : 'transparent' }}>
-                          <td style={{ padding: '12px 16px', color: TEXT, fontWeight: 600 }}>
-                            {sub.sub_name}
-                            {isAwarded && <span style={{ fontSize: 12, color: 'var(--success)', marginLeft: 8, fontWeight: 700, display: 'inline-flex', alignItems: 'center', gap: 3 }}><Star size={10} color="var(--success)" weight="fill" /> Awarded</span>}
-                          </td>
-                          <td style={{ padding: '12px 16px', color: DIM, fontSize: 12 }}>{sub.sub_email || '—'}</td>
-                          <td style={{ padding: '12px 16px', color: 'var(--text-primary)', fontWeight: 800, fontSize: 14 }}>{fmt(sub.amount)}</td>
-                          <td style={{ padding: '12px 16px', color: DIM, fontSize: 12 }}>{sub.submitted_at?.slice(0, 10) || '—'}</td>
-                          <td style={{ padding: '12px 16px' }}>
-                            {!isAwarded && pkg.status !== 'awarded' && (
-                              <button
-                                onClick={() => awardBid(sub.id, sub.sub_name)}
-                                disabled={awarding === sub.id}
-                                style={{ minHeight: 44, padding: '0 14px', background: 'rgba(74,222,128,.1)', border: '1px solid rgba(74,222,128,.3)', borderRadius: 10, color: 'var(--success)', fontSize: 12, fontWeight: 700, cursor: 'pointer', opacity: awarding === sub.id ? 0.5 : 1 }}>
-                                {awarding === sub.id ? 'Awarding…' : <span style={{ display: 'inline-flex', alignItems: 'center', gap: 5 }}><Trophy size={12} color="var(--success)" weight="fill" /> Award</span>}
-                              </button>
-                            )}
-                            {isAwarded && <StatusPill module="generic" status="awarded" size="sm" />}
-                          </td>
-                        </tr>
-                      );
-                    })}
-                  </tbody>
-                </table>
-              </div>
-            </SectionCard>
+              <DataTable<BidSubmission>
+                tableId="project-bid-package-bids"
+                exportName={`bids-${(pkg.trade || pkg.name || 'package').toLowerCase()}`}
+                columns={bidColumns}
+                rows={submissions}
+                rowKey={b => b.id}
+                defaultSort={{ key: 'amount', dir: 'asc' }}
+                rowStyle={b => (b.awarded ? { background: 'color-mix(in srgb, var(--success) 6%, transparent)' } : undefined)}
+                rowActions={b => [
+                  {
+                    label: awarding === b.id ? 'Awarding…' : 'Award',
+                    icon: <Trophy size={14} />,
+                    inline: true,
+                    hidden: b.awarded || pkg.status === 'awarded',
+                    disabled: awarding === b.id,
+                    onClick: () => awardBid(b.id, b.sub_name),
+                  },
+                ]}
+              />
+            </Card>
           </div>
         )}
 
-        {/* Invited Subs */}
-        <div style={{ marginBottom: 20 }}>
-          <style dangerouslySetInnerHTML={{ __html: INVITE_CSS }} />
-          <SectionCard
-            title="Invited Subcontractors"
-            /* The counts sit under the title, not beside the button: the action
-               slot does not shrink, and on a phone the two overran the title
-               and pushed Invite More off the card. */
-            subtitle={<span data-testid="invite-counts">{liveInvites.length} invited · {liveInvites.filter((s) => s.status === 'viewed').length} viewed · {submittedSubs.length} bid in</span>}
-            icon={<UsersThree size={17} weight="duotone" color="var(--text-secondary)" />}
-            action={
-              <div style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
-                <button
-                  onClick={() => { setShowInviteForm(!showInviteForm); setGate(null); }}
-                  className="pmBtn"
-                  style={{ minHeight: 44, padding: '0 14px', background: showInviteForm ? 'rgba(255,255,255,.05)' : 'var(--brand-primary-08)', border: `1px solid ${showInviteForm ? BORDER : 'color-mix(in srgb, var(--brand-primary) 30%, transparent)'}`, borderRadius: 10, color: showInviteForm ? DIM : GOLD, fontSize: 13, fontWeight: 700, cursor: 'pointer' }}>
-                  {showInviteForm ? 'Cancel' : <span style={{ display: 'inline-flex', alignItems: 'center', gap: 4 }}><Plus size={12} color="var(--text-secondary)" weight="bold" /> Invite More</span>}
-                </button>
-              </div>
-            }
-            flush
-          >
-            {/* What inviting does, before the GC does it. */}
-            {showInviteForm && !gate && (
-              <div style={{ padding: '12px 20px 0', color: DIM, fontSize: 13, lineHeight: 1.5 }}>
+        {/* Invited subs */}
+        <Card
+          title="Invited Subcontractors"
+          icon={<UsersThree size={17} />}
+          /* The counts sit under the title, not beside the button. */
+          subtitle={<span data-testid="invite-counts">{liveInvites.length} invited · {liveInvites.filter((s) => s.status === 'viewed').length} viewed · {submittedSubs.length} bid in</span>}
+          actions={
+            <Button size="sm" variant={showInviteForm ? 'ghost' : 'secondary'} icon={showInviteForm ? undefined : <Plus size={13} weight="bold" />} onClick={toggleInviteForm}>
+              {showInviteForm ? 'Cancel' : 'Invite More'}
+            </Button>
+          }
+          flush
+        >
+          {/* Invite composer — a package with no invites opens straight into it. */}
+          {showInviteForm && !gate && (
+            <form className="bdInvite" onSubmit={(e) => { e.preventDefault(); void handleInviteMore(); }}>
+              {/* What inviting does, before the GC does it. */}
+              <div className="bdHint">
                 {pkg.jacket_generated_at
-                  ? `The jacket went out as v${pkg.jacket_version ?? 1} on ${issuedOn}. A new sub is emailed that same jacket; anyone who already has it is not emailed again.`
-                  : 'Inviting issues the jacket: it is checked for empty sections first, recorded as v1, and only then emailed.'}
+                  ? `The jacket went out as v${pkg.jacket_version ?? 1} on ${issuedOn}. A new sub gets that same jacket; anyone who already has it is not emailed again.`
+                  : 'Inviting issues the jacket: it is checked for empty sections first, recorded as v1, then emailed.'}
               </div>
-            )}
+              {directory.length > 0 && (
+                <Field label="From Your Directory">
+                  {/* Native select — grouped by trade with this package's trade first, which the kit Select does not render. */}
+                  <select
+                    className="k-select"
+                    value={pickedSubId}
+                    onChange={(e) => {
+                      const v = e.target.value;
+                      setPickedSubId(v);
+                      const s = directory.find(d => d.id === v);
+                      if (s) { setInviteName(s.company_name || ''); setInviteEmail(s.email || ''); }
+                    }}
+                  >
+                    <option value="">Type a new company below…</option>
+                    {(() => {
+                      const norm = (t?: string | null) => (t || '').trim().toLowerCase();
+                      const pkgTrade = norm(pkg.trade);
+                      const byTrade = new Map<string, typeof directory>();
+                      for (const s of directory) {
+                        const key = (s.trade || '').trim() || 'Other';
+                        if (!byTrade.has(key)) byTrade.set(key, []);
+                        byTrade.get(key)!.push(s);
+                      }
+                      const label = (s: (typeof directory)[number]) =>
+                        `${s.company_name}${s.email ? '' : ' (no email on file)'}`;
+                      const groups = [...byTrade.entries()].sort((a, b) => {
+                        const am = pkgTrade && norm(a[0]) === pkgTrade ? 0 : 1;
+                        const bm = pkgTrade && norm(b[0]) === pkgTrade ? 0 : 1;
+                        if (am !== bm) return am - bm;              // this package's trade first
+                        if ((a[0] === 'Other') !== (b[0] === 'Other')) return a[0] === 'Other' ? 1 : -1;
+                        return a[0].localeCompare(b[0]);
+                      });
+                      return groups.map(([trade, subs]) => (
+                        <optgroup key={trade} label={pkgTrade && norm(trade) === pkgTrade ? `${trade} — matches this package` : trade}>
+                          {subs
+                            .slice()
+                            .sort((a, b) => (a.company_name || '').localeCompare(b.company_name || ''))
+                            .map(s => <option key={s.id} value={s.id}>{label(s)}</option>)}
+                        </optgroup>
+                      ));
+                    })()}
+                  </select>
+                </Field>
+              )}
+              <Field label="Name">
+                <Input value={inviteName} onChange={e => { setInviteName(e.target.value); if (pickedSubId) setPickedSubId(''); }} placeholder="Company name" />
+              </Field>
+              <Field label="Email" required>
+                <Input type="email" inputMode="email" value={inviteEmail} onChange={e => setInviteEmail(e.target.value)} placeholder="contractor@company.com" />
+              </Field>
+              <Button type="submit" icon={<Envelope size={15} />} disabled={!inviteEmail.trim() || inviting}>
+                {inviting ? 'Sending…' : pkg.jacket_generated_at ? 'Send Invite' : 'Issue & Send Invite'}
+              </Button>
+            </form>
+          )}
 
-            {/* Invite More Form */}
-            {showInviteForm && !gate && (
-              <div style={{ padding: '14px 20px', borderBottom: `1px solid ${HAIR}`, background: 'var(--bg-surface-2)', display: 'flex', gap: 10, alignItems: 'flex-end', flexWrap: 'wrap' }}>
-                {directory.length > 0 && (
-                  <div style={{ flex: 1, minWidth: 190 }}>
-                    <div style={{ fontSize: 12, fontWeight: 700, color: DIM, marginBottom: 4 }}>From Your Directory</div>
-                    <select
-                      value={pickedSubId}
-                      onChange={(e) => {
-                        const v = e.target.value;
-                        setPickedSubId(v);
-                        const s = directory.find(d => d.id === v);
-                        if (s) { setInviteName(s.company_name || ''); setInviteEmail(s.email || ''); }
-                      }}
-                      style={{ ...inp, width: '100%', boxSizing: 'border-box' }}
-                    >
-                      {/* GROUPED, AND THIS PACKAGE'S TRADE FIRST.
-                          A flat alphabetical list of every sub in the directory
-                          is fine at three and unusable at three hundred — and
-                          the one you want on an Electrical package is almost
-                          always an electrician. The subs whose trade matches
-                          the package are lifted into their own group at the
-                          top, the rest stay grouped by trade beneath, and subs
-                          with no trade recorded land in "Other" rather than
-                          vanishing. */}
-                      <option value="">Type a new company below…</option>
-                      {(() => {
-                        const norm = (t?: string | null) => (t || '').trim().toLowerCase();
-                        const pkgTrade = norm(pkg.trade);
-                        const byTrade = new Map<string, typeof directory>();
-                        for (const s of directory) {
-                          const key = (s.trade || '').trim() || 'Other';
-                          if (!byTrade.has(key)) byTrade.set(key, []);
-                          byTrade.get(key)!.push(s);
-                        }
-                        const label = (s: (typeof directory)[number]) =>
-                          `${s.company_name}${s.email ? '' : ' (no email on file)'}`;
-                        const groups = [...byTrade.entries()].sort((a, b) => {
-                          const am = pkgTrade && norm(a[0]) === pkgTrade ? 0 : 1;
-                          const bm = pkgTrade && norm(b[0]) === pkgTrade ? 0 : 1;
-                          if (am !== bm) return am - bm;              // this package's trade first
-                          if ((a[0] === 'Other') !== (b[0] === 'Other')) return a[0] === 'Other' ? 1 : -1;
-                          return a[0].localeCompare(b[0]);
-                        });
-                        return groups.map(([trade, subs]) => (
-                          <optgroup
-                            key={trade}
-                            label={pkgTrade && norm(trade) === pkgTrade ? `${trade} — matches this package` : trade}
-                          >
-                            {subs
-                              .slice()
-                              .sort((a, b) => (a.company_name || '').localeCompare(b.company_name || ''))
-                              .map(s => <option key={s.id} value={s.id}>{label(s)}</option>)}
-                          </optgroup>
-                        ));
-                      })()}
-                    </select>
-                  </div>
-                )}
-                <div style={{ flex: 1, minWidth: 160 }}>
-                  <div style={{ fontSize: 12, fontWeight: 700, color: DIM, marginBottom: 4 }}>Name</div>
-                  <input
-                    value={inviteName}
-                    onChange={e => { setInviteName(e.target.value); if (pickedSubId) setPickedSubId(''); }}
-                    placeholder="Company name"
-                    style={{ ...inp, width: '100%', boxSizing: 'border-box' }}
-                  />
-                </div>
-                <div style={{ flex: 2, minWidth: 220 }}>
-                  <div style={{ fontSize: 12, fontWeight: 700, color: DIM, marginBottom: 4 }}>Email *</div>
-                  <input type="email" inputMode="email" value={inviteEmail} onChange={e => setInviteEmail(e.target.value)} placeholder="contractor@company.com" style={{ ...inp, width: '100%', boxSizing: 'border-box' }} />
-                </div>
-                <button
-                  onClick={handleInviteMore}
-                  disabled={!inviteEmail.trim() || inviting}
-                  className="pmBtn"
-                  style={{ ...goldButtonStyle, minHeight: 44, opacity: (!inviteEmail.trim() || inviting) ? 0.6 : 1 }}>
-                  {inviting ? 'Sending…' : pkg.jacket_generated_at ? 'Send Invite' : 'Issue & Send Invite'}
-                </button>
-              </div>
-            )}
+          {/* The jacket is incomplete — nothing went out. Fix it, or send anyway. */}
+          {gate && (
+            <div className="bdPanel">
+              <JacketGatePrompt
+                missing={gate.missing}
+                busy={inviting}
+                onSendAnyway={() => sendInvites(gate.subs, true)}
+                onCancel={() => setGate(null)}
+                jacketHref={`${base}/bid-packages/${id}/jacket`}
+              />
+            </div>
+          )}
 
-            {/* The jacket is incomplete — nothing went out. Fix it, or send anyway. */}
-            {gate && (
-              <div style={{ padding: '14px 20px', borderBottom: `1px solid ${HAIR}` }}>
-                <JacketGatePrompt
-                  missing={gate.missing}
-                  busy={inviting}
-                  onSendAnyway={() => sendInvites(gate.subs, true)}
-                  onCancel={() => setGate(null)}
-                  jacketHref={`/app/projects/${projectId}/bid-packages/${id}/jacket`}
-                />
-              </div>
-            )}
+          {/* Exactly who was emailed and who was not. */}
+          {sendResult && (
+            <div className="bdPanel">
+              <JacketSendResult result={sendResult} onDismiss={() => setSendResult(null)} />
+            </div>
+          )}
 
-            {/* Exactly who was emailed and who was not. */}
-            {sendResult && (
-              <div style={{ padding: '14px 20px', borderBottom: `1px solid ${HAIR}` }}>
-                <JacketSendResult result={sendResult} onDismiss={() => setSendResult(null)} />
-              </div>
-            )}
-
-            {pkg.invited_subs.length === 0 ? (
-              <div style={{ padding: 20 }}>
-                <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 12, flexWrap: 'wrap', marginBottom: 12 }}>
-                  <div style={{ fontSize: 14, fontWeight: 800, color: TEXT }}>
-                    <UsersThree size={16} weight="duotone" color="var(--text-secondary)" style={{ marginRight: 7, verticalAlign: 'text-bottom' }} />
-                    No Subs Invited Yet
-                    <span style={{ fontWeight: 400, color: DIM }}>{showInviteForm ? ' — send the first invite with the form above; the jacket is checked and issued as it goes.' : ' — invite the first subcontractor to start collecting bids.'}</span>
-                  </div>
-                  {!showInviteForm && (
-                    <button onClick={() => setShowInviteForm(true)} style={{ ...goldButtonStyle, minHeight: 44 }} className="pmBtn">
-                      <Plus size={15} weight="bold" /> Invite Subcontractors
-                    </button>
-                  )}
-                </div>
-                <FlowStrip steps={[
-                  { title: 'Invite Subs', desc: 'The jacket is checked, issued and emailed' },
-                  { title: 'They Bid Online', desc: 'Through their own bid link' },
-                  { title: 'Compare and Award', desc: 'Right from this page' },
-                  { title: 'Award Flows On', desc: 'To contracts and budget' },
-                ]} />
-              </div>
-            ) : (
-              <div className="bpInv" data-testid="invite-list">
-                <div className="bpInvHead" aria-hidden>
-                  <span>Company</span><span>Status</span><span>Jacket Email</span><span>Bid</span><span>Actions</span>
-                </div>
-                {pkg.invited_subs.map(sub => {
-                  const isAwarded = sub.bid_amount != null && pkg.bid_submissions.some((b) => b.awarded && b.sub_email === sub.email);
+          {pkg.invited_subs.length === 0 ? (
+            <EmptyState
+              icon={<UsersThree size={22} />}
+              title="No subs invited yet"
+              text={showInviteForm ? 'Send the first invite with the form above.' : 'Invite the first subcontractor to start collecting bids.'}
+              action={!showInviteForm ? <Button icon={<Plus size={15} weight="bold" />} onClick={() => setShowInviteForm(true)}>Invite Subcontractors</Button> : undefined}
+            />
+          ) : (
+            <div data-testid="invite-list">
+              <DataTable<InvitedSub>
+                tableId="project-bid-package-invites"
+                exportName={`invites-${(pkg.trade || pkg.name || 'package').toLowerCase()}`}
+                columns={inviteColumns}
+                rows={pkg.invited_subs}
+                rowKey={sub => sub.id}
+                rowActions={sub => {
                   const pending = sub.status === 'invited' || sub.status === 'viewed';
-                  return (
-                    <div key={sub.id} className="bpInvRow" data-invite={sub.email} data-status={sub.status} style={{ opacity: sub.status === 'revoked' ? 0.6 : 1 }}>
-                      <div className="bpInvWho">
-                        <div style={{ color: TEXT, fontWeight: 700 }}>{sub.company_name}</div>
-                        <div style={{ color: DIM, fontSize: 12, overflowWrap: 'anywhere' }}>{sub.contact_name ? `${sub.contact_name} · ` : ''}{sub.email || '—'}</div>
-                      </div>
-                      <div><StatusPill module="bid_package_invites" status={sub.status} size="sm" /></div>
-                      <div><DeliveryCell d={sub.delivery} /></div>
-                      <div style={{ color: sub.bid_amount ? TEXT : DIM, fontWeight: sub.bid_amount ? 700 : 400, fontVariantNumeric: 'tabular-nums' }}>
-                        {sub.bid_amount ? fmt(sub.bid_amount) : '—'}
-                        {isAwarded && <span style={{ fontSize: 12, color: 'var(--success)', marginLeft: 6, display: 'inline-flex', alignItems: 'center', gap: 3 }}><Star size={10} color="var(--success)" weight="fill" /> Awarded</span>}
-                      </div>
-                      <div className="bpInvAct">
-                        {pending && (
-                          <button
-                            onClick={() => sendReminder(sub.id, sub.company_name)}
-                            disabled={reminding === sub.id}
-                            className="pmBtn"
-                            style={{ minHeight: 44, background: 'none', border: `1px solid ${BORDER}`, borderRadius: 10, color: 'var(--text-primary)', fontSize: 13, fontWeight: 700, padding: '0 12px', cursor: 'pointer', opacity: reminding === sub.id ? 0.5 : 1 }}>
-                            {reminding === sub.id ? 'Sending…' : <span style={{ display: 'inline-flex', alignItems: 'center', gap: 4 }}><Envelope size={12} color="var(--text-secondary)" weight="regular" /> Remind</span>}
-                          </button>
-                        )}
-                        {sub.status !== 'revoked' && (
-                          <button
-                            onClick={() => revokeLink(sub)}
-                            disabled={revoking === sub.id}
-                            className="pmBtn"
-                            aria-label={`Revoke ${sub.company_name}'s link`}
-                            style={{ minHeight: 44, background: 'none', border: '1px solid rgba(248,113,113,.3)', borderRadius: 10, color: 'var(--danger)', fontSize: 13, fontWeight: 700, padding: '0 12px', cursor: 'pointer', opacity: revoking === sub.id ? 0.5 : 1 }}>
-                            {revoking === sub.id ? 'Revoking…' : 'Revoke Link'}
-                          </button>
-                        )}
-                      </div>
-                    </div>
-                  );
-                })}
-              </div>
-            )}
-          </SectionCard>
-        </div>
-      </PremiumSurface>
-    </>
+                  return [
+                    { label: reminding === sub.id ? 'Sending…' : 'Remind', icon: <Envelope size={14} />, inline: true, hidden: !pending, disabled: reminding === sub.id, onClick: () => sendReminder(sub.id, sub.company_name) },
+                    { label: revoking === sub.id ? 'Revoking…' : 'Revoke Link', icon: <Prohibit size={14} />, tone: 'danger', hidden: sub.status === 'revoked', disabled: revoking === sub.id, onClick: () => revokeLink(sub) },
+                  ];
+                }}
+              />
+            </div>
+          )}
+        </Card>
+      </PageShell>
+      <Toast message={toast?.message ?? null} tone={toast?.tone} />
+    </div>
   );
 }
