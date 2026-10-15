@@ -202,9 +202,9 @@ const CSS = `
 .jl-chip[aria-pressed=true] span{color:var(--selected-control-fg)}
 .jl-count{margin-left:auto;font-size:13px;color:var(--fl-text-3)}
 .jt{border:1px solid var(--fl-line);border-radius:14px;overflow:hidden;background:var(--bg-surface)}
-.jt-head,.jt-row{display:grid;grid-template-columns:50px minmax(0,1fr) 122px 312px 132px;align-items:center;gap:14px;padding:0 16px}
+.jt-head,.jt-row{display:grid;grid-template-columns:50px minmax(0,1fr) 122px 336px 132px;align-items:center;gap:14px;padding:0 16px}
 .jt-head{height:38px;font-size:12px;font-weight:700;letter-spacing:.06em;text-transform:uppercase;color:var(--fl-text-3);border-bottom:1px solid var(--fl-line);background:color-mix(in srgb,var(--bg-base) 55%,var(--bg-surface))}
-.jt-dots-head,.jt-dots .jh-dots{display:grid;grid-template-columns:36px 72px 32px 44px 64px 44px;gap:4px}.jt-dots-head em{font-style:normal;white-space:nowrap;letter-spacing:0}
+.jt-dots-head,.jt-dots .jh-dots{display:grid;grid-template-columns:36px 84px 34px 46px 70px 46px;gap:4px}.jt-dots-head em{font-style:normal;white-space:nowrap;letter-spacing:0}
 .jt-ou{display:flex;justify-content:flex-end}
 .jt-meta{display:flex;align-items:center;gap:8px;min-width:0}
 .jt-row{min-height:76px;padding-top:12px;padding-bottom:12px;color:var(--fl-text);text-decoration:none;border-bottom:1px solid var(--fl-line);position:relative;transition:background .12s}
