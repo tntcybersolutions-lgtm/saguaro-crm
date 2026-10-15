@@ -1,24 +1,36 @@
 'use client';
-import { useProjectContext } from '@/lib/hooks/useProjectContext';
-import { StatusPill } from '@/components/ui/Status';
+/**
+ * Bills — vendor bills and supplier invoices on the job, on the kit layout.
+ *
+ * Reads   GET    /api/projects/:id/bills
+ * Create  POST   /api/bills/create            (from the New bill modal)
+ * Scan    upload to the job's Receipts folder → POST /api/bills/scan-receipt (prefills the modal)
+ * Verbs   PATCH  /api/bills/:id/approve | /pay | /update ({ amount })
+ *         DELETE /api/bills/:id/delete
+ */
 import React, { useState, useEffect, useCallback, useRef } from 'react';
 import { useParams } from 'next/navigation';
-import SaguaroDatePicker from '../../../../../components/SaguaroDatePicker';
+import { useProjectContext } from '@/lib/hooks/useProjectContext';
 import { toCents, toDollars, sumCents, scaleCents } from '@/lib/calc';
-import { PremiumSurface, ModuleHero, SectionCard, PremiumEmpty, StatStrip, FlowSteps, FlowStrip, InsightRow, AutoChip, goldButtonStyle, ghostButtonStyle, secondaryButtonStyle } from '@/components/ui/premium';
-import { Receipt, Plus, FilePlus, CurrencyDollar, Wallet, PencilSimple, ChartBar, Copy, Trash, Camera, Sparkle, type Icon } from '@phosphor-icons/react';
-import { ListToolbar } from '@/components/ui/ListToolbar';
 import { CSI_DIVISIONS } from '@/lib/construction-intelligence';
-import { SortableTh, usePersistedSort, useSortedRows } from '@/app/app/_shared/table-sort';
 import { useUnsavedGuard, useComposerDirty } from '@/lib/useUnsavedGuard';
 import UnsavedGuardModal from '@/components/UnsavedGuardModal';
 import Suggest from '@/components/ui/Suggest';
 import { uploadFileDirect } from '@/lib/upload-direct';
 import { shrinkForUpload } from '@/lib/image-shrink';
 import { openPdf } from '@/components/PdfViewer';
+import { confirmDialog } from '@/lib/ui/async-dialog';
+import { MODULES } from '@/lib/status-system';
 import type { ReceiptFields } from '@/lib/receipt-read';
-
-const GOLD='var(--brand-primary)', DARK='var(--bg-base)', RAISED='var(--bg-surface)', BORDER='rgba(255,255,255,0.12)', DIM='var(--text-secondary)', TEXT='var(--text-primary)', GREEN='var(--success)', RED='var(--danger)';
+import {
+  PageShell, StatRow, Badge, Button, Toolbar, DataTable, EmptyState, Select, Callout,
+  FormModal, Field, Input, DateInput, FormGrid, Toast, useToast,
+  type Column, type Action, type BadgeTone, type StatItem,
+} from '@/components/ui/kit';
+import {
+  Receipt, Plus, Camera, Sparkle, Wallet, PencilSimple, ChartBar, Copy, Trash, CheckCircle,
+  CurrencyDollar, WarningCircle, Clock, FileText,
+} from '@phosphor-icons/react';
 
 interface Bill {
   id: string;
@@ -37,22 +49,48 @@ interface Bill {
 
 const EMPTY_FORM = { invoice_num: '', vendor: '', description: '', amount: 0, tax: 0, due_date: '', category: '03 - Concrete', cost_code: '' };
 
-function statusBadge(status: string) {
-  return <StatusPill module="bills" status={status} size="sm" />;
-}
-
 function isOverdue(dueDate: string, status: string): boolean {
   if (status === 'Paid') return false;
   return new Date(dueDate) < new Date();
 }
 
+/** The overdue-aware status the list filters and badges on. */
+const effStatus = (b: Bill) => (isOverdue(b.due_date, b.status) && b.status !== 'Paid' ? 'Overdue' : b.status);
+
+const TONE: Record<string, BadgeTone> = { draft: 'neutral', waiting: 'under_contract', good: 'ongoing', done: 'completed', bad: 'overdue', warn: 'lead', active: 'ongoing' };
+function billBadge(status: string): { label: string; tone: BadgeTone } {
+  const def = MODULES.bills?.statuses?.[String(status || '').toLowerCase()];
+  return { label: def?.label || status || 'Pending', tone: (def && TONE[def.tone]) || 'neutral' };
+}
+
+// Cents when there are cents: a $602.73 bill must not read "$603".
+const fmt = (n: number) => '$' + ((Number(n) || 0).toLocaleString('en-US', { minimumFractionDigits: 0, maximumFractionDigits: 2 }));
+
+function plus30() {
+  const d = new Date(Date.now() + 30 * 86400000);
+  return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`;
+}
+
+/** Date-only values parse at local noon so they never shift a day under UTC. */
+function fmtDate(iso: string | null | undefined): string {
+  if (!iso) return '—';
+  const d = iso.length <= 10 ? new Date(iso + 'T12:00:00') : new Date(iso);
+  if (isNaN(d.getTime())) return iso;
+  return d.toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' });
+}
+
+type StatusFilter = 'all' | 'unpaid' | 'Pending' | 'Approved' | 'Paid' | 'Overdue';
+
 export default function BillsPage() {
   const params = useParams();
   const projectId = params.projectId as string;
+  const base = `/app/projects/${projectId}`;
   const [bills, setBills] = useState<Bill[]>([]);
   const [loading, setLoading] = useState(true);
+  const [loadError, setLoadError] = useState('');
   const [showForm, setShowForm] = useState(false);
   const [form, setForm] = useState(EMPTY_FORM);
+  const { toast, show } = useToast(4000);
 
   /* ── Unsaved-work guard: the composer holds real typing, so leaving the
    *    page (sidebar, field nav, ⌘K, back) confirms first and the draft is
@@ -66,22 +104,15 @@ export default function BillsPage() {
     onSave: () => handleSave(),
   });
   const [saving, setSaving] = useState(false);
-  const [successMsg, setSuccessMsg] = useState('');
-  const [errorMsg, setErrorMsg] = useState('');
+  const [formError, setFormError] = useState('');
   const [actionLoading, setActionLoading] = useState<string | null>(null);
-  const [menuId, setMenuId] = useState<string | null>(null);
-  const [editId, setEditId] = useState<string | null>(null);
+  const [editBill, setEditBill] = useState<Bill | null>(null);
   const [editVal, setEditVal] = useState('');
-  const [adjustId, setAdjustId] = useState<string | null>(null);
-  const [deleteId, setDeleteId] = useState<string | null>(null);
-  const [copiedId, setCopiedId] = useState<string | null>(null);
+  const [adjustBill, setAdjustBill] = useState<Bill | null>(null);
   // SmartCreate: the project-context snapshot — vendors, cost codes, budget rollups.
   const { ctx } = useProjectContext(projectId);
-  const [auto, setAuto] = useState<{ due?: boolean }>({});
-  // ListToolbar state — filters + sort persist per module via sag_flt_bills.
   const [search, setSearch] = useState('');
-  const [statusFilter, setStatusFilter] = useState('all');
-  const [sortBy, setSortBy] = useState('due');
+  const [statusFilter, setStatusFilter] = useState<StatusFilter>('all');
   // Scan a receipt: the photo is saved to the job's files, read, and prefills the form.
   const [scanning, setScanning] = useState<'' | 'upload' | 'read'>('');
   const [receipt, setReceipt] = useState<{ url: string; isPdf: boolean; fields: ReceiptFields | null; note: string } | null>(null);
@@ -89,12 +120,15 @@ export default function BillsPage() {
 
   const fetchBills = useCallback(async () => {
     setLoading(true);
+    setLoadError('');
     try {
       const res = await fetch(`/api/projects/${projectId}/bills`);
-      const json = await res.json();
+      const json = await res.json().catch(() => ({}));
+      if (!res.ok) throw new Error(json.error || "Couldn't load bills.");
       setBills(json.bills || []);
-    } catch {
+    } catch (e) {
       setBills([]);
+      setLoadError(e instanceof Error ? e.message : "Couldn't load bills.");
     } finally {
       setLoading(false);
     }
@@ -107,19 +141,20 @@ export default function BillsPage() {
   // Cancel stays cancelled.
   const autoOpenedRef = useRef(false);
   useEffect(() => {
-    if (!loading && bills.length === 0 && !autoOpenedRef.current) {
+    if (!loading && !loadError && bills.length === 0 && !autoOpenedRef.current) {
       autoOpenedRef.current = true;
-      openForm(true);
+      openForm();
     }
-  }, [loading, bills.length]);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [loading, loadError, bills.length]);
 
   async function handleSave(): Promise<boolean> {
     if (!form.vendor || !form.invoice_num || !form.amount) {
-      setErrorMsg('Vendor, invoice number, and amount are required.');
+      setFormError('Vendor, invoice number, and amount are required.');
       return false;
     }
     setSaving(true);
-    setErrorMsg('');
+    setFormError('');
     // MONEY: coerce before math — form/DB numerics can round-trip as strings.
     const billSubtotal = Number(form.amount) || 0;
     const billTax = Number(form.tax) || 0;
@@ -151,12 +186,11 @@ export default function BillsPage() {
       setShowForm(false);
       setForm(EMPTY_FORM);
       setReceipt(null);
-      setSuccessMsg(receipt ? 'Bill added — the receipt is attached.' : 'Bill added successfully.');
-      setTimeout(() => setSuccessMsg(''), 4000);
+      show(receipt ? 'Bill added — the receipt is attached.' : 'Bill added successfully.');
       guard.clearDraft();
       return true;
     } catch {
-      setErrorMsg('Could not save the bill. Please try again.');
+      setFormError('Could not save the bill. Please try again.');
       return false;
     } finally {
       setSaving(false);
@@ -169,11 +203,9 @@ export default function BillsPage() {
       const res = await fetch(`/api/bills/${id}/approve`, { method: 'PATCH' });
       if (!res.ok) throw new Error('approve failed');
       setBills(prev => prev.map(b => b.id === id ? { ...b, status: 'Approved' } : b));
-      setSuccessMsg('Bill approved.');
-      setTimeout(() => setSuccessMsg(''), 3000);
+      show('Bill approved.');
     } catch {
-      setErrorMsg('Could not approve the bill. Please try again.');
-      setTimeout(() => setErrorMsg(''), 4000);
+      show('Could not approve the bill. Please try again.', 'bad');
     } finally {
       setActionLoading(null);
     }
@@ -185,32 +217,25 @@ export default function BillsPage() {
       const res = await fetch(`/api/bills/${id}/pay`, { method: 'PATCH' });
       if (!res.ok) throw new Error('pay failed');
       setBills(prev => prev.map(b => b.id === id ? { ...b, status: 'Paid' } : b));
-      setSuccessMsg('Bill marked as paid.');
-      setTimeout(() => setSuccessMsg(''), 3000);
+      show('Bill marked as paid.');
     } catch {
-      setErrorMsg('Could not mark the bill as paid. Please try again.');
-      setTimeout(() => setErrorMsg(''), 4000);
+      show('Could not mark the bill as paid. Please try again.', 'bad');
     } finally {
       setActionLoading(null);
     }
   }
 
-  // Cents when there are cents: a $602.73 bill must not read "$603".
-  const fmt = (n: number) => '$' + ((Number(n) || 0).toLocaleString('en-US', { minimumFractionDigits: 0, maximumFractionDigits: 2 }));
-
-  function openBillMenu(id: string) { setMenuId(id); setEditId(null); setAdjustId(null); setDeleteId(null); }
-
   async function handleEditBill(id: string) {
     const amount = parseFloat(editVal);
     if (isNaN(amount) || amount < 0) return;
     setBills(prev => prev.map(b => b.id === id ? { ...b, amount } : b));
-    setEditId(null);
+    setEditBill(null);
     try {
       const res = await fetch(`/api/bills/${id}/update`, { method: 'PATCH', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ amount }) });
       if (!res.ok) throw new Error('update failed');
-      setSuccessMsg('Amount updated.'); setTimeout(() => setSuccessMsg(''), 3000);
+      show('Amount updated.');
     } catch {
-      setErrorMsg('Could not update the amount. Please try again.'); setTimeout(() => setErrorMsg(''), 4000);
+      show('Could not update the amount. Please try again.', 'bad');
       fetchBills();
     }
   }
@@ -220,71 +245,53 @@ export default function BillsPage() {
     if (!bill) return;
     const newAmt = toDollars(scaleCents(toCents(bill.amount), 1 + pct / 100));
     setBills(prev => prev.map(b => b.id === id ? { ...b, amount: newAmt } : b));
-    setAdjustId(null);
+    setAdjustBill(null);
     try {
       const res = await fetch(`/api/bills/${id}/update`, { method: 'PATCH', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ amount: newAmt }) });
       if (!res.ok) throw new Error('update failed');
-      setSuccessMsg(`Adjusted ${pct > 0 ? '+' : ''}${pct}%.`); setTimeout(() => setSuccessMsg(''), 3000);
+      show(`Adjusted ${pct > 0 ? '+' : ''}${pct}%.`);
     } catch {
-      setErrorMsg('Could not adjust the amount. Please try again.'); setTimeout(() => setErrorMsg(''), 4000);
+      show('Could not adjust the amount. Please try again.', 'bad');
       fetchBills();
     }
   }
 
-  function handleCopyBill(id: string, amount: number) {
-    navigator.clipboard.writeText(fmt(amount)).catch(() => {});
-    setCopiedId(id); setTimeout(() => setCopiedId(null), 2000);
-    setMenuId(null);
+  function handleCopyBill(amount: number) {
+    navigator.clipboard.writeText(fmt(amount)).then(
+      () => show(`Copied ${fmt(amount)}.`),
+      () => show('Could not copy — your browser blocked the clipboard.', 'bad'),
+    );
   }
 
-  async function handleDeleteBill(id: string) {
-    setBills(prev => prev.filter(b => b.id !== id));
-    setDeleteId(null);
+  async function handleDeleteBill(b: Bill) {
+    const ok = await confirmDialog({ title: 'Delete bill?', message: `Delete bill ${b.bill_number || ''} from ${b.vendor_name || 'this vendor'}? This cannot be undone.`, confirmLabel: 'Delete', danger: true });
+    if (!ok) return;
+    setBills(prev => prev.filter(x => x.id !== b.id));
     try {
-      const res = await fetch(`/api/bills/${id}/delete`, { method: 'DELETE' });
+      const res = await fetch(`/api/bills/${b.id}/delete`, { method: 'DELETE' });
       if (!res.ok) throw new Error('delete failed');
-      setSuccessMsg('Bill deleted.'); setTimeout(() => setSuccessMsg(''), 3000);
+      show('Bill deleted.');
     } catch {
-      setErrorMsg('Could not delete the bill. Please try again.'); setTimeout(() => setErrorMsg(''), 4000);
+      show('Could not delete the bill. Please try again.', 'bad');
       fetchBills();
     }
   }
 
   // Toolbar-driven view of the list. Status matches the effective (overdue-aware) status.
   const q = search.trim().toLowerCase();
-  const filteredBills = bills
-    .filter(b => {
-      const effStatus = isOverdue(b.due_date, b.status) && b.status !== 'Paid' ? 'Overdue' : b.status;
-      if (statusFilter !== 'all' && effStatus !== statusFilter) return false;
-      if (!q) return true;
-      return [b.bill_number, b.vendor_name, b.description, b.category].some(v => String(v || '').toLowerCase().includes(q));
-    })
-    .sort((a, b2) => {
-      if (sortBy === 'amount') return (Number(b2.amount) || 0) - (Number(a.amount) || 0);
-      if (sortBy === 'vendor') return String(a.vendor_name || '').localeCompare(String(b2.vendor_name || ''));
-      return String(a.due_date || '9999').localeCompare(String(b2.due_date || '9999'));
-    });
-
-  // Column-header sorting (R11 sweep) — when active it overrides the toolbar's
-  // sortBy ordering; cycling back to "none" restores it. Amount sorts numeric,
-  // due date as ISO, status on the effective (overdue-aware) label.
-  const { sort: colSort, cycleSort } = usePersistedSort('project-bills');
-  const sortedBills = useSortedRows(filteredBills, colSort, (b, key) => {
-    switch (key) {
-      case 'invoice': return b.bill_number || null;
-      case 'vendor':  return b.vendor_name || null;
-      case 'desc':    return b.description || null;
-      case 'amount':  return Number(b.amount) || 0;
-      case 'due':     return b.due_date || null;
-      case 'status':  return isOverdue(b.due_date, b.status) && b.status !== 'Paid' ? 'Overdue' : b.status;
-      default:        return (b as unknown as Record<string, unknown>)[key];
-    }
+  const filteredBills = bills.filter(b => {
+    const s = effStatus(b);
+    if (statusFilter === 'unpaid') { if (b.status !== 'Pending' && b.status !== 'Approved') return false; }
+    else if (statusFilter !== 'all' && s !== statusFilter) return false;
+    if (!q) return true;
+    return [b.bill_number, b.vendor_name, b.description, b.category].some(v => String(v || '').toLowerCase().includes(q));
   });
-  const pendingTotal = toDollars(sumCents(bills.filter(b => b.status === 'Pending' || b.status === 'Approved').map(b => toCents(b.amount || 0))));
+
+  const unpaid = bills.filter(b => b.status === 'Pending' || b.status === 'Approved');
+  const pendingTotal = toDollars(sumCents(unpaid.map(b => toCents(b.amount || 0))));
   const paidCount = bills.filter(b => b.status === 'Paid').length;
-  const inp: React.CSSProperties = { width: '100%', padding: '8px 10px', background: 'var(--bg-surface-2)', border: '1px solid ' + BORDER, borderRadius: 6, color: TEXT, fontSize: 13 };
-  const label: React.CSSProperties = { fontSize: 12, color: DIM, marginBottom: 4, display: 'block' };
-  const hint: React.CSSProperties = { fontSize: 12, color: 'var(--c-text-2)', marginTop: 5, lineHeight: 1.45 };
+  const overdueBills = bills.filter(b => effStatus(b) === 'Overdue');
+  const overdueTotal = toDollars(sumCents(overdueBills.map(b => toCents(b.amount || 0))));
 
   // ── SmartCreate intelligence (all Number-coerced: DB numerics round-trip as strings) ──
   const budget = ctx?.budget;
@@ -306,18 +313,14 @@ export default function BillsPage() {
   const lineActual = Number(selLine?.actual) || 0;
   const lineRemaining = lineBudget - lineActual - grandTotal;
 
-  function plus30() {
-    const d = new Date(Date.now() + 30 * 86400000);
-    return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`;
+  function openForm() {
+    setFormError('');
+    setShowForm(true);
+    setForm(f => f.due_date ? f : { ...f, due_date: plus30() });
   }
 
-  function openForm(open: boolean) {
-    setErrorMsg('');
-    setShowForm(open);
-    if (open) {
-      setForm(f => f.due_date ? f : { ...f, due_date: plus30() });
-      setAuto(a => ({ ...a, due: true }));
-    }
+  function closeForm() {
+    guard.requestClose(() => { setShowForm(false); setFormError(''); setReceipt(null); });
   }
 
   function pickCostCode(code: string) {
@@ -336,7 +339,7 @@ export default function BillsPage() {
      reading fails), then read it (POST /api/bills/scan-receipt) and prefill
      the form. Nothing becomes a bill until Save Bill. */
   async function scanReceipt(original: File) {
-    setErrorMsg('');
+    setFormError('');
     setScanning('upload');
     let url = '';
     const isPdf = original.type === 'application/pdf' || /\.pdf$/i.test(original.name);
@@ -347,10 +350,11 @@ export default function BillsPage() {
       if (!url) throw new Error('upload');
     } catch {
       setScanning('');
-      setErrorMsg('The receipt could not be uploaded. Check the connection and try again.');
+      show('The receipt could not be uploaded. Check the connection and try again.', 'bad');
       return;
     }
     setReceipt({ url, isPdf, fields: null, note: '' });
+    setForm(f => f.due_date ? f : { ...f, due_date: plus30() });
     setShowForm(true);
     setScanning('read');
     try {
@@ -376,7 +380,6 @@ export default function BillsPage() {
       }));
       if (r.cost_code && costCodeOptions.some((c: any) => String(c.costCode) === r.cost_code)) pickCostCode(r.cost_code);
       else if (r.division && costCodeOptions.length === 0) pickDivision(r.division);
-      setAuto(a => ({ ...a, due: false }));
       const unread = [!r.vendor_name && 'vendor', r.total === null && 'total', !r.bill_number && 'invoice number'].filter(Boolean);
       setReceipt({ url, isPdf, fields: r, note: unread.length ? `Not on the receipt: ${unread.join(', ')} — fill ${unread.length === 1 ? 'it' : 'them'} in.` : '' });
     } catch (e) {
@@ -387,300 +390,216 @@ export default function BillsPage() {
   }
 
   const openReceipt = (url: string, isPdf: boolean) => (isPdf ? openPdf({ url }) : window.open(url, '_blank', 'noopener'));
+  const toggle = (f: StatusFilter) => setStatusFilter(p => (p === f ? 'all' : f));
+
+  const stats: StatItem[] = [
+    { label: 'Bills', value: loading ? '—' : String(bills.length), sub: loading ? undefined : `${paidCount} paid`, icon: <Receipt size={15} />, onClick: () => setStatusFilter('all'), active: statusFilter === 'all' },
+    { label: 'Awaiting payment', value: loading ? '—' : fmt(pendingTotal), sub: loading ? undefined : `${unpaid.length} pending or approved`, icon: <Clock size={15} />, onClick: () => toggle('unpaid'), active: statusFilter === 'unpaid' },
+    { label: 'Overdue', value: loading ? '—' : String(overdueBills.length), sub: loading ? undefined : overdueBills.length ? `${fmt(overdueTotal)} past due` : 'None past due', tone: overdueBills.length ? 'bad' : 'default', icon: <WarningCircle size={15} />, onClick: () => toggle('Overdue'), active: statusFilter === 'Overdue' },
+    ...(ctx ? [
+      { label: 'Actual to date', value: fmt(bActual), sub: `of ${fmt(bOriginal)} budget · ${Number(budget?.lineCount) || budgetLines.length} lines`, icon: <CurrencyDollar size={15} />, href: `${base}/budget` },
+      { label: 'Budget remaining', value: fmt(bRemaining), sub: 'Original less actual', tone: bRemaining < 0 ? 'bad' as const : 'good' as const, icon: <Wallet size={15} />, href: `${base}/budget` },
+    ] : []),
+  ];
+
+  const columns: Column<Bill>[] = [
+    { key: 'bill_number', header: 'Invoice #', width: 120, accessor: b => b.bill_number || '', groupable: false },
+    { key: 'vendor_name', header: 'Vendor', primary: true, phone: 'show' },
+    { key: 'description', header: 'Description', render: b => <span title={b.description} style={{ display: 'inline-block', maxWidth: 260, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap', verticalAlign: 'bottom' }}>{b.description || '—'}</span> },
+    { key: 'category', header: 'Category', hidden: true },
+    { key: 'amount', header: 'Amount', align: 'right', total: 'sum', format: fmt, phone: 'show', accessor: b => Number(b.amount) || 0, render: b => <strong>{fmt(b.amount)}</strong> },
+    { key: 'due_date', header: 'Due date', accessor: b => b.due_date || '', render: b => <span style={{ color: effStatus(b) === 'Overdue' ? 'var(--danger)' : undefined, whiteSpace: 'nowrap' }}>{fmtDate(b.due_date)}</span> },
+    { key: 'status', header: 'Status', phone: 'show', accessor: b => effStatus(b), render: b => { const st = billBadge(effStatus(b)); return <Badge tone={st.tone} dot>{st.label}</Badge>; } },
+  ];
+
+  const rowActions = (b: Bill): Action[] => [
+    { label: actionLoading === b.id + '-approve' ? 'Approving…' : 'Approve', icon: <CheckCircle size={14} />, inline: true, hidden: b.status !== 'Pending', disabled: !!actionLoading, onClick: () => handleApprove(b.id) },
+    { label: actionLoading === b.id + '-pay' ? 'Saving…' : 'Mark paid', icon: <CurrencyDollar size={14} />, inline: true, hidden: b.status !== 'Pending' && b.status !== 'Approved', disabled: !!actionLoading, onClick: () => handlePay(b.id) },
+    { label: 'Receipt', icon: <FileText size={14} />, hidden: !b.pdf_url, onClick: () => openReceipt(b.pdf_url!, /\.pdf(\?|$)/i.test(b.pdf_url!)) },
+    { label: 'Edit amount', icon: <PencilSimple size={14} />, onClick: () => { setEditBill(b); setEditVal(String(b.amount)); } },
+    { label: 'Adjust %', icon: <ChartBar size={14} />, onClick: () => setAdjustBill(b) },
+    { label: 'Copy amount', icon: <Copy size={14} />, onClick: () => handleCopyBill(b.amount) },
+    { label: 'Delete bill', icon: <Trash size={14} />, tone: 'danger', onClick: () => { void handleDeleteBill(b); } },
+  ];
 
   return (
-    <PremiumSurface>
-      {/* Header */}
-      <ModuleHero
-        eyebrow="Financials"
-        eyebrowIcon={<Receipt size={13} weight="fill" color="var(--text-secondary)" />}
-        title="Bills"
-        subtitle="Vendor bills and supplier invoices"
-        actions={
-          <div style={{ display: 'flex', gap: 8, flexWrap: 'wrap' }}>
-            <button onClick={() => receiptInput.current?.click()} disabled={!!scanning} style={{ ...(showForm ? secondaryButtonStyle : goldButtonStyle), minHeight: 44, opacity: scanning ? 0.7 : 1 }} className="pmBtn">
-              <Camera size={15} weight="bold" /> {scanning === 'upload' ? 'Uploading…' : scanning === 'read' ? 'Reading…' : 'Scan Receipt'}
-            </button>
-            <button onClick={() => openForm(!showForm)} style={{ ...ghostButtonStyle, minHeight: 44 }} className="pmBtn">
-              <Plus size={15} weight="bold" /> New Bill
-            </button>
-            <input ref={receiptInput} type="file" accept="image/*,application/pdf" aria-label="Receipt photo or PDF" style={{ display: 'none' }}
-              onChange={e => { const f = e.target.files?.[0]; e.target.value = ''; if (f) scanReceipt(f); }} />
-          </div>
-        }
-      />
+    <PageShell
+      crumbs={[
+        { label: 'Projects', href: '/app/projects' },
+        { label: ctx?.project?.name || 'Project', href: `${base}/overview` },
+        { label: 'Bills' },
+      ]}
+      title="Bills"
+      subtitle="Vendor bills and supplier invoices."
+      actions={
+        <>
+          <Button icon={<Camera size={15} />} onClick={() => receiptInput.current?.click()} disabled={!!scanning}>
+            {scanning === 'upload' ? 'Uploading…' : scanning === 'read' ? 'Reading…' : 'Scan receipt'}
+          </Button>
+          <Button variant="primary" icon={<Plus size={15} weight="bold" />} onClick={openForm}>New bill</Button>
+          <input ref={receiptInput} type="file" accept="image/*,application/pdf" aria-label="Receipt photo or PDF" style={{ display: 'none' }}
+            onChange={e => { const f = e.target.files?.[0]; e.target.value = ''; if (f) scanReceipt(f); }} />
+        </>
+      }
+    >
+      {!loadError && <StatRow items={stats} />}
 
-      {/* One summary row: this project's bills first, then the budget every
-          bill posts against. Committed (POs + subcontracts) belongs to the
-          Budget screen; the known-vendor count shows under the Vendor field. */}
-      {(ctx || (!loading && bills.length > 0)) && (
-        <StatStrip items={[
-          ...(!loading && bills.length > 0 ? [
-            { href: `/app/projects/${projectId}/bills`, label: 'Total Bills', value: String(bills.length), sub: `${paidCount} paid` },
-            { href: `/app/projects/${projectId}/bills`, label: 'Pending + Approved', value: '$' + pendingTotal.toLocaleString(), sub: 'Awaiting payment' },
-          ] : []),
-          ...(ctx ? [
-            { href: `/app/projects/${projectId}/budget`, label: 'Budget', value: fmt(bOriginal), sub: `${Number(budget?.lineCount) || budgetLines.length} cost-coded lines` },
-            { href: `/app/projects/${projectId}/bills`, label: 'Actual to Date', value: fmt(bActual), sub: 'Bills + invoices posted' },
-            { href: `/app/projects/${projectId}/bills`, label: 'Remaining', value: fmt(bRemaining), accent: bRemaining < 0 ? RED : GREEN, sub: 'Original less actual' },
-          ] : []),
-        ]} />
-      )}
-
-      {successMsg && <div style={{ marginBottom: 16, padding: '10px 14px', background: 'rgba(74,222,128,.15)', border: '1px solid rgba(74,222,128,.4)', borderRadius: 7, color: GREEN, fontSize: 13 }}>{successMsg}</div>}
-      {errorMsg && <div style={{ marginBottom: 16, padding: '10px 14px', background: 'rgba(248,113,113,.15)', border: '1px solid rgba(248,113,113,.4)', borderRadius: 7, color: RED, fontSize: 13 }}>{errorMsg}</div>}
-
-      {showForm && (
-        <div className="billWrap" style={{ marginBottom: 24, display: 'grid', gridTemplateColumns: 'minmax(0,1fr) 320px', gap: 16, alignItems: 'start' }}>
-          <SectionCard title="New Bill" icon={<FilePlus size={17} weight="duotone" color="var(--text-secondary)" />}>
-            {receipt && (
-              <div style={{ display: 'flex', alignItems: 'flex-start', gap: 10, padding: '10px 14px', marginBottom: 14, borderRadius: 10, background: 'var(--bg-surface-2)', border: '1px solid var(--border-default)', fontSize: 13, color: TEXT, lineHeight: 1.5 }}>
-                <Sparkle size={17} weight="fill" color="var(--text-secondary)" style={{ flexShrink: 0, marginTop: 2 }} />
-                <div style={{ flex: 1, minWidth: 0 }}>
-                  {scanning === 'read'
-                    ? 'Reading the receipt…'
-                    : receipt.fields
-                      ? <>Read from the receipt{receipt.fields.confidence !== 'high' ? ` (${receipt.fields.confidence} confidence)` : ''} — check each field before saving.</>
-                      : null}
-                  {receipt.note && <div style={{ color: receipt.fields ? DIM : 'var(--warning)', marginTop: receipt.fields ? 2 : 0 }}>{receipt.note}</div>}
-                </div>
-                <button type="button" onClick={() => openReceipt(receipt.url, receipt.isPdf)} style={{ ...ghostButtonStyle, minHeight: 36, padding: '6px 12px', flexShrink: 0 }} className="pmBtn">View Receipt</button>
-              </div>
-            )}
-            <div className="billGrid" style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: 14 }}>
-              <div>
-                <label style={label}>Invoice # *</label>
-                <input type="text" value={form.invoice_num} onChange={e => setForm(p => ({ ...p, invoice_num: e.target.value }))} style={inp} />
-                <div style={hint}>{"The vendor's invoice number, exactly as printed."}</div>
-              </div>
-              <div>
-                <label style={label}>Vendor *</label>
-                <Suggest type="text" value={form.vendor} onChange={e => setForm(p => ({ ...p, vendor: e.target.value }))} style={inp} options={vendors} />
-                <div style={hint}>{vendors.length > 0 ? `${vendors.length} known vendor${vendors.length === 1 ? '' : 's'} on this project — start typing.` : 'New vendors are remembered for next time.'}</div>
-              </div>
-              <div>
-                <label style={label}>Cost Code</label>
-                {costCodeOptions.length > 0 ? (
-                  <select value={form.cost_code} onChange={e => pickCostCode(e.target.value)} style={inp}>
-                    <option value="">— Select cost code —</option>
-                    {costCodeOptions.map((c: any) => (
-                      <option key={c.costCode} value={c.costCode}>{c.costCode + ' — ' + (c.description || CSI_DIVISIONS[String(c.division)]?.name || '')}</option>
-                    ))}
-                  </select>
-                ) : (
-                  <select value={form.cost_code} onChange={e => pickDivision(e.target.value)} style={inp}>
-                    <option value="">— CSI division —</option>
-                    {Object.entries(CSI_DIVISIONS).map(([dv, d]) => (
-                      <option key={dv} value={dv}>{dv + ' — ' + d.name}</option>
-                    ))}
-                  </select>
-                )}
-                <div style={hint}>{costCodeOptions.length > 0 ? "From this project's budget — the total posts to that line's actual." : 'No cost-coded budget yet — file under a CSI division.'}</div>
-              </div>
-              <div>
-                <label style={label}>Amount ($) *</label>
-                <input type="number" value={form.amount} onChange={e => setForm(p => ({ ...p, amount: Number(e.target.value) }))} style={inp} />
-                <div style={hint}>Pre-tax amount from the invoice.</div>
-              </div>
-              <div>
-                <label style={label}>Tax ($)</label>
-                <input type="number" value={form.tax} onChange={e => setForm(p => ({ ...p, tax: Number(e.target.value) }))} style={inp} />
-                <div style={hint}>Sales tax as billed — leave 0 if exempt.</div>
-              </div>
-              <div>
-                <label style={label}>Due Date{auto.due && <AutoChip />}</label>
-                <SaguaroDatePicker value={form.due_date} onChange={v => setForm(p => ({ ...p, due_date: v }))} style={inp} />
-                <div style={hint}>{"Net 30 from today — adjust to the vendor's terms."}</div>
-              </div>
-              <div style={{ gridColumn: '1 / -1' }}>
-                <label style={label}>Description</label>
-                <input type="text" value={form.description} onChange={e => setForm(p => ({ ...p, description: e.target.value }))} style={inp} />
-              </div>
-              {selLine && (
-                <div style={{ gridColumn: '1 / -1', display: 'flex', alignItems: 'flex-start', gap: 10, padding: '10px 14px', borderRadius: 10, background: 'var(--bg-surface-2)', border: '1px solid var(--border-default)', fontSize: 13, color: DIM, lineHeight: 1.55 }}>
-                  <Wallet size={16} weight="duotone" color="var(--text-secondary)" style={{ flexShrink: 0, marginTop: 1 }} />
-                  <span>
-                    Posts <b style={{ color: TEXT }}>{fmt(grandTotal)}</b> actual against <b style={{ color: 'var(--text-primary)' }}>{selLine.costCode || selLine.division}</b>{selLine.description ? ` (${selLine.description})` : ''} — budget <b style={{ color: TEXT }}>{fmt(lineBudget)}</b>, actual to date <b style={{ color: TEXT }}>{fmt(lineActual)}</b>, remaining <b style={{ color: lineRemaining < 0 ? RED : GREEN }}>{fmt(lineRemaining)}</b> after this bill.
-                  </span>
-                </div>
-              )}
-              <div style={{ gridColumn: '1 / -1', display: 'flex', justifyContent: 'flex-end', gap: 24, borderTop: '1px solid rgba(255,255,255,0.08)', paddingTop: 10 }}>
-                <span style={{ fontSize: 12, color: DIM }}>Subtotal <b style={{ color: TEXT }}>{fmt(subtotalNum)}</b></span>
-                <span style={{ fontSize: 12, color: DIM }}>Tax <b style={{ color: TEXT }}>{fmt(taxNum)}</b></span>
-                <span style={{ fontSize: 12, color: DIM }}>Bill Total <b style={{ color: 'var(--text-primary)', fontSize: 14 }}>{fmt(grandTotal)}</b></span>
-              </div>
-            </div>
-            <div style={{ display: 'flex', gap: 10, marginTop: 16 }}>
-              <button onClick={handleSave} disabled={saving} style={{ ...goldButtonStyle, opacity: saving ? 0.7 : 1 }} className="pmBtn">
-                {saving ? 'Saving…' : 'Save Bill'}
-              </button>
-              <button onClick={() => { setShowForm(false); setErrorMsg(''); setReceipt(null); }} style={ghostButtonStyle} className="pmBtn">Cancel</button>
-            </div>
-          </SectionCard>
-
-          {/* Context rail — what the system does with this bill */}
-          <div style={{ display: 'flex', flexDirection: 'column', gap: 16 }}>
-            {selLine && (
-              <SectionCard flat title={`Cost Code ${selLine.costCode || selLine.division}`} icon={<Wallet size={17} weight="duotone" color="var(--text-secondary)" />}>
-                <InsightRow label="Line Budget" value={fmt(lineBudget)} />
-                <InsightRow label="Actual to Date" value={fmt(lineActual)} />
-                <InsightRow label="This Bill" value={fmt(grandTotal)} accent={GOLD} />
-                <InsightRow label="Remaining After" value={fmt(lineRemaining)} accent={lineRemaining < 0 ? RED : GREEN} strong />
-              </SectionCard>
-            )}
-            <SectionCard flat title="After You Save" icon={<CurrencyDollar size={17} weight="duotone" color="var(--text-secondary)" />}>
-              <FlowSteps title="" steps={[
-                { title: 'Bill Lands as Pending', desc: 'Queued in payables with overdue tracking off the due date — no follow-up spreadsheet.' },
-                { title: 'Budget Actual Rolls Up Server-Side', desc: form.cost_code ? `${fmt(grandTotal)} posts to ${form.cost_code} actual the moment you save.` : 'Pick a cost code and the total posts to that budget line automatically.' },
-                { title: 'Approve to Clear for Payment', desc: 'Approval moves the bill into the payment queue and pending-payables totals.' },
-                { title: 'Mark Paid Closes the Loop', desc: 'Paid bills drop out of pending totals; the project cost ledger stays current.' },
+      {!loading && !loadError && bills.length > 0 && (
+        <Toolbar
+          search={search}
+          onSearch={setSearch}
+          placeholder="Search by invoice, vendor or description…"
+          filters={
+            <Select aria-label="Status" value={statusFilter} onChange={e => setStatusFilter(e.target.value as StatusFilter)} style={{ width: 'auto', minWidth: 170 }}
+              options={[
+                { value: 'all', label: 'All statuses' },
+                { value: 'unpaid', label: 'Awaiting payment' },
+                { value: 'Pending', label: 'Pending' },
+                { value: 'Approved', label: 'Approved' },
+                { value: 'Paid', label: 'Paid' },
+                { value: 'Overdue', label: 'Overdue' },
               ]} />
-            </SectionCard>
-          </div>
-        </div>
+          }
+        />
       )}
 
-      <ListToolbar
-        module="bills"
-        search={search}
-        onSearch={setSearch}
-        searchPlaceholder="Search bills…"
-        filters={[{
-          key: 'status', label: 'Status', value: statusFilter, onChange: setStatusFilter,
-          allLabel: 'All Statuses',
-          options: ['Pending', 'Approved', 'Paid', 'Overdue'],
-        }]}
-        sort={sortBy}
-        onSort={setSortBy}
-        sortOptions={[
-          { value: 'due', label: 'Due Date' },
-          { value: 'amount', label: 'Amount (High First)' },
-          { value: 'vendor', label: 'Vendor A–Z' },
-        ]}
-        count={{ shown: filteredBills.length, total: bills.length }}
-        style={{ marginBottom: 16 }}
-      />
+      {loadError ? (
+        <EmptyState icon={<WarningCircle size={22} />} title="Couldn't load bills" text={loadError} action={<Button onClick={fetchBills}>Try again</Button>} />
+      ) : (
+        <DataTable<Bill>
+          tableId="project-bills"
+          exportName="bills"
+          columns={columns}
+          rows={filteredBills}
+          loading={loading}
+          rowKey={b => b.id}
+          defaultSort={{ key: 'due_date', dir: 'asc' }}
+          rowActions={rowActions}
+          empty={
+            bills.length === 0 ? (
+              <EmptyState
+                icon={<Receipt size={22} />}
+                title="No bills yet"
+                text="Log the first vendor invoice, or scan a receipt, to start the payables ledger."
+                action={<Button variant="primary" icon={<Plus size={15} weight="bold" />} onClick={openForm}>New bill</Button>}
+              />
+            ) : (
+              <EmptyState title="Nothing matches" text="Change the search or the status filter." action={<Button onClick={() => { setSearch(''); setStatusFilter('all'); }}>Clear filters</Button>} />
+            )
+          }
+        />
+      )}
 
-      <SectionCard title="All Bills" icon={<Receipt size={17} weight="duotone" color="var(--text-secondary)" />} flush>
-        {loading ? (
-          <div style={{ textAlign: 'center', padding: 40, color: DIM }}>Loading…</div>
-        ) : bills.length === 0 ? (
-          <div style={{ padding: 20 }}>
-            <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 12, flexWrap: 'wrap', marginBottom: 12 }}>
-              <div style={{ fontSize: 14, fontWeight: 800, color: TEXT }}>
-                <Receipt size={16} weight="duotone" color="var(--text-secondary)" style={{ marginRight: 7, verticalAlign: 'text-bottom' }} />
-                No Bills Yet
-                <span style={{ fontWeight: 400, color: DIM }}>{showForm ? ' — log the first one in the form above; it lands here as Pending.' : ' — log the first vendor invoice to start the payables ledger.'}</span>
-              </div>
-              {!showForm && (
-                <button onClick={() => openForm(true)} style={goldButtonStyle} className="pmBtn"><Plus size={15} weight="bold" /> New Bill</button>
-              )}
-            </div>
-            <FlowStrip steps={[
-              { title: 'Log the Bill', desc: 'Vendor, amount, cost code' },
-              { title: 'Budget Actual Posts', desc: 'To that line automatically' },
-              { title: 'Approve', desc: 'Clears it for payment' },
-              { title: 'Mark Paid', desc: 'Closes the loop' },
-            ]} />
-          </div>
-        ) : (
-          <div style={{ overflowX: 'auto' }}>
-            <table className="k-table" style={{ width: '100%', borderCollapse: 'collapse' }}>
-              <thead>
-                <tr>
-                  {([
-                    ['Invoice #','invoice'],['Vendor','vendor'],['Description','desc'],
-                    ['Amount','amount'],['Due Date','due'],['Status','status'],['Actions',undefined],
-                  ] as [string, string|undefined][]).map(([h,k]) => (
-                    <SortableTh key={h} label={h} sortKey={k} sort={colSort} onSort={cycleSort} />
-                  ))}
-                </tr>
-              </thead>
-              <tbody>
-                {sortedBills.map(b => {
-                  const overdue = isOverdue(b.due_date, b.status);
-                  return (
-                    <tr key={b.id} style={{ borderBottom: '1px solid rgba(255,255,255,.06)', background: overdue ? 'rgba(248,113,113,.05)' : 'transparent' }}>
-                      <td style={{ padding: '10px 14px', color: 'var(--text-primary)', fontWeight: 600 }}>{b.bill_number}</td>
-                      <td style={{ padding: '10px 14px', color: TEXT }}>{b.vendor_name}</td>
-                      <td style={{ padding: '10px 14px', color: DIM, maxWidth: 200, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{b.description}</td>
-                      <td style={{ padding: '10px 14px', position: 'relative' as const }}>
-                        {deleteId === b.id ? (
-                          <div style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
-                            <span style={{ fontSize: 12, color: RED, fontWeight: 600 }}>Delete bill?</span>
-                            <button onClick={(e) => { e.stopPropagation(); handleDeleteBill(b.id); }} style={{ padding: '3px 8px', background: 'rgba(248,113,113,.15)', border: `1px solid rgba(248,113,113,.3)`, borderRadius: 5, color: RED, fontSize: 12, fontWeight: 700, cursor: 'pointer' }}>Yes</button>
-                            <button onClick={(e) => { e.stopPropagation(); setDeleteId(null); }} style={{ padding: '3px 8px', background: RAISED, border: `1px solid ${BORDER}`, borderRadius: 5, color: DIM, fontSize: 12, cursor: 'pointer' }}>Cancel</button>
-                          </div>
-                        ) : editId === b.id ? (
-                          <div style={{ display: 'flex', alignItems: 'center', gap: 4 }}>
-                            <input value={editVal} onChange={e => setEditVal(e.target.value)} type="number" autoFocus onKeyDown={e => { if (e.key === 'Enter') handleEditBill(b.id); if (e.key === 'Escape') setEditId(null); }} style={{ width: 100, padding: '4px 8px', background: DARK, border: `1px solid ${GOLD}`, borderRadius: 5, color: TEXT, fontSize: 12, outline: 'none', textAlign: 'right' }} />
-                            <button onClick={() => handleEditBill(b.id)} style={{ padding: '3px 8px', background: `var(--brand-primary)`, border: 'none', borderRadius: 5, color: 'var(--on-brand)', fontSize: 12, fontWeight: 700, cursor: 'pointer' }}>Save</button>
-                            <button onClick={() => setEditId(null)} style={{ padding: '3px 8px', background: RAISED, border: `1px solid ${BORDER}`, borderRadius: 5, color: DIM, fontSize: 12, cursor: 'pointer' }}>Cancel</button>
-                          </div>
-                        ) : adjustId === b.id ? (
-                          <div style={{ display: 'flex', alignItems: 'center', gap: 3 }}>
-                            {[-10, -5, 5, 10].map(p => (
-                              <button key={p} onClick={(e) => { e.stopPropagation(); handleAdjustBill(b.id, p); }} style={{ padding: '3px 7px', background: p > 0 ? 'rgba(74,222,128,.1)' : 'rgba(248,113,113,.1)', border: `1px solid ${p > 0 ? 'rgba(74,222,128,.25)' : 'rgba(248,113,113,.25)'}`, borderRadius: 5, color: p > 0 ? GREEN : RED, fontSize: 12, fontWeight: 700, cursor: 'pointer' }}>{p > 0 ? '+' : ''}{p}%</button>
-                            ))}
-                            <button onClick={(e) => { e.stopPropagation(); setAdjustId(null); }} style={{ padding: '3px 6px', background: 'none', border: 'none', color: DIM, fontSize: 12, cursor: 'pointer' }}>Cancel</button>
-                          </div>
-                        ) : (
-                          <div style={{ display: 'flex', alignItems: 'center', gap: 4 }}>
-                            <span style={{ color: TEXT, fontWeight: 700 }}>{fmt(b.amount)}</span>
-                            {copiedId === b.id && <span style={{ fontSize: 12, color: GREEN, fontWeight: 600 }}>Copied!</span>}
-                            <button onClick={(e) => { e.stopPropagation(); openBillMenu(b.id); }} style={{ background: 'none', border: 'none', color: DIM, cursor: 'pointer', fontSize: 12, padding: '2px 4px', lineHeight: 1, opacity: 0.6 }} onMouseEnter={e => (e.currentTarget.style.opacity = '1')} onMouseLeave={e => (e.currentTarget.style.opacity = '0.6')}>&#9662;</button>
-                            {menuId === b.id && (
-                              <div style={{ position: 'absolute', top: 36, right: 14, background: 'var(--bg-solid-2)', border: `1px solid ${BORDER}`, borderRadius: 'var(--radius-md)', padding: 6, zIndex: 100, minWidth: 150, boxShadow: 'var(--shadow-lg)' }}>
-                                {([
-                                  { label: 'Edit Amount', icon: PencilSimple, action: () => { setMenuId(null); setEditId(b.id); setEditVal(String(b.amount)); } },
-                                  { label: 'Adjust %', icon: ChartBar, action: () => { setMenuId(null); setAdjustId(b.id); } },
-                                  { label: 'Copy Amount', icon: Copy, action: () => handleCopyBill(b.id, b.amount) },
-                                ] as { label: string; icon: Icon; action: () => void }[]).map(item => (
-                                  <div key={item.label} onClick={(e) => { e.stopPropagation(); item.action(); }} style={{ padding: '7px 12px', fontSize: 12, color: TEXT, cursor: 'pointer', borderRadius: 6, display: 'flex', alignItems: 'center', gap: 8 }} onMouseEnter={e => (e.currentTarget.style.background = 'rgba(255,255,255,0.06)')} onMouseLeave={e => (e.currentTarget.style.background = 'transparent')}>
-                                    <item.icon size={14} weight="duotone" color={DIM} />{item.label}
-                                  </div>
-                                ))}
-                                <div style={{ height: 1, background: BORDER, margin: '4px 0' }} />
-                                <div onClick={(e) => { e.stopPropagation(); setMenuId(null); setDeleteId(b.id); }} style={{ padding: '7px 12px', fontSize: 12, color: RED, cursor: 'pointer', borderRadius: 6, display: 'flex', alignItems: 'center', gap: 8 }} onMouseEnter={e => (e.currentTarget.style.background = 'rgba(248,113,113,.08)')} onMouseLeave={e => (e.currentTarget.style.background = 'transparent')}>
-                                  <Trash size={14} weight="duotone" color={RED} />Delete Bill
-                                </div>
-                              </div>
-                            )}
-                          </div>
-                        )}
-                      </td>
-                      <td style={{ padding: '10px 14px', color: overdue ? RED : DIM, whiteSpace: 'nowrap' }}>{b.due_date || '—'}</td>
-                      <td style={{ padding: '10px 14px' }}>{statusBadge(overdue && b.status !== 'Paid' ? 'Overdue' : b.status)}</td>
-                      <td style={{ padding: '10px 14px', whiteSpace: 'nowrap' }}>
-                        {b.status === 'Pending' && (
-                          <button onClick={() => handleApprove(b.id)} disabled={actionLoading === b.id + '-approve'} style={{ padding: '4px 10px', background: 'var(--bg-surface-2)', border: '1px solid var(--border-default)', borderRadius: 5, color: 'var(--text-primary)', fontSize: 12, cursor: 'pointer', marginRight: 6 }}>
-                            {actionLoading === b.id + '-approve' ? '…' : 'Approve'}
-                          </button>
-                        )}
-                        {(b.status === 'Pending' || b.status === 'Approved') && (
-                          <button onClick={() => handlePay(b.id)} disabled={actionLoading === b.id + '-pay'} style={{ padding: '4px 10px', background: 'rgba(74,222,128,.2)', border: '1px solid rgba(74,222,128,.4)', borderRadius: 5, color: GREEN, fontSize: 12, cursor: 'pointer' }}>
-                            {actionLoading === b.id + '-pay' ? '…' : 'Mark Paid'}
-                          </button>
-                        )}
-                        {b.status === 'Paid' && <StatusPill module="generic" status="paid" size="sm" />}
-                        {b.pdf_url && (
-                          <button onClick={() => openReceipt(b.pdf_url!, /\.pdf(\?|$)/i.test(b.pdf_url!))} style={{ padding: '4px 10px', background: RAISED, border: `1px solid ${BORDER}`, borderRadius: 5, color: DIM, fontSize: 12, cursor: 'pointer', marginLeft: 6 }}>
-                            Receipt
-                          </button>
-                        )}
-                      </td>
-                    </tr>
-                  );
-                })}
-              </tbody>
-            </table>
+      {/* New bill */}
+      <FormModal
+        open={showForm}
+        onClose={closeForm}
+        title="New bill"
+        subtitle="Lands as Pending; the total posts to the cost code's actual."
+        onSubmit={async () => { await handleSave(); }}
+        submitLabel="Save bill"
+        busy={saving}
+        error={formError}
+      >
+        {receipt && (
+          <div style={{ marginBottom: 16 }}>
+            <Callout
+              tone={receipt.fields || scanning === 'read' ? 'info' : 'warning'}
+              icon={<Sparkle size={17} weight="fill" />}
+              title={scanning === 'read'
+                ? 'Reading the receipt…'
+                : receipt.fields
+                  ? `Read from the receipt${receipt.fields.confidence !== 'high' ? ` (${receipt.fields.confidence} confidence)` : ''} — check each field before saving.`
+                  : 'Receipt saved to the job files.'}
+              text={receipt.note || undefined}
+              actions={<Button size="sm" onClick={() => openReceipt(receipt.url, receipt.isPdf)}>View receipt</Button>}
+            />
           </div>
         )}
-      </SectionCard>
+        <FormGrid cols={3}>
+          <Field label="Invoice #" required hint="The vendor's invoice number, exactly as printed.">
+            <Input value={form.invoice_num} onChange={e => setForm(p => ({ ...p, invoice_num: e.target.value }))} />
+          </Field>
+          <Field label="Vendor" required hint={vendors.length > 0 ? `${vendors.length} known vendor${vendors.length === 1 ? '' : 's'} on this project — start typing.` : 'New vendors are remembered for next time.'}>
+            <Suggest type="text" className="k-input" value={form.vendor} onChange={e => setForm(p => ({ ...p, vendor: e.target.value }))} options={vendors} />
+          </Field>
+          <Field label="Cost code" hint={costCodeOptions.length > 0 ? "From this project's budget — the total posts to that line's actual." : 'No cost-coded budget yet — file under a CSI division.'}>
+            {costCodeOptions.length > 0 ? (
+              <Select value={form.cost_code} onChange={e => pickCostCode(e.target.value)} placeholder="— Select cost code —"
+                options={costCodeOptions.map((c: any) => ({ value: String(c.costCode), label: c.costCode + ' — ' + (c.description || CSI_DIVISIONS[String(c.division)]?.name || '') }))} />
+            ) : (
+              <Select value={form.cost_code} onChange={e => pickDivision(e.target.value)} placeholder="— CSI division —"
+                options={Object.entries(CSI_DIVISIONS).map(([dv, d]) => ({ value: dv, label: dv + ' — ' + d.name }))} />
+            )}
+          </Field>
+          <Field label="Amount ($)" required hint="Pre-tax amount from the invoice.">
+            <Input type="number" inputMode="decimal" value={form.amount} onChange={e => setForm(p => ({ ...p, amount: Number(e.target.value) }))} />
+          </Field>
+          <Field label="Tax ($)" hint="Sales tax as billed — leave 0 if exempt.">
+            <Input type="number" inputMode="decimal" value={form.tax} onChange={e => setForm(p => ({ ...p, tax: Number(e.target.value) }))} />
+          </Field>
+          <Field label="Due date" hint="Net 30 from today — adjust to the vendor's terms.">
+            <DateInput value={form.due_date} onChange={e => setForm(p => ({ ...p, due_date: e.target.value }))} />
+          </Field>
+          <Field label="Description" span>
+            <Input value={form.description} onChange={e => setForm(p => ({ ...p, description: e.target.value }))} />
+          </Field>
+        </FormGrid>
+        {selLine && (
+          <div style={{ marginTop: 16 }}>
+            <Callout
+              tone={lineRemaining < 0 ? 'danger' : 'info'}
+              icon={<Wallet size={17} />}
+              title={`Cost code ${selLine.costCode || selLine.division}${selLine.description ? ` — ${selLine.description}` : ''}`}
+              text={<>Budget {fmt(lineBudget)} · actual to date {fmt(lineActual)} · this bill {fmt(grandTotal)} · <strong style={{ color: lineRemaining < 0 ? 'var(--danger)' : 'var(--success)' }}>{fmt(lineRemaining)} remaining</strong> after it.</>}
+            />
+          </div>
+        )}
+        <div style={{ display: 'flex', justifyContent: 'flex-end', flexWrap: 'wrap', gap: 24, marginTop: 16, paddingTop: 12, borderTop: '1px solid var(--border-subtle)', fontSize: 13, color: 'var(--text-secondary)' }}>
+          <span>Subtotal <strong style={{ color: 'var(--text-primary)' }}>{fmt(subtotalNum)}</strong></span>
+          <span>Tax <strong style={{ color: 'var(--text-primary)' }}>{fmt(taxNum)}</strong></span>
+          <span>Bill total <strong style={{ color: 'var(--text-primary)', fontSize: 15 }}>{fmt(grandTotal)}</strong></span>
+        </div>
+      </FormModal>
 
-      {menuId && <div style={{ position: 'fixed', inset: 0, zIndex: 50 }} onClick={() => setMenuId(null)} />}
-    <UnsavedGuardModal guard={guard} />
-    <style dangerouslySetInnerHTML={{ __html: '@media (max-width: 760px){.billWrap{grid-template-columns:minmax(0,1fr)!important}}@media (max-width: 560px){.billGrid{grid-template-columns:minmax(0,1fr)!important}.billGrid input,.billGrid select{font-size:16px!important;min-height:44px}}' }} />
-    </PremiumSurface>
+      {/* Edit amount */}
+      <FormModal
+        open={!!editBill}
+        onClose={() => setEditBill(null)}
+        size="sm"
+        title="Edit amount"
+        subtitle={editBill ? `${editBill.bill_number} · ${editBill.vendor_name}` : undefined}
+        onSubmit={() => { if (editBill) void handleEditBill(editBill.id); }}
+        submitLabel="Save"
+      >
+        <Field label="Amount ($)" required>
+          <Input type="number" inputMode="decimal" min={0} step="0.01" value={editVal} onChange={e => setEditVal(e.target.value)} autoFocus />
+        </Field>
+      </FormModal>
+
+      {/* Adjust % */}
+      <FormModal
+        open={!!adjustBill}
+        onClose={() => setAdjustBill(null)}
+        size="sm"
+        title="Adjust amount"
+        subtitle={adjustBill ? `${adjustBill.bill_number} · now ${fmt(adjustBill.amount)}` : undefined}
+        footer={<Button variant="ghost" onClick={() => setAdjustBill(null)}>Cancel</Button>}
+      >
+        <div style={{ display: 'flex', gap: 8, flexWrap: 'wrap' }}>
+          {[-10, -5, 5, 10].map(p => (
+            <Button key={p} onClick={() => { if (adjustBill) void handleAdjustBill(adjustBill.id, p); }}>
+              {p > 0 ? '+' : ''}{p}%
+            </Button>
+          ))}
+        </div>
+      </FormModal>
+
+      {/* Above the FormModal overlay so the unsaved-work prompt is never hidden behind it. */}
+      <div style={{ position: 'relative', zIndex: 10001 }}>
+        <UnsavedGuardModal guard={guard} />
+      </div>
+      <Toast message={toast?.message ?? null} tone={toast?.tone} />
+    </PageShell>
   );
 }
