@@ -42,7 +42,9 @@
     "e2e:sweep": "node tools/e2e-app-sweep.mjs",
     "e2e:nav": "node tools/e2e-nav-check.mjs",
     "e2e": "npm run e2e:nav && npm run e2e:sweep",
-    "test:invites": "jest --testEnvironment node lib/invite-flow.sanity.test.ts"
+    "test:invites": "jest --testEnvironment node lib/invite-flow.sanity.test.ts",
+    "test:items": "jest --testEnvironment node lib/items.sanity.test.ts",
+    "test:sanity": "jest --testEnvironment node lib/invite-flow.sanity.test.ts lib/items.sanity.test.ts"
   },
   "dependencies": {
     "@anthropic-ai/sdk": "^0.54.0",

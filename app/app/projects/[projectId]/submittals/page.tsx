@@ -23,7 +23,7 @@ import SaguaroDatePicker from '@/components/SaguaroDatePicker';
 import { humanError } from '@/lib/errors';
 import { useParams } from 'next/navigation';
 import { getAuthHeaders } from '@/lib/supabase-browser';
-import { Plus, Clipboard, X, CaretRight, ClipboardText, WarningCircle, PencilSimple, Trash, UserSwitch, ArrowClockwise } from '@phosphor-icons/react';
+import { Plus, Clipboard, X, CaretRight, ClipboardText, WarningCircle, PencilSimple, Trash, UserSwitch, ArrowClockwise, ArrowSquareOut } from '@phosphor-icons/react';
 import {
   PageShell, Card, StatRow, Badge, Button, Toolbar, DataTable, EmptyState, RowActions,
   FormModal, Field, Input, Textarea, Select, FormGrid, DetailList, Toast, useToast,
@@ -363,6 +363,7 @@ export default function SubmittalsPage(){
     const busy = rowBusyId===s.id;
     return [
       { label:'Open Details', icon:<ClipboardText size={15}/>, onClick:()=>viewSub(s) },
+      { label:'Open full page', icon:<ArrowSquareOut size={15}/>, href:`/app/projects/${projectId}/items/submittals/${s.id}`, hidden:String(s.id).startsWith('temp-') },
       { label: next ? `Advance to ${next}` : 'Advance', icon:<CaretRight size={15}/>, onClick:()=>advanceStatus(s), hidden:!next, disabled:busy },
       ...BIC_OPTIONS.filter(b=>b!==s.ball_in_court).map(b=>({ label:`Ball to ${b}`, icon:<UserSwitch size={15}/>, onClick:()=>reassignBIC(s,b), disabled:busy })),
       { label:'Edit', icon:<PencilSimple size={15}/>, onClick:()=>openEdit(s) },

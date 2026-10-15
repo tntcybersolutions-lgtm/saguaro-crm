@@ -28,7 +28,7 @@ import {
 } from '@/components/ui/kit';
 import {
   Question, WarningCircle, Plus, Lightning, X, ChatText, UserSwitch, CheckCircle,
-  Trash, FilePdf, Waveform, ArrowClockwise,
+  Trash, FilePdf, Waveform, ArrowClockwise, ArrowSquareOut,
 } from '@phosphor-icons/react';
 import { CSI_DIVISIONS } from '@/lib/construction-intelligence';
 import SaguaroDatePicker from '../../../../../components/SaguaroDatePicker';
@@ -613,6 +613,7 @@ export default function RFIsPage() {
     const temp = rfi.id.startsWith('temp-');
     return [
       { label: 'Open Details', icon: <Question size={15} />, onClick: () => selectRfi(rfi) },
+      { label: 'Open full page', icon: <ArrowSquareOut size={15} />, href: `/app/projects/${projectId}/items/rfis/${rfi.id}`, hidden: temp },
       { label: 'Answer', icon: <ChatText size={15} />, onClick: () => startAnswer(rfi), hidden: !ANSWERABLE(s), disabled: temp },
       { label: 'Reassign', icon: <UserSwitch size={15} />, onClick: () => startAssign(rfi), disabled: temp },
       { label: 'Close RFI', icon: <CheckCircle size={15} />, onClick: () => closeRfi(rfi), hidden: s === 'closed', disabled: temp },
