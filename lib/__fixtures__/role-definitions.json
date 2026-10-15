@@ -1,0 +1,276 @@
+[
+ {
+  "id": "role-a-admin",
+  "tenant_id": "company-a",
+  "name": "Admin",
+  "permissions": {
+   "RFIs": "Full",
+   "Admin": "Full",
+   "Budget": "Full",
+   "Safety": "Full",
+   "Reports": "Full",
+   "Pay Apps": "Full",
+   "Projects": "Full",
+   "Schedule": "Full",
+   "Documents": "Full",
+   "Submittals": "Full",
+   "Change Orders": "Full"
+  }
+ },
+ {
+  "id": "role-a-foreman",
+  "tenant_id": "company-a",
+  "name": "Foreman",
+  "permissions": {
+   "RFIs": "View",
+   "Admin": "None",
+   "Budget": "None",
+   "Safety": "Edit",
+   "Reports": "View",
+   "Pay Apps": "None",
+   "Projects": "View",
+   "Schedule": "Edit",
+   "Documents": "View",
+   "Submittals": "View",
+   "Change Orders": "None"
+  }
+ },
+ {
+  "id": "role-a-project-manager",
+  "tenant_id": "company-a",
+  "name": "Project Manager",
+  "permissions": {
+   "RFIs": "Full",
+   "Admin": "View",
+   "Budget": "Full",
+   "Safety": "Full",
+   "Reports": "Full",
+   "Pay Apps": "Full",
+   "Projects": "Full",
+   "Schedule": "Full",
+   "Documents": "Full",
+   "Submittals": "Full",
+   "Change Orders": "Full"
+  }
+ },
+ {
+  "id": "role-a-read-only",
+  "tenant_id": "company-a",
+  "name": "Read-Only",
+  "permissions": {
+   "RFIs": "View",
+   "Admin": "None",
+   "Budget": "View",
+   "Safety": "View",
+   "Reports": "View",
+   "Pay Apps": "View",
+   "Projects": "View",
+   "Schedule": "View",
+   "Documents": "View",
+   "Submittals": "View",
+   "Change Orders": "View",
+   "Sales": "View"
+  }
+ },
+ {
+  "id": "role-a-salesperson",
+  "tenant_id": "company-a",
+  "name": "Salesperson",
+  "permissions": {
+   "RFIs": "None",
+   "Admin": "None",
+   "Sales": "Full",
+   "Budget": "View",
+   "Safety": "None",
+   "Reports": "Full",
+   "Pay Apps": "View",
+   "Projects": "Full",
+   "Schedule": "View",
+   "Documents": "Full",
+   "Submittals": "None",
+   "Change Orders": "View"
+  }
+ },
+ {
+  "id": "role-a-subcontractor",
+  "tenant_id": "company-a",
+  "name": "Subcontractor",
+  "permissions": {
+   "RFIs": "Edit",
+   "Admin": "None",
+   "Budget": "None",
+   "Safety": "View",
+   "Reports": "None",
+   "Pay Apps": "View",
+   "Projects": "View",
+   "Schedule": "View",
+   "Documents": "View",
+   "Submittals": "Edit",
+   "Change Orders": "None"
+  }
+ },
+ {
+  "id": "role-a-superintendent",
+  "tenant_id": "company-a",
+  "name": "Superintendent",
+  "permissions": {
+   "RFIs": "Edit",
+   "Admin": "None",
+   "Budget": "View",
+   "Safety": "Edit",
+   "Reports": "View",
+   "Pay Apps": "View",
+   "Projects": "View",
+   "Schedule": "Edit",
+   "Documents": "Edit",
+   "Submittals": "Edit",
+   "Change Orders": "View"
+  }
+ },
+ {
+  "id": "role-b-admin",
+  "tenant_id": "company-b",
+  "name": "Admin",
+  "permissions": {
+   "RFIs": "Full",
+   "Admin": "Full",
+   "Budget": "Full",
+   "Safety": "Full",
+   "Reports": "Full",
+   "Pay Apps": "Full",
+   "Projects": "Full",
+   "Schedule": "Full",
+   "Documents": "Full",
+   "Submittals": "Full",
+   "Change Orders": "Full"
+  }
+ },
+ {
+  "id": "role-b-foreman",
+  "tenant_id": "company-b",
+  "name": "Foreman",
+  "permissions": {
+   "RFIs": "View",
+   "Admin": "None",
+   "Budget": "None",
+   "Safety": "Edit",
+   "Reports": "View",
+   "Pay Apps": "None",
+   "Projects": "View",
+   "Schedule": "Edit",
+   "Documents": "View",
+   "Submittals": "View",
+   "Change Orders": "None"
+  }
+ },
+ {
+  "id": "role-b-project-manager",
+  "tenant_id": "company-b",
+  "name": "Project Manager",
+  "permissions": {
+   "RFIs": "Full",
+   "Admin": "View",
+   "Budget": "Full",
+   "Safety": "Full",
+   "Reports": "Full",
+   "Pay Apps": "Full",
+   "Projects": "Full",
+   "Schedule": "Full",
+   "Documents": "Full",
+   "Submittals": "Full",
+   "Change Orders": "Full"
+  }
+ },
+ {
+  "id": "role-b-read-only",
+  "tenant_id": "company-b",
+  "name": "Read-Only",
+  "permissions": {
+   "RFIs": "View",
+   "Admin": "View",
+   "Budget": "View",
+   "Safety": "View",
+   "Reports": "View",
+   "Pay Apps": "View",
+   "Projects": "View",
+   "Schedule": "View",
+   "Documents": "View",
+   "Submittals": "View",
+   "Change Orders": "View"
+  }
+ },
+ {
+  "id": "role-b-salesperson",
+  "tenant_id": "company-b",
+  "name": "Salesperson",
+  "permissions": {
+   "RFIs": "None",
+   "Admin": "None",
+   "Sales": "Full",
+   "Budget": "View",
+   "Safety": "None",
+   "Reports": "Full",
+   "Pay Apps": "View",
+   "Projects": "Full",
+   "Schedule": "View",
+   "Documents": "Full",
+   "Submittals": "None",
+   "Change Orders": "View"
+  }
+ },
+ {
+  "id": "role-b-subcontractor",
+  "tenant_id": "company-b",
+  "name": "Subcontractor",
+  "permissions": {
+   "RFIs": "Edit",
+   "Admin": "None",
+   "Budget": "None",
+   "Safety": "View",
+   "Reports": "None",
+   "Pay Apps": "View",
+   "Projects": "View",
+   "Schedule": "View",
+   "Documents": "View",
+   "Submittals": "Edit",
+   "Change Orders": "None"
+  }
+ },
+ {
+  "id": "role-b-superintendent",
+  "tenant_id": "company-b",
+  "name": "Superintendent",
+  "permissions": {
+   "RFIs": "Edit",
+   "Admin": "None",
+   "Budget": "View",
+   "Safety": "Edit",
+   "Reports": "View",
+   "Pay Apps": "View",
+   "Projects": "View",
+   "Schedule": "Edit",
+   "Documents": "Edit",
+   "Submittals": "Edit",
+   "Change Orders": "View"
+  }
+ },
+ {
+  "id": "role-b-sales-rep",
+  "tenant_id": "company-b",
+  "name": "Sales Rep",
+  "permissions": {
+   "RFIs": "View",
+   "Admin": "None",
+   "Sales": "Edit",
+   "Budget": "View",
+   "Safety": "None",
+   "Reports": "View",
+   "Pay Apps": "View",
+   "Projects": "View",
+   "Schedule": "View",
+   "Documents": "View",
+   "Submittals": "View",
+   "Change Orders": "View"
+  }
+ }
+]
