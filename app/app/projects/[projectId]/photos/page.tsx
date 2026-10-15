@@ -147,11 +147,11 @@ const CSS = `
 /* Dense, big tiles like Procore. --ph-min is the tile's smallest width, and
    --ph-floor caps it so a phone still gets 3 / 2 / 1 columns (S / M / L).
    Medium: ~2 across on a phone, 4 on an iPad, 6 on a desktop, ~170–220px each. */
-.phWs { --ph-min: 172px; --ph-floor: calc(50% - 6px); --ph-gap: 12px; }
-.phWs[data-tile="s"] { --ph-min: 124px; --ph-floor: calc(33.333% - 8px); --ph-gap: 8px; }
-.phWs[data-tile="l"] { --ph-min: 268px; --ph-floor: 100%; --ph-gap: 14px; }
+.phWs { --ph-min: 250px; --ph-floor: calc(50% - 6px); --ph-gap: 12px; }
+.phWs[data-tile="s"] { --ph-min: 170px; --ph-floor: calc(33.333% - 8px); --ph-gap: 8px; }
+.phWs[data-tile="l"] { --ph-min: 380px; --ph-floor: 100%; --ph-gap: 14px; }
 .phGrid { display: grid; grid-template-columns: repeat(auto-fill, minmax(min(var(--ph-min), var(--ph-floor)), 1fr)); gap: var(--ph-gap); }
-.phSplit[data-open="true"] .phGrid { --ph-min: 132px; }
+.phSplit[data-open="true"] .phGrid { --ph-min: 180px; }
 .phTile { position: relative; display: flex; flex-direction: column; gap: 6px; min-width: 0; cursor: pointer; text-align: left; padding: 0; color: inherit; font: inherit; background: none; border: 0; }
 .phTile:focus-visible { outline: none; }
 .phTile:focus-visible .phThumb { outline: 2px solid var(--focus-ring); outline-offset: 2px; }
