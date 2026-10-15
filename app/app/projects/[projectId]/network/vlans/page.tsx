@@ -1,25 +1,23 @@
 'use client';
-
-import { useState, useEffect, useCallback } from 'react';
+/**
+ * Network › VLANs — segment the job's network: VLAN ids, subnets, gateways
+ * and DHCP scopes, with a live subnet calculator in the add form.
+ *
+ * Reads  GET  /api/network/projects?projectId=  →  GET /api/network/vlans?networkProjectId=
+ * Writes POST /api/network/vlans
+ */
+import React, { useState, useEffect, useCallback } from 'react';
 import { useParams } from 'next/navigation';
-import Link from 'next/link';
-import { Network, Plus, Calculator, Stack } from '@phosphor-icons/react';
+import { useProjectContext } from '@/lib/hooks/useProjectContext';
 import {
-  PremiumSurface, ModuleHero, SectionCard, StatStrip, PremiumEmpty,
-  goldButtonStyle, ghostButtonStyle, secondaryButtonStyle
-} from '@/components/ui/premium';
-import { ModuleSkeleton } from '@/components/ui/PageSkeleton';
+  PageShell, StatRow, Badge, Button, Toolbar, DataTable, EmptyState, Select, Field, Input, FormGrid, FormModal,
+  FormSection, DetailList, Toast, useToast,
+  type Column, type BadgeTone, type StatItem,
+} from '@/components/ui/kit';
+import { Network, Plus, Stack, Devices, Cpu, WarningCircle } from '@phosphor-icons/react';
 import { useUnsavedGuard, useComposerDirty } from '@/lib/useUnsavedGuard';
 import UnsavedGuardModal from '@/components/UnsavedGuardModal';
-
-const BASE = 'var(--bg-surface-2)';
-const GOLD = 'var(--brand-primary)';
-const GREEN = 'var(--success)';
-const BLUE = 'var(--brand-primary)';
-const RED = 'var(--danger)';
-const BORDER = 'rgba(255,255,255,0.12)';
-const DIM = 'var(--text-secondary)';
-const TEXT = 'var(--text-primary)';
+import NetworkTabs, { networkCrumbs, networkHref } from '../_components/NetworkTabs';
 
 interface Vlan {
   id: string;
@@ -36,71 +34,62 @@ interface Vlan {
   created_at: string;
 }
 
-const PURPOSE_COLORS: Record<string, { bg: string; text: string }> = {
-  data: { bg: 'var(--brand-primary-12)', text: BLUE },
-  voice: { bg: '#8B5CF620', text: 'var(--warning)' },
-  security: { bg: `color-mix(in srgb, ${RED} 13%, transparent)`, text: RED },
-  guest: { bg: 'var(--brand-primary-12)', text: GOLD },
-  iot: { bg: '#14B8A620', text: 'var(--success)' },
-  management: { bg: '#6B728020', text: 'var(--status-closed)' },
-  server: { bg: `color-mix(in srgb, ${GREEN} 13%, transparent)`, text: GREEN },
-  dmz: { bg: '#F9731620', text: 'var(--warning)' },
+const PURPOSES = ['data', 'voice', 'security', 'guest', 'iot', 'management', 'server', 'dmz'];
+const PURPOSE_TONE: Record<string, BadgeTone> = {
+  data: 'neutral', voice: 'lead', security: 'overdue', guest: 'under_contract',
+  iot: 'ongoing', management: 'closed', server: 'completed', dmz: 'lead',
 };
 
 const PURPOSE_LABELS: Record<string, string> = { iot: 'IoT', dmz: 'DMZ' };
-const purposeLabel = (p: string) => PURPOSE_LABELS[p] || p.charAt(0).toUpperCase() + p.slice(1);
-
-const inputStyle: React.CSSProperties = {
-  width: '100%', padding: '10px 12px', background: BASE, color: TEXT,
-  border: `1px solid ${BORDER}`, borderRadius: 8, fontSize: 13, outline: 'none',
-};
-const labelStyle: React.CSSProperties = {
-  color: DIM, fontSize: 12, fontWeight: 600, display: 'block', marginBottom: 4,
-};
+const purposeLabel = (p: string) => PURPOSE_LABELS[p] || (p ? p.charAt(0).toUpperCase() + p.slice(1) : '');
 
 function calculateSubnetInfo(cidr: string) {
-  try {
-    const parts = cidr.split('/');
-    if (parts.length !== 2) return null;
-    const ip = parts[0];
-    const prefix = parseInt(parts[1], 10);
-    if (isNaN(prefix) || prefix < 0 || prefix > 32) return null;
+  const parts = cidr.split('/');
+  if (parts.length !== 2) return null;
+  const ip = parts[0];
+  const prefix = parseInt(parts[1], 10);
+  if (isNaN(prefix) || prefix < 0 || prefix > 32) return null;
 
-    const octets = ip.split('.').map(Number);
-    if (octets.length !== 4 || octets.some(o => isNaN(o) || o < 0 || o > 255)) return null;
+  const octets = ip.split('.').map(Number);
+  if (octets.length !== 4 || octets.some(o => isNaN(o) || o < 0 || o > 255)) return null;
 
-    const ipNum = (octets[0] << 24) | (octets[1] << 16) | (octets[2] << 8) | octets[3];
-    const mask = prefix === 0 ? 0 : (~0 << (32 - prefix)) >>> 0;
-    const network = (ipNum & mask) >>> 0;
-    const broadcast = (network | (~mask >>> 0)) >>> 0;
-    const totalHosts = Math.pow(2, 32 - prefix);
-    const usableHosts = totalHosts > 2 ? totalHosts - 2 : 0;
+  const ipNum = (octets[0] << 24) | (octets[1] << 16) | (octets[2] << 8) | octets[3];
+  const mask = prefix === 0 ? 0 : (~0 << (32 - prefix)) >>> 0;
+  const network = (ipNum & mask) >>> 0;
+  const broadcast = (network | (~mask >>> 0)) >>> 0;
+  const totalHosts = Math.pow(2, 32 - prefix);
+  const usableHosts = totalHosts > 2 ? totalHosts - 2 : 0;
 
-    const toIp = (n: number) => `${(n >>> 24) & 255}.${(n >>> 16) & 255}.${(n >>> 8) & 255}.${n & 255}`;
+  const toIp = (n: number) => `${(n >>> 24) & 255}.${(n >>> 16) & 255}.${(n >>> 8) & 255}.${n & 255}`;
 
-    return {
-      network: toIp(network),
-      broadcast: toIp(broadcast),
-      firstUsable: usableHosts > 0 ? toIp(network + 1) : toIp(network),
-      lastUsable: usableHosts > 0 ? toIp(broadcast - 1) : toIp(broadcast),
-      mask: toIp(mask),
-      totalHosts,
-      usableHosts,
-      prefix,
-    };
-  } catch {
-    return null;
-  }
+  return {
+    network: toIp(network),
+    broadcast: toIp(broadcast),
+    firstUsable: usableHosts > 0 ? toIp(network + 1) : toIp(network),
+    lastUsable: usableHosts > 0 ? toIp(broadcast - 1) : toIp(broadcast),
+    mask: toIp(mask),
+    totalHosts,
+    usableHosts,
+    prefix,
+  };
 }
+
+const mono: React.CSSProperties = { fontFamily: 'var(--font-mono, monospace)' };
 
 export default function VlanManagerPage() {
   const { projectId } = useParams() as { projectId: string };
+  const { ctx } = useProjectContext(projectId);
+  const { toast, show } = useToast();
   const [networkProjectId, setNetworkProjectId] = useState('');
   const [vlans, setVlans] = useState<Vlan[]>([]);
   const [loading, setLoading] = useState(true);
+  const [loadError, setLoadError] = useState('');
   const [showForm, setShowForm] = useState(false);
   const [saving, setSaving] = useState(false);
+  const [formError, setFormError] = useState('');
   const [subnetInfo, setSubnetInfo] = useState<ReturnType<typeof calculateSubnetInfo>>(null);
+  const [search, setSearch] = useState('');
+  const [purposeFilter, setPurposeFilter] = useState('');
 
   const emptyForm = {
     vlan_id: 10, name: '', subnet: '', gateway: '', dhcp_start: '', dhcp_end: '',
@@ -108,9 +97,8 @@ export default function VlanManagerPage() {
   };
   const [form, setForm] = useState(emptyForm);
 
-  /* ── Unsaved-work guard: the composer holds real typing, so leaving the
-   *    page (sidebar, field nav, ⌘K, back) confirms first and the draft is
-   *    kept on this device either way. ── */
+  /* Unsaved-work guard: the composer holds real typing, so leaving the page
+   * confirms first and the draft is kept on this device either way. */
   const composerDirty = useComposerDirty(showForm, form);
   const guard = useUnsavedGuard({
     dirty: composerDirty,
@@ -122,6 +110,7 @@ export default function VlanManagerPage() {
 
   const fetchData = useCallback(async () => {
     setLoading(true);
+    setLoadError('');
     try {
       const npRes = await fetch(`/api/network/projects?projectId=${projectId}`);
       const npData = await npRes.json();
@@ -130,23 +119,22 @@ export default function VlanManagerPage() {
       const res = await fetch(`/api/network/vlans?networkProjectId=${npData.networkProject.id}`);
       const data = await res.json();
       setVlans(data.vlans || []);
-    } catch { /* */ }
+    } catch (e) {
+      setLoadError(e instanceof Error ? e.message : "Couldn't load VLANs");
+    }
     setLoading(false);
   }, [projectId]);
 
   useEffect(() => { fetchData(); }, [fetchData]);
 
   useEffect(() => {
-    if (form.subnet) {
-      setSubnetInfo(calculateSubnetInfo(form.subnet));
-    } else {
-      setSubnetInfo(null);
-    }
+    setSubnetInfo(form.subnet ? calculateSubnetInfo(form.subnet) : null);
   }, [form.subnet]);
 
   const handleSubmit = async (): Promise<boolean> => {
     if (!form.name || !networkProjectId) return false;
     setSaving(true);
+    setFormError('');
     try {
       const res = await fetch('/api/network/vlans', {
         method: 'POST',
@@ -159,188 +147,149 @@ export default function VlanManagerPage() {
         fetchData();
         guard.clearDraft();
         setSaving(false);
+        show('VLAN saved');
         return true;
       }
-    } catch { /* */ }
+      const j = await res.json().catch(() => ({}));
+      setFormError(j.error || "Couldn't save the VLAN.");
+    } catch (e) {
+      setFormError(e instanceof Error ? e.message : "Couldn't save the VLAN.");
+    }
     setSaving(false);
     return false;
   };
 
-  if (loading) {
-    return (
-      <PremiumSurface>
-        <ModuleSkeleton kpis={4} rows={5} />
-      </PremiumSurface>
-    );
-  }
+  const devicesAssigned = vlans.reduce((s, v) => s + (Number(v.device_count) || 0), 0);
+  const dhcpScopes = vlans.filter((v) => v.dhcp_start && v.dhcp_end).length;
+  const usableIps = vlans.reduce((s, v) => s + (calculateSubnetInfo(v.subnet || '')?.usableHosts || 0), 0);
+  const purposes = new Set(vlans.map((v) => v.purpose)).size;
+
+  const stats: StatItem[] = [
+    { label: 'VLANs', value: loading ? '—' : String(vlans.length), sub: loading ? undefined : `${purposes} purpose${purposes === 1 ? '' : 's'} in use`, icon: <Stack size={15} /> },
+    { label: 'Devices assigned', value: loading ? '—' : String(devicesAssigned), sub: 'Across all VLANs', icon: <Devices size={15} />, href: networkHref(projectId, 'devices') },
+    { label: 'DHCP scopes', value: loading ? '—' : String(dhcpScopes), sub: loading ? undefined : `Of ${vlans.length} VLAN${vlans.length === 1 ? '' : 's'} have ranges`, icon: <Network size={15} /> },
+    { label: 'Usable IPs planned', value: loading ? '—' : usableIps.toLocaleString(), sub: 'From subnet CIDRs', icon: <Cpu size={15} /> },
+  ];
+
+  const shown = vlans.filter(v => {
+    if (purposeFilter && v.purpose !== purposeFilter) return false;
+    const q = search.trim().toLowerCase();
+    if (!q) return true;
+    return [String(v.vlan_id), v.name, v.subnet, v.gateway].some(x => String(x || '').toLowerCase().includes(q));
+  });
+
+  const columns: Column<Vlan>[] = [
+    { key: 'vlan_id', header: 'VLAN ID', width: 100, phone: 'show', render: (v) => <strong style={mono}>{v.vlan_id}</strong>, groupable: false },
+    { key: 'name', header: 'Name', primary: true, phone: 'show' },
+    { key: 'subnet', header: 'Subnet', phone: 'show', render: (v) => v.subnet ? <span style={mono}>{v.subnet}</span> : '—' },
+    { key: 'gateway', header: 'Gateway', render: (v) => v.gateway ? <span style={mono}>{v.gateway}</span> : '—' },
+    { key: 'dhcp', header: 'DHCP range', accessor: (v) => (v.dhcp_start && v.dhcp_end ? `${v.dhcp_start} – ${v.dhcp_end}` : ''), render: (v) => v.dhcp_start && v.dhcp_end ? <span style={mono}>{v.dhcp_start} – {v.dhcp_end}</span> : '—', groupable: false },
+    { key: 'purpose', header: 'Purpose', accessor: (v) => purposeLabel(v.purpose), render: (v) => <Badge tone={PURPOSE_TONE[v.purpose] || 'neutral'}>{purposeLabel(v.purpose)}</Badge> },
+    { key: 'device_count', header: 'Devices', align: 'right', total: 'sum', accessor: (v) => Number(v.device_count) || 0, render: (v) => v.device_count ?? 0 },
+  ];
+
+  const set = <K extends keyof typeof form>(k: K, val: (typeof form)[K]) => setForm({ ...form, [k]: val });
+  const openForm = () => { setFormError(''); setShowForm(true); };
 
   return (
-    <PremiumSurface>
-      <ModuleHero
-        eyebrow="Network"
-        eyebrowIcon={<Network size={13} weight="fill" color="var(--text-secondary)" />}
-        aux={<Link href={`/app/projects/${projectId}/network`} style={{ color: DIM, fontSize: 12, textDecoration: 'none' }}>&larr; Back to Network</Link>}
-        title="VLAN"
-        accent="Manager"
-        subtitle="Segment the network, assign subnets, and plan DHCP scopes for this project."
-        actions={
-          <button
-            onClick={() => setShowForm(!showForm)}
-            className="pmBtn"
-            style={showForm ? ghostButtonStyle : goldButtonStyle}
-          >
-            {showForm ? 'Cancel' : <><Plus size={15} weight="bold" /> Add VLAN</>}
-          </button>
-        }
-      />
+    <PageShell
+      crumbs={networkCrumbs(projectId, ctx?.project?.name, 'VLANs')}
+      title="VLANs"
+      subtitle="Segment the network, assign subnets and plan DHCP scopes."
+      actions={<Button variant="primary" icon={<Plus size={15} weight="bold" />} onClick={openForm}>Add VLAN</Button>}
+    >
+      <NetworkTabs projectId={projectId} value="vlans" />
+      {!loadError && <StatRow items={stats} />}
 
-      {/* Segmentation at a glance — every figure derived from the fetched VLANs */}
-      {vlans.length > 0 && (() => {
-        const devicesAssigned = vlans.reduce((s, v) => s + (Number(v.device_count) || 0), 0);
-        const dhcpScopes = vlans.filter((v) => v.dhcp_start && v.dhcp_end).length;
-        const usableIps = vlans.reduce((s, v) => s + (calculateSubnetInfo(v.subnet || '')?.usableHosts || 0), 0);
-        const purposes = new Set(vlans.map((v) => v.purpose)).size;
-        return (
-          <StatStrip items={[
-            {href: `/app/projects/${projectId}/network/vlans`,  label: 'VLANs', value: String(vlans.length), sub: `${purposes} purpose${purposes === 1 ? '' : 's'} in use` },
-            {href: `/app/projects/${projectId}/network/devices`,  label: 'Devices Assigned', value: String(devicesAssigned), sub: 'Across all VLANs' },
-            {href: `/app/projects/${projectId}/network/vlans`,  label: 'DHCP Scopes', value: String(dhcpScopes), sub: `Of ${vlans.length} VLAN${vlans.length === 1 ? '' : 's'} have ranges` },
-            {href: `/app/projects/${projectId}/network/vlans`,  label: 'Usable IPs Planned', value: usableIps.toLocaleString(), sub: 'From subnet CIDRs' },
-          ]} />
-        );
-      })()}
-
-      {showForm && (
-        <div style={{ marginBottom: 24 }}>
-        <SectionCard title="Add VLAN" icon={<Plus size={17} weight="bold" color="var(--text-secondary)" />}>
-          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(200px, 1fr))', gap: 12 }}>
-            <div>
-              <label style={labelStyle}>VLAN ID *</label>
-              <input type="number" value={form.vlan_id} onChange={e => setForm({ ...form, vlan_id: +e.target.value })} style={inputStyle} />
-            </div>
-            <div>
-              <label style={labelStyle}>Name *</label>
-              <input value={form.name} onChange={e => setForm({ ...form, name: e.target.value })} placeholder="e.g. Corporate Data" style={inputStyle} />
-            </div>
-            <div>
-              <label style={labelStyle}>Subnet (CIDR)</label>
-              <input value={form.subnet} onChange={e => setForm({ ...form, subnet: e.target.value })} placeholder="192.168.10.0/24" style={inputStyle} />
-            </div>
-            <div>
-              <label style={labelStyle}>Gateway</label>
-              <input value={form.gateway} onChange={e => setForm({ ...form, gateway: e.target.value })} placeholder="192.168.10.1" style={inputStyle} />
-            </div>
-            <div>
-              <label style={labelStyle}>DHCP Start</label>
-              <input value={form.dhcp_start} onChange={e => setForm({ ...form, dhcp_start: e.target.value })} placeholder="192.168.10.100" style={inputStyle} />
-            </div>
-            <div>
-              <label style={labelStyle}>DHCP End</label>
-              <input value={form.dhcp_end} onChange={e => setForm({ ...form, dhcp_end: e.target.value })} placeholder="192.168.10.200" style={inputStyle} />
-            </div>
-            <div>
-              <label style={labelStyle}>Purpose</label>
-              <select value={form.purpose} onChange={e => setForm({ ...form, purpose: e.target.value })} style={inputStyle}>
-                {Object.keys(PURPOSE_COLORS).map(p => <option key={p} value={p}>{purposeLabel(p)}</option>)}
-              </select>
-            </div>
-            <div>
-              <label style={labelStyle}>Description</label>
-              <input value={form.description} onChange={e => setForm({ ...form, description: e.target.value })} style={inputStyle} />
-            </div>
-          </div>
-
-          {/* Subnet Calculator */}
-          {subnetInfo && (
-            <div style={{ marginTop: 16, padding: 14, background: 'var(--bg-surface-2)', borderRadius: 8, border: '1px solid var(--border-default)' }}>
-              <div style={{ color: 'var(--text-primary)', fontSize: 12, fontWeight: 700, marginBottom: 8, display: 'flex', alignItems: 'center', gap: 6 }}><Calculator size={14} weight="duotone" color="var(--text-secondary)" /> Subnet Calculator</div>
-              <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(150px, 1fr))', gap: 8 }}>
-                {[
-                  { label: 'Network', value: subnetInfo.network },
-                  { label: 'Broadcast', value: subnetInfo.broadcast },
-                  { label: 'First Usable', value: subnetInfo.firstUsable },
-                  { label: 'Last Usable', value: subnetInfo.lastUsable },
-                  { label: 'Subnet Mask', value: subnetInfo.mask },
-                  { label: 'Usable Hosts', value: subnetInfo.usableHosts.toLocaleString() },
-                ].map(item => (
-                  <div key={item.label}>
-                    <div style={{ color: DIM, fontSize: 12, fontWeight: 600 }}>{item.label}</div>
-                    <div style={{ color: TEXT, fontSize: 13, fontFamily: 'monospace', marginTop: 2 }}>{item.value}</div>
-                  </div>
-                ))}
-              </div>
-            </div>
-          )}
-
-          <button
-            onClick={handleSubmit}
-            disabled={saving || !form.name}
-            className="pmBtn"
-            style={{ ...goldButtonStyle, marginTop: 16, opacity: saving || !form.name ? 0.5 : 1, cursor: saving || !form.name ? 'not-allowed' : 'pointer' }}
-          >
-            {saving ? 'Saving…' : 'Save VLAN'}
-          </button>
-        </SectionCard>
-        </div>
-      )}
-
-      {/* VLAN Table */}
-      <SectionCard
-        title="Configured VLANs"
-        icon={<Stack size={17} weight="duotone" color="var(--text-secondary)" />}
-        flush
-      >
-      {vlans.length === 0 ? (
-        <PremiumEmpty
-          icon={<Network size={30} weight="duotone" color="var(--text-secondary)" />}
-          title="No VLANs configured"
-          description="Add your first VLAN to segment this project's network into subnets and DHCP scopes."
-          action={
-            <button onClick={() => setShowForm(true)} className="pmBtn" style={secondaryButtonStyle}>
-              <Plus size={15} weight="bold" /> Add VLAN
-            </button>
+      {!loadError && vlans.length > 0 && (
+        <Toolbar
+          search={search}
+          onSearch={setSearch}
+          placeholder="Search VLAN, name or subnet…"
+          filters={
+            <Select aria-label="Purpose" value={purposeFilter} onChange={e => setPurposeFilter(e.target.value)} style={{ width: 'auto', minWidth: 160 }}
+              options={[{ value: '', label: 'All purposes' }, ...PURPOSES.map(p => ({ value: p, label: purposeLabel(p) }))]} />
           }
         />
-      ) : (
-      <div style={{ overflowX: 'auto', WebkitOverflowScrolling: 'touch' as const }}>
-        <table className="k-table" style={{ width: '100%', borderCollapse: 'collapse' }}>
-          <thead>
-            <tr>
-              {['VLAN ID', 'Name', 'Subnet', 'Gateway', 'DHCP Range', 'Purpose', 'Devices'].map(col => (
-                <th key={col} style={{ padding: '12px 16px', textAlign: 'left', color: DIM, fontSize: 12, fontWeight: 700, borderBottom: `1px solid ${BORDER}`, whiteSpace: 'nowrap' }}>{col}</th>
-              ))}
-            </tr>
-          </thead>
-          <tbody>
-            {vlans.map(vlan => {
-                const pc = PURPOSE_COLORS[vlan.purpose] || PURPOSE_COLORS.data;
-                return (
-                  <tr key={vlan.id}>
-                    <td style={{ padding: '12px', borderBottom: `1px solid ${BORDER}`, color: TEXT, fontSize: 14, fontWeight: 700, fontFamily: 'monospace' }}>{vlan.vlan_id}</td>
-                    <td style={{ padding: '12px', borderBottom: `1px solid ${BORDER}`, color: TEXT, fontSize: 13, fontWeight: 600 }}>{vlan.name}</td>
-                    <td style={{ padding: '12px', borderBottom: `1px solid ${BORDER}`, color: TEXT, fontSize: 12, fontFamily: 'monospace' }}>{vlan.subnet || '—'}</td>
-                    <td style={{ padding: '12px', borderBottom: `1px solid ${BORDER}`, color: DIM, fontSize: 12, fontFamily: 'monospace' }}>{vlan.gateway || '—'}</td>
-                    <td style={{ padding: '12px', borderBottom: `1px solid ${BORDER}`, color: DIM, fontSize: 12, fontFamily: 'monospace' }}>
-                      {vlan.dhcp_start && vlan.dhcp_end ? `${vlan.dhcp_start} – ${vlan.dhcp_end}` : '—'}
-                    </td>
-                    <td style={{ padding: '12px', borderBottom: `1px solid ${BORDER}` }}>
-                      <span style={{
-                        fontSize: 12, padding: '3px 10px', borderRadius: 10, fontWeight: 600,
-                        background: pc.bg, color: pc.text,
-                      }}>{purposeLabel(vlan.purpose)}</span>
-                    </td>
-                    <td style={{ padding: '12px', borderBottom: `1px solid ${BORDER}`, color: DIM, fontSize: 13, textAlign: 'center' }}>
-                      {vlan.device_count ?? 0}
-                    </td>
-                  </tr>
-                );
-              })}
-          </tbody>
-        </table>
-      </div>
       )}
-      </SectionCard>
-    <UnsavedGuardModal guard={guard} />
-    </PremiumSurface>
+
+      {loadError ? (
+        <EmptyState icon={<WarningCircle size={22} />} title="Couldn't load VLANs" text={loadError} action={<Button onClick={fetchData}>Try again</Button>} />
+      ) : (
+        <DataTable<Vlan>
+          tableId="project-network-vlans"
+          exportName="vlans"
+          columns={columns}
+          rows={shown}
+          loading={loading}
+          rowKey={(v) => v.id}
+          defaultSort={{ key: 'vlan_id', dir: 'asc' }}
+          empty={
+            vlans.length === 0 ? (
+              <EmptyState icon={<Network size={22} />} title="No VLANs configured" text="Add the first VLAN to segment this job's network into subnets and DHCP scopes."
+                action={<Button variant="primary" icon={<Plus size={15} weight="bold" />} onClick={openForm}>Add VLAN</Button>} />
+            ) : (
+              <EmptyState title="Nothing matches" text="Change the search or the filter."
+                action={<Button onClick={() => { setSearch(''); setPurposeFilter(''); }}>Clear filters</Button>} />
+            )
+          }
+        />
+      )}
+
+      <FormModal
+        open={showForm}
+        onClose={() => setShowForm(false)}
+        title="Add VLAN"
+        onSubmit={async () => { await handleSubmit(); }}
+        submitLabel="Save VLAN"
+        busy={saving}
+        error={formError}
+      >
+        <FormGrid cols={2}>
+          <Field label="VLAN ID" required>
+            <Input type="number" required value={form.vlan_id} onChange={e => set('vlan_id', +e.target.value)} />
+          </Field>
+          <Field label="Name" required>
+            <Input required value={form.name} onChange={e => set('name', e.target.value)} placeholder="e.g. Corporate Data" />
+          </Field>
+          <Field label="Subnet (CIDR)">
+            <Input value={form.subnet} onChange={e => set('subnet', e.target.value)} placeholder="192.168.10.0/24" />
+          </Field>
+          <Field label="Gateway">
+            <Input value={form.gateway} onChange={e => set('gateway', e.target.value)} placeholder="192.168.10.1" />
+          </Field>
+          <Field label="DHCP start">
+            <Input value={form.dhcp_start} onChange={e => set('dhcp_start', e.target.value)} placeholder="192.168.10.100" />
+          </Field>
+          <Field label="DHCP end">
+            <Input value={form.dhcp_end} onChange={e => set('dhcp_end', e.target.value)} placeholder="192.168.10.200" />
+          </Field>
+          <Field label="Purpose">
+            <Select value={form.purpose} onChange={e => set('purpose', e.target.value)} options={PURPOSES.map(p => ({ value: p, label: purposeLabel(p) }))} />
+          </Field>
+          <Field label="Description">
+            <Input value={form.description} onChange={e => set('description', e.target.value)} />
+          </Field>
+          {subnetInfo && (
+            <>
+              <FormSection>Subnet calculator</FormSection>
+              <div className="k-span-all">
+                <DetailList items={[
+                  ['Network', <span key="n" style={mono}>{subnetInfo.network}</span>],
+                  ['Broadcast', <span key="b" style={mono}>{subnetInfo.broadcast}</span>],
+                  ['First usable', <span key="f" style={mono}>{subnetInfo.firstUsable}</span>],
+                  ['Last usable', <span key="l" style={mono}>{subnetInfo.lastUsable}</span>],
+                  ['Subnet mask', <span key="m" style={mono}>{subnetInfo.mask}</span>],
+                  ['Usable hosts', subnetInfo.usableHosts.toLocaleString()],
+                ]} />
+              </div>
+            </>
+          )}
+        </FormGrid>
+      </FormModal>
+
+      <UnsavedGuardModal guard={guard} />
+      <Toast message={toast?.message ?? null} tone={toast?.tone} />
+    </PageShell>
   );
 }
