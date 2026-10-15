@@ -22,6 +22,7 @@ import { type Icon as PhosphorIcon, CaretRight, CaretDown, BookmarkSimple, Rows,
 import { useSortedRows, type SortState, type SortDir } from './premium';
 import { SortBar } from './sort';
 import { STATUS_COLORS, type StatusKind } from '@/lib/status-colors';
+import { initialsOf, monoToken } from '@/lib/directory-view';
 
 const cx = (...c: (string | false | null | undefined)[]) => c.filter(Boolean).join(' ');
 
@@ -1263,4 +1264,33 @@ export function useToast(ms = 2800) {
   }, [ms]);
   React.useEffect(() => () => { if (timer.current) clearTimeout(timer.current); }, []);
   return { toast, show };
+}
+
+// ─── Avatar / CompanyMark ────────────────────────────────────────────────────
+/**
+ * A person's face: their photo when there is one, otherwise their initials on
+ * a tint of a deterministic accent token (same name → same color everywhere).
+ * `mark` overrides the initials (e.g. a role mark like "GC").
+ */
+export function Avatar({ name, src, size = 32, mark, tone, shape = 'round', title }: {
+  name?: string | null; src?: string | null; size?: number; mark?: string; tone?: string; shape?: 'round' | 'tile'; title?: string;
+}) {
+  const [broken, setBroken] = React.useState(false);
+  React.useEffect(() => { setBroken(false); }, [src]);
+  const label = String(name || '').trim();
+  const text = mark || initialsOf(label) || '?';
+  const style = { ['--face' as string]: `${size}px`, ['--mono' as string]: tone || monoToken(label || text) } as React.CSSProperties;
+  return (
+    <span className="k-face" data-shape={shape} style={style} title={title ?? (label || undefined)} aria-hidden={label ? undefined : true} role={label ? 'img' : undefined} aria-label={label || undefined}>
+      {src && !broken
+        // eslint-disable-next-line @next/next/no-img-element
+        ? <img src={src} alt="" loading="lazy" decoding="async" onError={() => setBroken(true)} />
+        : text}
+    </span>
+  );
+}
+
+/** A company's logo when it has one, else a monogram tile in its own token color. */
+export function CompanyMark({ name, logoUrl, size = 40 }: { name?: string | null; logoUrl?: string | null; size?: number }) {
+  return <Avatar name={name} src={logoUrl} size={size} shape="tile" />;
 }

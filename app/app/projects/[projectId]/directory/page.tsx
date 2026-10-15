@@ -1,109 +1,67 @@
 'use client';
-import React, { useCallback, useEffect, useRef, useState } from 'react';
-import { useParams } from 'next/navigation';
-import { UsersThree, Plus, EnvelopeSimple, Phone, Buildings, PencilSimple, Trash } from '@phosphor-icons/react';
-import Suggest from '@/components/ui/Suggest';
-import { confirmDialog } from '@/lib/ui/async-dialog';
-
 /**
- * The project directory — everyone on this job, in one place.
+ * The project directory — everyone on this job, grouped by company.
  *
  * The prime contract asks for the owner. Every RFI asks for the architect. The
- * pay application asks for both again, and submittals want the engineer. None
- * of them kept the answer, so a GC retyped the same five names across the life
- * of a project and any one of them could be spelled differently on a legal
- * document than on the one beside it.
- *
- * The owner and architect land here automatically the moment a project is
- * created, because that is when the GC types them. Everyone else is added once.
+ * pay application asks for both again, and submittals want the engineer. This
+ * screen keeps the answer once: contacts plus the job's subcontractor
+ * companies, each company under its mark (logo, or a monogram in its own
+ * stable token color) with its trade, and each person with their face
+ * (profile photo when they sign in, initials otherwise) and one-tap call /
+ * email. Grid or list, remembered on this device.
  *
  * Reads and writes /api/projects/[id]/directory — the same endpoint the field
- * app uses. There were already two contact tables and two APIs in here; a
- * third would have been the exact problem this work is meant to remove.
+ * app uses (GET also returns `companies` and each contact's `avatar_url` /
+ * `trade`; both are read-only extras).
  */
+import React, { useCallback, useEffect, useMemo, useState } from 'react';
+import { useParams } from 'next/navigation';
+import { Plus, EnvelopeSimple, Phone, PencilSimple, Trash, UsersThree, Buildings, HardHat, Wrench, WarningCircle, ArrowClockwise, SquaresFour, Rows } from '@phosphor-icons/react';
+import {
+  PageShell, StatRow, Badge, Button, Toolbar, EmptyState, RowActions, FormModal, FormGrid, Field, Input,
+  Toast, useToast, Avatar, CompanyMark, type StatItem,
+} from '@/components/ui/kit';
+import Suggest from '@/components/ui/Suggest';
+import { confirmDialog } from '@/lib/ui/async-dialog';
+import { useProjectContext } from '@/lib/hooks/useProjectContext';
+import { groupByCompany, telHref, mailHref, type DirContact, type DirCompany, type DirGroup } from '@/lib/directory-view';
 
-const GOLD = 'var(--brand-primary)';
-const TEXT = 'var(--text-primary)';
-const DIM = 'var(--text-tertiary)';
-const BORDER = 'var(--surface-raised)';
-const CARD = 'var(--bg-surface)';
-const BASE = 'var(--bg-base)';
-
-/* The roles a job actually has. Free text is still allowed — this is a prompt,
-   not a schema. */
+/* The roles a job actually has. Free text is still allowed — this is a prompt, not a schema. */
 const ROLES = [
   'Owner', 'Owner Rep', 'Architect', 'Structural Engineer', 'MEP Engineer',
-  'Civil Engineer', 'Project Manager', 'Superintendent', 'Estimator',
+  'Civil Engineer', 'Project Manager', 'Superintendent', 'Foreman', 'Estimator',
   'Inspector', 'Building Official', 'Lender', 'Insurer',
 ];
-
-interface Contact {
-  id?: string;
-  name: string;
-  role?: string | null;
-  company?: string | null;
-  email?: string | null;
-  phone?: string | null;
-}
-
-const input: React.CSSProperties = {
-  width: '100%', padding: '10px 12px', borderRadius: 8,
-  background: 'rgba(255,255,255,0.04)', border: `1px solid ${BORDER}`,
-  color: TEXT, fontSize: 16, outline: 'none', minHeight: 44,
-};
+type View = 'grid' | 'list';
+const VIEW_KEY = 'sag_dir_view';
+const EMPTY: DirContact = { name: '', role: 'Project Manager', company: '', email: '', phone: '' };
 
 export default function ProjectDirectory() {
   const params = useParams();
   const projectId = String(params['projectId'] || '');
+  const { ctx } = useProjectContext(projectId);
+  const { toast, show } = useToast(3500);
 
-  const [contacts, setContacts] = useState<Contact[]>([]);
+  const [contacts, setContacts] = useState<DirContact[]>([]);
+  const [companies, setCompanies] = useState<DirCompany[]>([]);
   const [loading, setLoading] = useState(true);
-  /* Three different failures, shown where the person is looking: the list
-     could not load (in place of the list, with Try Again), a save failed
-     (inside the form, beside Save), a remove failed (on the page). */
   const [loadError, setLoadError] = useState('');
   const [formError, setFormError] = useState('');
-  const [error, setError] = useState('');
   const [saving, setSaving] = useState(false);
-  const [draft, setDraft] = useState<Contact>({ name: '', role: 'Project Manager' });
-  const [adding, setAdding] = useState(false);
-  /* Non-null while the form is editing an existing person (same form as Add). */
+  const [draft, setDraft] = useState<DirContact>({ ...EMPTY });
+  const [open, setOpen] = useState(false);
   const [editingId, setEditingId] = useState<string | null>(null);
   const [removingId, setRemovingId] = useState<string | null>(null);
-  const formRef = useRef<HTMLFormElement | null>(null);
+  const [q, setQ] = useState('');
+  const [view, setView] = useState<View>('grid');
 
-  const closeForm = () => { setAdding(false); setEditingId(null); setFormError(''); setDraft({ name: '', role: 'Project Manager' }); };
-  const startEdit = (c: Contact) => {
-    if (!c.id) return;
-    setEditingId(c.id);
-    setDraft({ name: c.name || '', role: c.role ?? '', company: c.company ?? '', email: c.email ?? '', phone: c.phone ?? '' });
-    setAdding(true);
-    setFormError('');
-    setError('');
-    requestAnimationFrame(() => formRef.current?.scrollIntoView({ behavior: 'smooth', block: 'center' }));
-  };
-  const remove = async (c: Contact) => {
-    if (!c.id) return;
-    const ok = await confirmDialog({
-      title: `Remove ${c.name}?`,
-      message: `${c.name}${c.role ? ` (${c.role})` : ''} comes off this job's directory. Documents already written keep the name they were written with.`,
-      confirmLabel: 'Remove',
-      danger: true,
-    });
-    if (!ok) return;
-    setRemovingId(c.id);
-    setError('');
-    try {
-      const res = await fetch(`/api/projects/${projectId}/directory/${c.id}`, { method: 'DELETE' });
-      const body = await res.json().catch(() => ({}));
-      if (!res.ok) throw new Error(body.error || 'Could not remove that contact.');
-      if (editingId === c.id) closeForm();
-      await load();
-    } catch (e) {
-      setError(e instanceof Error ? e.message : 'Could not remove that contact.');
-    } finally {
-      setRemovingId(null);
-    }
+  useEffect(() => {
+    try { const v = localStorage.getItem(VIEW_KEY); if (v === 'grid' || v === 'list') setView(v); }
+    catch (e) { console.warn('[directory] view preference unavailable', e); }
+  }, []);
+  const pickView = (v: View) => {
+    setView(v);
+    try { localStorage.setItem(VIEW_KEY, v); } catch (e) { console.warn('[directory] could not save view preference', e); }
   };
 
   const load = useCallback(async () => {
@@ -112,7 +70,8 @@ export default function ProjectDirectory() {
       const res = await fetch(`/api/projects/${projectId}/directory`);
       const body = await res.json().catch(() => ({}));
       if (!res.ok) throw new Error(body.error || 'Could not load the directory.');
-      setContacts(body.contacts ?? []);
+      setContacts(Array.isArray(body.contacts) ? body.contacts : []);
+      setCompanies(Array.isArray(body.companies) ? body.companies : []);
       setLoadError('');
     } catch (e) {
       setLoadError(e instanceof Error ? e.message : 'Could not load the directory.');
@@ -120,30 +79,29 @@ export default function ProjectDirectory() {
       setLoading(false);
     }
   }, [projectId]);
+  useEffect(() => { void load(); }, [load]);
 
-  useEffect(() => { load(); }, [load]);
+  const openAdd = (company?: string) => { setEditingId(null); setDraft({ ...EMPTY, company: company || '' }); setFormError(''); setOpen(true); };
+  const openEdit = (c: DirContact) => {
+    if (!c.id) return;
+    setEditingId(c.id);
+    setDraft({ name: c.name || '', role: c.role ?? '', company: c.company ?? '', email: c.email ?? '', phone: c.phone ?? '' });
+    setFormError(''); setOpen(true);
+  };
+  const close = () => { if (saving) return; setOpen(false); setEditingId(null); setFormError(''); };
 
-  const save = async (e?: React.FormEvent) => {
-    e?.preventDefault();
-    if (!draft.name.trim() || saving) return;
-    setSaving(true);
-    setFormError('');
+  const save = async () => {
+    if (!draft.name.trim() || saving) { if (!draft.name.trim()) setFormError('Name is required.'); return; }
+    setSaving(true); setFormError('');
     try {
+      const payload = { name: draft.name, role: draft.role ?? null, company: draft.company ?? null, email: draft.email ?? null, phone: draft.phone ?? null };
       const res = editingId
-        ? await fetch(`/api/projects/${projectId}/directory/${editingId}`, {
-            method: 'PATCH',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({ name: draft.name, role: draft.role ?? null, company: draft.company ?? null, email: draft.email ?? null, phone: draft.phone ?? null }),
-          })
-        : await fetch(`/api/projects/${projectId}/directory`, {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify(draft),
-          });
+        ? await fetch(`/api/projects/${projectId}/directory/${editingId}`, { method: 'PATCH', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(payload) })
+        : await fetch(`/api/projects/${projectId}/directory`, { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(payload) });
       const body = await res.json().catch(() => ({}));
       if (!res.ok) throw new Error(body.error || 'Could not save that contact.');
-      closeForm();
-      setError('');
+      setOpen(false); setEditingId(null);
+      show(editingId ? 'Contact updated.' : 'Added to the directory.');
       await load();
     } catch (err) {
       setFormError(err instanceof Error ? err.message : 'Could not save that contact.');
@@ -152,159 +110,216 @@ export default function ProjectDirectory() {
     }
   };
 
-  return (
-    <main className="k-frame" style={{ background: BASE, minHeight: '100%' }}>
-      <div>
-        <div style={{ display: 'flex', alignItems: 'center', gap: 10, marginBottom: 6 }}>
-          <UsersThree size={20} weight="duotone" color="var(--text-secondary)" />
-          <h1 className="k-title" style={{ margin: 0 }}>Directory</h1>
-        </div>
-        <p style={{ margin: '0 0 20px', color: DIM, fontSize: 14, maxWidth: 620, lineHeight: 1.55 }}>
-          Everyone on this job. Contracts, RFIs, submittals and pay applications read these names
-          instead of asking for them again.
-        </p>
+  const remove = async (c: DirContact) => {
+    if (!c.id) return;
+    const ok = await confirmDialog({
+      title: `Remove ${c.name}?`,
+      message: `${c.name}${c.role ? ` (${c.role})` : ''} comes off this job's directory. Documents already written keep the name they were written with.`,
+      confirmLabel: 'Remove', danger: true,
+    });
+    if (!ok) return;
+    setRemovingId(c.id);
+    try {
+      const res = await fetch(`/api/projects/${projectId}/directory/${c.id}`, { method: 'DELETE' });
+      const body = await res.json().catch(() => ({}));
+      if (!res.ok) throw new Error(body.error || 'Could not remove that contact.');
+      show('Removed from the directory.');
+      await load();
+    } catch (e) {
+      show(e instanceof Error ? e.message : 'Could not remove that contact.', 'bad');
+    } finally {
+      setRemovingId(null);
+    }
+  };
 
-        {error && <p role="alert" style={{ color: 'var(--danger)', fontSize: 14 }}>{error}</p>}
-        {loadError && contacts.length > 0 && <p role="alert" style={{ color: 'var(--danger)', fontSize: 14 }}>{loadError}</p>}
+  const groups = useMemo(() => groupByCompany(contacts, companies), [contacts, companies]);
+  const qq = q.trim().toLowerCase();
+  const shown = useMemo<DirGroup[]>(() => {
+    if (!qq) return groups;
+    const hit = (v: unknown) => String(v || '').toLowerCase().includes(qq);
+    return groups
+      .map((g) => (hit(g.name) || hit(g.trade) ? g : { ...g, people: g.people.filter((p) => hit(p.name) || hit(p.role) || hit(p.email) || hit(p.phone)) }))
+      .filter((g) => g.people.length > 0 || hit(g.name) || hit(g.trade));
+  }, [groups, qq]);
 
-        {!adding && (
-          <button
-            type="button"
-            onClick={() => { setAdding(true); setFormError(''); }}
-            style={{
-              display: 'inline-flex', alignItems: 'center', gap: 8, minHeight: 44,
-              padding: '0 20px', borderRadius: 9, border: 'none', cursor: 'pointer',
-              background: GOLD, color: 'var(--on-brand)', fontSize: 14, fontWeight: 800, marginBottom: 18,
-            }}
-          >
-            <Plus size={15} weight="bold" color="var(--on-brand)" /> Add Someone
-          </button>
-        )}
+  const people = groups.reduce((n, g) => n + g.people.length, 0);
+  const named = groups.filter((g) => g.name);
+  const subCount = groups.filter((g) => g.isSub).length;
+  const trades = new Set(groups.map((g) => g.trade).filter(Boolean)).size;
+  const stats: StatItem[] = [
+    { label: 'Companies', value: loading ? '—' : named.length, sub: loading ? 'Loading…' : `${subCount} on the job as subs`, icon: <Buildings size={15} /> },
+    { label: 'People', value: loading ? '—' : people, sub: loading ? 'Loading…' : `${contacts.filter((c) => c.avatar_url).length} with a photo`, icon: <UsersThree size={15} /> },
+    { label: 'Subcontractors', value: loading ? '—' : subCount, sub: loading ? 'Loading…' : 'From the job’s sub list', icon: <HardHat size={15} /> },
+    { label: 'Trades', value: loading ? '—' : trades, sub: loading ? 'Loading…' : 'Across every company', icon: <Wrench size={15} /> },
+  ];
 
-        {adding && (
-          /* A real form: the keyboard's Go / Enter saves, the same as the button. */
-          <form ref={formRef} onSubmit={save} aria-label={editingId ? 'Edit contact' : 'Add someone to the directory'} style={{ background: CARD, border: `1px solid ${BORDER}`, borderRadius: 12, padding: '16px 18px', marginBottom: 18 }}>
-            {editingId && (
-              <div style={{ fontSize: 12, fontWeight: 800, color: 'var(--text-primary)', marginBottom: 10 }}>Edit Contact</div>
-            )}
-            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(min(100%, 190px), 1fr))', gap: 12 }}>
-              <label style={{ display: 'block' }}>
-                <span style={{ display: 'block', fontSize: 12, fontWeight: 700, color: DIM, marginBottom: 6 }}>Name</span>
-                <input autoFocus required aria-required="true" style={input} value={draft.name} onChange={(e) => setDraft({ ...draft, name: e.target.value })} />
-              </label>
-              <label style={{ display: 'block' }}>
-                <span style={{ display: 'block', fontSize: 12, fontWeight: 700, color: DIM, marginBottom: 6 }}>Role</span>
-                <Suggest style={input} value={draft.role ?? ''} onChange={(e) => setDraft({ ...draft, role: e.target.value })} options={ROLES} placeholder="Pick or type a role" />
-              </label>
-              <label style={{ display: 'block' }}>
-                <span style={{ display: 'block', fontSize: 12, fontWeight: 700, color: DIM, marginBottom: 6 }}>Company</span>
-                <input style={input} value={draft.company ?? ''} onChange={(e) => setDraft({ ...draft, company: e.target.value })} />
-              </label>
-              <label style={{ display: 'block' }}>
-                <span style={{ display: 'block', fontSize: 12, fontWeight: 700, color: DIM, marginBottom: 6 }}>Email</span>
-                <input type="email" inputMode="email" autoCapitalize="none" autoComplete="off" style={input} value={draft.email ?? ''} onChange={(e) => setDraft({ ...draft, email: e.target.value })} />
-              </label>
-              <label style={{ display: 'block' }}>
-                <span style={{ display: 'block', fontSize: 12, fontWeight: 700, color: DIM, marginBottom: 6 }}>Phone</span>
-                <input type="tel" inputMode="tel" autoComplete="off" style={input} value={draft.phone ?? ''} onChange={(e) => setDraft({ ...draft, phone: e.target.value })} />
-              </label>
-            </div>
-            {formError && <p role="alert" style={{ color: 'var(--danger)', fontSize: 14, margin: '12px 0 0' }}>{formError}</p>}
-            <div style={{ display: 'flex', gap: 10, marginTop: 14, flexWrap: 'wrap' }}>
-              <button
-                type="submit"
-                disabled={saving || !draft.name.trim()}
-                style={{
-                  minHeight: 44, padding: '0 22px', borderRadius: 9, border: 'none',
-                  background: draft.name.trim() ? GOLD : 'color-mix(in srgb, var(--brand-primary) 30%, transparent)',
-                  color: 'var(--on-brand)', fontSize: 14, fontWeight: 800,
-                  cursor: saving || !draft.name.trim() ? 'not-allowed' : 'pointer',
-                }}
-              >
-                {saving ? 'Saving…' : editingId ? 'Save Changes' : 'Add to Directory'}
-              </button>
-              <button
-                type="button"
-                onClick={closeForm}
-                style={{ minHeight: 44, padding: '0 18px', borderRadius: 9, background: 'transparent', border: `1px solid ${BORDER}`, color: DIM, fontSize: 14, fontWeight: 600, cursor: 'pointer' }}
-              >
-                Cancel
-              </button>
-            </div>
-          </form>
-        )}
-
-        {loading && contacts.length === 0 ? (
-          <p style={{ color: DIM, fontSize: 14 }}>Loading the directory…</p>
-        ) : loadError && contacts.length === 0 ? (
-          /* A failed read is not an empty job: say so, and offer the retry. */
-          <div role="alert" style={{ background: CARD, border: `1px solid ${BORDER}`, borderRadius: 12, padding: '20px 22px', color: TEXT, fontSize: 14, lineHeight: 1.6 }}>
-            <div style={{ color: 'var(--danger)', fontWeight: 700, marginBottom: 10 }}>{loadError}</div>
-            <button
-              type="button"
-              onClick={() => load()}
-              style={{ minHeight: 44, padding: '0 18px', borderRadius: 9, background: 'transparent', border: `1px solid ${BORDER}`, color: TEXT, fontSize: 14, fontWeight: 700, cursor: 'pointer' }}
-            >
-              Try Again
-            </button>
-          </div>
-        ) : contacts.length === 0 ? (
-          <div style={{ background: CARD, border: `1px solid ${BORDER}`, borderRadius: 12, padding: '26px 22px', color: DIM, fontSize: 14, lineHeight: 1.6 }}>
-            Nobody on this job yet. The owner and architect land here automatically when a project is
-            created with them filled in — add the engineer, the PM and the superintendent once, and
-            every document that needs them will have them.
-          </div>
-        ) : (
-          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(280px, 1fr))', gap: 12 }}>
-            {contacts.map((c, i) => (
-              <div key={c.id ?? `${c.name}-${i}`} style={{ background: CARD, border: `1px solid ${BORDER}`, borderRadius: 12, padding: '15px 17px' }}>
-                {c.role && (
-                  <div style={{ fontSize: 12, fontWeight: 800, color: 'var(--text-primary)', marginBottom: 5 }}>
-                    {c.role}
-                  </div>
-                )}
-                <div style={{ fontSize: 15, fontWeight: 800, color: TEXT, marginBottom: 3 }}>{c.name}</div>
-                {c.company && (
-                  <div style={{ display: 'flex', alignItems: 'center', gap: 6, fontSize: 13, color: DIM, marginBottom: 8 }}>
-                    <Buildings size={12} weight="duotone" color={DIM} /> {c.company}
-                  </div>
-                )}
-                {c.email && (
-                  <a href={`mailto:${c.email}`} style={{ display: 'flex', alignItems: 'center', gap: 6, fontSize: 13, color: DIM, textDecoration: 'none', minHeight: 26 }}>
-                    <EnvelopeSimple size={12} weight="duotone" color={DIM} /> {c.email}
-                  </a>
-                )}
-                {c.phone && (
-                  <a href={`tel:${c.phone}`} style={{ display: 'flex', alignItems: 'center', gap: 6, fontSize: 13, color: DIM, textDecoration: 'none', minHeight: 26 }}>
-                    <Phone size={12} weight="duotone" color={DIM} /> {c.phone}
-                  </a>
-                )}
-                {c.id && (
-                  <div style={{ display: 'flex', gap: 8, marginTop: 10, flexWrap: 'wrap' }}>
-                    <button
-                      type="button"
-                      onClick={() => startEdit(c)}
-                      aria-label={`Edit ${c.name}`}
-                      style={{ display: 'inline-flex', alignItems: 'center', gap: 6, minHeight: 44, padding: '0 14px', borderRadius: 9, background: 'transparent', border: `1px solid ${BORDER}`, color: TEXT, fontSize: 13, fontWeight: 700, cursor: 'pointer' }}
-                    >
-                      <PencilSimple size={13} weight="bold" /> Edit
-                    </button>
-                    <button
-                      type="button"
-                      onClick={() => remove(c)}
-                      disabled={removingId === c.id}
-                      aria-label={`Remove ${c.name} from the directory`}
-                      style={{ display: 'inline-flex', alignItems: 'center', gap: 6, minHeight: 44, padding: '0 14px', borderRadius: 9, background: 'transparent', border: `1px solid ${BORDER}`, color: 'var(--danger)', fontSize: 13, fontWeight: 700, cursor: removingId === c.id ? 'default' : 'pointer', opacity: removingId === c.id ? 0.6 : 1 }}
-                    >
-                      <Trash size={13} weight="bold" /> {removingId === c.id ? 'Removing…' : 'Remove'}
-                    </button>
-                  </div>
-                )}
-              </div>
-            ))}
-          </div>
-        )}
+  let body: React.ReactNode;
+  if (loading && contacts.length === 0 && companies.length === 0) {
+    body = <div className="dirMsg" aria-busy="true">Loading the directory…</div>;
+  } else if (loadError && contacts.length === 0 && companies.length === 0) {
+    body = <EmptyState icon={<WarningCircle size={22} />} title="Couldn't load the directory" text={loadError} action={<Button icon={<ArrowClockwise size={15} />} onClick={() => void load()}>Try Again</Button>} />;
+  } else if (groups.length === 0) {
+    body = <EmptyState icon={<UsersThree size={22} />} title="Nobody on this job yet" text="The owner and architect land here when a project is created with them." action={<Button variant="primary" icon={<Plus size={15} weight="bold" />} onClick={() => openAdd()}>Add Someone</Button>} />;
+  } else if (shown.length === 0) {
+    body = <EmptyState icon={<UsersThree size={22} />} title="No one matches that search" action={<Button onClick={() => setQ('')}>Clear Search</Button>} />;
+  } else {
+    body = (
+      <div className="dirGroups">
+        {shown.map((g) => (
+          <CompanyGroup key={g.key} g={g} view={view} onAdd={openAdd} onEdit={openEdit} onRemove={remove} removingId={removingId} />
+        ))}
       </div>
-    </main>
+    );
+  }
+
+  return (
+    <div className="dirWs">
+      <style dangerouslySetInnerHTML={{ __html: CSS }} />
+      <PageShell
+        crumbs={[{ label: 'Projects', href: '/app/projects' }, { label: ctx?.project?.name || 'Project', href: `/app/projects/${projectId}/overview` }, { label: 'Directory' }]}
+        title="Directory"
+        subtitle={ctx?.project?.name || undefined}
+        actions={<Button variant="primary" icon={<Plus size={15} weight="bold" />} onClick={() => openAdd()}>Add Someone</Button>}
+      >
+        <StatRow items={stats} />
+        {loadError && (contacts.length > 0 || companies.length > 0) && <p role="alert" className="dirErr">{loadError}</p>}
+        {groups.length > 0 && (
+          <Toolbar
+            search={q}
+            onSearch={setQ}
+            placeholder="Search people, companies, trades…"
+            actions={
+              <span className="dirViews" role="group" aria-label="Layout">
+                <button type="button" className="k-chip" aria-pressed={view === 'grid'} onClick={() => pickView('grid')}><SquaresFour size={15} /> Grid</button>
+                <button type="button" className="k-chip" aria-pressed={view === 'list'} onClick={() => pickView('list')}><Rows size={15} /> List</button>
+              </span>
+            }
+          />
+        )}
+        {body}
+      </PageShell>
+
+      <FormModal
+        open={open}
+        onClose={close}
+        title={editingId ? 'Edit Contact' : 'Add to the Directory'}
+        subtitle={ctx?.project?.name || undefined}
+        onSubmit={save}
+        submitLabel={editingId ? 'Save Changes' : 'Add to Directory'}
+        busy={saving}
+        error={formError || null}
+      >
+        <FormGrid cols={2}>
+          <Field label="Name" required>
+            <Input autoFocus value={draft.name} onChange={(e) => setDraft({ ...draft, name: e.target.value })} />
+          </Field>
+          <Field label="Role">
+            <Suggest className="k-input" value={draft.role ?? ''} onChange={(e) => setDraft({ ...draft, role: e.target.value })} options={ROLES} placeholder="Pick or type a role" />
+          </Field>
+          <Field label="Company">
+            <Suggest className="k-input" value={draft.company ?? ''} onChange={(e) => setDraft({ ...draft, company: e.target.value })} options={named.map((g) => g.name)} placeholder="Pick or type a company" />
+          </Field>
+          <Field label="Email">
+            <Input type="email" inputMode="email" autoCapitalize="none" autoComplete="off" value={draft.email ?? ''} onChange={(e) => setDraft({ ...draft, email: e.target.value })} />
+          </Field>
+          <Field label="Phone">
+            <Input type="tel" inputMode="tel" autoComplete="off" value={draft.phone ?? ''} onChange={(e) => setDraft({ ...draft, phone: e.target.value })} />
+          </Field>
+        </FormGrid>
+      </FormModal>
+      <Toast message={toast?.message ?? null} tone={toast?.tone} />
+    </div>
   );
 }
+
+function QuickLinks({ phone, email, who }: { phone?: string | null; email?: string | null; who: string }) {
+  const tel = telHref(phone); const mail = mailHref(email);
+  if (!tel && !mail) return null;
+  return (
+    <span className="dirQuick">
+      {tel && <Button size="sm" variant="ghost" icon={<Phone size={16} weight="bold" />} href={tel} aria-label={`Call ${who}`} title={`Call ${phone}`} />}
+      {mail && <Button size="sm" variant="ghost" icon={<EnvelopeSimple size={16} weight="bold" />} href={mail} aria-label={`Email ${who}`} title={`Email ${email}`} />}
+    </span>
+  );
+}
+
+function CompanyGroup({ g, view, onAdd, onEdit, onRemove, removingId }: {
+  g: DirGroup; view: View;
+  onAdd: (company?: string) => void; onEdit: (c: DirContact) => void; onRemove: (c: DirContact) => void; removingId: string | null;
+}) {
+  const title = g.name || 'No company';
+  return (
+    <section className="dirCo" aria-label={title}>
+      <header className="dirCoHead">
+        {g.name ? <CompanyMark name={g.name} size={44} /> : <Avatar name="" mark="—" size={44} shape="tile" tone="var(--text-tertiary)" />}
+        <div className="dirCoText">
+          <h2 className="dirCoName">{title}</h2>
+          <span className="dirCoMeta">
+            {g.trade && <Badge tone="neutral">{g.trade}</Badge>}
+            {g.isSub && <Badge tone="ongoing">Sub on this job</Badge>}
+            <span className="dirCount">{g.people.length} {g.people.length === 1 ? 'person' : 'people'}</span>
+          </span>
+        </div>
+        <QuickLinks phone={g.phone} email={g.email} who={title} />
+        {g.name && <Button size="sm" variant="ghost" icon={<Plus size={15} weight="bold" />} onClick={() => onAdd(g.name)} aria-label={`Add someone at ${g.name}`} title={`Add someone at ${g.name}`} />}
+      </header>
+      {g.people.length > 0 && (
+        <ul className="dirPeople" data-view={view}>
+          {g.people.map((p, i) => (
+            <li key={p.id ?? `${g.key}-${p.name}-${i}`} className="dirPerson">
+              <Avatar name={p.name} src={p.avatar_url} size={view === 'grid' ? 48 : 36} />
+              <div className="dirPText">
+                <span className="dirPName">{p.name}</span>
+                {p.role && <span className="dirPRole">{p.role}</span>}
+                {view === 'list' && (p.phone || p.email) && <span className="dirPContact">{[p.phone, p.email].filter(Boolean).join(' · ')}</span>}
+              </div>
+              <span className="dirPActions">
+                <QuickLinks phone={p.phone} email={p.email} who={p.name} />
+                {p.id && (
+                  <RowActions actions={[
+                    { label: 'Edit', icon: <PencilSimple size={15} />, onClick: () => onEdit(p) },
+                    { label: removingId === p.id ? 'Removing…' : 'Remove', icon: <Trash size={15} />, onClick: () => onRemove(p), tone: 'danger', disabled: removingId === p.id },
+                  ]} />
+                )}
+              </span>
+            </li>
+          ))}
+        </ul>
+      )}
+    </section>
+  );
+}
+
+const CSS = `
+.dirWs > .k-page { max-width: none; }
+.dirMsg { color: var(--text-secondary); font-size: var(--fs-md); padding: 16px 0; }
+.dirErr { color: var(--danger); font-size: var(--fs-md); margin: 0; }
+.dirViews { display: inline-flex; gap: 6px; }
+.dirGroups { display: flex; flex-direction: column; }
+.dirCo { padding: 20px 0; border-top: 1px solid var(--border-subtle); min-width: 0; }
+.dirCo:first-child { border-top: 0; padding-top: 4px; }
+.dirCoHead { display: flex; align-items: center; gap: 12px; min-width: 0; }
+.dirCoText { display: flex; flex-direction: column; gap: 6px; min-width: 0; flex: 1 1 auto; }
+.dirCoName { margin: 0; font-size: var(--fs-lg); font-weight: 800; color: var(--text-primary); line-height: 1.2; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.dirCoMeta { display: flex; flex-wrap: wrap; align-items: center; gap: 6px 8px; }
+.dirCount { font-size: var(--fs-xs); font-weight: 700; color: var(--text-tertiary); }
+.dirQuick { display: inline-flex; gap: 2px; flex-shrink: 0; }
+.dirPeople { list-style: none; margin: 14px 0 0; padding: 0; min-width: 0; }
+.dirPeople[data-view="grid"] { display: grid; grid-template-columns: repeat(auto-fill, minmax(min(100%, 260px), 1fr)); gap: 6px 20px; padding-left: 56px; }
+.dirPeople[data-view="list"] { display: flex; flex-direction: column; padding-left: 56px; }
+.dirPerson { display: flex; align-items: center; gap: 12px; min-width: 0; padding: 8px 0; }
+.dirPeople[data-view="list"] .dirPerson + .dirPerson { border-top: 1px solid var(--border-subtle); }
+.dirPText { display: flex; flex-direction: column; gap: 2px; min-width: 0; flex: 1 1 auto; }
+.dirPName { font-size: var(--fs-md); font-weight: 700; color: var(--text-primary); overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.dirPRole { font-size: var(--fs-sm); color: var(--text-secondary); overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.dirPContact { font-size: var(--fs-xs); color: var(--text-tertiary); overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.dirPActions { display: inline-flex; align-items: center; gap: 2px; flex-shrink: 0; }
+@media (max-width: 640px) {
+  .dirWs .k-btn, .dirWs .k-chip, .dirWs .k-input { min-height: 44px; }
+  .dirWs .k-icon-btn { min-width: 44px; }
+  .dirPeople[data-view="grid"], .dirPeople[data-view="list"] { padding-left: 0; }
+  .dirCoHead { flex-wrap: wrap; }
+  .dirCoText { flex-basis: calc(100% - 60px); }
+  .dirCoHead > .dirQuick { margin-left: 56px; }
+}
+`;

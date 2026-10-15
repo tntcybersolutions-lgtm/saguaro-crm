@@ -14,6 +14,8 @@ import { useParams } from 'next/navigation';
 import { PageShell, Button, Tabs, Field, Input, Textarea, Select, Toast, useToast, EmptyState } from '@/components/ui/kit';
 import { PencilSimple, FloppyDisk, X, Paperclip, LinkSimple, ChatText, Trash, FileText, ArrowSquareOut, MagnifyingGlass } from '@phosphor-icons/react';
 import ItemHistory from '@/components/item/ItemHistory';
+import WorkflowChain from '@/components/submittals/WorkflowChain';
+import type { SubmittalLike } from '@/lib/submittal-workflow';
 import DailyLogSections from '@/components/item/DailyLogSections';
 import { LOG_SECTIONS } from '@/lib/daily-log-sections';
 import { itemTool, itemNumber, nounInSentence, statusLabel, type ItemField, type ItemTool } from '@/lib/items/registry';
@@ -186,6 +188,12 @@ export default function ItemPage() {
           </div>
         ))}
       </div>
+
+      {tool.type === 'submittals' && (
+        <section className="ip-chain" aria-label="Approval workflow">
+          <WorkflowChain submittal={item as SubmittalLike} entityId={id} refreshKey={historyKey} />
+        </section>
+      )}
 
       <Tabs
         value={tab}
@@ -475,6 +483,7 @@ function FilesTab({ tool, id, projectId, files, reload, show }: {
 const CSS = `
 .ip-loading{color:var(--text-secondary);font-size:14px;padding:16px 0}
 .ip-muted{color:var(--text-secondary);font-size:14px;margin:0}
+.ip-chain{padding:4px 0 20px;margin-bottom:4px;border-bottom:1px solid var(--border-default)}
 .ip-strip{display:grid;grid-template-columns:repeat(auto-fit,minmax(150px,1fr));border-top:1px solid var(--border-default);border-bottom:1px solid var(--border-default);margin:4px 0 16px}
 .ip-strip-cell{display:flex;flex-direction:column;gap:4px;padding:12px 16px 12px 0}
 .ip-strip-cell + .ip-strip-cell{padding-left:16px;border-left:1px solid var(--border-default)}

@@ -21,7 +21,7 @@ import {
   Crown, Compass, PencilSimple, LinkSimple, ArrowSquareOut, WarningCircle,
 } from '@phosphor-icons/react';
 import {
-  PageShell, Card, StatRow, Badge, Button, Toolbar, Tabs, DataTable, EmptyState, ItemList, ItemRow,
+  PageShell, Card, StatRow, Badge, Avatar, CompanyMark, Button, Toolbar, Tabs, DataTable, EmptyState, ItemList, ItemRow,
   FormModal, FormGrid, Field, Input, Select, DetailList, Callout, Toast, useToast,
   type Column, type BadgeTone, type StatItem,
 } from '@/components/ui/kit';
@@ -68,6 +68,25 @@ export default function TeamPage(){
     } catch { /* the roster still shows accepted members */ }
   }, [projectId]);
   useEffect(() => { void loadPendingInvites(); }, [loadPendingInvites]);
+  /* Faces: each member's profile photo (signed), from the job banner read —
+     keyed by user id, else lower-cased email. Missing → initials. */
+  const [faces, setFaces] = useState<Record<string, string>>({});
+  useEffect(() => {
+    if (!projectId) return;
+    let alive = true;
+    fetch(`/api/projects/${projectId}/banner`).then(async (r) => {
+      if (!r.ok) return;
+      const j = await r.json().catch(() => ({}));
+      const m: Record<string, string> = {};
+      for (const f of (Array.isArray(j?.team) ? j.team : []) as { key?: string; avatarUrl?: string | null }[]) {
+        if (f?.key && f.avatarUrl) m[String(f.key).toLowerCase()] = f.avatarUrl;
+      }
+      if (alive) setFaces(m);
+    }, (e) => console.error('[team] faces read failed', e));
+    return () => { alive = false; };
+  }, [projectId]);
+  const faceFor = (userId: string | null | undefined, email: string | null | undefined) =>
+    (userId && faces[String(userId).toLowerCase()]) || (email && faces[String(email).toLowerCase()]) || null;
   const members = React.useMemo(() => {
     const have = new Set(rosterMembers.map(m => (m.email || '').toLowerCase()).filter(Boolean));
     const invited = pendingInvites
@@ -382,7 +401,7 @@ export default function TeamPage(){
   type TeamSub = (typeof subs)[number];
   const memberColumns: Column<Member>[] = [
     { key: 'name', header: 'Name', primary: true, phone: 'show', accessor: m => m.name, render: m => (
-      <span className="k-name"><span className="k-avatar" aria-hidden>{m.name[0]}</span><span className="k-name-text"><span>{m.name}</span><span>{m.email}</span></span></span>
+      <span className="k-name"><Avatar name={m.name} src={faceFor(m.userId, m.email)} size={32}/><span className="k-name-text"><span>{m.name}</span><span>{m.email}</span></span></span>
     ) },
     { key: 'role', header: 'Role', phone: 'hide', accessor: m => m.role, render: m => m.role },
     { key: 'access', header: 'Access Level', phone: 'show', accessor: m => m.access, render: m => <Badge tone={accessTone(m.access)}>{m.access}</Badge> },
@@ -406,9 +425,9 @@ export default function TeamPage(){
   ];
   const teamSubColumns: Column<TeamSub>[] = [
     { key: 'name', header: 'Company', primary: true, phone: 'show', accessor: s => s.name, render: s => (
-      <span className="k-name"><span className="k-avatar" aria-hidden>{(s.name||'?').split(/\s+/).slice(0,2).map(w=>w[0]?.toUpperCase()||'').join('')}</span><span className="k-name-text"><span>{s.name}</span><span>{s.email || findCtxSub(s.name)?.email || ''}</span></span></span>
+      <span className="k-name"><CompanyMark name={s.name} size={32}/><span className="k-name-text"><span>{s.name}</span><span>{s.email || findCtxSub(s.name)?.email || ''}</span></span></span>
     ) },
-    { key: 'trade', header: 'Trade', phone: 'show', accessor: s => findCtxSub(s.name)?.trade || '', render: s => findCtxSub(s.name)?.trade || '—' },
+    { key: 'trade', header: 'Trade', phone: 'show', accessor: s => findCtxSub(s.name)?.trade || '', render: s => { const t = findCtxSub(s.name)?.trade; return t ? <Badge tone="neutral">{t}</Badge> : '—'; } },
     { key: 'contract', header: 'Contract', align: 'right', phone: 'show', total: 'sum', format: fmtMoney, accessor: s => Number(findCtxSub(s.name)?.contractAmount) > 0 ? Number(findCtxSub(s.name)?.contractAmount) : null, render: s => { const a = Number(findCtxSub(s.name)?.contractAmount); return a > 0 ? <span style={{color:'var(--text-primary)',fontWeight:700}}>{fmtMoney(a)}</span> : '—'; } },
     { key: 'access', header: 'Portal Access', phone: 'hide', accessor: s => s.access, render: () => <Badge tone={accessTone('sub portal')}>Sub Portal</Badge> },
   ];
