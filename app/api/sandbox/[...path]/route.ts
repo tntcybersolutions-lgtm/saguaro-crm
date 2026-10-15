@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { sandboxCheckHandler, sandboxSignupHandler } from '../../../../sandbox-manager-route';
+import { sandboxCheckHandler } from '../../../../sandbox-manager-route';
 import { SandboxManager } from '../../../../sandbox-manager';
 import { supabaseAdmin } from '../../../../supabase/admin';
 import { getUser } from '@/lib/supabase-server';
@@ -43,7 +43,11 @@ export async function POST(
   const { path } = await params;
   const [segment] = path;
 
-  if (segment === 'signup') return sandboxSignupHandler(req);
+  /* The sandbox signup wrote to sandbox_tenants columns that do not exist, so
+     it created an auth user and then failed. The free trial is /signup. */
+  if (segment === 'signup') {
+    return NextResponse.json({ error: 'Start your free trial at /signup.', redirect: '/signup' }, { status: 410 });
+  }
 
   if (segment === 'event') {
     const user = await getUser(req);

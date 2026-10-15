@@ -213,7 +213,7 @@ export default function ComparePage() {
                 Start Free Trial
               </Link>
               <Link
-                href="/sandbox"
+                href="/signup"
                 style={{
                   background: 'transparent', color: DIM, fontWeight: 500, fontSize: 15,
                   padding: '12px 28px', borderRadius: 8, textDecoration: 'none',

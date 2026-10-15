@@ -967,7 +967,7 @@ export default function CompareProcorePage() {
               }}>
                 Start My Free Migration →
               </Link>
-              <Link href="/sandbox" style={{
+              <Link href="/signup" style={{
                 display: 'flex',
                 alignItems: 'center',
                 justifyContent: 'center',
