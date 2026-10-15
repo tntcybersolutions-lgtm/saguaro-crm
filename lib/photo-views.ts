@@ -199,3 +199,84 @@ export function uploaders(photos: PhotoLike[]): string[] {
 export function cleanAlbumName(raw: string): string {
   return raw.replace(/\s+/g, ' ').trim().slice(0, 60);
 }
+
+/* ── Map pins: screen-grid clustering ───────────────────────────────────── */
+
+/** A Web Mercator world pixel at `zoom` (256-px tiles), as Leaflet / OSM tiles use. */
+export function worldPx(lat: number, lng: number, zoom: number): { x: number; y: number } {
+  const size = 256 * Math.pow(2, zoom);
+  const clamped = Math.max(-85.05112878, Math.min(85.05112878, lat));
+  const s = Math.sin((clamped * Math.PI) / 180);
+  return {
+    x: ((lng + 180) / 360) * size,
+    y: (0.5 - Math.log((1 + s) / (1 - s)) / (4 * Math.PI)) * size,
+  };
+}
+
+export interface PointCluster<T> {
+  key: string;
+  /** Mean of the members — where the pin goes. */
+  lat: number;
+  lng: number;
+  items: T[];
+  /** South-west / north-east corners of the members, for zooming in on a cluster. */
+  bounds: [[number, number], [number, number]];
+  /** Every member sits on (practically) the same spot — zooming in will never split it. */
+  samePlace: boolean;
+}
+
+/**
+ * Pins that would overlap on screen, merged: every point is dropped into a
+ * `cellPx`-square cell of the map at `zoom`, and each occupied cell becomes
+ * one pin at its members' mean position. Zooming in shrinks the world under
+ * the cells, so clusters split apart as you go. Points without a fix are left
+ * out. Biggest cluster first, then by key, so the order is stable.
+ */
+export function clusterPoints<T>(items: T[], geoOf: (t: T) => GeoFix | null, zoom: number, cellPx = 56): PointCluster<T>[] {
+  const z = Math.max(0, Math.min(22, Math.round(zoom)));
+  const cell = cellPx > 0 ? cellPx : 56;
+  const map = new Map<string, { items: T[]; sLat: number; sLng: number; minLat: number; minLng: number; maxLat: number; maxLng: number }>();
+  for (const it of items) {
+    const g = geoOf(it);
+    if (!g) continue;
+    const p = worldPx(g.lat, g.lng, z);
+    const key = `${Math.floor(p.x / cell)}:${Math.floor(p.y / cell)}`;
+    const c = map.get(key) || { items: [], sLat: 0, sLng: 0, minLat: Infinity, minLng: Infinity, maxLat: -Infinity, maxLng: -Infinity };
+    c.items.push(it); c.sLat += g.lat; c.sLng += g.lng;
+    c.minLat = Math.min(c.minLat, g.lat); c.maxLat = Math.max(c.maxLat, g.lat);
+    c.minLng = Math.min(c.minLng, g.lng); c.maxLng = Math.max(c.maxLng, g.lng);
+    map.set(key, c);
+  }
+  return [...map.entries()]
+    .map(([key, c]) => ({
+      key,
+      lat: c.sLat / c.items.length,
+      lng: c.sLng / c.items.length,
+      items: c.items,
+      bounds: [[c.minLat, c.minLng], [c.maxLat, c.maxLng]] as [[number, number], [number, number]],
+      // ~1 m: GPS stamps from one spot, or the same address geocoded twice.
+      samePlace: c.maxLat - c.minLat < 1e-5 && c.maxLng - c.minLng < 1e-5,
+    }))
+    .sort((a, b) => b.items.length - a.items.length || a.key.localeCompare(b.key));
+}
+
+/** The box around every fix, or null when there is none. */
+export function boundsOf<T>(items: T[], geoOf: (t: T) => GeoFix | null): [[number, number], [number, number]] | null {
+  let minLat = Infinity, minLng = Infinity, maxLat = -Infinity, maxLng = -Infinity;
+  for (const it of items) {
+    const g = geoOf(it);
+    if (!g) continue;
+    minLat = Math.min(minLat, g.lat); maxLat = Math.max(maxLat, g.lat);
+    minLng = Math.min(minLng, g.lng); maxLng = Math.max(maxLng, g.lng);
+  }
+  return Number.isFinite(minLat) ? [[minLat, minLng], [maxLat, maxLng]] : null;
+}
+
+/* ── Grid tile size (Timeline S / M / L) ───────────────────────────────── */
+
+export type TileSize = 's' | 'm' | 'l';
+export const TILE_SIZES: TileSize[] = ['s', 'm', 'l'];
+/** A stored value back to a size; anything unknown is the default, medium. */
+export function parseTileSize(v: unknown): TileSize {
+  return v === 's' || v === 'm' || v === 'l' ? v : 'm';
+}

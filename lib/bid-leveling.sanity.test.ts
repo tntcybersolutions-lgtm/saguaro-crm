@@ -8,6 +8,7 @@
  * amounts read defensively, and a CSV a spreadsheet cannot execute.
  */
 import { describe, test, expect } from '@jest/globals';
+import { buildLevelingGrid, parseLineAmounts, parseAlternates, toLevelingCsv, median } from './bid-leveling';
 import { buildLevelingGrid, parseLineAmounts, parseAlternates, toLevelingCsv, median, normalizeBidSheet, readBidLines, parseBond, moneyToCents } from './bid-leveling';
 import type { ScopeLine, Bidder } from './bidleveling';
 

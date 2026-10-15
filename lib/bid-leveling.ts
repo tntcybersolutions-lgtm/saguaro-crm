@@ -16,6 +16,10 @@
  * see the bids as submitted. A gap on a line nobody priced has no median and
  * is never given a made-up figure — it is counted as an unpriced gap instead.
  *
+ * Per-line amounts are optional input. bid_submissions.unit_price_items and
+ * the alternate columns exist but no flow writes them yet; parseLineAmounts /
+ * parseAlternates read them defensively so the grid fills in the moment they
+ * are captured, and level on base totals + scope status until then.
  * Per-line amounts come from the bidder's price sheet on the bid portal
  * (normalizeBidSheet writes bid_submissions.unit_price_items and
  * alternate_amounts; parseLineAmounts / parseAlternates / parseBond read them
@@ -218,6 +222,14 @@ const toCentsNum = (v: unknown): number | null => {
   return Number.isFinite(n) ? Math.round(n * 100) : null;
 };
 
+export interface LineAmount { amountCents: number | null; status?: 'included' | 'excluded' | 'clarify' }
+
+/**
+ * Read bid_submissions.unit_price_items into per-line amounts keyed by
+ * bid_package_items.id. Accepts an array of objects ({ itemId | lineId |
+ * scopeLineId | bid_package_item_id | id, amount | total | total_amount |
+ * price | value, status? }) or a plain { [itemId]: amount } map. Anything that
+ * does not name a known line is dropped — never guessed onto one.
 export interface LineAmount { amountCents: number | null; status?: 'included' | 'excluded' | 'clarify' | 'not_quoted' }
 
 /* ── The bidder's line-item price sheet (portal writer ⇄ leveling reader) ────
@@ -422,6 +434,10 @@ export function parseLineAmounts(raw: unknown, lineIds: Iterable<string>): Recor
     const key = String(id ?? '');
     if (!valid.has(key)) return;
     const st = typeof status === 'string' ? status.toLowerCase() : '';
+    const cents = toCentsNum(amt);
+    out[key] = {
+      amountCents: cents != null && cents > 0 ? cents : null,
+      ...(st === 'included' || st === 'excluded' || st === 'clarify' ? { status: st as LineAmount['status'] } : {}),
     const cents = st === 'not_quoted' ? null : toCentsNum(amt);
     out[key] = {
       amountCents: cents != null && cents > 0 ? cents : null,
