@@ -16,6 +16,7 @@ export const dynamic = 'force-dynamic';
 const UUID = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
 
 type Row = Record<string, unknown>;
+const CLOSED = new Set(['closed', 'completed', 'verified', 'answered', 'approved', 'void', 'cancelled', 'rejected']);
 
 export async function GET(req: NextRequest, { params }: { params: Promise<{ id: string }> }) {
   const { id } = await params;
@@ -40,7 +41,8 @@ export async function GET(req: NextRequest, { params }: { params: Promise<{ id: 
     const revisions = ((siblings || []) as Row[])
       .filter((s) => sheetKey(s.sheet_number) === sheetKey(drawing.sheet_number))
       .sort((a, b) => String(b.created_at).localeCompare(String(a.created_at)))
-      .map((s) => ({ id: s.id, version: s.version, status: s.status, revision_date: s.revision_date, created_at: s.created_at, name: s.name }));
+      .map((s) => ({ id: s.id, version: s.version, status: s.status, revision_date: s.revision_date, created_at: s.created_at, name: s.name, url: s.url as string | null }));
+    const signedRevs = await signFields(revisions as Row[], ['url']);
 
     // Names for linked items, one read per tool, only tools this person may see.
     const allowed = await viewableTools(db, user, projectId);
@@ -69,6 +71,7 @@ export async function GET(req: NextRequest, { params }: { params: Promise<{ id: 
         title: (p.title as string) || null, description: (p.description as string) || null, color: p.color, status: p.status,
         item: linked && tool && !(tool.hasDeletedAt && linked.deleted_at) ? {
           type: tool.type, id: linked.id, noun: tool.noun, name: itemName(tool, linked), status: statusLabel(linked[tool.statusKey] as string),
+          closed: CLOSED.has(String(linked[tool.statusKey] || '').toLowerCase()),
           href: `/app/projects/${projectId}/items/${tool.type}/${linked.id}`,
         } : null,
         created_at: p.created_at,
@@ -80,7 +83,7 @@ export async function GET(req: NextRequest, { params }: { params: Promise<{ id: 
     return NextResponse.json({
       drawing: { id: drawing.id, name: drawing.name, sheet_number: drawing.sheet_number, discipline: drawing.discipline, version: drawing.version, status: drawing.status, revision_date: drawing.revision_date, url, isPdf: /\.pdf(\?|$)/i.test(String(drawing.url || '')) },
       project,
-      revisions,
+      revisions: signedRevs.map((r) => ({ ...r, isPdf: /\.pdf(\?|$)/i.test(String((revisions.find((x) => x.id === r.id) || {}).url || '')) })),
       pins: pinsOut,
     });
   } catch (e) {
