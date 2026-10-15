@@ -2,7 +2,6 @@
 import React, { useState, useEffect, useCallback } from 'react';
 import { confirmDialog } from '@/lib/ui/async-dialog';
 import { useProjectContext } from '@/lib/hooks/useProjectContext';
-import SaguaroDatePicker from '@/components/SaguaroDatePicker';
 import { humanError } from '@/lib/errors';
 import { useParams, useRouter } from 'next/navigation';
 import SheetThumb from '@/components/drawings/SheetThumb';
@@ -12,19 +11,16 @@ import {
   CaretLeft, CaretRight, PencilSimple, Trash, Warning, ArrowClockwise, FileX, ArrowSquareOut,
 } from '@phosphor-icons/react';
 import { SHEET_DISCIPLINES } from '@/lib/construction-intelligence';
-import { FlowSteps, InsightRow, AutoChip, goldButtonStyle, ghostButtonStyle } from '@/components/ui/premium';
 import {
-  Button, Badge, Tabs, Toolbar, Select, StatRow, DataTable, DetailList, EmptyState, Card, Menu, Toast,
+  PageShell, Button, Badge, Tabs, Toolbar, Select, StatRow, DataTable, DetailList, EmptyState, Card, Menu, Toast,
+  FormModal, FormGrid, Field, Input, Textarea, DateInput, Callout, ItemList, ItemRow,
   type BadgeTone, type Column,
 } from '@/components/ui/kit';
 import { useUnsavedGuard, useComposerDirty } from '@/lib/useUnsavedGuard';
 import UnsavedGuardModal from '@/components/UnsavedGuardModal';
 import { openPdf, PdfPane } from '@/components/PdfViewer';
 
-const BORDER='rgba(255,255,255,0.12)',DIM='var(--text-secondary)',TEXT='var(--text-primary)';
-const RED='var(--danger)';
-const PSURFACE='var(--bg-surface)';
-const PBORDER='var(--border-subtle)';
+const TEXT='var(--text-primary)';
 
 // Canonical sheet-discipline taxonomy — the shared list every picker draws from.
 const DISCIPLINES=SHEET_DISCIPLINES;
@@ -61,23 +57,12 @@ const DISCIPLINE_COLORS:Record<string,string>={
   Other:'var(--text-tertiary)',
 };
 
-const inp:React.CSSProperties={
-  width:'100%',padding:'9px 12px',background:'var(--bg-surface-2)',
-  border:`1px solid ${BORDER}`,borderRadius:7,color:TEXT,
-  fontSize:16,outline:'none',boxSizing:'border-box',
-};
-const hint:React.CSSProperties={fontSize:12,color:'var(--text-tertiary)',marginTop:5,lineHeight:1.45};
 
 const EMPTY_FORM={
   drawing_number:'',title:'',discipline:'Architectural',
   revision:0,revision_date:'',status:'current',url:'',notes:'',
 };
 
-function FieldLabel({label,auto}:{label:string;auto?:boolean}){
-  return(
-    <label style={{display:'block',fontSize:12,fontWeight:700,color:DIM, marginBottom:5}}>{label}{auto&&<AutoChip/>}</label>
-  );
-}
 
 /* revision_date is a timestamptz, so the API hands back "2026-10-02T00:00:00+00:00".
    Appending "T12:00:00" to that (the old code) built an unparseable string and
@@ -135,17 +120,18 @@ const DW_CSS=`
 .sg-rev{color:var(--text-tertiary);font-size:12px}
 .sg-skel{height:14px;width:60%;border-radius:4px;background:var(--bg-surface-2)}
 
-@keyframes drawerIn{from{transform:translateX(100%);opacity:.4}to{transform:translateX(0);opacity:1}}
+.dw-page>.k-page{max-width:none}
+.dw-drop{display:block;cursor:pointer;border:1.5px dashed var(--border-default);border-radius:12px;padding:16px 14px;text-align:center;background:var(--bg-surface-2);color:var(--text-primary)}
+.dw-drop:hover,.dw-drop:focus-within{border-color:var(--brand-primary)}
+.dw-drop[data-state="ready"]{border-color:var(--success)}
+.dw-drop[data-state="failed"]{border-color:var(--danger)}
+.dw-drop-name{font-size:13px;font-weight:800;margin-top:6px;overflow-wrap:anywhere}
+.dw-drop-sub{font-size:12px;color:var(--text-secondary);margin-top:4px;line-height:1.5}
 .dw-root{--dw-h:calc(100vh - 56px - env(safe-area-inset-top,0px) - var(--sag-header-msg-h,0px) - var(--sag-nextstep-h,0px));width:100%;max-width:none;min-width:0;display:flex;flex-direction:column}
 @supports (height:100dvh){.dw-root{--dw-h:calc(100dvh - 56px - env(safe-area-inset-top,0px) - var(--sag-header-msg-h,0px) - var(--sag-nextstep-h,0px))}}
 .dw-root[data-view="sheet"]{height:var(--dw-h);min-height:520px}
-.dw-head{display:flex;align-items:center;flex-wrap:wrap;gap:10px 16px;padding:14px var(--sp-6) 0;min-width:0}
-.dw-head-id{min-width:0;flex:1 1 220px}
-.dw-eyebrow{font-size:12px;color:var(--text-tertiary);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
-.dw-title{margin:2px 0 0;font-size:var(--fs-title-m);font-weight:800;color:var(--title-page);letter-spacing:-0.01em;line-height:1.2}
-.dw-head-tabs .k-tabs{border-bottom:none}
 .dw-err{display:flex;align-items:center;gap:10px;flex-wrap:wrap;margin:12px var(--sp-6) 0;padding:10px 14px;border-radius:var(--radius-sm);background:rgba(248,113,113,0.10);border:1px solid rgba(248,113,113,0.40);color:#FFB3BB;font-size:13px}
-.dw-work{flex:1;min-height:0;min-width:0;display:flex;margin:12px var(--sp-6) var(--sp-4);border:1px solid var(--border-subtle);border-radius:var(--radius-md);overflow:hidden;background:var(--bg-base)}
+.dw-work{flex:1;min-height:0;min-width:0;display:flex;margin:0;border:1px solid var(--border-subtle);border-radius:var(--radius-md);overflow:hidden;background:var(--bg-base)}
 .dw-rail{width:280px;flex-shrink:0;display:flex;flex-direction:column;min-height:0;border-right:1px solid var(--border-subtle);background:var(--bg-surface)}
 .dw-rail-head{display:flex;align-items:center;gap:6px;padding:10px 10px 8px 12px;border-bottom:1px solid var(--border-subtle)}
 .dw-rail-title{flex:1;min-width:0;font-size:13px;font-weight:700;color:var(--text-primary)}
@@ -192,15 +178,14 @@ const DW_CSS=`
 .dw-hist:focus-visible{outline:2px solid var(--focus-ring);outline-offset:-2px}
 .dw-link{color:var(--text-primary);text-decoration:underline;text-underline-offset:2px}
 .dw-scrim{display:none}
-.dw-reg{display:flex;flex-direction:column;gap:var(--sp-4);padding:var(--sp-4) var(--sp-6) var(--sp-8);min-width:0}
+.dw-reg{display:flex;flex-direction:column;gap:var(--sp-4);padding:0;min-width:0}
 .dw-seg{display:inline-flex;border:1px solid var(--border-default);border-radius:var(--radius-sm);overflow:hidden}
 .dw-seg button{all:unset;box-sizing:border-box;height:36px;padding:0 12px;font-size:13px;font-weight:600;color:var(--text-secondary);cursor:pointer;white-space:nowrap}
 .dw-seg button[aria-pressed="true"]{background:rgba(255,255,255,0.10);color:var(--text-primary)}
 .dw-seg button:focus-visible{outline:2px solid var(--focus-ring);outline-offset:-2px}
 @media ${PHONE}{
-  .dw-head{padding:10px 16px 0}
   .dw-err{margin:10px 16px 0}
-  .dw-work{margin:10px 0 0;border-radius:0;border-left:none;border-right:none;border-bottom:none}
+  .dw-work{margin:0;border-radius:0;border-left:none;border-right:none;border-bottom:none}
   .dw-rail,.dw-meta{position:fixed;top:0;bottom:0;z-index:560;width:min(88vw,360px);background:var(--bg-elevated);box-shadow:var(--shadow-lg);padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}
   .dw-rail{left:0}
   .dw-meta{right:0;border-left:1px solid var(--border-default)}
@@ -211,7 +196,6 @@ const DW_CSS=`
   .dw-hide-sm{display:none}
   .dw-root .k-btn,.dw-seg button{height:44px}
   .dw-rail-search input{height:44px;font-size:16px}
-  .dw-reg{padding:var(--sp-4) 16px var(--sp-6)}
 }
 `;
 
@@ -700,10 +684,12 @@ export default function DrawingsPage(){
       {ctx&&(
         <div className="dw-meta-sec">
           <div className="dw-meta-h">On This Project</div>
-          <InsightRow label="Current Set" value={`${current} sheet${current===1?'':'s'}`}/>
-          <InsightRow label={`${active.discipline||'Other'} Sheets Current`} value={String(drawings.filter(d=>(d.discipline||'Other')===(active.discipline||'Other')&&d.status==='current').length)}/>
-          <InsightRow label="Open RFIs" value={String(Number(counts?.openRfis)||0)}/>
-          <InsightRow label="Open Submittals" value={String(Number(counts?.openSubmittals)||0)}/>
+          <ItemList>
+            <ItemRow title="Current set" value={`${current} sheet${current===1?'':'s'}`}/>
+            <ItemRow title={`${active.discipline||'Other'} sheets current`} value={String(drawings.filter(d=>(d.discipline||'Other')===(active.discipline||'Other')&&d.status==='current').length)}/>
+            <ItemRow title="Open RFIs" value={String(Number(counts?.openRfis)||0)}/>
+            <ItemRow title="Open submittals" value={String(Number(counts?.openSubmittals)||0)}/>
+          </ItemList>
           <div style={{display:'flex',gap:14,flexWrap:'wrap',marginTop:8,fontSize:13}}>
             <a className="dw-link" href={`/app/projects/${projectId}/rfis`}>Open RFIs →</a>
             <a className="dw-link" href={`/app/projects/${projectId}/submittals`}>Open Submittals →</a>
@@ -784,27 +770,37 @@ export default function DrawingsPage(){
 
       <Toast message={toast?.msg??null} tone={toast?.type==='error'?'bad':'good'}/>
 
-      <div className="dw-root" data-view={view}>
-        {/* Header — context, title, view toggle, ONE primary action */}
-        <header className="dw-head">
-          <div className="dw-head-id">
-            <div className="dw-eyebrow">{ctx?.project?.name||'Project'}{!loading&&!loadError&&total>0?` · ${current} current sheet${current===1?'':'s'} across ${disciplineCount} discipline${disciplineCount===1?'':'s'}`:''}</div>
-            <h1 className="dw-title">Drawings</h1>
-          </div>
-          <div className="dw-head-tabs">
-            <Tabs value={view} onChange={k=>setView(k as 'grid'|'register')} tabs={[
-              {key:'grid',label:'Sheets',count:loading||loadError?undefined:filtered.length},
-              {key:'register',label:'Register',count:loading||loadError?undefined:total},
-            ]}/>
-          </div>
-          <Button variant="primary" icon={<Plus size={15} weight="bold"/>} onClick={openCreate}>Add Drawing</Button>
-        </header>
+      <div className="dw-page">
+      <PageShell
+        crumbs={[
+          {label:'Projects',href:'/app/projects'},
+          {label:ctx?.project?.name||'Project',href:`/app/projects/${projectId}/overview`},
+          {label:'Drawings'},
+        ]}
+        title="Drawings"
+        subtitle={!loading&&!loadError&&total>0?`${current} current sheet${current===1?'':'s'} across ${disciplineCount} discipline${disciplineCount===1?'':'s'}`:'The sheet set, by discipline and revision.'}
+        actions={<Button variant="primary" icon={<Plus size={15} weight="bold"/>} onClick={openCreate}>Add drawing</Button>}
+      >
+        {!loading&&!loadError&&total>0&&(
+          <StatRow items={[
+            {label:'Current set',value:current,sub:superseded>0?`${superseded} superseded on record`:'No superseded sheets',tone:'good',icon:<Ruler size={15}/>,onClick:()=>{setFilterStatus('current');setDrawingSet('current');},active:filterStatus==='current'},
+            {label:'For review',value:forReview,sub:'Awaiting review',tone:forReview>0?'warn':'default',icon:<Warning size={15}/>,onClick:()=>{setFilterStatus('for_review');},active:filterStatus==='for_review'},
+            {label:'Superseded',value:superseded,sub:'Kept on record',icon:<ArrowClockwise size={15}/>,onClick:()=>{setFilterStatus('superseded');setDrawingSet('all');},active:filterStatus==='superseded'},
+            {label:'Disciplines',value:disciplineCount,sub:`${total} sheet${total===1?'':'s'} in register`,icon:<Columns size={15}/>,onClick:()=>{clearFilters();setDrawingSet('all');},active:!filtersOn&&drawingSet==='all'},
+          ]}/>
+        )}
+        <Tabs value={view} onChange={k=>setView(k as 'grid'|'register')} tabs={[
+          {key:'grid',label:'Sheets',count:loading||loadError?undefined:filtered.length},
+          {key:'register',label:'Register',count:loading||loadError?undefined:total},
+        ]}/>
 
+      <div className="dw-root" data-view={view}>
         {view==='grid'?(
           <div className="dw-reg">
             <Toolbar search={search} onSearch={setSearch} placeholder="Find a sheet by number or title…"
               filters={<>
-                <Select aria-label="Discipline" value={filterDiscipline==='all'?'':filterDiscipline} onChange={e=>setFilterDiscipline(e.target.value||'all')} placeholder="All Disciplines" options={[...DISCIPLINES]}/>
+                <Select aria-label="Discipline" value={filterDiscipline==='all'?'':filterDiscipline} onChange={e=>setFilterDiscipline(e.target.value||'all')} placeholder="All Disciplines" options={[...DISCIPLINES]} style={{ width: 'auto', minWidth: 170 }}/>
+                <Select aria-label="Status" value={filterStatus==='all'?'':filterStatus} onChange={e=>setFilterStatus(e.target.value||'all')} placeholder="All Statuses" options={STATUSES.map(s=>({value:s,label:STATUS_LABELS[s]}))} style={{ width: 'auto', minWidth: 170 }}/>
                 {setToggle}
               </>}
             />
@@ -894,18 +890,10 @@ export default function DrawingsPage(){
           </div>
         ):(
           <div className="dw-reg">
-            {!loading&&!loadError&&total>0&&(
-              <StatRow items={[
-                {label:'Current Set',value:current,sub:superseded>0?`${superseded} superseded on record`:'No superseded sheets',tone:'good',onClick:()=>{setFilterStatus('current');setDrawingSet('current');}},
-                {label:'For Review',value:forReview,sub:'Awaiting review',tone:forReview>0?'warn':'default',onClick:()=>{setFilterStatus('for_review');}},
-                {label:'Superseded',value:superseded,sub:'Kept on record',onClick:()=>{setFilterStatus('superseded');setDrawingSet('all');}},
-                {label:'Disciplines',value:disciplineCount,sub:`${total} sheet${total===1?'':'s'} in register`,onClick:()=>{clearFilters();setDrawingSet('all');}},
-              ]}/>
-            )}
             <Toolbar search={search} onSearch={setSearch} placeholder="Search drawings…"
               filters={<>
-                <Select aria-label="Discipline" value={filterDiscipline==='all'?'':filterDiscipline} onChange={e=>setFilterDiscipline(e.target.value||'all')} placeholder="All Disciplines" options={[...DISCIPLINES]}/>
-                <Select aria-label="Status" value={filterStatus==='all'?'':filterStatus} onChange={e=>setFilterStatus(e.target.value||'all')} placeholder="All Statuses" options={STATUSES.map(s=>({value:s,label:STATUS_LABELS[s]}))}/>
+                <Select aria-label="Discipline" value={filterDiscipline==='all'?'':filterDiscipline} onChange={e=>setFilterDiscipline(e.target.value||'all')} placeholder="All Disciplines" options={[...DISCIPLINES]} style={{ width: 'auto', minWidth: 170 }}/>
+                <Select aria-label="Status" value={filterStatus==='all'?'':filterStatus} onChange={e=>setFilterStatus(e.target.value||'all')} placeholder="All Statuses" options={STATUSES.map(s=>({value:s,label:STATUS_LABELS[s]}))} style={{ width: 'auto', minWidth: 170 }}/>
                 {setToggle}
               </>}
               actions={
@@ -918,7 +906,7 @@ export default function DrawingsPage(){
             {(loading||loadError||filtered.length===0||!groupByDiscipline)?(
               <Card flush title={loading?'Drawings':!groupByDiscipline&&filtered.length>0?'All Drawings':undefined}
                 subtitle={!loading&&filtered.length>0?`${filtered.length} of ${total} sheet${total===1?'':'s'}`:undefined}>
-                <DataTable columns={columns} rows={loading||loadError?[]:filtered} rowKey={d=>d.id} loading={loading}
+                <DataTable tableId="project-drawings" exportName="drawings" columns={columns} rows={loading||loadError?[]:filtered} rowKey={d=>d.id} loading={loading}
                   onRowClick={viewDrawing} rowActions={rowActions} empty={registerEmpty}/>
               </Card>
             ):(
@@ -926,7 +914,7 @@ export default function DrawingsPage(){
                 <Card key={disc} flush
                   title={<span style={{display:'inline-flex',alignItems:'center',gap:8}}><span className="dw-dot" style={{background:DISCIPLINE_COLORS[disc]||'var(--text-tertiary)'}}/>{disc}</span>}
                   subtitle={`${grouped[disc].length} sheet${grouped[disc].length===1?'':'s'}`}>
-                  <DataTable columns={columns} rows={grouped[disc]} rowKey={d=>d.id} onRowClick={viewDrawing} rowActions={rowActions}/>
+                  <DataTable tableId="project-drawings" exportName="drawings" columns={columns} rows={grouped[disc]} rowKey={d=>d.id} onRowClick={viewDrawing} rowActions={rowActions}/>
                 </Card>
               ))
             )}
@@ -934,137 +922,72 @@ export default function DrawingsPage(){
         )}
       </div>
 
-      {/* Add / Edit / New Revision — slide-over */}
-      {(mode==='create'||mode==='edit')&&(
-        <div role="dialog" aria-modal="true" aria-label={mode==='create'?(replacing?'Upload New Revision':'Add Drawing'):'Edit Drawing'}
-          style={{position:'fixed',top:0,right:0,bottom:0,width:'min(460px,100%)',zIndex:600,
-          background:'var(--bg-elevated)',borderLeft:`1px solid ${BORDER}`,
-          boxShadow:'-28px 0 70px -24px rgba(0,0,0,.75)',
-          overflow:'auto',display:'flex',flexDirection:'column',
-          paddingTop:'env(safe-area-inset-top,0px)',paddingBottom:'env(safe-area-inset-bottom,0px)',
-          animation:'drawerIn .28s cubic-bezier(.2,.7,.3,1)'}}>
-          <div style={{padding:'12px 16px 12px 20px',borderBottom:`1px solid ${PBORDER}`,
-            display:'flex',alignItems:'center',justifyContent:'space-between',
-            position:'sticky',top:0,background:'var(--bg-elevated)',zIndex:2}}>
-            <div style={{fontWeight:800,fontSize:15,color:TEXT}}>
-              {mode==='create'?(replacing?'Upload New Revision':'Add Drawing'):'Edit Drawing'}
-            </div>
-            <button type="button" className="dw-ibtn" onClick={closePanel} aria-label="Close" style={{width:44,height:44}}>
-              <X size={16} weight="bold"/>
-            </button>
-          </div>
+      </PageShell>
+      </div>
 
-          <div style={{flex:1,padding:20}}>
-            <div style={{display:'flex',flexDirection:'column',gap:14}}>
-              {mode==='create'&&replacing&&(
-                <div style={{background:'rgba(251,191,36,0.10)',border:'1px solid rgba(251,191,36,0.40)',borderRadius:10,padding:'10px 12px',fontSize:13,color:TEXT,lineHeight:1.5}}>
-                  Replacing <strong>{sheetNo(replacing)||'this sheet'} R{revOf(replacing)}</strong> — this files as R{Number(form.revision)||0}. It becomes the current sheet; the earlier revision stays on record, marked superseded.
-                </div>
-              )}
-              {mode==='create'&&(
-                <label style={{display:'block',cursor:'pointer',border:`1.5px dashed ${saveError&&uploadFile?'rgba(248,113,113,0.6)':uploadFile?'rgba(74,222,128,0.5)':'color-mix(in srgb, var(--brand-primary) 40%, transparent)'}`,borderRadius:12,padding:'16px 14px',textAlign:'center',background:saveError&&uploadFile?'rgba(248,113,113,0.06)':uploadFile?'rgba(74,222,128,0.06)':'color-mix(in srgb, var(--brand-primary) 5%, transparent)'}}>
-                  <input type="file" accept=".pdf,image/*" style={{display:'none'}}
-                    onChange={e=>pickFile(e.target.files?.[0]||null)}/>
-                  <UploadSimple size={20} weight="bold" color={saveError&&uploadFile?'var(--danger)':uploadFile?'var(--success)':'var(--brand-primary-strong)'}/>
-                  <div style={{fontSize:13,fontWeight:800,color:saveError&&uploadFile?'var(--danger)':uploadFile?'var(--success)':'var(--brand-primary-strong)',marginTop:6,overflowWrap:'anywhere'}}>
-                    {uploadFile?uploadFile.name:'Upload the Sheet PDF'}
-                  </div>
-                  <div style={{fontSize:12,color:DIM,marginTop:4,lineHeight:1.5}}>
-                    {saveError&&uploadFile?'Not uploaded. The file is still attached — fix the issue below and try again, or tap to choose a different file.'
-                      :uploadFile?'Ready to upload. Sheet number and title were read from the filename — adjust below.'
-                      :'Drop in "A-101 Floor Plan.pdf" and the sheet number and title prefill from the filename. Or skip the file and link a URL below.'}
-                  </div>
-                </label>
-              )}
-              <div style={{display:'grid',gridTemplateColumns:'1fr 1fr',gap:12}}>
-                <div style={{minWidth:0}}>
-                  <FieldLabel label="Drawing # *" auto={mode==='create'&&autoFields.num}/>
-                  <input value={form.drawing_number}
-                    onChange={e=>{const v=e.target.value;setAutoFields(a=>({...a,num:false}));setForm(f=>({...f,drawing_number:v}));}}
-                    style={inp} placeholder="e.g. A1.01"/>
-                  <div style={hint}>Sheets sort naturally — A-2 files before A-10.</div>
-                </div>
-                <div style={{minWidth:0}}>
-                  <FieldLabel label="Revision"/>
-                  <input type="number" min={0} value={form.revision}
-                    onChange={e=>setForm(f=>({...f,revision:e.target.value}))}
-                    style={inp}/>
-                </div>
+      {/* Add / Edit / New Revision */}
+      <FormModal
+        open={mode==='create'||mode==='edit'}
+        onClose={closePanel}
+        title={mode==='create'?(replacing?'Upload new revision':'Add drawing'):'Edit drawing'}
+        onSubmit={async()=>{await save();}}
+        submitLabel={mode==='create'?(uploadFile?(saveError?'Retry upload':'Upload sheet'):(replacing?'Add revision':'Add drawing')):'Save changes'}
+        busy={saving}
+        error={saveError?`${mode==='create'&&uploadFile?'Upload failed':'Save failed'} — ${saveError}`:null}
+      >
+        <div style={{display:'flex',flexDirection:'column',gap:14}}>
+          {mode==='create'&&replacing&&(
+            <Callout tone="warning" title={`Replacing ${sheetNo(replacing)||'this sheet'} R${revOf(replacing)}`}
+              text={`This files as R${Number(form.revision)||0} and becomes current; the earlier revision stays on record, marked superseded.`}/>
+          )}
+          {mode==='create'&&(
+            <label className="dw-drop" data-state={saveError&&uploadFile?'failed':uploadFile?'ready':undefined}>
+              <input type="file" accept=".pdf,image/*" style={{display:'none'}}
+                onChange={e=>pickFile(e.target.files?.[0]||null)}/>
+              <UploadSimple size={20} weight="bold" color={saveError&&uploadFile?'var(--danger)':uploadFile?'var(--success)':'var(--text-secondary)'}/>
+              <div className="dw-drop-name">{uploadFile?uploadFile.name:'Upload the sheet PDF'}</div>
+              <div className="dw-drop-sub">
+                {saveError&&uploadFile?'Not uploaded. The file is still attached — fix the issue and try again, or tap to choose another file.'
+                  :uploadFile?'Sheet number and title were read from the filename.'
+                  :'"A-101 Floor Plan.pdf" fills the sheet number and title. Or skip the file and link a URL.'}
               </div>
-              <div>
-                <FieldLabel label="Title *" auto={mode==='create'&&autoFields.title}/>
-                <input value={form.title} onChange={e=>{const v=e.target.value;setAutoFields(a=>({...a,title:false}));setForm(f=>({...f,title:v}));}}
-                  style={inp} placeholder="e.g. Floor Plan - Level 1"/>
-              </div>
-              <div style={{display:'grid',gridTemplateColumns:'1fr 1fr',gap:12}}>
-                <div style={{minWidth:0}}>
-                  <FieldLabel label="Discipline"/>
-                  <select value={form.discipline}
-                    onChange={e=>setForm(f=>({...f,discipline:e.target.value}))}
-                    style={{...inp,padding:'9px 10px'}}>
-                    {DISCIPLINES.map(d=><option key={d} value={d}>{d}</option>)}
-                  </select>
-                  <div style={hint}>Canonical discipline list — the register groups sheets under this.</div>
-                </div>
-                <div style={{minWidth:0}}>
-                  <FieldLabel label="Status"/>
-                  <select value={form.status}
-                    onChange={e=>setForm(f=>({...f,status:e.target.value}))}
-                    style={{...inp,padding:'9px 10px'}}>
-                    {STATUSES.map(s=><option key={s} value={s}>{STATUS_LABELS[s]}</option>)}
-                  </select>
-                  <div style={hint}>Superseded and void sheets drop out of the current set but stay on record.</div>
-                </div>
-              </div>
-              <div>
-                <FieldLabel label="Revision Date" auto={mode==='create'&&autoFields.date}/>
-                <SaguaroDatePicker value={form.revision_date}
-                  onChange={v=>{setAutoFields(a=>({...a,date:false}));setForm(f=>({...f,revision_date:v}));}}
-                  style={inp}/>
-                <div style={hint}>Defaults to today — the date on the title block wins.</div>
-              </div>
-              <div>
-                <FieldLabel label="PDF / Drawing URL"/>
-                <input value={form.url} onChange={e=>setForm(f=>({...f,url:e.target.value}))}
-                  style={inp} placeholder="https://…"/>
-                <div style={hint}>{uploadFile&&mode==='create'?'Not needed — the uploaded file stores its own link.':'Optional — link an external PDF if you are not uploading the file.'}</div>
-              </div>
-              <div>
-                <FieldLabel label="Notes"/>
-                <textarea value={form.notes}
-                  onChange={e=>setForm(f=>({...f,notes:e.target.value}))}
-                  rows={3} style={{...inp,resize:'vertical',lineHeight:1.5}}
-                  placeholder="Revision notes, superseded by, etc."/>
-              </div>
-              {mode==='create'&&!replacing&&(
-                <div style={{background:PSURFACE,border:`1px solid ${PBORDER}`,borderRadius:12,padding:'14px 16px'}}>
-                  <FlowSteps title="What Happens Next" steps={[
-                    {title:'Sheet Files Itself',desc:'Lands under its discipline, sorted by sheet number.'},
-                    {title:'The Team Works the Current Set',desc:'Field crews and subs build from sheets marked current.'},
-                    {title:'Revisions Supersede Cleanly',desc:'Upload the next rev with the same sheet number — it becomes current and this one is marked superseded, kept on record.'},
-                  ]}/>
-                </div>
-              )}
-              {saveError&&(
-                <div role="alert" style={{display:'flex',gap:8,alignItems:'flex-start',background:'rgba(248,113,113,0.10)',border:'1px solid rgba(248,113,113,0.45)',borderRadius:10,padding:'10px 12px',fontSize:13,color:'var(--danger)',lineHeight:1.5}}>
-                  <Warning size={16} color={RED} style={{flexShrink:0,marginTop:2}}/>
-                  <div><strong style={{color:TEXT}}>{mode==='create'&&uploadFile?'Upload Failed':'Save Failed'}</strong> — {saveError}</div>
-                </div>
-              )}
-              <div style={{display:'flex',gap:10,paddingTop:4}}>
-                <button onClick={save} disabled={saving} className="pmBtn"
-                  style={{...goldButtonStyle,flex:1,minHeight:44,opacity:saving?0.6:1,cursor:saving?'not-allowed':'pointer'}}>
-                  {saving?(uploadFile&&mode==='create'?'Uploading…':'Saving…'):mode==='create'?(uploadFile?(saveError?'Retry Upload':'Upload Sheet'):(replacing?'Add Revision':'Add Drawing')):'Save Changes'}
-                </button>
-                <button onClick={closePanel} style={{...ghostButtonStyle,minHeight:44}}>
-                  Cancel
-                </button>
-              </div>
-            </div>
-          </div>
+            </label>
+          )}
+          <FormGrid cols={2}>
+            <Field label="Drawing #" required hint={mode==='create'&&autoFields.num?'Read from the filename.':undefined}>
+              <Input value={form.drawing_number} required
+                onChange={e=>{const v=e.target.value;setAutoFields(a=>({...a,num:false}));setForm(f=>({...f,drawing_number:v}));}}
+                placeholder="e.g. A1.01"/>
+            </Field>
+            <Field label="Revision">
+              <Input type="number" min={0} value={form.revision}
+                onChange={e=>setForm(f=>({...f,revision:e.target.value}))}/>
+            </Field>
+            <Field label="Title" required span hint={mode==='create'&&autoFields.title?'Read from the filename.':undefined}>
+              <Input value={form.title} required onChange={e=>{const v=e.target.value;setAutoFields(a=>({...a,title:false}));setForm(f=>({...f,title:v}));}}
+                placeholder="e.g. Floor Plan - Level 1"/>
+            </Field>
+            <Field label="Discipline">
+              <Select value={form.discipline} onChange={e=>setForm(f=>({...f,discipline:e.target.value}))} options={[...DISCIPLINES]}/>
+            </Field>
+            <Field label="Status" hint="Superseded and void sheets leave the current set but stay on record.">
+              <Select value={form.status} onChange={e=>setForm(f=>({...f,status:e.target.value}))} options={STATUSES.map(s=>({value:s,label:STATUS_LABELS[s]}))}/>
+            </Field>
+            <Field label="Revision date" hint={mode==='create'&&autoFields.date?'Defaulted to today — the title block date wins.':undefined}>
+              <DateInput value={form.revision_date}
+                onChange={e=>{const v=e.target.value;setAutoFields(a=>({...a,date:false}));setForm(f=>({...f,revision_date:v}));}}/>
+            </Field>
+            <Field label="PDF / drawing URL" hint={uploadFile&&mode==='create'?'Not needed — the uploaded file stores its own link.':'Optional — link an external PDF instead of uploading.'}>
+              <Input value={form.url} onChange={e=>setForm(f=>({...f,url:e.target.value}))} placeholder="https://…"/>
+            </Field>
+            <Field label="Notes" span>
+              <Textarea value={form.notes} onChange={e=>setForm(f=>({...f,notes:e.target.value}))} rows={3}
+                placeholder="Revision notes, superseded by, etc."/>
+            </Field>
+          </FormGrid>
         </div>
-      )}
-      <UnsavedGuardModal guard={guard} />
+      </FormModal>
+      <div style={{ position: 'relative', zIndex: 10001 }}><UnsavedGuardModal guard={guard} /></div>
     </>
   );
 }
