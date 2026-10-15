@@ -23,19 +23,22 @@ import { DOC_HEX } from '@/lib/document-palette';
 import { Suspense, useCallback, useEffect, useMemo, useState } from 'react';
 import { useSearchParams } from 'next/navigation';
 import { humanError } from '@/lib/errors';
-import { levelBids, usd, TRADE_TEMPLATES, type ScopeLine, type Bidder, type ScopeStatus } from '@/lib/bidleveling';
-import { PageShell, Card, Button, Badge, StatRow, Tabs, EmptyState, Input, Textarea, Menu, type StatItem } from '@/components/ui/kit';
-import { Plus, Trash, Sparkle, Warning, Info, FilePdf, Target, CaretDown, CaretRight, Scales, ArrowRight, Lock, EyeSlash, Trophy } from '@phosphor-icons/react';
+import { usd, TRADE_TEMPLATES, type ScopeLine, type Bidder, type ScopeStatus, type BidderScopeItem } from '@/lib/bidleveling';
+import { buildLevelingGrid, toLevelingCsv, type GridCell, type CellTone, type CellKind, type BidderExtras } from '@/lib/bid-leveling';
+import { confirmDialog } from '@/lib/ui/async-dialog';
+import { PageShell, Card, Button, Badge, StatRow, Tabs, EmptyState, Input, Textarea, Menu, Callout, type StatItem } from '@/components/ui/kit';
+import { Plus, Trash, Sparkle, Warning, Info, FilePdf, Target, CaretDown, CaretRight, Scales, ArrowRight, Lock, EyeSlash, Trophy, FileCsv } from '@phosphor-icons/react';
 
 import { printHtml } from '@/lib/print-doc';
 const uid = () => Math.random().toString(36).slice(2, 9);
 const toCents = (s: string) => Math.round((parseFloat(String(s).replace(/[^0-9.]/g, '')) || 0) * 100);
-/* Scope status colors — the semantic tokens, never page hex. */
-const STC: Record<ScopeStatus, string> = { included: 'var(--success)', excluded: 'var(--danger)', clarify: 'var(--warning)', alternate: 'var(--info)' };
 /* Short labels stay for the printed bid tab (unchanged output). */
 const STL: Record<ScopeStatus, string> = { included: 'Incl', excluded: 'Excl', clarify: 'Clar', alternate: 'Alt' };
-const STL_FULL: Record<ScopeStatus, string> = { included: 'Included', excluded: 'Excluded', clarify: 'Clarify', alternate: 'Alternate' };
 const nextStatus = (s: ScopeStatus): ScopeStatus => ({ included: 'excluded', excluded: 'clarify', clarify: 'alternate', alternate: 'included' } as const)[s];
+/* Grid cell labels and per-row tone classes (lib/bid-leveling decides the tone). */
+const KIND_LABEL: Record<CellKind, string> = { priced: '', included: 'Included', excluded: 'Excluded', clarify: 'Clarify', alternate: 'Alternate', not_quoted: 'Not quoted' };
+const toneClass = (t: CellTone) => (t === 'low' ? 'lv-low' : t === 'gap' ? 'lv-gap' : t === 'outlier' ? 'lv-out' : '');
+const cellLabel = (c: GridCell) => (c.kind === 'priced' ? usd(c.amountCents || 0) : KIND_LABEL[c.kind]) + (c.plugCents > 0 ? `, plugged ${usd(c.plugCents)}` : '');
 
 /* Bar segment colors for the normalized-totals chart. */
 const SEG = { base: 'var(--status-closed)', gap: 'var(--status-under-contract)', alt: 'var(--status-lead)', adj: 'var(--status-completed)' };
@@ -98,6 +101,13 @@ const CSS = `
 .lv-adj-fields { display: flex; flex-wrap: wrap; gap: 8px 14px; align-items: center; }
 .lv-adj-fields label { display: inline-flex; align-items: center; gap: 6px; font-size: 13px; color: var(--text-secondary); }
 .lv-adj-fields input[type="checkbox"] { width: 20px; height: 20px; }
+.lv-grid .lv-low { color: var(--success); background: color-mix(in srgb, var(--success) 10%, var(--bg-solid)); }
+.lv-grid .lv-gap { color: var(--warning); background: color-mix(in srgb, var(--warning) 9%, var(--bg-solid)); }
+.lv-grid .lv-out { color: var(--danger); background: color-mix(in srgb, var(--danger) 10%, var(--bg-solid)); }
+.lv-grid .lv-med { display: block; font-size: 12px; color: var(--text-tertiary); font-weight: 500; }
+.lv-grid .lv-text { white-space: normal; min-width: 160px; max-width: 240px; font-size: 12px; line-height: 1.4; vertical-align: top; padding-top: 8px; padding-bottom: 8px; height: auto; }
+.lv-grid .lv-text div { display: -webkit-box; -webkit-line-clamp: 3; -webkit-box-orient: vertical; overflow: hidden; }
+.lv-grid .lv-colhead .k-btn { margin-top: 4px; }
 .lv-kicker { font-size: 12px; font-weight: 700; color: var(--text-tertiary); display: inline-flex; align-items: center; gap: 6px; }
 @media (max-width: 640px) {
   .lv-grid .lv-scope { min-width: 150px; max-width: 190px; }
@@ -142,6 +152,13 @@ function BidLevelingBoard() {
      received — shown read-only; only GC-side adjustments are editable. */
   const [submittedIds, setSubmittedIds] = useState<Set<string>>(new Set());
   const [awaiting, setAwaiting] = useState<{ company: string; status: string }[]>([]);
+  /* Gap plug on/off: fill each gap with the row median, or show bids as sent. */
+  const [plugGaps, setPlugGaps] = useState(true);
+  /* What each submission said in its own words — read-only, shown in the grid. */
+  const [extras, setExtras] = useState<Record<string, BidderExtras>>({});
+  const [pkgStatus, setPkgStatus] = useState<string | null>(null);
+  const [awarding, setAwarding] = useState<string | null>(null);
+  const [complianceHold, setComplianceHold] = useState<{ submissionId: string; subName: string; message: string } | null>(null);
 
   const loadPackage = useCallback(async () => {
     if (!packageId) return;
@@ -166,22 +183,45 @@ function BidLevelingBoard() {
       }));
       setScopeLines(lines);
 
+      setPkgStatus(d.package?.status || null);
       const suggested = d.analysis?.suggested || {};
       setBidders((d.bids || []).map((b: any) => {
         const ai = suggested[b.id];
+        const scope: BidderScopeItem[] = Array.isArray(ai?.scope) && ai.scope.length
+          ? ai.scope.map((x: BidderScopeItem) => ({ ...x }))
+          : lines.map((l) => ({ scopeLineId: l.id, status: 'included' as ScopeStatus }));
+        /* Per-line prices the submission itself carried (unit_price_items),
+           keyed to this package's lines by the API. A stated status wins over
+           the AI reading; a priced line with no status is included. */
+        const amounts = (b.lineAmounts || {}) as Record<string, { amountCents: number | null; status?: ScopeStatus }>;
+        for (const [lineId, a] of Object.entries(amounts)) {
+          const cur = scope.find((x) => x.scopeLineId === lineId);
+          if (cur) {
+            if (a.amountCents) cur.valueCents = a.amountCents;
+            if (a.status) cur.status = a.status;
+          } else {
+            scope.push({ scopeLineId: lineId, status: a.status || 'included', ...(a.amountCents ? { valueCents: a.amountCents } : {}) });
+          }
+        }
         return {
           id: String(b.id),
           name: b.company || 'Bidder',
           /* The board is entirely in cents; the API speaks dollars. */
           baseBidCents: Math.round(Number(b.base || 0) * 100),
-          scope: Array.isArray(ai?.scope) && ai.scope.length
-            ? ai.scope
-            : lines.map((l) => ({ scopeLineId: l.id, status: 'included' as ScopeStatus })),
+          scope,
+          alternates: Array.isArray(b.alternates) ? b.alternates : [],
           adjustments: b.gap ? { carryCents: Math.round(Number(b.gap) * 100), note: 'Scope gap' } : undefined,
           bondIncluded: !!b.bond,
+          ...(typeof b.insuranceMeets === 'boolean' ? { insuranceMeets: b.insuranceMeets } : {}),
           note: b.exclusions || undefined,
         } as Bidder;
       }));
+      setExtras(Object.fromEntries((d.bids || []).map((b: any) => [String(b.id), {
+        exclusions: b.exclusions || null,
+        inclusions: b.inclusions || null,
+        clarifications: b.clarifications || null,
+        awarded: !!b.awarded,
+      } as BidderExtras])));
       setSubmittedIds(new Set((d.bids || []).map((b: any) => String(b.id))));
       setAwaiting(Array.isArray(d.awaiting) ? d.awaiting.map((a: any) => ({ company: String(a.company || 'Invited sub'), status: String(a.status || 'invited') })) : []);
       setAiNote(d.analysis?.recommendation || null);
@@ -242,7 +282,52 @@ function BidLevelingBoard() {
     }
   }
 
-  const result = useMemo(() => levelBids(scopeLines, bidders, { selectedAlternateKeys: selAlts, budgetCents: toCents(budget) || undefined }), [scopeLines, bidders, selAlts, budget]);
+  const grid = useMemo(
+    () => buildLevelingGrid(scopeLines, bidders, { plugGaps, selectedAlternateKeys: selAlts, budgetCents: toCents(budget) || undefined, extras }),
+    [scopeLines, bidders, selAlts, budget, plugGaps, extras],
+  );
+  const result = grid.result;
+  const anyAwarded = pkgStatus === 'awarded' || Object.values(extras).some((x) => x.awarded);
+
+  /* CSV of exactly what the grid shows, in its column order. */
+  const exportCsv = () => {
+    const csv = toLevelingCsv(grid, `${pkgName || 'Bid package'} — bid leveling`);
+    const url = URL.createObjectURL(new Blob([csv], { type: 'text/csv;charset=utf-8' }));
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = `${(pkgName || 'bid-leveling').replace(/[^A-Za-z0-9]+/g, '-').replace(/^-|-$/g, '').toLowerCase() || 'bid-leveling'}-leveling.csv`;
+    document.body.appendChild(a); a.click(); a.remove();
+    setTimeout(() => URL.revokeObjectURL(url), 1000);
+  };
+
+  /* Award — the same /award action as the bid package page, compliance hold
+     and override included. */
+  async function awardBid(submissionId: string, subName: string, opts?: { override?: boolean }) {
+    if (!packageId) return;
+    if (!opts?.override && !(await confirmDialog({ title: 'Please confirm', message: `Award bid to ${subName}?`, danger: false }))) return;
+    setAwarding(submissionId);
+    setComplianceHold(null);
+    try {
+      const r = await fetch(`/api/bid-packages/${packageId}/award`, {
+        method: 'POST', headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ submissionId, packageId, overrideCompliance: !!opts?.override }),
+      });
+      const d = await r.json().catch(() => ({})) as { error?: string; warnings?: string[] };
+      if (!r.ok || d.error) {
+        const m = String(d.error || 'Award failed.');
+        if (/compliance hold/i.test(m)) { setComplianceHold({ submissionId, subName, message: m }); return; }
+        setMsg(m);
+        return;
+      }
+      setMsg([`Awarded to ${subName}.`, ...(Array.isArray(d.warnings) ? d.warnings.map(String) : [])].join(' '));
+      await loadPackage();
+    } catch (e) {
+      console.error(e);
+      setMsg(humanError(e, `Could not award bid to ${subName}. Please try again.`));
+    } finally {
+      setAwarding(null);
+    }
+  }
   const altKeys = useMemo(() => Array.from(new Set(bidders.flatMap((b) => (b.alternates || []).map((a) => a.key)))), [bidders]);
   const altMeta = useMemo(() => { const m: Record<string, string> = {}; bidders.forEach((b) => (b.alternates || []).forEach((a) => { m[a.key] = a.description; })); return m; }, [bidders]);
   const maxTotal = Math.max(1, ...result.bidders.map((b) => b.leveledTotalCents), toCents(budget) || 0);
@@ -424,7 +509,10 @@ function BidLevelingBoard() {
               {pkgComplete ? 'Leveling Complete' : 'Save & Mark Complete'}
             </Button>
             {bidders.length > 0 && (
-              <Menu label="More leveling actions" actions={[{ label: 'Export Bid Tab', icon: <FilePdf size={15} />, onClick: exportPdf }]} />
+              <Menu label="More leveling actions" actions={[
+                { label: 'Export Bid Tab', icon: <FilePdf size={15} />, onClick: exportPdf },
+                { label: 'Export CSV', icon: <FileCsv size={15} />, onClick: exportCsv },
+              ]} />
             )}
           </>
         }
@@ -512,11 +600,40 @@ function BidLevelingBoard() {
           </Card>
         )}
 
-        {/* The leveling grid */}
+        {/* The leveling grid — scope rows × bidders, low → high on the leveled total. */}
         <Card
           title="Leveling Grid"
-          subtitle={scopeLines.length > 0 && bidders.length > 0 ? 'Tap a scope cell to cycle Included → Excluded → Clarify → Alternate.' : undefined}
+          subtitle={scopeLines.length > 0 && bidders.length > 0 ? 'Bidders low → high on leveled total. Tap a scope cell to change its status.' : undefined}
+          actions={bidders.length > 0 ? (
+            <div style={{ display: 'flex', gap: 8, flexWrap: 'wrap' }}>
+              <Button
+                variant={plugGaps ? 'secondary' : 'ghost'}
+                aria-pressed={plugGaps}
+                onClick={() => setPlugGaps((v) => !v)}
+                title="Fill each gap with the median of the bidders who priced that line"
+              >
+                {plugGaps ? 'Gap Plugs On' : 'Gap Plugs Off'}
+              </Button>
+              <Button onClick={exportCsv} icon={<FileCsv size={15} />}>Export CSV</Button>
+            </div>
+          ) : undefined}
         >
+          {complianceHold && (
+            <div style={{ marginBottom: 'var(--sp-3)' }}>
+              <Callout
+                tone="warning"
+                icon={<Warning size={18} weight="fill" />}
+                title={`${complianceHold.subName} is on compliance hold`}
+                text={complianceHold.message}
+                actions={
+                  <div style={{ display: 'flex', gap: 8, flexWrap: 'wrap' }}>
+                    <Button size="sm" variant="danger" disabled={awarding === complianceHold.submissionId} onClick={() => awardBid(complianceHold.submissionId, complianceHold.subName, { override: true })}>Award Anyway</Button>
+                    <Button size="sm" variant="ghost" onClick={() => setComplianceHold(null)}>Dismiss</Button>
+                  </div>
+                }
+              />
+            </div>
+          )}
           {bidders.length === 0 ? (
             <EmptyState
               icon={<Scales size={22} />}
@@ -529,62 +646,74 @@ function BidLevelingBoard() {
           ) : (
             <>
               <div className="lv-legend" aria-label="Grid legend">
-                <span><span className="lv-swatch lv-swatch-sub" /> Submitted — as received, read-only</span>
-                <span><span className="lv-swatch lv-swatch-int" /> Internal adjustments — GC only</span>
-                <span><span className="lv-swatch lv-swatch-norm" /> Normalized total — submitted + adjustments</span>
+                <span><span className="lv-swatch" style={{ background: 'var(--success)' }} /> Lowest in row</span>
+                <span><span className="lv-swatch" style={{ background: 'var(--warning)' }} /> Gap — excluded, clarify or not quoted</span>
+                <span><span className="lv-swatch" style={{ background: 'var(--danger)' }} /> Over 25% above row median</span>
+                <span><span className="lv-swatch lv-swatch-int" /> Internal — GC only</span>
               </div>
               <div className="lv-grid-wrap" role="region" aria-label="Leveling grid, scrolls horizontally" tabIndex={0}>
                 <table className="lv-grid k-table-skin">
                   <thead>
                     <tr>
                       <th className="lv-scope" scope="col">Scope</th>
-                      {result.bidders.map((b) => (
-                        <th key={b.id} scope="col">
-                          <div className="lv-colhead">
-                            <span>{b.name}</span>
-                            {colBadges(b.id)}
-                          </div>
-                        </th>
-                      ))}
+                      {grid.columns.map((c) => {
+                        const fromPkg = submittedIds.has(c.id);
+                        return (
+                          <th key={c.id} scope="col">
+                            <div className="lv-colhead">
+                              <span>{c.name}</span>
+                              {colBadges(c.id)}
+                              {c.extras.awarded ? (
+                                <Badge tone="completed"><Trophy size={11} weight="fill" /> Awarded</Badge>
+                              ) : fromPkg && !anyAwarded ? (
+                                <Button size="sm" icon={<Trophy size={13} />} disabled={awarding !== null} onClick={() => awardBid(c.id, c.name)} aria-label={`Award bid to ${c.name}`}>
+                                  {awarding === c.id ? 'Awarding…' : 'Award'}
+                                </Button>
+                              ) : null}
+                            </div>
+                          </th>
+                        );
+                      })}
                     </tr>
                   </thead>
                   <tbody>
                     {section(<><Lock size={13} /> Submitted</>, 'As received')}
                     <tr>
                       <td className="lv-scope">Base Bid</td>
-                      {result.bidders.map((b) => <td key={b.id} className="lv-num" style={{ color: 'var(--text-primary)', fontWeight: 700 }}>{usd(b.baseBidCents)}</td>)}
+                      {grid.columns.map((c) => <td key={c.id} className={`lv-num ${toneClass(c.baseTone)}`} style={{ fontWeight: 700 }}>{usd(c.baseCents)}</td>)}
                     </tr>
 
-                    {section('Scope Coverage', 'Who includes each line')}
-                    {scopeLines.length === 0 ? (
+                    {section('Scope', 'Amount per line, or what the bid says about it')}
+                    {grid.rows.length === 0 ? (
                       <tr>
                         <td className="lv-scope lv-dim">No scope lines yet — load a CSI template or add lines in Scope Checklist.</td>
                         <td colSpan={colCount} />
                       </tr>
-                    ) : scopeLines.map((l) => {
-                      const cov = result.scopeCoverage.find((c) => c.scopeLineId === l.id)!;
-                      const covColor = cov.noneCovered ? 'var(--danger)' : cov.singleBid ? 'var(--warning)' : 'var(--success)';
+                    ) : grid.rows.map((r) => {
+                      const cov = result.scopeCoverage.find((x) => x.scopeLineId === r.lineId);
+                      const included = cov?.includedBy ?? 0;
+                      const covColor = included === 0 ? 'var(--danger)' : included === 1 ? 'var(--warning)' : 'var(--success)';
                       return (
-                        <tr key={l.id}>
+                        <tr key={r.lineId}>
                           <td className="lv-scope">
-                            {l.description}
-                            {l.required === false && <span className="lv-dim"> (optional)</span>}
-                            <span className="lv-cov" style={{ color: covColor }} title="Bidders that include this line">{cov.includedBy} of {colCount}</span>
+                            {r.description}
+                            <span className="lv-cov" style={{ color: covColor }} title="Bidders that include this line">{included} of {colCount}</span>
+                            {r.medianCents != null && <span className="lv-med">Median {usd(r.medianCents)}</span>}
                           </td>
-                          {result.bidders.map((b) => {
-                            const it = b.lines.find((s) => s.scopeLineId === l.id);
-                            const st = (it && it.status !== 'missing' ? it.status : 'excluded') as ScopeStatus;
+                          {r.cells.map((cell) => {
+                            const name = grid.columns.find((c) => c.id === cell.bidderId)?.name || 'Bidder';
                             return (
-                              <td key={b.id} style={{ padding: '2px 6px', background: `color-mix(in srgb, ${STC[st]} 9%, var(--bg-solid))` }}>
+                              <td key={cell.bidderId} className={toneClass(cell.tone)} style={{ padding: '2px 6px' }}>
                                 <button
                                   type="button"
                                   className="lv-cell-btn"
-                                  style={{ color: STC[st] }}
-                                  onClick={() => cycleCell(b.id, l.id)}
-                                  aria-label={`${b.name}, ${l.description}: ${STL_FULL[st]}. Change status.`}
+                                  style={{ color: 'inherit' }}
+                                  onClick={() => cycleCell(cell.bidderId, r.lineId)}
+                                  aria-label={`${name}, ${r.description}: ${cellLabel(cell)}. Change status.`}
                                 >
-                                  {STL_FULL[st]}
-                                  {it?.valueCents ? <small>{usd(it.valueCents)}</small> : null}
+                                  {cell.kind === 'priced' ? usd(cell.amountCents || 0) : KIND_LABEL[cell.kind]}
+                                  {cell.plugCents > 0 && <small>+{usd(cell.plugCents)} plug</small>}
+                                  {cell.unpricedGap && plugGaps && <small>No price to plug</small>}
                                 </button>
                               </td>
                             );
@@ -593,40 +722,97 @@ function BidLevelingBoard() {
                       );
                     })}
 
+                    {section('Alternates, Bond & Qualifications', 'As the bid states them')}
+                    <tr>
+                      <td className="lv-scope">Alternates</td>
+                      {grid.columns.map((c) => (
+                        <td key={c.id} className={c.alternatesCents ? 'lv-num' : 'lv-num lv-dim'}>
+                          {c.alternatesCents
+                            ? (c.alternatesCents > 0 ? '+' : '−') + usd(Math.abs(c.alternatesCents))
+                            : c.alternates.length ? `${c.alternates.length} offered` : 'None'}
+                        </td>
+                      ))}
+                    </tr>
+                    <tr>
+                      <td className="lv-scope">Bond</td>
+                      {grid.columns.map((c) => (
+                        <td key={c.id} className={`lv-num ${c.bondCents ? '' : c.bondIncluded === true ? 'lv-low' : c.bondIncluded === false ? 'lv-gap' : 'lv-dim'}`}>
+                          {c.bondCents ? '+' + usd(c.bondCents) : c.bondIncluded === true ? 'Included' : c.bondIncluded === false ? 'Not included' : '—'}
+                        </td>
+                      ))}
+                    </tr>
+                    <tr>
+                      <td className="lv-scope">Exclusions</td>
+                      {grid.columns.map((c) => (
+                        <td key={c.id} className={`lv-text ${c.extras.exclusions ? 'lv-gap' : 'lv-dim'}`} title={c.extras.exclusions || undefined}>
+                          <div>{c.extras.exclusions || 'None stated'}</div>
+                        </td>
+                      ))}
+                    </tr>
+                    <tr>
+                      <td className="lv-scope">Clarifications</td>
+                      {grid.columns.map((c) => (
+                        <td key={c.id} className={`lv-text ${c.extras.clarifications ? '' : 'lv-dim'}`} title={c.extras.clarifications || undefined}>
+                          <div>{c.extras.clarifications || 'None stated'}</div>
+                        </td>
+                      ))}
+                    </tr>
+
                     {section(<><EyeSlash size={13} /> Internal Adjustments</>, 'GC only — never shared with bidders', true)}
                     <tr className="lv-int">
-                      <td className="lv-scope">+ Gap Allowances</td>
-                      {result.bidders.map((b) => <td key={b.id} className={b.gapAllowanceCents ? 'lv-num' : 'lv-num lv-dim'}>{b.gapAllowanceCents ? '+' + usd(b.gapAllowanceCents) : '—'}</td>)}
+                      <td className="lv-scope">+ Gap Plugs {plugGaps ? '(row median)' : '(off)'}</td>
+                      {grid.columns.map((c) => (
+                        <td key={c.id} className={c.plugCents ? 'lv-num' : 'lv-num lv-dim'}>
+                          {c.plugCents ? '+' + usd(c.plugCents) : '—'}
+                          {c.unpricedGapCount > 0 && <span className="lv-med">{c.unpricedGapCount} unpriced gap{c.unpricedGapCount > 1 ? 's' : ''}</span>}
+                        </td>
+                      ))}
                     </tr>
                     <tr className="lv-int">
-                      <td className="lv-scope">+ Alternates</td>
-                      {result.bidders.map((b) => <td key={b.id} className={b.alternatesAdjCents ? 'lv-num' : 'lv-num lv-dim'}>{b.alternatesAdjCents ? (b.alternatesAdjCents > 0 ? '+' : '') + usd(b.alternatesAdjCents) : '—'}</td>)}
+                      <td className="lv-scope">+ Alternates Applied</td>
+                      {grid.columns.map((c) => <td key={c.id} className={c.alternatesCents ? 'lv-num' : 'lv-num lv-dim'}>{c.alternatesCents ? (c.alternatesCents > 0 ? '+' : '−') + usd(Math.abs(c.alternatesCents)) : '—'}</td>)}
                     </tr>
                     <tr className="lv-int">
                       <td className="lv-scope">+ Bond, Tax &amp; Carry</td>
-                      {result.bidders.map((b) => <td key={b.id} className={b.adjustmentsCents ? 'lv-num' : 'lv-num lv-dim'}>{b.adjustmentsCents ? '+' + usd(b.adjustmentsCents) : '—'}</td>)}
+                      {grid.columns.map((c) => <td key={c.id} className={c.adjustmentsCents ? 'lv-num' : 'lv-num lv-dim'}>{c.adjustmentsCents ? '+' + usd(c.adjustmentsCents) : '—'}</td>)}
                     </tr>
 
                     {section('Comparison')}
                     <tr>
-                      <td className="lv-scope">Δ vs Lowest Normalized</td>
-                      {result.bidders.map((b) => <td key={b.id} className="lv-num lv-dim">{b.isLow ? '—' : '+' + usd(b.deltaFromLowCents)}</td>)}
+                      <td className="lv-scope">vs Low</td>
+                      {grid.columns.map((c) => (
+                        <td key={c.id} className={`lv-num ${c.isLowLeveled ? 'lv-low' : 'lv-dim'}`}>
+                          {c.isLowLeveled ? 'Low' : c.vsLowPct == null ? '—' : `+${usd(c.vsLowCents)} (${c.vsLowPct}%)`}
+                        </td>
+                      ))}
                     </tr>
                     {result.budgetCents ? (
                       <tr>
                         <td className="lv-scope">vs Your Budget</td>
-                        {result.bidders.map((b) => <td key={b.id} className="lv-num" style={{ color: (b.vsBudgetCents || 0) > 0 ? 'var(--danger)' : 'var(--success)' }}>{(b.vsBudgetCents || 0) > 0 ? '+' : ''}{usd(b.vsBudgetCents || 0)} ({b.vsBudgetPct}%)</td>)}
+                        {grid.columns.map((c) => {
+                          const over = c.leveledCents - (result.budgetCents || 0);
+                          const pct = Math.round(((c.leveledCents / (result.budgetCents || 1)) - 1) * 1000) / 10;
+                          return <td key={c.id} className="lv-num" style={{ color: over > 0 ? 'var(--danger)' : 'var(--success)' }}>{over > 0 ? '+' : over < 0 ? '−' : ''}{usd(Math.abs(over))} ({pct}%)</td>;
+                        })}
                       </tr>
                     ) : null}
                     <tr>
                       <td className="lv-scope">Required Scope Coverage</td>
-                      {result.bidders.map((b) => <td key={b.id} className="lv-num" style={{ color: b.requiredCoveragePct < 100 ? 'var(--warning)' : 'var(--text-secondary)' }}>{b.requiredCoveragePct}%</td>)}
+                      {grid.columns.map((c) => {
+                        const pct = result.bidders.find((b) => b.id === c.id)?.requiredCoveragePct ?? 100;
+                        return <td key={c.id} className="lv-num" style={{ color: pct < 100 ? 'var(--warning)' : 'var(--text-secondary)' }}>{pct}%</td>;
+                      })}
                     </tr>
                   </tbody>
                   <tfoot>
                     <tr>
-                      <td className="lv-scope">Normalized Total</td>
-                      {result.bidders.map((b) => <td key={b.id} className="lv-num">{usd(b.leveledTotalCents)}</td>)}
+                      <td className="lv-scope">
+                        Leveled Total
+                        <span className="lv-med">
+                          Spread {usd(grid.spreadCents)}{grid.spreadPct != null ? ` · ${grid.spreadPct}%` : ''}
+                        </span>
+                      </td>
+                      {grid.columns.map((c) => <td key={c.id} className={`lv-num ${toneClass(c.leveledTone)}`}>{usd(c.leveledCents)}</td>)}
                     </tr>
                   </tfoot>
                 </table>
