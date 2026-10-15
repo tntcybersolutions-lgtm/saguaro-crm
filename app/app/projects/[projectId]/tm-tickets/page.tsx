@@ -34,14 +34,14 @@ import { TRADESPERSON_ROLES } from '@/lib/contractor-trades';
 import { getSupabaseBrowser, ensureBrowserSession } from '@/lib/supabase-browser';
 import { useProjectContext } from '@/lib/hooks/useProjectContext';
 import {
-  PageShell, Card, StatRow, Badge, Button, Toolbar, DataTable, EmptyState, RowActions,
+  PageShell, Card, StatRow, Badge, Button, Toolbar, DataTable, EmptyState, RowActions, Menu,
   FormModal, Field, Input, Textarea, Select, FormGrid, DetailList, Toast, useToast,
   type Column, type Action, type BadgeTone, type StatItem,
 } from '@/components/ui/kit';
-import { FlowSteps, FlowStrip, InsightRow, AutoChip } from '@/components/ui/premium';
 import {
   Receipt, Plus, X, CheckCircle, XCircle, PaperPlaneTilt, ArrowsClockwise, Lightning,
   FileCsv, FileXls, FilePdf, HardHat, Package, Wrench, Signature, Trash, WarningCircle, ArrowClockwise,
+  CurrencyDollar, HourglassMedium, NotePencil, DownloadSimple,
 } from '@phosphor-icons/react';
 import { layout } from '@/lib/design-tokens';
 import { localDay } from '@/lib/calendar-day';
@@ -165,6 +165,10 @@ const CSS = `
 .tmLines td:last-child { color: var(--text-primary); font-weight: 700; }
 .tmLadder { border: 1px solid var(--border-default); border-radius: var(--radius-sm); padding: 12px 14px; background: var(--bg-surface-2); }
 .tmRule { height: 1px; background: var(--border-subtle); margin: 8px 0; }
+.tmLadRow { display: flex; justify-content: space-between; align-items: baseline; gap: 12px; padding: 5px 0; }
+.tmLadRow > span:first-child { font-size: var(--fs-xs); color: var(--text-tertiary); white-space: nowrap; }
+.tmLadRow > span:last-child { font-size: var(--fs-sm); font-weight: 700; color: var(--text-primary); font-variant-numeric: tabular-nums; text-align: right; min-width: 0; overflow: hidden; text-overflow: ellipsis; }
+.tmLadRow[data-strong="true"] > span:last-child { font-size: 15px; font-weight: 800; }
 .tmSigs { display: grid; grid-template-columns: repeat(auto-fit, minmax(220px, 1fr)); gap: 14px; }
 .tmSigs img { width: 100%; background: #fff; border: 1px solid var(--border-default); border-radius: var(--radius-sm); display: block; }
 .tmActions { display: flex; flex-direction: column; gap: 8px; }
@@ -187,7 +191,6 @@ const CSS = `
 .tmPadNote { font-size: var(--fs-xs); color: var(--text-tertiary); margin-top: 4px; }
 .tmPadNote[data-ok="true"] { color: var(--status-ongoing); }
 .tmDateInput { width: 100%; }
-.tmExport { display: inline-flex; gap: 6px; }
 @media (max-width: 640px) {
   .tmWs .k-btn, .tmWs .k-stat, .tmWs select.k-select, .tmWs .k-input { min-height: 44px; }
   .tmWs .k-table td { height: 48px; }
@@ -236,6 +239,16 @@ function LineTable({ headers, rows }: { headers: string[]; rows: (string | numbe
   );
 }
 
+/** One label / figure line of a totals ladder. */
+function LadderRow({ label, value, strong }: { label: React.ReactNode; value: React.ReactNode; strong?: boolean }) {
+  return (
+    <div className="tmLadRow" data-strong={strong ? 'true' : undefined}>
+      <span>{label}</span>
+      <span>{value}</span>
+    </div>
+  );
+}
+
 // Totals ladder: subtotal -> +markup% -> +tax% -> total. Stored `total` is the
 // server's source of truth; the intermediate lines are derived for display.
 function TotalsLadder({ sub, markupPct, taxPct, total }: { sub: number; markupPct: number; taxPct: number; total: number }) {
@@ -243,11 +256,11 @@ function TotalsLadder({ sub, markupPct, taxPct, total }: { sub: number; markupPc
   const taxAmt = ((sub + markupAmt) * taxPct) / 100;
   return (
     <div className="tmLadder">
-      <InsightRow label="Subtotal (Labor + Materials + Equipment)" value={fmtUSD(sub)} />
-      <InsightRow label={`Markup (${markupPct}%)`} value={'+' + fmtUSD(markupAmt)} />
-      <InsightRow label={`Tax (${taxPct}%)`} value={'+' + fmtUSD(taxAmt)} />
+      <LadderRow label="Subtotal (Labor + Materials + Equipment)" value={fmtUSD(sub)} />
+      <LadderRow label={`Markup (${markupPct}%)`} value={'+' + fmtUSD(markupAmt)} />
+      <LadderRow label={`Tax (${taxPct}%)`} value={'+' + fmtUSD(taxAmt)} />
       <div className="tmRule" />
-      <InsightRow label="Ticket Total" value={fmtUSD(total)} strong />
+      <LadderRow label="Ticket Total" value={fmtUSD(total)} strong />
     </div>
   );
 }
@@ -607,22 +620,22 @@ export default function TmTicketsPage() {
   const toggleStatus = (s: string) => setStatusFilter(prev => (prev === s ? 'all' : s));
   const stats: StatItem[] = loading
     ? [
-        { label: 'Total Value', value: '—', sub: 'Loading…' },
-        { label: 'Approved', value: '—', sub: 'Loading…' },
-        { label: 'Awaiting Approval', value: '—', sub: 'Loading…' },
-        { label: 'Drafts', value: '—', sub: 'Loading…' },
-        { label: 'Billed', value: '—', sub: 'Loading…' },
+        { label: 'Total Value', value: '—', sub: 'Loading…', icon: <CurrencyDollar size={15} /> },
+        { label: 'Approved', value: '—', sub: 'Loading…', icon: <CheckCircle size={15} /> },
+        { label: 'Awaiting Approval', value: '—', sub: 'Loading…', icon: <HourglassMedium size={15} /> },
+        { label: 'Drafts', value: '—', sub: 'Loading…', icon: <NotePencil size={15} /> },
+        { label: 'Billed', value: '—', sub: 'Loading…', icon: <Receipt size={15} /> },
       ]
     : [
-        { label: 'Total Value', value: fmtUSD(totalValue), sub: statusFilter !== 'all' || search ? 'Click to show everything' : `${tickets.length} ticket${tickets.length !== 1 ? 's' : ''}`, onClick: statusFilter !== 'all' || search ? () => { setStatusFilter('all'); setSearch(''); } : undefined },
-        { label: 'Approved', value: fmtUSD(approvedValue), tone: approvedValue > 0 ? 'good' : 'default', sub: statusFilter === 'approved' ? 'Filtered — click to clear' : `${statusCounts['approved'] || 0} approved`, onClick: () => toggleStatus('approved') },
-        { label: 'Awaiting Approval', value: fmtUSD(awaitingValue), tone: awaitingCount > 0 ? 'warn' : 'default', sub: statusFilter === 'submitted' ? 'Filtered — click to clear' : awaitingCount > 0 ? `${awaitingCount} submitted` : 'None submitted', onClick: () => toggleStatus('submitted') },
-        { label: 'Drafts', value: draftCount, sub: statusFilter === 'draft' ? 'Filtered — click to clear' : draftCount > 0 ? 'Not yet submitted' : 'All sent', onClick: () => toggleStatus('draft') },
-        { label: 'Billed', value: fmtUSD(billedValue), sub: statusFilter === 'billed' ? 'Filtered — click to clear' : `${statusCounts['billed'] || 0} on invoices`, onClick: () => toggleStatus('billed') },
+        { label: 'Total Value', value: fmtUSD(totalValue), sub: `${tickets.length} ticket${tickets.length !== 1 ? 's' : ''}`, icon: <CurrencyDollar size={15} />, onClick: () => { setStatusFilter('all'); setSearch(''); }, active: statusFilter === 'all' && !search },
+        { label: 'Approved', value: fmtUSD(approvedValue), tone: approvedValue > 0 ? 'good' : 'default', sub: `${statusCounts['approved'] || 0} approved`, icon: <CheckCircle size={15} />, onClick: () => toggleStatus('approved'), active: statusFilter === 'approved' },
+        { label: 'Awaiting Approval', value: fmtUSD(awaitingValue), tone: awaitingCount > 0 ? 'warn' : 'default', sub: awaitingCount > 0 ? `${awaitingCount} submitted` : 'None submitted', icon: <HourglassMedium size={15} />, onClick: () => toggleStatus('submitted'), active: statusFilter === 'submitted' },
+        { label: 'Drafts', value: draftCount, sub: draftCount > 0 ? 'Not yet submitted' : 'All sent', icon: <NotePencil size={15} />, onClick: () => toggleStatus('draft'), active: statusFilter === 'draft' },
+        { label: 'Billed', value: fmtUSD(billedValue), sub: `${statusCounts['billed'] || 0} on invoices`, icon: <Receipt size={15} />, onClick: () => toggleStatus('billed'), active: statusFilter === 'billed' },
       ];
 
   // ── Log columns: full log, or a compact log beside the ticket ──
-  const ticketCol: Column<TmTicketRow> = { key: 'ticket', header: 'Ticket', accessor: t => num(t.ticket_number), width: 92, render: t => <span className="tmNum" data-sel={t.id === selectedId ? 'true' : undefined}>{ticketLabel(t)}</span> };
+  const ticketCol: Column<TmTicketRow> = { key: 'ticket', header: 'Ticket', primary: true, phone: 'show', groupable: false, accessor: t => num(t.ticket_number), width: 92, render: t => <span className="tmNum" data-sel={t.id === selectedId ? 'true' : undefined}>{ticketLabel(t)}</span> };
   const dateCol: Column<TmTicketRow> = { key: 'date', header: 'Work Date', accessor: t => String(t.work_date || t.created_at || '').slice(0, 10), render: t => <span className="tmMuted">{fmtDate(t.work_date || t.created_at)}</span> };
   const descCol: Column<TmTicketRow> = { key: 'desc', phone: 'hide', header: 'Description', accessor: t => (t.description || '').toLowerCase(), render: t => (
     <div className="tmDesc">
@@ -632,10 +645,10 @@ export default function TmTicketsPage() {
       )}
     </div>
   ) };
-  const laborCol: Column<TmTicketRow> = { key: 'labor', phone: 'hide', header: 'Labor', accessor: t => num(t.labor_total), align: 'right', render: t => <span className="tmMoney tmMuted">{fmtUSD(t.labor_total)}</span> };
-  const matCol: Column<TmTicketRow> = { key: 'materials', phone: 'hide', header: 'Materials', accessor: t => num(t.materials_total), align: 'right', render: t => <span className="tmMoney tmMuted">{fmtUSD(t.materials_total)}</span> };
-  const eqCol: Column<TmTicketRow> = { key: 'equipment', phone: 'hide', header: 'Equipment', accessor: t => num(t.equipment_total), align: 'right', render: t => <span className="tmMoney tmMuted">{fmtUSD(t.equipment_total)}</span> };
-  const totalCol: Column<TmTicketRow> = { key: 'total', phone: 'show', header: 'Total', accessor: t => num(t.total), align: 'right', render: t => <span className="tmTotal">{fmtUSD(t.total)}</span> };
+  const laborCol: Column<TmTicketRow> = { key: 'labor', phone: 'hide', header: 'Labor', accessor: t => num(t.labor_total), align: 'right', total: 'sum', format: fmtUSD, render: t => <span className="tmMoney tmMuted">{fmtUSD(t.labor_total)}</span> };
+  const matCol: Column<TmTicketRow> = { key: 'materials', phone: 'hide', header: 'Materials', accessor: t => num(t.materials_total), align: 'right', total: 'sum', format: fmtUSD, render: t => <span className="tmMoney tmMuted">{fmtUSD(t.materials_total)}</span> };
+  const eqCol: Column<TmTicketRow> = { key: 'equipment', phone: 'hide', header: 'Equipment', accessor: t => num(t.equipment_total), align: 'right', total: 'sum', format: fmtUSD, render: t => <span className="tmMoney tmMuted">{fmtUSD(t.equipment_total)}</span> };
+  const totalCol: Column<TmTicketRow> = { key: 'total', phone: 'show', header: 'Total', accessor: t => num(t.total), align: 'right', total: 'sum', format: fmtUSD, render: t => <span className="tmTotal">{fmtUSD(t.total)}</span> };
   const statusCol: Column<TmTicketRow> = { key: 'status', phone: 'show', header: 'Status', accessor: t => STATUS_RANK[displayStatus(t.status)] ?? 9, render: t => {
     const b = statusBadge(t.status);
     return (
@@ -733,11 +746,11 @@ export default function TmTicketsPage() {
                 {(selected.contractor_signature || selected.owner_signature) && <Badge tone="neutral"><Signature size={11} /> {selected.contractor_signature && selected.owner_signature ? 'Both Signed' : 'One Signature'}</Badge>}
               </div>
               <div className="tmNext">
-                {selStatus === 'draft' && 'Submit it for approval — the approver is stamped on the ticket.'}
-                {selStatus === 'submitted' && 'Waiting on approval. Approve or reject inline.'}
-                {selStatus === 'approved' && 'Approved. Mark it billed once it lands on an invoice, or escalate it into a change event.'}
-                {selStatus === 'rejected' && 'Rejected. Fix and resubmit, or escalate it as a change event.'}
-                {selStatus === 'billed' && 'Billed. The ticket is on an invoice.'}
+                {selStatus === 'draft' && 'Next: submit for approval.'}
+                {selStatus === 'submitted' && 'Next: approve or reject.'}
+                {selStatus === 'approved' && 'Next: mark billed or escalate.'}
+                {selStatus === 'rejected' && 'Next: resubmit or escalate.'}
+                {selStatus === 'billed' && 'On an invoice.'}
               </div>
             </div>
             <div className="tmSection">
@@ -789,26 +802,18 @@ export default function TmTicketsPage() {
     );
   } else if (!loading && tickets.length === 0) {
     listBody = (
-      <>
-        <EmptyState
-          icon={<Receipt size={22} />}
-          title="No T&M tickets yet"
-          text="Capture out-of-scope work before it becomes a dispute — labor, materials and equipment with signatures, approved, then billed or escalated."
-          action={<Button icon={<Plus size={15} weight="bold" />} onClick={() => setShowForm(true)}>New T&M Ticket</Button>}
-        />
-        <div style={{ padding: '0 16px 16px' }}>
-          <FlowStrip steps={[
-            { title: 'Capture the Extra', desc: 'Labor, materials, equipment' },
-            { title: 'Get It Signed', desc: 'Contractor + owner pads' },
-            { title: 'Approve', desc: 'Stamped with who and when' },
-            { title: 'Bill or Escalate', desc: 'Invoice it or make it a change event' },
-          ]} />
-        </div>
-      </>
+      <EmptyState
+        icon={<Receipt size={22} />}
+        title="No T&M tickets yet"
+        text="Capture extra work with labor, materials, equipment and signatures."
+        action={<Button icon={<Plus size={15} weight="bold" />} onClick={() => setShowForm(true)}>New T&M Ticket</Button>}
+      />
     );
   } else {
     listBody = (
       <DataTable
+        tableId="project-tm-tickets"
+        exportName="tm-tickets"
         columns={columns}
         rows={filtered}
         rowKey={t => t.id}
@@ -828,12 +833,13 @@ export default function TmTicketsPage() {
     );
   }
 
-  const exportBtn = (format: 'csv' | 'xlsx' | 'pdf', icon: React.ReactNode) => (
-    <Button size="sm" icon={icon} onClick={() => exportTickets(format)} disabled={!!exporting || filtered.length === 0}
-      title={`Export ${filtered.length} ticket${filtered.length === 1 ? '' : 's'} (current filter) as ${format.toUpperCase()}`}>
-      {format.toUpperCase()}
-    </Button>
-  );
+  // Server-built exports of the tickets the current filter shows.
+  const exportOff = !!exporting || filtered.length === 0;
+  const exportActions: Action[] = [
+    { label: `CSV (${filtered.length})`, icon: <FileCsv size={15} />, onClick: () => exportTickets('csv'), disabled: exportOff },
+    { label: `Excel (${filtered.length})`, icon: <FileXls size={15} />, onClick: () => exportTickets('xlsx'), disabled: exportOff },
+    { label: `PDF (${filtered.length})`, icon: <FilePdf size={15} />, onClick: () => exportTickets('pdf'), disabled: exportOff },
+  ];
 
   return (
     <div className="tmWs">
@@ -845,11 +851,14 @@ export default function TmTicketsPage() {
           { label: 'T&M Tickets' },
         ]}
         title="T&M Tickets"
-        subtitle="Time and material extras with signatures — approved, then billed or escalated to a change event."
+        subtitle="Signed extras — approved, then billed or escalated."
         actions={
-          <Button variant="primary" icon={<Plus size={15} weight="bold" />} onClick={() => setShowForm(true)}>
-            New T&M Ticket
-          </Button>
+          <>
+            {tickets.length > 0 && <Menu actions={exportActions} triggerLabel={exporting ? 'Exporting…' : 'Export'} triggerIcon={<DownloadSimple size={15} />} label="Export tickets" />}
+            <Button variant="primary" icon={<Plus size={15} weight="bold" />} onClick={() => setShowForm(true)}>
+              New T&M Ticket
+            </Button>
+          </>
         }
       >
         {!loadError && <StatRow items={stats} />}
@@ -871,16 +880,7 @@ export default function TmTicketsPage() {
                 {(search || statusFilter !== 'all') && <Button variant="ghost" size="sm" onClick={() => { setSearch(''); setStatusFilter('all'); }}>Clear</Button>}
               </>
             }
-            actions={
-              <>
-                <span className="tmExport">
-                  {exportBtn('csv', <FileCsv size={14} />)}
-                  {exportBtn('xlsx', <FileXls size={14} />)}
-                  {exportBtn('pdf', <FilePdf size={14} />)}
-                </span>
-                <span className="tmMuted" style={{ fontSize: 'var(--fs-sm)' }}>{filtered.length} of {tickets.length}</span>
-              </>
-            }
+            actions={<span className="tmMuted" style={{ fontSize: 'var(--fs-sm)' }}>{filtered.length} of {tickets.length}</span>}
           />
         )}
 
@@ -915,7 +915,7 @@ export default function TmTicketsPage() {
         }
       >
         <FormGrid cols={2}>
-          <Field label="Work Date" hint={<><AutoChip label="Today" /> Defaulted to today — adjust freely.</>}>
+          <Field label="Work Date">
             <div className="tmDateInput"><SaguaroDatePicker value={fDate} onChange={setFDate} style={DATE_INPUT_STYLE} /></div>
           </Field>
           <Field label="Reference / PO">
@@ -946,7 +946,6 @@ export default function TmTicketsPage() {
             </div>
           </div>
           <Button size="sm" icon={<Plus size={12} weight="bold" />} onClick={() => setFLabor(p => [...p, { id: uid(), worker: '', trade: DEFAULT_TRADE, regHours: '', otHours: '', rate: '' }])}>Add Labor Line</Button>
-          <div className="tmHint">Overtime bills at 1.5x the worker&apos;s rate — same math the server stores.</div>
         </div>
 
         {/* Materials grid */}
@@ -991,10 +990,10 @@ export default function TmTicketsPage() {
         </div>
 
         <FormGrid cols={2}>
-          <Field label="Markup %" hint={<><AutoChip label="15% Standard" /> Applied to the full subtotal. Adds {fmtUSD(previewMarkupAmt)}.</>}>
+          <Field label="Markup %" hint={`On the subtotal. Adds ${fmtUSD(previewMarkupAmt)}.`}>
             <Input value={fMarkup} onChange={e => setFMarkup(e.target.value)} inputMode="decimal" />
           </Field>
-          <Field label="Tax %" hint={`Applied after markup. Adds ${fmtUSD(previewTaxAmt)}.`}>
+          <Field label="Tax %" hint={`After markup. Adds ${fmtUSD(previewTaxAmt)}.`}>
             <Input value={fTax} onChange={e => setFTax(e.target.value)} inputMode="decimal" />
           </Field>
           <Field label="Notes" span>
@@ -1008,27 +1007,19 @@ export default function TmTicketsPage() {
             <SignaturePad label="Contractor Signature" value={contractorSig} onChange={setContractorSig} />
             <SignaturePad label="Owner / GC Signature" value={ownerSig} onChange={setOwnerSig} />
           </div>
-          <div className="tmHint">A signed ticket is the strongest backup when the extra hits the pay app. Both pads are optional on drafts.</div>
         </div>
 
         {/* Live ticket math — the SAME operations as the server route */}
         <div className="tmLadder">
-          <InsightRow label="Labor (OT at 1.5x)" value={fmtUSD(previewLabor)} />
-          <InsightRow label="Materials" value={fmtUSD(previewMaterials)} />
-          <InsightRow label="Equipment" value={fmtUSD(previewEquipment)} />
+          <LadderRow label="Labor (OT at 1.5x)" value={fmtUSD(previewLabor)} />
+          <LadderRow label="Materials" value={fmtUSD(previewMaterials)} />
+          <LadderRow label="Equipment" value={fmtUSD(previewEquipment)} />
           <div className="tmRule" />
-          <InsightRow label="Subtotal" value={fmtUSD(previewSub)} />
-          <InsightRow label={`Markup (${num(fMarkup)}%)`} value={'+' + fmtUSD(previewMarkupAmt)} />
-          <InsightRow label={`Tax (${num(fTax)}%)`} value={'+' + fmtUSD(previewTaxAmt)} />
+          <LadderRow label="Subtotal" value={fmtUSD(previewSub)} />
+          <LadderRow label={`Markup (${num(fMarkup)}%)`} value={'+' + fmtUSD(previewMarkupAmt)} />
+          <LadderRow label={`Tax (${num(fTax)}%)`} value={'+' + fmtUSD(previewTaxAmt)} />
           <div className="tmRule" />
-          <InsightRow label="Ticket Total" value={fmtUSD(previewTotal)} strong />
-        </div>
-        <div style={{ marginTop: 16 }}>
-          <FlowSteps title="After You Submit" steps={[
-            { title: 'Ticket Numbered + Logged', desc: 'Auto-numbered and queued for approval with the total locked server-side.' },
-            { title: 'Approve or Reject Inline', desc: 'The approver is stamped on the ticket with a timestamp.' },
-            { title: 'Bill It or Escalate It', desc: 'Mark billed for invoicing, or escalate into a change event with the ticket attached.' },
-          ]} />
+          <LadderRow label="Ticket Total" value={fmtUSD(previewTotal)} strong />
         </div>
       </FormModal>
 

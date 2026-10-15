@@ -1,29 +1,26 @@
 'use client';
+/**
+ * Crew Timesheets — the job's time entries for a week, with approve / reject.
+ *
+ * Every read / write is the one this screen already used:
+ *   list     GET   /api/projects/[id]/timesheets?week=current|last|all
+ *   create   POST  /api/timesheets/create            (lands as pending)
+ *   decide   PATCH /api/timesheets/[id]/status       { status: 'approved' | 'rejected' }
+ */
 import { useProjectContext } from '@/lib/hooks/useProjectContext';
 import React, { useState, useEffect, useCallback, useRef } from 'react';
 import SaguaroDatePicker from '@/components/SaguaroDatePicker';
 import { useParams } from 'next/navigation';
-import { Badge, Table, T } from '@/components/ui/shell';
+import { Clock, Plus, ListNumbers, HourglassMedium, CheckCircle, XCircle, CurrencyDollar, WarningCircle } from '@phosphor-icons/react';
 import {
-  PremiumSurface,
-  ModuleHero,
-  SectionCard,
-  PremiumEmpty,
-  StatStrip,
-  FlowSteps,
-  FlowStrip,
-  InsightRow,
-  AutoChip,
-  goldButtonStyle,
-  ghostButtonStyle, secondaryButtonStyle
-} from '@/components/ui/premium';
-import { Clock, Plus } from '@phosphor-icons/react';
+  PageShell, Card, StatRow, Badge, Button, Tabs, Toolbar, DataTable, EmptyState,
+  FormModal, FormGrid, Field, Input, Select, Toast, useToast,
+  type Column, type Action, type BadgeTone, type StatItem,
+} from '@/components/ui/kit';
 import { CSI_DIVISIONS } from '@/lib/construction-intelligence';
-import { moduleAccent } from '@/lib/ui/app-accent';
 import { useUnsavedGuard, useComposerDirty } from '@/lib/useUnsavedGuard';
 import UnsavedGuardModal from '@/components/UnsavedGuardModal';
 import Suggest from '@/components/ui/Suggest';
-import { StatusPill } from '@/components/ui/Status';
 import { localDay } from '@/lib/calendar-day';
 import { addDays } from '@/lib/time-zone';
 
@@ -45,20 +42,7 @@ interface TimeEntry {
 }
 
 type WeekFilter = 'current' | 'last' | 'all';
-
-// Cinematic-kit accent palette (matches the dashboard) ------------------------
-const GREEN = 'var(--success)';
-const ORANGE = 'var(--warning)';
-
-const inp: React.CSSProperties = { width: '100%', padding: '9px 12px', background: 'rgba(255,255,255,0.04)', border: '1px solid rgba(255,255,255,0.10)', borderRadius: 10, color: 'var(--text-primary)', fontSize: 13, outline: 'none', boxSizing: 'border-box' };
-const lbl: React.CSSProperties = { display: 'block', fontSize: 12, fontWeight: 700, color: 'var(--c-text-2)', marginBottom: 6 };
-
-// Compact button + filter-chip presets derived from the kit --------------------
-const goldBtnSm: React.CSSProperties = { ...goldButtonStyle, padding: '6px 14px', fontSize: 12, borderRadius: 9 };
-const dangerBtnSm: React.CSSProperties = { display: 'inline-flex', alignItems: 'center', justifyContent: 'center', gap: 6, padding: '6px 14px', borderRadius: 9, cursor: 'pointer', background: 'rgba(248,113,113,0.12)', color: 'var(--danger)', border: '1px solid rgba(248,113,113,0.35)', fontWeight: 700, fontSize: 12 };
-const chipBase: React.CSSProperties = { display: 'inline-flex', alignItems: 'center', justifyContent: 'center', padding: '7px 16px', borderRadius: 999, fontSize: 13, fontWeight: 700, cursor: 'pointer', border: '1px solid', transition: 'all .16s ease' };
-const chipActive: React.CSSProperties = { ...chipBase, background: 'var(--brand-primary)', color: 'var(--on-brand)', borderColor: 'transparent', boxShadow: 'none' };
-const chipInactive: React.CSSProperties = { ...chipBase, background: 'rgba(255,255,255,0.04)', color: 'var(--c-text-2)', borderColor: 'rgba(255,255,255,0.10)' };
+type StatusFilter = 'all' | 'pending' | 'approved' | 'rejected';
 
 function getWeekStart(date: Date): string {
   const d = new Date(date);
@@ -75,12 +59,34 @@ const CLASSIFICATIONS = ['Laborer', 'Carpenter', 'Electrician', 'Plumber', 'Iron
 const emptyForm = () => ({ employee: '', date: localDay(), regular_hrs: 8, ot_hrs: 0, classification: 'Laborer', costCode: '' });
 
 const fmt = (n: number) => '$' + ((Number(n) || 0).toLocaleString('en-US', { maximumFractionDigits: 0 }));
+const fmtHrs = (n: number) => `${(Number(n) || 0).toFixed(1)}h`;
+/** Date-only values parse at local noon ('T12:00:00') so they never shift a day under UTC. */
+const fmtDate = (d?: string | null) => d ? new Date(String(d).slice(0, 10) + 'T12:00:00').toLocaleDateString('en-US', { weekday: 'short', month: 'short', day: 'numeric', year: 'numeric' }) : '—';
+const workedHrs = (e: TimeEntry) => (Number(e.regular_hrs) || 0) + (Number(e.ot_hrs) || 0);
+
+/** One status → one badge (lib/status-colors). */
+function statusBadge(s: string): { label: string; tone: BadgeTone } {
+  const k = String(s || 'pending').toLowerCase();
+  if (k === 'approved') return { label: 'Approved', tone: 'ongoing' };
+  if (k === 'rejected') return { label: 'Rejected', tone: 'overdue' };
+  if (k === 'paid') return { label: 'Paid', tone: 'completed' };
+  if (k === 'draft') return { label: 'Draft', tone: 'neutral' };
+  if (k === 'submitted') return { label: 'Submitted', tone: 'under_contract' };
+  return { label: 'Pending', tone: 'under_contract' };
+}
+
+const DATE_INPUT_STYLE: React.CSSProperties = {
+  width: '100%', minHeight: 40, padding: '8px 12px', fontSize: 14,
+  background: 'var(--bg-surface-2)', border: '1px solid var(--border-default)',
+  borderRadius: 'var(--radius-sm)', color: 'var(--text-primary)',
+};
 
 export default function TimesheetsPage() {
   const params = useParams();
   const projectId = params.projectId as string;
   const [entries, setEntries] = useState<TimeEntry[]>([]);
   const [loading, setLoading] = useState(true);
+  const [loadError, setLoadError] = useState(false);
   const [showForm, setShowForm] = useState(false);
   const [form, setForm] = useState(emptyForm);
 
@@ -96,20 +102,24 @@ export default function TimesheetsPage() {
     onSave: () => handleSave(),
   });
   const [saving, setSaving] = useState(false);
-  const [toast, setToast] = useState('');
+  const { toast, show } = useToast(4000);
   const [weekFilter, setWeekFilter] = useState<WeekFilter>('current');
+  const [statusFilter, setStatusFilter] = useState<StatusFilter>('all');
+  const [search, setSearch] = useState('');
   // Project snapshot (/api/project-context): cost codes, budget actuals, open
   // items — the entry form walks in knowing the job.
   const { ctx } = useProjectContext(projectId);
 
   const fetchEntries = useCallback(async () => {
     setLoading(true);
+    setLoadError(false);
     try {
       const res = await fetch(`/api/projects/${projectId}/timesheets?week=${weekFilter}`);
       const json = await res.json();
       setEntries(json.entries || []);
     } catch {
       setEntries([]);
+      setLoadError(true);
     } finally {
       setLoading(false);
     }
@@ -150,6 +160,17 @@ export default function TimesheetsPage() {
   const pendingCount = filtered.filter(e => e.status === 'pending').length;
   const approvedCount = filtered.filter(e => e.status === 'approved').length;
 
+  // The table: this period, then the status tile / filter and the search.
+  const q = search.trim().toLowerCase();
+  const shown = filtered.filter(e => {
+    if (statusFilter !== 'all' && e.status !== statusFilter) return false;
+    if (!q) return true;
+    return [e.employee, e.classification, e.leave_label].some(v => String(v || '').toLowerCase().includes(q));
+  });
+  const filtersActive = statusFilter !== 'all' || !!q;
+  const clearFilters = () => { setStatusFilter('all'); setSearch(''); };
+  const toggleStatus = (s: StatusFilter) => setStatusFilter(prev => (prev === s ? 'all' : s));
+
   async function handleSave(): Promise<boolean> {
     if (!form.employee) return false;
     setSaving(true);
@@ -178,14 +199,12 @@ export default function TimesheetsPage() {
       if (!res.ok) throw new Error('save failed');
       setShowForm(false);
       setForm(emptyForm());
-      setToast('Timesheet entry added.');
-      setTimeout(() => setToast(''), 4000);
+      show('Timesheet entry added.');
       fetchEntries();
       guard.clearDraft();
       return true;
     } catch {
-      setToast('Could not add the entry. Please try again.');
-      setTimeout(() => setToast(''), 4000);
+      show('Could not add the entry. Please try again.', 'bad');
       return false;
     } finally {
       setSaving(false);
@@ -201,188 +220,157 @@ export default function TimesheetsPage() {
         body: JSON.stringify({ status: action }),
       });
       if (!res.ok) throw new Error('update failed');
-      setToast(`Timesheet ${action}.`);
-      setTimeout(() => setToast(''), 4000);
+      show(`Timesheet ${action}.`);
     } catch {
-      setToast('Could not update the timesheet. Please try again.');
-      setTimeout(() => setToast(''), 4000);
+      show('Could not update the timesheet. Please try again.', 'bad');
       fetchEntries();
     }
   }
 
-  return (
-    <PremiumSurface>
-      {/* Header */}
-      <ModuleHero
-        eyebrow="Labor Tracking"
-        eyebrowIcon={<Clock size={13} weight="fill" color={moduleAccent('time').hex} />}
-        title="Crew"
-        accent="Timesheets"
-        subtitle="Weekly crew timesheets and labor tracking."
-        actions={
-          <button style={showForm ? ghostButtonStyle : goldButtonStyle} className="pmBtn" onClick={() => setShowForm(p => !p)}>
-            <Plus size={15} weight="bold" /> Add Entry
-          </button>
-        }
+  function openForm() { setShowForm(true); }
+  /** Every close path for the entry modal (X, Cancel, Esc, backdrop) runs through the guard. */
+  function closeForm() { guard.requestClose(() => setShowForm(false)); }
+
+  const base = `/app/projects/${projectId}`;
+  const stats: StatItem[] = [
+    { label: 'Total Entries', value: loading ? '—' : String(totalEntries), sub: 'Logged this period', icon: <ListNumbers size={15} />, onClick: clearFilters, active: !filtersActive },
+    { label: 'Total Hours', value: loading ? '—' : fmtHrs(totalHours), sub: 'Regular + overtime', icon: <Clock size={15} /> },
+    { label: 'Pending Approval', value: loading ? '—' : String(pendingCount), tone: pendingCount > 0 ? 'warn' : 'default', sub: 'Awaiting review', icon: <HourglassMedium size={15} />, onClick: () => toggleStatus('pending'), active: statusFilter === 'pending' },
+    { label: 'Approved', value: loading ? '—' : String(approvedCount), tone: approvedCount > 0 ? 'good' : 'default', sub: 'This period', icon: <CheckCircle size={15} />, onClick: () => toggleStatus('approved'), active: statusFilter === 'approved' },
+    ...(ctx ? [{ label: 'Budget Actuals', value: fmt(Number(ctx.budget?.actual) || 0), sub: 'Approved labor posts here', icon: <CurrencyDollar size={15} />, href: `${base}/budget` } as StatItem] : []),
+  ];
+
+  const columns: Column<TimeEntry>[] = [
+    { key: 'employee', header: 'Employee', primary: true, phone: 'show', accessor: e => e.employee || '', render: e => e.employee || '—' },
+    { key: 'date', header: 'Date', phone: 'show', accessor: e => e.date || '', render: e => (
+      <span style={{ display: 'inline-flex', alignItems: 'center', gap: 6, flexWrap: 'wrap', whiteSpace: 'nowrap' }}>
+        <span style={{ color: 'var(--text-secondary)' }}>{fmtDate(e.date)}</span>
+        {e.sent_late && <Badge tone="lead">Punched offline</Badge>}
+      </span>
+    ) },
+    /* A PTO / sick row: no worked hours. Show its leave hours and what kind of
+       leave it is — it used to read as an unlabeled 0-hour shift. */
+    { key: 'regular_hrs', header: 'Regular Hrs', align: 'right', phone: 'hide', total: 'sum', format: fmtHrs, accessor: e => (e.leave_label ? null : Number(e.regular_hrs) || 0), render: e => e.leave_label ? <span style={{ color: 'var(--text-tertiary)' }}>—</span> : e.regular_hrs },
+    { key: 'ot_hrs', header: 'OT Hrs', align: 'right', phone: 'hide', total: 'sum', format: fmtHrs, accessor: e => (e.leave_label ? null : Number(e.ot_hrs) || 0), render: e => e.leave_label ? <span style={{ color: 'var(--text-tertiary)' }}>—</span> : <span style={{ color: e.ot_hrs > 0 ? 'var(--warning)' : 'var(--text-tertiary)' }}>{e.ot_hrs}</span> },
+    { key: 'total_hrs', header: 'Total Hrs', align: 'right', phone: 'show', accessor: e => (e.leave_label ? Number(e.leave_hrs ?? 0) : workedHrs(e)),
+      // Worked hours only — leave hours post nothing to job cost.
+      total: rows => fmtHrs(rows.reduce((s, e) => s + (e.leave_label ? 0 : workedHrs(e)), 0)),
+      render: e => e.leave_label
+        ? <span style={{ fontWeight: 700, color: 'var(--text-primary)', whiteSpace: 'nowrap' }} title="Leave hours — not worked time, posts nothing to job cost">{fmtHrs(Number(e.leave_hrs ?? 0))}</span>
+        : <span style={{ fontWeight: 700, color: 'var(--text-primary)' }}>{fmtHrs(workedHrs(e))}</span> },
+    { key: 'classification', header: 'Classification', phone: 'hide', accessor: e => (e.leave_label ? `${e.leave_label} · leave` : e.classification || ''), render: e => e.leave_label ? <Badge tone="neutral">{`${e.leave_label} · leave`}</Badge> : <span style={{ color: 'var(--text-secondary)' }}>{e.classification || '—'}</span> },
+    { key: 'status', header: 'Status', phone: 'show', accessor: e => statusBadge(e.status).label, render: e => { const b = statusBadge(e.status); return <Badge tone={b.tone} dot>{b.label}</Badge>; } },
+  ];
+
+  const entryActions = (e: TimeEntry): Action[] => [
+    { label: 'Approve', icon: <CheckCircle size={14} />, inline: true, onClick: () => handleAction(e.id, 'approved'), hidden: e.status !== 'pending' },
+    { label: 'Reject', icon: <XCircle size={14} />, tone: 'danger', inline: true, onClick: () => handleAction(e.id, 'rejected'), hidden: e.status !== 'pending' },
+  ];
+
+  let body: React.ReactNode;
+  if (!loading && loadError) {
+    body = <EmptyState icon={<WarningCircle size={22} />} title="Couldn’t load time entries" text="Nothing has been lost — try again." action={<Button onClick={fetchEntries}>Try Again</Button>} />;
+  } else if (!loading && filtered.length === 0) {
+    body = (
+      <EmptyState
+        icon={<Clock size={22} />}
+        title={entries.length === 0 ? 'No time entries yet' : 'No entries in this period'}
+        text={entries.length === 0 ? 'Log the first crew entry — the roster builds as you go.' : 'Switch the week, or add one for this period.'}
+        action={<Button icon={<Plus size={15} weight="bold" />} onClick={openForm}>Add Entry</Button>}
       />
+    );
+  } else {
+    body = (
+      <DataTable<TimeEntry>
+        tableId="project-timesheets"
+        exportName="timesheets"
+        columns={columns}
+        rows={shown}
+        loading={loading}
+        rowKey={e => e.id}
+        defaultSort={{ key: 'date', dir: 'desc' }}
+        rowActions={entryActions}
+        empty={<EmptyState title="No entries match" text="Change the search or the status filter." action={<Button onClick={clearFilters}>Clear Filters</Button>} />}
+      />
+    );
+  }
 
-      {/* One summary: this period's entries, plus where approved labor posts once the project context is in */}
-      <StatStrip items={[
-        { href: `/app/projects/${projectId}/timesheets`, label: 'Total Entries', value: String(totalEntries), sub: 'Logged this period' },
-        { href: `/app/projects/${projectId}/timesheets`, label: 'Total Hours', value: `${totalHours.toFixed(1)}h`, sub: 'Regular + overtime' },
-        { href: `/app/projects/${projectId}/timesheets`, label: 'Pending Approval', value: String(pendingCount), accent: pendingCount > 0 ? ORANGE : undefined, sub: 'Awaiting review' },
-        { href: `/app/projects/${projectId}/timesheets`, label: 'Approved', value: String(approvedCount), accent: approvedCount > 0 ? GREEN : undefined, sub: 'This period' },
-        ...(ctx ? [
-          { href: `/app/projects/${projectId}/budget`, label: 'Budget Actuals', value: fmt(Number(ctx.budget?.actual) || 0), sub: 'Approved labor posts here' },
-        ] : []),
-      ]} />
+  const totalForm = (Number(form.regular_hrs) || 0) + (Number(form.ot_hrs) || 0);
+  const otForm = Number(form.ot_hrs) || 0;
 
-      {/* Week filter */}
-      <div style={{ display: 'flex', gap: 8, marginBottom: 20, flexWrap: 'wrap' }}>
-        {([['current', 'Current Week'], ['last', 'Last Week'], ['all', 'All']] as [WeekFilter, string][]).map(([key, label]) => (
-          <button key={key} className="pmBtn" style={weekFilter === key ? chipActive : chipInactive} onClick={() => setWeekFilter(key)}>{label}</button>
-        ))}
-      </div>
+  return (
+    <>
+      <PageShell
+        crumbs={[
+          { label: 'Projects', href: '/app/projects' },
+          { label: ctx?.project?.name || 'Project', href: `${base}/overview` },
+          { label: 'Timesheets' },
+        ]}
+        title="Crew Timesheets"
+        subtitle="Weekly crew hours — approve to post labor to job cost."
+        actions={<Button variant="primary" icon={<Plus size={15} weight="bold" />} onClick={openForm}>Add Entry</Button>}
+      >
+        <StatRow items={stats} />
 
-      {toast && (
-        <div style={{ marginBottom: 16, padding: '11px 16px', background: 'rgba(74,222,128,0.12)', border: '1px solid rgba(74,222,128,0.3)', borderRadius: 10, color: GREEN, fontSize: 13, fontWeight: 600 }}>
-          {toast}
-        </div>
-      )}
+        <Tabs
+          tabs={[{ key: 'current', label: 'Current Week' }, { key: 'last', label: 'Last Week' }, { key: 'all', label: 'All' }]}
+          value={weekFilter}
+          onChange={k => setWeekFilter(k as WeekFilter)}
+        />
 
-      {/* Create Form */}
-      {showForm && (
-        <div style={{ marginBottom: 24 }}>
-          <SectionCard title="Add Timesheet Entry" icon={<Plus size={17} weight="bold" style={{ color: 'var(--text-primary)' }} />}>
-            <div style={{ display: 'grid', gridTemplateColumns: 'minmax(0,1fr) 280px', gap: 22, alignItems: 'start' }}>
-            <div>
-            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(180px, 1fr))', gap: 14 }}>
-              <div>
-                <label style={lbl}>Employee *</label>
-                <Suggest type="text" value={form.employee} onChange={e => setForm(p => ({ ...p, employee: e.target.value }))} style={inp} placeholder="Crew member name" options={roster} />
-                {roster.length > 0 && <div style={{ fontSize: 12, color: 'var(--c-text-2)', marginTop: 4, lineHeight: 1.45 }}>{roster.length} crew name{roster.length === 1 ? '' : 's'} on file — start typing to pick.</div>}
-              </div>
-              <div>
-                <label style={lbl}>Date<AutoChip /></label>
-                <SaguaroDatePicker value={form.date} onChange={v => setForm(p => ({ ...p, date: v }))} style={inp} />
-                <div style={{ fontSize: 12, color: 'var(--c-text-2)', marginTop: 4, lineHeight: 1.45 }}>Defaulted to today — edit to backfill.</div>
-              </div>
-              <div>
-                <label style={lbl}>Classification</label>
-                <select value={form.classification} onChange={e => setForm(p => ({ ...p, classification: e.target.value }))} style={inp}>
-                  {CLASSIFICATIONS.map(c => <option key={c}>{c}</option>)}
-                </select>
-              </div>
-              <div>
-                <label style={lbl}>Cost Code</label>
-                <select value={form.costCode} onChange={e => setForm(p => ({ ...p, costCode: e.target.value }))} style={inp}>
-                  <option value="">Unassigned</option>
-                  {codeOptions.map(c => <option key={c.value} value={c.value}>{c.label}</option>)}
-                </select>
-                <div style={{ fontSize: 12, color: 'var(--c-text-2)', marginTop: 4, lineHeight: 1.45 }}>{ctx?.costCodes?.length ? 'Pulled from the project budget lines.' : 'Full CSI division list — budget lines give project-specific codes.'}</div>
-              </div>
-              <div>
-                <label style={lbl}>Regular Hours{form.regular_hrs === 8 && <AutoChip />}</label>
-                <input type="number" min={0} max={24} value={form.regular_hrs} onChange={e => setForm(p => ({ ...p, regular_hrs: Number(e.target.value) }))} style={inp} />
-                <div style={{ fontSize: 12, color: 'var(--c-text-2)', marginTop: 4, lineHeight: 1.45 }}>Standard 8h day — hours past 8 belong in OT.</div>
-              </div>
-              <div>
-                <label style={lbl}>OT Hours</label>
-                <input type="number" min={0} max={24} value={form.ot_hrs} onChange={e => setForm(p => ({ ...p, ot_hrs: Number(e.target.value) }))} style={inp} />
-              </div>
-              <div style={{ display: 'flex', flexDirection: 'column', justifyContent: 'flex-end', paddingBottom: 2 }}>
-                <span style={{ fontSize: 14, fontWeight: 700, color: 'var(--text-primary)' }}>Total: {(Number(form.regular_hrs) || 0) + (Number(form.ot_hrs) || 0)}h</span>
-                {(Number(form.ot_hrs) || 0) > 0 && <span style={{ fontSize: 12, color: ORANGE, marginTop: 2 }}>{Number(form.ot_hrs) || 0}h overtime flagged</span>}
-              </div>
-            </div>
-            <div style={{ display: 'flex', gap: 10, marginTop: 16 }}>
-              <button style={{ ...goldButtonStyle, opacity: saving ? 0.6 : 1, cursor: saving ? 'not-allowed' : 'pointer' }} className="pmBtn" onClick={handleSave} disabled={saving}>{saving ? 'Saving…' : 'Save Entry'}</button>
-              <button style={ghostButtonStyle} className="pmBtn" onClick={() => setShowForm(false)}>Cancel</button>
-            </div>
-            </div>
-            {/* Context rail — the downstream automation this entry triggers */}
-            <div style={{ borderLeft: '1px solid rgba(255,255,255,0.08)', paddingLeft: 20 }}>
-              <FlowSteps title="After You Save" steps={[
-                { title: 'Entry Lands as Pending', desc: 'It appears in the table below for review — nothing posts yet.' },
-                { title: 'Approve in One Click', desc: 'Approval stamps who approved and when on the entry.' },
-                { title: 'Labor Posts to Job Cost', desc: 'Approved labor becomes a cost entry and rolls into the budget line actuals for its division — automatically.' },
-              ]} />
-              {ctx && (
-                <div style={{ marginTop: 16, paddingTop: 12, borderTop: '1px solid rgba(255,255,255,0.08)' }}>
-                  <InsightRow label="Budget Actuals" value={fmt(Number(ctx.budget?.actual) || 0)} />
-                  <InsightRow label="Pending Entries" value={String(pendingCount)} accent={pendingCount > 0 ? ORANGE : undefined} />
-                  <InsightRow label="Approved" value={String(approvedCount)} accent={approvedCount > 0 ? GREEN : undefined} />
-                </div>
-              )}
-            </div>
-            </div>
-          </SectionCard>
-        </div>
-      )}
-
-      {/* Table */}
-      <SectionCard title="Time Entries" icon={<Clock size={17} weight="duotone" color={moduleAccent('time').hex} />} flush>
-        {loading ? (
-          <div style={{ textAlign: 'center', padding: 44, color: 'var(--c-text-2)', fontSize: 13 }}>Loading…</div>
-        ) : filtered.length === 0 ? (
-          <div style={{ padding: 20 }}>
-            <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 12, flexWrap: 'wrap', marginBottom: 12 }}>
-              <div style={{ fontSize: 14, fontWeight: 800, color: 'var(--text-primary)' }}>
-                <Clock size={16} weight="duotone" style={{ color: 'var(--text-primary)', marginRight: 7, verticalAlign: 'text-bottom' }} />
-                {entries.length === 0 ? 'No time entries yet' : 'No entries in this period'}
-                <span style={{ fontWeight: 400, color: 'var(--c-text-2)' }}>
-                  {entries.length === 0
-                    ? (showForm ? ' — log the first crew entry in the form above; the roster builds as you go.' : ' — log the first crew entry to start tracking labor.')
-                    : ' — switch the week filter, or add one for this period.'}
-                </span>
-              </div>
-              {!showForm && (
-                <button style={secondaryButtonStyle} className="pmBtn" onClick={() => setShowForm(true)}><Plus size={15} weight="bold" /> Add Entry</button>
-              )}
-            </div>
-            <FlowStrip steps={[
-              { title: 'Log Hours', desc: 'Name, hours, cost code' },
-              { title: 'Pending Review', desc: 'Lands in this table' },
-              { title: 'Approve in One Click' },
-              { title: 'Labor Posts to Job Cost', desc: 'Budget actuals update' },
-            ]} />
-          </div>
-        ) : (
-          <Table
-            headers={['Employee', 'Date', 'Regular Hrs', 'OT Hrs', 'Total Hrs', 'Classification', 'Status', 'Actions']}
-            rows={filtered.map(e => [
-              <span key="emp" style={{ fontWeight: 600 }}>{e.employee}</span>,
-              <span key="dt" style={{ color: T.muted, whiteSpace: 'nowrap' }}>
-                {e.date}
-                {e.sent_late && <> <Badge label="Punched offline" color="amber" /></>}
-              </span>,
-              ...(e.leave_label ? [
-                /* A PTO / sick row: no worked hours. Show its leave hours and what kind of
-                   leave it is — it used to read as an unlabeled 0-hour shift. */
-                <span key="rh" style={{ color: T.muted }}>—</span>,
-                <span key="oh" style={{ color: T.muted }}>—</span>,
-                <span key="th" style={{ fontWeight: 700, color: T.white, whiteSpace: 'nowrap' }} title="Leave hours — not worked time, posts nothing to job cost">{Number(e.leave_hrs ?? 0).toFixed(1)}h</span>,
-                <Badge key="cl" label={`${e.leave_label} · leave`} color="blue" />,
-              ] : [
-                <span key="rh" style={{ color: T.white }}>{e.regular_hrs}</span>,
-                <span key="oh" style={{ color: e.ot_hrs > 0 ? T.amber : T.muted }}>{e.ot_hrs}</span>,
-                <span key="th" style={{ fontWeight: 700, color: 'var(--text-primary)' }}>{(e.regular_hrs + e.ot_hrs).toFixed(1)}h</span>,
-                <span key="cl" style={{ color: T.muted }}>{e.classification}</span>,
-              ]),
-              <StatusPill key="st" module="timesheets" status={e.status} size="sm" />,
-              <div key="act" style={{ display: 'flex', gap: 6 }}>
-                {e.status === 'pending' && (
-                  <>
-                    <button style={goldBtnSm} className="pmBtn" onClick={() => handleAction(e.id, 'approved')}>Approve</button>
-                    <button style={dangerBtnSm} className="pmBtn" onClick={() => handleAction(e.id, 'rejected')}>Reject</button>
-                  </>
-                )}
-              </div>,
-            ])}
+        {!loading && !loadError && filtered.length > 0 && (
+          <Toolbar
+            search={search}
+            onSearch={setSearch}
+            placeholder="Search employee or classification…"
+            filters={
+              <>
+                <Select aria-label="Status" value={statusFilter} onChange={e => setStatusFilter(e.target.value as StatusFilter)} style={{ width: 'auto', minWidth: 150 }}
+                  options={[{ value: 'all', label: 'All Statuses' }, { value: 'pending', label: 'Pending' }, { value: 'approved', label: 'Approved' }, { value: 'rejected', label: 'Rejected' }]} />
+                {filtersActive && <Button variant="ghost" size="sm" onClick={clearFilters}>Clear</Button>}
+              </>
+            }
+            actions={<span style={{ fontSize: 'var(--fs-sm)', color: 'var(--text-tertiary)' }}>{shown.length} of {filtered.length}</span>}
           />
         )}
-      </SectionCard>
-    <UnsavedGuardModal guard={guard} />
-    </PremiumSurface>
+
+        <Card flush>{body}</Card>
+      </PageShell>
+
+      <FormModal
+        open={showForm}
+        onClose={closeForm}
+        title="Add Timesheet Entry"
+        subtitle="Lands as pending for approval."
+        onSubmit={async () => { await handleSave(); }}
+        submitLabel="Save Entry"
+        busy={saving}
+      >
+        <FormGrid cols={3}>
+          <Field label="Employee" required hint={roster.length > 0 ? `${roster.length} crew name${roster.length === 1 ? '' : 's'} on file — start typing to pick.` : undefined}>
+            <Suggest type="text" className="k-input" required value={form.employee} onChange={e => setForm(p => ({ ...p, employee: e.target.value }))} placeholder="Crew member name" options={roster} autoFocus />
+          </Field>
+          <Field label="Date" hint="Today — edit to backfill.">
+            <div style={{ width: '100%' }}><SaguaroDatePicker value={form.date} onChange={v => setForm(p => ({ ...p, date: v }))} style={DATE_INPUT_STYLE} /></div>
+          </Field>
+          <Field label="Classification">
+            <Select value={form.classification} onChange={e => setForm(p => ({ ...p, classification: e.target.value }))} options={CLASSIFICATIONS} />
+          </Field>
+          <Field label="Cost Code" hint={ctx?.costCodes?.length ? 'From the project budget lines.' : 'CSI divisions.'}>
+            <Select value={form.costCode} onChange={e => setForm(p => ({ ...p, costCode: e.target.value }))} placeholder="Unassigned" options={codeOptions.map(c => ({ value: c.value, label: c.label }))} />
+          </Field>
+          <Field label="Regular Hours" hint="Hours past 8 go in OT.">
+            <Input type="number" min={0} max={24} value={form.regular_hrs} onChange={e => setForm(p => ({ ...p, regular_hrs: Number(e.target.value) }))} />
+          </Field>
+          <Field label="OT Hours" hint={<span style={{ color: otForm > 0 ? 'var(--warning)' : undefined }}>{`Total ${totalForm}h${otForm > 0 ? ` · ${otForm}h overtime` : ''}`}</span>}>
+            <Input type="number" min={0} max={24} value={form.ot_hrs} onChange={e => setForm(p => ({ ...p, ot_hrs: Number(e.target.value) }))} />
+          </Field>
+        </FormGrid>
+      </FormModal>
+
+      {/* Above the FormModal overlay so the unsaved-work prompt is never hidden behind it. */}
+      <div style={{ position: 'relative', zIndex: 10001 }}><UnsavedGuardModal guard={guard} /></div>
+      <Toast message={toast?.message ?? null} tone={toast?.tone} />
+    </>
   );
 }
