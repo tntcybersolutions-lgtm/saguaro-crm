@@ -6,13 +6,13 @@
  * global "active project" — so every read and every write on this screen is addressed to
  * the project named in the URL bar. It cannot drift.
  *
- * Anatomy: title + one primary action (Add Photo) → StatRow (each tile filters
- * the gallery) → Toolbar (search, album, group by) → workspace split: the
- * thumbnail gallery on the left (real thumbnails, one aspect ratio, grouped by
- * date or album), and when a photo is selected, the viewer beside a 320–384px
- * details + action rail. Phone: gallery, then viewer, stacked. ← / → step
- * through the visible photos, Esc closes the viewer. Create / edit open the
- * composer in a FormModal with a real file input.
+ * Anatomy: title + one primary action (Add Photos & Video) → StatRow (each
+ * tile filters the gallery) → Toolbar (search, album, group by) → a dense
+ * thumbnail grid grouped by day (or album), captions under each picture. A tap
+ * opens the full-screen lightbox (swipe, zoom, play, send, delete); its Details
+ * button — or a tile's (i) — opens the viewer + details rail beside the grid
+ * (stacked on phones). ← / → step through the visible photos, Esc closes.
+ * Create / edit open the composer in a FormModal with a real file input.
  *
  * Every read / write is the one this screen already used:
  *   list      GET    /api/photos/list?projectId=&include=files
@@ -47,13 +47,13 @@ import OnThisPhone from '@/components/media/OnThisPhone';
 import {
   Camera, X, PencilSimple, Plus, Images, WarningCircle, ArrowClockwise, Trash,
   Crop, CaretLeft, CaretRight, Play, ArrowsOut, LinkSimple, PaperPlaneTilt,
+  Info, VideoCamera, CalendarBlank, FolderOpen,
 } from '@phosphor-icons/react';
 import {
   PageShell, Card, StatRow, Badge, Button, Toolbar, Tabs, EmptyState, RowActions,
   FormModal, Field, Input, Textarea, Select, FormGrid, DetailList, Toast, useToast,
   type BadgeTone, type StatItem,
 } from '@/components/ui/kit';
-import { AutoChip } from '@/components/ui/premium';
 import { useUnsavedGuard, useComposerDirty } from '@/lib/useUnsavedGuard';
 import UnsavedGuardModal from '@/components/UnsavedGuardModal';
 import { layout } from '@/lib/design-tokens';
@@ -93,7 +93,6 @@ function fmtDate(iso:string|null|undefined){
 }
 
 const CSS = `
-.phWs > .k-page { max-width: none; }
 .phCq { container: phws / inline-size; min-width: 0; }
 .phSplit { display: grid; grid-template-columns: minmax(0, 1fr); gap: 16px; align-items: start; min-width: 0; }
 .phSplit > * { min-width: 0; }
@@ -108,33 +107,40 @@ const CSS = `
   .phDetail { grid-template-columns: minmax(0, 1fr) clamp(${layout.detailRailMin}px, 34%, ${layout.detailRailMax}px); }
   .phRail { order: 0; position: sticky; top: 16px; }
 }
-.phGallery { display: flex; flex-direction: column; gap: 24px; padding: 16px; }
-.phGroupHead { display: flex; align-items: center; gap: 10px; margin-bottom: 12px; font-size: var(--fs-sm); font-weight: 700; color: var(--text-primary); }
-.phGroupHead small { color: var(--text-tertiary); font-weight: 600; }
+.phGallery { display: flex; flex-direction: column; gap: 20px; padding: 16px; }
+.phGroupHead { display: flex; align-items: center; gap: 10px; margin-bottom: 10px; font-size: var(--fs-sm); font-weight: 700; color: var(--text-primary); }
+.phGroupHead small { color: var(--text-tertiary); font-weight: 600; font-size: var(--fs-sm); }
 .phGroupHead::after { content: ''; flex: 1; height: 1px; background: var(--border-subtle); }
-.phGrid { display: grid; grid-template-columns: repeat(auto-fill, minmax(180px, 1fr)); gap: 12px; }
-.phSplit[data-open="true"] .phGrid { grid-template-columns: repeat(auto-fill, minmax(150px, 1fr)); }
-.phCard { position: relative; display: flex; flex-direction: column; min-width: 0; border-radius: var(--radius-sm); overflow: hidden; background: var(--bg-surface-2); border: 1px solid var(--border-default); cursor: pointer; transition: border-color .15s, box-shadow .15s; text-align: left; padding: 0; color: inherit; font: inherit; }
-.phCard:hover { border-color: var(--border-strong); }
-.phCard:focus-visible { outline: 2px solid var(--focus-ring); outline-offset: 2px; }
-.phCard[data-sel="true"] { border-color: var(--brand-primary); box-shadow: 0 0 0 1px var(--brand-primary), var(--glass-highlight); }
-.phThumb { position: relative; width: 100%; aspect-ratio: 4 / 3; background: var(--bg-solid); overflow: hidden; }
-.phThumb img { width: 100%; height: 100%; object-fit: cover; display: block; }
-.phThumb[data-missing="true"] { display: flex; align-items: center; justify-content: center; color: var(--text-tertiary); font-size: var(--fs-xs); }
-.phCardBody { padding: 8px 10px 10px; display: flex; flex-direction: column; gap: 6px; min-width: 0; }
-.phCardTitle { font-size: var(--fs-sm); font-weight: 700; color: var(--text-primary); overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
-.phCardMeta { display: flex; align-items: center; justify-content: space-between; gap: 8px; font-size: var(--fs-xs); color: var(--text-tertiary); }
-.phCardMeta > span { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
-.phCardEdit { position: absolute; top: 6px; right: 6px; opacity: 0; transition: opacity .15s; }
-.phCard:hover .phCardEdit, .phCard:focus-within .phCardEdit, .phCard[data-sel="true"] .phCardEdit { opacity: 1; }
-.phCardEdit .k-btn { background: rgba(14,15,18,0.85); }
+.phGrid { display: grid; grid-template-columns: repeat(auto-fill, minmax(150px, 1fr)); gap: 10px; }
+.phSplit[data-open="true"] .phGrid { grid-template-columns: repeat(auto-fill, minmax(120px, 1fr)); }
+.phTile { position: relative; display: flex; flex-direction: column; gap: 6px; min-width: 0; cursor: pointer; text-align: left; padding: 0; color: inherit; font: inherit; background: none; border: 0; }
+.phTile:focus-visible { outline: none; }
+.phTile:focus-visible .phThumb { outline: 2px solid var(--focus-ring); outline-offset: 2px; }
+.phThumb { position: relative; width: 100%; aspect-ratio: 4 / 3; background: var(--bg-solid); border: 1px solid var(--border-subtle); border-radius: var(--radius-sm); overflow: hidden; transition: border-color .15s, box-shadow .15s; }
+.phTile:hover .phThumb { border-color: var(--border-strong); }
+.phTile[data-sel="true"] .phThumb { border-color: var(--brand-primary); box-shadow: 0 0 0 1px var(--brand-primary); }
+/* The whole picture, never cropped: contained on the dark ground. */
+.phThumb img { width: 100%; height: 100%; object-fit: contain; display: block; transition: transform .2s; }
+.phTile:hover .phThumb img { transform: scale(1.02); }
+.phThumb[data-missing="true"] { display: flex; align-items: center; justify-content: center; gap: 6px; color: var(--text-tertiary); font-size: var(--fs-sm); }
+.phCap { display: flex; flex-direction: column; gap: 2px; min-width: 0; padding: 0 2px; }
+.phCapTitle { font-size: var(--fs-sm); font-weight: 600; color: var(--text-secondary); overflow: hidden; text-overflow: ellipsis; white-space: nowrap; transition: color .15s; }
+.phTile:hover .phCapTitle, .phTile[data-sel="true"] .phCapTitle { color: var(--text-primary); }
+.phCapMeta { display: flex; align-items: center; gap: 6px; font-size: 12px; color: var(--text-tertiary); min-width: 0; }
+.phCapMeta > span { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.phCapMore { max-height: 0; overflow: hidden; opacity: 0; transition: max-height .15s, opacity .15s; font-size: 12px; color: var(--text-tertiary); white-space: nowrap; text-overflow: ellipsis; }
+.phTile:hover .phCapMore, .phTile:focus-visible .phCapMore { max-height: 18px; opacity: 1; }
+.phTileTools { position: absolute; top: 6px; right: 6px; display: flex; gap: 4px; opacity: 0; transition: opacity .15s; }
+.phTile:hover .phTileTools, .phTile:focus-within .phTileTools, .phTile[data-sel="true"] .phTileTools { opacity: 1; }
+.phTileTools .k-btn { background: color-mix(in srgb, var(--bg-base) 85%, transparent); }
 .phViewer { position: relative; display: flex; align-items: center; justify-content: center; width: 100%; max-height: min(70vh, 720px); min-height: 220px; background: var(--bg-solid); border-radius: var(--radius-sm); border: 1px solid var(--border-subtle); overflow: hidden; }
-.phViewer img { max-width: 100%; max-height: min(70vh, 720px); width: auto; height: auto; display: block; object-fit: contain; }
+.phViewer img { max-width: 100%; max-height: min(70vh, 720px); width: auto; height: auto; display: block; object-fit: contain; cursor: zoom-in; }
 .phViewer[data-missing="true"] { color: var(--text-tertiary); font-size: var(--fs-sm); }
+.phViewer video { width: 100%; max-height: min(70vh, 720px); display: block; background: var(--bg-solid); }
 .phNav { position: absolute; top: 50%; transform: translateY(-50%); }
 .phNav[data-side="left"] { left: 8px; }
 .phNav[data-side="right"] { right: 8px; }
-.phNav .k-btn { background: rgba(14,15,18,0.8); }
+.phNav .k-btn { background: color-mix(in srgb, var(--bg-base) 80%, transparent); }
 .phSection { display: flex; flex-direction: column; gap: 8px; }
 .phSection + .phSection { margin-top: 20px; padding-top: 20px; border-top: 1px solid var(--border-subtle); }
 .phSectionTitle { font-size: var(--fs-sm); font-weight: 700; color: var(--text-tertiary); }
@@ -143,34 +149,28 @@ const CSS = `
 .phBadges { display: inline-flex; align-items: center; gap: 6px; flex-wrap: wrap; }
 .phActions { display: flex; flex-direction: column; gap: 8px; }
 .phActions .k-btn { width: 100%; justify-content: flex-start; }
-.phActionsRow { display: flex; gap: 8px; align-items: center; }
+.phActionsRow { display: flex; gap: 8px; align-items: center; flex-wrap: wrap; }
 .phActionsRow > .k-btn { flex: 1 1 auto; }
-.phNext { font-size: var(--fs-sm); color: var(--text-tertiary); line-height: 1.5; }
-.phNext a { color: var(--link); font-weight: 700; }
-.phDrop { width: 100%; min-height: 96px; display: flex; align-items: center; justify-content: center; gap: 8px; padding: 16px 12px; border-radius: var(--radius-sm); border: 1px dashed var(--brand-primary-35); background: var(--brand-primary-08); color: var(--text-primary); font-weight: 700; font-size: var(--fs-md); cursor: pointer; }
-.phDrop:hover { background: var(--brand-primary-12); }
+.phDrop { width: 100%; min-height: 96px; display: flex; align-items: center; justify-content: center; gap: 8px; padding: 16px 12px; border-radius: var(--radius-sm); border: 1px dashed var(--border-strong); background: var(--bg-surface-2); color: var(--text-primary); font-weight: 700; font-size: var(--fs-md); cursor: pointer; }
+.phDrop:hover { border-color: var(--border-interactive); }
 .phDrop:focus-visible { outline: 2px solid var(--focus-ring); outline-offset: 2px; }
 .phPreview { border: 1px solid var(--border-default); border-radius: var(--radius-sm); overflow: hidden; background: var(--bg-solid); }
 .phPreview img { width: 100%; max-height: 240px; object-fit: contain; display: block; background: var(--bg-solid); }
-.phPreviewBar { display: flex; align-items: center; gap: 8px; padding: 8px 10px; font-size: var(--fs-xs); color: var(--text-tertiary); }
+.phPreviewBar { display: flex; align-items: center; gap: 8px; padding: 8px 10px; font-size: var(--fs-sm); color: var(--text-tertiary); }
 .phPreviewBar > span { flex: 1; min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
 .phDateInput { width: 100%; }
 .phTabs .k-tabs { margin: 0; }
-.phViewer .phZoomHit { display: contents; cursor: zoom-in; }
-.phViewer img { cursor: zoom-in; }
-.phViewer video { width: 100%; max-height: min(70vh, 720px); display: block; background: #000; }
 .phPlay { position: absolute; inset: 0; display: flex; align-items: center; justify-content: center; pointer-events: none; }
-.phPlay > span { width: 44px; height: 44px; border-radius: 50%; background: rgba(8,9,12,0.72); border: 1px solid rgba(255,255,255,0.25); display: inline-flex; align-items: center; justify-content: center; color: #fff; }
-.phDur { position: absolute; right: 6px; bottom: 6px; padding: 2px 6px; border-radius: 6px; background: rgba(8,9,12,0.8); color: #fff; font-size: 12px; font-weight: 700; }
-.phUploading { display: inline-flex; align-items: center; gap: 8px; min-height: 36px; padding: 0 12px; border-radius: 999px; border: 1px solid var(--border-default); background: rgba(255,255,255,0.04); color: var(--text-secondary); font: inherit; font-size: var(--fs-sm); font-weight: 700; cursor: pointer; }
-.phUploading i { display: block; width: 64px; height: 4px; border-radius: 4px; background: rgba(255,255,255,0.1); overflow: hidden; }
-.phUploading i > b { display: block; height: 100%; background: var(--info-fg); }
-.phLinkAlt { align-self: flex-start; background: none; border: none; padding: 6px 0; color: var(--text-tertiary); font: inherit; font-size: 13px; font-weight: 600; cursor: pointer; display: inline-flex; align-items: center; gap: 6px; min-height: 44px; }
-.phLinkAlt:hover { color: var(--text-primary); }
+.phPlay > span { width: 40px; height: 40px; border-radius: 50%; background: color-mix(in srgb, var(--bg-base) 75%, transparent); border: 1px solid var(--border-strong); display: inline-flex; align-items: center; justify-content: center; color: var(--text-primary); }
+.phUpBar { display: block; width: 56px; height: 4px; border-radius: 4px; background: var(--bg-surface-2); overflow: hidden; }
+.phUpBar > b { display: block; height: 100%; background: var(--success); transition: width .2s; }
+.phLinkAlt { align-self: flex-start; }
 @media (max-width: 640px) {
   .phWs .k-btn, .phWs .k-stat, .phWs select.k-select, .phWs .k-input { min-height: 44px; }
-  .phGrid, .phSplit[data-open="true"] .phGrid { grid-template-columns: repeat(auto-fill, minmax(140px, 1fr)); }
-  .phCardEdit { opacity: 1; }
+  .phGallery { padding: 12px; }
+  .phGrid, .phSplit[data-open="true"] .phGrid { grid-template-columns: repeat(auto-fill, minmax(104px, 1fr)); gap: 8px; }
+  .phTileTools { opacity: 1; }
+  .phCapMore { display: none; }
 }
 `;
 
@@ -403,14 +403,13 @@ export default function PhotosPage(){
   function viewPhoto(photo:any){
     setSelected(photo);setMode('view');
   }
-  /* On a phone a tap means "show me the picture": straight to the full-screen
-     viewer (swipe, pinch, play). The details card used to open instead, with
-     the picture under it behind the tab bar — it looked like nothing opened. */
-  const isPhone = () => typeof window !== 'undefined' && window.matchMedia('(max-width: 767px)').matches;
+  /* A tap on a tile means "show me the picture": straight to the full-screen
+     lightbox (swipe, pinch, zoom, play) on every device. Its Details button —
+     or the tile's own (i) — opens the details card beside the grid. */
   const [lightboxFromTap,setLightboxFromTap]=useState(false);
   function openPhoto(photo:any){
     viewPhoto(photo);
-    if(isPhone()){ setLightboxFromTap(true); setLightboxOpen(true); }
+    setLightboxFromTap(true); setLightboxOpen(true);
   }
   function closePanel(){setSelected(null);setMode(null);clearUpload();}
   /** Abandoning an edit keeps the photo in the viewer. */
@@ -577,7 +576,7 @@ export default function PhotosPage(){
     for(const p of src){
       const key=groupBy==='album'
         ?(p.album||'General')
-        :(p.taken_at?new Date(p.taken_at).toLocaleDateString('en-US',{month:'long',year:'numeric'}):'No date');
+        :(p.taken_at&&!isNaN(new Date(p.taken_at).getTime())?new Date(p.taken_at).toLocaleDateString('en-US',{weekday:'short',month:'short',day:'numeric',year:'numeric'}):'No date');
       if(!grouped[key]) grouped[key]=[];
       grouped[key].push(p);
     }
@@ -628,19 +627,20 @@ export default function PhotosPage(){
   // ── Stat tiles: each opens the gallery filtered to that slice ──
   const stats: StatItem[] = loading
     ? [
-        { label:'Photos & Video', value:'—', sub:'Loading…' },
-        { label:'This Month', value:'—', sub:'Loading…' },
-        { label:'Issues Tagged', value:'—', sub:'Loading…' },
-        { label:'Last Added', value:'—', sub:'Loading…' },
+        { label:'Photos & Video', value:'—', sub:'Loading…', icon:<Images size={15}/> },
+        { label:'This Month', value:'—', sub:'Loading…', icon:<CalendarBlank size={15}/> },
+        { label:'Issues Tagged', value:'—', sub:'Loading…', icon:<WarningCircle size={15}/> },
+        { label:'Last Added', value:'—', sub:'Loading…', icon:<Camera size={15}/> },
       ]
     : [
-        { label:'Photos & Video', value:photos.length, sub: filtersActive ? 'Click to show everything' : videoCount>0 ? `${videoCount} video${videoCount===1?'':'s'} · ${albums.length} album${albums.length===1?'':'s'}` : albums.length>0 ? `${albums.length} album${albums.length===1?'':'s'} in use` : 'No albums yet', onClick: filtersActive ? clearFilters : undefined },
-        { label:'This Month', value:thisMonth, tone: thisMonth>0 ? 'good' : 'default', sub: periodFilter==='month' ? 'Filtered — click to clear' : 'Added since the 1st', onClick: () => setPeriodFilter(p => (p==='month' ? 'all' : 'month')) },
-        { label:'Issues Tagged', value:issueCount, tone: issueCount>0 ? 'bad' : 'default', sub: filterAlbum==='Issues' ? 'Filtered — click to clear' : issueCount>0 ? 'Flagged for follow-up' : 'Clean so far', onClick: () => setFilterAlbum(a => (a==='Issues' ? 'All' : 'Issues')) },
-        { label:'Last Added', value: lastPhoto ? fmtDate(lastPhoto.taken_at) : '—', sub: lastPhoto ? `${isVideo(lastPhoto)?'Video':'Photo'} · ${lastPhoto.title || 'Most recent capture'}` : 'Nothing documented yet', onClick: lastPhoto ? () => viewPhoto(lastPhoto) : undefined },
+        { label:'Photos & Video', value:photos.length, icon: videoCount>0 ? <VideoCamera size={15}/> : <Images size={15}/>, sub: filtersActive ? 'Click to show everything' : videoCount>0 ? `${videoCount} video${videoCount===1?'':'s'} · ${albums.length} album${albums.length===1?'':'s'}` : albums.length>0 ? `${albums.length} album${albums.length===1?'':'s'} in use` : 'No albums yet', onClick: filtersActive ? clearFilters : undefined },
+        { label:'This Month', value:thisMonth, icon:<CalendarBlank size={15}/>, tone: thisMonth>0 ? 'good' : 'default', sub: periodFilter==='month' ? 'Filtered — click to clear' : 'Added since the 1st', onClick: () => setPeriodFilter(p => (p==='month' ? 'all' : 'month')), active: periodFilter==='month' },
+        { label:'Issues Tagged', value:issueCount, icon:<WarningCircle size={15}/>, tone: issueCount>0 ? 'bad' : 'default', sub: filterAlbum==='Issues' ? 'Filtered — click to clear' : issueCount>0 ? 'Flagged for follow-up' : 'Clean so far', onClick: () => setFilterAlbum(a => (a==='Issues' ? 'All' : 'Issues')), active: filterAlbum==='Issues' },
+        { label:'Last Added', value: lastPhoto ? fmtDate(lastPhoto.taken_at) : '—', icon:<Camera size={15}/>, sub: lastPhoto ? `${isVideo(lastPhoto)?'Video':'Photo'} · ${lastPhoto.title || 'Most recent capture'}` : 'Nothing documented yet', onClick: lastPhoto ? () => viewPhoto(lastPhoto) : undefined },
       ];
 
-  const detailOpen = !!selected && mode!=='create';
+  // A tap opens the lightbox only; the details card waits for its Details button.
+  const detailOpen = !!selected && mode!=='create' && !(lightboxOpen && lightboxFromTap);
   // Stacked layouts: once the record is in the DOM, bring it into view instead of leaving it below the fold.
   useEffect(()=>{
     if(!detailOpen) return;
@@ -658,6 +658,7 @@ export default function PhotosPage(){
       photo={photo}
       selected={selected?.id===photo.id&&mode!=='create'}
       onClick={()=>openPhoto(photo)}
+      onInfo={()=>viewPhoto(photo)}
       onEdit={(id,url)=>setEditingPhoto({id,url})}
       onStale={resign}
     />
@@ -669,10 +670,10 @@ export default function PhotosPage(){
     galleryBody = (
       <div className="phGallery" aria-busy="true">
         <div className="phGrid">
-          {Array.from({length:8}).map((_,i)=>(
-            <div key={i} className="phCard" aria-hidden style={{cursor:'default'}}>
+          {Array.from({length:12}).map((_,i)=>(
+            <div key={i} className="phTile" aria-hidden style={{cursor:'default'}}>
               <div className="phThumb" />
-              <div className="phCardBody"><div style={{height:12,width:'70%',borderRadius:4,background:'var(--border-subtle)'}}/><div style={{height:10,width:'40%',borderRadius:4,background:'var(--border-subtle)'}}/></div>
+              <div className="phCap"><div style={{height:12,width:'70%',borderRadius:4,background:'var(--border-subtle)'}}/></div>
             </div>
           ))}
         </div>
@@ -692,7 +693,7 @@ export default function PhotosPage(){
       <EmptyState
         icon={<Camera size={22}/>}
         title={waitingItems.length ? 'Nothing uploaded to this job yet' : 'No photos or video yet'}
-        text="Photos and video are the project record — progress proof, inspection evidence, punch documentation, closeout backup. Add a whole day's worth at once, any size."
+        text="Add a whole day's worth at once, any size."
         action={<Button icon={<Plus size={15} weight="bold"/>} onClick={openUpload}>Add Photos &amp; Video</Button>}
       />
     );
@@ -755,7 +756,7 @@ export default function PhotosPage(){
             )}
           </div>
           {ordered.length>1 && selIndex>=0 && (
-            <div className="phMuted" style={{fontSize:'var(--fs-xs)',marginTop:8}}>{selIndex+1} of {ordered.length} in view · ← → to step, Esc to close</div>
+            <div className="phMuted" style={{fontSize:'var(--fs-sm)',marginTop:8}} title="← → to step, Esc to close">{selIndex+1} of {ordered.length}</div>
           )}
 
           {selected.description && (
@@ -785,10 +786,9 @@ export default function PhotosPage(){
                 {selectedFromFiles && !isVideo(selected) && <Badge tone="closed">Read-Only</Badge>}
               </div>
               {selectedFromFiles && !isVideo(selected) && (
-                <div className="phNext">
-                  This image lives in the project&apos;s Files &amp; Media library. Rename, move or delete it there.{' '}
-                  <a href={`/app/projects/${projectId}/files`}>Open Files &amp; Media</a>
-                </div>
+                <Button size="sm" variant="ghost" icon={<FolderOpen size={15}/>} href={`/app/projects/${projectId}/files`} title="This image lives in Files & Media — rename, move or delete it there.">
+                  Manage in Files &amp; Media
+                </Button>
               )}
             </div>
             <div className="phSection">
@@ -867,9 +867,9 @@ export default function PhotosPage(){
         onRemove={queue.remove}
         hint="Photos at any size · videos up to 500 MB. They upload straight to storage, so big files are fine."
         extra={queue.items.length===0 && (
-          <button type="button" className="phLinkAlt" onClick={()=>{ setUploadOpen(false); openCreate(); }}>
-            <LinkSimple size={15}/> Have a link instead? Add a photo by URL
-          </button>
+          <Button variant="ghost" size="sm" className="phLinkAlt" icon={<LinkSimple size={15}/>} onClick={()=>{ setUploadOpen(false); openCreate(); }}>
+            Add a photo by URL
+          </Button>
         )}
       >
         <Field label="Album for these photos" hint="Videos go to the Video album.">
@@ -939,10 +939,10 @@ export default function PhotosPage(){
         actions={
           <>
             {queue.busy && !uploadOpen && (
-              <button type="button" className="phUploading" onClick={()=>setUploadOpen(true)} aria-label="Show uploads">
+              <Button onClick={()=>setUploadOpen(true)} aria-label="Show uploads">
                 Uploading {queue.counts.done} of {queue.counts.total - queue.counts.failed}
-                <i><b style={{width:`${Math.round(queue.overall*100)}%`}}/></i>
-              </button>
+                <span className="phUpBar" aria-hidden><b style={{width:`${Math.round(queue.overall*100)}%`}}/></span>
+              </Button>
             )}
             <Button variant="primary" icon={<Plus size={15} weight="bold"/>} onClick={openUpload}>
               Add Photos &amp; Video
@@ -1041,10 +1041,10 @@ export default function PhotosPage(){
           <Field label="Title" required span>
             <Input value={form.title} onChange={e=>setForm(f=>({...f,title:e.target.value}))} placeholder="e.g. Foundation pour complete"/>
           </Field>
-          <Field label="Album" hint={mode==='create'&&auto.album ? <><AutoChip/> Matched your current album filter — change freely.</> : undefined}>
+          <Field label="Album" hint={mode==='create'&&auto.album ? 'Matched your current album filter.' : undefined}>
             <Select value={form.album} onChange={e=>setForm(f=>({...f,album:e.target.value}))} options={ALBUMS}/>
           </Field>
-          <Field label="Date Taken" hint={mode==='create'&&auto.date ? <><AutoChip/> Defaulted to today — adjust freely.</> : undefined}>
+          <Field label="Date Taken" hint={mode==='create'&&auto.date ? 'Defaulted to today.' : undefined}>
             <div className="phDateInput"><SaguaroDatePicker value={form.taken_at} onChange={v=>setForm(f=>({...f,taken_at:v}))} style={DATE_INPUT_STYLE}/></div>
           </Field>
           <Field label="Description" span>
@@ -1078,8 +1078,8 @@ export default function PhotosPage(){
   );
 }
 
-function PhotoCard({photo,selected,onClick,onEdit,onStale}:{
-  photo:any;selected:boolean;onClick:()=>void;onEdit?:(id:string,url:string)=>void;onStale?:()=>void;
+function PhotoCard({photo,selected,onClick,onInfo,onEdit,onStale}:{
+  photo:any;selected:boolean;onClick:()=>void;onInfo?:()=>void;onEdit?:(id:string,url:string)=>void;onStale?:()=>void;
 }){
   const src=isVideo(photo)?photo.thumbnail_url:(photo.thumbnail_url||photo.url);
   const [missing,setMissing]=useState(!photo.url);
@@ -1092,12 +1092,16 @@ function PhotoCard({photo,selected,onClick,onEdit,onStale}:{
     setMissing(true);
   };
   const badge=albumBadge(photo.album);
+  const when=photo.taken_at&&!isNaN(new Date(photo.taken_at).getTime())
+    ? new Date(photo.taken_at).toLocaleDateString('en-US',{month:'short',day:'numeric'}) : '';
+  const more=[photo.location, photo.taken_by].filter(Boolean).join(' · ');
   return(
-    <div className="phCard" data-sel={selected?'true':undefined} role="button" tabIndex={0}
+    <div className="phTile" data-sel={selected?'true':undefined} role="button" tabIndex={0}
       onClick={onClick}
-      onKeyDown={e=>{ if(e.key==='Enter'||e.key===' '){ e.preventDefault(); onClick(); } }}
+      onKeyDown={e=>{ if(e.target!==e.currentTarget) return; if(e.key==='Enter'||e.key===' '){ e.preventDefault(); onClick(); } }}
       aria-label={`Open ${photo.title||'photo'}`}
-      aria-pressed={selected}>
+      aria-pressed={selected}
+      title={[photo.title||'Untitled', when, more].filter(Boolean).join(' · ')}>
       <div className="phThumb" data-missing={missing?'true':undefined}>
         {!missing ? (
           /* Grid tiles render the ~400px thumbnail; the full original is for the
@@ -1109,27 +1113,30 @@ function PhotoCard({photo,selected,onClick,onEdit,onStale}:{
         ) : (
           <span><Images size={18}/> No image</span>
         )}
-        {isVideo(photo) && !missing && (
-          <>
-            {photo.thumbnail_url && <div className="phPlay"><span><Play size={18} weight="fill"/></span></div>}
-            {photo.duration_seconds ? <span className="phDur">{fmtDuration(photo.duration_seconds)}</span> : null}
-          </>
+        {isVideo(photo) && !missing && photo.thumbnail_url && <div className="phPlay"><span><Play size={16} weight="fill"/></span></div>}
+        {(onInfo || (photo.url && onEdit && !isFromFiles(photo))) && (
+          <div className="phTileTools">
+            {onInfo && (
+              <Button size="sm" variant="ghost" icon={<Info size={14}/>} aria-label={`Details for ${photo.title||'photo'}`} title="Details"
+                onClick={(e)=>{e.stopPropagation();onInfo();}}/>
+            )}
+            {photo.url && onEdit && !isFromFiles(photo) && (
+              <Button size="sm" variant="ghost" icon={<Crop size={14}/>} aria-label={`Edit, crop or rotate ${photo.title||'photo'}`} title="Edit / Crop / Rotate"
+                onClick={(e)=>{e.stopPropagation();onEdit(photo.id,photo.url);}}/>
+            )}
+          </div>
         )}
       </div>
-      <div className="phCardBody">
-        <div className="phCardTitle" title={photo.title||'Untitled'}>{photo.title||'Untitled'}</div>
-        <div className="phCardMeta">
-          <Badge tone={badge.tone}>{badge.label}</Badge>
-          {photo.taken_at && <span>{new Date(photo.taken_at).toLocaleDateString('en-US',{month:'short',day:'numeric'})}</span>}
+      {/* Words sit under the picture, never over it. */}
+      <div className="phCap">
+        <div className="phCapTitle">{photo.title||'Untitled'}</div>
+        <div className="phCapMeta">
+          {badge.tone!=='neutral' ? <Badge tone={badge.tone}>{badge.label}</Badge> : <span>{badge.label}</span>}
+          {when && <span>· {when}</span>}
+          {isVideo(photo) && photo.duration_seconds ? <span>· {fmtDuration(photo.duration_seconds)}</span> : null}
         </div>
-        {photo.location && <div className="phCardMeta"><span>{photo.location}</span></div>}
+        {more && <div className="phCapMore">{more}</div>}
       </div>
-      {photo.url && onEdit && !isFromFiles(photo) && (
-        <div className="phCardEdit">
-          <Button size="sm" variant="ghost" icon={<Crop size={14}/>} aria-label={`Edit, crop or rotate ${photo.title||'photo'}`} title="Edit / Crop / Rotate"
-            onClick={(e)=>{e.stopPropagation();onEdit(photo.id,photo.url);}}/>
-        </div>
-      )}
     </div>
   );
 }
