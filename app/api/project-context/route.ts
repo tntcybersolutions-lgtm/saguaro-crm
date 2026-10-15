@@ -35,7 +35,7 @@ export async function GET(req: NextRequest) {
 
   const [
     projectQ, contractsQ, cosQ, payAppsQ, budgetQ, subsQ, packagesQ,
-    invoicesQ, billsQ, posQ, rfisQ, submittalsQ, tasksQ, logQ, takeoffsQ, contactsQ, punchQ, proposalsQ, modelsQ,
+    invoicesQ, billsQ, posQ, rfisQ, submittalsQ, tasksQ, logQ, takeoffsQ, contactsQ, punchQ, proposalsQ, modelsQ, meetingsQ,
   ] = await Promise.all([
     safe(db.from('projects').select('id, name, color, status, closeout_date, address, project_number, owner_name, owner_email, architect_name, start_date, end_date, percent_complete, contract_amount, original_contract_amount, retainage_pct, phase, setup_step, setup_complete').eq('id', projectId).eq('tenant_id', t).single()),
     safe(db.from('contracts').select('id, contract_type, title, party_name, vendor_name, amount, contract_amount, original_amount, approved_changes, invoiced_amount, paid_amount, status, retainage_pct, trade').eq('project_id', projectId).eq('tenant_id', t)),
@@ -79,6 +79,8 @@ export async function GET(req: NextRequest) {
     safe(db.from('project_files').select('id', { count: 'exact', head: true })
       .eq('project_id', projectId).eq('tenant_id', t).is('deleted_at', null)
       .or('file_name.ilike.%.ifc,file_name.ilike.%.glb,file_name.ilike.%.gltf')),
+    /* Meetings on the job — shows the Meetings tool in the rail once one exists. */
+    safe(db.from('meetings').select('id', { count: 'exact', head: true }).eq('project_id', projectId).eq('tenant_id', t)),
   ]);
 
   const p = (projectQ as any)?.data ?? null;
@@ -236,6 +238,7 @@ export async function GET(req: NextRequest) {
       scheduleTasks: tasks.length,
       openPunch: N((punchQ as any)?.count),
       modelFiles: N((modelsQ as any)?.count),
+      meetings: N((meetingsQ as any)?.count),
     },
     schedule: {
       criticalCount: tasks.filter((tk) => tk.is_critical && tk.status !== 'complete').length,
