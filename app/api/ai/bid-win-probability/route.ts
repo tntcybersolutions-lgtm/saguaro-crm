@@ -13,13 +13,13 @@ export async function POST(req: NextRequest) {
   // Fetch historical bid submissions to establish win rate
   const { data: historicalBids } = await db
     .from('bid_submissions')
-    .select('id, bid_amount, status, sub_name, bid_packages(trade, project_budget)')
+    .select('id, amount, status, is_awarded, sub_name')
     .eq('tenant_id', tenantId)
     .in('status', ['awarded', 'not_awarded'])
     .limit(50);
 
   const bids = (historicalBids || []) as any[];
-  const wins = bids.filter((b: any) => b.status === 'awarded').length;
+  const wins = bids.filter((b: any) => b.is_awarded || b.status === 'awarded').length;
   const historicalWinRate = bids.length > 0 ? Math.round(wins / bids.length * 100) : null;
 
   // Current bid being analyzed
