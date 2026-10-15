@@ -161,3 +161,45 @@ describe('item search respects tool access', () => {
     expect(fm.items.some((i: { type: string }) => i.type === 'rfis')).toBe(true);
   });
 });
+
+import { GET as listMarkups, POST as addMarkup } from '@/app/api/projects/[projectId]/drawings/markups/route';
+import { PATCH as patchMarkup, DELETE as delMarkup } from '@/app/api/projects/[projectId]/drawings/markups/[id]/route';
+
+describe('drawing markups', () => {
+  const mp = { params: Promise.resolve({ projectId: JOB }) };
+  const mip = (id: string) => ({ params: Promise.resolve({ projectId: JOB, id }) });
+  const geo = { space: 'image', w: 1000, h: 700, style: { color: 'rgb(239,68,68)', width: 4 }, geometry: [[10, 10], [200, 120]] };
+
+  test('a private markup is seen and changed only by the person who drew it until published', async () => {
+    const r = await addMarkup(req(`/api/projects/${JOB}/drawings/markups`, 'POST', { drawing_id: D1, markup_type: 'cloud', data: { ...geo, private: true } }), mp);
+    expect(r.status).toBe(200);
+    const id = (await r.json()).markup.id;
+    await addMarkup(req(`/api/projects/${JOB}/drawings/markups`, 'POST', { drawing_id: D1, markup_type: 'rect', data: geo }), mp);
+    expect((await (await listMarkups(req(`/api/projects/${JOB}/drawings/markups?drawing_id=${D1}`), mp)).json()).markups).toHaveLength(2);
+    currentUser = FOREMAN;
+    expect((await (await listMarkups(req(`/api/projects/${JOB}/drawings/markups?drawing_id=${D1}`), mp)).json()).markups).toHaveLength(1);
+    expect((await patchMarkup(req(`/x`, 'PATCH', { data: { ...geo, private: false } }), mip(id))).status).toBe(404);
+    expect((await delMarkup(req(`/x`, 'DELETE'), mip(id))).status).toBe(404);
+    currentUser = ADMIN;
+    expect((await patchMarkup(req(`/x`, 'PATCH', { data: { ...geo, private: false } }), mip(id))).status).toBe(200);
+    currentUser = FOREMAN;
+    expect((await (await listMarkups(req(`/api/projects/${JOB}/drawings/markups?drawing_id=${D1}`), mp)).json()).markups).toHaveLength(2);
+  });
+
+  test("someone else's published markup can't be edited without full Documents access", async () => {
+    const id = (await (await addMarkup(req(`/api/projects/${JOB}/drawings/markups`, 'POST', { drawing_id: D1, markup_type: 'rect', data: geo }), mp)).json()).markup.id;
+    currentUser = FOREMAN;
+    expect((await patchMarkup(req(`/x`, 'PATCH', { color: 'red' }), mip(id))).status).toBe(403);
+  });
+
+  test('a sheet link must point at a sheet on the same job', async () => {
+    const D2 = 'aaaaaaaa-0000-4000-8000-0000000000d2';
+    fake.T('drawings').push({ id: D2, tenant_id: A, project_id: JOB, name: 'Details', sheet_number: 'A-501', status: 'current', deleted_at: null });
+    fake.T('drawings').push({ id: 'dx', tenant_id: A, project_id: JOB2, name: 'Other job', sheet_number: 'A-1', status: 'current', deleted_at: null });
+    const ok = await addMarkup(req(`/x`, 'POST', { drawing_id: D1, markup_type: 'link', data: { ...geo, text: 'A-501' }, entity_type: 'drawings', entity_id: D2 }), mp);
+    expect(ok.status).toBe(200);
+    expect((await ok.json()).markup).toMatchObject({ entity_type: 'drawings', entity_id: D2 });
+    expect((await addMarkup(req(`/x`, 'POST', { drawing_id: D1, markup_type: 'link', data: geo, entity_type: 'drawings', entity_id: 'dx' }), mp)).status).toBe(404);
+    expect((await addMarkup(req(`/x`, 'POST', { drawing_id: D1, markup_type: 'link', data: geo }), mp)).status).toBe(400);
+  });
+});
