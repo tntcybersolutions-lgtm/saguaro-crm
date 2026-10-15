@@ -5,7 +5,7 @@
  *   DELETE /api/items/:tool/:id/links?linkId=…   unlink (the items themselves are untouched)
  */
 import { NextRequest, NextResponse } from 'next/server';
-import { loadItem } from '@/lib/items/server';
+import { loadItem, viewableTools } from '@/lib/items/server';
 import { itemTool, itemName, statusLabel } from '@/lib/items/registry';
 import { apiError } from '@/lib/api-error';
 
@@ -30,6 +30,8 @@ export async function GET(req: NextRequest, { params }: P) {
     const byType = new Map<string, string[]>();
     others.forEach((o) => byType.set(o.type, [...(byType.get(o.type) || []), o.oid]));
     const found = new Map<string, Record<string, unknown>>();
+    const allowed = await viewableTools(l.db, l.user, (l.item.project_id as string) || null);
+    for (const t of Array.from(byType.keys())) if (!allowed.has(t)) byType.delete(t);
     await Promise.all(Array.from(byType.entries()).map(async ([t, ids]) => {
       const tool = itemTool(t);
       if (!tool) return;
@@ -66,6 +68,8 @@ export async function POST(req: NextRequest, { params }: P) {
     if (target.hasDeletedAt) q = q.is('deleted_at', null);
     const { data: other } = await q.maybeSingle();
     if (!other) return NextResponse.json({ error: `${target.noun} not found` }, { status: 404 });
+    const allowed = await viewableTools(l.db, l.user, ((other as { project_id?: string | null }).project_id) || null);
+    if (!allowed.has(target.type)) return NextResponse.json({ error: `${target.noun} not found` }, { status: 404 });
     const { data, error } = await l.db.from('item_links' as never).insert({
       tenant_id: l.user.tenantId,
       project_id: (l.item.project_id as string) || null,

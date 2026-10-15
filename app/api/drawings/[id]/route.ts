@@ -49,7 +49,9 @@ export async function DELETE(req: NextRequest, { params }: { params: Promise<{ i
   if (!user) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
   try {
     const db = createServerClient();
-    const { error } = await db.from('drawings').delete().eq('id', id).eq('tenant_id', user.tenantId);
+    // Kept, not erased: a removed sheet leaves the register but its pins,
+    // markups and history stay recoverable.
+    const { error } = await db.from('drawings').update({ deleted_at: new Date().toISOString() } as never).eq('id', id).eq('tenant_id', user.tenantId);
     if (error) throw error;
     return NextResponse.json({ success: true });
   } catch (e: unknown) {

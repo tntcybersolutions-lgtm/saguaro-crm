@@ -68,6 +68,7 @@ export default function ItemPage() {
   const [item, setItem] = useState<Item | null>(null);
   const [projectName, setProjectName] = useState('');
   const [files, setFiles] = useState<FileRow[]>([]);
+  const [onDrawings, setOnDrawings] = useState<SheetRef[]>([]);
   const [loadErr, setLoadErr] = useState('');
   const [tab, setTab] = useState(type === 'daily_logs' ? 'log' : 'general');
   const [editing, setEditing] = useState(false);
@@ -87,6 +88,7 @@ export default function ItemPage() {
     setItem(j.item);
     setProjectName(j.project?.name || '');
     setFiles(Array.isArray(j.files) ? j.files : []);
+    setOnDrawings(Array.isArray(j.drawings) ? j.drawings : []);
   }, [tool, type, id]);
 
   const loadComments = useCallback(async () => {
@@ -243,7 +245,7 @@ export default function ItemPage() {
         </section>
       )}
       {tab === 'comments' && <CommentsTab type={type} id={id} projectId={projectId} tool={tool} comments={comments} reload={loadComments} show={show} />}
-      {tab === 'related' && <RelatedTab type={type} id={id} projectId={projectId} tool={tool} links={links} reload={loadLinks} show={show} />}
+      {tab === 'related' && <RelatedTab type={type} id={id} projectId={projectId} tool={tool} links={links} reload={loadLinks} show={show} onDrawings={onDrawings} />}
       {tab === 'files' && <FilesTab tool={tool} id={id} projectId={projectId} files={files} reload={load} show={show} />}
       {tab === 'history' && <section className="ip-section"><ItemHistory key={historyKey} entityType={tool.table} entityId={id} /></section>}
     </PageShell>
@@ -341,8 +343,10 @@ function CommentsTab({ type, id, projectId, tool, comments, reload, show }: {
 
 /* ── Related items ────────────────────────────────────────────────────────── */
 
-function RelatedTab({ type, id, projectId, tool, links, reload, show }: {
-  type: string; id: string; projectId: string; tool: ItemTool; links: LinkRow[] | null; reload: () => Promise<void>; show: (m: string, t?: 'good' | 'bad') => void;
+type SheetRef = { id: string; sheet: string | null; name: string | null; version: string | null; status: string | null; pins: number; href: string };
+
+function RelatedTab({ type, id, projectId, tool, links, reload, show, onDrawings }: {
+  type: string; id: string; projectId: string; tool: ItemTool; links: LinkRow[] | null; reload: () => Promise<void>; show: (m: string, t?: 'good' | 'bad') => void; onDrawings: SheetRef[];
 }) {
   const [q, setQ] = useState('');
   const [hits, setHits] = useState<Hit[] | null>(null);
@@ -407,6 +411,20 @@ function RelatedTab({ type, id, projectId, tool, links, reload, show }: {
             </li>
           ))}
         </ul>
+      )}
+      {onDrawings.length > 0 && (
+        <>
+          <div className="ip-row-head"><span className="ip-muted">Pinned on {onDrawings.length} drawing{onDrawings.length === 1 ? '' : 's'}</span></div>
+          <ul className="ip-list">
+            {onDrawings.map((d) => (
+              <li key={d.id}>
+                <span className="ip-noun">Sheet</span>
+                <Link className="ip-name ip-link" href={d.href}>{[d.sheet, d.name].filter(Boolean).join(' · ') || 'Drawing'}</Link>
+                <span className="ip-status">{d.version ? `Rev ${d.version}` : ''}{d.status === 'superseded' ? ' · superseded' : ''}</span>
+              </li>
+            ))}
+          </ul>
+        </>
       )}
     </section>
   );

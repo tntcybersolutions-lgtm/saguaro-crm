@@ -15,6 +15,9 @@ export const dynamic = 'force-dynamic'
 
 type PinInsert = Database['public']['Tables']['drawing_pins']['Insert'];
 import { apiError } from '@/lib/api-error';
+import { pinEntityFor, toolForPin } from '@/lib/drawing-revisions';
+import { itemTool } from '@/lib/items/registry';
+import { viewableTools } from '@/lib/items/server';
 
 /** 'punch' → 'punch_item'; everything else passes through. */
 function normalizeEntityType(et: unknown): string | null {
@@ -70,9 +73,23 @@ export async function POST(req: NextRequest, { params }: { params: Promise<{ id:
       return NextResponse.json({ error: 'Drawing not found' }, { status: 404 })
     }
 
-    const x = Number(x_pct) || 0
-    const y = Number(y_pct) || 0
-    const et = normalizeEntityType(entity_type)
+    const x = Math.min(1, Math.max(0, Number(x_pct) || 0))
+    const y = Math.min(1, Math.max(0, Number(y_pct) || 0))
+    const et = normalizeEntityType(typeof entity_type === 'string' ? pinEntityFor(entity_type) : entity_type)
+    // A pin that points at an item must point at a real one on this job that this person can see.
+    if (entity_id) {
+      const tool = itemTool(toolForPin(et))
+      if (!tool) return NextResponse.json({ error: 'That kind of item cannot be pinned.' }, { status: 400 })
+      let q = db.from(tool.table as never).select('id, project_id').eq('id', entity_id).eq('tenant_id', user.tenantId)
+      if (tool.hasDeletedAt) q = q.is('deleted_at', null)
+      const { data: target } = await q.maybeSingle()
+      const allowed = await viewableTools(db, user, drawing.project_id)
+      if (!target || (target as { project_id: string }).project_id !== drawing.project_id || !allowed.has(tool.type)) {
+        return NextResponse.json({ error: `${tool.noun} not found on this job` }, { status: 404 })
+      }
+    } else if (!String(title || description || '').trim()) {
+      return NextResponse.json({ error: 'Pick an item to pin or write a note.' }, { status: 400 })
+    }
     const page = Number(page_number)
     const isPunch = et === 'punch_item'
 
@@ -110,7 +127,7 @@ export async function POST(req: NextRequest, { params }: { params: Promise<{ id:
 
 // DELETE /api/drawings/{id}/pins?pinId=...
 export async function DELETE(req: NextRequest, { params }: { params: Promise<{ id: string }> }) {
-  const g = await requirePermission(req, 'Documents', 'Full');
+  const g = await requirePermission(req, 'Documents', 'Edit');
   if (!g.ok) return g.res;
   const user = g.user;
   const { id } = await params

@@ -77,11 +77,11 @@ export default function CommitmentsPage() {
   }, [rows, search, kind, state]);
 
   const stats: StatItem[] = [
-    { label: 'Committed', value: loading ? '—' : fmt(sum(live, 'revised')), sub: `${live.length} live · ${fmt(sum(live, 'approved_changes'))} in changes`, icon: <Handshake size={15} />, onClick: () => setState('live'), active: state === 'live' },
-    { label: 'Billed to date', value: loading ? '—' : fmt(sum(live, 'billed')), sub: `${fmt(sum(live, 'paid'))} paid`, icon: <Receipt size={15} /> },
+    { label: 'Committed', value: loading ? '—' : fmt(sum(live, 'revised')), sub: loading ? undefined : `${live.length} live · ${fmt(sum(live, 'approved_changes'))} in changes`, icon: <Handshake size={15} />, onClick: () => setState('live'), active: state === 'live' },
+    { label: 'Billed to date', value: loading ? '—' : fmt(sum(live, 'billed')), sub: loading ? undefined : `${fmt(sum(live, 'paid'))} paid`, icon: <Receipt size={15} /> },
     { label: 'Remaining', value: loading ? '—' : fmt(sum(live, 'remaining')), sub: 'Left to bill on live commitments', icon: <Wallet size={15} /> },
     { label: 'Retainage held', value: loading ? '—' : fmt(sum(live, 'retainage_held')), icon: <Scales size={15} /> },
-    { label: 'Over-billed', value: loading ? '—' : String(overBilled.length), sub: overBilled.length ? 'Billed past the revised amount' : 'None', tone: overBilled.length ? 'bad' : 'default', icon: <WarningCircle size={15} />, onClick: () => setState('over'), active: state === 'over' },
+    { label: 'Over-billed', value: loading ? '—' : String(overBilled.length), sub: loading ? undefined : overBilled.length ? 'Billed past the revised amount' : 'None', tone: overBilled.length ? 'bad' : 'default', icon: <WarningCircle size={15} />, onClick: () => setState('over'), active: state === 'over' },
   ];
 
   const columns: Column<CommitmentRow>[] = [
@@ -148,7 +148,7 @@ export default function CommitmentsPage() {
           rowKey={(r) => `${r.source}:${r.id}`}
           defaultSort={{ key: 'number', dir: 'asc' }}
           onRowClick={(r) => router.push(r.href)}
-          rowActions={(r) => [{ label: 'Open', icon: <ArrowSquareOut size={14} />, href: r.href, inline: true }]}
+          rowActions={(r) => [{ label: 'Open', icon: <ArrowSquareOut size={14} />, href: r.href }]}
           empty={
             rows.length === 0 ? (
               <EmptyState

@@ -5,9 +5,9 @@
  */
 import { NextRequest, NextResponse } from 'next/server';
 import { createServerClient, getUser } from '@/lib/supabase-server';
-import { requirePermission } from '@/lib/permissions';
-import type { PermLevel } from '@/lib/permission-categories';
-import { itemTool, type ItemTool } from './registry';
+import { requirePermission, getEffectivePermissions } from '@/lib/permissions';
+import { meetsLevel, type PermLevel } from '@/lib/permission-categories';
+import { itemTool, ITEM_TOOLS, type ItemTool } from './registry';
 
 type Db = ReturnType<typeof createServerClient>;
 export type LoadedItem =
@@ -36,4 +36,13 @@ export async function loadItem(req: NextRequest, type: string, id: string, level
   const g = await requirePermission(req, tool.perm, level, { projectId: (item.project_id as string) || null, db });
   if (!g.ok) return { ok: false, res: g.res };
   return { ok: true, tool, item, user, db };
+}
+
+/**
+ * The tools this person may see on a job — so search and Related never show a
+ * subcontract or PO to someone without Budget access, or an RFI without RFIs.
+ */
+export async function viewableTools(db: Db, user: { id: string; tenantId: string }, projectId: string | null): Promise<Set<string>> {
+  const perms = await getEffectivePermissions(db, user.id, user.tenantId, projectId);
+  return new Set(Object.values(ITEM_TOOLS).filter((t) => meetsLevel(perms[t.perm], 'View')).map((t) => t.type));
 }

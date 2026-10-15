@@ -7,6 +7,7 @@ import { NextRequest, NextResponse } from 'next/server';
 import { requirePermission } from '@/lib/permissions';
 import { ITEM_TOOLS, itemName, statusLabel } from '@/lib/items/registry';
 import { apiError } from '@/lib/api-error';
+import { viewableTools } from '@/lib/items/server';
 
 export const dynamic = 'force-dynamic';
 
@@ -19,7 +20,8 @@ export async function GET(req: NextRequest) {
   const exclude = req.nextUrl.searchParams.get('exclude') || '';
   try {
     const safe = q.replace(/[%,()*]/g, ' ').trim();
-    const results = await Promise.all(Object.values(ITEM_TOOLS).map(async (tool) => {
+    const allowed = await viewableTools(g.db, g.user, projectId);
+    const results = await Promise.all(Object.values(ITEM_TOOLS).filter((t) => allowed.has(t.type)).map(async (tool) => {
       let query = g.db.from(tool.table as never).select('*').eq('tenant_id', g.user.tenantId).eq('project_id', projectId);
       if (tool.hasDeletedAt) query = query.is('deleted_at', null);
       if (safe) query = query.or(tool.searchKeys.map((k) => `${k}.ilike.%${safe}%`).join(','));
