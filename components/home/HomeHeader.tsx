@@ -130,7 +130,7 @@ function CreateMenu({ view, projectId }: { view: HomeView; projectId: string | n
   );
 }
 
-export default function HomeHeader({ ctx, loading, projects, projectId, onParam, onSaveDefault, saving }: {
+export default function HomeHeader({ ctx, loading, projects, projectId, onParam, onSaveDefault, saving, extra }: {
   ctx: HeaderContext | null;
   /** True until the first answer; a failed load shows a plain title, not skeletons. */
   loading: boolean;
@@ -139,6 +139,8 @@ export default function HomeHeader({ ctx, loading, projects, projectId, onParam,
   onParam: (k: 'view' | 'scope' | 'project', v: string | null) => void;
   onSaveDefault: () => void;
   saving: boolean;
+  /** Extra controls at the end of the row (Arrange). */
+  extra?: React.ReactNode;
 }) {
   return (
     <header className="fh-head">
@@ -148,6 +150,7 @@ export default function HomeHeader({ ctx, loading, projects, projectId, onParam,
           {ctx && <ViewChip ctx={ctx} onView={v => onParam('view', v)} onScope={s => onParam('scope', s)} onSaveDefault={onSaveDefault} saving={saving} />}
           <JobChip projects={projects} value={projectId || ''} onChange={id => onParam('project', id)} />
           <CreateMenu view={ctx?.view || 'operations'} projectId={projectId} />
+          {extra}
         </div>
       </div>
       {ctx

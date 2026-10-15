@@ -55,6 +55,16 @@ import { architectName, ownerName } from '@/lib/project-parties';
 import { useProjects } from '@/lib/hooks/useProjects';
 import type { JobHealth } from '@/lib/job-health';
 import { HealthRing, ScheduleBar, ItemDots, OverUnder, JOB_HEALTH_CSS } from '@/components/jobs/JobHealthParts';
+import { ArrangeButton, usePanelLayout, type PanelDef } from '@/components/layout/ArrangePanels';
+
+/* The job page's panels, in their standard order. Top: health, money, brief; then the tools column and the side column. */
+const JOB_PANELS: PanelDef[] = [
+  { key: 'health', label: 'Job health' }, { key: 'money', label: 'Money' }, { key: 'brief', label: "Sage's read" },
+  { key: 'tools', label: 'Tools' }, { key: 'attention', label: 'Needs attention' }, { key: 'upcoming', label: 'Coming up' },
+  { key: 'steps', label: 'Steps' }, { key: 'job', label: 'Job details' },
+];
+const TOP = ['health', 'money', 'brief'];
+const SIDE_PANELS = ['attention', 'upcoming', 'steps', 'job'];
 
 /* ── Fetchers ─────────────────────────────────────────────────────────── */
 
@@ -143,6 +153,7 @@ export default function JobPage() {
   const { projectId } = useParams<{ projectId: string }>();
   const router = useRouter();
   const base = '/app/projects/' + projectId;
+  const arrangeState = usePanelLayout('job-overview', JOB_PANELS);
 
   const { data: agg, error: aggError, isLoading: aggLoading, mutate: reloadAgg } = useSWR<any>(
     projectId ? '/api/projects/' + projectId : null, aggregateFetcher, { revalidateOnFocus: false, keepPreviousData: true },
@@ -369,9 +380,8 @@ export default function JobPage() {
     </section>
   );
 
-  const side = (
-    <div className="jx-side">
-      {(attn.length > 0 || alertCount > 0 || aggError) && (
+  const sidePanels: Record<string, React.ReactNode> = {
+    attention: (attn.length > 0 || alertCount > 0 || aggError) ? (
         <section aria-label="Needs attention">
           <SectionLabel action={alertCount > 0 ? { label: scanning ? 'Scanning…' : 'Re-scan', onClick: () => { if (!scanning) void runAutopilot(); } } : undefined}>Needs attention</SectionLabel>
           {scanMsg && <p className="jx-note" data-ok={scanMsg.ok || undefined} role="status">{scanMsg.text}</p>}
@@ -383,8 +393,8 @@ export default function JobPage() {
           )}
           {attn.length > 5 && <button type="button" className="jx-more" onClick={() => setShowAllWork((v) => !v)}>{showAllWork ? 'Show fewer' : `Show all ${attn.length}`}</button>}
         </section>
-      )}
-
+    ) : null,
+    upcoming: (
       <section aria-label="Coming up">
         <SectionLabel action={{ label: 'Schedule', href: `${base}/schedule` }}>Coming up</SectionLabel>
         {!data && !aggError ? <RowSkeleton rows={2} /> : ups.length === 0 ? (
@@ -396,7 +406,8 @@ export default function JobPage() {
         )}
         {ups.length > 5 && <p className="fl-empty">{ups.length - 5} more on the <Link href={`${base}/schedule`} className="jx-inline">schedule</Link>.</p>}
       </section>
-
+    ),
+    steps: (
       <section aria-label="Steps">
         <SectionLabel>{done ? `Steps · ${doneCount} of ${steps.length} done` : 'Steps'}</SectionLabel>
         {!done ? (
@@ -420,7 +431,8 @@ export default function JobPage() {
           </ol>
         )}
       </section>
-
+    ),
+    job: (
       <section aria-label="The job">
         <SectionLabel>Job</SectionLabel>
         <FlatList label="The job">
@@ -463,26 +475,17 @@ export default function JobPage() {
           </li>
         </FlatList>
       </section>
+    ),
+  };
+  const sideShown = arrangeState.visible.filter((k) => SIDE_PANELS.includes(k));
+  const side = sideShown.length ? (
+    <div className="jx-side">
+      {sideShown.map((k) => <React.Fragment key={k}>{sidePanels[k]}</React.Fragment>)}
     </div>
-  );
+  ) : null;
 
-  return (
-    <div className="k-frame jx">
-      {css}
-      <header className="jx-head">
-        <div className="jx-title">
-          <h1 className="k-title">{p.name || 'Untitled job'}</h1>
-          <span className="jx-pill" data-tone={stage === 'building' ? 'success' : stage === 'bidding' ? 'info' : undefined}>{stageLabel(p)}</span>
-        </div>
-        {(addr || when) && (
-          <p className="jx-meta">
-            {addr && <span><MapPin size={16} weight="bold" aria-hidden="true" />{addr}</span>}
-            {when && <span data-late={when.late || undefined}><CalendarBlank size={16} weight="bold" aria-hidden="true" />{when.text}</span>}
-          </p>
-        )}
-      </header>
-
-      {health && (
+  const topPanels: Record<string, React.ReactNode> = {
+    health: health && (
         <section className="jx-health" aria-label="Job health">
           <HealthRing health={health} size={84} />
           <div className="jx-health-body">
@@ -501,8 +504,8 @@ export default function JobPage() {
           </div>
           <div className="jx-health-ou"><span className="jx-health-k">Over / under</span><OverUnder health={health} /></div>
         </section>
-      )}
-
+      ),
+    money: (
       <div className="jx-money" aria-busy={moneyState === 'loading' || undefined}>
         <NumberStrip items={[
           { value: moneyState === 'ok' ? (contract > 0 ? fmtMoneyShort(contract) : 'Not set') : moneyState === 'failed' ? '—' : <i className="jx-skel-val" />, label: 'Contract' },
@@ -513,8 +516,8 @@ export default function JobPage() {
           <div className="jx-bar" role="progressbar" aria-label="Billed of contract" aria-valuemin={0} aria-valuemax={100} aria-valuenow={pct ?? 0}><i style={{ width: `${Math.min(100, pct ?? 0)}%` }} /></div>
         )}
       </div>
-
-      {brief ? (
+    ),
+    brief: brief ? (
         <Brief action={{ label: brief.action.label, href: base + brief.action.href }}>
           {brief.parts.map((x, i) => (typeof x === 'string' ? <React.Fragment key={i}>{x}</React.Fragment> : <b key={i}>{x.b}</b>))}
         </Brief>
@@ -522,10 +525,30 @@ export default function JobPage() {
         <Brief action={{ label: 'Retry', onClick: () => { void reloadTools(); } }}>Couldn&apos;t count this job&apos;s tools, so there is no read on it yet.</Brief>
       ) : (
         <div className="jx-brief-skel" aria-busy="true" aria-label="Reading the job"><i /><i /></div>
-      )}
+      ),
+  };
 
-      <div className="jx-cols">
-        <div className="jx-main">{tools}</div>
+  return (
+    <div className="k-frame jx">
+      {css}
+      <header className="jx-head">
+        <div className="jx-title">
+          <h1 className="k-title">{p.name || 'Untitled job'}</h1>
+          <span className="jx-pill" data-tone={stage === 'building' ? 'success' : stage === 'bidding' ? 'info' : undefined}>{stageLabel(p)}</span>
+          <span style={{ marginLeft: 'auto' }}><ArrangeButton panels={JOB_PANELS} state={arrangeState} /></span>
+        </div>
+        {(addr || when) && (
+          <p className="jx-meta">
+            {addr && <span><MapPin size={16} weight="bold" aria-hidden="true" />{addr}</span>}
+            {when && <span data-late={when.late || undefined}><CalendarBlank size={16} weight="bold" aria-hidden="true" />{when.text}</span>}
+          </p>
+        )}
+      </header>
+
+      {arrangeState.visible.filter((k) => TOP.includes(k)).map((k) => <React.Fragment key={k}>{topPanels[k]}</React.Fragment>)}
+
+      <div className="jx-cols" data-single={!arrangeState.visible.includes('tools') || !side || undefined}>
+        {arrangeState.visible.includes('tools') && <div className="jx-main">{tools}</div>}
         {side}
       </div>
     </div>
@@ -627,5 +650,6 @@ const CSS = `
 .jx .fl-act.jx-danger:hover:not([disabled]){background:var(--action-danger-hover)}
 @media (min-width:1100px){
   .jx-cols{display:grid;grid-template-columns:minmax(0,1.2fr) minmax(0,1fr);gap:0 40px;align-items:start}
+  .jx-cols[data-single]{grid-template-columns:minmax(0,1fr)}
 }
 `;

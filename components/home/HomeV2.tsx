@@ -29,6 +29,7 @@ import HomeFinance from './HomeFinance';
 import AlertTicker from './AlertTicker';
 import { ActivitySection, AttentionSection, BiddingSection, JobsSection, LinksSection, MoneySection, Prose, WorkRowsSection } from './HomeSections';
 import { HOME_CSS } from './home-css';
+import { ArrangeButton, usePanelLayout, type PanelDef } from '@/components/layout/ArrangePanels';
 import { STATUS_HEADER, reasonFromResponse, isNetworkError, NO_SIGNAL_DETAIL } from '@/lib/ui/status-fetch';
 
 export interface HomePayload {
@@ -71,6 +72,10 @@ const PHONE_ORDER: Record<HomeView, SectionKey[]> = {
   field: ['brief', 'strip', 'attention', 'work', 'links', 'activity'],
 };
 const SIDE: SectionKey[] = ['strip', 'bidding', 'links'];
+const SECTION_LABEL: Record<SectionKey, string> = {
+  brief: "Sage's brief", strip: 'Numbers', bidding: 'Bidding', jobs: 'Jobs', money: 'Money',
+  attention: 'Needs attention', work: 'Your list', links: 'Coming up', activity: 'Activity',
+};
 
 function HomeInner() {
   const sp = useSearchParams();
@@ -88,6 +93,13 @@ function HomeInner() {
   const { data, error, isLoading, isValidating, mutate } = useSWR<HomePayload>(key, fetcher, { revalidateOnFocus: true, refreshInterval: 120_000, keepPreviousData: true });
   const [saving, setSaving] = useState(false);
   const [saveNote, setSaveNote] = useState<string | null>(null);
+  /* Each person can order and hide Home's panels, per view. */
+  const homeView = (data?.context.view || 'operations') as HomeView;
+  const panelDefs: PanelDef[] = React.useMemo(
+    () => (PHONE_ORDER[homeView] || PHONE_ORDER.operations).map((k) => ({ key: k, label: SECTION_LABEL[k] })),
+    [homeView],
+  );
+  const arrangeState = usePanelLayout(`home-${homeView}`, panelDefs);
 
   useEffect(() => { if (data?.context.classicHome) router.replace('/app/classic'); }, [data?.context.classicHome, router]);
 
@@ -163,7 +175,7 @@ function HomeInner() {
   } else {
     const f = data.flat;
     const view = data.context.view;
-    const order = PHONE_ORDER[view] || PHONE_ORDER.operations;
+    const order = arrangeState.visible as SectionKey[];
     const review = (data.ticker?.items || []).filter(t => t.tone === 'review');
     const done = (data.ticker?.items || []).filter(t => t.tone === 'green' && t.id !== 'clear');
     const render: Record<SectionKey, React.ReactNode> = {
@@ -235,6 +247,7 @@ function HomeInner() {
           onParam={setParam}
           onSaveDefault={saveDefault}
           saving={saving}
+          extra={data ? <ArrangeButton panels={panelDefs} state={arrangeState} /> : null}
         />
         {body}
       </div>
