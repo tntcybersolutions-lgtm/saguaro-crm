@@ -8,6 +8,7 @@ import { describe, test, expect } from '@jest/globals';
 import {
   groupByDay, groupByMonth, clusterByLocation, matchesPhotoFilter, albumSummaries,
   photoGeo, isIssuePhoto, uploaders, cleanAlbumName, type PhotoLike,
+  worldPx, clusterPoints, boundsOf, parseTileSize,
 } from './photo-views';
 
 const P = (id: string, x: Partial<PhotoLike> = {}): PhotoLike => ({ id, ...x });
@@ -104,5 +105,59 @@ describe('albums', () => {
     expect(uploaders([P('a', { taken_by: 'b' }), P('b', { taken_by: 'a' }), P('c', { taken_by: 'b' }), P('d')])).toEqual(['a', 'b']);
     expect(cleanAlbumName('  Level  2   North ')).toBe('Level 2 North');
     expect(cleanAlbumName('   ')).toBe('');
+  });
+});
+
+describe('map pins', () => {
+  const g = (lat: number, lng: number) => ({ lat, lng });
+  const pts = [
+    { id: 'a', geo: g(33.4484, -112.0740) },   // downtown Phoenix
+    { id: 'b', geo: g(33.4485, -112.0741) },   // ~15 m away
+    { id: 'c', geo: g(33.8303, -112.1430) },   // Anthem, ~43 km north
+    { id: 'd', geo: null as null | { lat: number; lng: number } },
+  ];
+  const geoOf = (p: typeof pts[number]) => p.geo;
+
+  test('worldPx: the origin tile corners', () => {
+    expect(worldPx(0, -180, 0)).toEqual({ x: 0, y: 128 });
+    const c = worldPx(0, 0, 1);
+    expect(c.x).toBeCloseTo(256, 6);
+    expect(c.y).toBeCloseTo(256, 6);
+  });
+
+  test('zoomed out, the valley is one pin; zoomed in, it splits', () => {
+    const far = clusterPoints(pts, geoOf, 6);
+    expect(far).toHaveLength(1);
+    expect(far[0].items.map((p) => p.id).sort()).toEqual(['a', 'b', 'c']);
+    const near = clusterPoints(pts, geoOf, 12);
+    expect(near.map((c) => c.items.length)).toEqual([2, 1]);
+    expect(near[0].samePlace).toBe(false);
+  });
+
+  test('cluster sits at the mean, bounds hold every member, no-GPS left out', () => {
+    const [c] = clusterPoints(pts.slice(0, 2), geoOf, 10);
+    expect(c.lat).toBeCloseTo(33.44845, 6);
+    expect(c.lng).toBeCloseTo(-112.07405, 6);
+    expect(c.bounds).toEqual([[33.4484, -112.0741], [33.4485, -112.0740]]);
+    expect(clusterPoints([pts[3]], geoOf, 10)).toEqual([]);
+  });
+
+  test('same spot never splits', () => {
+    const same = [{ id: 'x', geo: g(40, -100) }, { id: 'y', geo: g(40, -100) }];
+    const [c] = clusterPoints(same, (p) => p.geo, 22);
+    expect(c.items).toHaveLength(2);
+    expect(c.samePlace).toBe(true);
+  });
+
+  test('boundsOf', () => {
+    expect(boundsOf(pts, geoOf)).toEqual([[33.4484, -112.1430], [33.8303, -112.0740]]);
+    expect(boundsOf([pts[3]], geoOf)).toBeNull();
+  });
+
+  test('tile size: stored value or medium', () => {
+    expect(parseTileSize('s')).toBe('s');
+    expect(parseTileSize('l')).toBe('l');
+    expect(parseTileSize(null)).toBe('m');
+    expect(parseTileSize('huge')).toBe('m');
   });
 });

@@ -7,7 +7,7 @@
  *   Good morning, Chad                     22px
  *   Sage's brief                           one or two sentences, one action
  *   number strip                           four figures for the view
- *   Bidding · Jobs · Money · Needs attention · the view's list · More · Activity
+ *   Bidding · Jobs · Jobs map · Money · Needs attention · the view's list · More · Activity
  *
  * Every word and number comes from GET /api/home (`flat` + the existing
  * sections). Filters live in the URL, so opening a row and coming back keeps
@@ -29,6 +29,7 @@ import HomeFinance from './HomeFinance';
 import AlertTicker from './AlertTicker';
 import { ActivitySection, AttentionSection, BiddingSection, JobsSection, LinksSection, MoneySection, Prose, WorkRowsSection } from './HomeSections';
 import { HOME_CSS } from './home-css';
+import JobsMapPanel from './JobsMapPanel';
 import { ArrangeButton, usePanelLayout, type PanelDef } from '@/components/layout/ArrangePanels';
 import { STATUS_HEADER, reasonFromResponse, isNetworkError, NO_SIGNAL_DETAIL } from '@/lib/ui/status-fetch';
 
@@ -63,17 +64,17 @@ const fetcher = async (url: string): Promise<HomePayload> => {
 const CLOSED = ['completed', 'complete', 'closed', 'cancelled', 'archived', 'lost'];
 
 /** Where each section sits: phone order, and the column on a wide screen. */
-type SectionKey = 'brief' | 'strip' | 'bidding' | 'jobs' | 'money' | 'attention' | 'work' | 'links' | 'activity';
+type SectionKey = 'brief' | 'strip' | 'bidding' | 'jobs' | 'map' | 'money' | 'attention' | 'work' | 'links' | 'activity';
 const PHONE_ORDER: Record<HomeView, SectionKey[]> = {
-  owner: ['brief', 'strip', 'bidding', 'jobs', 'money', 'attention', 'links', 'activity'],
-  operations: ['brief', 'strip', 'attention', 'bidding', 'jobs', 'money', 'links', 'activity'],
-  sales: ['brief', 'strip', 'attention', 'work', 'links', 'activity'],
-  service: ['brief', 'strip', 'attention', 'work', 'links', 'activity'],
-  field: ['brief', 'strip', 'attention', 'work', 'links', 'activity'],
+  owner: ['brief', 'strip', 'bidding', 'jobs', 'map', 'money', 'attention', 'links', 'activity'],
+  operations: ['brief', 'strip', 'attention', 'bidding', 'jobs', 'map', 'money', 'links', 'activity'],
+  sales: ['brief', 'strip', 'attention', 'work', 'map', 'links', 'activity'],
+  service: ['brief', 'strip', 'attention', 'work', 'map', 'links', 'activity'],
+  field: ['brief', 'strip', 'attention', 'work', 'map', 'links', 'activity'],
 };
 const SIDE: SectionKey[] = ['strip', 'bidding', 'links'];
 const SECTION_LABEL: Record<SectionKey, string> = {
-  brief: "Sage's brief", strip: 'Numbers', bidding: 'Bidding', jobs: 'Jobs', money: 'Money',
+  brief: "Sage's brief", strip: 'Numbers', bidding: 'Bidding', jobs: 'Jobs', map: 'Jobs map', money: 'Money',
   attention: 'Needs attention', work: 'Your list', links: 'Coming up', activity: 'Activity',
 };
 
@@ -196,6 +197,7 @@ function HomeInner() {
       ) : null,
       bidding: f?.bidding ? <BiddingSection sec={f.bidding} onRetry={retry} /> : null,
       jobs: f?.jobs ? <JobsSection sec={f.jobs} onRetry={retry} health={healthById} /> : null,
+      map: <JobsMapPanel />,
       money: f?.money ? <MoneySection sec={f.money} onRetry={retry} /> : null,
       attention: (
         <AttentionSection items={data.queue.items} total={data.queue.total} restricted={data.queue.state === 'restricted'}
