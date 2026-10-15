@@ -50,11 +50,33 @@ export interface EngineCallbacks {
 
 /* ── web-ifc: one WASM instance for the whole tab ─────────────────────── */
 
+type WebIfcModule = { IfcAPI: new () => IfcAPI };
+let webIfcScript: Promise<WebIfcModule> | null = null;
+function loadWebIfcScript(): Promise<WebIfcModule> {
+  const w = window as unknown as { WebIFC?: WebIfcModule };
+  if (w.WebIFC) return Promise.resolve(w.WebIFC);
+  if (!webIfcScript) {
+    webIfcScript = new Promise<WebIfcModule>((resolve, reject) => {
+      const el = document.createElement('script');
+      el.src = '/wasm/web-ifc-api-iife.js';
+      el.async = true;
+      el.onload = () => (w.WebIFC ? resolve(w.WebIFC) : reject(new Error('The IFC parser did not load.')));
+      el.onerror = () => reject(new Error('The IFC parser could not be downloaded.'));
+      document.head.appendChild(el);
+    });
+    webIfcScript.catch(() => { webIfcScript = null; });
+  }
+  return webIfcScript;
+}
+
 let ifcApiPromise: Promise<IfcAPI> | null = null;
 async function getIfcApi(): Promise<IfcAPI> {
   if (!ifcApiPromise) {
     ifcApiPromise = (async () => {
-      const WebIFC = await import('web-ifc');
+      // The 5.7 MB parser glue is loaded as a plain script from /wasm/ (copied
+      // there by prebuild) instead of being bundled: bundling it ran Vercel's
+      // build out of memory. It defines window.WebIFC.
+      const WebIFC = await loadWebIfcScript();
       const api = new WebIFC.IfcAPI();
       // public/wasm/web-ifc.wasm (copied from node_modules by prebuild).
       api.SetWasmPath('/wasm/', true);

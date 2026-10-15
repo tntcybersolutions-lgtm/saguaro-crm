@@ -13,15 +13,18 @@ import { dirname, join } from 'node:path';
 import { fileURLToPath } from 'node:url';
 
 const root = join(dirname(fileURLToPath(import.meta.url)), '..');
-const src = join(root, 'node_modules', 'web-ifc', 'web-ifc.wasm');
-const dest = join(root, 'public', 'wasm', 'web-ifc.wasm');
-
-if (!existsSync(src)) {
-  console.error('copy-web-ifc-wasm: node_modules/web-ifc/web-ifc.wasm is missing — run npm install');
-  process.exit(1);
-}
-mkdirSync(dirname(dest), { recursive: true });
-const same = existsSync(dest) && Buffer.compare(readFileSync(src), readFileSync(dest)) === 0;
-if (!same) copyFileSync(src, dest);
+// The .wasm and the browser glue (loaded as a plain <script>, never bundled —
+// bundling the 5.7 MB glue ran the Vercel build out of memory).
 const { version } = JSON.parse(readFileSync(join(root, 'node_modules', 'web-ifc', 'package.json'), 'utf8'));
-console.log(`copy-web-ifc-wasm: web-ifc ${version} ${same ? 'already current' : 'copied'} → public/wasm/web-ifc.wasm`);
+for (const file of ['web-ifc.wasm', 'web-ifc-api-iife.js']) {
+  const src = join(root, 'node_modules', 'web-ifc', file);
+  const dest = join(root, 'public', 'wasm', file);
+  if (!existsSync(src)) {
+    console.error(`copy-web-ifc-wasm: node_modules/web-ifc/${file} is missing — run npm install`);
+    process.exit(1);
+  }
+  mkdirSync(dirname(dest), { recursive: true });
+  const same = existsSync(dest) && Buffer.compare(readFileSync(src), readFileSync(dest)) === 0;
+  if (!same) copyFileSync(src, dest);
+  console.log(`copy-web-ifc-wasm: web-ifc ${version} ${same ? 'already current' : 'copied'} → public/wasm/${file}`);
+}
