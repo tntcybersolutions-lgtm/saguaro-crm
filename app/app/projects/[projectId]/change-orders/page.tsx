@@ -6,7 +6,9 @@
  * position: original / approved / pending / revised — the CO tiles filter the
  * log) → Toolbar → workspace split: DataTable log on the left, and when a row
  * is selected, the change order beside a 320–384px details + action rail.
- * Phone: stacked. The composer opens in a FormModal.
+ * Phone: stacked. The composer opens in a FormModal. The log is the shared
+ * DataTable: saved views, grouping, column picker, CSV export and a signed
+ * cost total (rejected change orders are left out of it).
  *
  * Money: the running totals come from the exact-cents engine (lib/calc) —
  * revised contract = original + APPROVED change orders only; pending is tracked
@@ -35,14 +37,13 @@ import { useParams } from 'next/navigation';
 import { toCents, toDollars, summarizeContract } from '@/lib/calc';
 import {
   Robot, X, Warning, CheckCircle, XCircle, Plus, Clipboard, PencilSimple, Copy, Trash,
-  ArrowClockwise, WarningCircle, ArrowSquareOut,
+  ArrowClockwise, WarningCircle, ArrowSquareOut, Handshake, SealCheck, HourglassMedium, Scales,
 } from '@phosphor-icons/react';
 import {
   PageShell, Card, StatRow, Badge, Button, Toolbar, DataTable, EmptyState, RowActions,
   FormModal, Field, Input, Textarea, Select, FormGrid, DetailList, Toast, useToast,
   type Column, type Action, type BadgeTone, type StatItem,
 } from '@/components/ui/kit';
-import { FlowSteps, FlowStrip, InsightRow, AutoChip } from '@/components/ui/premium';
 import Suggest from '@/components/ui/Suggest';
 import { layout } from '@/lib/design-tokens';
 import { coAmount } from '@/lib/change-order-amount';
@@ -134,7 +135,11 @@ function statusBadge(s:string|null|undefined): { label:string; tone:BadgeTone } 
   if (k==='rejected') return { label:'Rejected', tone:'overdue' };
   return { label:'Pending', tone:'under_contract' };
 }
-const STATUS_RANK: Record<string, number> = { pending: 0, approved: 1, rejected: 2 };
+
+/** One label / value line of the composer's live contract ladder. */
+function LadderRow({ label, value, strong }: { label: React.ReactNode; value: React.ReactNode; strong?: boolean }) {
+  return <div className="coRow" data-strong={strong ? 'true' : undefined}><span>{label}</span><span>{value}</span></div>;
+}
 
 const CSS = `
 .coWs > .k-page { max-width: none; }
@@ -180,6 +185,10 @@ const CSS = `
 .coNext { font-size: var(--fs-sm); color: var(--text-tertiary); line-height: 1.5; }
 .coLadder { border: 1px solid var(--border-default); border-radius: var(--radius-sm); padding: 12px 14px; background: var(--bg-surface-2); }
 .coRule { height: 1px; background: var(--border-subtle); margin: 8px 0; }
+.coRow { display: flex; justify-content: space-between; align-items: baseline; gap: 12px; padding: 5px 0; font-size: var(--fs-sm); }
+.coRow > span:first-child { color: var(--text-tertiary); }
+.coRow > span + span { color: var(--text-primary); font-weight: 600; font-variant-numeric: tabular-nums; white-space: nowrap; }
+.coRow[data-strong="true"] > span { color: var(--text-primary); font-weight: 800; }
 .coFormBtns { display: flex; gap: 8px; flex-wrap: wrap; }
 .coInlineErr { display: flex; align-items: center; gap: 8px; flex-wrap: wrap; font-size: var(--fs-sm); color: var(--status-overdue); }
 .coRisk { border: 1px solid var(--brand-primary-25); border-radius: var(--radius-sm); padding: 14px 16px; background: var(--bg-surface-2); display: flex; flex-direction: column; gap: 12px; }
@@ -398,7 +407,7 @@ export default function ChangeOrdersPage() {
   }
 
   function handleCopyCO(id: string, amount: number) {
-    navigator.clipboard.writeText(fmt(amount)).catch(() => {});
+    navigator.clipboard.writeText(fmt(amount)).catch((e) => console.error('clipboard', e));
     setCoCopiedId(id); setTimeout(() => setCoCopiedId(null), 2000);
     setToast({ msg: `${fmt(amount)} copied.`, type: 'success' });
   }
@@ -467,30 +476,34 @@ export default function ChangeOrdersPage() {
   // ── Stat tiles: contract position — the CO tiles filter the log ──
   const stats: StatItem[] = loading
     ? [
-        { label:'Original Contract', value:'—', sub:'Loading…' },
-        { label:'Approved COs', value:'—', sub:'Loading…' },
-        { label:'Pending COs', value:'—', sub:'Loading…' },
-        { label:'Revised Contract', value:'—', sub:'Loading…' },
+        { label:'Original Contract', value:'—', sub:'Loading…', icon:<Handshake size={15}/> },
+        { label:'Approved COs', value:'—', sub:'Loading…', icon:<SealCheck size={15}/> },
+        { label:'Pending COs', value:'—', sub:'Loading…', icon:<HourglassMedium size={15}/> },
+        { label:'Revised Contract', value:'—', sub:'Loading…', icon:<Scales size={15}/> },
       ]
     : [
-        { label:'Original Contract', value:fmt(contractSum), sub:'Prime contract baseline', href:`/app/projects/${projectId}/contracts` },
-        { label:'Approved COs', value:fmtSigned(approvedCOs), tone: approvedCOs>0 ? 'good' : approvedCOs<0 ? 'bad' : 'default', sub: coStatusFilter==='approved' ? 'Filtered — click to clear' : `${approvedCount} approved`, onClick:()=>toggleStatus('approved') },
-        { label:'Pending COs', value:fmtSigned(pendingCOs), tone: pendingCount>0 ? 'warn' : 'default', sub: coStatusFilter==='pending' ? 'Filtered — click to clear' : pendingCount>0 ? `${pendingCount} awaiting decision` : 'None awaiting decision', onClick:()=>toggleStatus('pending') },
-        { label:'Revised Contract', value:fmt(currentContract), sub:`Original + approved COs${rejectedCount>0?` · ${rejectedCount} rejected`:''}`, href:`/app/projects/${projectId}/contracts` },
+        { label:'Original Contract', value:fmt(contractSum), sub:'Prime contract baseline', icon:<Handshake size={15}/>, href:`/app/projects/${projectId}/contracts` },
+        { label:'Approved COs', value:fmtSigned(approvedCOs), tone: approvedCOs>0 ? 'good' : approvedCOs<0 ? 'bad' : 'default', sub: coStatusFilter==='approved' ? 'Filtered — click to clear' : `${approvedCount} approved`, icon:<SealCheck size={15}/>, onClick:()=>toggleStatus('approved'), active: coStatusFilter==='approved' },
+        { label:'Pending COs', value:fmtSigned(pendingCOs), tone: pendingCount>0 ? 'warn' : 'default', sub: coStatusFilter==='pending' ? 'Filtered — click to clear' : pendingCount>0 ? `${pendingCount} awaiting decision` : 'None awaiting decision', icon:<HourglassMedium size={15}/>, onClick:()=>toggleStatus('pending'), active: coStatusFilter==='pending' },
+        { label:'Revised Contract', value:fmt(currentContract), sub:`Original + approved COs${rejectedCount>0?` · ${rejectedCount} rejected`:''}`, icon:<Scales size={15}/>, href:`/app/projects/${projectId}/contracts` },
       ];
 
   // ── Log columns: full log, or a compact log beside the change order ──
   const numCol: Column<any> = { key:'co_number', header:'CO #', accessor:c=>Number(c.co_number)||0, width:90, render:c=><span className="coNum" data-sel={c.id===selectedId?'true':undefined}>CO-{padCo(c.co_number)}</span> };
-  const titleCol: Column<any> = { key:'title', header:'Title', accessor:c=>(c.title||'').toLowerCase(), render:c=>(
+  const titleCol: Column<any> = { key:'title', header:'Title', primary:true, phone:'show', accessor:c=>c.title||'', render:c=>(
     <div className="coTitle"><span title={c.title}>{c.title||'Untitled change order'}</span>{c.description && <span title={c.description}>{c.description}</span>}</div>
   ) };
-  const statusCol: Column<any> = { key:'status', header:'Status', accessor:c=>STATUS_RANK[String(c.status||'pending')]??9, render:c=>{const b=statusBadge(c.status);return <Badge tone={b.tone}>{b.label}</Badge>;} };
-  const costCol: Column<any> = { key:'cost', header:'Cost Impact', accessor:c=>coAmount(c), align:'right', render:c=>{const n=coAmount(c);return <span className="coMoney" data-sign={signOf(n)}>{fmtSigned(n)}</span>;} };
-  const schedCol: Column<any> = { key:'schedule', header:'Schedule', accessor:c=>Number(c.schedule_impact)||0, align:'right', render:c=>{const d=Number(c.schedule_impact)||0;return d>0 ? <span style={{color:'var(--text-primary)'}}>+{d} day{d===1?'':'s'}</span> : <span className="coMuted">—</span>;} };
-  const reasonCol: Column<any> = { key:'reason', header:'Reason', accessor:c=>(c.reason||'').toLowerCase(), render:c=>c.reason ? <span className="coTitle" style={{maxWidth:200}}><span style={{color:'var(--text-secondary)',fontWeight:500}} title={c.reason}>{c.reason}</span></span> : <span className="coMuted">—</span> };
+  const statusCol: Column<any> = { key:'status', header:'Status', phone:'show', accessor:c=>statusBadge(c.status).label, render:c=>{const b=statusBadge(c.status);return <Badge tone={b.tone}>{b.label}</Badge>;} };
+  /* Signed total of what is on screen, rejected left out — a rejected CO never moves the contract. */
+  const costTotal = (list:any[]) => { const n = list.filter(c=>String(c.status||'pending')!=='rejected').reduce((a,c)=>a+coAmount(c),0); return <span className="coMoney" data-sign={signOf(n)} title="Approved + pending (rejected left out)">{fmtSigned(n)}</span>; };
+  const costCol: Column<any> = { key:'cost', header:'Cost Impact', phone:'show', accessor:c=>coAmount(c), align:'right', total:costTotal, format:fmtSigned, render:c=>{const n=coAmount(c);return <span className="coMoney" data-sign={signOf(n)}>{fmtSigned(n)}</span>;} };
+  const schedCol: Column<any> = { key:'schedule', header:'Schedule', phone:'hide', accessor:c=>Number(c.schedule_impact)||0, align:'right', total:'sum', format:n=>n>0?`+${n} day${n===1?'':'s'}`:'—', render:c=>{const d=Number(c.schedule_impact)||0;return d>0 ? <span style={{color:'var(--text-primary)'}}>+{d} day{d===1?'':'s'}</span> : <span className="coMuted">—</span>;} };
+  const reasonCol: Column<any> = { key:'reason', header:'Reason', phone:'hide', accessor:c=>c.reason||'', render:c=>c.reason ? <span className="coTitle" style={{maxWidth:200}}><span style={{color:'var(--text-secondary)',fontWeight:500}} title={c.reason}>{c.reason}</span></span> : <span className="coMuted">—</span> };
+  const createdCol: Column<any> = { key:'created_at', header:'Created', hidden:true, phone:'hide', accessor:c=>c.created_at?String(c.created_at).slice(0,10):'', render:c=>fmtDate(c.created_at) };
+  const approvedCol: Column<any> = { key:'approved_at', header:'Approved', hidden:true, phone:'hide', accessor:c=>c.approved_at?String(c.approved_at).slice(0,10):'', render:c=>fmtDate(c.approved_at) };
   const columns: Column<any>[] = detailOpen
     ? [numCol, titleCol, costCol, statusCol]
-    : [numCol, titleCol, statusCol, costCol, schedCol, reasonCol];
+    : [numCol, titleCol, statusCol, costCol, schedCol, reasonCol, createdCol, approvedCol];
 
   /** The record's verbs — shared by the row overflow and the rail. */
   function coActions(co:any): Action[] {
@@ -616,22 +629,12 @@ export default function ChangeOrdersPage() {
     );
   } else if (!loading && cos.length===0) {
     listBody = (
-      <>
-        <EmptyState
-          icon={<Clipboard size={22}/>}
-          title="No change orders yet"
-          text={`Log scope changes, owner requests, and unforeseen conditions. CO-${padCo(nextCoNumber)} is numbered and ready.`}
-          action={<Button icon={<Plus size={15} weight="bold"/>} onClick={()=>setShowForm(true)}>New Change Order</Button>}
-        />
-        <div style={{padding:'0 16px 16px'}}>
-          <FlowStrip steps={[
-            {title:'Log the CO',desc:'Numbered automatically'},
-            {title:'Pending Decision',desc:'Approve or reject inline'},
-            {title:'Contract Sum Updates',desc:'On approval, automatically'},
-            {title:'Budget Line Syncs',desc:'Nothing re-typed'},
-          ]} />
-        </div>
-      </>
+      <EmptyState
+        icon={<Clipboard size={22}/>}
+        title="No change orders yet"
+        text={`Scope changes, owner requests and unforeseen conditions land here. CO-${padCo(nextCoNumber)} is numbered and ready.`}
+        action={<Button icon={<Plus size={15} weight="bold"/>} onClick={()=>setShowForm(true)}>New Change Order</Button>}
+      />
     );
   } else {
     listBody = (
@@ -643,6 +646,8 @@ export default function ChangeOrdersPage() {
         defaultSort={{ key:'co_number', dir:'asc' }}
         onRowClick={c=>setSelectedId(c.id)}
         rowActions={coActions}
+        tableId="project-change-orders"
+        exportName="change-orders"
         empty={
           <EmptyState
             icon={<Clipboard size={22}/>}
@@ -729,7 +734,7 @@ export default function ChangeOrdersPage() {
         }
       >
         <FormGrid cols={2}>
-          <Field label="CO Number" hint={<><AutoChip/> {lastCo ? `Assigned automatically — follows CO-${padCo(lastCo.co_number)}.` : 'Assigned automatically — first change order on this project.'}</>}>
+          <Field label="CO Number" hint={lastCo ? `Assigned automatically — follows CO-${padCo(lastCo.co_number)}.` : 'Assigned automatically — first change order on this project.'}>
             <Input value={`CO-${padCo(nextCoNumber)}`} readOnly />
           </Field>
           <Field
@@ -763,13 +768,13 @@ export default function ChangeOrdersPage() {
 
         {/* Contract position — live, from the exact-cents engine */}
         <div className="coLadder" style={{ marginTop:16 }}>
-          <InsightRow label="Original Contract" value={fmt(contractSum)}/>
-          <InsightRow label={`Approved COs (${approvedCount})`} value={fmtSigned(approvedCOs)}/>
-          {pendingCount>0 && <InsightRow label={`Pending COs (${pendingCount}) — not in the sum`} value={fmtSigned(pendingCOs)}/>}
-          <InsightRow label="This CO" value={fmtSigned(fCostNum)}/>
+          <LadderRow label="Original Contract" value={fmt(contractSum)}/>
+          <LadderRow label={`Approved COs (${approvedCount})`} value={fmtSigned(approvedCOs)}/>
+          {pendingCount>0 && <LadderRow label={`Pending COs (${pendingCount}) — not in the sum`} value={fmtSigned(pendingCOs)}/>}
+          <LadderRow label="This CO" value={fmtSigned(fCostNum)}/>
           <div className="coRule"/>
-          <InsightRow label="New Contract Sum (on approval)" value={fmt(newContractSum)} strong/>
-          {fSchedNum>0 && <InsightRow label="Schedule Impact" value={`+${fSchedNum} day${fSchedNum===1?'':'s'}`}/>}
+          <LadderRow label="New Contract Sum (on approval)" value={fmt(newContractSum)} strong/>
+          {fSchedNum>0 && <LadderRow label="Schedule Impact" value={`+${fSchedNum} day${fSchedNum===1?'':'s'}`}/>}
         </div>
 
         {riskTarget==='form' && (riskLoading||riskResult||riskError) && (
@@ -780,14 +785,6 @@ export default function ChangeOrdersPage() {
           </div>
         )}
 
-        <div style={{ marginTop:16 }}>
-          <FlowSteps title="After You Submit" steps={[
-            {title:'CO Logged as Pending', desc:`Numbered CO-${padCo(nextCoNumber)} automatically and queued for a decision.`},
-            {title:'Owner Approval', desc:'Approve or reject right from the log — status flips instantly.'},
-            {title:'Contract Sum Auto-Updates', desc:`On approval the revised contract and prime contract move to ${fmt(newContractSum)} on their own.`},
-            {title:'Budget Line Syncs', desc:'The matching budget line absorbs the approved amount — nothing re-typed in Budget.'},
-          ]}/>
-        </div>
       </FormModal>
 
       {/* Above the FormModal overlay so the unsaved-work prompt is never hidden behind it. */}
