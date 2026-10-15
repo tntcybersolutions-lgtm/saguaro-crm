@@ -241,3 +241,6 @@ STILL OPEN:
 - White-label still defaults to `*.saguarocrm.com` subdomains / `tenants.saguarocrm.com` CNAME
   (`white-label-provisioning.ts:36,38,259,306,457,572`) and `sandbox.saguarocrm.com` (`sandbox-manager*.ts`). That
   domain is not ours. Fixing it needs a decision on the white-label domain plus wildcard DNS, so it is not a code-only change.
+
+- 2026-10-15 (Step 6): `contracts` has no cost code or budget line, so a subcontract written by hand (not from a bid award) is on Commitments but not in the budget's Committed column. Needs a cost-code/budget-line picker on the subcontract.
+- 2026-10-15 (Step 6): `app/api/projects/[projectId]/purchase-orders/route.ts` GET filters by project only (project ownership is checked first, but the query itself has no `.eq('tenant_id', …)` — §3 rule).

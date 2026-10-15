@@ -48,6 +48,7 @@ export const TOPBAR_LABELS: Record<string, string> = {
   'bid-packages': 'Bid Packages',
   'lien-waivers': 'Lien Waivers',
   'purchase-orders': 'Purchase Orders',
+  commitments: 'Commitments',
   w9: 'W-9',
   oac: 'OAC',
   kpis: 'KPIs',

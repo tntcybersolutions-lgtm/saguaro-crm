@@ -20,7 +20,7 @@ jest.mock('@/lib/supabase-server', () => ({
   getUser: async () => currentUser,
   supabaseAdmin: {},
 }));
-jest.mock('@/lib/storage-signing', () => ({ signStoredUrl: async (_b: string, p: string) => `signed:${p}` }));
+jest.mock('@/lib/storage-signing', () => ({ signStoredUrl: async (_b: string, p: string) => `signed:${p}`, signFields: async (rows: Record<string, unknown>[]) => rows }));
 
 import { NextRequest } from 'next/server';
 import { GET as getItem, PATCH as patchItem } from '@/app/api/items/[tool]/[id]/route';

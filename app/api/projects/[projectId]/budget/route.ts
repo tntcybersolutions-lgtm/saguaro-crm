@@ -4,6 +4,7 @@ import { requirePermission } from '@/lib/permissions';
 import type { Database } from '@/lib/database.types';
 import { apiError } from '@/lib/api-error';
 import { toBudgetLineView, budgetLineWrite } from '@/lib/budget-line';
+import { awardPackageOf } from '@/lib/commitments';
 
 // Real columns on public.budget_lines that callers may set. Anything outside
 // this set is dropped so the insert/update never references a non-existent
@@ -57,8 +58,8 @@ export async function GET(req: NextRequest, { params }: { params: { projectId: s
     // typed on the line.
     const norm = (c: unknown) => String(c ?? '').trim().toLowerCase();
     const [cm, po, bl] = await Promise.all([
-      supabase.from('commitments').select('budget_line_item_id, original_amount, approved_changes, current_amount, status').eq('project_id', params.projectId).eq('tenant_id', user.tenantId),
-      supabase.from('purchase_orders').select('cost_code, total, status').eq('project_id', params.projectId).eq('tenant_id', user.tenantId),
+      supabase.from('commitments').select('budget_line_item_id, original_amount, approved_changes, current_amount, status, bid_package_id').eq('project_id', params.projectId).eq('tenant_id', user.tenantId),
+      supabase.from('purchase_orders').select('cost_code, total, status, notes').eq('project_id', params.projectId).eq('tenant_id', user.tenantId),
       supabase.from('bills').select('cost_code, total, amount, status').eq('project_id', params.projectId).eq('tenant_id', user.tenantId),
     ]);
     const DEAD = new Set(['void', 'voided', 'cancelled', 'canceled', 'rejected', 'draft']);
@@ -69,9 +70,12 @@ export async function GET(req: NextRequest, { params }: { params: { projectId: s
         const amt = Number(c.current_amount) || (Number(c.original_amount) || 0) + (Number(c.approved_changes) || 0);
         committedByLine.set(c.budget_line_item_id!, (committedByLine.get(c.budget_line_item_id!) || 0) + amt);
       });
+    // A bid award writes both a commitment and a draft PO for the same deal —
+    // count the commitment, not its PO twin.
+    const awarded = new Set(((cm.data ?? []) as { bid_package_id?: string | null }[]).map((c) => c.bid_package_id).filter(Boolean) as string[]);
     const poByCode = new Map<string, number>();
-    ((po.data ?? []) as { cost_code: string | null; total: number | null; status: string | null }[])
-      .filter((x) => x.cost_code && !DEAD.has(norm(x.status)))
+    ((po.data ?? []) as { cost_code: string | null; total: number | null; status: string | null; notes?: string | null }[])
+      .filter((x) => x.cost_code && !DEAD.has(norm(x.status)) && !awarded.has(awardPackageOf(x as Record<string, unknown>) || ''))
       .forEach((x) => poByCode.set(norm(x.cost_code), (poByCode.get(norm(x.cost_code)) || 0) + (Number(x.total) || 0)));
     const billsByCode = new Map<string, number>();
     ((bl.data ?? []) as { cost_code: string | null; total: number | null; amount: number | null; status: string | null }[])

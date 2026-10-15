@@ -56,6 +56,7 @@ export const CORE_TOOLS: readonly string[] = [
 const HAS_WORK: Record<string, (s: ToolSignals) => boolean> = {
   '/schedule':         s => (s.counts?.scheduleTasks || 0) > 0,
   '/purchase-orders':  s => (s.counts?.purchaseOrders || 0) > 0,
+  '/commitments':      s => (s.counts?.purchaseOrders || 0) > 0 || (s.subs?.length || 0) > 0,
   '/invoices':         s => (s.counts?.invoices || 0) > 0,
   '/bills':            s => (s.counts?.bills || 0) > 0,
   '/rfis':             s => (s.counts?.openRfis || 0) > 0,
