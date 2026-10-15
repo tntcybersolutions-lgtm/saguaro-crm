@@ -99,6 +99,9 @@ export default function SubsAndVendorsPage() {
   const [q, setQ] = useState('');
   const [trade, setTrade] = useState('');
   const [paperFilter, setPaperFilter] = useState(false);
+  /* Companies set Inactive stay on file (contracts and waivers point at them)
+     but leave the working list until asked for. */
+  const [showInactive, setShowInactive] = useState(false);
 
   const load = useCallback(async () => {
     setLoading(true);
@@ -125,16 +128,19 @@ export default function SubsAndVendorsPage() {
   );
 
   const lacksPaper = (s: Sub) => s.w9_on_file !== true || !s.insurance_expiry || (parseDay(s.insurance_expiry)?.getTime() ?? 0) < Date.now();
+  const isInactive = (s: Sub) => String(s.status || '').toLowerCase() === 'inactive';
+  const inactiveCount = subs.filter(isInactive).length;
   const shown = useMemo(() => {
     const needle = q.trim().toLowerCase();
     return subs.filter(s => {
+      if (!showInactive && isInactive(s)) return false;
       if (paperFilter && !lacksPaper(s)) return false;
       if (trade && (s.trade || '') !== trade) return false;
       if (!needle) return true;
       return [s.company_name, s.trade, s.contact_name, s.email || s.contact_email]
         .some(v => (v || '').toLowerCase().includes(needle));
     });
-  }, [subs, q, trade, paperFilter]);
+  }, [subs, q, trade, paperFilter, showInactive]);
 
   const [selectedId, setSelectedId] = useState<string | null>(null);
   const columns = useMemo<Column<Sub>[]>(() => [
@@ -211,7 +217,7 @@ export default function SubsAndVendorsPage() {
         {/* "On File" shows them: every company (filters cleared) and the list
             brought into view. It only cleared filters, so with none set the
             tap did nothing at all. */}
-        <StatCard label="On File" value={String(subs.length)} sub="Companies tenant-wide" icon={<Buildings size={17} weight="duotone" color="var(--text-secondary)" />} href="#subs-directory" onClick={() => { setQ(''); setTrade(''); setPaperFilter(false); }} />
+        <StatCard label="On File" value={String(subs.length - inactiveCount)} sub="Companies tenant-wide" icon={<Buildings size={17} weight="duotone" color="var(--text-secondary)" />} href="#subs-directory" onClick={() => { setQ(''); setTrade(''); setPaperFilter(false); }} />
         <StatCard label="Paperwork Missing" value={String(missingPaper)} sub={missingPaper ? 'Cannot be awarded without override' : 'Everyone is current'} icon={<WarningCircle size={17} weight="duotone" color={missingPaper ? 'var(--text-primary)' : GOLD} />} tone={missingPaper ? 'bad' : undefined} active={paperFilter} onClick={() => setPaperFilter(v => !v)} />
         <StatCard label="Prequalified" value={String(prequalified)} sub="Passed prequalification" icon={<SealCheck size={17} weight="duotone" color="var(--text-secondary)" />} tone={prequalified > 0 ? 'good' : undefined} href="/app/prequalification" />
         <StatCard label="Trades Covered" value={String(trades.length)} sub="Distinct trades on file" icon={<Package size={17} weight="duotone" color="var(--text-secondary)" />} onClick={() => document.getElementById('subs-trade-filter')?.focus()} />
@@ -244,6 +250,16 @@ export default function SubsAndVendorsPage() {
             <option value="">All Trades ({trades.length})</option>
             {trades.map(t => <option key={t} value={t}>{t}</option>)}
           </select>
+          {inactiveCount > 0 && (
+            <button
+              type="button"
+              aria-pressed={showInactive}
+              onClick={() => setShowInactive(v => !v)}
+              style={{ padding: '9px 12px', minHeight: 40, background: showInactive ? 'var(--selected-control-bg)' : 'var(--bg-surface-2)', color: showInactive ? 'var(--selected-control-fg)' : TEXT, border: `1px solid ${BORDER}`, borderRadius: 8, fontSize: 13, fontWeight: 600, cursor: 'pointer' }}
+            >
+              {showInactive ? 'Hide inactive' : `Show inactive (${inactiveCount})`}
+            </button>
+          )}
         </div>
 
         {loading ? (
