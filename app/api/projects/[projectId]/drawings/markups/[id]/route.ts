@@ -24,6 +24,17 @@ export async function PATCH(req: NextRequest, { params }: { params: Promise<{ pr
     const body = await req.json().catch(() => ({} as Record<string, unknown>));
     const supabase = createServerClient();
 
+    // Only the person who drew a markup may change it (Documents Full may too,
+    // except someone else's private markup, which stays theirs alone).
+    const { data: existing } = await supabase.from('drawing_markups').select('id, created_by, data')
+      .eq('id', id).eq('project_id', projectId).eq('tenant_id', user.tenantId).maybeSingle();
+    if (!existing) return apiFail('Markup not found', 404);
+    const mine = existing.created_by === user.id;
+    const isPrivate = !!(existing.data && typeof existing.data === 'object' && (existing.data as { private?: boolean }).private === true);
+    if (!mine && (isPrivate || !hasPermission(g.perms, 'Documents', 'Full'))) {
+      return isPrivate ? apiFail('Markup not found', 404) : apiFail('Only the person who drew this markup can change it.', 403);
+    }
+
     const updates: MarkupUpdate = {
       updated_at: new Date().toISOString(),
       updated_by: user.id,
@@ -75,7 +86,7 @@ export async function DELETE(req: NextRequest, { params }: { params: Promise<{ p
     // Documents Full (admin) may delete any markup in the tenant.
     const { data: existing, error: readErr } = await supabase
       .from('drawing_markups')
-      .select('id, created_by')
+      .select('id, created_by, data')
       .eq('id', id)
       .eq('project_id', projectId)
       .eq('tenant_id', user.tenantId)
@@ -88,6 +99,8 @@ export async function DELETE(req: NextRequest, { params }: { params: Promise<{ p
 
     // created_by is a uuid (auth user id) on both web and mobile writes.
     const isCreator = existing.created_by === user.id;
+    const isPrivate = !!(existing.data && typeof existing.data === 'object' && (existing.data as { private?: boolean }).private === true);
+    if (!isCreator && isPrivate) return apiFail('Markup not found', 404);
     if (!isCreator && !hasPermission(g.perms, 'Documents', 'Full')) {
       return NextResponse.json({ error: 'Only the creator or an admin can delete this markup' }, { status: 403 });
     }

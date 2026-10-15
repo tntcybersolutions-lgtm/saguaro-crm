@@ -25,7 +25,7 @@ import {
   Cursor, Hand, PencilSimple, Highlighter, LineSegment, ArrowUpRight, Square, Circle, Cloud, TextT,
   Ruler, Crosshair, Polygon, Hash, Question, Wrench, NotePencil, Eraser, CaretLeft, CaretRight, CaretDown,
   ArrowsOut, CornersOut, DownloadSimple, UploadSimple, X, Trash, Eye, EyeSlash, ArrowSquareOut,
-  WarningCircle, ClockCounterClockwise, SquareHalf, CheckCircle, ArrowCounterClockwise, MapPin, LinkSimple, Plus,
+  WarningCircle, ClockCounterClockwise, SquareHalf, CheckCircle, Lock, LockOpen, ArrowCounterClockwise, MapPin, LinkSimple, Plus,
 } from '@phosphor-icons/react';
 
 /* ── types ─────────────────────────────────────────────────────────────── */
@@ -42,11 +42,11 @@ type ListRow = { id: string; sheet_number: string; title: string; discipline: st
 type Hit = { type: string; id: string; name: string; status: string };
 type Pt = [number, number];
 type MStyle = { color: string; width: number; opacity?: number; head?: boolean };
-type MData = { space: 'image'; w: number; h: number; style: MStyle; geometry: Pt[]; text?: string; ftPerUnit?: number; feet?: number; kind?: 'scale' | 'count' | 'area'; sqft?: number };
-type Markup = { id: string; markup_type: string; data: MData; page_number: number | null; color: string; created_by: string; created_by_name: string | null; created_at: string };
+type MData = { space: 'image'; w: number; h: number; style: MStyle; geometry: Pt[]; text?: string; ftPerUnit?: number; feet?: number; kind?: 'scale' | 'count' | 'area'; sqft?: number; private?: boolean };
+type Markup = { id: string; markup_type: string; data: MData; page_number: number | null; color: string; created_by: string; created_by_name: string | null; created_at: string; entity_type?: string | null; entity_id?: string | null };
 
-type Tool = 'select' | 'pan' | 'pen' | 'highlight' | 'line' | 'arrow' | 'rect' | 'ellipse' | 'cloud' | 'text' | 'measure' | 'area' | 'count' | 'calibrate' | 'rfi' | 'punch' | 'note' | 'erase';
-const DRAW_TOOLS: Tool[] = ['pen', 'highlight', 'line', 'arrow', 'rect', 'ellipse', 'cloud', 'text', 'measure', 'area', 'count', 'calibrate'];
+type Tool = 'select' | 'pan' | 'pen' | 'highlight' | 'line' | 'arrow' | 'rect' | 'ellipse' | 'cloud' | 'text' | 'measure' | 'area' | 'count' | 'calibrate' | 'link' | 'rfi' | 'punch' | 'note' | 'erase';
+const DRAW_TOOLS: Tool[] = ['pen', 'highlight', 'line', 'arrow', 'rect', 'ellipse', 'cloud', 'text', 'measure', 'area', 'count', 'calibrate', 'link'];
 const PIN_TOOLS: Tool[] = ['rfi', 'punch', 'note'];
 
 /* Redline colors: red is the industry markup color; the rest separate trades. */
@@ -79,6 +79,7 @@ const TOOL_GROUPS: { tools: { k: Tool; label: string; key?: string; icon: React.
     { k: 'calibrate', label: 'Set scale', icon: <Crosshair size={19} /> },
   ] },
   { tools: [
+    { k: 'link', label: 'Link to a sheet', key: 'K', icon: <LinkSimple size={19} weight="bold" /> },
     { k: 'rfi', label: 'RFI pin', icon: <Question size={19} weight="bold" /> },
     { k: 'punch', label: 'Punch pin', icon: <Wrench size={19} weight="bold" /> },
     { k: 'note', label: 'Note pin', icon: <NotePencil size={19} weight="bold" /> },
@@ -220,6 +221,19 @@ function MarkupShape({ m, scale, selected, onPick, interactive }: { m: Markup; s
     case 'cloud':
       shape = <path d={cloudPath(g[0], g[1] || g[0], st.width)} {...common} {...halo} />;
       break;
+    case 'link': {
+      const [a, b] = [g[0], g[1] || g[0]];
+      const x = Math.min(a[0], b[0]), y = Math.min(a[1], b[1]), w = Math.abs(b[0] - a[0]), h = Math.abs(b[1] - a[1]);
+      const tag = `↗ ${d.text || 'Sheet'}`;
+      shape = (
+        <g {...halo} style={{ cursor: 'pointer', pointerEvents: interactive ? 'all' : 'none' }} onClick={interactive ? (e) => { e.stopPropagation(); onPick(); } : undefined}>
+          <rect x={x} y={y} width={w} height={h} fill="rgba(232,255,42,.10)" stroke="rgb(161,178,0)" strokeWidth={2} strokeDasharray="5 4" rx={3} />
+          <rect x={x} y={y - 18} width={tag.length * 7 + 10} height={17} rx={3} fill="rgb(15,23,42)" />
+          <text x={x + 5} y={y - 6} fontSize={11} fontWeight={700} fill="rgb(232,255,42)">{tag}</text>
+        </g>
+      );
+      break;
+    }
     case 'text':
       shape = (
         <text x={g[0][0]} y={g[0][1]} fill={st.color} fontSize={10 + st.width * 3} fontWeight={700} {...halo}
@@ -300,6 +314,8 @@ export default function DrawingWorkspace() {
   const [msg, setMsg] = useState<{ text: string; ok?: boolean } | null>(null);
   const [cursor, setCursor] = useState<Pt | null>(null);
   const [myIds, setMyIds] = useState<string[]>([]);
+  const [priv, setPriv] = useState(false);
+  const [linkDraft, setLinkDraft] = useState<{ a: Pt; b: Pt } | null>(null);
   const rootRef = useRef<HTMLDivElement>(null);
   const canvasRef = useRef<HTMLCanvasElement>(null);
   const scrollRef = useRef<HTMLDivElement>(null);
@@ -307,6 +323,20 @@ export default function DrawingWorkspace() {
   const fileRef = useRef<HTMLInputElement>(null);
   const drag = useRef<{ x: number; y: number; sl: number; st: number } | null>(null);
   const REF_H = Math.round(REF_W * aspect);
+
+  /* The workspace fills the window below the app header — the page itself never scrolls. */
+  useEffect(() => {
+    const fit = () => {
+      const el = rootRef.current;
+      if (!el || document.fullscreenElement) return;
+      const top = el.getBoundingClientRect().top + window.scrollY;
+      el.style.height = `${Math.max(520, window.innerHeight - top - 12)}px`;
+    };
+    fit();
+    window.addEventListener('resize', fit);
+    document.addEventListener('fullscreenchange', fit);
+    return () => { window.removeEventListener('resize', fit); document.removeEventListener('fullscreenchange', fit); };
+  }, []);
 
   /* data */
   const loadSheet = useCallback(async () => {
@@ -372,7 +402,7 @@ export default function DrawingWorkspace() {
       const tag = (e.target as HTMLElement)?.tagName;
       if (tag === 'INPUT' || tag === 'TEXTAREA' || tag === 'SELECT') return;
       if (e.key === 'Enter' && tool === 'area' && draftPts) { e.preventDefault(); void finishArea(); return; }
-      if (e.key === 'Escape') { setDraftPts(null); setTextAt(null); setPinDraft(null); setCalib(null); setSelMarkup(null); setActivePin(null); return; }
+      if (e.key === 'Escape') { setDraftPts(null); setTextAt(null); setPinDraft(null); setCalib(null); setLinkDraft(null); setSelMarkup(null); setActivePin(null); return; }
       if ((e.ctrlKey || e.metaKey) && e.key.toLowerCase() === 'z') { e.preventDefault(); void undo(); return; }
       if ((e.key === 'Delete' || e.key === 'Backspace') && selMarkup) { e.preventDefault(); void removeMarkup(selMarkup); return; }
       if (e.ctrlKey || e.metaKey || e.altKey) return;
@@ -400,15 +430,15 @@ export default function DrawingWorkspace() {
     return [+(((e.clientX - r.left) / r.width) * REF_W).toFixed(1), +(((e.clientY - r.top) / r.height) * REF_H).toFixed(1)];
   };
 
-  const saveMarkup = async (type: string, geometry: Pt[], extra: Partial<MData> = {}, style?: Partial<MStyle>) => {
+  const saveMarkup = async (type: string, geometry: Pt[], extra: Partial<MData> = {}, style?: Partial<MStyle>, entity?: { type: string; id: string }) => {
     const st: MStyle = { color, width: weight, ...(style || {}) };
-    const data: MData = { space: 'image', w: REF_W, h: REF_H, style: st, geometry, ...extra };
+    const data: MData = { space: 'image', w: REF_W, h: REF_H, style: st, geometry, ...(priv && type !== 'stamp' ? { private: true } : {}), ...extra };
     const temp: Markup = { id: `tmp-${Date.now()}`, markup_type: type, data, page_number: page, color: st.color, created_by: 'me', created_by_name: 'You', created_at: new Date().toISOString() };
     setMarkups((m) => [...m, temp]);
     setSaveState('saving');
     const r = await fetch(`/api/projects/${projectId}/drawings/markups`, {
       method: 'POST', headers: { 'content-type': 'application/json' },
-      body: JSON.stringify({ drawing_id: drawingId, markup_type: type, data, page_number: page, color: st.color }),
+      body: JSON.stringify({ drawing_id: drawingId, markup_type: type, data, page_number: page, color: st.color, ...(entity ? { entity_type: entity.type, entity_id: entity.id } : {}) }),
     }).catch(() => null);
     const j = r ? await r.json().catch(() => ({})) : {};
     if (!r || !r.ok || !j.markup?.id) {
@@ -435,6 +465,14 @@ export default function DrawingWorkspace() {
     }
     setMyIds((ids) => ids.filter((x) => x !== id)); setSaveState('saved');
   };
+  const publish = async (m: Markup) => {
+    const data = { ...m.data, private: false };
+    setMarkups((all) => all.map((x) => (x.id === m.id ? { ...x, data } : x)));
+    const r = await fetch(`/api/projects/${projectId}/drawings/markups/${m.id}`, { method: 'PATCH', headers: { 'content-type': 'application/json' }, body: JSON.stringify({ data }) }).catch(() => null);
+    if (!r || !r.ok) { setMarkups((all) => all.map((x) => (x.id === m.id ? m : x))); setMsg({ text: "Couldn't publish that markup." }); return; }
+    setMsg({ text: 'Published — everyone on the job can see it now.', ok: true });
+  };
+  const publishAll = async () => { for (const m of markups.filter((x) => x.data?.private)) await publish(m); };
   const undo = async () => { const last = myIds[myIds.length - 1]; if (last) await removeMarkup(last); };
 
   const onDown = (e: React.PointerEvent<SVGSVGElement>) => {
@@ -481,6 +519,7 @@ export default function DrawingWorkspace() {
       if (!ftPerUnit) { setMsg({ text: 'Set the scale first: pick Set scale and trace a dimension you know.' }); setTool('calibrate'); return; }
       await saveMarkup('measure', [pts[0], pts[1]], { feet: +(dist(pts[0], pts[1]) * ftPerUnit).toFixed(3) });
     } else if (tool === 'calibrate') { setCalib({ a: pts[0], b: pts[1] }); setCalibVal(''); }
+    else if (tool === 'link') setLinkDraft({ a: pts[0], b: pts[1] });
   };
 
   const finishArea = async () => {
@@ -555,6 +594,43 @@ export default function DrawingWorkspace() {
     } catch (e) { setMsg({ text: (e as Error).message }); } finally { setBusy(false); }
   };
 
+  /** The sheet as it looks now — drawing, markups and pins — saved as a PNG. */
+  const exportPng = async () => {
+    const c = canvasRef.current, svg = svgRef.current;
+    if (!c || !svg || !d) return;
+    try {
+      const out = document.createElement('canvas');
+      out.width = c.width; out.height = c.height;
+      const ctx = out.getContext('2d')!;
+      ctx.drawImage(c, 0, 0);
+      const clone = svg.cloneNode(true) as SVGSVGElement;
+      clone.setAttribute('width', String(c.width)); clone.setAttribute('height', String(c.height));
+      clone.setAttribute('xmlns', 'http://www.w3.org/2000/svg');
+      const url = URL.createObjectURL(new Blob([new XMLSerializer().serializeToString(clone)], { type: 'image/svg+xml' }));
+      await new Promise<void>((res, rej) => { const im = new Image(); im.onload = () => { ctx.drawImage(im, 0, 0, c.width, c.height); URL.revokeObjectURL(url); res(); }; im.onerror = rej; im.src = url; });
+      const r = Math.max(10, c.width / 120);
+      for (const [i, p] of pins.entries()) {
+        const k = pinKind(p);
+        ctx.fillStyle = p.item?.closed ? 'rgb(22,163,74)' : k === 'rfi' ? 'rgb(220,38,38)' : k === 'punch' ? 'rgb(217,119,6)' : 'rgb(71,85,105)';
+        ctx.beginPath(); ctx.arc(p.x * c.width, p.y * c.height, r, 0, Math.PI * 2); ctx.fill();
+        ctx.lineWidth = r / 5; ctx.strokeStyle = 'white'; ctx.stroke();
+        ctx.fillStyle = 'white'; ctx.font = `bold ${r}px system-ui`; ctx.textAlign = 'center'; ctx.textBaseline = 'middle';
+        ctx.fillText(String(i + 1), p.x * c.width, p.y * c.height);
+      }
+      const blob: Blob | null = await new Promise((res) => out.toBlob(res, 'image/png'));
+      if (!blob) throw new Error('no image');
+      const a = document.createElement('a');
+      a.href = URL.createObjectURL(blob);
+      a.download = `${d.sheet_number}-rev${d.version || ''}-markups${pages > 1 ? `-p${page}` : ''}.png`.replace(/[^\w.-]+/g, '_');
+      a.click();
+      setTimeout(() => URL.revokeObjectURL(a.href), 5000);
+      setMsg({ text: 'Downloaded the sheet with its markups and pins.', ok: true });
+    } catch (e) {
+      console.error('[drawing] export', e);
+      setMsg({ text: "Couldn't build the image. Try again once the sheet finishes loading." });
+    }
+  };
+
   const fitPage = () => {
     const el = scrollRef.current;
     if (!el) return;
@@ -577,7 +653,8 @@ export default function DrawingWorkspace() {
   const pins = (sheet?.pins || []).filter((p) => p.page === page);
   const pinSel = (sheet?.pins || []).find((p) => p.id === activePin) || null;
   const isDraw = DRAW_TOOLS.includes(tool);
-  const markupLabel: Record<string, string> = { freehand: 'Pen', arrow: 'Line / arrow', rect: 'Rectangle', circle: 'Ellipse', cloud: 'Revision cloud', text: 'Text', measure: 'Measurement' };
+  const markupLabel: Record<string, string> = { freehand: 'Pen', arrow: 'Line / arrow', rect: 'Rectangle', circle: 'Ellipse', cloud: 'Revision cloud', text: 'Text', measure: 'Measurement', link: 'Link' };
+  const privateCount = markups.filter((m) => m.data?.private).length;
 
   return (
     <div className="dz" ref={rootRef}>
@@ -623,7 +700,8 @@ export default function DrawingWorkspace() {
         <button type="button" className="dz-ib" aria-label="Fit page" title="Fit page" onClick={fitPage}><ArrowsOut size={17} /></button>
         <span className="dz-div" />
         <button type="button" className="dz-ib" aria-label="Full screen" title="Full screen" onClick={fullScreen}><CornersOut size={17} /></button>
-        {d?.url && <a className="dz-ib" href={d.url} target="_blank" rel="noreferrer" download aria-label="Download" title="Download"><DownloadSimple size={17} /></a>}
+        {d?.url && <a className="dz-ib" href={d.url} target="_blank" rel="noreferrer" download aria-label="Download the original file" title="Download the original file"><DownloadSimple size={17} /></a>}
+        <button type="button" className="dz-act" disabled={!sheet || rendering} onClick={() => void exportPng()} title="Save this page with markups and pins as an image"><DownloadSimple size={16} /> With markups</button>
         <button type="button" className="dz-act" disabled={!sheet || busy} onClick={() => fileRef.current?.click()}><UploadSimple size={16} /> Upload revision</button>
       </header>
 
@@ -641,6 +719,7 @@ export default function DrawingWorkspace() {
               {WEIGHTS.map((w) => <button key={w.w} type="button" role="radio" aria-checked={weight === w.w} title={w.n} className="dz-wt" data-on={weight === w.w || undefined} onClick={() => setWeight(w.w)}><i style={{ height: w.w }} />{w.n}</button>)}
             </div>
             {tool === 'area' && <span className="dz-hint">Click each corner · double-click or Enter to close</span>}
+            {tool === 'link' && <span className="dz-hint">Drag a box over a callout, then pick the sheet it points to</span>}
             {tool === 'count' && <span className="dz-hint">Click each one to count it · each color is its own tally</span>}
             {(tool === 'measure' || tool === 'area') && !ftPerUnit && <button type="button" className="dz-link" onClick={() => setTool('calibrate')}>Set the scale first</button>}
           </>
@@ -655,6 +734,9 @@ export default function DrawingWorkspace() {
           </span>
         )}
         <span className="dz-grow" />
+        <button type="button" className="dz-vis" data-on={priv || undefined} onClick={() => setPriv((v) => !v)} title="Who sees the markups you draw next">
+          {priv ? <><Lock size={14} weight="bold" /> Only me</> : <><LockOpen size={14} /> Everyone on the job</>}
+        </button>
         <label className="dz-toggle"><input type="checkbox" checked={showMarkups} onChange={(e) => setShowMarkups(e.target.checked)} /> Markups</label>
         <label className="dz-toggle"><input type="checkbox" checked={showPins} onChange={(e) => setShowPins(e.target.checked)} /> Pins</label>
       </div>
@@ -695,8 +777,12 @@ export default function DrawingWorkspace() {
                   <filter id="dw-sel" x="-20%" y="-20%" width="140%" height="140%"><feDropShadow dx="0" dy="0" stdDeviation="3" floodColor="rgb(232,255,42)" floodOpacity="1" /></filter>
                 </defs>
                 {showMarkups && pageMarkups.map((m) => (
-                  <MarkupShape key={m.id} m={m} scale={ftPerUnit} selected={selMarkup === m.id} interactive={tool === 'select' || tool === 'erase'}
-                    onPick={() => { if (tool === 'erase') void removeMarkup(m.id); else { setSelMarkup(m.id); setTab('markups'); } }} />
+                  <MarkupShape key={m.id} m={m} scale={ftPerUnit} selected={selMarkup === m.id} interactive={tool === 'select' || tool === 'erase' || (m.markup_type === 'link' && tool === 'pan')}
+                    onPick={() => {
+                      if (tool === 'erase') { void removeMarkup(m.id); return; }
+                      if (m.markup_type === 'link' && m.entity_id) { router.push(`${base}/drawings/${m.entity_id}`); return; }
+                      setSelMarkup(m.id); setTab('markups');
+                    }} />
                 ))}
                 {showMarkups && counts.filter((m) => (m.page_number || 1) === page).map((m) => {
                   const same = counts.filter((x) => x.data.style.color === m.data.style.color);
@@ -713,7 +799,7 @@ export default function DrawingWorkspace() {
                 {draftPts && (() => {
                   const fake: Markup = {
                     id: 'draft', page_number: page, color, created_by: '', created_by_name: '', created_at: '',
-                    markup_type: tool === 'pen' || tool === 'highlight' ? 'freehand' : tool === 'line' || tool === 'arrow' ? 'arrow' : tool === 'ellipse' ? 'circle' : tool === 'rect' ? 'rect' : tool === 'cloud' ? 'cloud' : 'measure',
+                    markup_type: tool === 'pen' || tool === 'highlight' ? 'freehand' : tool === 'line' || tool === 'arrow' ? 'arrow' : tool === 'ellipse' ? 'circle' : tool === 'rect' ? 'rect' : tool === 'cloud' ? 'cloud' : tool === 'link' ? 'link' : 'measure',
                     data: { space: 'image', w: REF_W, h: REF_H, geometry: draftPts, style: tool === 'highlight' ? { color, width: Math.max(12, weight * 4), opacity: 0.35 } : tool === 'calibrate' ? { color: 'rgb(232,255,42)', width: 2 } : { color, width: weight, head: tool !== 'line' } },
                   };
                   if (tool === 'calibrate') fake.data.feet = undefined;
@@ -767,6 +853,19 @@ export default function DrawingWorkspace() {
                 </div>
               )}
 
+              {linkDraft && (
+                <div className="dz-pop" style={{ left: `${(Math.max(linkDraft.a[0], linkDraft.b[0]) / REF_W) * 100}%`, top: `${(Math.min(linkDraft.a[1], linkDraft.b[1]) / REF_H) * 100}%` }} onPointerDown={(e) => e.stopPropagation()}>
+                  <header><b>Link this area to a sheet</b><button type="button" aria-label="Cancel" onClick={() => setLinkDraft(null)}><X size={12} /></button></header>
+                  <div className="dz-hits">
+                    {sheets.filter((x) => x.id !== drawingId).length === 0 ? <p className="dz-dim">No other sheets on this job yet.</p> : sheets.filter((x) => x.id !== drawingId).map((x) => (
+                      <button key={x.id} type="button" onClick={async () => { const ld = linkDraft; setLinkDraft(null); await saveMarkup('link', [ld.a, ld.b], { text: x.sheet_number }, { color: 'rgb(161,178,0)', width: 2 }, { type: 'drawings', id: x.id }); }}>
+                        <span><b>{x.sheet_number}</b> {x.title}</span><small>{x.discipline || ''}</small>
+                      </button>
+                    ))}
+                  </div>
+                </div>
+              )}
+
               {calib && (
                 <div className="dz-pop" style={{ left: `${(calib.b[0] / REF_W) * 100}%`, top: `${(calib.b[1] / REF_H) * 100}%` }} onPointerDown={(e) => e.stopPropagation()}>
                   <header><b>How long is that line?</b><button type="button" aria-label="Cancel" onClick={() => setCalib(null)}><X size={12} /></button></header>
@@ -786,6 +885,9 @@ export default function DrawingWorkspace() {
             ))}
           </div>
           <div className="dz-pane">
+            {tab === 'markups' && privateCount > 0 && (
+              <div className="dz-privbar"><Lock size={13} weight="bold" /> {privateCount} only you can see <button type="button" className="dz-link" onClick={() => void publishAll()}>Publish all</button></div>
+            )}
             {tab === 'markups' && counts.length > 0 && (
               <div className="dz-counts">
                 {Array.from(new Set(counts.map((c) => c.data.style.color))).map((c) => (
@@ -798,7 +900,9 @@ export default function DrawingWorkspace() {
             ) : pageMarkups.slice().reverse().map((m) => (
               <div key={m.id} className="dz-row" data-on={selMarkup === m.id || undefined} onClick={() => { setSelMarkup(m.id); setTool('select'); }}>
                 <span className="dz-chip" style={{ background: m.data?.style?.color || m.color }} />
-                <span className="dz-row-t"><b>{markupLabel[m.markup_type] || label(m.markup_type)}{m.markup_type === 'text' && m.data?.text ? ` · ${m.data.text}` : ''}{m.markup_type === 'measure' ? (m.data?.kind === 'area' ? ` · ${m.data.sqft != null ? sqftLabel(m.data.sqft) : '—'}` : ` · ${m.data?.feet != null ? feetIn(m.data.feet) : ftPerUnit ? feetIn(dist(m.data.geometry[0], m.data.geometry[1]) * ftPerUnit) : '—'}`) : ''}</b><small>{(m.created_by_name || '').split('@')[0] || 'Someone'} · {day(m.created_at)}</small></span>
+                <span className="dz-row-t"><b>{markupLabel[m.markup_type] || label(m.markup_type)}{(m.markup_type === 'text' || m.markup_type === 'link') && m.data?.text ? ` · ${m.markup_type === 'link' ? 'to ' : ''}${m.data.text}` : ''}{m.markup_type === 'measure' ? (m.data?.kind === 'area' ? ` · ${m.data.sqft != null ? sqftLabel(m.data.sqft) : '—'}` : ` · ${m.data?.feet != null ? feetIn(m.data.feet) : ftPerUnit ? feetIn(dist(m.data.geometry[0], m.data.geometry[1]) * ftPerUnit) : '—'}`) : ''}</b><small>{(m.created_by_name || '').split('@')[0] || 'Someone'} · {day(m.created_at)}</small></span>
+                {m.data?.private && <button type="button" className="dz-pub" title="Only you can see this. Publish to share it." onClick={(e) => { e.stopPropagation(); void publish(m); }}><Lock size={12} weight="bold" /> Publish</button>}
+                {m.markup_type === 'link' && m.entity_id && <Link className="dz-x" style={{ opacity: 1, display: 'grid', placeItems: 'center' }} href={`${base}/drawings/${m.entity_id}`} aria-label="Open linked sheet" onClick={(e) => e.stopPropagation()}><ArrowSquareOut size={14} /></Link>}
                 <button type="button" className="dz-x" aria-label="Remove markup" onClick={(e) => { e.stopPropagation(); void removeMarkup(m.id); }}><Trash size={14} /></button>
               </div>
             )))}
@@ -848,8 +952,8 @@ export default function DrawingWorkspace() {
 
 const CSS = `
 .dz{--dz-ink:rgb(226,232,240);--dz-dim:rgb(148,163,184);--dz-line:rgba(148,163,184,.18);--dz-chrome:rgb(17,24,35);--dz-chrome-2:rgb(24,33,47);--dz-well:rgb(10,14,22);--dz-hot:var(--brand-primary);
-  display:flex;flex-direction:column;height:calc(100vh - 104px);min-height:600px;border:1px solid var(--dz-line);border-radius:10px;overflow:hidden;background:var(--dz-chrome);color:var(--dz-ink);font-size:13px}
-.dz:fullscreen{height:100vh;border-radius:0}
+  display:flex;flex-direction:column;height:calc(100vh - 150px);min-height:520px;border:1px solid var(--dz-line);border-radius:10px;overflow:hidden;background:var(--dz-chrome);color:var(--dz-ink);font-size:13px}
+.dz:fullscreen{height:100vh !important;border-radius:0}
 .dz-top{display:flex;align-items:center;gap:6px;height:52px;padding:0 10px;background:var(--dz-chrome);border-bottom:1px solid var(--dz-line);flex:none;min-width:0}
 .dz-grow{flex:1}
 .dz-div{width:1px;height:22px;background:var(--dz-line);margin:0 4px;flex:none}
@@ -867,7 +971,7 @@ const CSS = `
 .dz-zoom{min-width:78px;justify-content:space-between}
 .dz-act{display:inline-flex;align-items:center;gap:6px;height:34px;padding:0 12px;margin-left:6px;border-radius:7px;border:1px solid var(--dz-line);background:var(--dz-chrome-2);color:var(--dz-ink);font:600 13px/1 inherit;cursor:pointer;white-space:nowrap}
 .dz-act:hover{border-color:var(--dz-hot)}
-.dz-props{display:flex;align-items:center;gap:8px;height:42px;padding:0 12px 0 66px;background:var(--dz-chrome-2);border-bottom:1px solid var(--dz-line);flex:none;overflow-x:auto}
+.dz-props{display:flex;align-items:center;gap:8px;height:42px;padding:0 12px 0 98px;background:var(--dz-chrome-2);border-bottom:1px solid var(--dz-line);flex:none;overflow-x:auto}
 .dz-tool-name{font-weight:700;color:var(--dz-ink);min-width:96px}
 .dz-hint{color:var(--dz-dim);white-space:nowrap}
 .dz-swatches{display:flex;gap:6px}
@@ -879,17 +983,17 @@ const CSS = `
 .dz-wt[data-on]{border-color:var(--dz-line);background:var(--dz-chrome);color:var(--dz-ink)}
 .dz-toggle{display:inline-flex;align-items:center;gap:6px;color:var(--dz-dim);white-space:nowrap;cursor:pointer}
 .dz-toggle input{accent-color:var(--dz-hot)}
-.dz-body{flex:1;min-height:0;display:grid;grid-template-columns:56px minmax(0,1fr) 300px}
-@media (max-width:1100px){.dz-body{grid-template-columns:56px minmax(0,1fr)}.dz-side{display:none}.dz-props{padding-left:12px}}
-.dz-tools{display:flex;flex-direction:column;gap:2px;padding:8px 6px;background:var(--dz-chrome);border-right:1px solid var(--dz-line);overflow-y:auto;overflow-x:visible}
-.dz-tgroup{display:grid;gap:2px;padding-bottom:6px;margin-bottom:6px;border-bottom:1px solid var(--dz-line)}
+.dz-body{flex:1;min-height:0;display:grid;grid-template-columns:88px minmax(0,1fr) 300px}
+@media (max-width:1100px){.dz-body{grid-template-columns:88px minmax(0,1fr)}.dz-side{display:none}.dz-props{padding-left:12px}}
+.dz-tools{display:flex;flex-direction:column;align-items:center;gap:2px;padding:8px 6px;background:var(--dz-chrome);border-right:1px solid var(--dz-line);overflow:visible;position:relative;z-index:3}
+.dz-tgroup{display:grid;grid-template-columns:repeat(2,36px);gap:3px;padding-bottom:6px;margin-bottom:6px;border-bottom:1px solid var(--dz-line)}
 .dz-tgroup-end{border:0;margin-top:auto}
-.dz-tool{position:relative;display:grid;place-items:center;width:44px;height:40px;border-radius:8px;border:0;background:none;color:var(--dz-dim);cursor:pointer}
+.dz-tool{position:relative;display:grid;place-items:center;width:36px;height:36px;border-radius:7px;border:0;background:none;color:var(--dz-dim);cursor:pointer}
 .dz-tool:hover:not(:disabled){background:var(--dz-chrome-2);color:var(--dz-ink)}
 .dz-tool[data-on]{background:var(--dz-hot);color:var(--bg-base)}
 .dz-tool[data-k=rfi]:not([data-on]){color:rgb(248,113,113)}.dz-tool[data-k=punch]:not([data-on]){color:rgb(251,191,36)}
 .dz-tool:disabled{opacity:.3;cursor:default}
-.dz-tip{position:absolute;left:52px;top:50%;transform:translateY(-50%);display:none;align-items:center;gap:8px;padding:6px 9px;border-radius:6px;background:var(--dz-well);border:1px solid var(--dz-line);color:var(--dz-ink);font:600 12px/1 inherit;white-space:nowrap;z-index:20;pointer-events:none}
+.dz-tip{position:absolute;left:44px;top:50%;transform:translateY(-50%);display:none;align-items:center;gap:8px;padding:6px 9px;border-radius:6px;background:var(--dz-well);border:1px solid var(--dz-line);color:var(--dz-ink);font:600 12px/1 inherit;white-space:nowrap;z-index:20;pointer-events:none}
 .dz-tip kbd{padding:2px 5px;border-radius:4px;background:var(--dz-chrome-2);color:var(--dz-dim);font:600 11px/1 inherit}
 .dz-tool:hover .dz-tip,.dz-tool:focus-visible .dz-tip{display:inline-flex}
 .dz-stage{position:relative;min-width:0;min-height:0;display:flex;background:var(--dz-well)}
@@ -966,6 +1070,11 @@ const CSS = `
 .dz-tl-dot[data-new]{border-style:dashed}
 .dz-link{display:inline-flex;gap:5px;align-items:center;padding:0;border:0;background:none;color:var(--dz-ink);text-decoration:underline;font:inherit;cursor:pointer;width:max-content}
 .dz-dim{color:var(--dz-dim);margin:0}
+.dz-vis{display:inline-flex;align-items:center;gap:6px;height:28px;padding:0 10px;border-radius:6px;border:1px solid var(--dz-line);background:var(--dz-chrome);color:var(--dz-dim);font:600 12px/1 inherit;cursor:pointer;white-space:nowrap}
+.dz-vis[data-on]{color:var(--dz-ink);border-color:var(--dz-hot)}
+.dz-pub{display:inline-flex;align-items:center;gap:4px;height:24px;padding:0 8px;border-radius:5px;border:1px solid var(--dz-line);background:var(--dz-chrome);color:var(--dz-ink);font:600 11px/1 inherit;cursor:pointer;white-space:nowrap}
+.dz-pub:hover{border-color:var(--dz-hot)}
+.dz-privbar{display:flex;align-items:center;gap:8px;padding:8px 10px;border-bottom:1px solid var(--dz-line);color:var(--dz-dim)}
 .dz-counts{display:flex;flex-wrap:wrap;gap:12px;padding:8px 10px 10px;border-bottom:1px solid var(--dz-line);margin-bottom:4px}
 .dz-counts span{display:inline-flex;align-items:center;gap:6px;color:var(--dz-dim)}
 .dz-counts i{width:12px;height:12px;border-radius:50%;display:inline-block}

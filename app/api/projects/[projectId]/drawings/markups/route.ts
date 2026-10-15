@@ -57,7 +57,12 @@ export async function GET(req: NextRequest, { params }: { params: Promise<{ proj
     }
 
     // Comments (live columns: content / author_name) keyed by markup.
-    const rows = data ?? [];
+    // Private markups (data.private) are seen only by the person who drew them
+    // until they publish; everyone else on the job sees published ones.
+    const rows = (data ?? []).filter((m) => {
+      const d = m.data as { private?: boolean } | null;
+      return !(d && typeof d === 'object' && d.private === true) || m.created_by === user.id;
+    });
     const comments: Record<string, CommentRow[]> = {};
     if (rows.length > 0) {
       const { data: commentData, error: cErr } = await supabase
@@ -107,6 +112,13 @@ export async function POST(req: NextRequest, { params }: { params: Promise<{ pro
       return NextResponse.json({ error: 'data is required' }, { status: 400 });
     }
 
+    // A link must point at a sheet on this same job in this company.
+    if (markupType === 'link') {
+      if (body.entity_type !== 'drawings' || !body.entity_id) return NextResponse.json({ error: 'Pick the sheet this links to.' }, { status: 400 });
+      const db0 = createServerClient();
+      const { data: target } = await db0.from('drawings').select('id').eq('id', body.entity_id).eq('project_id', projectId).eq('tenant_id', user.tenantId).is('deleted_at', null).maybeSingle();
+      if (!target) return NextResponse.json({ error: 'That sheet is not on this job.' }, { status: 404 });
+    }
     const pageNumber = Number(body.page_number);
     const row: MarkupInsert = {
       tenant_id: user.tenantId,
