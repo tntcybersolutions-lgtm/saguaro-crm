@@ -50,18 +50,33 @@ export function storageObjectKey(stored: string | null | undefined): string | nu
  * that ever resolved, nothing in the logs. An unbounded call on a load path is
  * the defect; a slow signer must degrade to a broken link, never to a dead page.
  */
-const SIGN_TIMEOUT_MS = Number(process.env.STORAGE_SIGN_TIMEOUT_MS || 4000);
+const SIGN_TIMEOUT_MS = Number(process.env.STORAGE_SIGN_TIMEOUT_MS || 9000);
 
-export async function withTimeout<T>(work: Promise<T>, label: string): Promise<T | null> {
+/* Signed links this server instance already made, reused until 5 minutes
+   before they expire. A list page signs the same files on every visit; going
+   back to storage each time is what made a cold list time out. */
+const signedCache = new Map<string, { url: string; until: number }>();
+function cached(key: string): string | null {
+  const hit = signedCache.get(key);
+  if (!hit) return null;
+  if (hit.until <= Date.now()) { signedCache.delete(key); return null; }
+  return hit.url;
+}
+function remember(key: string, url: string, ttlSeconds: number) {
+  if (signedCache.size > 5000) signedCache.clear();
+  signedCache.set(key, { url, until: Date.now() + Math.max(0, ttlSeconds - 300) * 1000 });
+}
+
+export async function withTimeout<T>(work: Promise<T>, label: string, ms = SIGN_TIMEOUT_MS): Promise<T | null> {
   let timer: ReturnType<typeof setTimeout> | undefined;
   try {
     return await Promise.race([
       work,
       new Promise<null>((resolve) => {
         timer = setTimeout(() => {
-          console.error(`[storage-signing] timed out after ${SIGN_TIMEOUT_MS}ms: ${label}`);
+          console.error(`[storage-signing] timed out after ${ms}ms: ${label}`);
           resolve(null);
-        }, SIGN_TIMEOUT_MS);
+        }, ms);
       }),
     ]);
   } finally {
@@ -148,6 +163,8 @@ export async function signUrl(stored: string | null | undefined, ttlSeconds = 36
   const parsed = bucketAndPath(stored);
   if (!parsed) return stored; // foreign URL, demo://, or a bare path — leave it alone
   const { bucket, path } = parsed;
+  const hit = cached(`${bucket}/${path}`);
+  if (hit) return hit;
   try {
     const res = await withTimeout(
       createServerClient().storage.from(bucket).createSignedUrl(path, ttlSeconds),
@@ -156,10 +173,50 @@ export async function signUrl(stored: string | null | undefined, ttlSeconds = 36
     if (!res) return reportSigningFailure(bucket, path, 'timed out');
     const { data, error } = res;
     if (error || !data?.signedUrl) return reportSigningFailure(bucket, path, error);
+    remember(`${bucket}/${path}`, data.signedUrl, ttlSeconds);
     return data.signedUrl;
   } catch (e: unknown) {
     return reportSigningFailure(bucket, path, e);
   }
+}
+
+/**
+ * Sign many stored URLs at once: one createSignedUrls call per bucket instead
+ * of one call per file. A Files list of 30 documents used to fire 30 parallel
+ * signing requests on a cold server; they all timed out together and the
+ * whole list failed. Returns stored value -> signed URL ('' when it failed).
+ */
+async function signMany(values: string[], ttlSeconds: number): Promise<Map<string, string>> {
+  const out = new Map<string, string>();
+  const byBucket = new Map<string, Map<string, string[]>>(); // bucket -> path -> stored values
+  for (const v of values) {
+    const parsed = bucketAndPath(v);
+    if (!parsed) { out.set(v, v); continue; }
+    const hit = cached(`${parsed.bucket}/${parsed.path}`);
+    if (hit) { out.set(v, hit); continue; }
+    const paths = byBucket.get(parsed.bucket) || new Map<string, string[]>();
+    paths.set(parsed.path, [...(paths.get(parsed.path) || []), v]);
+    byBucket.set(parsed.bucket, paths);
+  }
+  await Promise.all([...byBucket.entries()].map(async ([bucket, paths]) => {
+    const list = [...paths.keys()];
+    const attempt = () => withTimeout(createServerClient().storage.from(bucket).createSignedUrls(list, ttlSeconds), `${bucket} (${list.length} files)`);
+    let res = await attempt().catch(() => null);
+    if (!res || res.error) res = await attempt().catch(() => null); // one retry: the first call often pays the cold start
+    const signed = new Map<string, string>();
+    if (res && !res.error) {
+      for (const row of res.data || []) {
+        if (row.path && row.signedUrl && !row.error) signed.set(row.path, row.signedUrl);
+      }
+    }
+    for (const [path, stored] of paths) {
+      const url = signed.get(path) || '';
+      if (url) remember(`${bucket}/${path}`, url, ttlSeconds);
+      else reportSigningFailure(bucket, path, res?.error || (res ? 'not returned' : 'timed out'));
+      for (const s of stored) out.set(s, url);
+    }
+  }));
+  return out;
 }
 
 /**
@@ -186,19 +243,20 @@ export async function signFields<T extends Record<string, any>>(
 ): Promise<T[]> {
   const strict = opts.strict !== false;
   const failures: string[] = [];
-  const signed = await Promise.all(
-    rows.map(async (r) => {
-      const out: Record<string, any> = { ...r };
-      for (const f of fields) {
-        const before = out[f];
-        if (typeof before !== 'string' || !before) continue;
-        const after = await signUrl(before, ttlSeconds);
-        if (!after) failures.push(`${f} on row ${String(out.id ?? '?')}`);
-        out[f] = after;
-      }
-      return out as T;
-    }),
-  );
+  const values = new Set<string>();
+  for (const r of rows) for (const f of fields) { const v = r[f]; if (typeof v === 'string' && v) values.add(v); }
+  const map = await signMany([...values], ttlSeconds);
+  const signed = rows.map((r) => {
+    const out: Record<string, any> = { ...r };
+    for (const f of fields) {
+      const before = out[f];
+      if (typeof before !== 'string' || !before) continue;
+      const after = map.get(before) ?? '';
+      if (!after) failures.push(`${f} on row ${String(out.id ?? '?')}`);
+      out[f] = after;
+    }
+    return out as T;
+  });
   if (strict && failures.length) {
     throw new Error(
       `storage signing failed for ${failures.length} field(s): ${failures.slice(0, 5).join(', ')}${failures.length > 5 ? ', …' : ''}`,
