@@ -1043,12 +1043,14 @@ export default function PhotosPage(){
         {months.map(m=>(
           <section key={m.key} id={`ph-m-${m.key}`} data-ph-month={m.key} className="phMonth">
             <div className="phMonthHead">{m.label}<small>{m.items.length}</small></div>
-            {m.days.map(d=>(
+            {/* One dense grid per month (each caption carries its day); a day
+                only gets its own header row when it is a big shoot. */}
+            {m.days.some(d=>d.items.length>=6) ? m.days.map(d=>(
               <div key={d.key}>
                 <div className="phGroupHead"><span>{d.label}</span><small>{d.items.length}</small></div>
                 <div className="phGrid">{d.items.map(card)}</div>
               </div>
-            ))}
+            )) : <div className="phGrid">{m.items.map(card)}</div>}
           </section>
         ))}
       </div>
