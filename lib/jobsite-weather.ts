@@ -12,6 +12,8 @@
  * { available: false } and the screen says there is no forecast.
  */
 
+import { outlookFromPeriods, type WeatherDay } from '@/lib/job-banner';
+
 const UA = { 'User-Agent': 'SaguaroControl (support@saguarocontrol.net)' };
 
 export type JobsiteWeather =
@@ -99,6 +101,64 @@ export async function jobsiteWeather(db: Db, tenantId: string, projectId: string
       raw: { point: { lat, lng }, period: { name: day?.name, detailed: day?.detailedForecast } },
     };
   } catch {
+    return { available: false, reason: 'weather lookup failed' };
+  }
+}
+
+/* ── 4-day outlook for the job home banner ─────────────────────────────── */
+
+export type JobsiteOutlook =
+  | { available: false; reason: string }
+  | { available: true; source: 'nws'; updatedAt: string | null; days: WeatherDay[] };
+
+/* Forecast by grid point, kept 30 minutes per server instance: NWS updates
+   about hourly, and every job on the same few square miles shares a point. */
+const OUTLOOK_TTL_MS = 30 * 60 * 1000;
+const outlookCache = new Map<string, { until: number; value: JobsiteOutlook }>();
+
+/** Today + the next 3 days at one of this company's jobs. Never throws. */
+export async function jobsiteOutlook(db: Db, tenantId: string, projectId: string, days = 4): Promise<JobsiteOutlook> {
+  try {
+    const { data: project } = await db
+      .from('projects')
+      .select('id, latitude, longitude, address, city, state, zip')
+      .eq('id', projectId)
+      .eq('tenant_id', tenantId)
+      .single();
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    const p = project as any;
+    if (!p) return { available: false, reason: 'project not found' };
+
+    let lat = Number(p.latitude) || null;
+    let lng = Number(p.longitude) || null;
+    if ((lat == null || lng == null) && (p.address || p.zip)) {
+      const geo = await geocode([p.address, p.city, p.state, p.zip].filter(Boolean).join(', '));
+      if (geo) {
+        lat = geo.lat; lng = geo.lng;
+        db.from('projects').update({ latitude: lat, longitude: lng } as never).eq('id', projectId).eq('tenant_id', tenantId).then(() => {}, () => {});
+      }
+    }
+    if (lat == null || lng == null) return { available: false, reason: 'no location on project' };
+
+    const key = `${lat.toFixed(3)},${lng.toFixed(3)}:${days}`;
+    const hit = outlookCache.get(key);
+    if (hit && hit.until > Date.now()) return hit.value;
+
+    const pt = await fetch(`https://api.weather.gov/points/${lat.toFixed(4)},${lng.toFixed(4)}`, { headers: UA, signal: AbortSignal.timeout(6000) });
+    if (!pt.ok) return { available: false, reason: 'outside NWS coverage' };
+    const fUrl = (await pt.json())?.properties?.forecast;
+    if (!fUrl) return { available: false, reason: 'no forecast for point' };
+    const fc = await fetch(fUrl, { headers: UA, signal: AbortSignal.timeout(6000) });
+    if (!fc.ok) return { available: false, reason: 'forecast unavailable' };
+    const fcd = await fc.json();
+    const out = outlookFromPeriods(fcd?.properties?.periods || [], days);
+    if (!out.length) return { available: false, reason: 'empty forecast' };
+    const value: JobsiteOutlook = { available: true, source: 'nws', updatedAt: fcd?.properties?.updateTime ?? fcd?.properties?.generatedAt ?? null, days: out };
+    if (outlookCache.size > 2000) outlookCache.clear();
+    outlookCache.set(key, { until: Date.now() + OUTLOOK_TTL_MS, value });
+    return value;
+  } catch (e) {
+    console.error('[jobsite-weather] outlook failed', e);
     return { available: false, reason: 'weather lookup failed' };
   }
 }
