@@ -84,7 +84,7 @@ function toneOf(g: StatusGroup): 'run' | 'bad' | 'nosig' | 'done' {
 }
 const TITLE = { run: 'WORKING ON IT', bad: 'NEEDS ATTENTION', nosig: 'NO SIGNAL', done: 'DONE' } as const;
 
-function Row({ s, n }: { s: StatusStep; n: number }) {
+function Row({ s, n, numbered }: { s: StatusStep; n: number; numbered: boolean }) {
   const settled = s.state === 'done' || s.state === 'failed' || s.state === 'offline';
   const text = settled && s.result ? s.result : s.label;
   const count = s.count && !settled ? ` — ${s.count.done} of ${s.count.total}` : '';
@@ -94,7 +94,7 @@ function Row({ s, n }: { s: StatusStep; n: number }) {
         {s.state === 'done' || s.state === 'offline' ? <Check size={13} weight="bold" /> : s.state === 'failed' ? '!' : s.state === 'waiting' ? n : null}
       </span>
       <span className="stc-body">
-        <span className="stc-label">{n}. {text}{count}</span>
+        <span className="stc-label">{numbered ? `${n}. ` : ''}{text}{count}</span>
         {s.detail ? <span className="stc-detail" style={{ display: 'block' }}>{s.detail}</span> : null}
         {s.state === 'running' && typeof s.progress === 'number' ? (
           <span className="stc-bar" style={{ display: 'block' }}><span style={{ width: `${Math.round(Math.max(0.03, Math.min(1, s.progress)) * 100)}%` }} /></span>
@@ -186,7 +186,7 @@ export default function StatusCenter() {
         </div>
         <ol ref={listRef}>
           {hidden ? <li className="stc-more">{hidden} earlier {hidden === 1 ? 'step' : 'steps'} finished</li> : null}
-          {shown.map((s, i) => <Row key={s.id} s={s} n={hidden + i + 1} />)}
+          {shown.map((s, i) => <Row key={s.id} s={s} n={hidden + i + 1} numbered={g.steps.length > 1} />)}
         </ol>
       </section>
     </>
