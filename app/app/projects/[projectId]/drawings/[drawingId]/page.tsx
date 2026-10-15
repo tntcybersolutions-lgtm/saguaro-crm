@@ -43,7 +43,8 @@ type Hit = { type: string; id: string; name: string; status: string };
 type Pt = [number, number];
 type MStyle = { color: string; width: number; opacity?: number; head?: boolean };
 type MData = { space: 'image'; w: number; h: number; style: MStyle; geometry: Pt[]; text?: string; ftPerUnit?: number; feet?: number; kind?: 'scale' | 'count' | 'area'; sqft?: number; private?: boolean };
-type Markup = { id: string; markup_type: string; data: MData; page_number: number | null; color: string; created_by: string; created_by_name: string | null; created_at: string; entity_type?: string | null; entity_id?: string | null };
+type MComment = { id: string; content: string; author_name: string | null; created_at: string };
+type Markup = { comments?: MComment[]; id: string; markup_type: string; data: MData; page_number: number | null; color: string; created_by: string; created_by_name: string | null; created_at: string; entity_type?: string | null; entity_id?: string | null };
 
 type Tool = 'select' | 'pan' | 'pen' | 'highlight' | 'line' | 'arrow' | 'rect' | 'ellipse' | 'cloud' | 'text' | 'measure' | 'area' | 'count' | 'calibrate' | 'link' | 'rfi' | 'punch' | 'note' | 'erase';
 const DRAW_TOOLS: Tool[] = ['pen', 'highlight', 'line', 'arrow', 'rect', 'ellipse', 'cloud', 'text', 'measure', 'area', 'count', 'calibrate', 'link'];
@@ -315,6 +316,7 @@ export default function DrawingWorkspace() {
   const [cursor, setCursor] = useState<Pt | null>(null);
   const [myIds, setMyIds] = useState<string[]>([]);
   const [priv, setPriv] = useState(false);
+  const [commentText, setCommentText] = useState('');
   const [linkDraft, setLinkDraft] = useState<{ a: Pt; b: Pt } | null>(null);
   const rootRef = useRef<HTMLDivElement>(null);
   const canvasRef = useRef<HTMLCanvasElement>(null);
@@ -471,6 +473,15 @@ export default function DrawingWorkspace() {
     const r = await fetch(`/api/projects/${projectId}/drawings/markups/${m.id}`, { method: 'PATCH', headers: { 'content-type': 'application/json' }, body: JSON.stringify({ data }) }).catch(() => null);
     if (!r || !r.ok) { setMarkups((all) => all.map((x) => (x.id === m.id ? m : x))); setMsg({ text: "Couldn't publish that markup." }); return; }
     setMsg({ text: 'Published — everyone on the job can see it now.', ok: true });
+  };
+  const addComment = async (m: Markup) => {
+    const content = commentText.trim();
+    if (!content) return;
+    setCommentText('');
+    const r = await fetch(`/api/projects/${projectId}/drawings/markups/${m.id}`, { method: 'POST', headers: { 'content-type': 'application/json' }, body: JSON.stringify({ content }) }).catch(() => null);
+    const j = r ? await r.json().catch(() => ({})) : {};
+    if (!r || !r.ok || !j.comment) { setCommentText(content); setMsg({ text: j.error || "Couldn't post the comment." }); return; }
+    setMarkups((all) => all.map((x) => (x.id === m.id ? { ...x, comments: [...(x.comments || []), j.comment as MComment] } : x)));
   };
   const publishAll = async () => { for (const m of markups.filter((x) => x.data?.private)) await publish(m); };
   const undo = async () => { const last = myIds[myIds.length - 1]; if (last) await removeMarkup(last); };
@@ -898,13 +909,27 @@ export default function DrawingWorkspace() {
             {tab === 'markups' && (pageMarkups.length === 0 ? (
               <div className="dz-empty"><PencilSimple size={26} /><b>No markups on this page</b><span>Pick a tool on the left and draw on the sheet. Everyone on the job sees them.</span></div>
             ) : pageMarkups.slice().reverse().map((m) => (
-              <div key={m.id} className="dz-row" data-on={selMarkup === m.id || undefined} onClick={() => { setSelMarkup(m.id); setTool('select'); }}>
+              <React.Fragment key={m.id}>
+              <div className="dz-row" data-on={selMarkup === m.id || undefined} onClick={() => { setSelMarkup(m.id); setTool('select'); }}>
                 <span className="dz-chip" style={{ background: m.data?.style?.color || m.color }} />
                 <span className="dz-row-t"><b>{markupLabel[m.markup_type] || label(m.markup_type)}{(m.markup_type === 'text' || m.markup_type === 'link') && m.data?.text ? ` · ${m.markup_type === 'link' ? 'to ' : ''}${m.data.text}` : ''}{m.markup_type === 'measure' ? (m.data?.kind === 'area' ? ` · ${m.data.sqft != null ? sqftLabel(m.data.sqft) : '—'}` : ` · ${m.data?.feet != null ? feetIn(m.data.feet) : ftPerUnit ? feetIn(dist(m.data.geometry[0], m.data.geometry[1]) * ftPerUnit) : '—'}`) : ''}</b><small>{(m.created_by_name || '').split('@')[0] || 'Someone'} · {day(m.created_at)}</small></span>
                 {m.data?.private && <button type="button" className="dz-pub" title="Only you can see this. Publish to share it." onClick={(e) => { e.stopPropagation(); void publish(m); }}><Lock size={12} weight="bold" /> Publish</button>}
                 {m.markup_type === 'link' && m.entity_id && <Link className="dz-x" style={{ opacity: 1, display: 'grid', placeItems: 'center' }} href={`${base}/drawings/${m.entity_id}`} aria-label="Open linked sheet" onClick={(e) => e.stopPropagation()}><ArrowSquareOut size={14} /></Link>}
                 <button type="button" className="dz-x" aria-label="Remove markup" onClick={(e) => { e.stopPropagation(); void removeMarkup(m.id); }}><Trash size={14} /></button>
+                {(m.comments?.length ?? 0) > 0 && selMarkup !== m.id && <span className="dz-ccount" title="Comments">{m.comments!.length}</span>}
               </div>
+              {selMarkup === m.id && !m.id.startsWith('tmp-') && (
+                <div className="dz-thread">
+                  {(m.comments || []).map((c) => (
+                    <div key={c.id} className="dz-comment"><b>{(c.author_name || '').split('@')[0] || 'Someone'}</b><small>{day(c.created_at)}</small><p>{c.content}</p></div>
+                  ))}
+                  <div className="dz-reply">
+                    <input className="dz-input" placeholder="Comment on this markup" value={commentText} onChange={(e) => setCommentText(e.target.value)} onKeyDown={(e) => { if (e.key === 'Enter') void addComment(m); }} />
+                    <button type="button" className="dz-btn" data-primary disabled={!commentText.trim()} onClick={() => void addComment(m)}>Post</button>
+                  </div>
+                </div>
+              )}
+              </React.Fragment>
             )))}
             {tab === 'pins' && ((sheet?.pins.length ?? 0) === 0 ? (
               <div className="dz-empty"><MapPin size={26} /><b>No pins yet</b><span>Use RFI, Punch or Note in the tools and click the sheet.</span></div>
@@ -952,9 +977,10 @@ export default function DrawingWorkspace() {
 
 const CSS = `
 .dz{--dz-ink:rgb(226,232,240);--dz-dim:rgb(148,163,184);--dz-line:rgba(148,163,184,.18);--dz-chrome:rgb(17,24,35);--dz-chrome-2:rgb(24,33,47);--dz-well:rgb(10,14,22);--dz-hot:var(--brand-primary);
-  display:flex;flex-direction:column;height:calc(100vh - 150px);min-height:520px;border:1px solid var(--dz-line);border-radius:10px;overflow:hidden;background:var(--dz-chrome);color:var(--dz-ink);font-size:13px}
+  display:flex;flex-direction:column;height:calc(100vh - 150px);min-height:520px;width:100%;max-width:100%;min-width:0;box-sizing:border-box;border:1px solid var(--dz-line);border-radius:10px;overflow:hidden;background:var(--dz-chrome);color:var(--dz-ink);font-size:13px}
 .dz:fullscreen{height:100vh !important;border-radius:0}
-.dz-top{display:flex;align-items:center;gap:6px;height:52px;padding:0 10px;background:var(--dz-chrome);border-bottom:1px solid var(--dz-line);flex:none;min-width:0}
+.dz-top{display:flex;align-items:center;gap:6px;height:52px;padding:0 10px;background:var(--dz-chrome);border-bottom:1px solid var(--dz-line);flex:none;min-width:0;overflow-x:auto;scrollbar-width:none}
+.dz-top::-webkit-scrollbar{display:none}
 .dz-grow{flex:1}
 .dz-div{width:1px;height:22px;background:var(--dz-line);margin:0 4px;flex:none}
 .dz-ib{display:inline-grid;place-items:center;min-width:34px;height:34px;border-radius:7px;border:0;background:none;color:var(--dz-dim);cursor:pointer;font:600 18px/1 inherit;text-decoration:none;flex:none}
@@ -966,7 +992,7 @@ const CSS = `
 .dz-sel select{position:absolute;inset:0;opacity:0;cursor:pointer;font-size:16px}
 .dz-sel-v{display:flex;gap:8px;align-items:baseline;min-width:0;white-space:nowrap}
 .dz-sel-v b{font-size:15px;color:var(--title-page,var(--dz-hot))}
-.dz-sel-v span{color:var(--dz-dim);overflow:hidden;text-overflow:ellipsis;max-width:34vw}
+.dz-sel-v span{color:var(--dz-dim);overflow:hidden;text-overflow:ellipsis;max-width:22vw}
 .dz-sel-sm{height:32px;gap:6px;font-weight:600}
 .dz-zoom{min-width:78px;justify-content:space-between}
 .dz-act{display:inline-flex;align-items:center;gap:6px;height:34px;padding:0 12px;margin-left:6px;border-radius:7px;border:1px solid var(--dz-line);background:var(--dz-chrome-2);color:var(--dz-ink);font:600 13px/1 inherit;cursor:pointer;white-space:nowrap}
@@ -983,7 +1009,7 @@ const CSS = `
 .dz-wt[data-on]{border-color:var(--dz-line);background:var(--dz-chrome);color:var(--dz-ink)}
 .dz-toggle{display:inline-flex;align-items:center;gap:6px;color:var(--dz-dim);white-space:nowrap;cursor:pointer}
 .dz-toggle input{accent-color:var(--dz-hot)}
-.dz-body{flex:1;min-height:0;display:grid;grid-template-columns:88px minmax(0,1fr) 300px}
+.dz-body{flex:1;min-height:0;min-width:0;display:grid;grid-template-columns:88px minmax(0,1fr) minmax(240px,300px)}
 @media (max-width:1100px){.dz-body{grid-template-columns:88px minmax(0,1fr)}.dz-side{display:none}.dz-props{padding-left:12px}}
 .dz-tools{display:flex;flex-direction:column;align-items:center;gap:2px;padding:8px 6px;background:var(--dz-chrome);border-right:1px solid var(--dz-line);overflow:visible;position:relative;z-index:3}
 .dz-tgroup{display:grid;grid-template-columns:repeat(2,36px);gap:3px;padding-bottom:6px;margin-bottom:6px;border-bottom:1px solid var(--dz-line)}
@@ -1041,7 +1067,7 @@ const CSS = `
 .dz-toast button{background:none;border:0;color:var(--dz-dim);cursor:pointer}
 .dz-side{display:flex;flex-direction:column;min-height:0;background:var(--dz-chrome);border-left:1px solid var(--dz-line)}
 .dz-tabs{display:flex;border-bottom:1px solid var(--dz-line);flex:none}
-.dz-tabs button{flex:1;display:inline-flex;justify-content:center;gap:6px;padding:13px 4px;border:0;border-bottom:2px solid transparent;background:none;color:var(--dz-dim);font:600 13px/1 inherit;cursor:pointer}
+.dz-tabs button{flex:1;min-width:0;display:inline-flex;justify-content:center;gap:5px;padding:13px 2px;white-space:nowrap;border:0;border-bottom:2px solid transparent;background:none;color:var(--dz-dim);font:600 13px/1 inherit;cursor:pointer}
 .dz-tabs button span{color:var(--dz-dim);font-weight:500}
 .dz-tabs button[data-on]{color:var(--dz-ink);border-bottom-color:var(--dz-hot)}
 .dz-pane{flex:1;overflow:auto;padding:6px}
@@ -1070,6 +1096,13 @@ const CSS = `
 .dz-tl-dot[data-new]{border-style:dashed}
 .dz-link{display:inline-flex;gap:5px;align-items:center;padding:0;border:0;background:none;color:var(--dz-ink);text-decoration:underline;font:inherit;cursor:pointer;width:max-content}
 .dz-dim{color:var(--dz-dim);margin:0}
+.dz-ccount{min-width:20px;height:20px;padding:0 6px;border-radius:10px;background:var(--dz-chrome-2);color:var(--dz-ink);font:700 11px/20px inherit;text-align:center}
+.dz-thread{display:grid;gap:8px;margin:0 6px 8px 28px;padding:10px;border-left:2px solid var(--dz-hot);background:var(--dz-chrome-2);border-radius:0 7px 7px 0}
+.dz-comment{display:grid;grid-template-columns:auto 1fr;column-gap:8px;line-height:1.4}
+.dz-comment small{color:var(--dz-dim);font-size:12px}
+.dz-comment p{grid-column:1/-1;margin:2px 0 0;color:var(--dz-ink)}
+.dz-reply{display:flex;gap:6px}
+.dz-reply .dz-input{flex:1;min-width:0}
 .dz-vis{display:inline-flex;align-items:center;gap:6px;height:28px;padding:0 10px;border-radius:6px;border:1px solid var(--dz-line);background:var(--dz-chrome);color:var(--dz-dim);font:600 12px/1 inherit;cursor:pointer;white-space:nowrap}
 .dz-vis[data-on]{color:var(--dz-ink);border-color:var(--dz-hot)}
 .dz-pub{display:inline-flex;align-items:center;gap:4px;height:24px;padding:0 8px;border-radius:5px;border:1px solid var(--dz-line);background:var(--dz-chrome);color:var(--dz-ink);font:600 11px/1 inherit;cursor:pointer;white-space:nowrap}

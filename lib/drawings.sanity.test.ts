@@ -186,6 +186,19 @@ describe('drawing markups', () => {
     expect((await (await listMarkups(req(`/api/projects/${JOB}/drawings/markups?drawing_id=${D1}`), mp)).json()).markups).toHaveLength(2);
   });
 
+  test('comments: anyone on the job can comment on a published markup, nobody on a private one they cannot see', async () => {
+    const pub = (await (await addMarkup(req(`/x`, 'POST', { drawing_id: D1, markup_type: 'rect', data: geo }), mp)).json()).markup.id;
+    const priv = (await (await addMarkup(req(`/x`, 'POST', { drawing_id: D1, markup_type: 'rect', data: { ...geo, private: true } }), mp)).json()).markup.id;
+    currentUser = FOREMAN;
+    const { POST: comment } = await import('@/app/api/projects/[projectId]/drawings/markups/[id]/route');
+    const ok = await comment(req(`/x`, 'POST', { content: 'Confirmed in field' }), mip(pub));
+    expect(ok.status).toBe(200);
+    expect((await ok.json()).comment.content).toBe('Confirmed in field');
+    expect((await comment(req(`/x`, 'POST', { content: 'peek' }), mip(priv))).status).toBe(404);
+    const list = await (await listMarkups(req(`/x?drawing_id=${D1}`), mp)).json();
+    expect(list.markups.find((m: { id: string }) => m.id === pub).comments).toHaveLength(1);
+  });
+
   test("someone else's published markup can't be edited without full Documents access", async () => {
     const id = (await (await addMarkup(req(`/api/projects/${JOB}/drawings/markups`, 'POST', { drawing_id: D1, markup_type: 'rect', data: geo }), mp)).json()).markup.id;
     currentUser = FOREMAN;

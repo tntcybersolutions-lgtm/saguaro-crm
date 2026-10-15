@@ -4,7 +4,8 @@ import { confirmDialog } from '@/lib/ui/async-dialog';
 import { useProjectContext } from '@/lib/hooks/useProjectContext';
 import SaguaroDatePicker from '@/components/SaguaroDatePicker';
 import { humanError } from '@/lib/errors';
-import { useParams } from 'next/navigation';
+import { useParams, useRouter } from 'next/navigation';
+import SheetThumb from '@/components/drawings/SheetThumb';
 import { getAuthHeaders } from '@/lib/supabase-browser';
 import {
   Plus, Ruler, X, UploadSimple, SidebarSimple, Info, ArrowsOutSimple, Columns,
@@ -114,6 +115,26 @@ const PHONE='(max-width: 640px)';
    backdrop-filter anywhere in the canvas area: the sheet repaints on every
    pan and page, and a blur behind it costs a frame each time. */
 const DW_CSS=`
+.sg-sec{margin:18px 0 6px}
+.sg-h{display:flex;align-items:center;gap:8px;margin:0 0 10px;font-size:14px;font-weight:700;color:var(--title-section,var(--brand-primary))}
+.sg-h span:last-child{color:var(--text-tertiary);font-weight:500}
+.sg-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(210px,1fr));gap:14px}
+.sg-card{display:grid;grid-template-rows:auto 1fr;border-radius:10px;border:1px solid var(--border-default);background:var(--bg-surface);overflow:hidden;text-decoration:none;color:var(--text-primary);transition:border-color .12s,transform .12s}
+.sg-card:hover{border-color:var(--brand-primary);transform:translateY(-1px)}
+.sg-card:focus-visible{outline:2px solid var(--brand-primary);outline-offset:2px}
+.sg-card[data-old]{opacity:.6}
+.st-thumb{position:relative;aspect-ratio:4/3;background:white;display:grid;place-items:center;overflow:hidden;border-bottom:1px solid var(--border-default)}
+.st-thumb img{width:100%;height:100%;object-fit:contain;display:block}
+.st-skel{position:absolute;inset:0;background:linear-gradient(90deg,var(--bg-surface-2),var(--bg-surface),var(--bg-surface-2));background-size:200% 100%;animation:stsk 1.2s linear infinite}
+@keyframes stsk{to{background-position:-200% 0}}
+@media (prefers-reduced-motion:reduce){.st-skel{animation:none}}
+.st-fail{position:absolute;inset:0;display:grid;place-items:center;background:var(--bg-surface-2);color:var(--text-tertiary);font-size:13px}
+.sg-meta{display:grid;gap:2px;padding:10px 12px;font-size:13px;align-content:start}
+.sg-meta b{font-size:15px}
+.sg-title{color:var(--text-secondary);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.sg-rev{color:var(--text-tertiary);font-size:12px}
+.sg-skel{height:14px;width:60%;border-radius:4px;background:var(--bg-surface-2)}
+
 @keyframes drawerIn{from{transform:translateX(100%);opacity:.4}to{transform:translateX(0);opacity:1}}
 .dw-root{--dw-h:calc(100vh - 56px - env(safe-area-inset-top,0px) - var(--sag-header-msg-h,0px) - var(--sag-nextstep-h,0px));width:100%;max-width:none;min-width:0;display:flex;flex-direction:column}
 @supports (height:100dvh){.dw-root{--dw-h:calc(100dvh - 56px - env(safe-area-inset-top,0px) - var(--sag-header-msg-h,0px) - var(--sag-nextstep-h,0px))}}
@@ -231,7 +252,8 @@ export default function DrawingsPage(){
   const [replacing,setReplacing]=useState<any>(null);
 
   /* ── Canvas layout state ── */
-  const [view,setView]=useState<'sheet'|'register'>('sheet');
+  const router=useRouter();
+  const [view,setView]=useState<'sheet'|'register'|'grid'>('grid');
   const [activeId,setActiveId]=useState<string|null>(null);
   const [railOpen,setRailOpen]=useState(true);
   const [metaOpen,setMetaOpen]=useState(true);
@@ -338,7 +360,11 @@ export default function DrawingsPage(){
     setSelected(drawing);setMode('edit');
   }
   /* Opening a sheet puts it on the canvas (it used to open a side drawer). */
+  /* Opening a sheet goes to the drawing workspace (markups, measure, pins). */
   function viewDrawing(drawing:any){
+    router.push(`/app/projects/${projectId}/drawings/${drawing.id}`);
+  }
+  function viewOnLegacyCanvas(drawing:any){
     setActiveId(drawing.id);
     setPage(1);setPageCount(1);setImgError(false);
     setView('sheet');
@@ -766,15 +792,50 @@ export default function DrawingsPage(){
             <h1 className="dw-title">Drawings</h1>
           </div>
           <div className="dw-head-tabs">
-            <Tabs value={view} onChange={k=>setView(k as 'sheet'|'register')} tabs={[
-              {key:'sheet',label:'Sheet'},
+            <Tabs value={view} onChange={k=>setView(k as 'grid'|'register')} tabs={[
+              {key:'grid',label:'Sheets',count:loading||loadError?undefined:filtered.length},
               {key:'register',label:'Register',count:loading||loadError?undefined:total},
             ]}/>
           </div>
           <Button variant="primary" icon={<Plus size={15} weight="bold"/>} onClick={openCreate}>Add Drawing</Button>
         </header>
 
-        {view==='sheet'?(
+        {view==='grid'?(
+          <div className="dw-reg">
+            <Toolbar search={search} onSearch={setSearch} placeholder="Find a sheet by number or title…"
+              filters={<>
+                <Select aria-label="Discipline" value={filterDiscipline==='all'?'':filterDiscipline} onChange={e=>setFilterDiscipline(e.target.value||'all')} placeholder="All Disciplines" options={[...DISCIPLINES]}/>
+                {setToggle}
+              </>}
+            />
+            {loading?(
+              <div className="sg-grid">{Array.from({length:8}).map((_,i)=><div key={i} className="sg-card" aria-hidden><div className="st-thumb"><span className="st-skel"/></div><div className="sg-meta"><span className="sg-skel"/></div></div>)}</div>
+            ):filtered.length===0?registerEmpty:(
+              groupOrder.map(disc=>(
+                <section key={disc} className="sg-sec" aria-label={disc}>
+                  <h2 className="sg-h"><span className="dw-dot" style={{background:DISCIPLINE_COLORS[disc]||'var(--text-tertiary)'}}/>{disc}<span>{grouped[disc].length}</span></h2>
+                  <div className="sg-grid">
+                    {grouped[disc].map((d:any)=>{
+                      const url=d.url||d.file_url||'';
+                      return (
+                        <a key={d.id} className="sg-card" href={`/app/projects/${projectId}/drawings/${d.id}`} data-old={(d.status==='superseded'||d.status==='void')||undefined}
+                          onClick={e=>{if(e.metaKey||e.ctrlKey)return;e.preventDefault();viewDrawing(d);}}>
+                          {url?<SheetThumb url={url} isPdf={/\.pdf(\?|$)/i.test(url)} alt={`${sheetNo(d)} ${d.title||''}`}/>:<div className="st-thumb"><span className="st-fail">No file</span></div>}
+                          <div className="sg-meta">
+                            <b>{sheetNo(d)||'—'}</b>
+                            <span className="sg-title">{d.title||''}</span>
+                            <span className="sg-rev">R{revOf(d)} · {fmtDate(d.revision_date)}</span>
+                            {d.status!=='current'&&<Badge tone={STATUS_TONE[d.status]||'neutral'}>{STATUS_LABELS[d.status]||d.status}</Badge>}
+                          </div>
+                        </a>
+                      );
+                    })}
+                  </div>
+                </section>
+              ))
+            )}
+          </div>
+        ):view==='sheet'?(
           <div className="dw-work">
             {railOpen&&rail}
             {isPhone&&(railOpen||(metaOpen&&!!active))&&(
