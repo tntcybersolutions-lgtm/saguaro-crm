@@ -54,7 +54,7 @@ function Kpi({ label, value, sub, href, pct, spark, tone, note }: {
     <>
       <span className="hf-k-label">{label}</span>
       <b className="hf-k-val" data-tone={tone} title={note}>{value}</b>
-      {pct != null && <span className="hf-k-bar" aria-hidden><i style={{ width: `${Math.max(2, Math.min(100, pct))}%` }} /></span>}
+      {pct != null && <span className="hf-k-bar" data-tone={tone} aria-hidden><i style={{ width: `${Math.max(2, Math.min(100, pct))}%` }} /></span>}
       {sub && <span className="hf-k-sub">{sub}</span>}
       {spark && spark.some(v => v > 0) && (
         <span className="hf-k-spark" aria-hidden>
@@ -295,6 +295,9 @@ a.hf-card:focus-visible{outline:2px solid var(--focus-ring);outline-offset:2px}
 .hf-k-sub{font-size:13px;line-height:1.35;color:var(--text-secondary);position:relative;z-index:1}
 .hf-k-bar{display:block;height:6px;border-radius:3px;background:var(--bg-surface-2);overflow:hidden;margin:3px 0 1px}
 .hf-k-bar i{display:block;height:100%;border-radius:3px;background:${BLUE}}
+.hf-k-bar[data-tone=good] i{background:${GREEN}}
+.hf-k-bar[data-tone=warn] i{background:var(--warning)}
+.hf-k-bar[data-tone=bad] i{background:var(--danger)}
 .hf-k-spark{position:absolute;left:0;right:0;bottom:0;height:42px;opacity:.6;pointer-events:none}
 
 .hf-grid{display:grid;grid-template-columns:minmax(0,1fr);gap:12px;margin-top:12px}
