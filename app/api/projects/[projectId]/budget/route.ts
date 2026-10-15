@@ -52,7 +52,42 @@ export async function GET(req: NextRequest, { params }: { params: { projectId: s
     // job list show. The budget lines are COST; their total is not the contract.
     const p = project as { revised_contract_value?: number | null; contract_amount?: number | null; contract_value?: number | null };
     const contract = Number(p.revised_contract_value || p.contract_amount || p.contract_value || 0);
-    return NextResponse.json({ lines: (data ?? []).map((r) => toBudgetLineView(r as Record<string, unknown>)), contract });
+    // Live roll-ups by cost code, so Committed and Direct costs come from the
+    // job's own commitments, purchase orders and bills — not only what someone
+    // typed on the line.
+    const norm = (c: unknown) => String(c ?? '').trim().toLowerCase();
+    const [cm, po, bl] = await Promise.all([
+      supabase.from('commitments').select('budget_line_item_id, original_amount, approved_changes, current_amount, status').eq('project_id', params.projectId).eq('tenant_id', user.tenantId),
+      supabase.from('purchase_orders').select('cost_code, total, status').eq('project_id', params.projectId).eq('tenant_id', user.tenantId),
+      supabase.from('bills').select('cost_code, total, amount, status').eq('project_id', params.projectId).eq('tenant_id', user.tenantId),
+    ]);
+    const DEAD = new Set(['void', 'voided', 'cancelled', 'canceled', 'rejected', 'draft']);
+    const committedByLine = new Map<string, number>();
+    ((cm.data ?? []) as { budget_line_item_id: string | null; original_amount: number | null; approved_changes: number | null; current_amount: number | null; status: string | null }[])
+      .filter((c) => c.budget_line_item_id && !DEAD.has(norm(c.status)))
+      .forEach((c) => {
+        const amt = Number(c.current_amount) || (Number(c.original_amount) || 0) + (Number(c.approved_changes) || 0);
+        committedByLine.set(c.budget_line_item_id!, (committedByLine.get(c.budget_line_item_id!) || 0) + amt);
+      });
+    const poByCode = new Map<string, number>();
+    ((po.data ?? []) as { cost_code: string | null; total: number | null; status: string | null }[])
+      .filter((x) => x.cost_code && !DEAD.has(norm(x.status)))
+      .forEach((x) => poByCode.set(norm(x.cost_code), (poByCode.get(norm(x.cost_code)) || 0) + (Number(x.total) || 0)));
+    const billsByCode = new Map<string, number>();
+    ((bl.data ?? []) as { cost_code: string | null; total: number | null; amount: number | null; status: string | null }[])
+      .filter((x) => x.cost_code && !DEAD.has(norm(x.status)))
+      .forEach((x) => billsByCode.set(norm(x.cost_code), (billsByCode.get(norm(x.cost_code)) || 0) + (Number(x.total) || Number(x.amount) || 0)));
+    const round = (n: number) => Math.round(n * 100) / 100;
+    const lines = (data ?? []).map((r) => {
+      const v = toBudgetLineView(r as Record<string, unknown>);
+      const liveCommitted = (committedByLine.get(v.id) || 0) + (poByCode.get(norm(v.cost_code)) || 0);
+      const committed = liveCommitted > 0 ? round(liveCommitted) : v.committed_cost;
+      const direct = round(billsByCode.get(norm(v.cost_code)) || 0);
+      const projectedCost = round(committed + direct);
+      const eac = Math.max(v.forecast_cost, projectedCost);
+      return { ...v, committed_cost: committed, committed_source: liveCommitted > 0 ? 'commitments' : 'entered', direct_costs: direct, projected_cost: projectedCost, forecast_cost: round(eac), over_under: round(v.revised_budget - eac) };
+    });
+    return NextResponse.json({ lines, contract });
   } catch (e) {
     const detail = e instanceof Error ? e.message : String(e);
     console.error('[projects/[projectId]/budget] read failed:', detail);

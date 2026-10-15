@@ -35,7 +35,7 @@ import { useParams } from 'next/navigation';
 import { toCents, toDollars, summarizeContract } from '@/lib/calc';
 import {
   Robot, X, Warning, CheckCircle, XCircle, Plus, Clipboard, PencilSimple, Copy, Trash,
-  ArrowClockwise, WarningCircle,
+  ArrowClockwise, WarningCircle, ArrowSquareOut,
 } from '@phosphor-icons/react';
 import {
   PageShell, Card, StatRow, Badge, Button, Toolbar, DataTable, EmptyState, RowActions,
@@ -498,6 +498,7 @@ export default function ChangeOrdersPage() {
     const busy = approvingId===co.id;
     return [
       { label:'Open Details', icon:<Clipboard size={15}/>, onClick:()=>setSelectedId(co.id) },
+      { label:'Open full page', icon:<ArrowSquareOut size={15}/>, href:`/app/projects/${projectId}/items/change_orders/${co.id}`, hidden:String(co.id).startsWith('temp-') },
       { label:'Approve', icon:<CheckCircle size={15}/>, onClick:()=>approveCO(co.id), hidden:s!=='pending', disabled:busy },
       { label:'Reject', icon:<XCircle size={15}/>, onClick:()=>rejectCO(co.id), hidden:s!=='pending', disabled:busy, tone:'danger' },
       { label:'Analyze Risk (AI)', icon:<Robot size={15}/>, onClick:()=>{ setSelectedId(co.id); analyzeRisk({title:co.title,description:co.description,reason:co.reason,cost_impact:coAmount(co),schedule_impact:co.schedule_impact,status:co.status},co.id); }, disabled: riskLoading&&riskTarget===co.id },

@@ -65,6 +65,7 @@ export function makeFakeDb() {
     in(c: string, vs: unknown[]) { this.filters.push((r) => vs.includes(r[c])); return this; }
     ilike(c: string, p: string) { const re = likeToRe(p); this.filters.push((r) => re.test(String(r[c] ?? ''))); return this; }
     gte(c: string, v: unknown) { this.filters.push((r) => r[c] >= (v as number)); return this; }
+    lt(c: string, v: unknown) { this.filters.push((r) => r[c] < (v as number)); return this; }
     or(expr: string) { this.filters.push(orFilter(expr)); return this; }
     order(col: string, o?: { ascending?: boolean }) { this.orderBy = { col, asc: o?.ascending !== false }; return this; }
     limit(n: number) { this.max = n; return this; }

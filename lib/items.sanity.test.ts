@@ -187,3 +187,43 @@ describe('item page — related items', () => {
     expect((await search(req(`/api/items/search?projectId=${JOB}&q=door`))).status).toBe(404);
   });
 });
+
+describe('item page — change orders and inspections', () => {
+  const CO = 'aaaaaaaa-0000-4000-8000-0000000000c1';
+  const INSP = 'aaaaaaaa-0000-4000-8000-0000000000e1';
+  beforeEach(() => {
+    fake.T('change_orders').push({ id: CO, tenant_id: A, project_id: JOB, co_number: 4, title: 'Added fire dampers', amount: 18250, status: 'pending', deleted_at: null, created_at: '2026-10-06T00:00:00Z' });
+    fake.T('inspections').push({ id: INSP, tenant_id: A, project_id: JOB, inspection_type: 'Above-ceiling', permit_number: 'B-2291', status: 'scheduled', result: 'pending', created_at: '2026-10-07T00:00:00Z' });
+  });
+  test('approving a CO stamps approved_at and keeps the money exact', async () => {
+    currentUser = ADMIN;
+    const r = await patchItem(req(`/api/items/change_orders/${CO}`, 'PATCH', { status: 'approved', amount: '18250.40' }), p('change_orders', CO));
+    expect(r.status).toBe(200);
+    const row = fake.T('change_orders')[0];
+    expect(row.amount).toBe(18250.4);
+    expect(row.approved_at).toBeTruthy();
+    expect(row.updated_at).toBeTruthy();
+  });
+  test('completing an inspection stamps inspected_at and never writes updated_at (no such column)', async () => {
+    currentUser = ADMIN;
+    const r = await patchItem(req(`/api/items/inspections/${INSP}`, 'PATCH', { status: 'completed', result: 'pass' }), p('inspections', INSP));
+    expect(r.status).toBe(200);
+    const row = fake.T('inspections')[0];
+    expect(row.result).toBe('pass');
+    expect(row.inspected_at).toBeTruthy();
+    expect('updated_at' in row).toBe(false);
+  });
+  test('CO permissions: Foreman has no Change Orders access', async () => {
+    currentUser = FOREMAN;
+    expect((await getItem(req(`/api/items/change_orders/${CO}`), p('change_orders', CO))).status).toBe(403);
+  });
+  test('link a CO to an RFI and find it in search', async () => {
+    currentUser = ADMIN;
+    expect((await addLink(req(`/api/items/rfis/${RFI}/links`, 'POST', { toType: 'change_orders', toId: CO }), p('rfis', RFI))).status).toBe(201);
+    const fromCo = await (await listLinks(req(`/api/items/change_orders/${CO}/links`), p('change_orders', CO))).json();
+    expect(fromCo.links).toEqual([expect.objectContaining({ type: 'rfis', name: 'RFI #7 · Door hardware at level 2' })]);
+    const found = await (await search(req(`/api/items/search?projectId=${JOB}&q=dampers`))).json();
+    expect(found.items.map((i: { name: string }) => i.name)).toEqual(['CO #4 · Added fire dampers']);
+  });
+});
+

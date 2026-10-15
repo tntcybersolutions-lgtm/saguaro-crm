@@ -117,10 +117,10 @@ const CSS = `
 .ih-row[data-action="status_changed"] .ih-dot{background:var(--brand-primary)}
 .ih-head{font-size:14px;color:var(--text-primary);display:flex;flex-wrap:wrap;gap:6px;align-items:baseline}
 .ih-head time{color:var(--text-tertiary);font-size:12px;margin-left:auto}
-.ih-table{margin-top:8px;border-collapse:collapse;font-size:13px;width:100%}
+.ih-table{margin-top:8px;border-collapse:collapse;font-size:13px;width:auto;max-width:100%}
 .ih-table th{color:var(--text-secondary);font-weight:600;text-align:left;padding:3px 12px 3px 0;white-space:nowrap;vertical-align:top;width:1%}
-.ih-old{color:var(--text-tertiary);text-decoration:line-through;padding:3px 8px 3px 0;overflow-wrap:anywhere}
+.ih-old{color:var(--text-tertiary);text-decoration:line-through;padding:3px 8px 3px 0;overflow-wrap:anywhere;max-width:320px}
 .ih-arrow{color:var(--text-tertiary);padding:3px 8px;width:1%}
-.ih-new{color:var(--text-primary);padding:3px 0;overflow-wrap:anywhere}
+.ih-new{color:var(--text-primary);padding:3px 0;overflow-wrap:anywhere;max-width:420px}
 @media (max-width:600px){.ih-table th{white-space:normal}}
 `;
