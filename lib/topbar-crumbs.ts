@@ -25,6 +25,7 @@ export const TOPBAR_LABELS: Record<string, string> = {
   time: 'Time',
   bids: 'Bids & Estimates',
   takeoff: 'AI Takeoff',
+  models: 'Models',
   documents: 'Documents',
   autopilot: 'Autopilot',
   reports: 'Reports',

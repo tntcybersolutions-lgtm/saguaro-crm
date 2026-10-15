@@ -21,7 +21,7 @@ import {
   ShieldCheck, IdentificationBadge, ClipboardText, Camera, MagnifyingGlass,
   HardHat, CheckCircle, CheckSquare, Timer, Question, Export, ChatCircle,
   Folder, Bank, BookOpen, Users, Globe, Laptop, ArrowsSplit, Plug, Shield,
-  WifiHigh, Broadcast, Gear, Robot, ChartBar, Brain, CaretLeft, CaretRight, ArrowLeft, X,
+  WifiHigh, Broadcast, Gear, Robot, ChartBar, Brain, CaretLeft, CaretRight, ArrowLeft, X, Cube,
 } from '@phosphor-icons/react';
 
 export interface ProjectNavItem {
@@ -116,6 +116,7 @@ export const PROJECT_NAV_SECTIONS: ProjectNavSection[] = [
     items: [
       { label: 'Files',           href: '/files',             icon: Folder, badge: null, accent: 'documents' },
       { label: 'Drawings',        href: '/drawings',          icon: Ruler, badge: null, accent: 'drawings' },
+      { label: 'Models',          href: '/models',            icon: Cube, badge: null },
       { label: 'Permits',         href: '/permits',           icon: Bank,  badge: null, accent: 'permits' },
       { label: 'Specifications',  href: '/specs',             icon: BookOpen, badge: null, accent: 'specs' },
     ],
@@ -202,7 +203,7 @@ export const PROJECT_PHASES: ProjectPhase[] = [
   { key: 'execution', label: 'Execution',       tagline: 'Set up & buy out',      icon: Clipboard,   href: '/schedule',    match: ['/schedule', '/selections', '/contracts', '/subs', '/purchase-orders'] },
   { key: 'field',     label: 'Field',           tagline: 'Build & track daily',   icon: HardHat,     href: '/daily-logs',  match: ['/daily-logs', '/tm-tickets', '/photos', '/inspections', '/safety', '/punch-list', '/todos', '/timesheets', '/crews'] },
   { key: 'financial', label: 'Financials',      tagline: 'Cost, bill & get paid', icon: Money,       href: '/budget',      match: ['/budget', '/change-orders', '/pay-apps', '/invoices', '/bills', '/lien-waivers', '/insurance', '/payroll', '/w9'] },
-  { key: 'docs',      label: 'Docs & Comms',    tagline: 'Drawings, RFIs, files', icon: Folder,      href: '/files',       match: ['/files', '/drawings', '/permits', '/specs', '/rfis', '/submittals', '/messages', '/directory', '/team', '/compliance'] },
+  { key: 'docs',      label: 'Docs & Comms',    tagline: 'Drawings, RFIs, files', icon: Folder,      href: '/files',       match: ['/files', '/drawings', '/models', '/permits', '/specs', '/rfis', '/submittals', '/messages', '/directory', '/team', '/compliance'] },
   { key: 'closeout',  label: 'Closeout',        tagline: 'Finish & hand over',    icon: CheckCircle, href: '/closeout',    match: ['/closeout'] },
 ];
 
