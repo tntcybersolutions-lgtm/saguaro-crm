@@ -352,7 +352,15 @@ export default function DailyLogsPage() {
           wind_conditions: body.windConditions, phase_of_work: body.phaseOfWork,
         },
       });
-      if (!sent.saved && !sent.response.ok) throw new Error('Failed to create daily log');
+      if (!sent.saved && !sent.response.ok) {
+        /* 409 = this project already has a log for that day. The route's message
+           says so and names the way out; the generic error hid it. */
+        if (sent.response.status === 409) {
+          const dup = await sent.response.json().catch(() => ({} as { error?: string }));
+          throw new Error(dup.error || 'A daily log already exists for that day on this project. Open it to add to the day.');
+        }
+        throw new Error('Failed to create daily log');
+      }
       setNotice(sent.saved ? "Saved on this phone — it sends when you're back online." : '');
       // Remember what was saved for next time, and receipt what was accepted.
       setLastUsed('daily-log', { projectId: form.projectId, superintendent: form.superintendent });

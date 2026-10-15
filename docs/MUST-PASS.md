@@ -44,7 +44,7 @@ to stop.
 - Reopen and confirm it persisted with today's practice date, not a UTC date
 - API: `app/api/daily-logs`
 - Taps at 390px: MEASURE
-- STATUS: NOT VERIFIED
+- STATUS: CODE-VERIFIED — AWAITING LIVE RUN (steps: page, list/create/[id] routes, tenant filter, auth guard, response keys `logs`/`log`, insert columns vs live schema = CODE-VERIFIED; persistence, practice-date display, tap count = NEEDS-LIVE-RUN)
 
 ### Path 2 — Clock in and clock out
 - Open `app/app/time/page.tsx` (474 lines), clock in, clock out
