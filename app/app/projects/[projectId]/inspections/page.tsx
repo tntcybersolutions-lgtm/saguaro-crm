@@ -26,7 +26,7 @@ import { confirmDialog } from '@/lib/ui/async-dialog';
 import { useProjectContext } from '@/lib/hooks/useProjectContext';
 import { useParams } from 'next/navigation';
 import SaguaroDatePicker from '../../../../../components/SaguaroDatePicker';
-import { ClipboardText, Plus, Warning, ArrowsClockwise, X, CheckCircle } from '@phosphor-icons/react';
+import { ClipboardText, Plus, Warning, ArrowsClockwise, X, CheckCircle, ArrowSquareOut } from '@phosphor-icons/react';
 import {
   PageShell, Card, StatRow, Badge, Button, Toolbar, DataTable, EmptyState,
   FormModal, Field, Input, Select, Textarea, FormGrid, DetailList, Toast, useToast,
@@ -428,6 +428,7 @@ export default function InspectionsPage() {
   const isResulted = (i: Inspection) => ['passed', 'failed', 'conditional pass'].includes(canonResult(i.result));
   const rowActions = (i: Inspection): Action[] => [
     { label: 'Open Record', icon: <ClipboardText size={15} />, onClick: () => setSelectedId(i.id) },
+    { label: 'Open full page', icon: <ArrowSquareOut size={15} />, href: `/app/projects/${projectId}/items/inspections/${i.id}`, hidden: String(i.id).startsWith('temp-') },
     { label: isResulted(i) ? 'Change Result' : 'Record Result', icon: <CheckCircle size={15} />, onClick: () => openRecord(i) },
     { label: 'Schedule Re-Inspection', icon: <ArrowsClockwise size={15} />, onClick: () => openCreate(i.type), hidden: !needsReinspect(i) },
   ];

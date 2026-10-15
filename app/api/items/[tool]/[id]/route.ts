@@ -58,7 +58,9 @@ export async function PATCH(req: NextRequest, { params }: { params: Promise<{ to
     if (l.tool.type === 'rfis' && status === 'answered' && !l.item.answered_at) patch.answered_at = new Date().toISOString();
     if (l.tool.type === 'punch_list' && status === 'completed' && !l.item.completed_at) patch.completed_at = new Date().toISOString();
     if (l.tool.type === 'punch_list' && status === 'verified' && !l.item.verified_at) patch.verified_at = new Date().toISOString();
-    patch.updated_at = new Date().toISOString();
+    if (l.tool.hasUpdatedAt !== false) patch.updated_at = new Date().toISOString();
+    if (l.tool.type === 'inspections' && (status === 'completed') && !l.item.inspected_at) patch.inspected_at = new Date().toISOString();
+    if (l.tool.type === 'change_orders' && status === 'approved' && !l.item.approved_at) patch.approved_at = new Date().toISOString();
 
     const { data, error } = await l.db
       .from(l.tool.table as never)

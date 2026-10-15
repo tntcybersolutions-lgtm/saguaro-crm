@@ -39,6 +39,8 @@ export type ItemTool = {
   statusKey: string;
   statuses: string[];
   hasDeletedAt: boolean;
+  /** Table has updated_at (inspections does not). Defaults to true. */
+  hasUpdatedAt?: boolean;
   fields: ItemField[];
   edit: string[];
   /** Columns the cross-tool search reads. */
@@ -163,6 +165,64 @@ export const ITEM_TOOLS: Record<string, ItemTool> = {
     ],
     edit: ['status', 'log_date', 'superintendent', 'phase_of_work', 'foreman_name', 'safety_notes', 'approved_by'],
     searchKeys: ['work_performed', 'notes', 'superintendent'],
+  },
+  change_orders: {
+    type: 'change_orders', table: 'change_orders', noun: 'Change order', plural: 'Change orders', perm: 'Change Orders', listPath: 'change-orders',
+    numberKey: 'co_number', titleKey: 'title', numberPrefix: 'CO #', statusKey: 'status',
+    statuses: ['draft', 'pending', 'submitted', 'approved', 'rejected', 'void'], hasDeletedAt: true,
+    fields: [
+      { key: 'status', label: 'Status', kind: 'select', options: ['draft', 'pending', 'submitted', 'approved', 'rejected', 'void'], strip: true },
+      { key: 'amount', label: 'Amount', kind: 'money', strip: true },
+      { key: 'schedule_impact_days', label: 'Schedule impact (days)', kind: 'number', strip: true },
+      { key: 'change_type', label: 'Type', kind: 'text', strip: true },
+      { key: 'initiated_by', label: 'Initiated by', kind: 'text', strip: true },
+      { key: 'pco_number', label: 'PCO #', kind: 'text' },
+      { key: 'description', label: 'Description', kind: 'long' },
+      { key: 'scope_of_change', label: 'Scope of change', kind: 'long' },
+      { key: 'reason', label: 'Reason', kind: 'long' },
+      { key: 'labor_amount', label: 'Labor', kind: 'money' },
+      { key: 'materials_amount', label: 'Materials', kind: 'money' },
+      { key: 'equipment_amount', label: 'Equipment', kind: 'money' },
+      { key: 'subtrade_amount', label: 'Subcontract', kind: 'money' },
+      { key: 'overhead_amount', label: 'Overhead', kind: 'money' },
+      { key: 'profit_amount', label: 'Profit', kind: 'money' },
+      { key: 'billable_to', label: 'Billable to', kind: 'text' },
+      { key: 'contract_reference', label: 'Contract reference', kind: 'text' },
+      { key: 'revised_completion_date', label: 'Revised completion', kind: 'date' },
+      { key: 'approved_by', label: 'Approved by', kind: 'text' },
+      { key: 'approved_at', label: 'Approved', kind: 'datetime' },
+      { key: 'rejection_reason', label: 'Rejected because', kind: 'long' },
+      { key: 'notes', label: 'Notes', kind: 'long' },
+      { key: 'created_at', label: 'Created', kind: 'datetime' },
+    ],
+    edit: ['title', 'status', 'amount', 'schedule_impact_days', 'change_type', 'initiated_by', 'pco_number', 'description', 'scope_of_change', 'reason', 'labor_amount', 'materials_amount', 'equipment_amount', 'subtrade_amount', 'overhead_amount', 'profit_amount', 'billable_to', 'contract_reference', 'revised_completion_date', 'rejection_reason', 'notes'],
+    searchKeys: ['title', 'description', 'pco_number'],
+  },
+  inspections: {
+    type: 'inspections', table: 'inspections', noun: 'Inspection', plural: 'Inspections', perm: 'Safety', listPath: 'inspections',
+    numberKey: 'permit_number', titleKey: 'inspection_type', numberPrefix: 'Permit ', statusKey: 'status',
+    statuses: ['scheduled', 'in_progress', 'completed', 'cancelled'], hasDeletedAt: false, hasUpdatedAt: false,
+    fields: [
+      { key: 'status', label: 'Status', kind: 'select', options: ['scheduled', 'in_progress', 'completed', 'cancelled'], strip: true },
+      { key: 'result', label: 'Result', kind: 'select', options: ['pending', 'pass', 'fail', 'partial'], strip: true },
+      { key: 'scheduled_date', label: 'Scheduled', kind: 'datetime', strip: true },
+      { key: 'inspector_name', label: 'Inspector', kind: 'text', strip: true },
+      { key: 'inspector_agency', label: 'Agency', kind: 'text', strip: true },
+      { key: 'ahj_name', label: 'Authority having jurisdiction', kind: 'text' },
+      { key: 'checklist_passed', label: 'Checklist items passed', kind: 'number' },
+      { key: 'checklist_total', label: 'Checklist items', kind: 'number' },
+      { key: 'deficiency_count', label: 'Deficiencies', kind: 'number' },
+      { key: 'deficiency_notes', label: 'Deficiency notes', kind: 'long' },
+      { key: 're_inspection_date', label: 'Re-inspection', kind: 'date' },
+      { key: 'inspected_at', label: 'Inspected', kind: 'datetime' },
+      { key: 'signed_off_by', label: 'Signed off by', kind: 'text' },
+      { key: 'signed_off_at', label: 'Signed off', kind: 'datetime' },
+      { key: 'weather', label: 'Weather', kind: 'text' },
+      { key: 'notes', label: 'Notes', kind: 'long' },
+      { key: 'created_at', label: 'Created', kind: 'datetime' },
+    ],
+    edit: ['inspection_type', 'status', 'result', 'inspector_name', 'inspector_agency', 'ahj_name', 'permit_number', 'deficiency_count', 'deficiency_notes', 're_inspection_date', 'signed_off_by', 'weather', 'notes'],
+    searchKeys: ['inspection_type', 'notes', 'permit_number', 'inspector_name'],
   },
 };
 
