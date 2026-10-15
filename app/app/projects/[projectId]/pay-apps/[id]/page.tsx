@@ -1,14 +1,16 @@
 'use client';
 /**
- * Pay Application detail — Pass 4, on the RFIs reference layout (record + rail).
+ * Pay Application detail — kit record page (record + rail).
  *
- * Anatomy: crumbs → title (Pay App #N) + the ONE workflow primary (Submit to
+ * Anatomy: crumbs (Projects › Job › Pay Applications › #N) → title + the ONE
+ * workflow primary (Submit to
  * Owner / Approve / Certify / Mark Paid — whichever is next) with PDF and Edit
  * SOV as secondaries → StatRow (contract / this period / completed / retainage
  * / payment due) → workspace: the G703 schedule of values and the G702 summary
  * on the left, a 320–384px rail (status, where it sits in the approval /
  * waiver / payment chain, prior-app comparison, details, retainage, related)
- * on the right. Phone: stacked.
+ * on the right. Phone: stacked. The G703 is the shared DataTable — totals row,
+ * columns, CSV export — with inputs in its cells while a draft is edited.
  *
  * Money: aligned, tabular, two decimals, never truncated. Approval and
  * record-payment stay the explicit existing POST workflows.
@@ -22,7 +24,10 @@
  *
  * Note: the daily_logs-style column drift applies here too — the table's SOV
  * columns are prev_completed / this_period / stored_materials; the old
- * work_* names stay optional so a payload using them still works.
+ * work_* names stay optional so a payload using them still works. An edit to
+ * Previous / This Period / Stored writes BOTH names on the line, so the value
+ * typed is the value the totals use and the value the PUT sends (the PUT body
+ * shape is unchanged: resolved work_* names per line).
  */
 import React, { useState, useEffect, useCallback } from 'react';
 import { useProjectContext } from '@/lib/hooks/useProjectContext';
@@ -31,13 +36,14 @@ import { useParams, useRouter } from 'next/navigation';
 import { getAuthHeaders } from '@/lib/supabase-browser';
 import {
   Clipboard, ArrowLeft, ArrowRight, PencilSimple, FloppyDisk, FileText, Plus, X,
-  Files, Lock, CurrencyDollar, WarningCircle,
+  Files, Lock, CurrencyDollar, WarningCircle, Scales, CalendarBlank, ChartBar, Vault, Wallet,
+  CheckCircle, Circle,
 } from '@phosphor-icons/react';
 import {
   PageShell, Card, StatRow, Badge, Button, EmptyState, DetailList, Input, Toast, useToast,
-  type BadgeTone, type StatItem,
+  DataTable, Timeline,
+  type BadgeTone, type StatItem, type Column,
 } from '@/components/ui/kit';
-import { FlowSteps, InsightRow } from '@/components/ui/premium';
 import { openPdf } from '@/components/PdfViewer';
 import { layout } from '@/lib/design-tokens';
 
@@ -114,6 +120,33 @@ function calcLine(l: SovLine, retPct: number): SovLine {
   };
 }
 
+/* The three money columns of a G703 line, each with its live column name and
+   its older alias. Reads resolve live-name-first (as calcLine does); edits
+   write both, so neither name can hold a stale figure. */
+const MONEY_FIELDS = {
+  prev:   { live: 'prev_completed',   alias: 'work_from_prev',   label: 'previous' },
+  this:   { live: 'this_period',      alias: 'work_this_period', label: 'this period' },
+  stored: { live: 'stored_materials', alias: 'materials_stored', label: 'stored' },
+} as const;
+type MoneyKey = keyof typeof MONEY_FIELDS;
+const moneyOf = (l: SovLine, k: MoneyKey) => {
+  const f = MONEY_FIELDS[k];
+  return Number(l[f.live] ?? l[f.alias] ?? 0) || 0;
+};
+
+/** One label / value line in a rail ladder (prior-app comparison, retainage). */
+function LadderRow({ label, value, strong }: { label: React.ReactNode; value: React.ReactNode; strong?: boolean }) {
+  return <div className="pdRow" data-strong={strong ? 'true' : undefined}><span>{label}</span><span>{value}</span></div>;
+}
+
+type SovRow = { l: SovLine; i: number };
+
+/** A number input in a DataTable cell keeps ↑/↓ for itself (step the value)
+ *  instead of letting the row's keyboard navigation take them. */
+const keepArrows = (e: React.KeyboardEvent<HTMLInputElement>) => {
+  if (e.key === 'ArrowUp' || e.key === 'ArrowDown') e.stopPropagation();
+};
+
 const CSS = `
 .pdWs > .k-page { max-width: none; }
 .pdCq { container: pdws / inline-size; min-width: 0; }
@@ -129,17 +162,9 @@ const CSS = `
 .pdBarTrack { flex: 1; height: 6px; border-radius: 3px; background: rgba(255,255,255,0.08); overflow: hidden; min-width: 80px; }
 .pdBarFill { height: 100%; border-radius: 3px; background: var(--status-ongoing); transition: width .4s; }
 .pdBar b { color: var(--text-primary); font-variant-numeric: tabular-nums; }
-.pdTableWrap { overflow-x: auto; }
-.pdTable { width: 100%; border-collapse: collapse; font-size: var(--fs-sm); }
-.pdTable th { position: sticky; top: 0; z-index: 1; background: var(--bg-surface-2); text-align: left; padding: 8px 10px; font-size: 12px; font-weight: 700; color: var(--text-tertiary); border-bottom: 1px solid var(--border-default); white-space: nowrap; }
-.pdTable td { padding: 6px 10px; height: 44px; border-bottom: 1px solid var(--border-subtle); color: var(--text-secondary); white-space: nowrap; font-variant-numeric: tabular-nums; vertical-align: middle; }
-.pdTable th:first-child, .pdTable td:first-child { padding-left: var(--sp-4); position: sticky; left: 0; z-index: 1; background: var(--bg-solid); }
-.pdTable th:first-child { background: var(--bg-solid-2); z-index: 3; }
-.pdTable th[data-align="right"], .pdTable td[data-align="right"] { text-align: right; }
-.pdTable td[data-desc] { white-space: normal; min-width: 200px; color: var(--text-primary); }
-.pdTable tfoot td { font-weight: 800; color: var(--text-primary); background: var(--bg-surface-2); border-top: 2px solid var(--border-default); }
-.pdTable .k-input { min-height: 32px; padding: 4px 8px; font-size: 13px; }
-.pdTable .k-input[data-num] { text-align: right; width: 110px; }
+.pdSov .k-table td .k-input { min-height: 32px; padding: 4px 8px; font-size: 13px; }
+.pdSov .k-table td .k-input[data-num] { text-align: right; width: 110px; }
+.pdSov [data-desc] .k-input { min-width: 200px; }
 .pdPct { display: inline-flex; align-items: center; gap: 6px; min-width: 90px; }
 .pdPctTrack { flex: 1; height: 5px; border-radius: 999px; background: rgba(255,255,255,0.08); overflow: hidden; min-width: 40px; }
 .pdPctFill { height: 100%; border-radius: 999px; background: var(--status-under-contract); }
@@ -164,6 +189,7 @@ const CSS = `
 .pdSkel { height: 14px; border-radius: 4px; background: var(--border-subtle); }
 @media (max-width: 640px) {
   .pdWs .k-btn, .pdWs .k-stat, .pdWs .k-input { min-height: 44px; }
+  .pdSov .k-table td .k-input[data-num], .pdSov [data-desc] .k-input { width: 100%; min-width: 0; }
 }
 `;
 
@@ -196,14 +222,20 @@ export default function PayAppDetailPage() {
           const r = await fetch(`/api/pay-apps/list?projectId=${projectId}`);
           const d = await r.json();
           setAllApps(d.payApps || []);
-        } catch {}
+        } catch (e) {
+          // Enrichment only (prior-app comparison) — the page renders without it.
+          console.error('pay app list', e);
+        }
       })(),
       (async () => {
         try {
           const r = await fetch(`/api/lien-waivers/list?projectId=${projectId}`);
           const d = await r.json();
           setWaivers((d.lienWaivers || []).filter((w: any) => w.pay_application_id === id));
-        } catch {}
+        } catch (e) {
+          // Enrichment only (waiver chain) — the page renders without it.
+          console.error('lien waivers', e);
+        }
       })(),
     ]);
   }, [projectId, id]);
@@ -250,6 +282,18 @@ export default function PayAppDetailPage() {
       const next = [...prev];
       const updated = { ...next[i], [field]: field === 'description' || field === 'csi_code' ? val : (parseFloat(val) || 0) };
       next[i] = calcLine(updated, retPct);
+      return next;
+    });
+  }
+
+  /** Previous / This Period / Stored: the typed number lands on the live column
+   *  name AND its alias, so calcLine, the totals and the PUT all see it. */
+  function updateMoney(i: number, k: MoneyKey, val: string) {
+    const n = parseFloat(val) || 0;
+    const f = MONEY_FIELDS[k];
+    setLines(prev => {
+      const next = [...prev];
+      next[i] = calcLine({ ...next[i], [f.live]: n, [f.alias]: n }, retPct);
       return next;
     });
   }
@@ -425,11 +469,82 @@ export default function PayAppDetailPage() {
   const thisDelta = sovThis - priorThis;
 
   const stats: StatItem[] = [
-    { label: 'Contract Sum', value: fmt(contractToDate), sub: `${fmt(Number(payApp.contract_sum)||0)} original ${Number(payApp.change_orders_total||0)>=0?'+':'-'} ${fmt(Math.abs(Number(payApp.change_orders_total)||0))} COs` },
-    { label: 'This Period', value: fmt(sovThis), sub: `${fmtDate(payApp.period_from)} – ${fmtDate(payApp.period_to)}` },
-    { label: 'Total Completed', value: fmt(sovCompleted), tone: 'good', sub: `${completePct}% of contract` },
-    { label: 'Retainage Held', value: fmt(sovRetainage), sub: `${retPct}% on completed to date` },
-    { label: 'Payment Due', value: fmt(sovPayment), tone: 'good', sub: wBlocking > 0 ? `Held by ${wBlocking} unsigned waiver${wBlocking===1?'':'s'}` : 'Line 8 of the G702' },
+    { label: 'Contract Sum', value: fmt(contractToDate), icon: <Scales size={15} />, sub: `${fmt(Number(payApp.contract_sum)||0)} original ${Number(payApp.change_orders_total||0)>=0?'+':'-'} ${fmt(Math.abs(Number(payApp.change_orders_total)||0))} COs` },
+    { label: 'This Period', value: fmt(sovThis), icon: <CalendarBlank size={15} />, sub: `${fmtDate(payApp.period_from)} – ${fmtDate(payApp.period_to)}` },
+    { label: 'Total Completed', value: fmt(sovCompleted), tone: 'good', icon: <ChartBar size={15} />, sub: `${completePct}% of contract` },
+    { label: 'Retainage Held', value: fmt(sovRetainage), icon: <Vault size={15} />, sub: `${retPct}% on completed to date` },
+    { label: 'Payment Due', value: fmt(sovPayment), tone: wBlocking > 0 ? 'warn' : 'good', icon: <Wallet size={15} />, sub: wBlocking > 0 ? `Held by ${wBlocking} unsigned waiver${wBlocking===1?'':'s'}` : 'Line 8 of the G702' },
+  ];
+
+  // ── G703 columns: read-only figures, or inputs while a draft is edited ──
+  const pctCell = (pct: number) => (
+    <span className="pdPct">
+      <span className="pdPctTrack"><span className="pdPctFill" data-done={pct >= 100 ? 'true' : undefined} style={{ display: 'block', width: `${Math.min(100, Math.max(0, pct))}%` }} /></span>
+      <b>{pct.toFixed(0)}%</b>
+    </span>
+  );
+  const completedOf = (list: SovRow[]) => list.reduce((a, r) => a + moneyOf(r.l, 'prev') + moneyOf(r.l, 'this') + moneyOf(r.l, 'stored'), 0);
+  const moneyCol = (k: MoneyKey, header: string, strong?: boolean): Column<SovRow> => ({
+    key: k, header, align: 'right', total: 'sum', format: fmt, phone: canEdit || k === 'this' ? 'show' : 'hide',
+    accessor: (r) => moneyOf(r.l, k),
+    render: (r) => canEdit
+      ? <Input type="number" data-num="true" onKeyDown={keepArrows} value={moneyOf(r.l, k) || ''} onChange={e => updateMoney(r.i, k, e.target.value)} placeholder="0" aria-label={`Line ${r.l.line_number} ${MONEY_FIELDS[k].label}`} />
+      : <span className={strong ? 'pdStrong' : undefined}>{fmt(moneyOf(r.l, k))}</span>,
+  });
+  const sovColumns: Column<SovRow>[] = [
+    { key: 'line_number', header: '#', width: 56, groupable: false, accessor: (r) => r.l.line_number, render: (r) => <span className="pdStrong">{r.l.line_number}</span> },
+    {
+      key: 'description', header: 'Description', primary: true, phone: 'show', accessor: (r) => r.l.description || '',
+      render: (r) => canEdit
+        ? <span data-desc="true"><Input value={r.l.description} onChange={e => updateLine(r.i, 'description', e.target.value)} placeholder="Description" aria-label={`Line ${r.l.line_number} description`} /></span>
+        : (r.l.description || <span className="pdMuted">—</span>),
+    },
+    {
+      key: 'scheduled_value', header: 'Scheduled Value', align: 'right', total: 'sum', format: fmt, phone: 'show',
+      accessor: (r) => Number(r.l.scheduled_value) || 0,
+      render: (r) => canEdit
+        ? <Input type="number" data-num="true" onKeyDown={keepArrows} value={r.l.scheduled_value || ''} onChange={e => updateLine(r.i, 'scheduled_value', e.target.value)} placeholder="0" aria-label={`Line ${r.l.line_number} scheduled value`} />
+        : <span className="pdStrong">{fmt(r.l.scheduled_value)}</span>,
+    },
+    moneyCol('prev', 'Previous'),
+    moneyCol('this', 'This Period', true),
+    moneyCol('stored', 'Stored'),
+    {
+      key: 'percent_complete', header: '% Done', phone: 'hide', groupable: false, accessor: (r) => r.l.percent_complete,
+      total: (list) => { const sv = list.reduce((a, r) => a + (Number(r.l.scheduled_value) || 0), 0); return pctCell(sv > 0 ? Math.round((completedOf(list) / sv) * 1000) / 10 : 0); },
+      render: (r) => pctCell(r.l.percent_complete),
+    },
+    {
+      key: 'balance_to_finish', header: 'Balance', align: 'right', total: 'sum', format: fmt, phone: 'hide',
+      accessor: (r) => r.l.balance_to_finish,
+      render: (r) => <span className={r.l.balance_to_finish < 0 ? 'pdNeg' : undefined}>{fmt(r.l.balance_to_finish)}</span>,
+    },
+    {
+      key: 'retainage', header: 'Retainage', align: 'right', phone: 'hide', accessor: (r) => r.l.retainage, format: fmt,
+      // Same rounding as the G702 line 5: retainage on the summed completed figure.
+      total: (list) => fmt(Math.round(completedOf(list) * (retPct / 100) * 100) / 100),
+      render: (r) => fmt(r.l.retainage),
+    },
+    { key: 'csi_code', header: 'CSI', hidden: true, phone: 'hide', accessor: (r) => r.l.csi_code || '' },
+  ];
+  const sovRows: SovRow[] = lines.map((l, i) => ({ l, i }));
+
+  // Where this app sits in the approval / waiver / payment chain.
+  const chain = [
+    { title: 'Draft & Schedule of Values', done: true,
+      body: `${lines.length} SOV line${lines.length === 1 ? '' : 's'} — ${fmt(sovScheduled)} scheduled.` },
+    { title: 'Submitted to Owner', done: stageRank >= 1,
+      body: stageRank >= 1 ? `Sent${payApp.submitted_date ? ` ${fmtDate(payApp.submitted_date)}` : ''}.` : 'Not sent yet.' },
+    { title: 'Owner Approval', done: stageRank >= 2,
+      body: stageRank >= 2 ? `Approved${payApp.approved_date ? ` ${fmtDate(payApp.approved_date)}` : ''} — conditional waivers generated.` : 'Waiting on the owner.' },
+    { title: 'Lien Waivers Signed', done: stageRank >= 2 && wTotal > 0 && wBlocking === 0,
+      body: wTotal > 0
+        ? `${wSigned} of ${wTotal} signed${wBlocking > 0 ? ` — ${wBlocking} still gate payment` : ' — payment gate clear'}.`
+        : subCount > 0 ? `${subCount} sub${subCount === 1 ? '' : 's'} on the job — waivers generate at approval.` : 'Waivers generate at approval.' },
+    { title: 'Payment Received', done: payApp.status === 'paid',
+      body: payApp.status === 'paid'
+        ? `${fmt(sovPayment)} collected.`
+        : `${fmt(sovPayment)} due${wBlocking > 0 ? ` — held by ${wBlocking} unsigned waiver${wBlocking === 1 ? '' : 's'}` : ''}.` },
   ];
 
   const nextAction = meta.action;
@@ -480,75 +595,17 @@ export default function PayAppDetailPage() {
                   <b>{completePct}%</b>
                   <span>{fmt(sovCompleted)} of {fmt(contractToDate)} · balance {fmt(contractToDate - sovCompleted)}</span>
                 </div>
-                <div className="pdTableWrap">
-                  <table className="pdTable k-table-skin">
-                    <thead>
-                      <tr>
-                        <th>#</th>
-                        <th>Description</th>
-                        <th data-align="right">Scheduled Value</th>
-                        <th data-align="right">Previous</th>
-                        <th data-align="right">This Period</th>
-                        <th data-align="right">Stored</th>
-                        <th>% Done</th>
-                        <th data-align="right">Balance</th>
-                        <th data-align="right">Retainage</th>
-                        {canEdit && <th aria-label="Remove" />}
-                      </tr>
-                    </thead>
-                    <tbody>
-                      {lines.length === 0 && (
-                        <tr><td colSpan={canEdit ? 10 : 9} className="pdMuted" style={{ textAlign: 'center', height: 64 }}>No schedule of values lines on this application.</td></tr>
-                      )}
-                      {lines.map((l, i) => (
-                        <tr key={i}>
-                          <td className="pdStrong">{l.line_number}</td>
-                          <td data-desc="true">
-                            {canEdit
-                              ? <Input value={l.description} onChange={e => updateLine(i, 'description', e.target.value)} placeholder="Description" aria-label={`Line ${l.line_number} description`} />
-                              : (l.description || <span className="pdMuted">—</span>)}
-                          </td>
-                          {canEdit
-                            ? (['scheduled_value','work_from_prev','work_this_period','materials_stored'] as const).map(f => (
-                                <td key={f} data-align="right">
-                                  <Input type="number" data-num="true" value={(l as unknown as Record<string,number>)[f] || ''} onChange={e => updateLine(i, f, e.target.value)} placeholder="0" aria-label={`Line ${l.line_number} ${f.replace(/_/g,' ')}`} />
-                                </td>
-                              ))
-                            : <>
-                                <td data-align="right" className="pdStrong">{fmt(l.scheduled_value)}</td>
-                                <td data-align="right">{fmt(l.prev_completed ?? l.work_from_prev ?? 0)}</td>
-                                <td data-align="right" className="pdStrong">{fmt(l.this_period ?? l.work_this_period ?? 0)}</td>
-                                <td data-align="right">{fmt(l.stored_materials ?? l.materials_stored ?? 0)}</td>
-                              </>
-                          }
-                          <td>
-                            <span className="pdPct">
-                              <span className="pdPctTrack"><span className="pdPctFill" data-done={l.percent_complete >= 100 ? 'true' : undefined} style={{ display: 'block', width: `${Math.min(100, l.percent_complete)}%` }} /></span>
-                              <b>{l.percent_complete.toFixed(0)}%</b>
-                            </span>
-                          </td>
-                          <td data-align="right" className={l.balance_to_finish < 0 ? 'pdNeg' : undefined}>{fmt(l.balance_to_finish)}</td>
-                          <td data-align="right">{fmt(l.retainage)}</td>
-                          {canEdit && (
-                            <td><Button variant="ghost" size="sm" icon={<X size={14} weight="bold" />} aria-label={`Remove line ${l.line_number}`} onClick={() => removeLine(i)} /></td>
-                          )}
-                        </tr>
-                      ))}
-                    </tbody>
-                    <tfoot>
-                      <tr>
-                        <td colSpan={2}>Totals</td>
-                        <td data-align="right">{fmt(sovScheduled)}</td>
-                        <td data-align="right">{fmt(sovPrev)}</td>
-                        <td data-align="right">{fmt(sovThis)}</td>
-                        <td data-align="right">{fmt(sovMats)}</td>
-                        <td><span className="pdPct"><span className="pdPctTrack"><span className="pdPctFill" data-done={completePct >= 100 ? 'true' : undefined} style={{ display: 'block', width: `${Math.min(100, completePct)}%` }} /></span><b>{completePct}%</b></span></td>
-                        <td data-align="right">{fmt(lines.reduce((s,l) => s + (l.balance_to_finish||0), 0))}</td>
-                        <td data-align="right">{fmt(sovRetainage)}</td>
-                        {canEdit && <td />}
-                      </tr>
-                    </tfoot>
-                  </table>
+                <div className="pdSov">
+                  <DataTable<SovRow>
+                    tableId="project-pay-app-sov"
+                    exportName={`pay-app-${appNum}-g703`}
+                    columns={sovColumns}
+                    rows={sovRows}
+                    rowKey={(r) => r.i}
+                    defaultSort={{ key: 'line_number', dir: 'asc' }}
+                    rowActions={canEdit ? (r) => [{ label: 'Remove', icon: <X size={14} weight="bold" />, onClick: () => removeLine(r.i), tone: 'danger', inline: true }] : undefined}
+                    empty={<EmptyState title="No schedule of values lines on this application" action={canEdit ? <Button icon={<Plus size={15} weight="bold" />} onClick={addLine}>Add Row</Button> : undefined} />}
+                  />
                 </div>
               </Card>
 
@@ -608,49 +665,34 @@ export default function PayAppDetailPage() {
               </Card>
 
               <Card title="Where This App Sits">
-                <FlowSteps title="" steps={[
-                  { title: 'Draft & Schedule of Values', done: true,
-                    desc: `${lines.length} SOV line${lines.length === 1 ? '' : 's'} — ${fmt(sovScheduled)} scheduled.` },
-                  { title: 'Submitted to Owner', done: stageRank >= 1,
-                    desc: stageRank >= 1
-                      ? `Sent${payApp.submitted_date ? ` ${fmtDate(payApp.submitted_date)}` : ''} with a one-click owner approval link.`
-                      : 'Sends the G702/G703 packet with a one-click owner approval link.' },
-                  { title: 'Owner Approval', done: stageRank >= 2,
-                    desc: stageRank >= 2
-                      ? `Approved${payApp.approved_date ? ` ${fmtDate(payApp.approved_date)}` : ''} — conditional lien waivers generated for the subs.`
-                      : 'Approval auto-generates conditional waivers for every sub on the job.' },
-                  { title: 'Lien Waivers Signed', done: stageRank >= 2 && wTotal > 0 && wBlocking === 0,
-                    desc: wTotal > 0
-                      ? `${wSigned} of ${wTotal} signed${wBlocking > 0 ? ` — ${wBlocking} still gate payment` : ' — payment gate clear'}.`
-                      : subCount > 0
-                        ? `Waivers for ${subCount} sub${subCount === 1 ? '' : 's'} generate at approval.`
-                        : 'Waivers generate automatically at approval.' },
-                  { title: 'Payment Received', done: payApp.status === 'paid',
-                    desc: payApp.status === 'paid'
-                      ? `${fmt(sovPayment)} collected — paid-to-date and the prime contract updated automatically.`
-                      : `Mark Paid releases ${fmt(sovPayment)}${wBlocking > 0 ? ` — currently held by ${wBlocking} unsigned waiver${wBlocking === 1 ? '' : 's'}` : ''}. Signed conditionals convert to unconditional waivers.` },
-                ]} />
+                <Timeline items={chain.map((c) => ({
+                  key: c.title,
+                  icon: c.done ? <CheckCircle size={16} weight="fill" /> : <Circle size={16} />,
+                  tone: c.done ? 'success' : 'neutral',
+                  title: c.title,
+                  body: c.body,
+                }))} />
               </Card>
 
               {priorApp && (
                 <Card title={`Compared to App #${priorApp._n}`}>
-                  <InsightRow label="Prior Period" value={`${fmtDate(priorApp.period_from)} – ${fmtDate(priorApp.period_to)}`} />
-                  <InsightRow label="Prior Billed (Period)" value={fmt(priorThis)} />
-                  <InsightRow label="This App (Period)" value={fmt(sovThis)} strong />
-                  <InsightRow label="Period-over-Period" value={`${thisDelta < 0 ? '-' : '+'}${fmt(Math.abs(thisDelta))}`} />
+                  <LadderRow label="Prior Period" value={`${fmtDate(priorApp.period_from)} – ${fmtDate(priorApp.period_to)}`} />
+                  <LadderRow label="Prior Billed (Period)" value={fmt(priorThis)} />
+                  <LadderRow label="This App (Period)" value={fmt(sovThis)} strong />
+                  <LadderRow label="Period-over-Period" value={`${thisDelta < 0 ? '-' : '+'}${fmt(Math.abs(thisDelta))}`} />
                   <div className="pdRule" />
-                  <InsightRow label="Completed Then" value={fmt(priorDone)} />
-                  <InsightRow label="Completed Now" value={fmt(sovCompleted)} />
-                  <InsightRow label="Prior Payment Due" value={fmt(Number(priorApp.current_payment_due) || 0)} />
-                  <InsightRow label="This Payment Due" value={fmt(sovPayment)} strong />
+                  <LadderRow label="Completed Then" value={fmt(priorDone)} />
+                  <LadderRow label="Completed Now" value={fmt(sovCompleted)} />
+                  <LadderRow label="Prior Payment Due" value={fmt(Number(priorApp.current_payment_due) || 0)} />
+                  <LadderRow label="This Payment Due" value={fmt(sovPayment)} strong />
                 </Card>
               )}
 
               <Card title="Retainage Tracking">
-                <InsightRow label="Rate" value={`${retPct}%`} strong />
-                <InsightRow label="Held This App" value={fmt(sovRetainage)} />
-                <InsightRow label="Released to Date" value={fmt(0)} />
-                <div className="pdNext" style={{ marginTop: 8 }}>Retainage is released at closeout; nothing has been released on this application.</div>
+                <LadderRow label="Rate" value={`${retPct}%`} strong />
+                <LadderRow label="Held This App" value={fmt(sovRetainage)} />
+                <LadderRow label="Released to Date" value={fmt(0)} />
+                <div className="pdNext" style={{ marginTop: 8 }}>Released at closeout — nothing released on this application.</div>
               </Card>
             </aside>
           </div>
