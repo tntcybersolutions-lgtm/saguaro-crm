@@ -25,6 +25,7 @@
  */
 import { NextRequest, NextResponse } from 'next/server';
 import { createServerClient, getUser } from '@/lib/supabase-server';
+import { grantInvitedRole } from '@/lib/invite-role';
 import { createNotification } from '@/lib/notifications';
 import { must } from '@/lib/db-write';
 
@@ -236,6 +237,9 @@ export async function POST(req: NextRequest) {
         { status: 500 },
       );
     }
+
+    // The role they were invited as must carry its permissions, not just a label.
+    await grantInvitedRole(db, { tenantId: invite.tenant_id, userId: user.id, role, projectId: invite.project_id, assignedBy: invite.invited_by });
 
     // Current display name for the project_team row.
     const { data: profile } = await db

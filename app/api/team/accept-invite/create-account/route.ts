@@ -26,6 +26,7 @@ import { createClient } from '@supabase/supabase-js';
 import { createServerClient } from '@/lib/supabase-server';
 import { createNotification } from '@/lib/notifications';
 import { apiError } from '@/lib/api-error';
+import { grantInvitedRole } from '@/lib/invite-role';
 
 const INVITE_TTL_MS = 7 * 24 * 60 * 60 * 1000;
 
@@ -116,6 +117,9 @@ export async function POST(req: NextRequest) {
       .from('profiles')
       .upsert({ id: userId, tenant_id: invite.tenant_id, email, full_name: fullName, role, company, updated_at: nowIso }, { onConflict: 'id' });
     if (profErr) throw profErr;
+
+    // The role they were invited as must carry its permissions, not just a label.
+    await grantInvitedRole(db, { tenantId: invite.tenant_id, userId, role, projectId: invite.project_id, assignedBy: invite.invited_by });
 
     if (invite.project_id) {
       const { error: teamErr } = await db.from('project_team').insert({
