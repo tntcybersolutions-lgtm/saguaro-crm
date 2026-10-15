@@ -72,7 +72,7 @@ export default function ItemHistory({ entityType, entityId }: { entityType: stri
 
   return (
     <div className="ih">
-      <style>{CSS}</style>
+      <style dangerouslySetInnerHTML={{ __html: CSS }} />
       {rows.map((e) => {
         const fields = Object.keys(e.changes || {}).filter((k) => !HIDE.has(k));
         const who = e.user_name || e.user_email || 'Saguaro (automatic)';
