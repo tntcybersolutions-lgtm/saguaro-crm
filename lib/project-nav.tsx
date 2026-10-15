@@ -15,6 +15,7 @@
  */
 
 import {
+  Handshake,
   SquaresFour, Ruler, Calculator, FileText, CalendarBlank, Package, Palette,
   Clipboard, NotePencil, Wallet, ArrowsClockwise, Money, Receipt, Signature,
   ShieldCheck, IdentificationBadge, ClipboardText, Camera, MagnifyingGlass,
@@ -65,7 +66,7 @@ export const PROJECT_NAV_SECTIONS: ProjectNavSection[] = [
       { label: 'Selections & Allowances', href: '/selections',      icon: Palette, badge: null },
       { label: 'Contracts',             href: '/contracts',         icon: Clipboard, badge: null, accent: 'contracts' },
       { label: 'Subcontractors',        href: '/subs',              icon: Users, badge: null, accent: 'subs' },
-      { label: 'PO & Subcontracts',     href: '/purchase-orders',   icon: NotePencil, badge: null },
+      { label: 'Purchase Orders',       href: '/purchase-orders',   icon: NotePencil, badge: null },
     ],
   },
   {
@@ -91,6 +92,7 @@ export const PROJECT_NAV_SECTIONS: ProjectNavSection[] = [
     label: 'FINANCIAL',
     items: [
       { label: 'Budget',          href: '/budget',            icon: Wallet, badge: null, accent: 'budget' },
+      { label: 'Commitments',     href: '/commitments',       icon: Handshake, badge: null, accent: 'commitments' },
       { label: 'Change Orders',   href: '/change-orders',     icon: ArrowsClockwise, accent: 'changeorders' },
       { label: 'Pay Applications', href: '/pay-apps',         icon: Money, badge: null, accent: 'payapps' },
       { label: 'Client Invoices', href: '/invoices',          icon: Receipt, badge: null, accent: 'invoices' },

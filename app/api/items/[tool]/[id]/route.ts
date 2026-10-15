@@ -7,7 +7,7 @@ import { NextRequest, NextResponse } from 'next/server';
 import { loadItem } from '@/lib/items/server';
 import { pickEditable } from '@/lib/items/registry';
 import { apiError } from '@/lib/api-error';
-import { signStoredUrl } from '@/lib/storage-signing';
+import { signStoredUrl, signFields } from '@/lib/storage-signing';
 
 export const dynamic = 'force-dynamic';
 
@@ -33,7 +33,16 @@ export async function GET(req: NextRequest, { params }: { params: Promise<{ tool
       id: f.id, name: f.file_name, size: f.file_size, kind: f.kind, by: f.uploaded_by_name, at: f.created_at,
       url: f.storage_bucket && f.storage_path ? await signStoredUrl(String(f.storage_bucket), String(f.storage_path), 3600) : null,
     })));
-    return NextResponse.json({ item: l.item, project, files });
+    // The signed contract or PO document itself, when one was generated or uploaded.
+    const docKey = ['pdf_url', 'file_url'].find((k) => typeof l.item[k] === 'string' && l.item[k]);
+    if (docKey) {
+      const [signed] = await signFields([{ u: l.item[docKey] } as Record<string, unknown>], ['u']);
+      files.unshift({ id: `doc-${docKey}`, name: `${l.tool.noun} document (PDF)`, size: null, kind: 'document', by: null, at: (l.item.executed_at ?? l.item.created_at) as unknown, url: (signed?.u as string) || null });
+    }
+    // Never hand back the e-sign token or signer IP — the signing link is sent from the contracts screen.
+    const item = { ...l.item };
+    for (const k of ['signing_token', 'sub_sign_ip', 'html_content']) delete item[k];
+    return NextResponse.json({ item, project, files });
   } catch (e) {
     return apiError(`items/${type}`, e);
   }
@@ -61,6 +70,22 @@ export async function PATCH(req: NextRequest, { params }: { params: Promise<{ to
     if (l.tool.hasUpdatedAt !== false) patch.updated_at = new Date().toISOString();
     if (l.tool.type === 'inspections' && (status === 'completed') && !l.item.inspected_at) patch.inspected_at = new Date().toISOString();
     if (l.tool.type === 'change_orders' && status === 'approved' && !l.item.approved_at) patch.approved_at = new Date().toISOString();
+    if (l.tool.type === 'contracts') {
+      // The contracts screen reads amount, the signing flow contract_amount, and
+      // older rows vendor_name — keep each pair the same so every screen agrees.
+      if ('amount' in patch) patch.contract_amount = patch.amount;
+      if ('party_name' in patch) patch.vendor_name = patch.party_name;
+      if (status === 'executed' && !l.item.executed_at) {
+        const now = new Date().toISOString();
+        patch.executed_at = now;
+        if (!l.item.executed_date && !('executed_date' in patch)) patch.executed_date = now.slice(0, 10);
+      }
+    }
+    if (l.tool.type === 'purchase_orders' && status === 'approved' && !l.item.approved_at) {
+      patch.approved_at = new Date().toISOString();
+      patch.approved_by = l.user.id;
+    }
+    if (l.tool.type === 'purchase_orders' && status === 'received' && !l.item.delivered_at) patch.delivered_at = new Date().toISOString();
 
     const { data, error } = await l.db
       .from(l.tool.table as never)
