@@ -17,8 +17,12 @@
  * Views (kit Tabs): Timeline — months → days, with a sticky jump-to-month
  * rail; Albums — a tile per album (cover + count), open one for its grid,
  * new / rename by re-filing photos (album is a column on each photo);
- * Location — photos with GPS clustered by spot, each with an Open in Maps
- * link (the repo has no map library, so no tiles are drawn).
+ * Location — a real map (Leaflet + free OSM/CARTO tiles, components/media/
+ * PhotoMap, loaded client-only): every GPS-stamped photo is a pin showing its
+ * own thumbnail, nearby pins merge with a count, and a popup opens the
+ * lightbox; the spot list stays under the map with the no-GPS count.
+ * Grid size S / M / L (Timeline, album and spot grids) is remembered per
+ * viewer in localStorage.
  * Select mode (checkbox on hover, long-press on a phone) → download, move to
  * album, send to another job, delete. Markup draws on a photo and saves the
  * result as a NEW photo "<title> (marked up)" — the original is untouched.
@@ -37,6 +41,7 @@
  * returned — nothing here publishes private media.
  */
 import React, { useState, useEffect, useCallback, useRef, useSyncExternalStore } from 'react';
+import dynamic from 'next/dynamic';
 import { confirmDialog } from '@/lib/ui/async-dialog';
 import { useProjectContext } from '@/lib/hooks/useProjectContext';
 import SaguaroDatePicker from '@/components/SaguaroDatePicker';
@@ -51,6 +56,7 @@ import { saveMediaMany } from '@/lib/media-save';
 import {
   groupByDay, groupByMonth, clusterByLocation, matchesPhotoFilter, albumSummaries, photoGeo,
   isIssuePhoto, uploaders as uploadersOf, cleanAlbumName, photoTags, type PhotoFilter,
+  parseTileSize, TILE_SIZES, type TileSize,
 } from '@/lib/photo-views';
 import SubInbox from '@/components/media/SubInbox';
 import SendToJobDialog, { type MoveItem } from '@/components/media/SendToJobDialog';
@@ -76,6 +82,15 @@ import { useUnsavedGuard, useComposerDirty } from '@/lib/useUnsavedGuard';
 import UnsavedGuardModal from '@/components/UnsavedGuardModal';
 import { layout } from '@/lib/design-tokens';
 import { photoFix, readFix, fixLabel, fixMapUrl } from '@/lib/photo-gps';
+
+/* Leaflet needs `window`: the map is drawn in the browser only. */
+const PhotoMap = dynamic(() => import('@/components/media/PhotoMap'), {
+  ssr: false,
+  loading: () => <div className="phMapWait" aria-busy="true">Loading map…</div>,
+});
+/** Per-viewer grid size (S / M / L), kept in this browser. */
+const TILE_KEY='saguaro:photos:tile-size';
+const TILE_LABEL:Record<TileSize,string>={s:'Small tiles',m:'Medium tiles',l:'Large tiles'};
 
 const ALBUMS=['General','Progress','Inspections','Closeout','Issues','End of Day','Other'];
 /* Every project video, wherever it was uploaded (here, Files & Media, a sub's
@@ -129,8 +144,14 @@ const CSS = `
 .phGroupHead { display: flex; align-items: center; gap: 10px; margin-bottom: 10px; font-size: var(--fs-sm); font-weight: 700; color: var(--text-primary); }
 .phGroupHead small { color: var(--text-tertiary); font-weight: 600; font-size: var(--fs-sm); }
 .phGroupHead::after { content: ''; flex: 1; height: 1px; background: var(--border-subtle); }
-.phGrid { display: grid; grid-template-columns: repeat(auto-fill, minmax(150px, 1fr)); gap: 10px; }
-.phSplit[data-open="true"] .phGrid { grid-template-columns: repeat(auto-fill, minmax(120px, 1fr)); }
+/* Dense, big tiles like Procore. --ph-min is the tile's smallest width, and
+   --ph-floor caps it so a phone still gets 3 / 2 / 1 columns (S / M / L).
+   Medium: ~2 across on a phone, 4 on an iPad, 6 on a desktop, ~170–220px each. */
+.phWs { --ph-min: 172px; --ph-floor: calc(50% - 6px); --ph-gap: 12px; }
+.phWs[data-tile="s"] { --ph-min: 124px; --ph-floor: calc(33.333% - 8px); --ph-gap: 8px; }
+.phWs[data-tile="l"] { --ph-min: 268px; --ph-floor: 100%; --ph-gap: 14px; }
+.phGrid { display: grid; grid-template-columns: repeat(auto-fill, minmax(min(var(--ph-min), var(--ph-floor)), 1fr)); gap: var(--ph-gap); }
+.phSplit[data-open="true"] .phGrid { --ph-min: 132px; }
 .phTile { position: relative; display: flex; flex-direction: column; gap: 6px; min-width: 0; cursor: pointer; text-align: left; padding: 0; color: inherit; font: inherit; background: none; border: 0; }
 .phTile:focus-visible { outline: none; }
 .phTile:focus-visible .phThumb { outline: 2px solid var(--focus-ring); outline-offset: 2px; }
@@ -212,14 +233,26 @@ const CSS = `
 .phGeoHead { display: flex; align-items: center; gap: 10px; flex-wrap: wrap; font-size: var(--fs-sm); color: var(--text-secondary); }
 .phGeoHead strong { color: var(--text-primary); font-size: var(--fs-md); }
 .phPanel { display: flex; flex-direction: column; gap: 14px; }
+.phSeg { display: inline-flex; align-items: center; border: 1px solid var(--border-default); border-radius: var(--radius-sm); overflow: hidden; background: var(--bg-surface); }
+.phSeg button { min-width: 40px; min-height: 36px; padding: 0 10px; border: 0; border-right: 1px solid var(--border-default); background: transparent; color: var(--text-secondary); font: inherit; font-size: 13px; font-weight: 800; cursor: pointer; display: inline-flex; align-items: center; justify-content: center; gap: 6px; }
+.phSeg button:last-child { border-right: 0; }
+.phSeg button:hover { color: var(--text-primary); background: var(--bg-surface-2); }
+.phSeg button[aria-checked="true"] { color: var(--text-primary); background: var(--bg-surface-2); box-shadow: inset 0 -2px 0 var(--text-primary); }
+.phSeg button:focus-visible { outline: 2px solid var(--focus-ring); outline-offset: -2px; }
+.phMapWrap { display: flex; flex-direction: column; gap: 16px; padding: 16px; }
+.phMapWait { display: flex; align-items: center; justify-content: center; height: clamp(320px, 56vh, 640px); border-radius: var(--radius-sm); border: 1px solid var(--border-subtle); background: var(--bg-solid); color: var(--text-tertiary); font-size: var(--fs-sm); }
+.phNoGeo { display: flex; align-items: center; gap: 8px; font-size: var(--fs-sm); color: var(--text-secondary); }
+.phNoGeo strong { color: var(--text-primary); }
 .phPanel h2 { margin: 0; font-size: 17px; font-weight: 800; overflow-wrap: anywhere; }
 @media (max-width: 640px) {
   .phAlbumGrid { grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 10px; padding: 12px; }
   .phCheck { width: 36px; height: 36px; }
   .phMore label { max-width: none; }
+  .phSeg button { min-height: 44px; min-width: 44px; }
+  .phMapWrap { padding: 12px; }
   .phWs .k-btn, .phWs .k-stat, .phWs select.k-select, .phWs .k-input { min-height: 44px; }
   .phGallery { padding: 12px; }
-  .phGrid, .phSplit[data-open="true"] .phGrid { grid-template-columns: repeat(auto-fill, minmax(104px, 1fr)); gap: 8px; }
+  .phWs { --ph-gap: 8px; }
   .phTileTools { opacity: 1; }
   .phCapMore { display: none; }
 }
@@ -278,6 +311,11 @@ export default function PhotosPage(){
   const [albumErr,setAlbumErr]=useState('');
   const [sendTargets,setSendTargets]=useState<{items:MoveItem[];what:string;bulk:boolean}|null>(null);
   const [markup,setMarkup]=useState<{photo:any;reopen:boolean}|null>(null);
+  /* Grid size, remembered per viewer in this browser. Storage can be blocked
+     (private mode, cleared data) — the page then just uses Medium. */
+  const [tile,setTile]=useState<TileSize>('m');
+  useEffect(()=>{ try{ setTile(parseTileSize(window.localStorage.getItem(TILE_KEY))); }catch(err){ console.debug('[photos] tile size read', err); } },[]);
+  const chooseTile=(t:TileSize)=>{ setTile(t); try{ window.localStorage.setItem(TILE_KEY,t); }catch(err){ console.debug('[photos] tile size save', err); } };
 
   // Real file upload — the thing this panel was missing entirely.
   const [uploadFile,setUploadFile]=useState<File|null>(null);
@@ -969,7 +1007,11 @@ export default function PhotosPage(){
     galleryBody = clusters.length===0 ? (
       <EmptyState icon={<MapPin size={22}/>} title="No GPS on these photos" text={`${noGeo} photo${noGeo===1?'':'s'} without a location stamp. Photos added from a phone are stamped where they were taken.`}/>
     ) : (
-      <div className="phGallery">
+      <div className="phMapWrap">
+        <PhotoMap photos={ordered} onOpen={openPhoto} fitKey={`${projectId}:${ordered.length}:${search}:${filterAlbum}:${periodFilter}:${dateFrom}:${dateTo}:${uploader}:${issuesOnly}`}/>
+        {noGeo>0 && (
+          <div className="phNoGeo"><MapPin size={16}/><span><strong>{noGeo}</strong> photo{noGeo===1?'':'s'} without a location stamp — see Timeline.</span></div>
+        )}
         {clusters.map((c,i)=>{
           const ds=c.items.map((p:any)=>p.taken_at).filter(Boolean).sort();
           const span=ds.length?(fmtDate(ds[0])===fmtDate(ds[ds.length-1])?fmtDate(ds[0]):`${fmtDate(ds[0])} – ${fmtDate(ds[ds.length-1])}`):'';
@@ -987,7 +1029,6 @@ export default function PhotosPage(){
             </div>
           );
         })}
-        {noGeo>0 && <div className="phMuted" style={{fontSize:'var(--fs-sm)'}}>{noGeo} more without a location stamp — see Timeline.</div>}
       </div>
     );
   } else if (view==='albums') {
@@ -1002,12 +1043,14 @@ export default function PhotosPage(){
         {months.map(m=>(
           <section key={m.key} id={`ph-m-${m.key}`} data-ph-month={m.key} className="phMonth">
             <div className="phMonthHead">{m.label}<small>{m.items.length}</small></div>
-            {m.days.map(d=>(
+            {/* One dense grid per month (each caption carries its day); a day
+                only gets its own header row when it is a big shoot. */}
+            {m.days.some(d=>d.items.length>=6) ? m.days.map(d=>(
               <div key={d.key}>
                 <div className="phGroupHead"><span>{d.label}</span><small>{d.items.length}</small></div>
                 <div className="phGrid">{d.items.map(card)}</div>
               </div>
-            ))}
+            )) : <div className="phGrid">{m.items.map(card)}</div>}
           </section>
         ))}
       </div>
@@ -1173,7 +1216,7 @@ export default function PhotosPage(){
   const composerOpen = mode==='create'||mode==='edit';
 
   return(
-    <div className="phWs" onDragEnter={onPageDragEnter}>
+    <div className="phWs" data-tile={tile} onDragEnter={onPageDragEnter}>
       <style dangerouslySetInnerHTML={{ __html: CSS }} />
 
       {selected && (
@@ -1322,10 +1365,19 @@ export default function PhotosPage(){
                 tabs={[
                   { key:'timeline', label:'Timeline' },
                   { key:'albums', label:'Albums', count: albumSummaries(photos).length },
-                  { key:'map', label:'Location', count: geoCount },
+                  { key:'map', label:'Map', count: geoCount },
                 ]}
               />
               <span className="phSpacer"/>
+              {!(view==='albums'&&!openAlbum) && (
+                <div className="phSeg" role="radiogroup" aria-label="Photo size">
+                  {TILE_SIZES.map(t=>(
+                    <button key={t} type="button" role="radio" aria-checked={tile===t} aria-label={TILE_LABEL[t]} title={TILE_LABEL[t]} onClick={()=>chooseTile(t)}>
+                      {t.toUpperCase()}
+                    </button>
+                  ))}
+                </div>
+              )}
               {picking
                 ? <Button variant="ghost" size="sm" icon={<X size={15}/>} onClick={endPicking}>Done Selecting</Button>
                 : <Button size="sm" icon={<CheckSquare size={15}/>} onClick={()=>setPicking(true)}>Select</Button>}

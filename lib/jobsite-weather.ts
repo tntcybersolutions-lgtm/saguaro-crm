@@ -29,7 +29,7 @@ export type JobsiteWeather =
       raw: { point: { lat: number; lng: number }; period: { name?: string; detailed?: string } };
     };
 
-async function geocode(address: string): Promise<{ lat: number; lng: number } | null> {
+export async function geocode(address: string): Promise<{ lat: number; lng: number } | null> {
   try {
     const url = `https://geocoding.geo.census.gov/geocoder/locations/onelineaddress?address=${encodeURIComponent(address)}&benchmark=Public_AR_Current&format=json`;
     const r = await fetch(url, { headers: UA, signal: AbortSignal.timeout(6000) });
