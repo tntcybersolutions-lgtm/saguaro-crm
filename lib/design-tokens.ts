@@ -10,9 +10,9 @@
 export const paletteHex = {
   bg: '#101722', card: '#1B2636', raised: '#243247', border: '#334155',
   text: '#F8FAFC', text2: '#CBD5E1', text3: '#A3B1C6', text4: '#64748B',
-  titlePage: '#38BDF8', titleSection: '#7DD3FC', borderCard: '#3D4F68',
+  titlePage: '#E8FF2A', titleSection: '#F0FF6B', borderCard: '#3D4F68',
   yellow: '#E8FF2A', yellowHi: '#F0FF6B', yellowHover: '#CFE60F', onBrand: '#101722',
-  blue: '#38BDF8', orange: '#FBBF24', green: '#4ADE80', red: '#F87171', gray: '#94A3B8',
+  blue: '#E8FF2A', orange: '#FBBF24', green: '#4ADE80', red: '#F87171', gray: '#94A3B8',
 } as const;
 export const palette = {
   bg: 'var(--c-bg)', card: 'var(--c-card)', raised: 'var(--c-raised)', border: 'var(--border-subtle)',
@@ -64,7 +64,7 @@ export const colors = {
   red:        '#F87171',
   orange:     '#FBBF24',
   amber:      '#FBBF24',
-  blue:       '#38BDF8',
+  blue:       '#E8FF2A',
 
   white:      '#ffffff',
   black:      '#000000',

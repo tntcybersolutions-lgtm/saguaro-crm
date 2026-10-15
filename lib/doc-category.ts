@@ -18,8 +18,8 @@ export const DOC_CATEGORY_LABEL: Record<DocCategory, string> = {
 };
 
 export const DOC_CATEGORY_COLOR: Record<DocCategory, string> = {
-  contracts: '#38BDF8',
-  bidding: '#38BDF8',
+  contracts: '#E8FF2A',
+  bidding: '#E8FF2A',
   billing: '#4ADE80',
   closeout: '#4ADE80',
   compliance: '#CBD5E1',

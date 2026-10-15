@@ -20,7 +20,7 @@ export interface DefaultRole {
 export const DEFAULT_ROLE_DEFINITIONS: DefaultRole[] = [
   {
     name: 'Project Manager',
-    color: '#38BDF8',
+    color: '#E8FF2A',
     description: 'Runs the job end to end — full access to every operational module.',
     permissions: { Projects: 'Full', Budget: 'Full', Schedule: 'Full', Safety: 'Full', Documents: 'Full', RFIs: 'Full', Submittals: 'Full', 'Change Orders': 'Full', 'Pay Apps': 'Full', Reports: 'Full', Sales: 'Edit', Admin: 'View' },
   },

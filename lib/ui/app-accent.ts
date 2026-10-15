@@ -18,13 +18,13 @@ export type ModuleDomain = 'core' | 'sales' | 'precon' | 'build' | 'field' | 'mo
 
 /** Mirror of the --mod-* tokens in app/globals.css (keep identical). */
 export const DOMAIN_HEX: Record<ModuleDomain, string> = {
-  core: '#38BDF8',
+  core: '#E879F9',
   sales: '#A78BFA',
-  precon: '#22D3EE',
+  precon: '#FB7185',
   build: '#818CF8',
   field: '#2DD4BF',
   money: '#F472B6',
-  docs: '#60A5FA',
+  docs: '#C084FC',
   people: '#FB923C',
 };
 
