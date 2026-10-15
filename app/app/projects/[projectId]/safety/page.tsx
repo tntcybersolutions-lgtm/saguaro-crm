@@ -1,29 +1,36 @@
 'use client';
+/**
+ * Project Safety — incidents, toolbox talks and corrective actions on the kit.
+ *
+ * Anatomy: title + one primary action (Report Incident) → StatRow (OSHA
+ * recordables, near misses, open incidents, open actions, days incident-free;
+ * tiles jump to the matching tab + filter) → Tabs (Incidents / Toolbox Talks /
+ * Corrective Actions), each a DataTable. Every composer is a FormModal.
+ *
+ * Every read / write is the one this screen already used:
+ *   incidents  GET  /api/projects/[id]/safety
+ *   report     POST /api/safety/incidents/create  (+ best-effort corrective action)
+ *   actions    GET/POST /api/projects/[id]/safety/corrective-actions
+ *   advance    PATCH /api/projects/[id]/safety/corrective-actions/[actionId]
+ *   talks      GET/POST /api/safety/talks
+ *   JHA        POST /api/documents/jha  (opens the returned PDF)
+ */
 import React, { useState, useEffect, useCallback } from 'react';
 import { useProjectContext } from '@/lib/hooks/useProjectContext';
 import { useParams } from 'next/navigation';
-import { Badge, Table, T } from '@/components/ui/shell';
 import {
-  PremiumSurface, ModuleHero, SectionCard, PremiumEmpty,
-  StatStrip, FlowSteps, FlowStrip, AutoChip,
-  goldButtonStyle, ghostButtonStyle, goldOutlineButtonStyle, secondaryButtonStyle, railStyle
-} from '@/components/ui/premium';
+  PageShell, Card, StatRow, Badge, Button, Toolbar, Tabs, DataTable, EmptyState, Callout,
+  FormModal, Field, Input, Textarea, Select, FormGrid, Toast, useToast,
+  type Column, type Action, type BadgeTone, type StatItem,
+} from '@/components/ui/kit';
 import {
-  ShieldCheck, ClipboardText, CheckCircle, Warning,
-  FilePdf, Plus, X, ArrowRight, Wrench,
-  ChalkboardTeacher, UsersThree,
+  ShieldCheck, CheckCircle, Warning, FilePdf, Plus, ArrowRight, Wrench,
+  ChalkboardTeacher, UsersThree, FirstAid, Eye, Timer,
 } from '@phosphor-icons/react';
 import SaguaroDatePicker from '../../../../../components/SaguaroDatePicker';
-import { ListToolbar } from '@/components/ui/ListToolbar';
 import { useUnsavedGuard, useComposerDirty } from '@/lib/useUnsavedGuard';
 import UnsavedGuardModal from '@/components/UnsavedGuardModal';
 import Suggest from '@/components/ui/Suggest';
-import { StatusPill } from '@/components/ui/Status';
-
-// Semantic accents — tuned to match the dashboard's Sonoran palette.
-const GREEN = 'var(--success)';
-const RED = 'var(--danger)';
-const AMBER = 'var(--warning)';
 
 interface Incident {
   id: string;
@@ -76,23 +83,23 @@ interface ToolboxTalk {
   notes: string;
 }
 
-const SEVERITY_BADGE: Record<string, 'amber' | 'gold' | 'red' | 'muted'> = {
-  'Near Miss': 'amber',
-  'First Aid': 'gold',
-  'Recordable': 'red',
-  'Lost Time': 'red',
+const SEVERITY_BADGE: Record<string, BadgeTone> = {
+  'Near Miss': 'lead',
+  'First Aid': 'under_contract',
+  'Recordable': 'overdue',
+  'Lost Time': 'overdue',
 };
 
-const STATUS_BADGE: Record<string, 'red' | 'green' | 'muted'> = {
-  Open: 'red',
-  Resolved: 'green',
+const STATUS_BADGE: Record<string, BadgeTone> = {
+  Open: 'overdue',
+  Resolved: 'completed',
 };
 
-const CA_STATUS_BADGE: Record<string, 'red' | 'amber' | 'gold' | 'green' | 'muted'> = {
-  open: 'red',
-  in_progress: 'amber',
-  verified: 'gold',
-  closed: 'green',
+const CA_STATUS_BADGE: Record<string, BadgeTone> = {
+  open: 'neutral',
+  in_progress: 'lead',
+  verified: 'under_contract',
+  closed: 'completed',
 };
 
 const CA_STATUS_LABELS: Record<string, string> = {
@@ -128,6 +135,29 @@ function normalizeIncident(r: Record<string, unknown>): Incident {
 
 const EMPTY_CA_FORM = { description: '', assigned_to: '', due_date: '' };
 
+type TabKey = 'incidents' | 'talks' | 'actions';
+type CaFilter = 'all' | 'open' | 'in_progress' | 'verified' | 'closed' | 'overdue';
+
+const DATE_INPUT_STYLE: React.CSSProperties = {
+  width: '100%', minHeight: 40, padding: '8px 12px', fontSize: 14,
+  background: 'var(--bg-surface-2)', border: '1px solid var(--border-default)',
+  borderRadius: 'var(--radius-sm)', color: 'var(--text-primary)',
+};
+
+const CSS = `
+.sfWs > .k-page { max-width: none; }
+.sfMuted { color: var(--text-tertiary); }
+.sfClamp { display: inline-block; max-width: 320px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; vertical-align: middle; }
+.sfBadges { display: inline-flex; align-items: center; gap: 6px; flex-wrap: wrap; }
+.sfLate { color: var(--status-overdue); font-weight: 700; }
+.sfGap { margin-bottom: 16px; }
+@media (max-width: 640px) {
+  .sfWs .k-btn, .sfWs .k-stat, .sfWs select.k-select, .sfWs .k-input { min-height: 44px; }
+  .sfWs .k-table td { height: 48px; }
+  .sfClamp { max-width: 200px; }
+}
+`;
+
 export default function SafetyPage() {
   const { projectId } = useParams() as { projectId: string };
   const [incidents, setIncidents] = useState<Incident[]>([]);
@@ -147,8 +177,10 @@ export default function SafetyPage() {
     onSave: () => handleSave(),
   });
   const [saving, setSaving] = useState(false);
-  const [successMsg, setSuccessMsg] = useState('');
+  const { toast, show } = useToast(4000);
+  /** Shared composer error (shown in whichever FormModal is open). */
   const [errorMsg, setErrorMsg] = useState('');
+  const [tab, setTab] = useState<TabKey>('incidents');
   // Distinct from "no incidents": the read itself failed, so we know nothing
   // about this project's safety record and must not imply a clean one.
   const [loadError, setLoadError] = useState('');
@@ -169,10 +201,12 @@ export default function SafetyPage() {
   // Project intelligence — one snapshot; forms walk in knowing the roster.
   const { ctx } = useProjectContext(projectId);
   const [auto, setAuto] = useState<{ incDate?: boolean; talkDate?: boolean; presenter?: boolean; attendees?: boolean; caDue?: boolean }>({});
-  // ListToolbar state — filters persist per module via sag_flt_safety.
+  // Incident log filters.
   const [incidentSearch, setIncidentSearch] = useState('');
   const [incidentTypeFilter, setIncidentTypeFilter] = useState('all');
   const [incidentStatusFilter, setIncidentStatusFilter] = useState('all');
+  const [oshaFilter, setOshaFilter] = useState<'all' | 'recordable'>('all');
+  const [caFilter, setCaFilter] = useState<CaFilter>('all');
 
   const fetchData = useCallback(async () => {
     setLoading(true);
@@ -256,6 +290,7 @@ export default function SafetyPage() {
   const filteredIncidents = incidents.filter(i => {
     if (incidentStatusFilter !== 'all' && i.status !== incidentStatusFilter) return false;
     if (incidentTypeFilter !== 'all' && i.type !== incidentTypeFilter) return false;
+    if (oshaFilter === 'recordable' && !isOshaRecordable(i)) return false;
     if (!qS) return true;
     return [i.description, i.type, i.severity, i.corrective_action].some(v => String(v || '').toLowerCase().includes(qS));
   });
@@ -319,8 +354,8 @@ export default function SafetyPage() {
         notes: String(json.talk.content ?? talkForm.notes),
       }, ...prev]);
       setShowTalkForm(false);
-      setSuccessMsg('Toolbox talk logged.');
-      setTimeout(() => setSuccessMsg(''), 4000);
+      show('Toolbox talk logged.');
+      setTimeout(() => show(''), 4000);
     } catch {
       setErrorMsg('Could not log the toolbox talk. Please try again.');
     } finally {
@@ -366,8 +401,8 @@ export default function SafetyPage() {
 
       setShowForm(false);
       setForm(EMPTY_FORM);
-      setSuccessMsg('Incident reported.');
-      setTimeout(() => setSuccessMsg(''), 4000);
+      show('Incident reported.');
+      setTimeout(() => show(''), 4000);
       guard.clearDraft();
       return true;
     } catch {
@@ -393,8 +428,8 @@ export default function SafetyPage() {
       setActions(prev => [json.action as CorrectiveAction, ...prev]);
       setShowCAForm(false);
       setCaForm(EMPTY_CA_FORM);
-      setSuccessMsg('Corrective action created.');
-      setTimeout(() => setSuccessMsg(''), 4000);
+      show('Corrective action created.');
+      setTimeout(() => show(''), 4000);
     } catch {
       setErrorMsg('Could not create the corrective action. Please try again.');
     } finally {
@@ -415,11 +450,9 @@ export default function SafetyPage() {
       const json = await res.json().catch(() => ({}));
       if (!res.ok) throw new Error('update failed');
       setActions(prev => prev.map(a => a.id === action.id ? { ...a, ...json.action, status: nextStatus } : a));
-      setSuccessMsg(`Action updated to ${CA_STATUS_LABELS[nextStatus]}.`);
-      setTimeout(() => setSuccessMsg(''), 4000);
+      show(`Action updated to ${CA_STATUS_LABELS[nextStatus]}.`);
     } catch {
-      setErrorMsg('Could not update the corrective action. Please try again.');
-      setTimeout(() => setErrorMsg(''), 4000);
+      show('Could not update the corrective action. Please try again.', 'bad');
       fetchActions();
     }
   }
@@ -436,8 +469,7 @@ export default function SafetyPage() {
       if (!res.ok || !link) throw new Error(json.error || 'no document returned');
       window.open(link, '_blank');
     } catch {
-      setErrorMsg('Could not generate the JHA. Please try again.');
-      setTimeout(() => setErrorMsg(''), 4000);
+      show('Could not generate the JHA. Please try again.', 'bad');
     }
   }
 
@@ -447,344 +479,364 @@ export default function SafetyPage() {
     return new Date(action.due_date) < new Date();
   }
 
-  const inp: React.CSSProperties = {
-    width: '100%', padding: '8px 12px', background: T.surface,
-    border: `1px solid ${T.border}`, borderRadius: 8, color: T.white, fontSize: 13, outline: 'none',
+  const base = `/app/projects/${projectId}`;
+  const closeIncident = () => guard.requestClose(() => { setShowForm(false); setErrorMsg(''); });
+  const closeTalk = () => { if (!talkSaving) { setShowTalkForm(false); setErrorMsg(''); } };
+  const closeCA = () => { if (!caSaving) { setShowCAForm(false); setErrorMsg(''); } };
+  const goIncidents = (patch: () => void) => { setTab('incidents'); patch(); };
+  const goActions = (f: CaFilter) => { setTab('actions'); setCaFilter(prev => (prev === f ? 'all' : f)); };
+
+  // ── Stat tiles — each opens the matching tab and filter ──
+  const unknown = loading || !!loadError;
+  const stats: StatItem[] = [
+    {
+      label: 'OSHA Recordables', value: unknown ? '—' : recordables, icon: <FirstAid size={15} />,
+      tone: unknown ? 'default' : recordables > 0 ? 'bad' : 'good',
+      sub: loading ? 'Loading…' : loadError ? 'Unknown' : recordables > 0 ? 'On the 300 log' : 'Clean 300 log',
+      onClick: () => goIncidents(() => setOshaFilter(p => (p === 'recordable' ? 'all' : 'recordable'))),
+      active: tab === 'incidents' && oshaFilter === 'recordable',
+    },
+    {
+      label: 'Near Misses', value: unknown ? '—' : nearMisses, icon: <Eye size={15} />,
+      tone: !unknown && nearMisses > 0 ? 'warn' : 'default',
+      sub: loading ? 'Loading…' : 'Leading indicator',
+      onClick: () => goIncidents(() => setIncidentTypeFilter(p => (p === 'Near Miss' ? 'all' : 'Near Miss'))),
+      active: tab === 'incidents' && incidentTypeFilter === 'Near Miss',
+    },
+    {
+      label: 'Open Incidents', value: unknown ? '—' : openCount, icon: <Warning size={15} />,
+      tone: !unknown && openCount > 0 ? 'bad' : 'default',
+      sub: loading ? 'Loading…' : `${incidents.length} reported`,
+      onClick: () => goIncidents(() => setIncidentStatusFilter(p => (p === 'Open' ? 'all' : 'Open'))),
+      active: tab === 'incidents' && incidentStatusFilter === 'Open',
+    },
+    {
+      label: 'Open Actions', value: actionsLoading ? '—' : openActionsCount, icon: <Wrench size={15} />,
+      tone: actionsLoading ? 'default' : overdueActionsCount > 0 ? 'bad' : openActionsCount > 0 ? 'warn' : 'default',
+      sub: actionsLoading ? 'Loading…' : overdueActionsCount > 0 ? `${overdueActionsCount} overdue` : 'None overdue',
+      onClick: () => goActions(overdueActionsCount > 0 ? 'overdue' : 'open'),
+      active: tab === 'actions' && (caFilter === 'overdue' || caFilter === 'open'),
+    },
+    {
+      label: 'Days Incident-Free', value: unknown ? '—' : daysSinceLast, icon: <Timer size={15} />,
+      tone: !unknown && daysSinceLast > 30 ? 'good' : 'default',
+      sub: loading ? 'Loading…' : lastIncident ? `Since ${fmtDate(lastIncident.date)}` : 'No recordable incidents',
+    },
+  ];
+
+  // ── Incident log ──
+  const incidentColumns: Column<Incident>[] = [
+    { key: 'description', header: 'Description', primary: true, phone: 'show', accessor: i => i.description || '', render: i => <span className="sfClamp" title={i.description}>{i.description || '—'}</span> },
+    { key: 'date', header: 'Date', phone: 'show', accessor: i => i.date || '', render: i => <span className="sfMuted" style={{ whiteSpace: 'nowrap' }}>{fmtDate(i.date)}</span> },
+    { key: 'type', header: 'Type', phone: 'hide', render: i => i.type || '—' },
+    { key: 'osha', header: 'OSHA', accessor: i => (isOshaRecordable(i) ? 'Recordable' : ''), render: i => isOshaRecordable(i) ? <Badge tone="overdue">Recordable</Badge> : <span className="sfMuted">—</span> },
+    { key: 'severity', header: 'Severity', phone: 'hide', render: i => <Badge tone={SEVERITY_BADGE[i.severity] || 'neutral'}>{i.severity || '—'}</Badge> },
+    { key: 'status', header: 'Status', phone: 'show', render: i => <Badge tone={STATUS_BADGE[i.status] || 'neutral'} dot>{i.status || '—'}</Badge> },
+  ];
+  const incidentFiltersActive = !!incidentSearch || incidentTypeFilter !== 'all' || incidentStatusFilter !== 'all' || oshaFilter !== 'all';
+  const clearIncidentFilters = () => { setIncidentSearch(''); setIncidentTypeFilter('all'); setIncidentStatusFilter('all'); setOshaFilter('all'); };
+
+  let incidentBody: React.ReactNode;
+  if (!loading && loadError) {
+    incidentBody = (
+      <EmptyState
+        icon={<Warning size={22} />}
+        title="Couldn't load the incident log"
+        text={`This is not a clean safety record — the read failed, so this project's incidents are unknown. ${loadError}`}
+        action={<Button onClick={fetchData}>Try again</Button>}
+      />
+    );
+  } else if (!loading && incidents.length === 0) {
+    incidentBody = (
+      <EmptyState
+        icon={<CheckCircle size={22} />}
+        title="No incidents recorded"
+        text={subCount > 0 ? `${subCount} sub crew${subCount === 1 ? '' : 's'} on site. Report near misses too.` : 'Report near misses too.'}
+        action={<Button icon={<Plus size={15} weight="bold" />} onClick={openIncident}>Report a Near Miss</Button>}
+      />
+    );
+  } else {
+    incidentBody = (
+      <DataTable<Incident>
+        tableId="project-safety-incidents"
+        exportName="safety-incidents"
+        columns={incidentColumns}
+        rows={filteredIncidents}
+        rowKey={i => i.id}
+        loading={loading}
+        defaultSort={{ key: 'date', dir: 'desc' }}
+        empty={<EmptyState title="No incidents match these filters" text="Clear the search or filters to see more." action={<Button onClick={clearIncidentFilters}>Clear filters</Button>} />}
+      />
+    );
+  }
+
+  // ── Toolbox talks ──
+  const talkColumns: Column<ToolboxTalk>[] = [
+    { key: 'topic', header: 'Topic', primary: true, phone: 'show', render: t => t.topic || '—' },
+    { key: 'talk_date', header: 'Date', phone: 'show', accessor: t => t.talk_date || '', render: t => <span className="sfMuted" style={{ whiteSpace: 'nowrap' }}>{fmtDate(t.talk_date)}</span> },
+    { key: 'conducted_by', header: 'Presenter', render: t => t.conducted_by || <span className="sfMuted">—</span> },
+    { key: 'attendee_count', header: 'Attendees', align: 'right', phone: 'show', total: 'sum', accessor: t => t.attendee_count, render: t => <span style={{ display: 'inline-flex', alignItems: 'center', gap: 6 }}><UsersThree size={13} />{t.attendee_count}</span> },
+    { key: 'notes', header: 'Notes', phone: 'hide', render: t => t.notes ? <span className="sfClamp sfMuted" title={t.notes}>{t.notes}</span> : <span className="sfMuted">—</span> },
+  ];
+
+  // ── Corrective actions ──
+  const filteredActions = actions.filter(a => {
+    if (caFilter === 'all') return true;
+    if (caFilter === 'overdue') return isOverdue(a);
+    return a.status === caFilter;
+  });
+  const actionColumns: Column<CorrectiveAction>[] = [
+    { key: 'description', header: 'Description', primary: true, phone: 'show', render: a => <span className="sfClamp" title={a.description}>{a.description || '—'}</span> },
+    { key: 'assigned_to', header: 'Assigned To', render: a => a.assigned_to || <span className="sfMuted">Unassigned</span> },
+    {
+      key: 'due_date', header: 'Due Date', phone: 'show', accessor: a => a.due_date || '',
+      render: a => isOverdue(a)
+        ? <span className="sfBadges"><span className="sfLate">{fmtDate(a.due_date)}</span><Badge tone="overdue">Overdue</Badge></span>
+        : <span className="sfMuted">{a.due_date ? fmtDate(a.due_date) : 'No date'}</span>,
+    },
+    { key: 'status', header: 'Status', phone: 'show', accessor: a => CA_STATUS_LABELS[a.status] || a.status, render: a => <Badge tone={CA_STATUS_BADGE[a.status] || 'neutral'} dot>{CA_STATUS_LABELS[a.status] || a.status}</Badge> },
+  ];
+  const actionVerbs = (a: CorrectiveAction): Action[] => {
+    const nextStatus = CA_STATUS_FLOW[a.status];
+    return [
+      { label: nextStatus ? `Move to ${CA_STATUS_LABELS[nextStatus]}` : 'Complete', icon: nextStatus ? <ArrowRight size={14} weight="bold" /> : <CheckCircle size={14} />, onClick: () => handleAdvanceCAStatus(a), inline: true, hidden: !nextStatus },
+    ];
   };
-  const lbl: React.CSSProperties = { display: 'block', fontSize: 12, fontWeight: 600, color: T.muted, marginBottom: 6 };
-  const hint: React.CSSProperties = { fontSize: 12, color: 'var(--c-text-2)', marginTop: 5, lineHeight: 1.45 };
 
   return (
-    <PremiumSurface>
-      {/* Header */}
-      <ModuleHero
-        eyebrow={ctx?.project?.name || 'Health & Safety'}
-        eyebrowIcon={<ShieldCheck size={13} weight="fill" color="var(--text-secondary)" />}
+    <div className="sfWs">
+      <style dangerouslySetInnerHTML={{ __html: CSS }} />
+      <PageShell
+        crumbs={[
+          { label: 'Projects', href: '/app/projects' },
+          { label: ctx?.project?.name || 'Project', href: `${base}/overview` },
+          { label: 'Safety' },
+        ]}
         title="Safety"
-        subtitle="Safety incidents, inspections, and OSHA records"
+        subtitle="Incidents, toolbox talks and OSHA records."
         actions={
           <>
-            <button onClick={handleGenerateJHA} style={ghostButtonStyle} className="pmBtn">
-              <FilePdf size={15} weight="bold" /> Generate JHA
-            </button>
-            <button onClick={() => { if (showTalkForm) { setShowTalkForm(false); setErrorMsg(''); } else { openTalk(); } }} style={goldOutlineButtonStyle} className="pmBtn">
-              {showTalkForm ? <><X size={15} weight="bold" /> Cancel Talk</> : <><ChalkboardTeacher size={15} weight="bold" /> Log Toolbox Talk</>}
-            </button>
-            <button onClick={() => { if (showForm) { setShowForm(false); setErrorMsg(''); } else { openIncident(); } }} style={goldButtonStyle} className="pmBtn">
-              {showForm ? <><X size={15} weight="bold" /> Cancel</> : <><Plus size={15} weight="bold" /> Report Incident</>}
-            </button>
+            <Button variant="ghost" icon={<FilePdf size={15} weight="bold" />} onClick={handleGenerateJHA}>Generate JHA</Button>
+            <Button icon={<ChalkboardTeacher size={15} weight="bold" />} onClick={openTalk}>Log Toolbox Talk</Button>
+            <Button variant="primary" icon={<Plus size={15} weight="bold" />} onClick={openIncident}>Report Incident</Button>
           </>
         }
-      />
+      >
+        <StatRow items={stats} />
 
-      {/* One summary: the indicators a PM watches — recordables, near misses, open incidents and actions, days incident-free */}
-      {!loading && (
-        <StatStrip items={[
-          {href: `/app/projects/${projectId}/safety`,  label: 'OSHA Recordables', value: String(recordables), accent: recordables > 0 ? RED : GREEN, sub: recordables > 0 ? 'On the 300 log' : 'Clean 300 log' },
-          {href: `/app/projects/${projectId}/safety`,  label: 'Near Misses', value: String(nearMisses), accent: nearMisses > 0 ? AMBER : undefined, sub: 'Leading indicator — keep reporting' },
-          {href: `/app/projects/${projectId}/safety`,  label: 'Open', value: String(openCount), accent: openCount > 0 ? RED : undefined },
-          {href: `/app/projects/${projectId}/safety`,  label: 'Open Actions', value: String(openActionsCount), accent: openActionsCount > 0 ? AMBER : undefined },
-          {href: `/app/projects/${projectId}/safety`,  label: 'Overdue Actions', value: String(overdueActionsCount), accent: overdueActionsCount > 0 ? RED : undefined, sub: overdueActionsCount > 0 ? 'Needs attention' : undefined },
-          {href: `/app/projects/${projectId}/safety`,  label: 'Days Incident-Free', value: String(daysSinceLast), accent: daysSinceLast > 30 ? GREEN : undefined, sub: lastIncident ? `Since ${fmtDate(lastIncident.date)}` : 'No recordable incidents' },
-        ]} />
-      )}
+        <Tabs
+          value={tab}
+          onChange={k => setTab(k as TabKey)}
+          tabs={[
+            { key: 'incidents', label: 'Incidents', count: loading || loadError ? undefined : incidents.length },
+            { key: 'talks', label: 'Toolbox Talks', count: talks.length },
+            { key: 'actions', label: 'Corrective Actions', count: actionsLoading ? undefined : actions.length },
+          ]}
+        />
 
-      {successMsg && (
-        <div style={{ marginBottom: 16, padding: '10px 14px', background: T.greenDim, border: `1px solid rgba(74,222,128,0.4)`, borderRadius: 10, color: T.green, fontSize: 13 }}>{successMsg}</div>
-      )}
-      {errorMsg && (
-        <div style={{ marginBottom: 16, padding: '10px 14px', background: T.redDim, border: `1px solid rgba(248,113,113,0.4)`, borderRadius: 10, color: T.red, fontSize: 13 }}>{errorMsg}</div>
-      )}
+        {tab === 'incidents' && (
+          <>
+            {!loading && !loadError && incidents.length > 0 && (
+              <Toolbar
+                search={incidentSearch}
+                onSearch={setIncidentSearch}
+                placeholder="Search incidents…"
+                filters={
+                  <>
+                    <Select aria-label="Type" value={incidentTypeFilter} onChange={e => setIncidentTypeFilter(e.target.value)} style={{ width: 'auto', minWidth: 150 }} options={[{ value: 'all', label: 'All Types' }, ...TYPES]} />
+                    <Select aria-label="Status" value={incidentStatusFilter} onChange={e => setIncidentStatusFilter(e.target.value)} style={{ width: 'auto', minWidth: 150 }} options={[{ value: 'all', label: 'All Statuses' }, 'Open', 'Resolved']} />
+                    <Select aria-label="OSHA" value={oshaFilter} onChange={e => setOshaFilter(e.target.value as 'all' | 'recordable')} style={{ width: 'auto', minWidth: 150 }} options={[{ value: 'all', label: 'All OSHA' }, { value: 'recordable', label: 'Recordable only' }]} />
+                    {incidentFiltersActive && <Button variant="ghost" size="sm" onClick={clearIncidentFilters}>Clear</Button>}
+                  </>
+                }
+                actions={<span className="sfMuted" style={{ fontSize: 'var(--fs-sm)' }}>{filteredIncidents.length} of {incidents.length}</span>}
+              />
+            )}
+            <Card flush>{incidentBody}</Card>
+          </>
+        )}
 
-      {/* Create Incident Form */}
-      {showForm && (
-        <div className={ctx ? 'pmSplit' : undefined} style={railStyle(320, { gap: 18, alignItems: 'start', marginBottom: 20 })}>
-          <SectionCard title="Report Safety Incident" icon={<Warning size={17} weight="duotone" color={RED} />} accent={RED}>
-            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: 14 }}>
-              <div>
-                <label style={lbl}>Date *{auto.incDate && <AutoChip />}</label>
-                <SaguaroDatePicker value={form.date} onChange={v => setForm(p => ({ ...p, date: v }))} style={inp} />
-                <div style={hint}>Defaulted to today — report the day it happened.</div>
-              </div>
-              <div>
-                <label style={lbl}>Type</label>
-                <select value={form.type} onChange={e => setForm(p => ({ ...p, type: e.target.value }))} style={inp}>
-                  {TYPES.map(t => <option key={t}>{t}</option>)}
-                </select>
-                <div style={hint}>Near Miss and First Aid stay off the OSHA 300 log.</div>
-              </div>
-              <div>
-                <label style={lbl}>Severity</label>
-                <select value={form.severity} onChange={e => setForm(p => ({ ...p, severity: e.target.value }))} style={inp}>
-                  {TYPES.map(s => <option key={s}>{s}</option>)}
-                </select>
-                <div style={hint}>Drives the OSHA-recordable flag below.</div>
-              </div>
-              <div style={{ gridColumn: 'span 3' }}>
-                <div style={{ padding: '9px 12px', borderRadius: 8, fontSize: 12, lineHeight: 1.5, background: formIsRecordable ? 'rgba(248,113,113,0.10)' : 'rgba(74,222,128,0.08)', border: `1px solid ${formIsRecordable ? 'rgba(248,113,113,0.35)' : 'rgba(74,222,128,0.3)'}`, color: formIsRecordable ? '#F0A092' : GREEN }}>
-                  {formIsRecordable
-                    ? 'OSHA-recordable: this incident will be flagged for the 300 log. Recordables generally must be logged within 7 calendar days; fatalities reported within 8 hours, in-patient hospitalizations within 24.'
-                    : 'Not OSHA-recordable as classified — it will be saved for internal tracking and trend analysis only.'}
-                </div>
-              </div>
-              <div style={{ gridColumn: 'span 3' }}>
-                <label style={lbl}>Description *</label>
-                <textarea value={form.description} onChange={e => setForm(p => ({ ...p, description: e.target.value }))} rows={3} style={{ ...inp, resize: 'vertical' }} placeholder="What happened, who was involved, where on site…" />
-              </div>
-              <div style={{ gridColumn: 'span 3' }}>
-                <label style={lbl}>Corrective Action</label>
-                <textarea value={form.corrective_action} onChange={e => setForm(p => ({ ...p, corrective_action: e.target.value }))} rows={2} style={{ ...inp, resize: 'vertical' }} placeholder="What prevents a repeat…" />
-                <div style={hint}>Anything entered here auto-creates a tracked corrective action linked to this incident.</div>
-              </div>
-            </div>
-            <div style={{ display: 'flex', gap: 10, marginTop: 16 }}>
-              <button onClick={handleSave} disabled={saving} className="pmBtn" style={{ ...goldButtonStyle, opacity: saving ? 0.5 : 1, cursor: saving ? 'not-allowed' : 'pointer' }}>{saving ? 'Saving…' : 'Report Incident'}</button>
-              <button onClick={() => { setShowForm(false); setErrorMsg(''); }} style={ghostButtonStyle} className="pmBtn">Cancel</button>
-            </div>
-          </SectionCard>
-          {ctx && (
-            <SectionCard flat title="After You Report" icon={<ShieldCheck size={17} weight="duotone" color="var(--text-secondary)" />}>
-              <FlowSteps title="" steps={[
-                { title: 'Incident Enters the Log', desc: formIsRecordable ? 'Flagged OSHA-recordable for the 300 log.' : 'Saved for internal tracking and trends.' },
-                { title: 'Corrective Action Opens', desc: 'The corrective-action text becomes a tracked item with its own status flow.' },
-                { title: 'Verify and Close', desc: 'Advance Open to In Progress to Verified to Closed as the fix lands.' },
-                { title: 'Stats Update Everywhere', desc: 'Days-incident-free and recordable counts refresh across the project.' },
-              ]} />
-            </SectionCard>
-          )}
-        </div>
-      )}
-
-      {/* Incidents Table */}
-      <ListToolbar
-        module="safety"
-        search={incidentSearch}
-        onSearch={setIncidentSearch}
-        searchPlaceholder="Search incidents…"
-        filters={[
-          { key: 'type', label: 'Type', value: incidentTypeFilter, onChange: setIncidentTypeFilter, allLabel: 'All Types', options: [...TYPES] },
-          { key: 'status', label: 'Status', value: incidentStatusFilter, onChange: setIncidentStatusFilter, allLabel: 'All Statuses', options: ['Open', 'Resolved'] },
-        ]}
-        count={{ shown: filteredIncidents.length, total: incidents.length }}
-        style={{ marginBottom: 16 }}
-      />
-      <div style={{ marginBottom: 28 }}>
-        <SectionCard
-          title="Incident Log"
-          subtitle="Reported safety incidents for this project"
-          icon={<ClipboardText size={17} weight="duotone" color="var(--text-secondary)" />}
-          flush
-        >
-          {loading ? (
-            <div style={{ padding: 40, textAlign: 'center', color: T.muted }}>Loading…</div>
-          ) : loadError ? (
-            <div style={{ padding: 40, textAlign: 'center' }}>
-              <Warning size={30} weight="duotone" color={RED} />
-              <div style={{ marginTop: 12, color: T.white, fontSize: 15, fontWeight: 700 }}>
-                Could not load the incident log
-              </div>
-              <div style={{ marginTop: 6, color: T.muted, fontSize: 13, maxWidth: 460, marginLeft: 'auto', marginRight: 'auto' }}>
-                This is <strong>not</strong> a clean safety record — the read failed, so this
-                project&apos;s incidents are unknown. {loadError}
-              </div>
-              <button onClick={fetchData} style={{ ...ghostButtonStyle, marginTop: 16 }} className="pmBtn">
-                Retry
-              </button>
-            </div>
-          ) : incidents.length === 0 ? (
-            <PremiumEmpty
-              icon={<CheckCircle size={30} weight="duotone" color={GREEN} />}
-              title="No incidents recorded"
-              description={`A clean log${subCount > 0 ? ` with ${subCount} sub crew${subCount === 1 ? '' : 's'} on site` : ''} — keep it that way by reporting near misses too: they are the leading indicator that prevents the recordable. Anything logged here flags OSHA-recordable automatically by type.`}
-              action={<button onClick={openIncident} style={ghostButtonStyle} className="pmBtn"><Plus size={15} weight="bold" /> Report a Near Miss</button>}
+        {tab === 'talks' && (
+          <Card
+            flush
+            title="Toolbox Talks"
+            subtitle={lastTalk ? `${talks.length} logged · last ${fmtDate(lastTalk.talk_date)}` : undefined}
+            icon={<ChalkboardTeacher size={17} />}
+            actions={<Button size="sm" icon={<Plus size={14} weight="bold" />} onClick={openTalk}>Log Talk</Button>}
+          >
+            <DataTable<ToolboxTalk>
+              tableId="project-safety-talks"
+              exportName="toolbox-talks"
+              columns={talkColumns}
+              rows={talks}
+              rowKey={t => t.id}
+              defaultSort={{ key: 'talk_date', dir: 'desc' }}
+              empty={
+                <EmptyState
+                  icon={<ChalkboardTeacher size={22} />}
+                  title="No toolbox talks logged"
+                  text={subCount > 0 ? `${subCount} sub crew${subCount === 1 ? '' : 's'} on this project.` : undefined}
+                  action={<Button icon={<ChalkboardTeacher size={15} weight="bold" />} onClick={openTalk}>Log Toolbox Talk</Button>}
+                />
+              }
             />
-          ) : (
-            <Table
-              headers={['Date', 'Type', 'OSHA', 'Description', 'Severity', 'Status']}
-              rows={filteredIncidents.map(i => [
-                <span key="d" style={{ color: T.muted, whiteSpace: 'nowrap' }}>{i.date}</span>,
-                i.type,
-                <span key="osha" style={{ fontSize: 12, fontWeight: 800, color: isOshaRecordable(i) ? RED : T.muted }}>{isOshaRecordable(i) ? 'Recordable' : '—'}</span>,
-                <span key="desc" style={{ maxWidth: 300, display: 'block', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
-                  {i.description}
-                </span>,
-                <Badge key="sev" label={i.severity} color={SEVERITY_BADGE[i.severity] || 'muted'} />,
-                <StatusPill key="st" module="safety_incidents" status={i.status} size="sm" />,
-              ])}
-            />
-          )}
-        </SectionCard>
-      </div>
+          </Card>
+        )}
 
-      {/* Toolbox Talk form */}
-      {showTalkForm && (
-        <div style={{ marginBottom: 20 }}>
-          <SectionCard title="Log Toolbox Talk" icon={<ChalkboardTeacher size={17} weight="duotone" color="var(--text-secondary)" />}>
-            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(4, 1fr)', gap: 14 }}>
-              <div>
-                <label style={lbl}>Topic *</label>
-                <Suggest value={talkForm.topic} onChange={e => setTalkForm(p => ({ ...p, topic: e.target.value }))} style={inp} placeholder="e.g. Fall Protection" options={TALK_TOPICS} />
-                <div style={hint}>OSHA focus-four topics suggested first.</div>
-              </div>
-              <div>
-                <label style={lbl}>Date{auto.talkDate && <AutoChip />}</label>
-                <SaguaroDatePicker value={talkForm.talk_date} onChange={v => setTalkForm(p => ({ ...p, talk_date: v }))} style={inp} />
-                <div style={hint}>Defaulted to today.</div>
-              </div>
-              <div>
-                <label style={lbl}>Presenter{auto.presenter && <AutoChip />}</label>
-                <input value={talkForm.conducted_by} onChange={e => setTalkForm(p => ({ ...p, conducted_by: e.target.value }))} style={inp} placeholder="Who ran the talk" />
-                <div style={hint}>{auto.presenter ? 'Carried from the last talk.' : 'Usually the super or foreman.'}</div>
-              </div>
-              <div>
-                <label style={lbl}>Attendees{auto.attendees && <AutoChip />}</label>
-                <input type="number" min="0" value={talkForm.attendee_count} onChange={e => setTalkForm(p => ({ ...p, attendee_count: e.target.value }))} style={inp} placeholder="0" />
-                <div style={hint}>{subCount > 0 ? `${subCount} sub crew${subCount === 1 ? '' : 's'} on the roster.` : 'Headcount at the talk.'}</div>
-              </div>
-              <div style={{ gridColumn: 'span 4' }}>
-                <label style={lbl}>Notes</label>
-                <textarea value={talkForm.notes} onChange={e => setTalkForm(p => ({ ...p, notes: e.target.value }))} rows={2} style={{ ...inp, resize: 'vertical' }} placeholder="Key points covered, questions raised…" />
-              </div>
-            </div>
-            <div style={{ display: 'flex', gap: 10, marginTop: 16 }}>
-              <button onClick={handleLogTalk} disabled={talkSaving} className="pmBtn" style={{ ...goldButtonStyle, opacity: talkSaving ? 0.5 : 1, cursor: talkSaving ? 'not-allowed' : 'pointer' }}>{talkSaving ? 'Logging…' : 'Log Talk'}</button>
-              <button onClick={() => { setShowTalkForm(false); setErrorMsg(''); }} style={ghostButtonStyle} className="pmBtn">Cancel</button>
-            </div>
-          </SectionCard>
-        </div>
-      )}
-
-      {/* Toolbox Talks log */}
-      <div style={{ marginBottom: 28 }}>
-        <SectionCard
-          title="Toolbox Talks"
-          subtitle={lastTalk ? `${talks.length} logged · last ${fmtDate(lastTalk.talk_date)}` : 'Weekly safety briefings for the crew'}
-          icon={<ChalkboardTeacher size={17} weight="duotone" color="var(--text-secondary)" />}
-          flush
-        >
-          {talks.length === 0 ? (
-            <PremiumEmpty
-              compact
-              icon={<ChalkboardTeacher size={26} weight="duotone" color="var(--text-secondary)" />}
-              title="No toolbox talks logged"
-              description={`A five-minute weekly talk is the cheapest safety program there is${subCount > 0 ? ` — you have ${subCount} sub crew${subCount === 1 ? '' : 's'} on this project to cover` : ''}. Log the first one to start the cadence.`}
-              action={<button onClick={openTalk} style={secondaryButtonStyle} className="pmBtn"><ChalkboardTeacher size={15} weight="bold" /> Log Toolbox Talk</button>}
-            />
-          ) : (
-            <Table
-              headers={['Date', 'Topic', 'Presenter', 'Attendees', 'Notes']}
-              rows={talks.map(t => [
-                <span key="d" style={{ color: T.muted, whiteSpace: 'nowrap' }}>{fmtDate(t.talk_date)}</span>,
-                <span key="t" style={{ fontWeight: 600 }}>{t.topic}</span>,
-                <span key="p" style={{ color: t.conducted_by ? T.white : T.muted }}>{t.conducted_by || '—'}</span>,
-                <span key="a" style={{ display: 'inline-flex', alignItems: 'center', gap: 6, color: T.muted }}><UsersThree size={13} color={T.muted} />{t.attendee_count}</span>,
-                <span key="n" style={{ maxWidth: 280, display: 'block', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap', color: T.muted }}>{t.notes || '—'}</span>,
-              ])}
-            />
-          )}
-        </SectionCard>
-      </div>
-
-      {/* Corrective Actions Section */}
-      <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 12, flexWrap: 'wrap', gap: 12 }}>
-        <div>
-          <h2 style={{ margin: 0, fontSize: 18, fontWeight: 800, letterSpacing: '-0.01em' }}>Corrective Actions</h2>
-          <p style={{ margin: '3px 0 0', fontSize: 13, color: 'var(--c-text-2)' }}>Track and verify corrective actions from incidents</p>
-        </div>
-        <button onClick={() => { if (showCAForm) { setShowCAForm(false); setErrorMsg(''); } else { openCA(); } }} style={showCAForm ? ghostButtonStyle : secondaryButtonStyle} className="pmBtn">
-          {showCAForm ? <><X size={15} weight="bold" /> Cancel</> : <><Plus size={15} weight="bold" /> New Action</>}
-        </button>
-      </div>
-
-      {/* Create Corrective Action Form */}
-      {showCAForm && (
-        <div style={{ marginBottom: 20 }}>
-          <SectionCard title="New Corrective Action" icon={<Wrench size={17} weight="duotone" color="var(--text-secondary)" />}>
-            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(2, 1fr)', gap: 14 }}>
-              <div style={{ gridColumn: 'span 2' }}>
-                <label style={lbl}>Description *</label>
-                <textarea value={caForm.description} onChange={e => setCaForm(p => ({ ...p, description: e.target.value }))} rows={3} style={{ ...inp, resize: 'vertical' }} />
-              </div>
-              <div>
-                <label style={lbl}>Assigned To</label>
-                <Suggest value={caForm.assigned_to} onChange={e => setCaForm(p => ({ ...p, assigned_to: e.target.value }))} style={inp} placeholder="Name or email" options={((ctx?.subs || []) as { companyName?: string | null }[]).map((s) => s.companyName || '').filter(Boolean)} />
-                <div style={hint}>{subCount > 0 ? `${subCount} sub${subCount === 1 ? '' : 's'} on the roster to pick from.` : 'Who owns the fix.'}</div>
-              </div>
-              <div>
-                <label style={lbl}>Due Date{auto.caDue && <AutoChip />}</label>
-                <SaguaroDatePicker value={caForm.due_date} onChange={v => setCaForm(p => ({ ...p, due_date: v }))} style={inp} />
-                <div style={hint}>One week out by default — overdue flags itself.</div>
-              </div>
-            </div>
-            <div style={{ display: 'flex', gap: 10, marginTop: 16 }}>
-              <button onClick={handleCreateCA} disabled={caSaving} className="pmBtn" style={{ ...goldButtonStyle, opacity: caSaving ? 0.5 : 1, cursor: caSaving ? 'not-allowed' : 'pointer' }}>{caSaving ? 'Creating…' : 'Create Action'}</button>
-              <button onClick={() => { setShowCAForm(false); setErrorMsg(''); }} style={ghostButtonStyle} className="pmBtn">Cancel</button>
-            </div>
-          </SectionCard>
-        </div>
-      )}
-
-      {/* Corrective Actions Table */}
-      <div>
-        <SectionCard flush>
-          {actionsLoading ? (
-            <div style={{ padding: 40, textAlign: 'center', color: T.muted }}>Loading corrective actions…</div>
-          ) : actions.length === 0 ? (
-            <div style={{ padding: 20 }}>
-              <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 12, flexWrap: 'wrap', marginBottom: 12 }}>
-                <div style={{ fontSize: 14, fontWeight: 800, color: 'var(--text-primary)' }}>
-                  <Wrench size={16} weight="duotone" color="var(--text-secondary)" style={{ marginRight: 7, verticalAlign: 'text-bottom' }} />
-                  No corrective actions
-                  <span style={{ fontWeight: 400, color: 'var(--c-text-2)' }}>{showCAForm ? ' — describe the first one in the form above; the due date is already a week out.' : ' — incidents auto-create them, or add one directly.'}</span>
-                </div>
-                {!showCAForm && (
-                  <button onClick={openCA} style={secondaryButtonStyle} className="pmBtn"><Plus size={15} weight="bold" /> Add Corrective Action</button>
+        {tab === 'actions' && (
+          <>
+            {!actionsLoading && actions.length > 0 && (
+              <Toolbar
+                filters={
+                  <Select
+                    aria-label="Action status"
+                    value={caFilter}
+                    onChange={e => setCaFilter(e.target.value as CaFilter)}
+                    style={{ width: 'auto', minWidth: 160 }}
+                    options={[
+                      { value: 'all', label: 'All Statuses' },
+                      { value: 'open', label: 'Open' },
+                      { value: 'in_progress', label: 'In Progress' },
+                      { value: 'verified', label: 'Verified' },
+                      { value: 'closed', label: 'Closed' },
+                      { value: 'overdue', label: 'Overdue' },
+                    ]}
+                  />
+                }
+                actions={<span className="sfMuted" style={{ fontSize: 'var(--fs-sm)' }}>{filteredActions.length} of {actions.length}</span>}
+              />
+            )}
+            <Card
+              flush
+              title="Corrective Actions"
+              subtitle={overdueActionsCount > 0 ? `${overdueActionsCount} overdue` : undefined}
+              icon={<Wrench size={17} />}
+              actions={<Button size="sm" icon={<Plus size={14} weight="bold" />} onClick={openCA}>New Action</Button>}
+            >
+              <DataTable<CorrectiveAction>
+                tableId="project-safety-actions"
+                exportName="corrective-actions"
+                columns={actionColumns}
+                rows={filteredActions}
+                rowKey={a => a.id}
+                loading={actionsLoading}
+                defaultSort={{ key: 'due_date', dir: 'asc' }}
+                rowActions={actionVerbs}
+                empty={actions.length === 0 ? (
+                  <EmptyState
+                    icon={<Wrench size={22} />}
+                    title="No corrective actions"
+                    text="Incidents create them, or add one directly."
+                    action={<Button icon={<Plus size={15} weight="bold" />} onClick={openCA}>Add Corrective Action</Button>}
+                  />
+                ) : (
+                  <EmptyState title="No actions match this filter" action={<Button onClick={() => setCaFilter('all')}>Clear filter</Button>} />
                 )}
-              </div>
-              <FlowStrip steps={[
-                { title: 'Open the Action', desc: 'From an incident or directly' },
-                { title: 'Assign an Owner', desc: 'Sub roster type-ahead' },
-                { title: 'Fix Lands', desc: 'Advance Open to In Progress' },
-                { title: 'Verify and Close', desc: 'Overdue flags itself' },
-              ]} />
-            </div>
-          ) : (
-            <Table
-              headers={['Description', 'Assigned To', 'Due Date', 'Status', 'Actions']}
-              rows={actions.map(a => {
-                const overdue = isOverdue(a);
-                const nextStatus = CA_STATUS_FLOW[a.status];
-                const nextLabel = nextStatus ? CA_STATUS_LABELS[nextStatus] : null;
-                return [
-                  <span key="desc" style={{ maxWidth: 280, display: 'block', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
-                    {a.description}
-                  </span>,
-                  <span key="assign" style={{ color: a.assigned_to ? T.white : T.muted }}>{a.assigned_to || 'Unassigned'}</span>,
-                  <span key="due" style={{ color: overdue ? T.red : T.muted, fontWeight: overdue ? 700 : 400, whiteSpace: 'nowrap' }}>
-                    {a.due_date || 'No date'}
-                    {overdue && <StatusPill module="generic" status="overdue" size="sm" />}
-                  </span>,
-                  <Badge key="st" label={CA_STATUS_LABELS[a.status] || a.status} color={CA_STATUS_BADGE[a.status] || 'muted'} />,
-                  <span key="action">
-                    {nextLabel ? (
-                      <button
-                        onClick={() => handleAdvanceCAStatus(a)}
-                        className="pmBtn"
-                        style={{ ...ghostButtonStyle, padding: '5px 12px', fontSize: 12, borderRadius: 9, gap: 6 }}
-                      >
-                        <ArrowRight size={12} weight="bold" /> {nextLabel}
-                      </button>
-                    ) : (
-                      <StatusPill module="generic" status="complete" size="sm" />
-                    )}
-                  </span>,
-                ];
-              })}
+              />
+            </Card>
+          </>
+        )}
+      </PageShell>
+
+      {/* ── Report Incident ── */}
+      <FormModal
+        open={showForm}
+        onClose={closeIncident}
+        title="Report Safety Incident"
+        subtitle={ctx?.project?.name || undefined}
+        onSubmit={async () => { await handleSave(); }}
+        submitLabel="Report Incident"
+        busy={saving}
+        error={errorMsg || null}
+      >
+        <div className="sfGap">
+          {formIsRecordable ? (
+            <Callout
+              tone="danger"
+              icon={<Warning size={16} weight="bold" />}
+              title="OSHA-recordable — flagged for the 300 log"
+              text="Log within 7 calendar days. Fatalities within 8 hours, in-patient hospitalizations within 24."
             />
+          ) : (
+            <Callout tone="success" icon={<ShieldCheck size={16} weight="bold" />} title="Not OSHA-recordable" text="Saved for internal tracking only." />
           )}
-        </SectionCard>
-      </div>
-      <UnsavedGuardModal guard={guard} />
-    </PremiumSurface>
+        </div>
+        <FormGrid cols={3}>
+          <Field label="Date" required hint={auto.incDate ? 'Defaulted to today.' : undefined}>
+            <div style={{ width: '100%' }}><SaguaroDatePicker value={form.date} onChange={v => setForm(p => ({ ...p, date: v }))} style={DATE_INPUT_STYLE} /></div>
+          </Field>
+          <Field label="Type" hint="Near Miss and First Aid stay off the 300 log.">
+            <Select value={form.type} onChange={e => setForm(p => ({ ...p, type: e.target.value }))} options={TYPES} />
+          </Field>
+          <Field label="Severity">
+            <Select value={form.severity} onChange={e => setForm(p => ({ ...p, severity: e.target.value }))} options={TYPES} />
+          </Field>
+          <Field label="Description" required span>
+            <Textarea value={form.description} onChange={e => setForm(p => ({ ...p, description: e.target.value }))} rows={3} placeholder="What happened, who was involved, where on site…" />
+          </Field>
+          <Field label="Corrective Action" span hint="Creates a tracked corrective action linked to this incident.">
+            <Textarea value={form.corrective_action} onChange={e => setForm(p => ({ ...p, corrective_action: e.target.value }))} rows={2} placeholder="What prevents a repeat…" />
+          </Field>
+        </FormGrid>
+      </FormModal>
+
+      {/* ── Log Toolbox Talk ── */}
+      <FormModal
+        open={showTalkForm}
+        onClose={closeTalk}
+        title="Log Toolbox Talk"
+        subtitle={lastTalk ? `${talks.length} logged · last ${fmtDate(lastTalk.talk_date)}` : ctx?.project?.name || undefined}
+        onSubmit={handleLogTalk}
+        submitLabel="Log Talk"
+        busy={talkSaving}
+        error={errorMsg || null}
+      >
+        <FormGrid cols={2}>
+          <Field label="Topic" required hint="OSHA focus-four first.">
+            <Suggest className="k-input" value={talkForm.topic} onChange={e => setTalkForm(p => ({ ...p, topic: e.target.value }))} placeholder="e.g. Fall Protection" options={TALK_TOPICS} />
+          </Field>
+          <Field label="Date" hint={auto.talkDate ? 'Defaulted to today.' : undefined}>
+            <div style={{ width: '100%' }}><SaguaroDatePicker value={talkForm.talk_date} onChange={v => setTalkForm(p => ({ ...p, talk_date: v }))} style={DATE_INPUT_STYLE} /></div>
+          </Field>
+          <Field label="Presenter" hint={auto.presenter ? 'From the last talk.' : undefined}>
+            <Input value={talkForm.conducted_by} onChange={e => setTalkForm(p => ({ ...p, conducted_by: e.target.value }))} placeholder="Who ran the talk" />
+          </Field>
+          <Field label="Attendees" hint={auto.attendees ? 'From the last talk.' : subCount > 0 ? `${subCount} sub crew${subCount === 1 ? '' : 's'} on the roster.` : undefined}>
+            <Input type="number" min="0" inputMode="numeric" value={talkForm.attendee_count} onChange={e => setTalkForm(p => ({ ...p, attendee_count: e.target.value }))} placeholder="0" />
+          </Field>
+          <Field label="Notes" span>
+            <Textarea value={talkForm.notes} onChange={e => setTalkForm(p => ({ ...p, notes: e.target.value }))} rows={2} placeholder="Key points covered, questions raised…" />
+          </Field>
+        </FormGrid>
+      </FormModal>
+
+      {/* ── New Corrective Action ── */}
+      <FormModal
+        open={showCAForm}
+        onClose={closeCA}
+        title="New Corrective Action"
+        subtitle={openActionsCount > 0 ? `${openActionsCount} open${overdueActionsCount > 0 ? `, ${overdueActionsCount} overdue` : ''}` : ctx?.project?.name || undefined}
+        onSubmit={handleCreateCA}
+        submitLabel="Create Action"
+        busy={caSaving}
+        error={errorMsg || null}
+      >
+        <FormGrid cols={2}>
+          <Field label="Description" required span>
+            <Textarea value={caForm.description} onChange={e => setCaForm(p => ({ ...p, description: e.target.value }))} rows={3} />
+          </Field>
+          <Field label="Assigned To" hint={subCount > 0 ? `${subCount} sub${subCount === 1 ? '' : 's'} on the roster.` : undefined}>
+            <Suggest className="k-input" value={caForm.assigned_to} onChange={e => setCaForm(p => ({ ...p, assigned_to: e.target.value }))} placeholder="Name or email" options={((ctx?.subs || []) as { companyName?: string | null }[]).map((s) => s.companyName || '').filter(Boolean)} />
+          </Field>
+          <Field label="Due Date" hint={auto.caDue ? 'Defaulted to one week out.' : undefined}>
+            <div style={{ width: '100%' }}><SaguaroDatePicker value={caForm.due_date} onChange={v => setCaForm(p => ({ ...p, due_date: v }))} style={DATE_INPUT_STYLE} /></div>
+          </Field>
+        </FormGrid>
+      </FormModal>
+
+      {/* Above the FormModal overlay so the unsaved-work prompt is never hidden behind it. */}
+      <div style={{ position: 'relative', zIndex: 10001 }}><UnsavedGuardModal guard={guard} /></div>
+      <Toast message={toast?.message ?? null} tone={toast?.tone} />
+    </div>
   );
 }

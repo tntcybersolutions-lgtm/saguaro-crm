@@ -26,13 +26,12 @@ import { confirmDialog } from '@/lib/ui/async-dialog';
 import { useProjectContext } from '@/lib/hooks/useProjectContext';
 import { useParams } from 'next/navigation';
 import SaguaroDatePicker from '../../../../../components/SaguaroDatePicker';
-import { ClipboardText, Plus, Warning, ArrowsClockwise, X, CheckCircle, ArrowSquareOut } from '@phosphor-icons/react';
+import { ClipboardText, Plus, Warning, ArrowsClockwise, X, CheckCircle, ArrowSquareOut, CalendarBlank, Flag, Gauge } from '@phosphor-icons/react';
 import {
   PageShell, Card, StatRow, Badge, Button, Toolbar, DataTable, EmptyState,
-  FormModal, Field, Input, Select, Textarea, FormGrid, DetailList, Toast, useToast,
+  FormModal, Field, Input, Select, Textarea, FormGrid, DetailList, Toast, useToast, Callout,
   type Column, type Action, type BadgeTone, type StatItem,
 } from '@/components/ui/kit';
-import { FlowSteps, InsightRow, AutoChip } from '@/components/ui/premium';
 import { useUnsavedGuard, useComposerDirty } from '@/lib/useUnsavedGuard';
 import UnsavedGuardModal from '@/components/UnsavedGuardModal';
 import Suggest from '@/components/ui/Suggest';
@@ -138,15 +137,12 @@ const CSS = `
 .inActions { display: flex; flex-direction: column; gap: 8px; }
 .inActions .k-btn { width: 100%; justify-content: flex-start; }
 .inRail { position: sticky; top: 16px; }
-.inLadder { border: 1px solid var(--border-default); border-radius: var(--radius-sm); padding: 12px 14px; background: var(--bg-surface-2); margin-bottom: 16px; }
-.inWarn { display: flex; gap: 10px; align-items: flex-start; font-size: var(--fs-sm); color: var(--text-primary); line-height: 1.55; padding: 10px 14px; border-radius: var(--radius-sm); border: 1px solid rgba(248,113,113,.35); background: rgba(248,113,113,.08); margin-bottom: 16px; }
-.inWarn > svg { color: var(--status-overdue); flex-shrink: 0; margin-top: 2px; }
-.inWarn button { background: none; border: 0; padding: 0; color: var(--link); font-weight: 700; cursor: pointer; font: inherit; margin-right: 10px; }
+.inWarn { margin-bottom: 16px; }
 .inSeq { display: flex; flex-wrap: wrap; gap: 8px 16px; }
 .inSeqItem { display: flex; align-items: center; gap: 9px; font-size: var(--fs-sm); color: var(--text-tertiary); }
 .inSeqItem[data-next="true"] { color: var(--text-primary); font-weight: 700; }
 .inSeqNum { width: 18px; height: 18px; border-radius: 999px; display: inline-flex; align-items: center; justify-content: center; font-size: 12px; font-weight: 800; border: 1px solid var(--border-default); color: var(--text-tertiary); }
-.inSeqItem[data-next="true"] .inSeqNum { border-color: var(--link); color: var(--link); }
+.inSeqItem[data-next="true"] .inSeqNum { border-color: var(--text-primary); color: var(--text-primary); }
 .inEmptyGrid { display: grid; grid-template-columns: minmax(0, 1fr); }
 .inEmptyRail { padding: 14px 20px 18px; border-top: 1px solid var(--border-subtle); }
 .inDateInput { width: 100%; }
@@ -400,30 +396,30 @@ export default function InspectionsPage() {
   // ── Stat tiles — each filters the log ──
   const stats: StatItem[] = loading
     ? [
-        { label: 'Pass Rate', value: '—', sub: 'Loading…' },
-        { label: 'Re-Inspections Due', value: '—', sub: 'Loading…' },
-        { label: 'Scheduled', value: '—', sub: 'Loading…' },
-        { label: 'Deficiencies', value: '—', sub: 'Loading…' },
-        { label: 'Next Scheduled', value: '—', sub: 'Loading…' },
+        { label: 'Pass Rate', value: '—', sub: 'Loading…', icon: <Gauge size={15} /> },
+        { label: 'Re-Inspections Due', value: '—', sub: 'Loading…', icon: <ArrowsClockwise size={15} /> },
+        { label: 'Scheduled', value: '—', sub: 'Loading…', icon: <CalendarBlank size={15} /> },
+        { label: 'Deficiencies', value: '—', sub: 'Loading…', icon: <Warning size={15} /> },
+        { label: 'Next Milestone', value: '—', sub: 'Loading…', icon: <Flag size={15} /> },
       ]
     : [
-        { label: 'Pass Rate', value: resulted > 0 ? `${passRate}%` : '—', tone: resulted > 0 ? (passRate >= 80 ? 'good' : passRate >= 60 ? 'warn' : 'bad') : 'default', sub: filterResult === 'passed' ? 'Filtered — click to clear' : resulted > 0 ? `${passed} passed of ${resulted} resulted` : 'No results recorded yet', onClick: () => toggleResult('passed') },
-        { label: 'Re-Inspections Due', value: awaitingReinspection.length, tone: awaitingReinspection.length > 0 ? 'bad' : 'default', sub: filterResult === 'reinspect' ? 'Filtered — click to clear' : awaitingReinspection.length > 0 ? awaitingReinspection.slice(0, 2).map(f => f.type).join(', ') : failed > 0 ? 'Every failure re-passed' : 'No failures on record', onClick: () => toggleResult('reinspect') },
-        { label: 'Scheduled', value: scheduled, tone: scheduled > 0 ? 'warn' : 'default', sub: filterResult === 'scheduled' ? 'Filtered — click to clear' : nextUp ? `Next ${fmtDate(nextUp.date)}` : 'Nothing on the calendar', onClick: () => toggleResult('scheduled') },
-        { label: 'Deficiencies', value: deficiencies, tone: deficiencies > 0 ? 'warn' : 'default', sub: deficiencies > 0 ? 'Flagged on inspection checklists' : 'None flagged' },
-        { label: 'Next Milestone', value: suggestedType, sub: openPunch > 0 ? `${openPunch} open punch item${openPunch === 1 ? '' : 's'} before finals` : `${passedTypes.size} of ${INSPECTION_TYPES.length} milestone types passed` },
+        { label: 'Pass Rate', value: resulted > 0 ? `${passRate}%` : '—', tone: resulted > 0 ? (passRate >= 80 ? 'good' : passRate >= 60 ? 'warn' : 'bad') : 'default', sub: filterResult === 'passed' ? 'Filtered — click to clear' : resulted > 0 ? `${passed} passed of ${resulted} resulted` : 'No results recorded yet', onClick: () => toggleResult('passed'), active: filterResult === 'passed', icon: <Gauge size={15} /> },
+        { label: 'Re-Inspections Due', value: awaitingReinspection.length, tone: awaitingReinspection.length > 0 ? 'bad' : 'default', sub: filterResult === 'reinspect' ? 'Filtered — click to clear' : awaitingReinspection.length > 0 ? awaitingReinspection.slice(0, 2).map(f => f.type).join(', ') : failed > 0 ? 'Every failure re-passed' : 'No failures on record', onClick: () => toggleResult('reinspect'), active: filterResult === 'reinspect', icon: <ArrowsClockwise size={15} /> },
+        { label: 'Scheduled', value: scheduled, tone: scheduled > 0 ? 'warn' : 'default', sub: filterResult === 'scheduled' ? 'Filtered — click to clear' : nextUp ? `Next ${fmtDate(nextUp.date)}` : 'Nothing on the calendar', onClick: () => toggleResult('scheduled'), active: filterResult === 'scheduled', icon: <CalendarBlank size={15} /> },
+        { label: 'Deficiencies', value: deficiencies, tone: deficiencies > 0 ? 'warn' : 'default', sub: deficiencies > 0 ? 'Flagged on inspection checklists' : 'None flagged', icon: <Warning size={15} /> },
+        { label: 'Next Milestone', value: suggestedType, sub: openPunch > 0 ? `${openPunch} open punch item${openPunch === 1 ? '' : 's'} before finals` : `${passedTypes.size} of ${INSPECTION_TYPES.length} milestone types passed`, icon: <Flag size={15} /> },
       ];
 
   // ── Log columns ──
   const isSel = (i: Inspection) => i.id === selectedId;
-  const typeCol: Column<Inspection> = { key: 'type', header: 'Type', accessor: i => i.type || '', render: i => <span className="inType" data-sel={isSel(i) ? 'true' : undefined}>{i.type || '—'}</span> };
-  const dateCol: Column<Inspection> = { key: 'date', header: 'Date', accessor: i => i.date || '', render: i => <span className="inMuted">{fmtDate(i.date)}</span> };
-  const inspectorCol: Column<Inspection> = { key: 'inspector', phone: 'hide', header: 'Inspector', accessor: i => (i.inspector || '').toLowerCase(), render: i => i.inspector || <span className="inMuted">—</span> };
-  const agencyCol: Column<Inspection> = { key: 'agency', phone: 'hide', header: 'Agency', accessor: i => (i.agency || '').toLowerCase(), render: i => i.agency || <span className="inMuted">—</span> };
+  const typeCol: Column<Inspection> = { key: 'type', header: 'Type', primary: true, phone: 'show', accessor: i => i.type || '', render: i => <span className="inType" data-sel={isSel(i) ? 'true' : undefined}>{i.type || '—'}</span> };
+  const dateCol: Column<Inspection> = { key: 'date', header: 'Date', phone: 'show', accessor: i => i.date || '', render: i => <span className="inMuted">{fmtDate(i.date)}</span> };
+  const inspectorCol: Column<Inspection> = { key: 'inspector', phone: 'hide', header: 'Inspector', accessor: i => i.inspector || '', render: i => i.inspector || <span className="inMuted">—</span> };
+  const agencyCol: Column<Inspection> = { key: 'agency', phone: 'hide', header: 'Agency', accessor: i => i.agency || '', render: i => i.agency || <span className="inMuted">—</span> };
   const resultCol: Column<Inspection> = { key: 'result', phone: 'show', header: 'Result', accessor: i => RESULT_RANK[canonResult(i.result)] ?? 9, render: i => { const b = resultBadge(i.result); return <span className="inBadges"><Badge tone={b.tone}>{b.label}</Badge>{needsReinspect(i) && <Badge tone="overdue"><ArrowsClockwise size={11} /> Re-Inspect</Badge>}</span>; } };
   const defCol: Column<Inspection> = { key: 'deficiency_count', phone: 'hide', header: 'Deficiencies', accessor: i => Number(i.deficiency_count) || 0, align: 'right', render: i => (Number(i.deficiency_count) || 0) > 0 ? <span style={{ color: 'var(--status-under-contract)', fontWeight: 700 }}>{i.deficiency_count}</span> : <span className="inMuted">—</span> };
-  const notesCol: Column<Inspection> = { key: 'notes', phone: 'hide', header: 'Notes', accessor: i => (i.notes || '').toLowerCase(), render: i => i.notes ? <span className="inClamp" title={i.notes}>{i.notes}</span> : <span className="inMuted">—</span> };
-  const statusCol: Column<Inspection> = { key: 'status', phone: 'show', header: 'Status', accessor: i => (i.status || '').toLowerCase(), render: i => { const b = statusBadge(i.status); return <Badge tone={b.tone}>{b.label}</Badge>; } };
+  const notesCol: Column<Inspection> = { key: 'notes', phone: 'hide', header: 'Notes', accessor: i => i.notes || '', render: i => i.notes ? <span className="inClamp" title={i.notes}>{i.notes}</span> : <span className="inMuted">—</span> };
+  const statusCol: Column<Inspection> = { key: 'status', phone: 'show', header: 'Status', accessor: i => statusBadge(i.status).label, render: i => { const b = statusBadge(i.status); return <Badge tone={b.tone}>{b.label}</Badge>; } };
   const columns: Column<Inspection>[] = detailOpen ? [typeCol, dateCol, resultCol, statusCol] : [typeCol, dateCol, inspectorCol, agencyCol, resultCol, defCol, notesCol, statusCol];
   const isResulted = (i: Inspection) => ['passed', 'failed', 'conditional pass'].includes(canonResult(i.result));
   const rowActions = (i: Inspection): Action[] => [
@@ -495,8 +491,8 @@ export default function InspectionsPage() {
           icon={<ClipboardText size={22} />}
           title="No inspections on record"
           text={pctComplete > 0
-            ? `${ctx?.project?.name || 'This project'} is ${pctComplete}% complete — inspection records are how the work gets signed off. ${suggestedType} is the next milestone in a typical sequence.`
-            : 'Every passed inspection becomes part of the permanent project record — and failed ones are tracked until they re-pass. Schedule the first one to start the log.'}
+            ? `${ctx?.project?.name || 'This project'} is ${pctComplete}% complete. ${suggestedType} is next.`
+            : `${suggestedType} is next.`}
           action={<Button icon={<Plus size={15} weight="bold" />} onClick={() => openCreate()}>Schedule {suggestedType}</Button>}
         />
         {ctx && (
@@ -521,6 +517,9 @@ export default function InspectionsPage() {
         defaultSort={{ key: 'date', dir: 'desc' }}
         onRowClick={i => setSelectedId(i.id)}
         rowActions={rowActions}
+        tableId="project-inspections"
+        exportName="inspections"
+        isSelected={isSel}
         empty={<EmptyState icon={<ClipboardText size={22} />} title="No inspections match these filters" text="Clear the search, result, or type filter to see more." action={<Button onClick={clearFilters}>Clear Filters</Button>} />}
       />
     );
@@ -536,7 +535,7 @@ export default function InspectionsPage() {
           { label: 'Inspections' },
         ]}
         title="Inspections"
-        subtitle="Building inspections and approval records — failures stay flagged until they re-pass."
+        subtitle="Inspections, results and re-inspections."
         actions={<Button variant="primary" icon={<Plus size={15} weight="bold" />} onClick={() => openCreate()}>Schedule Inspection</Button>}
       >
         {!loadError && <StatRow items={stats} />}
@@ -572,57 +571,48 @@ export default function InspectionsPage() {
         open={showForm}
         onClose={closeComposer}
         title="Schedule Inspection"
-        subtitle={ctx?.project?.name ? `${ctx.project.name} · saved as Scheduled with the inspector and agency of record.` : 'Saved as Scheduled with the inspector and agency of record.'}
+        subtitle={[
+          ctx?.project?.name,
+          ctx ? `${pctComplete}% complete` : null,
+          `${inspections.length} held`,
+          resulted > 0 ? `${passRate}% pass rate` : null,
+          ctx ? `${openPunch} open punch` : null,
+          lastRecord ? `Last: ${lastRecord.type} ${fmtDate(lastRecord.date)} (${resultBadge(lastRecord.result).label})` : null,
+        ].filter(Boolean).join(' · ')}
         onSubmit={async () => { await handleSave(); }}
         submitLabel="Schedule Inspection"
         busy={saving}
         error={errorMsg || null}
       >
         {awaitingReinspection.length > 0 && (
-          <div className="inWarn" role="status">
-            <ArrowsClockwise size={16} weight="bold" />
-            <div>
-              {awaitingReinspection.length} failed inspection{awaitingReinspection.length === 1 ? '' : 's'} awaiting re-inspection:{' '}
-              {awaitingReinspection.slice(0, 3).map(f => (
-                <button key={f.id} type="button" onClick={() => openCreate(f.type)}>{f.type} (failed {fmtDate(f.date)})</button>
+          <div className="inWarn">
+            <Callout
+              tone="danger"
+              icon={<ArrowsClockwise size={16} weight="bold" />}
+              title={`${awaitingReinspection.length} failed inspection${awaitingReinspection.length === 1 ? '' : 's'} awaiting re-inspection`}
+              actions={awaitingReinspection.slice(0, 3).map(f => (
+                <Button key={f.id} size="sm" onClick={() => openCreate(f.type)}>{f.type} (failed {fmtDate(f.date)})</Button>
               ))}
-            </div>
-          </div>
-        )}
-        {ctx && (
-          <div className="inLadder">
-            <InsightRow label="Project" value={`${pctComplete}% complete`} />
-            <InsightRow label="Inspections Held" value={String(inspections.length)} />
-            <InsightRow label="Pass Rate" value={resulted > 0 ? `${passRate}%` : '—'} />
-            <InsightRow label="Open Punch Items" value={String(openPunch)} />
-            {lastRecord && <InsightRow label="Last Inspection" value={`${lastRecord.type} · ${fmtDate(lastRecord.date)} · ${resultBadge(lastRecord.result).label}`} />}
+            />
           </div>
         )}
         <FormGrid cols={2}>
-          <Field label="Inspection Type" required hint={<>{auto.type && <AutoChip />} {passedTypes.size > 0 ? `${passedTypes.size} of ${INSPECTION_TYPES.length} milestone types passed — ${suggestedType} is next.` : 'Typical sequence runs Foundation through Final Building.'}</>}>
+          <Field label="Inspection Type" required hint={passedTypes.size > 0 ? `${passedTypes.size} of ${INSPECTION_TYPES.length} passed — ${suggestedType} is next.` : undefined}>
             <Select value={form.type} onChange={e => setForm(p => ({ ...p, type: e.target.value }))} options={INSPECTION_TYPES} />
           </Field>
-          <Field label="Date" required hint={<>{auto.date && <AutoChip />} Defaulted to today — most agencies need 24–48h notice.</>}>
+          <Field label="Date" required hint={auto.date ? 'Defaulted to today.' : undefined}>
             <div className="inDateInput"><SaguaroDatePicker value={form.date} onChange={v => setForm(p => ({ ...p, date: v }))} style={DATE_INPUT_STYLE} /></div>
           </Field>
-          <Field label="Inspector" required hint={<>{auto.insp && <AutoChip />} {auto.insp ? `Carried from the last inspection (${fmtDate(lastRecord?.date)}).` : 'Who performs the inspection.'}</>}>
+          <Field label="Inspector" required hint={auto.insp ? `From the last inspection (${fmtDate(lastRecord?.date)}).` : undefined}>
             <Suggest className="k-input" type="text" value={form.inspector} onChange={e => { setForm(p => ({ ...p, inspector: e.target.value })); if (errorMsg) setErrorMsg(''); }} options={inspections.map((i) => i.inspector || '').filter(Boolean)} placeholder="Inspector name" />
           </Field>
-          <Field label="Agency" hint={<>{auto.agency && <AutoChip />} {auto.agency ? 'Same authority as the last inspection.' : 'The authority having jurisdiction.'}</>}>
+          <Field label="Agency" hint={auto.agency ? 'From the last inspection.' : undefined}>
             <Suggest className="k-input" type="text" value={form.agency} onChange={e => setForm(p => ({ ...p, agency: e.target.value }))} placeholder="e.g. City of Phoenix" options={inspections.map((i) => i.agency || '').filter(Boolean)} />
           </Field>
-          <Field label="Notes" span hint="Anything the inspector needs on arrival.">
+          <Field label="Notes" span>
             <Input value={form.notes} onChange={e => setForm(p => ({ ...p, notes: e.target.value }))} placeholder="Gate code, area under inspection, permit reference…" />
           </Field>
         </FormGrid>
-        <div style={{ marginTop: 16 }}>
-          <FlowSteps title="After You Schedule" steps={[
-            { title: 'Inspection Is on the Calendar', desc: 'Saved as Scheduled with the inspector and agency of record.' },
-            { title: 'Record the Result', desc: 'Pass, fail, or conditional — checklist deficiencies are counted per inspection.' },
-            { title: 'Failures Queue a Re-Inspection', desc: 'A failed type stays flagged here until a later inspection of that type passes.' },
-            { title: 'Records Feed Closeout', desc: 'Passed finals roll into the project closeout package.' },
-          ]} />
-        </div>
       </FormModal>
 
       {/* ── Record Result ── */}
