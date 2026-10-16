@@ -153,12 +153,24 @@ export async function GET(req: NextRequest) {
       };
     }), { pendingAmt: 0, approvedAmt: 0, rejectedAmt: 0, pendingCount: 0 }),
 
-    /* upcoming-deadlines (merge submittals + rfis + punch) */
+    /* upcoming-deadlines (merge submittals + rfis + punch). Each source is
+       read only for a role that may view its module (lib/items/registry:
+       RFIs → RFIs, Submittals → Submittals, punch → Projects). It used to
+       hand every signed-in user the titles of RFIs and submittals their role
+       cannot open — the same leak the rfi-tracker and submittal-status
+       widgets above were already closed against. */
     guard(async () => {
+      const none = Promise.resolve({ data: [] as any[] });
       const [{ data: subs }, { data: rfis }, { data: punch }] = await Promise.all([
-        db.from('submittals').select('title, due_date').eq('tenant_id', t).gte('due_date', today).order('due_date', { ascending: true }).limit(6),
-        db.from('rfis').select('subject, due_date').eq('tenant_id', t).gte('due_date', today).order('due_date', { ascending: true }).limit(6),
-        db.from('punch_list').select('description, due_date').eq('tenant_id', t).gte('due_date', today).order('due_date', { ascending: true }).limit(6),
+        can('Submittals')
+          ? db.from('submittals').select('title, due_date').eq('tenant_id', t).gte('due_date', today).order('due_date', { ascending: true }).limit(6)
+          : none,
+        can('RFIs')
+          ? db.from('rfis').select('subject, due_date').eq('tenant_id', t).gte('due_date', today).order('due_date', { ascending: true }).limit(6)
+          : none,
+        can('Projects')
+          ? db.from('punch_list').select('description, due_date').eq('tenant_id', t).gte('due_date', today).order('due_date', { ascending: true }).limit(6)
+          : none,
       ]);
       const merged = [
         ...(subs || []).map(r => ({ date: String(r.due_date), title: r.title || 'Submittal', type: 'Submittal' })),

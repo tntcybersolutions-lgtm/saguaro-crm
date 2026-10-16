@@ -40,7 +40,7 @@ export async function GET(_req: NextRequest) {
     }),
     guard(async () => {
       const { count } = await db.from('lien_waivers').select('id', { count: 'exact', head: true })
-        .eq('tenant_id', t).eq('status', 'pending');
+        .eq('tenant_id', t).eq('status', 'pending').is('deleted_at', null);
       return count || 0;
     }),
     guard(async () => {

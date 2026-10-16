@@ -1,0 +1,132 @@
+/**
+ * Proves the database's role check (rbac.permission_level_for, used by every
+ * role_gate_* RLS policy) and the app's role check (getEffectivePermissions in
+ * lib/permissions.ts, used by every API route) give the SAME answer.
+ *
+ * Run:
+ *   npx -y tsx tools/rls-permission-parity.ts <fixture.json> <sql-output.txt>
+ *
+ * fixture.json — the live inputs, exported read-only:
+ *   select json_build_object(
+ *     'profiles',    (select json_agg(json_build_object('id', id, 'role', role, 'tenant_id', tenant_id) order by id) from profiles),
+ *     'assignments', (select json_agg(json_build_object('user_id', user_id, 'tenant_id', tenant_id, 'role_id', role_id, 'project_id', project_id) order by id) from user_role_assignments),
+ *     'roles',       (select json_agg(json_build_object('id', id, 'tenant_id', tenant_id, 'permissions', permissions) order by id) from role_definitions)
+ *   )::text;
+ *
+ * sql-output.txt — what rbac.permission_level_for returned for the same
+ * inputs, from the rolled-back parity script (docs in the PR). Tokens:
+ *   u:<user>:<project|->:<12 digits>   every real user, no project / each scoped project / an unrelated one
+ *   r<n>:<12 digits>                   every stored role, alone, as a global grant to a non-admin member
+ *   multi / foreign / proj-none / proj-P / proj-Q   edge cases (see buildCases)
+ *   meta:<foreman>,<sub>,<super>,<foreignRole>,<P>,<Q>
+ * Digits are levels (0 None, 1 View, 2 Edit, 3 Full) in CATEGORIES order.
+ *
+ * The TS side runs the REAL getEffectivePermissions() against an in-memory
+ * stand-in for the three tables it reads, so nothing here re-implements it.
+ * Exit 0 = every case agrees.
+ */
+import fs from 'node:fs';
+
+type Profile = { id: string; role: string | null; tenant_id: string | null };
+type Assignment = { user_id: string; tenant_id: string; role_id: string | null; project_id: string | null };
+type Role = { id: string; tenant_id: string; permissions: unknown };
+type Fixture = { profiles: Profile[]; assignments: Assignment[]; roles: Role[] };
+
+/* lib/permissions → lib/supabase-server refuses to load without these. The stub
+   db below is passed in explicitly, so no client is ever created from them. */
+process.env.NEXT_PUBLIC_SUPABASE_URL ||= 'https://parity.invalid';
+process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY ||= 'parity';
+process.env.SUPABASE_SERVICE_ROLE_KEY ||= 'parity';
+
+/** Just enough of the supabase-js query builder for getEffectivePermissions. */
+function stubDb(tables: Record<string, Record<string, unknown>[]>) {
+  return {
+    from(table: string) {
+      let rows = [...(tables[table] ?? [])];
+      const q = {
+        select() { return q; },
+        eq(col: string, v: unknown) { rows = rows.filter((r) => r[col] === v); return q; },
+        in(col: string, vs: unknown[]) { rows = rows.filter((r) => vs.includes(r[col])); return q; },
+        maybeSingle() { return Promise.resolve({ data: rows[0] ?? null, error: null }); },
+        then(res: (v: { data: unknown[]; error: null }) => unknown, rej?: (e: unknown) => unknown) {
+          return Promise.resolve({ data: rows, error: null }).then(res, rej);
+        },
+      };
+      return q;
+    },
+  };
+}
+
+async function main() {
+  const [fixturePath, sqlPath] = process.argv.slice(2);
+  if (!fixturePath || !sqlPath) {
+    console.error('usage: tsx tools/rls-permission-parity.ts <fixture.json> <sql-output.txt>');
+    process.exit(2);
+  }
+  const { getEffectivePermissions, CATEGORIES } = await import('../lib/permissions');
+  const fx: Fixture = JSON.parse(fs.readFileSync(fixturePath, 'utf8'));
+  const tokens = fs.readFileSync(sqlPath, 'utf8').trim().split(/\s+/);
+  const RANK: Record<string, number> = { None: 0, View: 1, Edit: 2, Full: 3 };
+
+  const meta = tokens.find((t) => t.startsWith('meta:'))!.slice(5).split(',');
+  const [rFore, rSub, rSup, rForeign, P, Q] = meta;
+  const SAG = '692d8793-4d9f-4c43-a935-bf56cc637553';
+
+  async function tsDigits(profiles: Profile[], assignments: Assignment[], userId: string, projectId: string | null) {
+    const db = stubDb({
+      profiles: profiles as unknown as Record<string, unknown>[],
+      user_role_assignments: assignments as unknown as Record<string, unknown>[],
+      role_definitions: fx.roles as unknown as Record<string, unknown>[],
+    });
+    const prof = profiles.find((p) => p.id === userId);
+    const tenantId = prof?.tenant_id || userId; // getTenant(): profiles.tenant_id || user.id
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    const perms = await getEffectivePermissions(db as any, userId, tenantId, projectId);
+    return CATEGORIES.map((c) => String(RANK[perms[c]])).join('');
+  }
+
+  let checked = 0;
+  let failed = 0;
+  const report = (name: string, sql: string, ts: string) => {
+    checked++;
+    if (sql !== ts) {
+      failed++;
+      console.error(`FAIL ${name}: sql=${sql} ts=${ts}`);
+    }
+  };
+
+  // 1) Every real user, every project context the SQL side evaluated.
+  for (const t of tokens.filter((x) => x.startsWith('u:'))) {
+    const [, user, proj, digits] = t.split(':');
+    report(`user ${user.slice(0, 8)} @ ${proj === '-' ? 'no project' : proj.slice(0, 8)}`, digits,
+      await tsDigits(fx.profiles, fx.assignments, user, proj === '-' ? null : proj));
+  }
+
+  // 2) Every stored role, alone, global, to a non-admin member of its tenant.
+  const X = 'parity-x';
+  for (let i = 0; i < fx.roles.length; i++) {
+    const tok = tokens.find((x) => x.startsWith(`r${i + 1}:`));
+    if (!tok) { failed++; console.error(`FAIL role #${i + 1}: no SQL result`); continue; }
+    const rd = fx.roles[i];
+    report(`role ${rd.id.slice(0, 8)}`, tok.split(':')[1], await tsDigits(
+      [{ id: X, role: 'member', tenant_id: rd.tenant_id }],
+      [{ user_id: X, tenant_id: rd.tenant_id, role_id: rd.id, project_id: null }], X, null));
+  }
+
+  // 3) Edge cases.
+  const member = (id: string): Profile => ({ id, role: 'member', tenant_id: SAG });
+  const edge = (name: string) => tokens.find((x) => x.startsWith(`${name}:`))!.split(':')[1];
+  report('two global roles, highest wins', edge('multi'), await tsDigits([member('y')],
+    [{ user_id: 'y', tenant_id: SAG, role_id: rFore, project_id: null }, { user_id: 'y', tenant_id: SAG, role_id: rSub, project_id: null }], 'y', null));
+  report("grant to another company's role", edge('foreign'), await tsDigits([member('w')],
+    [{ user_id: 'w', tenant_id: SAG, role_id: rForeign, project_id: null }], 'w', null));
+  const zA: Assignment[] = [{ user_id: 'z', tenant_id: SAG, role_id: rSup, project_id: P }];
+  report('project-only grant, no project asked', edge('proj-none'), await tsDigits([member('z')], zA, 'z', null));
+  report('project-only grant, that project', edge('proj-P'), await tsDigits([member('z')], zA, 'z', P));
+  report('project-only grant, another project', edge('proj-Q'), await tsDigits([member('z')], zA, 'z', Q));
+
+  console.log(`${checked} cases x ${CATEGORIES.length} categories compared; ${failed} disagree.`);
+  process.exit(failed ? 1 : 0);
+}
+
+main().catch((e) => { console.error(e); process.exit(1); });

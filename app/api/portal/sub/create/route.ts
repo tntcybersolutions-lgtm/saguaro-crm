@@ -5,6 +5,7 @@ import { randomUUID } from 'crypto';
 import { must } from '@/lib/db-write';
 import { apiError } from '@/lib/api-error';
 import { orValue } from '@/lib/pg-filter';
+import { subPortalExpiry } from '@/lib/sub-portal-expiry';
 
 export const dynamic = 'force-dynamic';
 
@@ -158,8 +159,10 @@ export async function POST(req: NextRequest) {
         sub_email: inviteEmail || null,
         token,
         status:     'active',
+        // Good for 90 days; each resend restarts the clock (lib/sub-portal-expiry).
+        expires_at: subPortalExpiry(),
         created_by: user.id,
-      })
+      } as never)
       .select()
       .single();
 

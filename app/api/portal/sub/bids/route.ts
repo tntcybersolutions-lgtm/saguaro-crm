@@ -43,7 +43,7 @@ async function authenticateSubPortal(req: NextRequest) {
   const { data: session } = await db
     .from('portal_sub_sessions')
     .select('*')
-    .eq('token', token)
+    .eq('token', token).gt('expires_at', new Date().toISOString())
     .eq('status', 'active')
     .maybeSingle();
 

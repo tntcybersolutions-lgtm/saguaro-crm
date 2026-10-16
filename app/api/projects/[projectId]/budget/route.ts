@@ -56,7 +56,7 @@ export async function GET(req: NextRequest, { params }: { params: { projectId: s
     // the line.
     const norm = (c: unknown) => String(c ?? '').trim().toLowerCase();
     const [cm, bli, po, bl, primeQ, cosQ, propQ] = await Promise.all([
-      supabase.from('commitments').select('budget_line_item_id, csi_division, original_amount, approved_changes, current_amount, status, bid_package_id').eq('project_id', params.projectId).eq('tenant_id', user.tenantId),
+      supabase.from('commitments').select('budget_line_id, budget_line_item_id, csi_division, original_amount, approved_changes, current_amount, status, bid_package_id').eq('project_id', params.projectId).eq('tenant_id', user.tenantId),
       supabase.from('budget_line_items').select('id, cost_code, csi_division').eq('project_id', params.projectId).eq('tenant_id', user.tenantId),
       supabase.from('purchase_orders').select('cost_code, total, status, notes').eq('project_id', params.projectId).eq('tenant_id', user.tenantId),
       supabase.from('bills').select('cost_code, total, amount, status').eq('project_id', params.projectId).eq('tenant_id', user.tenantId),
@@ -98,11 +98,16 @@ export async function GET(req: NextRequest, { params }: { params: { projectId: s
     const DEAD = new Set(['void', 'voided', 'cancelled', 'canceled', 'rejected', 'draft']);
     const committedByLine = new Map<string, number>();
     const add = (m: Map<string, number>, id: string | null, amt: number) => { if (id && amt) m.set(id, (m.get(id) || 0) + amt); };
-    ((cm.data ?? []) as { budget_line_item_id: string | null; csi_division: string | null; original_amount: number | null; approved_changes: number | null; current_amount: number | null; status: string | null; bid_package_id: string | null }[])
+    /* An award's commitment now carries budget_line_id (set by the
+       on_bid_awarded trigger with this same code → description → division
+       rule); it wins when it names a line on this budget. */
+    const lineIds = new Set(((data ?? []) as { id: string }[]).map((l) => l.id));
+    ((cm.data ?? []) as { budget_line_id?: string | null; budget_line_item_id: string | null; csi_division: string | null; original_amount: number | null; approved_changes: number | null; current_amount: number | null; status: string | null; bid_package_id: string | null }[])
       .filter((c) => !DEAD.has(norm(c.status)))
       .forEach((c) => {
         const item = c.budget_line_item_id ? lineItem.get(c.budget_line_item_id) : undefined;
-        const lineId = (item && (findLine(item.cost_code) || findLine(item.csi_division)))
+        const lineId = (c.budget_line_id && lineIds.has(c.budget_line_id) ? c.budget_line_id : null)
+          || (item && (findLine(item.cost_code) || findLine(item.csi_division)))
           || findLine(c.csi_division)
           || (c.bid_package_id ? findLine(twinCode.get(c.bid_package_id)) : null);
         const amt = Number(c.current_amount) || (Number(c.original_amount) || 0) + (Number(c.approved_changes) || 0);

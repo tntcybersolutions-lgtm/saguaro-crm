@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from 'next/server';
 import { createServerClient, getUser } from '@/lib/supabase-server';
 import { sendClientPortalInvite, sendSubPortalInvite } from '@/lib/email';
 import { apiError } from '@/lib/api-error';
+import { subPortalExpiry } from '@/lib/sub-portal-expiry';
 
 export const dynamic = 'force-dynamic';
 
@@ -93,6 +94,18 @@ export async function POST(req: NextRequest) {
       if (!to) {
         return NextResponse.json({ error: 'No email address found for this subcontractor' }, { status: 400 });
       }
+      // A revoked link stays revoked — resending it would mail a dead link.
+      if (s.status !== 'active') {
+        return NextResponse.json({ error: 'This portal link was turned off. Send the sub a new invite instead.' }, { status: 409 });
+      }
+      /* Reissue: the link the sub gets is good for another 90 days from now,
+         including one that had already expired. */
+      const { error: expErr } = await db
+        .from('portal_sub_sessions')
+        .update({ expires_at: subPortalExpiry() } as never)
+        .eq('id', sessionId)
+        .eq('tenant_id', user.tenantId);
+      if (expErr) throw expErr;
 
       const mail = await sendSubPortalInvite({
         to,

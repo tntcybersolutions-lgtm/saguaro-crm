@@ -108,15 +108,18 @@ export async function onPayAppSubmitted(payAppId: string): Promise<void> {
     const project = pa.projects;
     if (!project) return;
 
+    /* The owner has no Saguaro login, so their link is the token review page
+       (lib/pay-app-status issues the token on submit). It used to link the
+       GC's own screen, which the owner cannot open. */
     const owner = ownerContact(project);
-    if (owner.email) {
+    if (owner.email && pa.owner_approval_token) {
       await sendPayAppSubmitted(
         owner.email,
         owner.name,
         project.name,
         pa.app_number,
         pa.current_payment_due || 0,
-        `${APP_URL}/app/projects/${project.id}/pay-apps/${payAppId}`
+        `${APP_URL}/portals/owner/${encodeURIComponent(String(pa.owner_approval_token))}`
       );
     }
 

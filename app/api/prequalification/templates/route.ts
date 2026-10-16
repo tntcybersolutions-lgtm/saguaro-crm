@@ -25,7 +25,7 @@ const UUID_RE =
   /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
 
 export async function POST(req: NextRequest) {
-  const g = await requirePermission(req, 'Safety', 'Edit');
+  const g = await requirePermission(req, 'Projects', 'Edit');
   if (!g.ok) return g.res;
   const user = g.user;
   try {

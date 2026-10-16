@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from 'next/server';
 import { createServerClient, getUser } from '@/lib/supabase-server';
 import { sendSubPortalInvite } from '@/lib/email';
 import { apiError } from '@/lib/api-error';
+import { subPortalExpiry } from '@/lib/sub-portal-expiry';
 
 export const dynamic = 'force-dynamic';
 
@@ -64,6 +65,16 @@ export async function POST(req: NextRequest) {
     const portalUrl = pu.token
       ? `${APP_URL}/portals/sub/${pu.token}`
       : `${APP_URL}/portals/sub/login`;
+    // Re-sending a link reissues it for another 90 days (lib/sub-portal-expiry).
+    if (pu.token) {
+      const { error: expErr } = await db
+        .from('portal_sub_sessions')
+        .update({ expires_at: subPortalExpiry() } as never)
+        .eq('token', String(pu.token))
+        .eq('tenant_id', user.tenantId)
+        .eq('status', 'active');
+      if (expErr) throw expErr;
+    }
 
     const mail = await sendSubPortalInvite({
       to,

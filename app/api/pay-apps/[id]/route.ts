@@ -5,8 +5,7 @@ import { toCents, toDollars, percentOf, subCents, computePayApp } from '@/lib/ca
 import { must } from '@/lib/db-write';
 import { apiError } from '@/lib/api-error';
 import { retainageLedger, retainageRate } from '@/lib/retainage';
-import { onPayAppApproved } from '@/lib/triggers';
-import { runInBackground } from '@/lib/background';
+import { transitionPayAppStatus, isPayAppStatus } from '@/lib/pay-app-status';
 
 export async function GET(req: NextRequest, { params }: { params: Promise<{ id: string }> }) {
   const { id } = await params;
@@ -323,40 +322,46 @@ export async function PATCH(req: NextRequest, { params }: { params: Promise<{ id
     for (const k of Object.keys(columnMap)) {
       if (body[k] !== undefined) updates[columnMap[k]] = body[k];
     }
-    if (Object.keys(updates).length === 0) {
+    /* A status sent here is a real transition, not a label. It goes through
+       lib/pay-app-status — the same stamps (submitted_at, approved_at,
+       certified_at, payment_received_at) and the same cascades (owner email,
+       lien waivers, certify notice, payment) as the dedicated endpoints. It
+       used to be written straight onto the row, so a status set here skipped
+       every one of them except the approval cascade. */
+    const wantStatus = updates.status;
+    delete updates.status;
+    if (wantStatus === undefined && Object.keys(updates).length === 0) {
       return NextResponse.json({ success: true });
     }
 
-    /* A status written here is still an approval. The register's bulk
-       Approve used this PATCH, so an app approved that way got no
-       approved_at and no conditional lien waivers — the approval cascade
-       only ran from POST /approve. Moving INTO approved now runs the same
-       cascade (it skips subs that already hold a waiver for this app). */
-    let becameApproved = false;
-    if (typeof updates.status === 'string') {
-      updates.status = String(updates.status).toLowerCase();
-      if (updates.status === 'approved') {
-        // Approving takes the same permission as POST /approve.
+    let data: unknown = null;
+    if (Object.keys(updates).length > 0) {
+      const res = await db
+        .from('pay_applications')
+        .update(updates)
+        .eq('id', id)
+        .eq('tenant_id', user.tenantId)
+        .select()
+        .single();
+      if (res.error) throw res.error;
+      data = res.data;
+    }
+    if (wantStatus !== undefined) {
+      const to = String(wantStatus ?? '').toLowerCase();
+      if (!isPayAppStatus(to)) return NextResponse.json({ error: `status must be one of: draft, submitted, approved, certified, paid, rejected` }, { status: 400 });
+      // Approving, certifying and paying take the same permission as their endpoints.
+      if (to === 'approved' || to === 'certified' || to === 'paid') {
         const full = await requirePermission(req, 'Pay Apps', 'Full');
         if (!full.ok) return full.res;
-        const { data: before, error: bErr } = await db
-          .from('pay_applications').select('status').eq('id', id).eq('tenant_id', user.tenantId).maybeSingle();
-        if (bErr) throw bErr;
-        if (!before) return NextResponse.json({ error: 'Not found' }, { status: 404 });
-        becameApproved = String((before as { status?: string | null }).status || '') !== 'approved';
-        if (becameApproved) updates.approved_at = new Date().toISOString();
       }
+      const r = await transitionPayAppStatus(db, user.tenantId, id, to, {
+        actorId: user.id,
+        overrideWaivers: body.overrideWaivers === true,
+        note: typeof body.note === 'string' ? body.note : null,
+      });
+      if (!r.ok) return NextResponse.json({ error: r.error, ...r.extra }, { status: r.status });
+      data = r.payApp;
     }
-
-    const { data, error } = await db
-      .from('pay_applications')
-      .update(updates)
-      .eq('id', id)
-      .eq('tenant_id', user.tenantId)
-      .select()
-      .single();
-    if (error) throw error;
-    if (becameApproved) runInBackground(onPayAppApproved(id), 'onPayAppApproved');
     return NextResponse.json({ payApp: data });
   } catch (e) {
     return apiError('pay-apps/[id] PATCH', e, "Couldn't save the pay application. Please try again.");

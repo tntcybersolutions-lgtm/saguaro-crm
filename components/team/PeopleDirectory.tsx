@@ -2,12 +2,16 @@
 /**
  * People / HR (web) — tenant employee roster + full employee record: contact & pay,
  * certifications, specialties, project assignments, and incident/warning history.
- * Reads/writes go through the RLS-scoped browser Supabase client (auto_set_tenant_id
- * trigger stamps the tenant). Mirrors the iOS People module.
+ *
+ * The roster list reads the browser-safe columns straight from Supabase. The
+ * full record, and every change to a person, goes through /api/team/employees:
+ * pay and home details are no longer readable or writable from the browser
+ * (20261016f_employees_private_columns.sql), and the server returns them only
+ * to Admin: View or to the person themselves.
  */
 import { useEffect, useMemo, useState, useCallback } from 'react';
 import SaguaroDatePicker from '@/components/SaguaroDatePicker';
-import { getSupabaseBrowser } from '@/lib/supabase-browser';
+import { getAuthHeaders, getSupabaseBrowser } from '@/lib/supabase-browser';
 import { UsersThree, Plus, PencilSimple, Trash, X, SealCheck, Warning, Star, FirstAid, Eye, ChatDots, Folder, CurrencyDollar, Phone, Envelope, MapPin, Briefcase, CaretLeft } from '@phosphor-icons/react';
 import { ListToolbar } from '@/components/ui/ListToolbar';
 
@@ -21,15 +25,6 @@ const INC_TYPES = [
   { v: 'injury', l: 'Injury', c: RED, I: FirstAid }, { v: 'near_miss', l: 'Near Miss', c: AMBER, I: Eye }, { v: 'commendation', l: 'Commendation', c: GREEN, I: Star },
 ];
 const incMeta = (t: string) => INC_TYPES.find((x) => x.v === t) ?? INC_TYPES[1];
-// Never show a raw Postgres message (it names tables/columns/constraints). Log the
-// real error for support and give the user words they can act on.
-const friendlyDbError = (err: { code?: string; message?: string } | null, fallback: string) => {
-  if (err) console.error('[people] save failed', err);
-  if (err?.code === '23505') return 'Someone with these details is already on your roster.';
-  if (err?.code === '42501') return "You don't have permission to change the crew roster.";
-  if (err?.code === '23502') return 'A required field is missing — check the name fields and try again.';
-  return fallback;
-};
 const fmtDate = (s: string | null) => { if (!s) return ''; const d = new Date(s); return isNaN(d.getTime()) ? String(s) : d.toLocaleDateString(undefined, { month: 'short', day: 'numeric', year: 'numeric' }); };
 
 export function PeopleDirectory() {
@@ -51,6 +46,35 @@ export function PeopleDirectory() {
   const [f, setF] = useState<any>({});
   const [inc, setInc] = useState<any>({ incident_type: 'incident', severity: 'low', occurred_at: new Date().toISOString().slice(0, 10) });
 
+  /* The full record, pay included when this user may see it. */
+  const fetchEmployee = useCallback(async (id: string): Promise<any | null> => {
+    try {
+      const res = await fetch(`/api/team/employees/${encodeURIComponent(id)}`, { headers: await getAuthHeaders(), credentials: 'same-origin', cache: 'no-store' });
+      if (!res.ok) { console.error('[people] record load failed', res.status); return null; }
+      const j = await res.json();
+      return j?.employee ? { ...j.employee, _canSeePay: !!j.canSeePay } : null;
+    } catch (err) {
+      console.error('[people] record load failed', err);
+      return null;
+    }
+  }, []);
+
+  /* Every change to a person goes through the server (Admin: Edit). */
+  const writeEmployee = async (path: string, method: 'POST' | 'PATCH', payload: any): Promise<{ id?: string; error?: string }> => {
+    try {
+      const res = await fetch(path, { method, headers: { ...(await getAuthHeaders()), 'Content-Type': 'application/json' }, credentials: 'same-origin', body: JSON.stringify(payload) });
+      const j = await res.json().catch(() => ({}));
+      if (!res.ok) {
+        console.error('[people] save failed', res.status, j?.ref);
+        return { error: res.status === 403 ? "You don't have permission to change the crew roster." : (j?.error || "Couldn't save that change — nothing was written. Try again.") };
+      }
+      return { id: j?.id };
+    } catch (err) {
+      console.error('[people] save failed', err);
+      return { error: "Couldn't reach the server — nothing was saved. Try again." };
+    }
+  };
+
   const loadRoster = useCallback(async () => {
     const { data } = await sb.from('employees').select('id, first_name, last_name, full_name, title, trade, email, phone, is_active, osha_10_certified, osha_30_certified, forklift_certified').order('first_name');
     setEmps(data ?? []);
@@ -58,13 +82,13 @@ export function PeopleDirectory() {
   useEffect(() => { loadRoster(); sb.from('projects').select('id, name').order('name').then(({ data }) => setProjects(data ?? [])); }, [loadRoster, sb]);
 
   const loadDetail = useCallback(async (id: string) => {
-    const [{ data: e }, { data: a }, { data: i }] = await Promise.all([
-      sb.from('employees').select('*').eq('id', id).maybeSingle(),
+    const [e, { data: a }, { data: i }] = await Promise.all([
+      fetchEmployee(id),
       sb.from('employee_project_assignments').select('id, project_id, active').eq('employee_id', id),
       sb.from('employee_incidents').select('*').eq('employee_id', id).order('occurred_at', { ascending: false }),
     ]);
     setDetail(e); setAssigns(a ?? []); setIncidents(i ?? []);
-  }, [sb]);
+  }, [sb, fetchEmployee]);
   useEffect(() => { if (selId) loadDetail(selId); }, [selId, loadDetail]);
 
   const trades = useMemo(() => Array.from(new Set(emps.map((e) => String(e.trade || '').trim()).filter(Boolean))).sort(), [emps]);
@@ -79,21 +103,20 @@ export function PeopleDirectory() {
   const addEmp = async () => {
     if (!f.first_name?.trim() && !f.last_name?.trim()) { setSaveErr('Enter a first or last name.'); return; }
     setSaveErr(null);
-    // full_name is GENERATED ALWAYS (first_name || ' ' || last_name) — never write it.
-    // first_name/last_name are NOT NULL, so a missing half is stored as ''.
-    // tenant_id is stamped by the auto_set_tenant_id trigger; RLS scopes the rest.
-    const { data, error } = await sb.from('employees').insert({ first_name: f.first_name?.trim() || '', last_name: f.last_name?.trim() || '', title: f.title || null, trade: f.trade || null, email: f.email || null, phone: f.phone || null, employment_type: f.employment_type || 'hourly', regular_rate: parseFloat(f.regular_rate) || 0, is_active: true }).select('id').maybeSingle();
-    if (error) { setSaveErr(friendlyDbError(error, "Couldn't add this person — nothing was saved. Try again.")); return; }
-    setAdding(false); setF({}); await loadRoster(); if (data?.id) setSelId(data.id);
+    // full_name is GENERATED ALWAYS — the server never writes it; a missing name
+    // half is stored as ''. tenant_id comes from the session, server-side.
+    const r = await writeEmployee('/api/team/employees', 'POST', { first_name: f.first_name?.trim() || '', last_name: f.last_name?.trim() || '', title: f.title || null, trade: f.trade || null, email: f.email || null, phone: f.phone || null, employment_type: f.employment_type || 'hourly', regular_rate: parseFloat(f.regular_rate) || 0, is_active: true });
+    if (r.error) { setSaveErr(r.error); return; }
+    setAdding(false); setF({}); await loadRoster(); if (r.id) setSelId(r.id);
   };
   const patch = async (payload: any): Promise<boolean> => {
     if (!selId) return false;
     setSaveErr(null);
-    const { error } = await sb.from('employees').update(payload).eq('id', selId);
-    if (error) { setSaveErr(friendlyDbError(error, "Couldn't save that change — nothing was written. Try again.")); return false; }
+    const r = await writeEmployee(`/api/team/employees/${encodeURIComponent(selId)}`, 'PATCH', payload);
+    if (r.error) { setSaveErr(r.error); return false; }
     await loadDetail(selId); await loadRoster(); return true;
   };
-  const saveEdit = async () => { const ok = await patch({ first_name: f.first_name?.trim() || '', last_name: f.last_name?.trim() || '', title: f.title || null, trade: f.trade || null, email: f.email || null, phone: f.phone || null, address: f.address || null, regular_rate: parseFloat(f.regular_rate) || 0, overtime_rate: parseFloat(f.overtime_rate) || 0, emergency_contact_name: f.emergency_contact_name || null, emergency_contact_phone: f.emergency_contact_phone || null }); if (ok) setEditing(false); };
+  const saveEdit = async () => { const ok = await patch({ first_name: f.first_name?.trim() || '', last_name: f.last_name?.trim() || '', title: f.title || null, trade: f.trade || null, email: f.email || null, phone: f.phone || null, ...(detail?._canSeePay ? { address: f.address || null, regular_rate: parseFloat(f.regular_rate) || 0, overtime_rate: parseFloat(f.overtime_rate) || 0, emergency_contact_name: f.emergency_contact_name || null, emergency_contact_phone: f.emergency_contact_phone || null } : {}) }); if (ok) setEditing(false); };
   const addSpec = async () => { const s = specInput.trim(); if (!s) return; await patch({ specialties: [...specialties, s] }); setSpecInput(''); };
   const addAssign = async (pid: string) => { if (!selId) return; await sb.from('employee_project_assignments').insert({ employee_id: selId, project_id: pid, active: true }); loadDetail(selId); };
   const rmAssign = async (aid: string) => { await sb.from('employee_project_assignments').delete().eq('id', aid); if (selId) loadDetail(selId); };

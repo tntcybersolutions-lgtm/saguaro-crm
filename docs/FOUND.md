@@ -318,3 +318,35 @@ MyWorkView.tsx, /api/my-work (+ jobs, agenda, roles, ?view=mine).
   Kept on purpose: kanban cards (Leads board), dashboard-setup widgets, photo thumbnails, the drawing sheet, chat
   bubbles, the Settings logo drop zone. Job phase tabs: same machined selected pill as the rail.
   The franchise Command Center pages redirect for this company (gated, not broken).
+
+## 16 Oct 2026 — MUST-PASS follow-ups (fix/mustpass-followups) — found, NOT fixed
+
+- `lib/document-templates/g702-generator.ts:322` — dead (nothing imports it); inserts a pay_applications row with
+  no tenant_id inside `catch { /* DB may not have table yet */ }`. Delete the module.
+- `pay-app-workflow.ts` `ownerApproveGetHandler` / `ownerApprovePostHandler` / `submitPayAppHandler` /
+  `recordPaymentHandler` — no longer routed (the catch-all now sends submit / record-payment through
+  lib/pay-app-status); they write `status` directly and use the unused `owner_approvals` table. Delete them.
+- `app/api/pay-apps/[id]/route.ts` DELETE hard-deletes a pay application while every reader filters `deleted_at`;
+  should soft-delete like lien waivers now do.
+- `app/api/compliance/lien-deadlines/route.ts:37` — gated on Safety: Edit, like prequalification was; lien
+  deadlines are sub/compliance work (Projects).
+- `app/app/kit/page.tsx` — the design-system reference page renders sample bids ("Mesa Logistics Center",
+  "Copper State Dev.") and is reachable at /app/kit by any signed-in user. Gate it to platform owners or remove.
+- `app/api/dashboard/widget-metrics/route.ts` `guard()` returns the fallback on ANY error with nothing logged, so a
+  broken widget reads as "no data".
+
+## 16 Oct 2026 — role-aware RLS (fix/role-rls) — found, NOT fixed
+
+- `public.app_user_role()` maps every profiles.role it does not recognize (e.g. 'Salesperson', 'Project Manager')
+  to `'admin'`, so the older `rbac_*` restrictive policies (bills, budgets, invoices, CO, pay apps, role_definitions,
+  api_keys…) treated a Salesperson as an admin. The new `role_gate_*` policies close that on the 51 tables they
+  cover; anything still relying on `app_user_role()` alone (daily_logs, rfis, photos, punch_list_items, drawing_sheets,
+  integrations, tenant_settings, custom_field_definitions, approval_workflows…) still has the hole.
+- `resource_assignments.hourly_rate / cost_rate` — person-level rates readable tenant-wide over REST; not gated.
+- `proposals`, `proposal_lines`, `bids`, `bid_submissions`, `bid_packages` — money columns with tenant-only policies
+  (Sales/Projects data; every current role that can reach them already holds the matching category).
+- `user_role_assignments` SELECT is tenant-wide: every member can list who holds which role (no write path exists).
+- `rbac.permission_level_for` and lib/permissions.ts both ignore `user_role_assignments.project_id` unless a
+  project is asked about — and a user whose ONLY grants are project-scoped falls to memberDefault (View on
+  everything) everywhere else. App Store Review (member, PM on one project) therefore reads every job's money.
+  That is the TS rule, mirrored exactly; it should probably be None, not View, for a scoped-only user.

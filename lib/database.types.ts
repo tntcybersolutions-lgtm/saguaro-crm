@@ -4861,6 +4861,7 @@ export type Database = {
           balance_remaining: number | null
           bid_package_id: string | null
           bid_submission_id: string | null
+          budget_line_id: string | null
           budget_line_item_id: string | null
           change_order_id: string | null
           commitment_number: string | null
@@ -18756,6 +18757,7 @@ export type Database = {
         Row: {
           created_at: string
           created_by: string | null
+          expires_at: string
           id: string
           last_login_at: string | null
           project_id: string | null
@@ -18770,6 +18772,7 @@ export type Database = {
         Insert: {
           created_at?: string
           created_by?: string | null
+          expires_at?: string
           id?: string
           last_login_at?: string | null
           project_id?: string | null
@@ -18784,6 +18787,7 @@ export type Database = {
         Update: {
           created_at?: string
           created_by?: string | null
+          expires_at?: string
           id?: string
           last_login_at?: string | null
           project_id?: string | null

@@ -3,6 +3,7 @@ import { createServerClient } from '@/lib/supabase-server';
 import { checkRateLimit, getClientIP } from '@/lib/rate-limit';
 import { sendSubPortalInvite } from '@/lib/email';
 import { apiError } from '@/lib/api-error';
+import { subPortalExpiry } from '@/lib/sub-portal-expiry';
 
 export const dynamic = 'force-dynamic';
 
@@ -78,7 +79,7 @@ export async function POST(req: NextRequest) {
         ]);
         const gcRow = gc as { company?: string | null; full_name?: string | null } | null;
         try {
-          await sendSubPortalInvite({
+          const mail = await sendSubPortalInvite({
             to: email,
             contactName: (sub?.contact_name as string) || (s.sub_contact_name as string) || '',
             companyName: (sub?.company_name as string) || (s.sub_company as string) || email,
@@ -87,6 +88,14 @@ export async function POST(req: NextRequest) {
             portalUrl: `${appUrl}/portals/sub/${s.token}`,
             isResend: true,
           });
+          /* The link just reached the sub's own inbox, so it is good for
+             another 90 days (lib/sub-portal-expiry). */
+          if (mail?.sent) {
+            const { error: expErr } = await db.from('portal_sub_sessions')
+              .update({ expires_at: subPortalExpiry() } as never)
+              .eq('token', s.token as string).eq('status', 'active');
+            if (expErr) console.error('[portal/sub/lookup] expiry refresh failed', expErr);
+          }
         } catch (e) {
           // One bad send must not stop the others; the person still gets the generic answer.
           console.error('[portal/sub/lookup] send failed', e);

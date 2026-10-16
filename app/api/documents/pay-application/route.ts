@@ -73,13 +73,33 @@ export async function POST(req: NextRequest) {
       storedMaterials: toCents(i.stored_materials ?? i.materials_stored ?? 0),
     }));
 
-    // Compute the schedule of values so the document cross-foots. The computed
-    // totals — not the client/DB-supplied ones — drive the math.
-    const calc = computePayApp({
+    /* With a schedule of values, the SOV is the truth: compute it so the
+       document cross-foots. WITHOUT one (a lump-sum application) there is
+       nothing to compute from — the engine returns $0 for every line, and
+       that $0 used to be printed on the G702 AND written back over the pay
+       app's real money. A lump-sum app prints its own stored figures. */
+    const hasSov = sovLines.length > 0;
+    const sovCalc = computePayApp({
       lines: sovLines,
       retainagePercent,
       previousPaymentsLessRetainage,
     });
+    const storedCompleted = toCents(Number(pa.total_completed_stored ?? pa.total_completed) || 0);
+    const storedRetainage = toCents(Number(pa.total_retainage ?? pa.retainage_amount) || 0);
+    const storedEarned = toCents(Number(pa.total_earned_less_retainage) || 0);
+    const storedPrevCerts = pa.less_previous_certificates != null && String(pa.less_previous_certificates).trim() !== ''
+      ? toCents(Number(pa.less_previous_certificates) || 0)
+      : previousPaymentsLessRetainage;
+    const calc = hasSov ? sovCalc : {
+      ...sovCalc,
+      completedAndStoredTotal: storedCompleted,
+      retainageTotal: storedRetainage,
+      totalEarnedLessRetainage: storedEarned,
+      currentPaymentDue: toCents(Number(pa.current_payment_due) || 0),
+      percentComplete: Number(pa.percent_complete) || 0,
+    };
+    // Line 7 printed on a lump-sum app is the one it was computed with.
+    const printedPrevCerts = hasSov ? previousPaymentsLessRetainage : storedPrevCerts;
 
     // Contract sum to date = original contract sum ± net change orders (rows 1–3
     // of the G702; these are not part of the SOV completed-work math).
@@ -88,9 +108,9 @@ export async function POST(req: NextRequest) {
     const contractSumToDateCents = addCents(contractSumCents, changeOrdersTotalCents);
 
     // Work-completed totals for the G702 4a/4b/4c breakdown lines.
-    const prevCompletedCents = sumCents(sovLines.map((l) => l.fromPrevious));
-    const thisPeriodCents = sumCents(sovLines.map((l) => l.thisPeriod));
-    const materialsStoredCents = sumCents(sovLines.map((l) => l.storedMaterials));
+    const prevCompletedCents = hasSov ? sumCents(sovLines.map((l) => l.fromPrevious)) : toCents(Number(pa.prev_completed) || 0);
+    const thisPeriodCents = hasSov ? sumCents(sovLines.map((l) => l.thisPeriod)) : toCents(Number(pa.this_period) || 0);
+    const materialsStoredCents = hasSov ? sumCents(sovLines.map((l) => l.storedMaterials)) : toCents(Number(pa.stored_materials) || 0);
 
     const g702Bytes = await generateG702({
       projectName: project?.name || '',
@@ -112,7 +132,7 @@ export async function POST(req: NextRequest) {
       retainagePercent,
       retainageAmount: toDollars(calc.retainageTotal),
       totalEarnedLessRetainage: toDollars(calc.totalEarnedLessRetainage),
-      prevPayments: toDollars(previousPaymentsLessRetainage),
+      prevPayments: toDollars(printedPrevCerts),
       // Row 8 = (Total Earned Less Retainage) − (Previous Certificates).
       // The engine subtracts prior payments; the old code emitted the raw DB
       // value, which omitted that subtraction.
@@ -157,24 +177,29 @@ export async function POST(req: NextRequest) {
         { ...source, title: `${label} — G703 continuation` }),
     ]);
 
-    // Update pay app with PDF URLs and the computed (cross-footed) summary so
-    // the stored figures match the issued document. Existing columns only.
-    await must(db.from('pay_applications').update({
-      g702_pdf_url: g702Url,
-      g703_pdf_url: g703Url,
-      total_completed: toDollars(calc.completedAndStoredTotal),
-      percent_complete: calc.percentComplete,
-      retainage_amount: toDollars(calc.retainageTotal),
-      // total_retainage is the column every screen reads first (lib/retainage).
-      total_retainage: toDollars(calc.retainageTotal),
-      total_earned_less_retainage: toDollars(calc.totalEarnedLessRetainage),
-      less_previous_certificates: toDollars(previousPaymentsLessRetainage),
-      current_payment_due: toDollars(calc.currentPaymentDue),
-      /* net_amount_due is NOT a column on pay_applications. Writing it made
-         Postgres reject the whole update with 42703, must() threw, and the
-         empty catch below turned it into a bare 500 — so generating a G702
-         failed every time and left nothing to diagnose it by. */
-    } as unknown as Database['public']['Tables']['pay_applications']['Update']).eq('id', body.payAppId).eq('tenant_id', user.tenantId), 'pay_applications update');
+    /* Generating a document records the document — the PDF links. The money
+       is written only where it can be recomputed from a schedule of values
+       AND the application is still a draft the GC is editing (the same
+       engine PUT /api/pay-apps/[id] uses, so the stored G702 cross-foots
+       with the issued one). A lump-sum app, or one already with the owner
+       or approved, never has its money rewritten by printing it.
+       (net_amount_due is not a column; writing it failed every generation.) */
+    const draft = ['draft', 'rejected'].includes(String(pa.status || 'draft').toLowerCase());
+    const writeBack: Record<string, unknown> = { g702_pdf_url: g702Url, g703_pdf_url: g703Url };
+    if (hasSov && draft) {
+      Object.assign(writeBack, {
+        total_completed: toDollars(calc.completedAndStoredTotal),
+        percent_complete: calc.percentComplete,
+        retainage_amount: toDollars(calc.retainageTotal),
+        // total_retainage is the column every screen reads first (lib/retainage).
+        total_retainage: toDollars(calc.retainageTotal),
+        total_earned_less_retainage: toDollars(calc.totalEarnedLessRetainage),
+        less_previous_certificates: toDollars(previousPaymentsLessRetainage),
+        current_payment_due: toDollars(calc.currentPaymentDue),
+      });
+    }
+    await must(db.from('pay_applications').update(writeBack as unknown as Database['public']['Tables']['pay_applications']['Update'])
+      .eq('id', body.payAppId).eq('tenant_id', user.tenantId), 'pay_applications update');
 
     return NextResponse.json({ g702Url, g703Url, success: true });
   } catch (e) {

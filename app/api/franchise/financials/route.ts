@@ -22,7 +22,7 @@ export async function GET(req: NextRequest) {
     const [{ data: projs }, todosRes, lienRes] = await Promise.all([
       db.from('projects').select('id,name,city,state,contract_value,cost_to_date,percent_complete').eq('tenant_id', user.tenantId).or('is_archived.is.null,is_archived.eq.false'),
       db.from('project_todos').select('project_id,description,status,completed_at').eq('tenant_id', user.tenantId).eq('linked_module', 'phase_checklist'),
-      db.from('lien_waivers').select('id,project_id,status').eq('tenant_id', user.tenantId).then((r: any) => r, () => ({ data: [] })),
+      db.from('lien_waivers').select('id,project_id,status').eq('tenant_id', user.tenantId).is('deleted_at', null).then((r: any) => r, () => ({ data: [] })),
     ]);
 
     // TI readiness = Phase 4 checklist completion per project

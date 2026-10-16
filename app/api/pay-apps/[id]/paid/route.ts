@@ -1,97 +1,37 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { requirePermission } from '@/lib/permissions';
-import { must } from '@/lib/db-write';
 import { apiError } from '@/lib/api-error';
+import { transitionPayAppStatus } from '@/lib/pay-app-status';
 
-/** Mark a pay app PAID — with the two links the old route dropped:
- *  1. GATE: unsigned conditional waivers that block payment stop the action
- *     (override with body.overrideWaivers = true, which is returned in the result).
- *  2. CASCADE: payment converts the period's waiver obligation — unconditional
- *     partial waivers are generated for every sub whose conditional was signed. */
+/** Mark a pay app PAID. The waiver gate (unsigned conditionals hold the
+ *  payment unless body.overrideWaivers), payment_received_at, the prime
+ *  contract's paid_amount and the unconditional waivers all live in
+ *  lib/pay-app-status, so a payment recorded any other way does the same. */
 export async function POST(req: NextRequest, { params }: { params: Promise<{ id: string }> }) {
   const g = await requirePermission(req, 'Pay Apps', 'Full');
   if (!g.ok) return g.res;
   const user = g.user;
   const { id } = await params;
   try {
-    const db = g.db;
-    const body = await req.json().catch(() => ({} as { overrideWaivers?: boolean }));
-
-    // ── Waiver gate ──
-    const { data: waivers, error: waiverErr } = await db
-      .from('lien_waivers')
-      .select('id, sub_id, status, amount, blocks_payment, claimant_name, company_name')
-      .eq('pay_application_id', id)
-      .eq('tenant_id', user.tenantId);
-    /* A failed read must stop the payment, not wave it through: with no rows
-       the gate saw no unsigned waivers and marked the pay app paid. */
-    if (waiverErr) throw waiverErr;
-    const blocking = (waivers || []).filter(
-      (w: { status: string | null; blocks_payment: boolean | null }) =>
-        w.blocks_payment !== false && (w.status === 'pending' || w.status === 'sent'),
-    );
-    if (blocking.length > 0 && !body.overrideWaivers) {
-      return NextResponse.json({
-        error: `Payment hold — ${blocking.length} lien waiver${blocking.length === 1 ? '' : 's'} not signed yet.`,
-        waiverBlock: true,
-        pending: blocking.map((w: { company_name: string | null; claimant_name: string | null; amount: number | null }) => ({
-          name: w.company_name || w.claimant_name || 'Sub', amount: w.amount,
-        })),
-      }, { status: 409 });
-    }
-
-    const { data: pa, error } = await db
-      .from('pay_applications')
-      .update({ status: 'paid', payment_received_at: new Date().toISOString() })
-      .eq('id', id)
-      .eq('tenant_id', user.tenantId)
-      .select('id, project_id, app_number, period_to, current_payment_due')
-      .single();
-    if (error) throw error;
-
-    // ── Payment cascade (1): the prime contract's paid_amount tracks reality ──
-    const paDue = Number((pa as { current_payment_due: number | null }).current_payment_due) || 0;
-    if (paDue > 0) {
-      // paid_amount exists in the LIVE schema (migration 017) — the generated
-      // types predate it, hence the unknown casts.
-      const { data: prime, error: primeErr } = await db
-        .from('contracts')
-        .select('id, paid_amount, invoiced_amount')
-        .eq('tenant_id', user.tenantId)
-        .eq('project_id', (pa as { project_id: string }).project_id)
-        .eq('contract_type', 'prime')
-        .limit(1)
-        .maybeSingle();
-      if (primeErr) throw primeErr;
-      if (prime) {
-        const p = prime as unknown as { id: string; paid_amount: number | null };
-        await must(db.from('contracts')
-          .update({ paid_amount: (p.paid_amount || 0) + paDue } as never)
-          .eq('tenant_id', user.tenantId)
-          .eq('id', p.id), 'contracts write');
-      }
-    }
-
-    // ── Payment cascade (2): signed conditionals convert to unconditional partials ──
-    const signed = (waivers || []).filter((w: { status: string | null }) => w.status === 'signed');
-    for (const w of signed as { id: string; sub_id: string | null; amount: number | null }[]) {
-      await must(db.from('lien_waivers').insert({
-        tenant_id: user.tenantId,
-        project_id: (pa as { project_id: string }).project_id,
-        sub_id: w.sub_id,
-        pay_application_id: id,
-        waiver_type: 'unconditional_progress',
-        amount: w.amount || 0,
-        through_date: (pa as { period_to: string | null }).period_to,
-        status: 'pending',
-        converted_from_id: w.id,
-      } as never), 'lien_waivers insert');
-    }
-
+    const body = (await req.json().catch(() => ({}))) as {
+      overrideWaivers?: boolean; amountPaid?: unknown; paymentMethod?: unknown; checkNumber?: unknown; paidDate?: unknown;
+    };
+    const r = await transitionPayAppStatus(g.db, user.tenantId, id, 'paid', {
+      actorId: user.id,
+      overrideWaivers: body.overrideWaivers === true,
+      payment: {
+        amount: body.amountPaid != null && String(body.amountPaid).trim() !== '' ? Number(body.amountPaid) : null,
+        method: typeof body.paymentMethod === 'string' ? body.paymentMethod : null,
+        checkNumber: typeof body.checkNumber === 'string' ? body.checkNumber : null,
+        receivedAt: typeof body.paidDate === 'string' && body.paidDate ? body.paidDate : null,
+      },
+    });
+    if (!r.ok) return NextResponse.json({ error: r.error, ...r.extra }, { status: r.status });
     return NextResponse.json({
       success: true,
-      unconditionalWaivers: signed.length,
-      overrode: blocking.length > 0 && !!body.overrideWaivers,
+      changed: r.changed,
+      unconditionalWaivers: Number(r.extra?.unconditionalWaivers ?? 0),
+      overrode: !!r.extra?.overrode,
     });
   } catch (err) {
     return apiError('pay-apps/paid', err, "Couldn't mark the pay app paid. Please try again.");
