@@ -136,6 +136,7 @@ export const TOOLS: ToolDef[] = [
   { id: 'proposal', label: 'Proposal', href: '/proposal', group: 'precon' },
 
   { id: 'drawings', label: 'Drawings', href: '/drawings', group: 'docs', core: true },
+  { id: 'models', label: 'Models', href: '/models', group: 'docs' },
   { id: 'specs', label: 'Specifications', href: '/specs', group: 'docs', core: true },
   { id: 'rfis', label: 'RFIs', href: '/rfis', group: 'docs', core: true },
   { id: 'submittals', label: 'Submittals', href: '/submittals', group: 'docs', core: true },

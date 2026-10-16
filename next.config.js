@@ -14,6 +14,11 @@ const nextConfig = {
   },
   experimental: {
     largePageDataBytes: 10 * 1024 * 1024,
+    // 258 files import icons from the @phosphor-icons/react barrel (~9,000
+    // modules). Without this every chunk drags the whole barrel through
+    // webpack, which is what put the Vercel build box at its memory ceiling.
+    // Rewrites each named import to its own file; runtime output is identical.
+    optimizePackageImports: ['@phosphor-icons/react'],
     // pdfjs-dist's legacy build is a Node-native lib (used server-side by
     // /api/heatmap/parse-vector). Keep it external so it's require()'d at
     // runtime instead of bundled — avoids webpack mangling its in-process

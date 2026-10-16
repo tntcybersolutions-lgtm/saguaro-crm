@@ -36,7 +36,7 @@
     "engine:sync": "node scripts/sync-heatmap-engine.mjs --sync",
     "engine:test": "npx -y tsx lib/heatmap/sanity.test.ts",
     "test:pipeline": "npx -y tsx lib/sales-pipeline.harness.ts",
-    "prebuild": "npm run check:style-escapes && npm run check:design-system",
+    "prebuild": "node tools/copy-web-ifc-wasm.mjs && node tools/build-model-engine.mjs && npm run check:style-escapes && npm run check:design-system",
     "check:style-escapes": "node tools/check-style-escapes.mjs --selftest && node tools/check-style-escapes.mjs",
     "check:design-system": "node tools/check-design-system.mjs",
     "e2e:sweep": "node tools/e2e-app-sweep.mjs",
@@ -44,7 +44,7 @@
     "e2e": "npm run e2e:nav && npm run e2e:sweep",
     "test:invites": "jest --testEnvironment node lib/invite-flow.sanity.test.ts",
     "test:items": "jest --testEnvironment node lib/items.sanity.test.ts",
-    "test:sanity": "jest --testEnvironment node lib/invite-flow.sanity.test.ts lib/items.sanity.test.ts lib/daily-log-sections.sanity.test.ts lib/budget-rollup.sanity.test.ts lib/commitments.sanity.test.ts lib/drawings.sanity.test.ts lib/panel-layout.sanity.test.ts lib/job-monthly.sanity.test.ts lib/reports.sanity.test.ts lib/cash-flow-projection.sanity.test.ts lib/schedule-cpm.sanity.test.ts lib/job-banner.sanity.test.ts lib/photo-views.sanity.test.ts lib/drawing-autolinks.sanity.test.ts lib/bid-leveling.sanity.test.ts lib/job-map.sanity.test.ts lib/submittal-workflow.sanity.test.ts lib/directory-view.sanity.test.ts lib/meetings.sanity.test.ts"
+    "test:sanity": "jest --testEnvironment node lib/invite-flow.sanity.test.ts lib/items.sanity.test.ts lib/daily-log-sections.sanity.test.ts lib/budget-rollup.sanity.test.ts lib/commitments.sanity.test.ts lib/drawings.sanity.test.ts lib/panel-layout.sanity.test.ts lib/job-monthly.sanity.test.ts lib/reports.sanity.test.ts lib/cash-flow-projection.sanity.test.ts lib/schedule-cpm.sanity.test.ts lib/job-banner.sanity.test.ts lib/photo-views.sanity.test.ts lib/drawing-autolinks.sanity.test.ts lib/bid-leveling.sanity.test.ts lib/job-map.sanity.test.ts lib/submittal-workflow.sanity.test.ts lib/directory-view.sanity.test.ts lib/meetings.sanity.test.ts lib/model-viewer.sanity.test.ts"
   },
   "dependencies": {
     "@anthropic-ai/sdk": "^0.54.0",
@@ -99,6 +99,7 @@
     "stripe": "^17.0.0",
     "swr": "^2.4.1",
     "three": "^0.185.1",
+    "web-ifc": "0.0.78",
     "web-push": "^3.6.7",
     "xlsx": "^0.18.5",
     "zod": "^3.23.0",
@@ -121,6 +122,7 @@
     "@typescript-eslint/eslint-plugin": "^8.57.2",
     "@typescript-eslint/parser": "^8.57.2",
     "axe-core": "^4.7.2",
+    "esbuild": "0.25.10",
     "eslint": "^8.50.0",
     "eslint-config-next": "^14.0.0",
     "jest": "^29.7.0",

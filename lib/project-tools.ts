@@ -32,6 +32,7 @@ export interface ToolSignals {
     openSubmittals?: number;
     scheduleTasks?: number;
     openPunch?: number;
+    modelFiles?: number;
     meetings?: number;
   };
   money?: { payAppCount?: number; originalContract?: number };
@@ -64,6 +65,7 @@ const HAS_WORK: Record<string, (s: ToolSignals) => boolean> = {
   '/submittals':       s => (s.counts?.openSubmittals || 0) > 0,
   '/meetings':         s => (s.counts?.meetings || 0) > 0,
   '/punch-list':       s => (s.counts?.openPunch || 0) > 0,
+  '/models':           s => (s.counts?.modelFiles || 0) > 0,
   '/pay-apps':         s => (s.money?.payAppCount || 0) > 0,
   '/crews':            s => (s.subs?.length || 0) > 0,
   /* A subcontract needs a sub, but a prime contract needs an owner and a
