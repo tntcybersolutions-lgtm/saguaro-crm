@@ -365,7 +365,7 @@ const NAV_SECTIONS: NavSection[] = [
     title: 'Home',
     items: [
       { label: 'Dashboard',    href: '/app',              icon: GridFour, core: true, accentKey: 'portfolio' },
-      { label: 'My Work',      href: '/app/my-work',      icon: Briefcase, accentKey: 'work', core: true },
+      { label: 'My Day',       href: '/app/my-work',      icon: Briefcase, accentKey: 'work', core: true },
       { label: 'Projects',     href: '/app/projects',     icon: FolderSimple, core: true, accentKey: 'portfolio' },
     ],
   },

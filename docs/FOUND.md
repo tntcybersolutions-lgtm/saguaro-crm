@@ -280,3 +280,15 @@ STILL OPEN:
 - 16 Oct (Chad: "fix the drift on words NO OVERLAP"): every dropdown in the app (Chrome/Edge customizable select)
   let a long chosen value run past the field — schedule Predecessor names ran over the Progress bar. Fixed once in
   `app/globals.css` (clip at the content box); verified live on /app/schedule.
+
+## 16 Oct 2026 — My Day (Chad: "go bigger on my day… any user's role… chronological… custom picker… visually amazing")
+
+Built, not a defect fix: /app/my-work is now **My Day** (nav label renamed). One board in the order a workday runs —
+start of day (date, on-time ring, late / today / this week / $ at stake / waiting-on numbers that filter, the live
+clock), today's agenda (meetings on an hour timeline with a now line; inspections and job starts in an Anytime lane),
+carried over, today's work, waiting on others, before you leave (daily log, clock out, first thing tomorrow), the
+next-two-weeks runway (a stacked bar per day; tap to filter) and job heat. Customize sheet: reorder (drag or arrows),
+show/hide, density, agenda hours, runway length, group-by, dollars, company vs my jobs — saved per person in
+`user_preferences.custom_settings.myDay` (`/api/my-day/prefs`), role defaults until they touch it.
+Files: lib/my-day.ts, lib/my-day-prefs.ts (+ sanity test), components/my-work/MyDayBoard.tsx, MyDayCustomize.tsx,
+MyWorkView.tsx, /api/my-work (+ jobs, agenda, roles, ?view=mine).

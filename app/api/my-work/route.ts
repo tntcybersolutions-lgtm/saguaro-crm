@@ -31,11 +31,14 @@ export async function GET(req: NextRequest) {
   const { user, db } = g;
   try {
     const { today, zone } = await requestDay(req.headers, db, user.tenantId, 'my-work');
-    const companyWide = hasPermission(g.perms, 'Admin', 'Full');
+    /* An owner / admin sees the company's work; ?view=mine narrows it to
+       their own jobs (My Day's Mine / Company switch). */
+    const canSeeCompany = hasPermission(g.perms, 'Admin', 'Full');
+    const companyWide = canSeeCompany && req.nextUrl.searchParams.get('view') !== 'mine';
     const c = await collectMyWork({ db, tenantId: user.tenantId, userId: user.id, email: user.email || '', today, zone, companyWide });
     return NextResponse.json(
       {
-        today, zone, companyWide, assigned: c.assigned,
+        today, zone, companyWide, canSeeCompany, assigned: c.assigned, jobs: c.jobs, agenda: c.agenda, roles: c.roles,
         items: c.items, snoozes: c.snoozes, snoozeReady: c.snoozeReady,
         failures: c.failures.map((source) => ({ source, label: SOURCE_LABEL[source] })),
       },

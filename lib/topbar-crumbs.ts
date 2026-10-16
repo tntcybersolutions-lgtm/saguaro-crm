@@ -20,7 +20,7 @@ export const UUID_RE = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f
 /** Segment → label, where Title Case of the slug would read wrong. */
 export const TOPBAR_LABELS: Record<string, string> = {
   app: 'Home',
-  'my-work': 'My Work',
+  'my-work': 'My Day',
   projects: 'Jobs',
   time: 'Time',
   bids: 'Bids & Estimates',

@@ -305,7 +305,7 @@ export const FEATURE_MATRIX: FeatureMatrixRow[] = [
   { label: 'Saguaro Radio — Live Streaming', starter: 'Add-on', pro: 'Add-on', ent: 'Add-on' },
   { label: 'Takeoff Studio — AI takeoff', starter: true, pro: true, ent: true },
   { label: 'Signal Studio', starter: true, pro: true, ent: true },
-  { label: 'My Work', starter: true, pro: true, ent: true },
+  { label: 'My Day', starter: true, pro: true, ent: true },
   { label: 'Crews', starter: true, pro: true, ent: true },
   { label: 'T&M Tickets', starter: true, pro: true, ent: true },
   { label: 'Daily Logs', starter: true, pro: true, ent: true },

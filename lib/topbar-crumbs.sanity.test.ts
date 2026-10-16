@@ -17,7 +17,7 @@ const t = (p: string, company: string | null = null) => resolveTopBar(p, { proje
 // Tab pages: no back link.
 check('Home: company name, no back', t('/app', 'Saguaro Control Systems').title === 'Saguaro Control Systems' && t('/app').back === null);
 check('Home without a company: "Home"', t('/app').title === 'Home');
-check('My Work: no back', t('/app/my-work').title === 'My Work' && t('/app/my-work').back === null);
+check('My Day: no back', t('/app/my-work').title === 'My Day' && t('/app/my-work').back === null);
 check('Jobs: no back', t('/app/projects').title === 'Jobs' && t('/app/projects').back === null);
 check('Time: no back', t('/app/time').title === 'Time' && t('/app/time').back === null);
 // Sections under Home: no "← Home".

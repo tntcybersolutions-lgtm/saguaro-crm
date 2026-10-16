@@ -53,6 +53,24 @@ export interface Collected {
   snoozeReady: boolean;
   /** Live jobs this person is assigned to. */
   assigned: number;
+  /** Name + color of every job an item or meeting points at (My Day's job heat and rails). */
+  jobs: Record<string, { name: string; color: string | null }>;
+  /** Today's timed events on the person's jobs (meetings), earliest first. */
+  agenda: AgendaEvent[];
+  /** The person's hats across live jobs ('project_manager', 'superintendent', …), strongest first. */
+  roles: string[];
+}
+
+export interface AgendaEvent {
+  id: string;
+  kind: 'meeting';
+  title: string;
+  projectId: string | null;
+  /** 'HH:MM' (24h) or null when the meeting has no start time. */
+  start: string | null;
+  end: string | null;
+  location: string | null;
+  href: string;
 }
 
 /** work_assignments roles that run a job in the field and owe its daily log. */
@@ -94,7 +112,7 @@ export async function collectMyWork(a: CollectArgs): Promise<Collected> {
 
   // The frame: jobs and this person's assignments. A failure here fails the read.
   const [projects, assignments] = await Promise.all([
-    rows(db.from('projects').select('id, name, status, start_date, is_archived').eq('tenant_id', t).is('deleted_at', null).limit(2000)),
+    rows(db.from('projects').select('id, name, color, status, start_date, is_archived').eq('tenant_id', t).is('deleted_at', null).limit(2000)),
     rows(db.from('work_assignments').select('project_id, role').eq('tenant_id', t).eq('assignee_user_id', uid).eq('status', 'active').limit(200)),
   ]);
 
@@ -314,7 +332,38 @@ export async function collectMyWork(a: CollectArgs): Promise<Collected> {
   // One row per thing to do, whichever query found it.
   const seen = new Set<string>();
   const unique = items.filter((it) => (seen.has(it.key) ? false : (seen.add(it.key), true)));
-  return { items: unique, failures, snoozes, snoozeReady, assigned: assignedIds.length };
+
+  /* Today's meetings on this person's jobs — the agenda strip. Best-effort:
+     a failure is logged and the strip is simply empty. */
+  let agenda: AgendaEvent[] = [];
+  if (!todayOnly) {
+    const ids = companyWide ? liveIds : assignedIds;
+    if (ids.length) {
+      const { data, error } = await db.from('meetings').select('id, project_id, title, location, meeting_date, start_time, end_time, status')
+        .eq('tenant_id', t).eq('meeting_date', today).in('project_id', ids.slice(0, 500)).limit(50);
+      if (error) console.error('[my-work] agenda read failed', error);
+      agenda = (((data as Row[] | null) || []).filter((m) => !['cancelled', 'canceled'].includes(lower(m.status))))
+        .map((m) => ({
+          id: String(m.id), kind: 'meeting' as const, title: String(m.title || 'Meeting'), projectId: m.project_id ?? null,
+          start: m.start_time ? String(m.start_time).slice(0, 5) : null, end: m.end_time ? String(m.end_time).slice(0, 5) : null,
+          location: m.location ? String(m.location) : null,
+          href: m.project_id ? `/app/projects/${m.project_id}/meetings/${m.id}` : '/app/projects',
+        }))
+        .sort((a, b) => (a.start ?? '99:99').localeCompare(b.start ?? '99:99'));
+    }
+  }
+
+  const jobs: Collected['jobs'] = {};
+  const color = new Map<string, string | null>(projects.map((p) => [p.id, p.color ?? null]));
+  for (const pid of [...unique.map((i) => i.projectId), ...agenda.map((a) => a.projectId)]) {
+    if (pid && !jobs[pid] && names.has(pid)) jobs[pid] = { name: names.get(pid)!, color: color.get(pid) ?? null };
+  }
+  const ROLE_RANK = ['owner', 'project_executive', 'project_manager', 'superintendent', 'estimator', 'foreman', 'field_engineer', 'accountant', 'viewer'];
+  const roles = [...new Set(roleOf.values())].sort((a, b) => {
+    const ra = ROLE_RANK.indexOf(a), rb = ROLE_RANK.indexOf(b);
+    return (ra < 0 ? 99 : ra) - (rb < 0 ? 99 : rb);
+  });
+  return { items: unique, failures, snoozes, snoozeReady, assigned: assignedIds.length, jobs, agenda, roles };
 }
 
 export { isMissingTable };

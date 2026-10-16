@@ -63,7 +63,7 @@ export const MODULE_ACCENTS: Record<string, ModuleAccent> = Object.fromEntries([
   A('team',       'Team',             '#FF8A00', '#FF8A00'),
   A('compliance', 'Compliance',       '#8FB3A9', '#2CFF7A'),
   // Cross-project + workforce
-  A('work',       'My Work',          '#FF8A00', '#FF8A00'), // turquoise — the personal cross-project hub
+  A('work',       'My Day',           '#FF8A00', '#FF8A00'), // turquoise — the personal cross-project hub
   A('crews',      'Crews',            '#FF8A00', '#FF8A00'), // workforce orange (mobile tools family)
   A('tm',         'T&M Tickets',      '#84BF8E', '#2CFF7A'), // ledger green — money-adjacent, never gold
 

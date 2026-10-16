@@ -229,7 +229,7 @@ export function AttentionSection({ items, total, restricted, today, canEdit, rev
         <>
           {items.length > 6 && opts.length > 2 && <Tabs label="Filter what needs attention" value={filter} options={opts} onChange={k => { setFilter(k); setAll(false); }} />}
           {shown.length === 0 && reviewRows.length === 0
-            ? <SectionEmpty text={filter === 'all' ? 'Nothing needs you right now.' : 'Nothing in this filter.'} action={filter === 'all' ? { label: 'My Work', href: '/app/my-work' } : undefined} />
+            ? <SectionEmpty text={filter === 'all' ? 'Nothing needs you right now.' : 'Nothing in this filter.'} action={filter === 'all' ? { label: 'My Day', href: '/app/my-work' } : undefined} />
             : (
               <FlatList label="Needs attention">
                 {shown.map(it => <li key={it.id}><QueueRow it={it} today={today} canEdit={canEdit} onChanged={onChanged} /></li>)}

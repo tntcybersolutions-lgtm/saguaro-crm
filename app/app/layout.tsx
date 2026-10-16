@@ -578,7 +578,7 @@ export default function AppLayout({ children }: { children: React.ReactNode }) {
       <nav className="sag-tabbar" aria-label="Primary" style={{ display: 'none', position: 'fixed', left: 0, right: 0, bottom: 0, zIndex: z.topbar, height: 'var(--sag-tabbar-h, 56px)', paddingBottom: 'env(safe-area-inset-bottom, 0px)', boxSizing: 'border-box', background: 'var(--bg-base)', borderTop: '1px solid var(--sg-border)' }}>
         {([
           { label: 'Home', href: '/app', icon: House, active: pathname === '/app' || pathname === '/app/' },
-          { label: 'My Work', href: '/app/my-work', icon: Briefcase, active: pathname.startsWith('/app/my-work') },
+          { label: 'My Day', href: '/app/my-work', icon: Briefcase, active: pathname.startsWith('/app/my-work') },
           { label: 'Photo', href: '', icon: Camera, active: false },
           { label: 'Jobs', href: '/app/projects', icon: FolderSimple, active: pathname.startsWith('/app/projects') },
           { label: 'Time', href: '/app/time', icon: Clock, active: pathname.startsWith('/app/time') },

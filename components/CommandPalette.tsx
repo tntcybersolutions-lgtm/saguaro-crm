@@ -34,7 +34,7 @@ const NAV_ITEMS: Omit<PaletteItem, 'section'>[] = [
   { id: 'nav-reports',    icon: '📊', label: 'Reports',         description: 'Financial and project reports',   href: '/app/reports' },
   { id: 'nav-autopilot',  icon: '🤖', label: 'Autopilot',      description: 'Automated CRM alerts & actions',  href: '/app/autopilot' },
   { id: 'nav-intel',      icon: '🧠', label: 'Intelligence',   description: 'Market intelligence, analytics & suggestions', href: '/app/intelligence' },
-  { id: 'nav-my-work',    icon: '✅', label: 'My Work',        description: 'Everything assigned to you, in one queue', href: '/app/my-work' },
+  { id: 'nav-my-work',    icon: '✅', label: 'My Day',         description: 'Your workday at a glance — late, today, agenda, what you are waiting on', href: '/app/my-work' },
   { id: 'nav-radio',      icon: '📻', label: 'Radio',          description: 'Push-to-talk field radio',        href: '/app/radio' },
   { id: 'nav-catalog',    icon: '🏷️', label: 'Catalog',        description: 'Materials catalog & best prices', href: '/app/catalog' },
   { id: 'nav-daily-logs', icon: '📋', label: 'Daily Logs',     description: 'Field reports across all projects', href: '/app/daily-logs' },

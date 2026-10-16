@@ -1,6 +1,9 @@
 'use client';
 /**
- * My Work — the GC's to-do list, flat (Chad's 2026-10-10 look).
+ * My Day (route /app/my-work) — the data and the actions behind the board.
+ * The board itself is MyDayBoard; the layout sheet is MyDayCustomize.
+ *
+ * Earlier list (Chad's 2026-10-10 look), kept for the rules it still follows:
  *
  *   Today · N      Do first (red / amber: money or a deadline at risk), then
  *                  the rest, then a peek at what's coming up
@@ -17,21 +20,27 @@
  * scrollTo, and the list keeps its height across a tab change so the browser
  * never has to clamp the scroll position either.
  */
-import React, { useCallback, useMemo, useRef, useState } from 'react';
+import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import useSWR from 'swr';
-import Link from 'next/link';
-import { FlatStyles, FlatList, SectionLabel, Tabs, RowSkeleton } from '@/components/ui/flat';
+import { FlatStyles, RowSkeleton } from '@/components/ui/flat';
 import { UiFx } from '@/components/ui/fx';
-import { buildView, dayLabel, fmtDay, groupByDay, type Bucket, type MyWorkItem, type Snooze } from '@/lib/my-work';
+import { applySnoozes, fmtDay, type MyWorkItem, type Snooze } from '@/lib/my-work';
 import { addDays } from '@/lib/time-zone';
 import { STATUS_HEADER, reasonFromResponse, isNetworkError, NO_SIGNAL_DETAIL } from '@/lib/ui/status-fetch';
-import { MyWorkRow, type RowControl } from './MyWorkRow';
+import { cleanPrefs, roleDefaults, type MyDayPrefs } from '@/lib/my-day-prefs';
+import type { RowControl } from './MyWorkRow';
+import MyDayBoard, { type AgendaEvent, type ClockState, type Jobs } from './MyDayBoard';
+import MyDayCustomize, { type SaveState } from './MyDayCustomize';
 
 type Payload = {
   today: string;
   zone: string;
   companyWide: boolean;
+  canSeeCompany?: boolean;
   assigned: number;
+  jobs?: Jobs;
+  agenda?: AgendaEvent[];
+  roles?: string[];
   items: MyWorkItem[];
   snoozes: Snooze[];
   snoozeReady: boolean;
@@ -82,13 +91,6 @@ const CSS = `
 
 type Toast = { text: string; tone: 'ok' | 'bad'; undo?: () => void } | null;
 
-/** 'RFIs', 'RFIs and pay apps', 'RFIs, pay apps and COIs'. */
-function listOf(words: string[]): string {
-  return words.length < 2 ? words.join('') : `${words.slice(0, -1).join(', ')} and ${words[words.length - 1]}`;
-}
-
-const TAB_LABEL: Record<Bucket, string> = { today: 'Today', week: 'This week', later: 'Later' };
-
 async function why(res: Response): Promise<string> {
   return reasonFromResponse(res);
 }
@@ -100,11 +102,22 @@ const json = (method: string, body: unknown, status: string): RequestInit => ({
 });
 
 export default function MyWorkView() {
-  const { data, error, isLoading, mutate } = useSWR<Payload>('/api/my-work', fetcher, {
+  /* The person's layout: saved to their account, else their role's default. */
+  const [saved, setSaved] = useState<MyDayPrefs | null | undefined>(undefined);
+  const [draft, setDraft] = useState<MyDayPrefs | null>(null);
+  const [customizing, setCustomizing] = useState(false);
+  const [saveState, setSaveState] = useState<SaveState>('idle');
+  useEffect(() => {
+    let live = true;
+    fetch('/api/my-day/prefs').then((r) => (r.ok ? r.json() : null)).then((d) => { if (live) setSaved(d?.prefs ?? null); }).catch(() => { if (live) setSaved(null); });
+    return () => { live = false; };
+  }, []);
+  const scope = (draft ?? saved)?.scope ?? 'company';
+
+  const { data, error, isLoading, mutate } = useSWR<Payload>(saved === undefined ? null : scope === 'mine' ? '/api/my-work?view=mine' : '/api/my-work', fetcher, {
     refreshInterval: 60_000, revalidateOnFocus: true, dedupingInterval: 10_000, keepPreviousData: true,
   });
 
-  const [tab, setTab] = useState<Bucket>('today');
   const [hidden, setHidden] = useState<Set<string>>(() => new Set());
   const [localSnoozes, setLocalSnoozes] = useState<Snooze[]>([]);
   const [portalOn, setPortalOn] = useState<Set<string>>(() => new Set());
@@ -112,7 +125,6 @@ export default function MyWorkView() {
   const [notes, setNotes] = useState<Record<string, string | undefined>>({});
   const [toast, setToast] = useState<Toast>(null);
   const toastTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
-  const bodyRef = useRef<HTMLDivElement | null>(null);
 
   const say = useCallback((t: Toast, ms = 6000) => {
     if (toastTimer.current) clearTimeout(toastTimer.current);
@@ -123,17 +135,47 @@ export default function MyWorkView() {
   const hide = (key: string) => setHidden((h) => new Set(h).add(key));
 
   const today = data?.today ?? null;
-  const view = useMemo(() => {
-    if (!data) return null;
-    const items = data.items.filter((it) => !hidden.has(it.key) && !(it.key.startsWith('bid-link:') && it.packageId && portalOn.has(it.packageId)));
-    return buildView(items, [...data.snoozes, ...localSnoozes], data.today);
+  const items = useMemo(() => {
+    if (!data) return [];
+    const its = data.items.filter((it) => !hidden.has(it.key) && !(it.key.startsWith('bid-link:') && it.packageId && portalOn.has(it.packageId)));
+    return applySnoozes(its, [...data.snoozes, ...localSnoozes], data.today);
   }, [data, hidden, localSnoozes, portalOn]);
 
-  /** Switch tabs in place. The list keeps the height it had, so the page can't jump. */
-  const switchTab = useCallback((k: Bucket) => {
-    const el = bodyRef.current;
-    if (el) el.style.minHeight = `${Math.max(el.offsetHeight, parseFloat(el.style.minHeight) || 0)}px`;
-    setTab(k);
+  const defaults = useMemo(() => roleDefaults(data?.roles ?? [], !!data?.companyWide), [data?.roles, data?.companyWide]);
+  const prefs: MyDayPrefs = draft ?? (saved ? cleanPrefs(saved, defaults) : defaults);
+
+  /* Every change applies at once and saves itself (debounced). */
+  const saveTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
+  const persist = useCallback((body: object, next: MyDayPrefs | null) => {
+    if (saveTimer.current) clearTimeout(saveTimer.current);
+    setSaveState('saving');
+    saveTimer.current = setTimeout(async () => {
+      try {
+        const r = await fetch('/api/my-day/prefs', { method: 'PUT', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(body) });
+        if (!r.ok) { setSaveState('error'); return; }
+        setSaved(next);
+        setSaveState('saved');
+      } catch {
+        setSaveState('error');
+      }
+    }, 500);
+  }, []);
+  const changePrefs = useCallback((p: MyDayPrefs) => { setDraft(p); persist({ prefs: p }, p); }, [persist]);
+  const resetPrefs = useCallback(() => { setDraft(null); setSaved(null); persist({ reset: true }, null); }, [persist]);
+
+  /* The clock: GET /api/timeclock/status. A person with no employee record gets no clock. */
+  const [clock, setClock] = useState<ClockState | null | 'none'>(null);
+  useEffect(() => {
+    let live = true;
+    const read = () => fetch('/api/timeclock/status').then(async (r) => {
+      if (!live) return;
+      if (!r.ok) { setClock('none'); return; }
+      const d = await r.json();
+      setClock({ onClock: !!d.onClock, todayHours: Number(d.todayHours) || 0, weekHours: Number(d.weekHours) || 0 });
+    }).catch(() => { if (live) setClock('none'); });
+    read();
+    const t = setInterval(read, 60_000);
+    return () => { live = false; clearInterval(t); };
   }, []);
 
   /* ── Actions — each one a real write; the result is said, not assumed ── */
@@ -203,7 +245,7 @@ export default function MyWorkView() {
       ? fetch(`/api/punch-list/${id}/complete`, json('PATCH', { status: 'completed' }, 'Closing the punch item|Punch item closed|Couldn\'t close the punch item'))
       : kind === 'todo'
         ? fetch(`/api/todos/${id}/complete`, json('PATCH', {}, 'Completing the to-do|To-do done|Couldn\'t complete the to-do'))
-        : fetch(`/api/schedule/${id}`, json('PUT', { status: 'complete' }, 'Marking the task complete|Task complete|Couldn\'t mark the task complete'));
+        : fetch(`/api/schedule/${id}`, json('PUT', { status: 'completed' }, 'Marking the task complete|Task complete|Couldn\'t mark the task complete'));
     setBusyFor(it.key, 'Saving…');
     try {
       const res = await req;
@@ -256,89 +298,54 @@ export default function MyWorkView() {
 
   /* ── Render ── */
 
-  const rowsOf = (list: MyWorkItem[], label: string) => (
-    <FlatList label={label}>{list.map((it) => <MyWorkRow key={it.key} it={it} ctl={ctl} />)}</FlatList>
-  );
-  const byDay = (list: MyWorkItem[], undatedLabel: string) => groupByDay(list).map((g) => (
-    <section key={g.day ?? 'none'} aria-label={g.day ? dayLabel(g.day) : undatedLabel}>
-      <div className="mw-day">{g.day ? dayLabel(g.day) : undatedLabel}</div>
-      {rowsOf(g.items, g.day ? dayLabel(g.day) : undatedLabel)}
-    </section>
-  ));
-
-  let panel: React.ReactNode;
+  let body: React.ReactNode;
   if (!data && (isLoading || !error)) {
-    panel = <RowSkeleton rows={7} />;
-  } else if (!data || !view) {
-    panel = (
+    body = <div style={{ maxWidth: 1320, margin: '0 auto', paddingTop: 24 }}><RowSkeleton rows={8} /></div>;
+  } else if (!data || !today) {
+    body = (
       <p className="mw-fail" role="alert">
-        {error instanceof LoadError && error.message ? error.message : 'Couldn’t load your work. Check your signal and try again.'}
+        {error instanceof LoadError && error.message ? error.message : 'Couldn’t load your day. Check your signal and try again.'}
         <button type="button" className="mw-link" onClick={() => void mutate()}>Retry</button>
       </p>
     );
-  } else if (tab === 'today') {
-    const { doFirst, rest } = view.today;
-    const upcoming = [...view.week, ...view.later].filter((it) => it.day).sort((a, b) => a.day!.localeCompare(b.day!)).slice(0, 3);
-    const upTab: Bucket = view.week.length ? 'week' : 'later';
-    panel = (
-      <>
-        {view.counts.today === 0 && (
-          <div className="mw-empty">
-            Nothing needs you today.
-            <button type="button" className="mw-link" onClick={() => switchTab('week')}>This week ›</button>
-            {!data.companyWide && data.assigned === 0 && <span>Nothing is assigned to you yet — a PM adds you to a job from its Team page. <Link className="mw-link" href="/app/projects">Jobs ›</Link></span>}
-          </div>
-        )}
-        {doFirst.length > 0 && <><SectionLabel>Do first</SectionLabel>{rowsOf(doFirst, 'Do first')}</>}
-        {rest.length > 0 && <><SectionLabel>{doFirst.length ? 'Also today' : 'Today'}</SectionLabel>{rowsOf(rest, 'Also today')}</>}
-        {upcoming.length > 0 && (
-          <>
-            <SectionLabel action={{ label: `${TAB_LABEL[upTab]} ›`, onClick: () => switchTab(upTab) }}>Coming up</SectionLabel>
-            {byDay(upcoming, 'No date')}
-          </>
-        )}
-      </>
-    );
-  } else if (tab === 'week') {
-    panel = view.week.length ? byDay(view.week, 'No date') : (
-      <div className="mw-empty">Nothing due in the next 7 days.<button type="button" className="mw-link" onClick={() => switchTab('later')}>Later ›</button></div>
-    );
   } else {
-    panel = view.later.length ? byDay(view.later, 'No date') : (
-      <div className="mw-empty">Nothing further out.<button type="button" className="mw-link" onClick={() => switchTab('today')}>Today ›</button></div>
+    body = (
+      <MyDayBoard
+        items={items}
+        today={today}
+        zone={data.zone}
+        jobs={data.jobs ?? {}}
+        agenda={data.agenda ?? []}
+        roles={data.roles ?? []}
+        companyWide={data.companyWide}
+        canSeeCompany={!!data.canSeeCompany}
+        prefs={prefs}
+        ctl={ctl}
+        clock={clock}
+        failures={data.failures ?? []}
+        onRetry={() => void mutate()}
+        onCustomize={() => { setSaveState('idle'); setCustomizing(true); }}
+        onScope={(sc) => changePrefs({ ...prefs, scope: sc })}
+      />
     );
   }
-
-  const failures = data?.failures ?? [];
 
   return (
     <div className="k-frame sgUi mw">
       <UiFx />
       <FlatStyles />
       <style dangerouslySetInnerHTML={{ __html: CSS }} />
-      <header className="k-head mw-head">
-        <h1 className="k-title">My Work</h1>
-        {today && <span className="mw-date">{dayLabel(today)}</span>}
-      </header>
-      <Tabs<Bucket>
-        label="When"
-        value={tab}
-        onChange={switchTab}
-        options={[
-          { key: 'today', label: 'Today', count: view?.counts.today },
-          { key: 'week', label: 'This week', count: view?.counts.week },
-          { key: 'later', label: 'Later' },
-        ]}
-      />
-      {failures.length > 0 && (
-        <p className="mw-fail" role="status">
-          Couldn&apos;t load {listOf(failures.map((f) => f.label))} ·
-          <button type="button" className="mw-link" onClick={() => void mutate()}>Retry</button>
-        </p>
+      {body}
+      {customizing && (
+        <MyDayCustomize
+          prefs={prefs}
+          onChange={changePrefs}
+          onReset={resetPrefs}
+          onClose={() => setCustomizing(false)}
+          save={saveState}
+          canSeeCompany={!!data?.canSeeCompany}
+        />
       )}
-      <div ref={bodyRef} role="tabpanel" aria-label={TAB_LABEL[tab]}>
-        {panel}
-      </div>
       <div role="status" aria-live="polite">
         {toast && (
           <div className="mw-toast" data-tone={toast.tone}>
@@ -350,4 +357,3 @@ export default function MyWorkView() {
     </div>
   );
 }
-
