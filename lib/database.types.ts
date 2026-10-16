@@ -25535,10 +25535,12 @@ export type Database = {
       saved_views: {
         Row: {
           columns: string[] | null
+          column_widths: Json
           created_at: string | null
           filters: Json | null
           id: string
           is_default: boolean | null
+          is_shared: boolean
           module: string
           name: string
           project_id: string | null
@@ -25546,14 +25548,17 @@ export type Database = {
           sort_dir: string | null
           sort_direction: string | null
           tenant_id: string
+          updated_at: string | null
           user_id: string
         }
         Insert: {
           columns?: string[] | null
+          column_widths?: Json
           created_at?: string | null
           filters?: Json | null
           id?: string
           is_default?: boolean | null
+          is_shared?: boolean
           module: string
           name: string
           project_id?: string | null
@@ -25561,14 +25566,17 @@ export type Database = {
           sort_dir?: string | null
           sort_direction?: string | null
           tenant_id: string
+          updated_at?: string | null
           user_id: string
         }
         Update: {
           columns?: string[] | null
+          column_widths?: Json
           created_at?: string | null
           filters?: Json | null
           id?: string
           is_default?: boolean | null
+          is_shared?: boolean
           module?: string
           name?: string
           project_id?: string | null
@@ -25576,6 +25584,7 @@ export type Database = {
           sort_dir?: string | null
           sort_direction?: string | null
           tenant_id?: string
+          updated_at?: string | null
           user_id?: string
         }
         Relationships: []

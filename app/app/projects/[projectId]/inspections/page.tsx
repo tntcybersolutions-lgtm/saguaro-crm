@@ -21,6 +21,8 @@
  * Deep link: ?inspection=<id> opens that record; &record=1 also opens its
  * Record Result form (the Home queue's "Record Result" lands here).
  */
+import { itemBulkEdit } from '@/lib/items/bulk';
+import { useEditRights } from '@/lib/hooks/usePermissions';
 import React, { useState, useEffect, useCallback, useRef } from 'react';
 import { confirmDialog } from '@/lib/ui/async-dialog';
 import { useProjectContext } from '@/lib/hooks/useProjectContext';
@@ -183,6 +185,7 @@ export default function InspectionsPage() {
   });
   const [saving, setSaving] = useState(false);
   const { toast, show } = useToast(4000);
+  const rights = useEditRights('Safety');
   const [errorMsg, setErrorMsg] = useState('');
   const [search, setSearch] = useState('');
   const [filterResult, setFilterResult] = useState<ResultFilter>('all');
@@ -518,6 +521,7 @@ export default function InspectionsPage() {
         onRowClick={i => setSelectedId(i.id)}
         rowActions={rowActions}
         tableId="project-inspections"
+        bulkEdit={itemBulkEdit('inspections', { allowed: rights.edit, canDelete: rights.full, deleteUrl: r => `/api/inspections/${r.id}`, onDone: () => { void fetchInspections(); } })}
         exportName="inspections"
         isSelected={isSel}
         empty={<EmptyState icon={<ClipboardText size={22} />} title="No inspections match these filters" text="Clear the search, result, or type filter to see more." action={<Button onClick={clearFilters}>Clear Filters</Button>} />}

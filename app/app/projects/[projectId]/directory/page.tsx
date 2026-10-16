@@ -19,8 +19,10 @@ import { useParams } from 'next/navigation';
 import { Plus, EnvelopeSimple, Phone, PencilSimple, Trash, UsersThree, Buildings, HardHat, Wrench, WarningCircle, ArrowClockwise, SquaresFour, Rows } from '@phosphor-icons/react';
 import {
   PageShell, StatRow, Badge, Button, Toolbar, EmptyState, RowActions, FormModal, FormGrid, Field, Input,
-  Toast, useToast, Avatar, CompanyMark, type StatItem,
+  Toast, useToast, Avatar, CompanyMark, DataTable, type StatItem, type Column,
 } from '@/components/ui/kit';
+import { useEditRights } from '@/lib/hooks/usePermissions';
+import { jsonRequest } from '@/lib/list-view';
 import Suggest from '@/components/ui/Suggest';
 import { confirmDialog } from '@/lib/ui/async-dialog';
 import { useProjectContext } from '@/lib/hooks/useProjectContext';
@@ -41,6 +43,7 @@ export default function ProjectDirectory() {
   const projectId = String(params['projectId'] || '');
   const { ctx } = useProjectContext(projectId);
   const { toast, show } = useToast(3500);
+  const rights = useEditRights('Projects');
 
   const [contacts, setContacts] = useState<DirContact[]>([]);
   const [companies, setCompanies] = useState<DirCompany[]>([]);
@@ -162,6 +165,47 @@ export default function ProjectDirectory() {
     body = <EmptyState icon={<UsersThree size={22} />} title="Nobody on this job yet" text="The owner and architect land here when a project is created with them." action={<Button variant="primary" icon={<Plus size={15} weight="bold" />} onClick={() => openAdd()}>Add Someone</Button>} />;
   } else if (shown.length === 0) {
     body = <EmptyState icon={<UsersThree size={22} />} title="No one matches that search" action={<Button onClick={() => setQ('')}>Clear Search</Button>} />;
+  } else if (view === 'list') {
+    /* List: one row per person with the shared list tools (columns, filters,
+       saved views, export, bulk remove through the row's own route). */
+    type PersonRow = DirContact & { rowKey: string; companyName: string };
+    const rows: PersonRow[] = shown.flatMap((g) => g.people.map((p, i) => ({ ...p, rowKey: p.id || `${g.key}:${i}`, companyName: g.name || p.company || '' })));
+    const cols: Column<PersonRow>[] = [
+      { key: 'name', header: 'Name', primary: true, render: (p) => <span className="dirTName"><Avatar name={p.name} src={p.avatar_url} size={28} />{p.name}</span> },
+      { key: 'role', header: 'Role', phone: 'show' },
+      { key: 'companyName', header: 'Company', phone: 'show' },
+      { key: 'trade', header: 'Trade' },
+      { key: 'email', header: 'Email', groupable: false, filterable: false, render: (p) => (p.email ? <a className="k-link" href={mailHref(p.email) ?? undefined} onClick={(e) => e.stopPropagation()}>{p.email}</a> : '—') },
+      { key: 'phone', header: 'Phone', groupable: false, filterable: false, render: (p) => (p.phone ? <a className="k-link" href={telHref(p.phone) ?? undefined} onClick={(e) => e.stopPropagation()}>{p.phone}</a> : '—') },
+    ];
+    body = (
+      <DataTable<PersonRow>
+        tableId="project-directory"
+        exportName="directory"
+        columns={cols}
+        rows={rows}
+        rowKey={(p) => p.rowKey}
+        onRowClick={(p) => { if (p.id) openEdit(p); }}
+        rowActions={(p) => (p.id ? [
+          { label: 'Edit', icon: <PencilSimple size={15} />, onClick: () => openEdit(p) },
+          { label: removingId === p.id ? 'Removing…' : 'Remove', icon: <Trash size={15} />, onClick: () => void remove(p), tone: 'danger', disabled: removingId === p.id },
+        ] : [])}
+        bulkEdit={{
+          noun: 'contact',
+          allowed: rights.edit,
+          remove: {
+            allowed: rights.edit,
+            label: 'Remove',
+            verb: 'removed',
+            // People listed from a sub's company record are edited on that company, not here.
+            apply: (p) => (p.id
+              ? jsonRequest(`/api/projects/${projectId}/directory/${p.id}`, 'DELETE')
+              : Promise.resolve(new Response(JSON.stringify({ error: `${p.name} comes from the ${p.companyName || 'sub'} company record — change it there.` }), { status: 409 }))),
+          },
+          onDone: () => { void load(); },
+        }}
+      />
+    );
   } else {
     body = (
       <div className="dirGroups">
@@ -314,6 +358,7 @@ const CSS = `
 .dirPRole { font-size: var(--fs-sm); color: var(--text-secondary); overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
 .dirPContact { font-size: var(--fs-xs); color: var(--text-tertiary); overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
 .dirPActions { display: inline-flex; align-items: center; gap: 2px; flex-shrink: 0; }
+.dirTName { display: inline-flex; align-items: center; gap: 10px; }
 @media (max-width: 640px) {
   .dirWs .k-btn, .dirWs .k-chip, .dirWs .k-input { min-height: 44px; }
   .dirWs .k-icon-btn { min-width: 44px; }

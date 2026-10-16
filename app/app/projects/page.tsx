@@ -9,7 +9,9 @@
  * carries each job's billing from its pay apps (billed_live). The page chrome
  * paints at once and the rows stand in as skeletons while the list loads.
  */
-import React, { useMemo, useState } from 'react';
+import React, { useEffect, useMemo, useState } from 'react';
+import { useRouter } from 'next/navigation';
+import { DataTable, type Column } from '@/components/ui/kit';
 import Link from 'next/link';
 import { useProjects } from '@/lib/hooks/useProjects';
 import { humanError } from '@/lib/errors';
@@ -39,6 +41,26 @@ function bucket(p: JobRow): Exclude<StageFilter, 'all'> {
   return s;
 }
 
+type JobsView = 'board' | 'table';
+const VIEW_KEY = 'saguaro.jobs.view';
+const STAGE_TEXT: Record<Exclude<StageFilter, 'all'>, string> = { bidding: 'Bidding', building: 'Building', complete: 'Complete', closed: 'Closed' };
+
+/* The table view: every job as a row with the shared list tools (columns,
+   filters, saved views, export). Job status is not bulk-edited — a job moves
+   through its own lifecycle (award, start, close-out) on the job page. */
+const JOB_COLUMNS: Column<JobRow>[] = [
+  { key: 'name', header: 'Job', primary: true, accessor: (p) => p.name || 'Untitled job' },
+  { key: 'project_number', header: 'Number', accessor: (p) => p.project_number || '' },
+  { key: 'stage', header: 'Stage', phone: 'show', accessor: (p) => STAGE_TEXT[bucket(p)] },
+  { key: 'city', header: 'City', accessor: (p) => [p.city, p.state].filter(Boolean).join(', ') },
+  { key: 'start_date', header: 'Start', accessor: (p) => ymd(p.start_date) || '', groupable: false, filterable: false },
+  { key: 'end_date', header: 'Finish', accessor: (p) => ymd(p.end_date) || '', groupable: false, filterable: false },
+  { key: 'health', header: 'Health', align: 'right', accessor: (p) => p.health?.score ?? null, render: (p) => (p.health ? String(p.health.score) : '—') },
+  { key: 'contract', header: 'Contract', align: 'right', phone: 'show', total: 'sum', format: fmtMoneyExact, accessor: (p) => Number(p.contract_amount) || 0, render: (p) => (Number(p.contract_amount) > 0 ? fmtMoneyExact(Number(p.contract_amount)) : '—') },
+  { key: 'billed', header: 'Billed', align: 'right', total: 'sum', format: fmtMoneyExact, accessor: (p) => (typeof p.billed_live === 'number' ? p.billed_live : 0), render: (p) => (typeof p.billed_live === 'number' ? fmtMoneyExact(p.billed_live) : '—') },
+  { key: 'billed_pct', header: 'Billed %', align: 'right', hidden: true, accessor: (p) => (typeof p.billed_live === 'number' ? billedPct(p.billed_live, Number(p.contract_amount) || 0) : null), render: (p) => { const v = typeof p.billed_live === 'number' ? billedPct(p.billed_live, Number(p.contract_amount) || 0) : null; return v == null ? '—' : `${v}%`; } },
+];
+
 const CHIPS: { key: StageFilter; label: string }[] = [
   { key: 'all', label: 'All' },
   { key: 'bidding', label: 'Bidding' },
@@ -54,6 +76,17 @@ export default function JobsPage() {
   const [stage, setStage] = useState<StageFilter>('all');
   const [sort, setSort] = useState<SortKey>('health');
   const today = useMemo(() => dayIn(deviceTimeZone() || 'UTC'), []);
+  const router = useRouter();
+  const [view, setView] = useState<JobsView>('board');
+  useEffect(() => {
+    try { if (window.localStorage.getItem(VIEW_KEY) === 'table') setView('table'); }
+    catch (e) { console.warn('[jobs] view preference unavailable', e); }
+  }, []);
+  const pickView = (v: JobsView) => {
+    setView(v);
+    try { window.localStorage.setItem(VIEW_KEY, v); }
+    catch (e) { console.warn('[jobs] could not remember the view', e); }
+  };
 
   const failed = !!loadError || degraded;
   const ready = !loading && !failed;
@@ -87,6 +120,17 @@ export default function JobsPage() {
     body = <FlatEmpty>No jobs yet. <Link href="/app/projects/new" className="jl-inline">Start the first one ›</Link></FlatEmpty>;
   } else if (shown.length === 0) {
     body = <FlatEmpty>No jobs match. <button type="button" className="jl-inline" onClick={clear}>Clear the filters</button></FlatEmpty>;
+  } else if (view === 'table') {
+    body = (
+      <DataTable<JobRow>
+        tableId="company-jobs"
+        exportName="jobs"
+        columns={JOB_COLUMNS}
+        rows={shown}
+        rowKey={(p) => p.id}
+        onRowClick={(p) => router.push(`/app/projects/${p.id}`)}
+      />
+    );
   } else {
     body = (
       <>
@@ -173,6 +217,10 @@ export default function JobsPage() {
           </button>
         ))}
         {filtering && ready && <span className="jl-count" role="status">{shown.length} of {rows.length}</span>}
+        <span className="jl-views" role="group" aria-label="Show jobs as">
+          <button type="button" className="jl-chip" aria-pressed={view === 'board'} onClick={() => pickView('board')}>Board</button>
+          <button type="button" className="jl-chip" aria-pressed={view === 'table'} onClick={() => pickView('table')}>Table</button>
+        </span>
       </div>
 
       {body}
@@ -201,6 +249,8 @@ const CSS = `
 .jl-chip[aria-pressed=true]{background:var(--selected-control-bg);color:var(--selected-control-fg);border-color:var(--selected-control-bg);font-weight:700}
 .jl-chip[aria-pressed=true] span{color:var(--selected-control-fg)}
 .jl-count{margin-left:auto;font-size:13px;color:var(--fl-text-3)}
+.jl-views{display:inline-flex;gap:6px;margin-left:auto}
+.jl-count + .jl-views{margin-left:8px}
 .jt{border:0;border-top:1px solid var(--fl-line);border-bottom:1px solid var(--fl-line);border-radius:0;overflow:hidden;background:none}
 .jt-head,.jt-row{display:grid;grid-template-columns:50px minmax(0,1fr) 122px 336px 132px;align-items:center;gap:14px;padding:0 16px}
 .jt-head{height:38px;font-size:12px;font-weight:700;letter-spacing:.06em;text-transform:uppercase;color:var(--fl-text-3);border-bottom:1px solid var(--fl-line);background:color-mix(in srgb,var(--bg-base) 55%,var(--bg-surface))}

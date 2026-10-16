@@ -18,11 +18,16 @@
 
 import React from 'react';
 import { createPortal } from 'react-dom';
-import { type Icon as PhosphorIcon, CaretRight, CaretDown, BookmarkSimple, Rows, Columns, DownloadSimple, DotsThree, MagnifyingGlass, X, EnvelopeSimple, Phone, User, Buildings, MapPin, CalendarBlank, CurrencyDollar, Flag, Tag, Hash, Note, Info } from '@phosphor-icons/react';
+import { type Icon as PhosphorIcon, CaretRight, CaretDown, CaretUp, CaretLeft, DotsSixVertical, Funnel, CheckSquare, Star, UsersThree, Trash, ArrowCounterClockwise, FloppyDisk, BookmarkSimple, Rows, Columns, DownloadSimple, DotsThree, MagnifyingGlass, X, EnvelopeSimple, Phone, User, Buildings, MapPin, CalendarBlank, CurrencyDollar, Flag, Tag, Hash, Note, Info } from '@phosphor-icons/react';
 import { useSortedRows, type SortState, type SortDir } from './premium';
 import { SortBar } from './sort';
 import { STATUS_COLORS, type StatusKind } from '@/lib/status-colors';
 import { initialsOf, monoToken } from '@/lib/directory-view';
+import {
+  mergeOrder, moveColumn, dropColumn, plainValue, humanValue, rowMatches, cleanFilters, distinctValues,
+  viewPayload, stateFromView, runBulk, bulkSummary,
+  type ListFilters, type ListViewState, type SavedListView,
+} from '@/lib/list-view';
 
 const cx = (...c: (string | false | null | undefined)[]) => c.filter(Boolean).join(' ');
 
@@ -517,6 +522,15 @@ export function ActionBar({ actions, children }: { actions: Action[]; children?:
 }
 
 // ─── DataTable ───────────────────────────────────────────────────────────────
+//
+// The ONE list table, and the list tools every list gets with it (Procore's
+// modernized list view): pick, reorder and resize columns; filter chips;
+// saved views (personal, or shared with the company, with a default); row
+// multi-select with bulk actions; and CSV export of exactly what is on screen.
+// The pure parts (order, filters, view shape, the bulk runner) are in
+// lib/list-view.ts. On a phone the rows stack, Columns becomes a "Fields"
+// sheet, a long-press (or Select) starts selecting, and the bulk bar docks
+// above the tab bar.
 
 export type Column<T> = {
   key: string;
@@ -541,6 +555,28 @@ export type Column<T> = {
   format?: (n: number) => string;
   /** Offered in "Group by". Defaults to true for text columns that are not the name column. */
   groupable?: boolean;
+  /** Offered in "Filter" (pick from the column's values). Defaults to the same rule as groupable. */
+  filterable?: boolean;
+};
+
+/**
+ * Bulk edit for a list. Every action runs row by row through `apply`, which
+ * must call the SAME route the single-record edit on that screen calls, so
+ * the route's permission check, validation, transitions and side effects run
+ * for every row. `allowed` false (no edit rights, or not known yet) means no
+ * checkboxes and no bulk bar at all.
+ */
+export type BulkEdit<T> = {
+  /** Singular noun for messages: 'RFI', 'punch item'. */
+  noun: string;
+  allowed: boolean;
+  status?: { label?: string; options: { value: string; label: string }[]; apply: (row: T, value: string) => Promise<Response> };
+  /** Pick from `options`; with no options (a free-text name field on that record) the person types the name. */
+  assignee?: { label?: string; options?: { value: string; label: string }[]; noneLabel?: string; placeholder?: string; apply: (row: T, value: string) => Promise<Response> };
+  due?: { label?: string; apply: (row: T, ymd: string) => Promise<Response> };
+  remove?: { label?: string; verb?: string; allowed?: boolean; apply: (row: T) => Promise<Response> };
+  /** Re-read the list after a bulk run (the rows changed on the server). */
+  onDone: () => void;
 };
 
 const valueOf = <T,>(col: Column<T>, row: T): unknown =>
@@ -548,16 +584,14 @@ const valueOf = <T,>(col: Column<T>, row: T): unknown =>
 
 const headerText = (h: React.ReactNode, key: string) => (typeof h === 'string' ? h : key.replace(/_/g, ' '));
 
-/** Plain text for a cell (export, grouping): numbers stay numbers, dates stay ISO. */
-function plainOf(v: unknown): string {
-  if (v == null) return '';
-  if (v instanceof Date) return v.toISOString();
-  if (typeof v === 'object') return '';
-  return String(v);
-}
+const plainOf = plainValue;
 
-type GridPrefs = { hidden?: string[]; sort?: SortState; groupBy?: string | null };
-type SavedView = { id: string; name: string; columns: string[] | null; sort_by: string | null; sort_direction: string | null; filters: { groupBy?: string | null } | null; is_default?: boolean };
+type GridPrefs = {
+  hidden?: string[]; sort?: SortState; groupBy?: string | null;
+  order?: string[]; widths?: Record<string, number>; filters?: ListFilters;
+  /** A view (own or shared) this person picked as their default for this list. */
+  defaultViewId?: string | null;
+};
 
 /** Stable id for a table: the page's route (ids → :id) + its column keys. */
 function autoGridId(keys: string[]): string {
@@ -571,14 +605,46 @@ function projectFromPath(): string | null {
   return m ? m[1] : null;
 }
 function readPrefs(id: string): GridPrefs {
-  try { return JSON.parse(window.localStorage.getItem(`saguaro.grid.${id}`) || '{}') as GridPrefs; } catch { return {}; }
+  try { return JSON.parse(window.localStorage.getItem(`saguaro.grid.${id}`) || '{}') as GridPrefs; }
+  catch (e) { console.warn('[list] saved columns unavailable', e); return {}; }
 }
 function writePrefs(id: string, p: GridPrefs) {
-  try { window.localStorage.setItem(`saguaro.grid.${id}`, JSON.stringify(p)); } catch { /* private mode */ }
+  try { window.localStorage.setItem(`saguaro.grid.${id}`, JSON.stringify(p)); }
+  catch (e) { console.warn('[list] could not remember columns', e); }
+}
+/** The default view is applied once per browser session per list, so a change you make sticks while you work. */
+function defaultAppliedThisSession(id: string): boolean {
+  try {
+    const k = `saguaro.grid.default.${id}`;
+    if (window.sessionStorage.getItem(k)) return true;
+    window.sessionStorage.setItem(k, '1');
+    return false;
+  } catch (e) { console.warn('[list] session storage unavailable', e); return true; }
 }
 
-/** A small popover anchored under a toolbar button (columns, views, group). */
-function GridPop({ label, icon, children, count, onOpen }: { label: string; icon?: React.ReactNode; children: (close: () => void) => React.ReactNode; count?: number; onOpen?: () => void }) {
+type ViewsPayload = { views: SavedListView[]; canShare: boolean };
+const viewsCache = new Map<string, { at: number; data: ViewsPayload }>();
+
+async function fetchViews(gridId: string, force = false): Promise<ViewsPayload & { error?: string }> {
+  const pid = projectFromPath();
+  const cacheKey = `${gridId}|${pid ?? ''}`;
+  const hit = viewsCache.get(cacheKey);
+  if (!force && hit && Date.now() - hit.at < 60_000) return hit.data;
+  try {
+    const r = await fetch(`/api/saved-views?module=${encodeURIComponent(gridId)}${pid ? `&project_id=${pid}` : ''}`, { credentials: 'include', cache: 'no-store' });
+    const j = await r.json().catch(() => ({}));
+    if (!r.ok) return { views: [], canShare: false, error: typeof j.error === 'string' ? j.error : "Couldn't load saved views." };
+    const data: ViewsPayload = { views: Array.isArray(j.views) ? j.views : [], canShare: !!j.canShare };
+    viewsCache.set(cacheKey, { at: Date.now(), data });
+    return data;
+  } catch (e) {
+    console.warn('[list] saved views', e);
+    return { views: [], canShare: false, error: 'No connection.' };
+  }
+}
+
+/** A small popover anchored under a toolbar button (columns, views, group). A bottom sheet on a phone. */
+function GridPop({ label, phoneLabel, icon, children, count, onOpen }: { label: string; phoneLabel?: string; icon?: React.ReactNode; children: (close: () => void) => React.ReactNode; count?: number; onOpen?: () => void }) {
   // Rendered in a portal with fixed positioning: the table wrapper scrolls
   // sideways (overflow-x), which would clip an absolutely positioned menu.
   const [pos, setPos] = React.useState<{ top: number; right: number } | null>(null);
@@ -592,6 +658,8 @@ function GridPop({ label, icon, children, count, onOpen }: { label: string; icon
     const onDown = (e: MouseEvent) => {
       const t = e.target as Node;
       if (btnRef.current?.contains(t) || menuRef.current?.contains(t)) return;
+      // A dialog opened from inside the menu (name a view) lives in its own portal.
+      if ((t as HTMLElement).closest?.('[role="dialog"],[role="alertdialog"]')) return;
       close();
     };
     const onKey = (e: KeyboardEvent) => { if (e.key === 'Escape') close(); };
@@ -609,14 +677,105 @@ function GridPop({ label, icon, children, count, onOpen }: { label: string; icon
   return (
     <div className="k-grid-pop">
       <button ref={btnRef} type="button" className="k-grid-btn" aria-haspopup="dialog" aria-expanded={open} onClick={toggle}>
-        {icon}{label}{count ? <span className="k-grid-count">{count}</span> : null}<CaretDown size={12} weight="bold" />
+        {icon}
+        {phoneLabel ? <><span className="k-lbl-desk">{label}</span><span className="k-lbl-phone">{phoneLabel}</span></> : label}
+        {count ? <span className="k-grid-count">{count}</span> : null}<CaretDown size={12} weight="bold" />
       </button>
       {open && createPortal(
-        <div ref={menuRef} className="k-grid-menu" role="dialog" aria-label={label} style={{ position: 'fixed', top: pos.top, right: pos.right }}>
+        <div ref={menuRef} className="k-grid-menu" role="dialog" aria-label={phoneLabel ?? label} style={{ position: 'fixed', top: pos.top, right: pos.right }}>
+          <div className="k-grid-sheet-head">
+            <strong>{phoneLabel ?? label}</strong>
+            <button type="button" className="k-grid-x" aria-label="Close" onClick={close}><X size={14} /></button>
+          </div>
           {children(close)}
         </div>,
         document.body,
       )}
+    </div>
+  );
+}
+
+/** Column picker: show/hide, drag to reorder (desktop), up/down (touch), reset. */
+function ColumnPanel({ order, hidden, label, onToggle, onMove, onDrop, onReset }: {
+  order: string[]; hidden: Set<string>; label: (k: string) => string;
+  onToggle: (k: string, on: boolean) => void; onMove: (k: string, d: -1 | 1) => void;
+  onDrop: (k: string, target: string) => void; onReset: () => void;
+}) {
+  const [dragging, setDragging] = React.useState<string | null>(null);
+  const [over, setOver] = React.useState<string | null>(null);
+  return (
+    <div className="k-grid-list">
+      {order.map((k, i) => (
+        <div
+          key={k}
+          className="k-col-row"
+          data-over={over === k && dragging !== k ? 'true' : undefined}
+          draggable={i > 0}
+          onDragStart={(e) => { setDragging(k); e.dataTransfer.effectAllowed = 'move'; e.dataTransfer.setData('text/plain', k); }}
+          onDragOver={(e) => { if (dragging && i > 0) { e.preventDefault(); setOver(k); } }}
+          onDragLeave={() => setOver((o) => (o === k ? null : o))}
+          onDrop={(e) => { e.preventDefault(); if (dragging) onDrop(dragging, k); setDragging(null); setOver(null); }}
+          onDragEnd={() => { setDragging(null); setOver(null); }}
+        >
+          <span className="k-col-grip" aria-hidden data-locked={i === 0 ? 'true' : undefined}><DotsSixVertical size={14} weight="bold" /></span>
+          <label className="k-grid-check">
+            <input type="checkbox" checked={!hidden.has(k)} disabled={i === 0} onChange={(e) => onToggle(k, e.target.checked)} />
+            {label(k)}
+          </label>
+          <button type="button" className="k-col-move" aria-label={`Move ${label(k)} up`} disabled={i <= 1} onClick={() => onMove(k, -1)}><CaretUp size={14} weight="bold" /></button>
+          <button type="button" className="k-col-move" aria-label={`Move ${label(k)} down`} disabled={i === 0 || i === order.length - 1} onClick={() => onMove(k, 1)}><CaretDown size={14} weight="bold" /></button>
+        </div>
+      ))}
+      <button type="button" className="k-grid-foot" onClick={onReset}><ArrowCounterClockwise size={14} />Reset columns</button>
+    </div>
+  );
+}
+
+/** Add Filter: pick a column, then tick the values to keep. Applied as you tick. */
+function FilterPanel({ cols, valuesFor, filters, onChange }: {
+  cols: { key: string; label: string }[];
+  valuesFor: (key: string) => { value: string; count: number }[];
+  filters: ListFilters;
+  onChange: (key: string, values: string[]) => void;
+}) {
+  const [col, setCol] = React.useState<string | null>(cols.length === 1 ? cols[0].key : null);
+  const [q, setQ] = React.useState('');
+  if (!col) {
+    return (
+      <div className="k-grid-list">
+        {cols.map((c) => (
+          <button type="button" key={c.key} data-on={!!filters[c.key]?.length} onClick={() => { setCol(c.key); setQ(''); }}>
+            {c.label}{filters[c.key]?.length ? <span className="k-grid-count">{filters[c.key].length}</span> : null}
+          </button>
+        ))}
+      </div>
+    );
+  }
+  const chosen = new Set(filters[col] ?? []);
+  const all = valuesFor(col);
+  const needle = q.trim().toLowerCase();
+  const list = needle ? all.filter((v) => humanValue(v.value).toLowerCase().includes(needle)) : all;
+  const label = cols.find((c) => c.key === col)?.label ?? col;
+  return (
+    <div className="k-grid-list">
+      {cols.length > 1 && <button type="button" className="k-grid-back" onClick={() => setCol(null)}><CaretLeft size={12} weight="bold" />{label}</button>}
+      {all.length > 12 && <input className="k-input k-grid-search" type="search" placeholder={`Search ${label.toLowerCase()}`} aria-label={`Search ${label}`} value={q} onChange={(e) => setQ(e.target.value)} />}
+      {list.map((v) => (
+        <label key={v.value} className="k-grid-check">
+          <input
+            type="checkbox"
+            checked={chosen.has(v.value)}
+            onChange={(e) => {
+              const n = new Set(chosen);
+              if (e.target.checked) n.add(v.value); else n.delete(v.value);
+              onChange(col, Array.from(n));
+            }}
+          />
+          <span className="k-grid-check-text">{humanValue(v.value)}</span>
+          <span className="k-grid-count">{v.count}</span>
+        </label>
+      ))}
+      {list.length === 0 && <div className="k-grid-note">Nothing matches.</div>}
     </div>
   );
 }
@@ -634,6 +793,7 @@ export function DataTable<T>({
   rowStyle,
   tableId,
   bulkActions,
+  bulkEdit,
   exportName,
   toolbar,
 }: {
@@ -654,55 +814,112 @@ export function DataTable<T>({
   rowStyle?: (row: T) => React.CSSProperties | undefined;
   /** Names this table for saved views and remembered columns. Defaults to the route + column keys. */
   tableId?: string;
-  /** Turns on row checkboxes; the actions act on every checked row. */
+  /** Turns on row checkboxes; the actions act on every checked row. Pass only when the person may run them. */
   bulkActions?: (rows: T[]) => Action[];
+  /** Standard bulk edit (status, assignee, due date, delete) through the record's own route. */
+  bulkEdit?: BulkEdit<T>;
   /** File name for Export (no extension). */
   exportName?: string;
-  /** Show the grid bar (views, group, columns, export). Defaults on for tables with 4+ columns. */
+  /** Show the grid bar (views, filter, group, columns, export). Defaults on for tables with 4+ columns or bulk actions. */
   toolbar?: boolean;
 }) {
+  const keys = React.useMemo(() => columns.map((c) => c.key), [columns]);
+  const keySig = keys.join(',');
+  const defaultHidden = React.useMemo(() => columns.filter((c) => c.hidden).map((c) => c.key), [columns]);
   const [gridId, setGridId] = React.useState(tableId || '');
   const [sort, setSort] = React.useState<SortState>(defaultSort ?? null);
-  const [hidden, setHidden] = React.useState<Set<string>>(() => new Set(columns.filter((c) => c.hidden).map((c) => c.key)));
+  const [hidden, setHidden] = React.useState<Set<string>>(() => new Set(defaultHidden));
+  const [order, setOrder] = React.useState<string[]>(keys);
+  const [widths, setWidths] = React.useState<Record<string, number>>({});
+  const [filters, setFilters] = React.useState<ListFilters>({});
   const [groupBy, setGroupBy] = React.useState<string | null>(null);
+  const [defaultViewId, setDefaultViewId] = React.useState<string | null>(null);
   const [checked, setChecked] = React.useState<Set<string | number>>(new Set());
-  const [views, setViews] = React.useState<SavedView[] | null>(null);
+  const [selecting, setSelecting] = React.useState(false);
+  const [views, setViews] = React.useState<SavedListView[] | null>(null);
+  const [canShare, setCanShare] = React.useState(false);
+  const [active, setActive] = React.useState<{ id: string; sig: string } | null>(null);
   const [viewMsg, setViewMsg] = React.useState('');
+  const [bulkMsg, setBulkMsg] = React.useState<{ text: string; tone: 'good' | 'bad' } | null>(null);
+  const [bulkBusy, setBulkBusy] = React.useState(false);
   const loadedPrefs = React.useRef(false);
+  const press = React.useRef<{ timer: ReturnType<typeof setTimeout> | null; fired: boolean; x: number; y: number }>({ timer: null, fired: false, x: 0, y: 0 });
 
-  // Restore this table's remembered columns / sort / grouping once its id is known (client only).
+  const stateNow = (): ListViewState => ({ order, hidden: Array.from(hidden), widths, filters, sort, groupBy });
+  const sigOf = (s: ListViewState) => JSON.stringify(viewPayload(s));
+  const applyState = React.useCallback((s: ListViewState) => {
+    setOrder(s.order); setHidden(new Set(s.hidden)); setWidths(s.widths); setFilters(s.filters); setSort(s.sort); setGroupBy(s.groupBy);
+  }, []);
+
+  // Restore this table's remembered layout once its id is known (client only),
+  // then apply the person's default view at the start of a session.
   React.useEffect(() => {
-    const id = tableId || autoGridId(columns.map((c) => c.key));
+    const id = tableId || autoGridId(keys);
     setGridId(id);
     const p = readPrefs(id);
-    if (p.hidden) setHidden(new Set(p.hidden.filter((k) => columns.some((c) => c.key === k))));
-    if (p.sort !== undefined) setSort(p.sort ?? null);
-    if (p.groupBy !== undefined) setGroupBy(p.groupBy && columns.some((c) => c.key === p.groupBy) ? p.groupBy : null);
+    setOrder(mergeOrder(p.order, keys));
+    if (p.hidden) setHidden(new Set(p.hidden.filter((k) => keys.includes(k) && k !== keys[0])));
+    if (p.sort !== undefined) setSort(p.sort && keys.includes(p.sort.key) ? p.sort : null);
+    if (p.groupBy !== undefined) setGroupBy(p.groupBy && keys.includes(p.groupBy) ? p.groupBy : null);
+    if (p.widths) setWidths(Object.fromEntries(Object.entries(p.widths).filter(([k, w]) => keys.includes(k) && typeof w === 'number')));
+    setFilters(cleanFilters(p.filters, keys));
+    setDefaultViewId(p.defaultViewId ?? null);
     loadedPrefs.current = true;
+    if (!id || defaultAppliedThisSession(id)) return;
+    let alive = true;
+    void fetchViews(id).then((d) => {
+      if (!alive) return;
+      setViews(d.views); setCanShare(d.canShare);
+      const def = d.views.find((v) => v.id === p.defaultViewId) ?? d.views.find((v) => v.mine && v.is_default);
+      if (def) {
+        const s = stateFromView(def, keys);
+        applyState(s);
+        setActive({ id: def.id, sig: sigOf(s) });
+      }
+    });
+    return () => { alive = false; };
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [tableId]);
+  }, [tableId, keySig]);
   React.useEffect(() => {
     if (!gridId || !loadedPrefs.current) return;
-    writePrefs(gridId, { hidden: Array.from(hidden), sort, groupBy });
-  }, [gridId, hidden, sort, groupBy]);
+    writePrefs(gridId, { hidden: Array.from(hidden), sort, groupBy, order, widths, filters, defaultViewId });
+  }, [gridId, hidden, sort, groupBy, order, widths, filters, defaultViewId]);
 
-  const visible = React.useMemo(() => columns.filter((c) => !hidden.has(c.key)), [columns, hidden]);
   const byKey = React.useMemo(() => new Map(columns.map((c) => [c.key, c])), [columns]);
+  const ordered = React.useMemo(() => mergeOrder(order, keys), [order, keys]);
+  const visible = React.useMemo(
+    () => ordered.filter((k) => !hidden.has(k) || k === keys[0]).map((k) => byKey.get(k)).filter((c): c is Column<T> => !!c),
+    [ordered, hidden, byKey, keys],
+  );
+  const customized = React.useMemo(
+    () => ordered.join(',') !== keys.join(',') || Array.from(hidden).sort().join(',') !== [...defaultHidden].sort().join(','),
+    [ordered, keys, hidden, defaultHidden],
+  );
   const getValue = React.useCallback((row: T, key: string) => {
     const col = byKey.get(key);
     return col ? valueOf(col, row) : undefined;
   }, [byKey]);
-  const sorted = useSortedRows(rows, sort, getValue);
+  const activeFilters = React.useMemo(() => cleanFilters(filters, keys), [filters, keys]);
+  const filterCount = Object.keys(activeFilters).length;
+  const filtered = React.useMemo(
+    () => (filterCount ? rows.filter((r) => rowMatches(activeFilters, (k) => getValue(r, k))) : rows),
+    [rows, activeFilters, filterCount, getValue],
+  );
+  const sorted = useSortedRows(filtered, sort, getValue);
 
   const cycle = (key: string) =>
     setSort((p) => (!p || p.key !== key ? { key, dir: 'asc' } : p.dir === 'asc' ? { key, dir: 'desc' } : null));
 
-  const showBar = toolbar ?? columns.length >= 4;
-  const bulk = !!bulkActions;
+  const editAllowed = !!bulkEdit?.allowed && !!(bulkEdit.status || bulkEdit.assignee || bulkEdit.due || (bulkEdit.remove && bulkEdit.remove.allowed !== false));
+  const bulk = !!bulkActions || editAllowed;
+  const showBar = toolbar ?? (columns.length >= 4 || bulk);
   const colCount = visible.length + (rowActions ? 1 : 0) + (bulk ? 1 : 0);
   const sortCols = visible.filter((c) => c.sortable !== false && typeof c.header === 'string').map((c) => ({ key: c.key, label: c.header as string }));
-  const groupCols = columns.filter((c) => c.groupable ?? (!c.primary && c.align !== 'right' && typeof c.header === 'string'));
+  const autoPickable = (c: Column<T>) => !c.primary && c.align !== 'right' && typeof c.header === 'string';
+  const groupCols = columns.filter((c) => c.groupable ?? autoPickable(c));
+  const filterCols = columns.filter((c) => c.filterable ?? c.groupable ?? autoPickable(c)).map((c) => ({ key: c.key, label: headerText(c.header, c.key) }));
   const hasTotals = visible.some((c) => c.total);
+  const labelOf = (k: string) => headerText(byKey.get(k)?.header, k);
 
   // Grouping: rows bucketed by the column's plain value, in sorted order.
   const groups = React.useMemo(() => {
@@ -711,7 +928,7 @@ export function DataTable<T>({
     if (!col) return null;
     const m = new Map<string, T[]>();
     sorted.forEach((r) => {
-      const k = plainOf(valueOf(col, r)) || '(none)';
+      const k = humanValue(plainOf(valueOf(col, r))).replace('(blank)', '(none)');
       const list = m.get(k);
       if (list) list.push(r); else m.set(k, [r]);
     });
@@ -729,6 +946,8 @@ export function DataTable<T>({
   const keyOf = (r: T) => rowKey(r);
   const allChecked = bulk && sorted.length > 0 && sorted.every((r) => checked.has(keyOf(r)));
   const checkedRows = bulk ? sorted.filter((r) => checked.has(keyOf(r))) : [];
+  const toggleRow = (k: string | number, on?: boolean) =>
+    setChecked((p) => { const n = new Set(p); if (on ?? !n.has(k)) n.add(k); else n.delete(k); return n; });
   React.useEffect(() => {
     // Drop checks for rows that left the table.
     if (!bulk || checked.size === 0) return;
@@ -739,12 +958,14 @@ export function DataTable<T>({
     if (changed) setChecked(next);
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [rows]);
+  React.useEffect(() => { if (!bulk) { setChecked(new Set()); setSelecting(false); } }, [bulk]);
+  const endSelecting = () => { setChecked(new Set()); setSelecting(false); };
 
-  // Export exactly what is on screen: visible columns, current sort, every row.
-  const exportCsv = () => {
+  // Export exactly what is on screen: visible columns in their order, current filters and sort.
+  const exportCsv = (list: T[]) => {
     const esc = (v: string) => (/[",\n]/.test(v) ? `"${v.replace(/"/g, '""')}"` : v);
     const head = visible.map((c) => esc(headerText(c.header, c.key)));
-    const lines = sorted.map((r) => visible.map((c) => esc(plainOf(valueOf(c, r)))).join(','));
+    const lines = list.map((r) => visible.map((c) => esc(plainOf(valueOf(c, r)))).join(','));
     const blob = new Blob([[head.join(','), ...lines].join('\n')], { type: 'text/csv;charset=utf-8' });
     const a = document.createElement('a');
     a.href = URL.createObjectURL(blob);
@@ -753,41 +974,131 @@ export function DataTable<T>({
     setTimeout(() => URL.revokeObjectURL(a.href), 1000);
   };
 
-  const loadViews = React.useCallback(async () => {
+  // ── Saved views ──
+  const loadViews = React.useCallback(async (force = false) => {
     if (!gridId) return;
-    const pid = projectFromPath();
-    try {
-      const r = await fetch(`/api/saved-views?module=${encodeURIComponent(gridId)}${pid ? `&project_id=${pid}` : ''}`, { credentials: 'include', cache: 'no-store' });
-      const j = await r.json().catch(() => ({}));
-      if (!r.ok) { setViewMsg(j.error || "Couldn't load saved views."); setViews([]); return; }
-      setViews(Array.isArray(j.views) ? j.views : []);
-    } catch { setViewMsg('No connection.'); setViews([]); }
+    const d = await fetchViews(gridId, force);
+    setViews(d.views); setCanShare(d.canShare);
+    if (d.error) setViewMsg(d.error);
   }, [gridId]);
-
-  const applyView = (v: SavedView) => {
-    if (Array.isArray(v.columns) && v.columns.length) setHidden(new Set(columns.map((c) => c.key).filter((k) => !v.columns!.includes(k))));
-    setSort(v.sort_by ? { key: v.sort_by, dir: v.sort_direction === 'desc' ? 'desc' : 'asc' } : null);
-    setGroupBy(v.filters?.groupBy && columns.some((c) => c.key === v.filters!.groupBy) ? v.filters.groupBy : null);
+  const applyView = (v: SavedListView) => {
+    const s = stateFromView(v, keys);
+    applyState(s);
+    setActive({ id: v.id, sig: sigOf(s) });
+    setViewMsg(`Showing "${v.name}".`);
   };
-  const saveView = async () => {
+  const viewRequest = async (url: string, method: 'POST' | 'PATCH' | 'DELETE', body?: unknown) => {
+    const r = await fetch(url, { method, credentials: 'include', headers: body ? { 'Content-Type': 'application/json' } : undefined, body: body ? JSON.stringify(body) : undefined });
+    const j = await r.json().catch(() => ({}));
+    return { ok: r.ok, j: j as { error?: string; view?: SavedListView } };
+  };
+  const saveView = async (share: boolean) => {
     const { textPrompt } = await import('@/lib/ui/async-dialog');
-    const name = (await textPrompt({ title: 'Save this view', message: 'Name it so you can come back to these columns, sort and grouping.', placeholder: 'e.g. Overdue by trade' }))?.trim();
+    const name = (await textPrompt({
+      title: share ? 'Save and share this view' : 'Save this view',
+      message: share ? 'Everyone in your company can load it. Only you can change it.' : 'Name it so you can come back to these columns, filters and sort.',
+      placeholder: 'e.g. Overdue by trade',
+      required: true,
+    }))?.trim();
     if (!name) return;
-    const pid = projectFromPath();
-    const r = await fetch('/api/saved-views', {
-      method: 'POST', credentials: 'include', headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ name, module: gridId, project_id: pid, columns: visible.map((c) => c.key), sort_by: sort?.key ?? null, sort_direction: sort?.dir ?? 'asc', filters: { groupBy } }),
-    });
-    const j = await r.json().catch(() => ({}));
-    setViewMsg(r.ok ? `Saved "${name}".` : (j.error || "Couldn't save the view."));
-    await loadViews();
+    const s = stateNow();
+    const { ok, j } = await viewRequest('/api/saved-views', 'POST', { name, module: gridId, is_shared: share, ...viewPayload(s) });
+    setViewMsg(ok ? `Saved "${name}"${share ? ' and shared it with the company' : ''}.` : (j.error || "Couldn't save the view."));
+    if (ok && j.view) setActive({ id: j.view.id, sig: sigOf(s) });
+    await loadViews(true);
   };
-  const deleteView = async (v: SavedView) => {
-    const r = await fetch(`/api/saved-views?id=${encodeURIComponent(v.id)}`, { method: 'DELETE', credentials: 'include' });
-    const j = await r.json().catch(() => ({}));
-    setViewMsg(r.ok ? `Removed "${v.name}".` : (j.error || "Couldn't remove the view."));
-    await loadViews();
+  const updateView = async (v: SavedListView) => {
+    const s = stateNow();
+    const { ok, j } = await viewRequest(`/api/saved-views?id=${encodeURIComponent(v.id)}`, 'PATCH', viewPayload(s));
+    setViewMsg(ok ? `Updated "${v.name}".` : (j.error || "Couldn't update the view."));
+    if (ok) setActive({ id: v.id, sig: sigOf(s) });
+    await loadViews(true);
   };
+  const shareView = async (v: SavedListView) => {
+    const { ok, j } = await viewRequest(`/api/saved-views?id=${encodeURIComponent(v.id)}`, 'PATCH', { is_shared: !v.is_shared });
+    setViewMsg(ok ? (v.is_shared ? `"${v.name}" is just yours now.` : `"${v.name}" is shared with the company.`) : (j.error || "Couldn't change sharing."));
+    await loadViews(true);
+  };
+  const makeDefault = async (v: SavedListView) => {
+    const isDef = defaultViewId === v.id || (!defaultViewId && v.mine && v.is_default);
+    if (isDef) {
+      setDefaultViewId(null);
+      if (v.mine && v.is_default) await viewRequest(`/api/saved-views?id=${encodeURIComponent(v.id)}`, 'PATCH', { is_default: false });
+      setViewMsg(`"${v.name}" is no longer your default.`);
+    } else {
+      setDefaultViewId(v.id);
+      if (v.mine) await viewRequest(`/api/saved-views?id=${encodeURIComponent(v.id)}`, 'PATCH', { is_default: true });
+      setViewMsg(`"${v.name}" opens first on this list.`);
+    }
+    await loadViews(true);
+  };
+  const deleteView = async (v: SavedListView) => {
+    const { ok, j } = await viewRequest(`/api/saved-views?id=${encodeURIComponent(v.id)}`, 'DELETE');
+    setViewMsg(ok ? `Removed "${v.name}".` : (j.error || "Couldn't remove the view."));
+    if (ok && active?.id === v.id) setActive(null);
+    if (ok && defaultViewId === v.id) setDefaultViewId(null);
+    await loadViews(true);
+  };
+  const resetAll = () => {
+    applyState({ order: keys, hidden: defaultHidden, widths: {}, filters: {}, sort: defaultSort ?? null, groupBy: null });
+    setActive(null);
+    setViewMsg('Back to the standard list.');
+  };
+  const activeView = active ? views?.find((v) => v.id === active.id) ?? null : null;
+  const modified = !!active && sigOf(stateNow()) !== active.sig;
+
+  // ── Bulk ──
+  const runAction = async (verb: string, run: (r: T) => Promise<Response>) => {
+    if (!bulkEdit || checkedRows.length === 0) return;
+    setBulkBusy(true);
+    setBulkMsg(null);
+    const outcome = await runBulk(checkedRows, run);
+    setBulkBusy(false);
+    setBulkMsg({ text: bulkSummary(outcome, bulkEdit.noun, verb), tone: outcome.failed ? 'bad' : 'good' });
+    if (outcome.done > 0) { setChecked(new Set()); setSelecting(false); }
+    bulkEdit.onDone();
+  };
+  const editActions: Action[] = [];
+  if (bulkEdit && editAllowed) {
+    const n = checkedRows.length;
+    if (bulkEdit.status) {
+      const st = bulkEdit.status;
+      editActions.push({ label: st.label ?? 'Change status', icon: <Flag size={14} />, disabled: bulkBusy, onClick: () => { void (async () => {
+        const { choicePrompt } = await import('@/lib/ui/async-dialog');
+        const v = await choicePrompt({ title: `Status for ${n} ${bulkEdit.noun}${n === 1 ? '' : 's'}`, options: st.options });
+        if (v) await runAction('updated', (r) => st.apply(r, v));
+      })(); } });
+    }
+    if (bulkEdit.assignee) {
+      const as = bulkEdit.assignee;
+      editActions.push({ label: as.label ?? 'Assign', icon: <User size={14} />, disabled: bulkBusy, onClick: () => { void (async () => {
+        const { choicePrompt, textPrompt } = await import('@/lib/ui/async-dialog');
+        const title = `${as.label ?? 'Assign'} — ${n} ${bulkEdit.noun}${n === 1 ? '' : 's'}`;
+        const v = as.options && as.options.length
+          ? await choicePrompt({ title, options: as.options, noneLabel: as.noneLabel })
+          : (await textPrompt({ title, placeholder: as.placeholder ?? 'Name', required: true, submitLabel: 'Assign' }))?.trim() || null;
+        if (v !== null) await runAction('updated', (r) => as.apply(r, v));
+      })(); } });
+    }
+    if (bulkEdit.due) {
+      const du = bulkEdit.due;
+      editActions.push({ label: du.label ?? 'Set due date', icon: <CalendarBlank size={14} />, disabled: bulkBusy, onClick: () => { void (async () => {
+        const { textPrompt } = await import('@/lib/ui/async-dialog');
+        const v = await textPrompt({ title: `${du.label ?? 'Due date'} — ${n} ${bulkEdit.noun}${n === 1 ? '' : 's'}`, type: 'date', required: true, submitLabel: 'Set date' });
+        if (v && /^\d{4}-\d{2}-\d{2}$/.test(v)) await runAction('updated', (r) => du.apply(r, v));
+      })(); } });
+    }
+    if (bulkEdit.remove && bulkEdit.remove.allowed !== false) {
+      const rm = bulkEdit.remove;
+      const label = rm.label ?? 'Delete';
+      editActions.push({ label, icon: <Trash size={14} />, tone: 'danger', disabled: bulkBusy, onClick: () => { void (async () => {
+        const { confirmDialog } = await import('@/lib/ui/async-dialog');
+        const ok = await confirmDialog({ title: `${label} ${n} ${bulkEdit.noun}${n === 1 ? '' : 's'}?`, message: label === 'Delete' ? 'This cannot be undone.' : undefined, confirmLabel: label, danger: true });
+        if (ok) await runAction(rm.verb ?? 'deleted', rm.apply);
+      })(); } });
+    }
+  }
+  const pageActions = bulkActions ? bulkActions(checkedRows).filter((a) => !a.hidden) : [];
 
   // Keyboard: ↑/↓ move between rows, Enter opens.
   const onRowKey = (e: React.KeyboardEvent<HTMLTableRowElement>, row: T) => {
@@ -801,29 +1112,79 @@ export function DataTable<T>({
     }
   };
 
+  // Touch: a long press starts selecting and picks the row.
+  const pressStart = (e: React.PointerEvent, k: string | number) => {
+    if (!bulk || e.pointerType !== 'touch') return;
+    press.current.fired = false;
+    press.current.x = e.clientX; press.current.y = e.clientY;
+    if (press.current.timer) clearTimeout(press.current.timer);
+    press.current.timer = setTimeout(() => {
+      press.current.fired = true;
+      setSelecting(true);
+      toggleRow(k, true);
+      try { navigator.vibrate?.(12); } catch (err) { console.warn('[list] vibrate', err); }
+    }, 480);
+  };
+  const pressMove = (e: React.PointerEvent) => {
+    if (!press.current.timer) return;
+    if (Math.abs(e.clientX - press.current.x) > 8 || Math.abs(e.clientY - press.current.y) > 8) { clearTimeout(press.current.timer); press.current.timer = null; }
+  };
+  const pressEnd = () => { if (press.current.timer) { clearTimeout(press.current.timer); press.current.timer = null; } };
+
+  const widthStyle = (k: string): React.CSSProperties | undefined => {
+    const w = widths[k];
+    return w ? { width: w, minWidth: w, maxWidth: w, overflow: 'hidden', textOverflow: 'ellipsis' } : undefined;
+  };
+  const startResize = (e: React.PointerEvent<HTMLSpanElement>, k: string) => {
+    e.preventDefault(); e.stopPropagation();
+    const th = e.currentTarget.parentElement;
+    const start = th?.getBoundingClientRect().width ?? 120;
+    const x0 = e.clientX;
+    const move = (ev: PointerEvent) => setWidths((p) => ({ ...p, [k]: Math.max(60, Math.min(800, Math.round(start + ev.clientX - x0))) }));
+    const up = () => { window.removeEventListener('pointermove', move); window.removeEventListener('pointerup', up); };
+    window.addEventListener('pointermove', move);
+    window.addEventListener('pointerup', up);
+  };
+
   const renderRow = (row: T) => {
     const k = keyOf(row);
+    const isChecked = checked.has(k);
+    const clickable = !!onRowClick || selecting;
+    let phoneSlots = 0;
     return (
       <tr
         key={k}
         style={rowStyle?.(row)}
-        data-clickable={!!onRowClick}
-        data-selected={isSelected?.(row) || checked.has(k) ? 'true' : undefined}
-        aria-selected={isSelected ? !!isSelected(row) : undefined}
+        data-clickable={clickable}
+        data-selected={isSelected?.(row) || isChecked ? 'true' : undefined}
+        data-checked={isChecked ? 'true' : undefined}
+        aria-selected={isSelected ? !!isSelected(row) : bulk ? isChecked : undefined}
         tabIndex={onRowClick ? 0 : -1}
         onKeyDown={(e) => onRowKey(e, row)}
-        onClick={onRowClick ? () => onRowClick(row) : undefined}
+        onPointerDown={bulk ? (e) => pressStart(e, k) : undefined}
+        onPointerMove={bulk ? pressMove : undefined}
+        onPointerUp={bulk ? pressEnd : undefined}
+        onPointerCancel={bulk ? pressEnd : undefined}
+        onContextMenu={bulk && selecting ? (e) => e.preventDefault() : undefined}
+        onClick={() => {
+          if (press.current.fired) { press.current.fired = false; return; }
+          if (selecting) { toggleRow(k); return; }
+          onRowClick?.(row);
+        }}
       >
         {bulk && (
           <td className="k-td-check" onClick={(e) => e.stopPropagation()}>
-            <input type="checkbox" aria-label="Select row" checked={checked.has(k)} onChange={(e) => setChecked((p) => { const n = new Set(p); if (e.target.checked) n.add(k); else n.delete(k); return n; })} />
+            <input type="checkbox" aria-label="Select row" checked={isChecked} onChange={(e) => toggleRow(k, e.target.checked)} />
           </td>
         )}
         {visible.map((c, ci) => {
           const v = valueOf(c, row);
-          const phone = c.phone ?? (ci < 4 ? 'show' : 'hide');
+          // Phones: the name plus three more. Once someone arranges Fields, their first ones win.
+          let phone: 'show' | 'hide';
+          if (customized) { phone = ci === 0 || c.phone === 'show' || phoneSlots < 4 ? 'show' : 'hide'; if (ci > 0 && phone === 'show') phoneSlots++; }
+          else phone = c.phone ?? (ci < 4 ? 'show' : 'hide');
           return (
-            <td key={c.key} className={c.primary ? 'k-td-primary' : undefined} style={{ textAlign: c.align }} data-label={typeof c.header === 'string' ? c.header : undefined} data-phone={phone}>
+            <td key={c.key} className={c.primary ? 'k-td-primary' : undefined} style={{ textAlign: c.align, ...widthStyle(c.key) }} data-label={typeof c.header === 'string' ? c.header : undefined} data-phone={phone}>
               {c.render ? c.render(row) : v == null || v === '' ? '—' : String(v)}
             </td>
           );
@@ -849,34 +1210,75 @@ export function DataTable<T>({
     </tr>
   );
 
+  const myViews = (views ?? []).filter((v) => v.mine);
+  const teamViews = (views ?? []).filter((v) => !v.mine);
+  const isDefault = (v: SavedListView) => defaultViewId ? defaultViewId === v.id : !!(v.mine && v.is_default);
+  const viewItem = (v: SavedListView) => (
+    <div key={v.id} className="k-grid-item" data-on={active?.id === v.id ? 'true' : undefined}>
+      <button type="button" onClick={() => applyView(v)}>{v.name}</button>
+      <button type="button" className="k-grid-x" aria-pressed={isDefault(v)} aria-label={isDefault(v) ? `Stop opening ${v.name} first` : `Open ${v.name} first on this list`} title={isDefault(v) ? 'Your default' : 'Make my default'} onClick={() => void makeDefault(v)}>
+        <Star size={14} weight={isDefault(v) ? 'fill' : 'regular'} />
+      </button>
+      {v.mine && canShare && (
+        <button type="button" className="k-grid-x" aria-pressed={!!v.is_shared} aria-label={v.is_shared ? `Stop sharing ${v.name}` : `Share ${v.name} with the company`} title={v.is_shared ? 'Shared with the company' : 'Share with the company'} onClick={() => void shareView(v)}>
+          <UsersThree size={14} weight={v.is_shared ? 'fill' : 'regular'} />
+        </button>
+      )}
+      {v.mine && <button type="button" className="k-grid-x" data-tone="danger" aria-label={`Remove view ${v.name}`} onClick={() => void deleteView(v)}><X size={12} /></button>}
+    </div>
+  );
+
   return (
-    <div className="k-table-wrap">
+    <div className="k-table-wrap" data-selecting={selecting ? 'true' : undefined} data-bulkbar={bulk && checkedRows.length > 0 ? 'true' : undefined}>
       {showBar && !loading && (
         <div className="k-grid-bar">
-          <span className="k-grid-n">{sorted.length.toLocaleString('en-US')} {sorted.length === 1 ? 'row' : 'rows'}</span>
+          <span className="k-grid-n" role="status">
+            {filterCount ? `${sorted.length.toLocaleString('en-US')} of ${rows.length.toLocaleString('en-US')}` : sorted.length.toLocaleString('en-US')} {rows.length === 1 && !filterCount ? 'row' : 'rows'}
+            {activeView ? <span className="k-grid-view"> · {activeView.name}{modified ? ' (changed)' : ''}</span> : null}
+          </span>
           <div className="k-toolbar-spacer" />
+          {bulk && (
+            <button type="button" className="k-grid-btn k-grid-select" aria-pressed={selecting} onClick={() => (selecting ? endSelecting() : setSelecting(true))}>
+              <CheckSquare size={14} />{selecting ? 'Done' : 'Select'}
+            </button>
+          )}
           {gridId && (
             <GridPop label="Views" icon={<BookmarkSimple size={14} />} onOpen={() => { setViewMsg(''); void loadViews(); }}>
               {() => {
                 if (views === null) return <div className="k-grid-note">Loading…</div>;
                 return (
                   <div className="k-grid-list">
+                    {myViews.length > 0 && <div className="k-grid-sub">My views</div>}
+                    {myViews.map(viewItem)}
+                    {teamViews.length > 0 && <div className="k-grid-sub">Shared with the company</div>}
+                    {teamViews.map(viewItem)}
                     {views.length === 0 && <div className="k-grid-note">No saved views yet.</div>}
-                    {views.map((v) => (
-                      <div key={v.id} className="k-grid-item">
-                        <button type="button" onClick={() => applyView(v)}>{v.name}</button>
-                        <button type="button" className="k-grid-x" aria-label={`Remove view ${v.name}`} onClick={() => void deleteView(v)}><X size={12} /></button>
-                      </div>
-                    ))}
-                    <button type="button" className="k-grid-save" onClick={() => void saveView()}>Save current view…</button>
-                    {viewMsg && <div className="k-grid-note">{viewMsg}</div>}
+                    {activeView?.mine && modified && (
+                      <button type="button" className="k-grid-foot" onClick={() => void updateView(activeView)}><FloppyDisk size={14} />Update &quot;{activeView.name}&quot;</button>
+                    )}
+                    <button type="button" className="k-grid-foot" onClick={() => void saveView(false)}><BookmarkSimple size={14} />Save current view…</button>
+                    {canShare && <button type="button" className="k-grid-foot" onClick={() => void saveView(true)}><UsersThree size={14} />Save and share with the company…</button>}
+                    {(active || customized || filterCount > 0) && <button type="button" className="k-grid-foot" onClick={resetAll}><ArrowCounterClockwise size={14} />Standard list</button>}
+                    {viewMsg && <div className="k-grid-note" role="status">{viewMsg}</div>}
                   </div>
                 );
               }}
             </GridPop>
           )}
+          {filterCols.length > 0 && (
+            <GridPop label="Filter" icon={<Funnel size={14} />} count={filterCount || undefined}>
+              {() => (
+                <FilterPanel
+                  cols={filterCols}
+                  filters={activeFilters}
+                  valuesFor={(k) => { const col = byKey.get(k); return col ? distinctValues(rows.map((r) => valueOf(col, r))) : []; }}
+                  onChange={(k, vals) => setFilters((p) => { const n = { ...p }; if (vals.length) n[k] = vals; else delete n[k]; return n; })}
+                />
+              )}
+            </GridPop>
+          )}
           {groupCols.length > 0 && (
-            <GridPop label={groupBy ? `Grouped: ${headerText(byKey.get(groupBy)?.header, groupBy)}` : 'Group'} icon={<Rows size={14} />}>
+            <GridPop label={groupBy ? `Grouped: ${labelOf(groupBy)}` : 'Group'} icon={<Rows size={14} />}>
               {(close) => (
                 <div className="k-grid-list">
                   <button type="button" data-on={!groupBy} onClick={() => { setGroupBy(null); close(); }}>No grouping</button>
@@ -887,35 +1289,49 @@ export function DataTable<T>({
               )}
             </GridPop>
           )}
-          <GridPop label="Columns" icon={<Columns size={14} />} count={hidden.size || undefined}>
+          <GridPop label="Columns" phoneLabel="Fields" icon={<Columns size={14} />} count={hidden.size || undefined}>
             {() => (
-              <div className="k-grid-list">
-                {columns.map((c, i) => (
-                  <label key={c.key} className="k-grid-check">
-                    <input
-                      type="checkbox"
-                      checked={!hidden.has(c.key)}
-                      disabled={i === 0}
-                      onChange={(e) => setHidden((p) => { const n = new Set(p); if (e.target.checked) n.delete(c.key); else n.add(c.key); return n; })}
-                    />
-                    {headerText(c.header, c.key)}
-                  </label>
-                ))}
-              </div>
+              <ColumnPanel
+                order={ordered}
+                hidden={hidden}
+                label={labelOf}
+                onToggle={(k, on) => setHidden((p) => { const n = new Set(p); if (on) n.delete(k); else n.add(k); return n; })}
+                onMove={(k, d) => setOrder(moveColumn(ordered, k, d))}
+                onDrop={(k, t) => setOrder(dropColumn(ordered, k, t))}
+                onReset={() => { setOrder(keys); setHidden(new Set(defaultHidden)); setWidths({}); }}
+              />
             )}
           </GridPop>
-          <button type="button" className="k-grid-btn" onClick={exportCsv} disabled={sorted.length === 0}><DownloadSimple size={14} />Export</button>
+          <button type="button" className="k-grid-btn" onClick={() => exportCsv(sorted)} disabled={sorted.length === 0}><DownloadSimple size={14} />Export</button>
+        </div>
+      )}
+      {showBar && !loading && filterCount > 0 && (
+        <div className="k-fchips" role="group" aria-label="Filters">
+          {Object.entries(activeFilters).map(([k, vals]) => (
+            <span key={k} className="k-fchip">
+              <span className="k-fchip-text"><b>{labelOf(k)}:</b> {vals.map(humanValue).join(', ')}</span>
+              <button type="button" aria-label={`Remove the ${labelOf(k)} filter`} onClick={() => setFilters((p) => { const n = { ...p }; delete n[k]; return n; })}><X size={12} weight="bold" /></button>
+            </span>
+          ))}
+          <button type="button" className="k-fchip-clear" onClick={() => setFilters({})}>Clear all</button>
         </div>
       )}
       {bulk && checkedRows.length > 0 && (
         <div className="k-grid-bulk" role="toolbar" aria-label="Bulk actions">
           <strong>{checkedRows.length} selected</strong>
-          {bulkActions!(checkedRows).filter((a) => !a.hidden).map((a) => (
-            <Button key={a.label} size="sm" variant={a.tone === 'danger' ? 'danger' : 'secondary'} icon={a.icon} disabled={a.disabled} onClick={() => { a.onClick?.(); }}>
+          {[...editActions, ...pageActions].map((a) => (
+            <Button key={a.label} size="sm" variant={a.tone === 'danger' ? 'danger' : 'secondary'} icon={a.icon} disabled={a.disabled || bulkBusy} onClick={() => { a.onClick?.(); }}>
               {a.label}
             </Button>
           ))}
-          <button type="button" className="k-grid-btn" onClick={() => setChecked(new Set())}>Clear</button>
+          <Button size="sm" variant="ghost" icon={<DownloadSimple size={14} />} onClick={() => exportCsv(checkedRows)}>Export</Button>
+          <button type="button" className="k-grid-btn" onClick={endSelecting}>Clear</button>
+        </div>
+      )}
+      {bulkMsg && (
+        <div className="k-grid-msg" role="status" data-tone={bulkMsg.tone}>
+          {bulkBusy ? 'Working…' : bulkMsg.text}
+          <button type="button" className="k-grid-x" aria-label="Dismiss" onClick={() => setBulkMsg(null)}><X size={12} /></button>
         </div>
       )}
       <SortBar columns={sortCols} sort={sort} onChange={setSort} />
@@ -936,10 +1352,19 @@ export function DataTable<T>({
                   data-sortable={sortable}
                   aria-sort={dir === 'asc' ? 'ascending' : dir === 'desc' ? 'descending' : undefined}
                   onClick={sortable ? () => cycle(c.key) : undefined}
-                  style={{ textAlign: c.align, width: c.width }}
+                  style={{ textAlign: c.align, width: c.width, ...widthStyle(c.key) }}
                 >
                   {c.header}
                   {dir && <span aria-hidden style={{ marginLeft: 4 }}>{dir === 'asc' ? '▲' : '▼'}</span>}
+                  <span
+                    className="k-col-resize"
+                    role="separator"
+                    aria-orientation="vertical"
+                    aria-label={`Resize ${headerText(c.header, c.key)}`}
+                    onPointerDown={(e) => startResize(e, c.key)}
+                    onClick={(e) => e.stopPropagation()}
+                    onDoubleClick={(e) => { e.stopPropagation(); setWidths((p) => { const n = { ...p }; delete n[c.key]; return n; }); }}
+                  />
                 </th>
               );
             })}
@@ -957,7 +1382,11 @@ export function DataTable<T>({
             ))
           ) : sorted.length === 0 ? (
             <tr>
-              <td className="k-table-empty" colSpan={colCount}>{empty ?? 'Nothing here yet.'}</td>
+              <td className="k-table-empty" colSpan={colCount}>
+                {filterCount > 0 && rows.length > 0
+                  ? <EmptyState title="No rows match these filters" action={<Button onClick={() => setFilters({})}>Clear filters</Button>} />
+                  : (empty ?? 'Nothing here yet.')}
+              </td>
             </tr>
           ) : groups ? (
             groups.map(([label, list]) => (

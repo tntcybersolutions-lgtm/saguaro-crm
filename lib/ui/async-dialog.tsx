@@ -22,7 +22,7 @@ export interface TextPromptOptions {
   defaultValue?: string;
   placeholder?: string;
   multiline?: boolean;
-  type?: 'text' | 'email' | 'tel' | 'number';
+  type?: 'text' | 'email' | 'tel' | 'number' | 'date';
   required?: boolean;
   submitLabel?: string;
   cancelLabel?: string;
@@ -57,6 +57,23 @@ export function confirmDialog(opts: ConfirmOptions): Promise<boolean> {
   return new Promise((resolve) => {
     if (typeof document === 'undefined') { resolve(false); return; }
     mount((close) => <ConfirmModal opts={opts} done={(v) => { close(); resolve(v); }} />);
+  });
+}
+
+export interface ChoiceOptions {
+  title: string;
+  message?: string;
+  options: { value: string; label: string }[];
+  /** Adds a first choice that clears the field (resolves to ''). */
+  noneLabel?: string;
+  cancelLabel?: string;
+}
+
+/** Pick one of a list. Resolves to the chosen value, '' for the none choice, or null if cancelled. */
+export function choicePrompt(opts: ChoiceOptions): Promise<string | null> {
+  return new Promise((resolve) => {
+    if (typeof document === 'undefined') { resolve(null); return; }
+    mount((close) => <ChoiceModal opts={opts} done={(v) => { close(); resolve(v); }} />);
   });
 }
 
@@ -160,6 +177,40 @@ function ConfirmModal({ opts, done }: { opts: ConfirmOptions; done: (v: boolean)
             onClick={() => done(true)}
             onKeyDown={(e) => { if (e.key === 'Enter') done(true); }}
           >{opts.confirmLabel ?? 'Confirm'}</button>
+        </div>
+      </div>
+    </div>
+  );
+}
+
+const choiceBtn: React.CSSProperties = {
+  ...btnBase, width: '100%', textAlign: 'left', fontWeight: 600,
+  background: 'transparent', border: '1px solid var(--border-default)', color: 'var(--text-primary)',
+};
+
+function ChoiceModal({ opts, done }: { opts: ChoiceOptions; done: (v: string | null) => void }) {
+  const [q, setQ] = useState('');
+  const ref = useRef<HTMLInputElement>(null);
+  useDismiss(() => done(null));
+  const many = opts.options.length > 12;
+  useEffect(() => { if (many) ref.current?.focus(); }, [many]);
+  const needle = q.trim().toLowerCase();
+  const list = needle ? opts.options.filter((o) => o.label.toLowerCase().includes(needle)) : opts.options;
+  return (
+    <div style={overlayS} onMouseDown={(e) => { if (e.target === e.currentTarget) done(null); }}>
+      <div style={panelS} role="dialog" aria-modal="true" aria-label={opts.title}>
+        <h2 style={titleS} className="k-dialog-title">{opts.title}</h2>
+        {opts.message && <p style={msgS}>{opts.message}</p>}
+        {many && <input ref={ref} type="search" value={q} onChange={(e) => setQ(e.target.value)} placeholder="Search" aria-label="Search the choices" style={{ ...inputS, marginTop: 14 }} />}
+        <div role="listbox" aria-label={opts.title} style={{ display: 'flex', flexDirection: 'column', gap: 6, marginTop: 14, maxHeight: '50vh', overflowY: 'auto' }}>
+          {opts.noneLabel && <button type="button" role="option" aria-selected={false} style={{ ...choiceBtn, color: 'var(--text-secondary)' }} onClick={() => done('')}>{opts.noneLabel}</button>}
+          {list.map((o) => (
+            <button key={o.value} type="button" role="option" aria-selected={false} style={choiceBtn} onClick={() => done(o.value)}>{o.label}</button>
+          ))}
+          {list.length === 0 && <p style={msgS}>Nothing matches.</p>}
+        </div>
+        <div style={rowS}>
+          <button type="button" style={btnGhost} onClick={() => done(null)}>{opts.cancelLabel ?? 'Cancel'}</button>
         </div>
       </div>
     </div>

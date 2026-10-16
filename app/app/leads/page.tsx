@@ -4,6 +4,8 @@
  * Built on components/ui/kit (design system Phase 2). Each lead's full page is
  * app/app/leads/[id]; this board's detail modal is the quick look.
  */
+import { jsonRequest } from '@/lib/list-view';
+import { useEditRights } from '@/lib/hooks/usePermissions';
 import React, { useState, useEffect, useMemo, useCallback } from 'react';
 import { useRouter } from 'next/navigation';
 import { Plus, DownloadSimple, ArrowRight, PencilSimple, Trash, Eye, EnvelopeSimple, Globe } from '@phosphor-icons/react';
@@ -86,6 +88,7 @@ const emptyLead = (): Partial<Lead> => ({
 export default function LeadsPage() {
   const router = useRouter();
   const { showToast } = useToast();
+  const salesRights = useEditRights('Sales');
   const [websiteFormOpen, setWebsiteFormOpen] = useState(false);
   const [leads, setLeads] = useState<Lead[]>([]);
   const [loading, setLoading] = useState(true);
@@ -599,6 +602,20 @@ export default function LeadsPage() {
             defaultSort={{ key: 'created_at', dir: 'desc' }}
             onRowClick={openDetail}
             rowActions={(l) => leadActions(l, { inlineOpen: true })}
+            tableId="company-leads"
+            /* Stage moves use the row's own PATCH. Won and Lost are left to the
+               row: each asks for the outcome and reason for the bid learner. */
+            bulkEdit={{
+              noun: 'lead',
+              allowed: salesRights.edit,
+              status: {
+                label: 'Move stage',
+                options: STAGES.filter(s => s !== 'Won' && s !== 'Lost').map(s => ({ value: s, label: s })),
+                apply: (l, v) => jsonRequest(`/api/leads/${l.id}`, 'PATCH', { stage: v }),
+              },
+              remove: { allowed: salesRights.full, apply: (l) => jsonRequest(`/api/leads/${l.id}`, 'DELETE') },
+              onDone: () => { void fetchLeads(); },
+            }}
             empty={leads.length === 0 ? emptyAll : emptyFiltered}
           />
         ) : view === 'owners' ? (

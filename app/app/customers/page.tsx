@@ -1,4 +1,6 @@
 'use client';
+import { jsonRequest } from '@/lib/list-view';
+import { useEditRights } from '@/lib/hooks/usePermissions';
 import React, { useState, useEffect, useMemo, useCallback, useRef } from 'react';
 import { createPortal } from 'react-dom';
 import { useRouter } from 'next/navigation';
@@ -90,6 +92,7 @@ const fmtDate = (d: string) => d ? new Date(d).toLocaleDateString('en-US', { mon
 export default function CustomersPage() {
   const router = useRouter();
   const { showToast } = useToast();
+  const custRights = useEditRights('Sales');
   const [customers, setCustomers] = useState<Customer[]>([]);
   const { projects: liveProjects, revalidate: revalidateProjects } = useProjects();
   const projects = liveProjects as any[];
@@ -1118,6 +1121,13 @@ export default function CustomersPage() {
               defaultSort={justAdded ? { key: 'created_at', dir: 'desc' } : { key: 'lead_score', dir: 'desc' }}
               isSelected={justAdded ? (c => c.id === justAdded) : undefined}
               onRowClick={c => openCustomer(c)}
+              tableId="company-customers"
+              bulkEdit={{
+                noun: 'customer',
+                allowed: custRights.full,
+                remove: { allowed: custRights.full, apply: (c) => jsonRequest(`/api/customers/${c.id}`, 'DELETE') },
+                onDone: () => { void load(); },
+              }}
               empty="No customers match your filters."
             />
           )}

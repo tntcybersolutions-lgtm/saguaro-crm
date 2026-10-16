@@ -7,6 +7,8 @@
  * Record  POST /api/contracts/create        (a contract papered elsewhere — "Record existing")
  * Upload  POST /api/contracts/:id/upload    (the signed copy; FormData { file })
  */
+import { itemBulkEdit } from '@/lib/items/bulk';
+import { useEditRights } from '@/lib/hooks/usePermissions';
 import React, { useState, useEffect, useCallback, useRef } from 'react';
 import { useParams } from 'next/navigation';
 import { humanError } from '@/lib/errors';
@@ -100,6 +102,7 @@ export default function ContractsPage() {
   const [showForm, setShowForm] = useState(false);
   const [form, setForm] = useState(EMPTY_FORM);
   const { toast, show } = useToast(4000);
+  const rights = useEditRights('Budget');
 
   /* ── Unsaved-work guard: the composer holds real typing, so leaving the
    *    page (sidebar, field nav, ⌘K, back) confirms first and the draft is
@@ -406,6 +409,7 @@ export default function ContractsPage() {
       ) : (
         <DataTable<Contract>
           tableId="project-contracts"
+          bulkEdit={itemBulkEdit('contracts', { allowed: rights.edit, onDone: () => { void fetchContracts(); } })}
           exportName="contracts"
           columns={columns}
           rows={filteredContracts}

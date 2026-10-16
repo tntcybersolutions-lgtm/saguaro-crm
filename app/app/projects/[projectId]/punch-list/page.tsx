@@ -14,6 +14,8 @@
  *   update   PUT    /api/punch-list/[id]        (full form, or { status } from the check box)
  *   delete   DELETE /api/punch-list/[id]
  */
+import { itemBulkEdit } from '@/lib/items/bulk';
+import { useEditRights } from '@/lib/hooks/usePermissions';
 import React, { useState, useEffect, useCallback, useRef } from 'react';
 import { confirmDialog } from '@/lib/ui/async-dialog';
 import { useProjectContext } from '@/lib/hooks/useProjectContext';
@@ -172,6 +174,7 @@ export default function PunchListPage(){
   const [saving,setSaving]=useState(false);
   const [deleting,setDeleting]=useState(false);
   const { toast, show: showToast } = useToast(4000);
+  const rights = useEditRights('Projects');
   const [search,setSearch]=useState('');
   const [filterStatus,setFilterStatus]=useState('all');
   const [filterPriority,setFilterPriority]=useState('all');
@@ -645,6 +648,7 @@ export default function PunchListPage(){
           onRowClick={viewItem}
           rowActions={itemActions}
           tableId="project-punch-list"
+          bulkEdit={itemBulkEdit('punch_list', { allowed: rights.edit, canDelete: rights.full, deleteUrl: r => `/api/punch-list/${r.id}`, people: items.map((i: any) => String(i.assigned_to_name || '')), onDone: () => { void revalidate(); } })}
           exportName="punch-list"
           defaultSort={{ key:'status', dir:'asc' }}
           isSelected={isSel}

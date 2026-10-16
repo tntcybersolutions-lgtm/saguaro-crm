@@ -350,3 +350,17 @@ MyWorkView.tsx, /api/my-work (+ jobs, agenda, roles, ?view=mine).
   project is asked about — and a user whose ONLY grants are project-scoped falls to memberDefault (View on
   everything) everywhere else. App Store Review (member, PM on one project) therefore reads every job's money.
   That is the TS rule, mirrored exactly; it should probably be None, not View, for a scoped-only user.
+
+## 16 Oct 2026 — list tools (feat/list-tools) — found, NOT fixed
+
+- `app/api/items/[tool]/[id]/route.ts` PATCH — for `change_orders`, setting `status: 'approved'` only stamps
+  `approved_at`; it does not run `applyChangeOrderMoney` (lib/change-order-cascade) the way
+  `POST /api/change-orders/[id]/approve` does. The record page's status field can therefore approve a CO
+  without moving the contract. List bulk approve uses the approve route, not this one.
+- `app/api/selections/[id]/route.ts` PUT / DELETE — `getUser` only, no `requirePermission`; any signed-in seat
+  can change or delete an owner selection. No bulk actions were wired to it for that reason.
+- `app/api/purchase-orders/[id]/status/route.ts` — writes any `status` string with no transition check and no
+  `approved_at` / `delivered_at` stamps (the items route stamps them). The PO screen enforces the one-step rule
+  client-side only; bulk mirrors that rule.
+- `/api/auth/permissions` returns the global map only (no projectId), so a person whose Edit grant is
+  project-scoped sees no bulk bar on that project's lists (fails closed; the routes would accept them).

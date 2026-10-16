@@ -1204,6 +1204,78 @@ button.k-stat[aria-pressed="true"] { box-shadow: inset 0 -2px 0 var(--brand-prim
 .k-table tr.k-subtotal-row td { height: 40px; color: var(--text-primary); font-weight: 600; border-bottom: 1px solid var(--border-default); }
 .k-table tfoot tr.k-total-row td { height: 44px; color: var(--text-primary); font-weight: 700; border-top: 2px solid var(--border-default); background: var(--bg-surface-2); position: sticky; bottom: 0; }
 @media (max-width: 640px) { .k-grid-bar .k-grid-n { width: 100%; } .k-grid-menu { max-width: calc(100vw - 16px); } }
+/* List tools (kit DataTable): column picker rows, filter chips, views, resize, bulk.
+   Laid on the surface — no boxes; yellow only for the selected item. */
+.k-lbl-phone { display: none; }
+.k-grid-sheet-head { display: none; }
+.k-grid-sub { padding: 8px 10px 4px; font-size: 12px; font-weight: 700; letter-spacing: .05em; text-transform: uppercase; color: var(--text-tertiary); }
+.k-grid-item[data-on="true"] > button:first-child { background: var(--selected-control-bg); color: var(--selected-control-fg); font-weight: 700; }
+.k-grid-x[aria-pressed="true"] { color: var(--text-primary); }
+.k-grid-x[data-tone="danger"]:hover { color: var(--danger); }
+.k-grid-foot { display: inline-flex; align-items: center; gap: 8px; text-align: left; min-height: 36px; padding: 0 10px; border: 0; border-top: 1px solid var(--border-default); background: transparent; color: var(--text-secondary); font-size: 14px; font-weight: 600; cursor: pointer; }
+.k-grid-foot + .k-grid-foot { border-top: 0; }
+.k-grid-foot:hover { color: var(--text-primary); background: var(--bg-surface-2); }
+.k-grid-back { display: inline-flex !important; align-items: center; gap: 6px; font-weight: 700; color: var(--text-primary) !important; border-bottom: 1px solid var(--border-default) !important; border-radius: 0 !important; margin-bottom: 4px; }
+.k-grid-search { margin: 4px 0 6px; }
+.k-grid-check-text { flex: 1; min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.k-grid-view { color: var(--text-secondary); }
+.k-col-row { display: flex; align-items: center; gap: 2px; border-radius: 6px; }
+.k-col-row[draggable="true"] { cursor: grab; }
+.k-col-row[data-over="true"] { box-shadow: inset 0 2px 0 var(--focus-ring); }
+.k-col-row .k-grid-check { flex: 1; min-width: 0; }
+.k-col-grip { display: inline-flex; width: 18px; justify-content: center; color: var(--text-tertiary); }
+.k-col-grip[data-locked="true"] { visibility: hidden; }
+.k-col-move { width: 30px; height: 30px; display: inline-flex; align-items: center; justify-content: center; border: 0; border-radius: 6px; background: transparent; color: var(--text-tertiary); cursor: pointer; }
+.k-col-move:hover:not(:disabled) { color: var(--text-primary); background: var(--bg-surface-2); }
+.k-col-move:disabled { opacity: .3; cursor: default; }
+.k-col-resize { position: absolute; top: 0; right: -3px; width: 7px; height: 100%; cursor: col-resize; z-index: 2; touch-action: none; }
+.k-col-resize::after { content: ""; position: absolute; top: 25%; bottom: 25%; left: 3px; width: 1px; background: transparent; }
+.k-table th:hover .k-col-resize::after { background: var(--border-strong); }
+.k-col-resize:hover::after, .k-col-resize:active::after { background: var(--focus-ring) !important; }
+.k-fchips { display: flex; flex-wrap: wrap; align-items: center; gap: 6px; padding: 8px var(--sp-4); border-bottom: 1px solid var(--border-default); }
+.k-fchip { display: inline-flex; align-items: center; gap: 4px; max-width: 100%; min-height: 30px; padding: 0 4px 0 10px; border-radius: 8px; border: 1px solid var(--border-default); background: var(--bg-surface-2); color: var(--text-secondary); font-size: 13px; }
+.k-fchip b { color: var(--text-primary); font-weight: 700; }
+.k-fchip-text { min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.k-fchip button { display: inline-flex; align-items: center; justify-content: center; width: 24px; height: 24px; border: 0; border-radius: 6px; background: transparent; color: var(--text-tertiary); cursor: pointer; }
+.k-fchip button:hover { color: var(--text-primary); background: var(--bg-hover); }
+.k-fchip-clear { border: 0; background: transparent; color: var(--link); font-size: 13px; font-weight: 600; cursor: pointer; min-height: 30px; padding: 0 6px; }
+.k-fchip-clear:hover { color: var(--link-hover); }
+.k-grid-select { display: none; }
+.k-grid-msg { display: flex; align-items: center; gap: 8px; padding: 8px var(--sp-4); border-bottom: 1px solid var(--border-default); font-size: 14px; color: var(--text-primary); }
+.k-grid-msg[data-tone="good"] { box-shadow: inset 3px 0 0 var(--success); }
+.k-grid-msg[data-tone="bad"] { box-shadow: inset 3px 0 0 var(--danger); }
+.k-grid-msg .k-grid-x { margin-left: auto; }
+.k-table tbody tr[data-checked="true"] td { background: var(--selected-row-bg); }
+@media (max-width: 767px) {
+  .k-lbl-desk { display: none; }
+  .k-lbl-phone { display: inline; }
+  .k-grid-select { display: inline-flex; }
+  .k-grid-btn { min-height: 44px; }
+  .k-grid-bar { padding: 8px 12px; gap: 6px; }
+  .k-grid-bar .k-grid-n { width: 100%; }
+  .k-col-resize { display: none; }
+  .k-table td, .k-table th { max-width: none !important; min-width: 0 !important; }
+  /* Popovers become a bottom sheet above the tab bar: Columns reads "Fields". */
+  .k-grid-menu { left: 0 !important; right: 0 !important; top: auto !important; bottom: var(--sag-tabbar-h) !important; max-width: none !important; min-width: 0 !important; max-height: 70vh; border-radius: 12px 12px 0 0; border-bottom: 0; padding: 4px 12px 12px; }
+  .k-grid-sheet-head { display: flex; align-items: center; justify-content: space-between; min-height: 48px; font-size: var(--fs-dialog); color: var(--title-page); }
+  .k-grid-sheet-head .k-grid-x { width: 44px; height: 44px; }
+  .k-grid-list > button, .k-grid-item > button:first-child, .k-grid-check, .k-grid-foot { min-height: 44px; }
+  .k-grid-x, .k-col-move { width: 44px; height: 44px; }
+  .k-col-grip { display: none; }
+  .k-fchips { padding: 8px 12px; }
+  .k-fchip { min-height: 36px; }
+  .k-fchip button { width: 36px; height: 36px; }
+  /* Selecting: checkboxes only while selecting; the bar docks above the tab bar. */
+  .k-table-wrap:not([data-selecting="true"]) .k-td-check { display: none !important; }
+  .k-table-wrap[data-selecting="true"] .k-table td.k-td-check { position: absolute !important; top: 10px; left: 0; width: 36px; justify-content: center; }
+  .k-table-wrap[data-selecting="true"] .k-table td.k-td-check input { width: 22px; height: 22px; }
+  .k-table-wrap[data-selecting="true"] .k-table tbody tr { padding-left: 44px !important; -webkit-touch-callout: none; user-select: none; }
+  .k-table tbody tr[data-checked="true"] { background: var(--selected-row-bg); }
+  .k-grid-bulk { position: fixed; left: 0; right: 0; bottom: var(--sag-tabbar-h); z-index: 150; padding: 8px 12px; border-top: 1px solid var(--border-strong); border-bottom: 0; background: var(--bg-surface); box-shadow: 0 -8px 20px rgba(2,6,23,0.5); }
+  .k-grid-bulk strong { width: 100%; }
+  .k-grid-bulk .k-btn { min-height: 44px; flex: 1 1 auto; }
+  .k-table-wrap[data-bulkbar="true"] { padding-bottom: 168px; }
+}
 
 /* Row actions — inline buttons + an overflow menu */
 .k-row-actions { display: inline-flex; align-items: center; gap: 4px; justify-content: flex-end; }
@@ -1630,7 +1702,7 @@ li[data-done="true"] .pj-next-step strong { color: var(--text-tertiary); text-de
      on its cells and gets the same cards (desktop is untouched). */
   :is(.k-table,.k-stack) thead { display: none; }
   :is(.k-table,.k-stack), :is(.k-table,.k-stack) tbody, :is(.k-table,.k-stack) tr { display: block; width: 100%; }
-  :is(.k-table,.k-stack) tr { position: relative; margin: 8px 12px; width: auto; border: 1px solid var(--border-subtle); border-radius: var(--radius-md); background: var(--bg-surface-2); padding: 10px 12px 10px; }
+  :is(.k-table,.k-stack) tr { position: relative; margin: 0; width: auto; border: 0; border-bottom: 1px solid var(--border-subtle); border-radius: 0; background: none; padding: 12px 12px; }
   :is(.k-table,.k-stack) tbody tr:hover td { background: none; }
   :is(.k-table,.k-stack) td { display: flex; justify-content: space-between; align-items: center; gap: 12px; height: auto !important; min-height: 28px; padding: 3px 0 !important; border-bottom: none; white-space: normal; text-align: left !important; position: static !important; box-shadow: none !important; background: none !important; }
   :is(.k-table,.k-stack) td::before { content: attr(data-label); flex-shrink: 0; font-size: var(--fs-xs); font-weight: 700; color: var(--text-tertiary); }

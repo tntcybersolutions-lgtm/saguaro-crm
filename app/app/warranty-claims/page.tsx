@@ -1,4 +1,6 @@
 'use client';
+import { jsonRequest } from '@/lib/list-view';
+import { useEditRights } from '@/lib/hooks/usePermissions';
 import React, { useState, useEffect, useMemo, useCallback } from 'react';
 import { DataTable, type Column } from '@/components/ui/kit';
 import { useProjects } from '@/lib/hooks/useProjects';
@@ -138,6 +140,7 @@ export default function WarrantyClaimsPage() {
   const [projects, setProjects] = useState<Project[]>([]);
   const [selectedProject, setSelectedProject] = useState('');
   const [claims, setClaims] = useState<WarrantyClaim[]>([]);
+  const claimRights = useEditRights('Safety');
   const [loading, setLoading] = useState(false);
   const [activeTab, setActiveTab] = useState<'dashboard'|'claims'|'create'>('dashboard');
   const [detailClaim, setDetailClaim] = useState<WarrantyClaim | null>(null);
@@ -589,6 +592,19 @@ export default function WarrantyClaimsPage() {
                 defaultSort={{ key: 'reported_date', dir: 'desc' }}
                 onRowClick={c => setDetailClaim(c)}
                 isSelected={c => detailClaim?.id === c.id}
+                tableId="company-warranty-claims"
+                /* The detail panel's status step, row by row: only a next step in STATUS_FLOW is taken. */
+                bulkEdit={{
+                  noun: 'claim',
+                  allowed: claimRights.edit,
+                  status: {
+                    options: STATUSES.map(s => ({ value: s, label: s.replace('_', ' ').replace(/\b\w/g, (ch) => ch.toUpperCase()) })),
+                    apply: (c, v) => (STATUS_FLOW[c.status] || []).includes(v)
+                      ? jsonRequest(`/api/projects/${selectedProject}/warranty-claims/${c.id}`, 'PATCH', { status: v, completed_date: v === 'completed' ? today : c.completed_date })
+                      : Promise.resolve(new Response(JSON.stringify({ error: `Claim ${c.claim_number || ''} is ${String(c.status).replace('_', ' ')} and can't move to ${v.replace('_', ' ')}.` }), { status: 409 })),
+                  },
+                  onDone: () => setReloadKey(k => k + 1),
+                }}
                 empty="No claims match these filters."
               />
             </SectionCard>
