@@ -154,7 +154,7 @@ export async function generateReportData(
     }
 
     if (reportType === 'lien-waiver-log') {
-      let q = anyDb.from('lien_waivers').select('*, subcontractors!subcontractor_id(company_name, trade), projects!project_id(name)').eq('tenant_id', tenantId).order('created_at', { ascending: false }).limit(100);
+      let q = anyDb.from('lien_waivers').select('*, subcontractors!subcontractor_id(company_name, trade), projects!project_id(name)').eq('tenant_id', tenantId).is('deleted_at', null).order('created_at', { ascending: false }).limit(100);
       if (projectId) q = q.eq('project_id', projectId);
       const waivers = await rowsOf(q);
       const rows = waivers.map((w: any) => [

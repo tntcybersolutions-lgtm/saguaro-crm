@@ -3,23 +3,34 @@ import { createServerClient } from '@/lib/supabase-server';
 import { checkRateLimit, getClientIP } from '@/lib/rate-limit';
 import { must } from '@/lib/db-write';
 import { apiError } from '@/lib/api-error';
+import { isSubPortalExpired, SUB_PORTAL_EXPIRED_MESSAGE } from '@/lib/sub-portal-expiry';
 
-/** Authenticate a sub portal session via token */
+/** Authenticate a sub portal session via token. An active link past its
+ *  expires_at comes back as 'expired' so the portal can say so plainly
+ *  rather than "invalid". */
 async function authenticateSubPortal(req: NextRequest) {
   const token =
     req.nextUrl.searchParams.get('token') ||
     req.headers.get('x-portal-token');
-  if (!token) return null;
+  if (!token) return { session: null, expired: false };
 
   const db = createServerClient();
-  const { data: session } = await db
+  const { data: session, error } = await db
     .from('portal_sub_sessions')
     .select('*')
     .eq('token', token)
     .eq('status', 'active')
-    .single();
+    .maybeSingle();
+  if (error) throw error;
+  if (!session) return { session: null, expired: false };
+  if (isSubPortalExpired((session as { expires_at?: string | null }).expires_at, new Date())) return { session: null, expired: true };
+  return { session, expired: false };
+}
 
-  return session;
+function refused(expired: boolean) {
+  return expired
+    ? NextResponse.json({ error: SUB_PORTAL_EXPIRED_MESSAGE, expired: true }, { status: 410 })
+    : NextResponse.json({ error: 'Invalid or expired portal token' }, { status: 401 });
 }
 
 /**
@@ -62,13 +73,8 @@ export async function POST(req: NextRequest) {
       );
     }
 
-    const session = await authenticateSubPortal(req);
-    if (!session) {
-      return NextResponse.json(
-        { error: 'Invalid or expired portal token' },
-        { status: 401 }
-      );
-    }
+    const { session, expired } = await authenticateSubPortal(req);
+    if (!session) return refused(expired);
 
     const db = createServerClient();
 
@@ -94,6 +100,7 @@ export async function POST(req: NextRequest) {
         project_name: project?.name ?? null,
         tenant_id: session.tenant_id,
         status: session.status,
+        expires_at: session.expires_at ?? null,
         last_login_at: new Date().toISOString(),
       },
       sub: sub || null,
@@ -106,13 +113,8 @@ export async function POST(req: NextRequest) {
 /** GET — Return current session info */
 export async function GET(req: NextRequest) {
   try {
-    const session = await authenticateSubPortal(req);
-    if (!session) {
-      return NextResponse.json(
-        { error: 'Invalid or expired portal token' },
-        { status: 401 }
-      );
-    }
+    const { session, expired } = await authenticateSubPortal(req);
+    if (!session) return refused(expired);
 
     const db = createServerClient();
 
@@ -125,6 +127,7 @@ export async function GET(req: NextRequest) {
         project_id: session.project_id,
         tenant_id: session.tenant_id,
         status: session.status,
+        expires_at: session.expires_at ?? null,
         last_login_at: session.last_login_at,
       },
       sub: sub || null,

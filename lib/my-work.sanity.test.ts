@@ -274,6 +274,28 @@ const args = { tenantId: TEN, userId: ME, email: 'pm@zz.test', today: T, zone: '
   check('the badge path counts what the Today tab counts', todayCount(badge.items, badge.snoozes, T) === buildView(owner.items, owner.snoozes, T).counts.today, `${todayCount(badge.items, badge.snoozes, T)} vs ${buildView(owner.items, owner.snoozes, T).counts.today}`);
   check('…and skips the far-off reads', !badge.items.some((i) => i.source === 'jobs' || i.key.startsWith('bids-due:')));
 
+  /* Sales follow-ups: an owner also sees the team's due/overdue calls, each
+     named with whose it is; a non-admin keeps their own queue. */
+  const leadWorld = {
+    ...world,
+    profiles: [{ id: 'user-jo', tenant_id: TEN, full_name: 'Jo Rivera' }],
+    lead_pipeline: [
+      { id: 'L-mine', tenant_id: TEN, company_name: 'Mesa Health', next_action: 'Send the proposal', next_action_date: '2026-10-12', stage: 'Qualified', assigned_to: ME },
+      { id: 'L-team-late', tenant_id: TEN, company_name: 'Tempe Labs', next_action: 'Call back', next_action_date: '2026-10-08', stage: 'Proposal', assigned_to: 'user-jo' },
+      { id: 'L-team-later', tenant_id: TEN, company_name: 'Gilbert Storage', next_action: 'Site walk', next_action_date: '2026-10-15', stage: 'New', assigned_to: 'user-jo' },
+      { id: 'L-team-won', tenant_id: TEN, company_name: 'Done Deal', next_action: 'Kickoff', next_action_date: '2026-10-05', stage: 'Won', assigned_to: 'user-jo' },
+      { id: 'L-other-tenant', tenant_id: OTHER, company_name: 'Not ours', next_action: 'x', next_action_date: '2026-10-01', stage: 'New', assigned_to: 'user-jo' },
+    ],
+  };
+  const ownerLeads = await collectMyWork({ ...args, db: fakeDb(leadWorld).db, companyWide: true });
+  const lk = ownerLeads.items.filter((i) => i.source === 'followups');
+  check("owner: own follow-up plus the team's overdue one, labeled with the assignee",
+    lk.some((i) => i.key === 'lead:L-mine') && lk.some((i) => i.key === 'lead:L-team-late' && i.meta.startsWith("Jo Rivera's follow-up")), lk.map((i) => `${i.key}|${i.meta}`).join(' '));
+  check("owner: a teammate's not-yet-due, won, or other-company follow-up is not shown",
+    !lk.some((i) => ['lead:L-team-later', 'lead:L-team-won', 'lead:L-other-tenant'].includes(i.key)));
+  const pmLeads = await collectMyWork({ ...args, db: fakeDb(leadWorld).db, companyWide: false });
+  check('non-admin: only their own (and unassigned) follow-ups', pmLeads.items.filter((i) => i.source === 'followups').map((i) => i.key).join(',') === 'lead:L-mine');
+
   console.log(failed ? `\n${failed} FAILED` : '\nall passed');
   if (failed) process.exit(1);
 })();

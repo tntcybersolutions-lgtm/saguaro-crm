@@ -318,3 +318,19 @@ MyWorkView.tsx, /api/my-work (+ jobs, agenda, roles, ?view=mine).
   Kept on purpose: kanban cards (Leads board), dashboard-setup widgets, photo thumbnails, the drawing sheet, chat
   bubbles, the Settings logo drop zone. Job phase tabs: same machined selected pill as the rail.
   The franchise Command Center pages redirect for this company (gated, not broken).
+
+## 16 Oct 2026 — MUST-PASS follow-ups (fix/mustpass-followups) — found, NOT fixed
+
+- `lib/document-templates/g702-generator.ts:322` — dead (nothing imports it); inserts a pay_applications row with
+  no tenant_id inside `catch { /* DB may not have table yet */ }`. Delete the module.
+- `pay-app-workflow.ts` `ownerApproveGetHandler` / `ownerApprovePostHandler` / `submitPayAppHandler` /
+  `recordPaymentHandler` — no longer routed (the catch-all now sends submit / record-payment through
+  lib/pay-app-status); they write `status` directly and use the unused `owner_approvals` table. Delete them.
+- `app/api/pay-apps/[id]/route.ts` DELETE hard-deletes a pay application while every reader filters `deleted_at`;
+  should soft-delete like lien waivers now do.
+- `app/api/compliance/lien-deadlines/route.ts:37` — gated on Safety: Edit, like prequalification was; lien
+  deadlines are sub/compliance work (Projects).
+- `app/app/kit/page.tsx` — the design-system reference page renders sample bids ("Mesa Logistics Center",
+  "Copper State Dev.") and is reachable at /app/kit by any signed-in user. Gate it to platform owners or remove.
+- `app/api/dashboard/widget-metrics/route.ts` `guard()` returns the fallback on ANY error with nothing logged, so a
+  broken widget reads as "no data".

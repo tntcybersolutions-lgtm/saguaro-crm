@@ -19,11 +19,15 @@ export async function DELETE(req: NextRequest, { params }: { params: Promise<{ i
     const db = createServerClient();
     /* Scoped by id AND tenant_id. An id on its own would let anyone who
        learns another tenant's row id delete it. */
+    /* A soft delete: a lien waiver is a legal record, and every reader
+       (lists, the payment gate, dashboards, reports) hides rows with
+       deleted_at set. */
     const { data, error } = await db
       .from('lien_waivers')
-      .delete()
+      .update({ deleted_at: new Date().toISOString() } as never)
       .eq('id', id)
       .eq('tenant_id', g.user.tenantId)
+      .is('deleted_at', null)
       .select('id')
       .maybeSingle();
     if (error) throw error;

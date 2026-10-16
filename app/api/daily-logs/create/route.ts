@@ -45,6 +45,16 @@ export async function POST(req: NextRequest) {
      Every field now reads both spellings, which is what the rest of the create
      endpoints in this codebase already do. */
   const pick = (camel: string, snake: string) => body[camel] ?? body[snake];
+  /* A number the user sent, or null when they sent nothing. `||` read a real
+     0 as blank: a 0 °F morning was saved as "no temperature" (and then
+     overwritten by the forecast), 0 equipment hours as nothing. */
+  const num = (v: unknown): number | null => {
+    if (v === null || v === undefined || (typeof v === 'string' && v.trim() === '')) return null;
+    const n = Number(v);
+    return Number.isFinite(n) ? n : null;
+  };
+  const sentHigh = num(pick('temperatureHigh', 'high_temp'));
+  const sentLow = num(pick('temperatureLow', 'low_temp'));
   let pickedLogDate: string = pick('logDate', 'log_date') || '';
 
   try {
@@ -56,14 +66,14 @@ export async function POST(req: NextRequest) {
     const equipmentOnSite = Array.isArray(body.equipmentOnSite ?? body.equipment_on_site) ? (body.equipmentOnSite ?? body.equipment_on_site) : null;
     const deliveriesIn = Array.isArray(body.deliveries) ? body.deliveries : [];
     // Roll crew_count up from the manpower lines when present, else trust the scalar.
-    const crewFromManpower = manpower ? manpower.reduce((s: number, m: any) => s + (Number(m.count ?? m.headcount ?? m.workers ?? 0) || 0), 0) : null;
+    const crewFromManpower = manpower && manpower.length > 0 ? manpower.reduce((s: number, m: any) => s + (Number(m.count ?? m.headcount ?? m.workers ?? 0) || 0), 0) : null;
 
     // AUTO WEATHER — a GC never types a temperature. If the client sent no
     // weather, stamp today's NWS forecast server-side via the shared
     // /api/weather brain (same source both surfaces use). Best-effort: any
     // failure just leaves the fields as the client sent them.
     let autoWx: any = null;
-    if (!body.weather && !pick('temperatureHigh', 'high_temp')) {
+    if (!body.weather && sentHigh === null && sentLow === null) {
       try {
         const origin = req.nextUrl.origin;
         const wr = await fetch(`${origin}/api/weather?projectId=${projectId}`, {
@@ -75,7 +85,10 @@ export async function POST(req: NextRequest) {
           autoWx = wd;
           recordLearning(db, { tenantId, kind: 'weather_autofill', projectId, userId: user.id, meta: { conditions: wd.conditions } });
         }
-      } catch { /* stay manual for the day */ }
+      } catch (wxErr) {
+        // The forecast is a convenience: the log still saves with the weather blank.
+        console.warn('[daily-logs/create] weather autofill unavailable', wxErr);
+      }
     }
 
     const { data: log, error } = await db.from('daily_logs').insert({
@@ -83,10 +96,10 @@ export async function POST(req: NextRequest) {
       project_id: projectId,
       log_date: pickedLogDate,
       weather: body.weather || autoWx?.conditions || null,
-      high_temp: pick('temperatureHigh', 'high_temp') || autoWx?.highTemp || null,
-      low_temp: pick('temperatureLow', 'low_temp') || autoWx?.lowTemp || null,
+      high_temp: sentHigh ?? num(autoWx?.highTemp),
+      low_temp: sentLow ?? num(autoWx?.lowTemp),
       ...(autoWx ? { weather_source: 'nws', weather_api_data: autoWx.raw ?? null } : {}),
-      crew_count: crewFromManpower ?? pick('crewCount', 'crew_count') ?? 0,
+      crew_count: Math.max(0, Math.round(crewFromManpower ?? num(pick('crewCount', 'crew_count')) ?? 0)),
       work_performed: pick('workPerformed', 'work_performed') || '',
       delays: body.delays || '',
       safety_notes: pick('safetyNotes', 'safety_notes') || '',

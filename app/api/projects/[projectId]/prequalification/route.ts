@@ -21,7 +21,7 @@ export async function GET(req: NextRequest, { params }: { params: { projectId: s
 }
 
 export async function POST(req: NextRequest, { params }: { params: { projectId: string } }) {
-  const g = await requirePermission(req, 'Safety', 'Edit');
+  const g = await requirePermission(req, 'Projects', 'Edit');
   if (!g.ok) return g.res;
   const user = g.user;
   try {

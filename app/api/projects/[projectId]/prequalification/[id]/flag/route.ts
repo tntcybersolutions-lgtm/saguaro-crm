@@ -19,7 +19,7 @@ async function handle(
   req: NextRequest,
   { params }: { params: { projectId: string; id: string } }
 ) {
-  const g = await requirePermission(req, 'Safety', 'Edit');
+  const g = await requirePermission(req, 'Projects', 'Edit');
   if (!g.ok) return g.res;
   const user = g.user;
 

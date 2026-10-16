@@ -84,8 +84,9 @@ export async function onPayAppSubmitted(payAppId: string): Promise<void> {
     const project = pa.projects;
     if (!project) return;
 
-    // Create owner portal approval link
-    const approvalLink = `${APP_URL}/owner-portal/approve/${pa.id}`;
+    // The GC's notification opens the GC's own pay-app screen. (It pointed at
+    // the owner's review page with the pay app's id, which is not its token.)
+    const approvalLink = `${APP_URL}/app/projects/${project.id}/pay-apps/${pa.id}`;
 
     await createNotification(
       project.tenant_id,
@@ -134,6 +135,7 @@ export async function onPayAppApproved(payAppId: string): Promise<void> {
           .select('id')
           .eq('pay_application_id', payAppId)
           .eq('sub_id', sub.id)
+          .is('deleted_at', null)
           .maybeSingle();
 
         if (existing) continue; // Idempotent — already created

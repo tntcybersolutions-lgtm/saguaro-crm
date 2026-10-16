@@ -134,6 +134,8 @@ export default function SubPortal(){
   useEffect(()=>{ if(new URLSearchParams(window.location.search).get('tab')==='photos') setTab('photos'); },[]);
   const [loading,setLoading]=useState(true);
   const [error,setError]=useState('');
+  // The server said this link is past its 90 days (410), not unknown.
+  const [linkExpired,setLinkExpired]=useState(false);
   const [toast,setToast]=useState('');
   const [isOnline,setIsOnline]=useState(true);
 
@@ -239,7 +241,10 @@ export default function SubPortal(){
     setLoading(true);
     // Authenticate first
     fetch(`/api/portal/sub/auth?token=${token}`,{method:'POST',headers})
-      .then(r=>{if(!r.ok)throw new Error('Invalid token');return r.json()})
+      .then(async r=>{
+        if(r.status===410){const d=await r.json().catch(()=>({}));setLinkExpired(true);throw new Error(d?.error||'This portal link has expired.');}
+        if(!r.ok)throw new Error('Invalid token');return r.json();
+      })
       .then(authData=>{
         setSession(authData.session);
         setSub(authData.sub);
@@ -718,8 +723,9 @@ export default function SubPortal(){
     <div style={{minHeight:'100vh',background:DARK,display:'flex',alignItems:'center',justifyContent:'center',fontFamily:'system-ui,sans-serif'}}>
       <div style={{textAlign:'center',color:RED}}>
         <div style={{fontSize:52,marginBottom:16}}>{'\u26A0'}</div>
-        <div style={{fontSize:22,fontWeight:800,color:TEXT}}>Portal Access Denied</div>
-        <div style={{fontSize:14,color:DIM,marginTop:10,maxWidth:420,lineHeight:1.6}}>{error||'This portal link is invalid or has expired. Please contact your general contractor for a new link.'}</div>
+        <div style={{fontSize:22,fontWeight:800,color:TEXT}}>{linkExpired?'This link has expired':'Portal Access Denied'}</div>
+        <div style={{fontSize:14,color:DIM,marginTop:10,maxWidth:420,lineHeight:1.6}}>{linkExpired?'Portal links last 90 days. Ask your general contractor to resend your invite, or get a fresh link sent to your email.':(error||'This portal link is invalid or has expired. Please contact your general contractor for a new link.')}</div>
+        {linkExpired&&<a href="/portals/sub/login" style={{display:'inline-flex',alignItems:'center',minHeight:44,marginTop:16,padding:'0 18px',borderRadius:8,background:'var(--brand-primary)',color:'var(--on-brand)',fontWeight:800,fontSize:14,textDecoration:'none'}}>Email me a fresh link</a>}
       </div>
     </div>
   );

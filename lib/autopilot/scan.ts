@@ -47,7 +47,7 @@ export async function runAutopilotScan(db: any, tenantId: string, projectId?: st
   if (expiringCerts?.length) results.push(`${expiringCerts.length} expiring insurance cert(s)`);
 
   // 3. Pending lien waivers
-  const { data: pendingWaivers } = await scope(db.from('lien_waivers').select('id, project_id').eq('tenant_id', tenantId).eq('status', 'pending').limit(20));
+  const { data: pendingWaivers } = await scope(db.from('lien_waivers').select('id, project_id').eq('tenant_id', tenantId).eq('status', 'pending').is('deleted_at', null).limit(20));
   if (pendingWaivers?.length) { results.push(`${pendingWaivers.length} pending lien waiver(s)`); alerts.push({ tenant_id: tenantId, project_id: projectId || null, severity: 'medium', alert_type: 'Pending Lien Waivers', title: 'Pending Lien Waivers', body: `${pendingWaivers.length} lien waiver(s) awaiting signature`, status: 'open' }); }
 
   // 4. Stale change orders (pending > 14 days)

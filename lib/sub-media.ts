@@ -38,7 +38,7 @@ export async function authSubPortal(req: NextRequest): Promise<SubSession | null
   const { data } = await db
     .from('portal_sub_sessions')
     .select('id, tenant_id, project_id, sub_id, sub_company, sub_contact_name')
-    .eq('token', token)
+    .eq('token', token).gt('expires_at', new Date().toISOString())
     .eq('status', 'active')
     .maybeSingle();
   return (data as SubSession | null) ?? null;

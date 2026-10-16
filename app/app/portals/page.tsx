@@ -44,6 +44,8 @@ interface SubSession {
   id: string; sub_id: string; project_id: string; token: string; status: string;
   last_login_at: string | null; created_at: string;
   company_name?: string; contact_name?: string; project_name?: string;
+  /** A sub's link lasts 90 days from its last send; `expired` is the server's read of it. */
+  expires_at?: string | null; expired?: boolean;
 }
 
 type Tab = 'client' | 'sub';
@@ -310,7 +312,12 @@ export default function PortalsPage() {
   const subColumns: Column<SubSession>[] = [
     { key: 'company_name', header: 'Company', accessor: s => (s.company_name || '').toLowerCase(), render: s => <div className="poWho"><span>{s.company_name || '—'}</span>{s.contact_name && <span>{s.contact_name}</span>}</div> },
     { key: 'project_name', header: 'Project', accessor: s => (s.project_name || '').toLowerCase(), render: s => s.project_name ? <span className="poMuted">{s.project_name}</span> : <span className="poMuted">—</span> },
-    { key: 'status', header: 'Status', accessor: s => STATUS_RANK[s.status] ?? 9, render: s => { const b = statusBadge(s.status); return <Badge tone={b.tone} dot>{b.label}</Badge>; } },
+    { key: 'status', header: 'Status', accessor: s => STATUS_RANK[s.expired ? 'expired' : s.status] ?? 9, render: s => { const b = statusBadge(s.expired ? 'expired' : s.status); return <Badge tone={b.tone} dot>{b.label}</Badge>; } },
+    { key: 'expires_at', phone: 'hide', header: 'Link Expires', accessor: s => s.expires_at || '9999', render: s => {
+      if (!s.expires_at || s.status !== 'active') return <span className="poMuted">—</span>;
+      const dl = Math.ceil((new Date(s.expires_at).getTime() - Date.now()) / 86400000);
+      return <span className={dl <= 0 ? 'poLate' : dl <= 14 ? 'poSoon' : 'poMuted'}>{fmt(s.expires_at)}{dl <= 0 ? ' · expired — Resend reissues it' : dl <= 14 ? ` · ${dl}d left` : ''}</span>;
+    } },
     { key: 'last_login_at', header: 'Last Login', accessor: s => s.last_login_at || '', render: s => s.last_login_at ? <span className="poMuted">{fmt(s.last_login_at)}</span> : s.status === 'active' ? <span className="poNever">Never opened</span> : <span className="poMuted">—</span> },
     { key: 'created_at', phone: 'hide', header: 'Invited', accessor: s => s.created_at || '', render: s => <span className="poMuted">{fmt(s.created_at)}</span> },
   ];

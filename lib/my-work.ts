@@ -558,7 +558,11 @@ export function assistItems(rows: AssistRow[], ctx: BuildCtx): MyWorkItem[] {
   }));
 }
 
-export interface LeadRow { id: string; company_name?: string | null; contact_name?: string | null; next_action?: string | null; next_action_date?: string | null; stage?: string | null; estimated_value?: number | string | null }
+export interface LeadRow {
+  id: string; company_name?: string | null; contact_name?: string | null; next_action?: string | null; next_action_date?: string | null; stage?: string | null; estimated_value?: number | string | null;
+  /** Set only on a teammate's follow-up shown to an owner/admin: whose call it is. */
+  assignee_name?: string | null;
+}
 
 /** Sales follow-ups: what you owe a lead, on the day you said you'd do it. */
 export function followUpItems(rows: LeadRow[], ctx: BuildCtx): MyWorkItem[] {
@@ -569,7 +573,7 @@ export function followUpItems(rows: LeadRow[], ctx: BuildCtx): MyWorkItem[] {
     out.push({
       key: `lead:${r.id}`, source: 'followups', projectId: null,
       title: r.next_action || 'Follow up',
-      meta: join(r.company_name || 'Lead', r.contact_name || null, r.stage || null, num(r.estimated_value) ? money(r.estimated_value) : null),
+      meta: join(r.assignee_name ? `${r.assignee_name}'s follow-up` : null, r.company_name || 'Lead', r.contact_name || null, r.stage || null, num(r.estimated_value) ? money(r.estimated_value) : null),
       day, now: false, tone: dueTone(day, ctx.today), amount: num(r.estimated_value),
       href: `/app/leads/${r.id}`, action: null, done: null,
     });

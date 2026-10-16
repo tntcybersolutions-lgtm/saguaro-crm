@@ -23,6 +23,7 @@ export async function POST(req: NextRequest, { params }: { params: Promise<{ id:
     })
       .eq('id', id)
       .eq('tenant_id', user.tenantId) // tenant guard: prevent cross-tenant sign
+      .is('deleted_at', null) // a deleted waiver cannot be signed
       .select('id')
       .maybeSingle();
     if (error) throw error;

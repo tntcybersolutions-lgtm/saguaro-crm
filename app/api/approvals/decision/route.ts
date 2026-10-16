@@ -5,8 +5,9 @@ import { metaFor, pickAmount, itemLabel, moduleLabel, type EntityMeta } from '@/
 import { must } from '@/lib/db-write';
 import { apiError } from '@/lib/api-error';
 import { applyChangeOrderMoney } from '@/lib/change-order-cascade';
-import { onChangeOrderApproved, onPayAppApproved } from '@/lib/triggers';
+import { onChangeOrderApproved } from '@/lib/triggers';
 import { runInBackground } from '@/lib/background';
+import { transitionPayAppStatus } from '@/lib/pay-app-status';
 
 export const dynamic = 'force-dynamic';
 
@@ -116,7 +117,17 @@ export async function POST(req: NextRequest) {
 
     // ---- REAL side effect: update the underlying entity status ----
     let entityUpdated = false;
-    if (isFinal) {
+    if (isFinal && meta.table === 'pay_applications') {
+      /* A pay application's status goes through lib/pay-app-status: the same
+         stamps and the same cascade (lien waivers on approval) as its own
+         Approve button. A reject returns it to the GC for revision. */
+      const r = await transitionPayAppStatus(db, user.tenantId, body.entityId, decision === 'approved' ? 'approved' : 'rejected', {
+        actorId: user.id,
+        note: note || null,
+      });
+      if (!r.ok) return NextResponse.json({ error: r.error, ...r.extra }, { status: r.status });
+      entityUpdated = true;
+    } else if (isFinal) {
       const patch: Record<string, unknown> = { status: decision };
       const nowIso = new Date().toISOString();
       if (decision === 'approved') {
@@ -152,9 +163,6 @@ export async function POST(req: NextRequest) {
         if (decision === 'approved' && !wasApproved) {
           runInBackground(onChangeOrderApproved(body.entityId, { money: false }), 'onChangeOrderApproved');
         }
-      }
-      if (meta.table === 'pay_applications' && decision === 'approved' && !wasApproved) {
-        runInBackground(onPayAppApproved(body.entityId), 'onPayAppApproved');
       }
     }
 
