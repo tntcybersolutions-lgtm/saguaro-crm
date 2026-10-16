@@ -95,7 +95,7 @@ export default function MilestonesPage() {
         ) : (
           <SectionCard flat>
             <PremiumEmpty compact icon={<FlagCheckered size={26} weight="duotone" color="var(--text-secondary)" />} title="Nothing matches this filter"
-              description="No milestone matches the current severity or search. Clear the filters to see the full board." />
+              description="No milestone matches the current severity or search." onClearFilters={() => { setFilter('all'); setQ(''); }} />
           </SectionCard>
         )
       ) : (

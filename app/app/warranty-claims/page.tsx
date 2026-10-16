@@ -488,8 +488,7 @@ export default function WarrantyClaimsPage() {
           <PremiumEmpty
             icon={<Buildings size={30} weight="duotone" color="var(--text-secondary)" />}
             title="Select a project"
-            description="Choose a project above to view its warranty claims."
-          />
+            description="Choose a project above to view its warranty claims." primary={{ label: 'New Claim', icon: <PlusCircle size={16} weight="bold" />, onClick: () => { setForm(emptyForm()); setActiveTab('create'); } }} perm={['Safety', 'Edit']} />
         </SectionCard>
       )}
 

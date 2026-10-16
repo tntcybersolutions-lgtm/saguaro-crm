@@ -638,7 +638,7 @@ export default function SubPortalPage() {
             </thead>
             <tbody>
               {filteredUsers.length === 0 && (
-                <tr><td colSpan={7} style={{ padding: 0 }}><PremiumEmpty compact icon={<UsersThree size={30} weight="duotone" color="var(--text-secondary)" />} title="No subcontractors found" description="No subs match your current filters. Adjust the filters or invite a subcontractor." /></td></tr>
+                <tr><td colSpan={7} style={{ padding: 0 }}><PremiumEmpty compact icon={<UsersThree size={30} weight="duotone" color="var(--text-secondary)" />} title="No subcontractors found" description="No subs match your current filters. Adjust the filters or invite a subcontractor." onClearFilters={filterTrade || filterProject || filterStatus || searchQuery ? () => { setFilterTrade(''); setFilterProject(''); setFilterStatus(''); setSearchQuery(''); } : undefined} primary={{ label: 'Invite Sub', onClick: () => setInviteModal(true) }} /></td></tr>
               )}
               {filteredUsers.map(u => (
                 <tr key={u.id} style={{ borderBottom: `1px solid color-mix(in srgb, ${BORDER} 13%, transparent)`, cursor: 'pointer' }}
@@ -799,7 +799,7 @@ export default function SubPortalPage() {
             </thead>
             <tbody>
               {filteredUsers.length === 0 && (
-                <tr><td colSpan={ALL_PERMISSIONS_LIST.length + 2} style={{ padding: 0 }}><PremiumEmpty compact icon={<ListChecks size={30} weight="duotone" color="var(--text-secondary)" />} title="No subs found" description="Invite a subcontractor to manage their portal permissions here." /></td></tr>
+                <tr><td colSpan={ALL_PERMISSIONS_LIST.length + 2} style={{ padding: 0 }}><PremiumEmpty compact icon={<ListChecks size={30} weight="duotone" color="var(--text-secondary)" />} title="No subs found" description="Invite a subcontractor to manage their portal permissions here." onClearFilters={filterTrade || filterProject || filterStatus || searchQuery ? () => { setFilterTrade(''); setFilterProject(''); setFilterStatus(''); setSearchQuery(''); } : undefined} primary={{ label: 'Invite Sub', onClick: () => setInviteModal(true) }} /></td></tr>
               )}
               {filteredUsers.map(u => (
                 <tr key={u.id} style={{ borderBottom: `1px solid color-mix(in srgb, ${BORDER} 13%, transparent)` }}>
@@ -937,7 +937,7 @@ export default function SubPortalPage() {
       {tab === 'compliance' && (
         <div>
           {/* Who owes a COI or W-9 — including ones never uploaded — with Ask for it. */}
-          <div style={{ marginBottom: 24 }}><ComplianceChecklist /></div>
+          <div style={{ marginBottom: 24 }}><ComplianceChecklist onInvite={() => setInviteModal(true)} /></div>
           {/* compliance summary */}
           <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(180px, 1fr))', gap: 12, marginBottom: 20 }}>
             {[
@@ -1005,7 +1005,7 @@ export default function SubPortalPage() {
         <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(320px, 1fr))', gap: 16 }}>
           {filteredUsers.length === 0 && (
             <div style={{ gridColumn: '1 / -1' }}>
-              <PremiumEmpty icon={<AddressBook size={30} weight="duotone" color="var(--text-secondary)" />} title="No subcontractors found" description="No subs match your current filters. Adjust the filters or invite a subcontractor to build your directory." />
+              <PremiumEmpty icon={<AddressBook size={30} weight="duotone" color="var(--text-secondary)" />} title="No subcontractors found" description="No subs match your current filters. Adjust the filters or invite a subcontractor to build your directory." onClearFilters={filterTrade || filterProject || filterStatus || searchQuery ? () => { setFilterTrade(''); setFilterProject(''); setFilterStatus(''); setSearchQuery(''); } : undefined} primary={{ label: 'Invite Sub', onClick: () => setInviteModal(true) }} />
             </div>
           )}
           {filteredUsers.map(u => (
@@ -1103,7 +1103,7 @@ export default function SubPortalPage() {
           {/* announcement history */}
           <SectionCard flat flush icon={<Envelope size={17} weight="duotone" color="var(--text-secondary)" />} title="Announcement History">
             {announcements.length === 0 && (
-              <PremiumEmpty compact icon={<Envelope size={30} weight="duotone" color="var(--text-secondary)" />} title="No announcements sent yet" description="Broadcasts you send to your subcontractors will appear here." />
+              <PremiumEmpty compact icon={<Envelope size={30} weight="duotone" color="var(--text-secondary)" />} title="No announcements sent yet" description="Broadcasts you send to your subcontractors will appear here." primary={{ label: 'New Announcement', onClick: () => setAnnounceModal(true) }} />
             )}
             {announcements.map(a => (
               <div key={a.id} style={{ padding: '16px 20px', borderBottom: `1px solid color-mix(in srgb, ${BORDER} 13%, transparent)` }}>

@@ -331,8 +331,9 @@ export default function CommandCenterPage() {
         {!loading && sorted.length === 0 && (
           <PremiumEmpty
             icon={<Buildings size={30} weight="duotone" color="var(--text-secondary)" />}
-            title="No projects match your filters"
-            description="Adjust the sort or filter controls above to see your projects."
+            title={projects.length ? 'No projects match your filters' : 'No projects yet'}
+            onClearFilters={projects.length ? () => { setStatusFilter('all'); setTypeFilter('all'); } : undefined}
+            primary={projects.length ? undefined : { label: 'New Project', href: '/app/projects/new' }}
           />
         )}
 

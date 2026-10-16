@@ -401,7 +401,7 @@ export default function QuickBooksPage() {
 
           <SectionCard title="Send history" subtitle="The last 25 sends." style={{ marginBottom: 24 }}>
             {st.history.length === 0 ? (
-              <PremiumEmpty compact title="Nothing sent yet." description={canManage ? 'Press Send to QuickBooks to make the first send.' : undefined} />
+              <PremiumEmpty compact title="Nothing sent yet." primary={canManage ? { label: 'Send to QuickBooks', icon: <ArrowsClockwise size={15} weight="bold" />, onClick: () => { void sync(); } } : undefined} />
             ) : st.history.map((h) => (
               <div key={h.at} style={{ padding: '10px 0', borderBottom: `1px solid ${LINE}` }}>
                 <div style={{ display: 'flex', gap: 10, flexWrap: 'wrap', alignItems: 'center' }}>

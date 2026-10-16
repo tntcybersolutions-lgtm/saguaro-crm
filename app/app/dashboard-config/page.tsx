@@ -666,8 +666,8 @@ export default function DashboardConfigPage() {
                   <PremiumEmpty
                     icon={<Package size={30} weight="duotone" color="var(--text-secondary)" />}
                     title="No Widgets Match Your Search"
-                    description="Try a different keyword or category filter."
                     compact
+                    onClearFilters={() => { setSearchTerm(''); setCatalogFilter('all'); }}
                   />
                 </div>
               )}
@@ -993,8 +993,8 @@ export default function DashboardConfigPage() {
               <PremiumEmpty
                 icon={<FolderOpen size={30} weight="duotone" color="var(--text-secondary)" />}
                 title="No Saved Layouts"
-                description="Save your current layout to see it here."
                 compact
+                primary={{ label: 'Save Current Layout', onClick: () => { setLoadModalOpen(false); setSaveAsModalOpen(true); } }}
               />
             ) : (
               <div style={{ display: 'flex', flexDirection: 'column', gap: 10 }}>

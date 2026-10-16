@@ -903,7 +903,7 @@ export default function TakeoffPage() {
                 {rowsCapped && <button type="button" className="tkShowAll" onClick={() => setShowAllRows(true)}>Showing first {CSI_ROW_CAP.toLocaleString()} of {totalMatRows.toLocaleString()} line items — show all</button>}
               </div>
             ) : (
-              <EmptyState icon={<ListChecks size={22} />} title={t.status === 'analyzing' ? 'Analysis in progress…' : 'No line items yet'} text={t.status === 'analyzing' ? 'The AI is reading your blueprint and extracting quantities.' : 'No line items are available for this estimate.'} />
+              <EmptyState icon={<ListChecks size={22} />} title={t.status === 'analyzing' ? 'Analysis in progress…' : 'No line items yet'} text={t.status === 'analyzing' ? 'The AI is reading your blueprint and extracting quantities.' : 'No line items are available for this estimate.'} primary={t.status === 'analyzing' ? undefined : { label: 'Upload Blueprint', icon: <UploadSimple size={15} weight="bold" />, onClick: resetUpload }} />
             )
           )}
 

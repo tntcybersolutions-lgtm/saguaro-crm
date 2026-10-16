@@ -123,7 +123,9 @@ export default function OwnerUpdatesPage() {
             <PremiumEmpty
               icon={<EnvelopeSimple size={32} weight="duotone" color="var(--text-secondary)" />}
               title="No active sites yet"
-              description="Launch a site from the Rollout Pipeline and its weekly owner update drafts itself here — status, schedule, procurement, and open items in one owner-ready note."
+              description="Each launched site drafts its weekly owner update here."
+              primary={{ label: 'Launch New Site', href: '/app/command-center/rollout?new=1' }}
+              perm={['Admin', 'Full']}
             />
           </SectionCard>
         ) : (

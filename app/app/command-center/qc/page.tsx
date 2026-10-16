@@ -58,7 +58,9 @@ export default function QCPage() {
             <PremiumEmpty
               icon={<MagnifyingGlass size={32} weight="duotone" color="var(--text-secondary)" />}
               title="No QC checklist for this site"
-              description={`Sites launched from the template come pre-loaded with the ${QC_TRADES.length}-trade QC checklist.`}
+              description={`Sites launched from the template carry the ${QC_TRADES.length}-trade QC checklist.`}
+              primary={{ label: 'Launch New Site', href: '/app/command-center/rollout?new=1' }}
+              perm={['Admin', 'Full']}
             />
           </SectionCard>
         ) : (

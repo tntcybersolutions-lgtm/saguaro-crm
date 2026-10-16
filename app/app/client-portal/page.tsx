@@ -775,7 +775,8 @@ export default function ClientPortalPage() {
                 title={threads.length > 0 ? 'Select a conversation' : 'Two-way client messaging'}
                 description={threads.length > 0
                   ? 'Pick a thread on the left to read and reply. Replies appear instantly in the client portal.'
-                  : 'Clients message you from inside their portal and your replies appear there instantly — every exchange stays attached to the project instead of a lost email thread.'}
+                  : 'Clients message you from their portal; replies land there instantly.'}
+                primary={threads.length > 0 ? undefined : { label: 'Invite Client', onClick: () => { resetInviteForm(); setInviteOpen(true); } }}
               />
             </div>
           ) : (
@@ -868,7 +869,8 @@ export default function ClientPortalPage() {
                   compact
                   icon={<UsersThree size={26} weight="duotone" color="var(--text-secondary)" />}
                   title="No active portal users"
-                  description={`Invite a client from the Users tab, then tune all ${PERM_KEYS.length} portal sections per person here — or apply a preset below in one click.`}
+                  description={`Tune all ${PERM_KEYS.length} portal sections per person here.`}
+                  primary={{ label: 'Invite Client', onClick: () => { resetInviteForm(); setInviteOpen(true); } }}
                 />
               </td></tr>
             )}
@@ -935,7 +937,8 @@ export default function ClientPortalPage() {
           <PremiumEmpty
             icon={<Buildings size={30} weight="duotone" color="var(--text-secondary)" />}
             title="No projects to share yet"
-            description="Create a project and it appears here as a column — check a box to give a client a live portal view of that job. Clients only ever see the projects you explicitly grant."
+            description="Clients only ever see the jobs you grant."
+            primary={{ label: 'New Project', href: '/app/projects/new' }}
           />
         </SectionCard>
       ) : (

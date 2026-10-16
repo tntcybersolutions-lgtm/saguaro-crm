@@ -1,6 +1,7 @@
 'use client';
 
 import { Suspense, useState, useEffect, useCallback, useMemo } from 'react';
+import { useOpenOnNew } from '@/lib/ui/open-on-new';
 import {
   PremiumSurface,
   ModuleHero,
@@ -136,6 +137,9 @@ function AssemblyLibraryContent() {
     setConfirmDelete(false);
     setPanelOpen(true);
   };
+
+  // `?new=1` opens the builder — an estimate's empty assembly picker links here.
+  useOpenOnNew(openCreate, true);
 
   const openEdit = (assembly: Assembly) => {
     setEditingId(assembly.id);

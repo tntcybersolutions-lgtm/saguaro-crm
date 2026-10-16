@@ -8,6 +8,8 @@ import { useRouter } from 'next/navigation';
 import { Circle } from '@phosphor-icons/react';
 import { useFeature } from '@/lib/hooks/useEntitlements';
 import type { Severity } from '@/lib/franchise';
+import { EmptyState as KitEmptyState } from '@/components/ui/kit';
+import type { EmptyActionProps } from '@/components/ui/empty-actions';
 
 /* The suite's colours are the app tokens: `gold` is the module accent (the
    page's --acc), green / yellow / red are status, blue is information. */
@@ -112,15 +114,10 @@ export function SearchInput({ value, onChange, placeholder }: { value: string; o
   );
 }
 
-export function EmptyState({ icon, title, body, action }: { icon?: React.ReactNode; title: string; body?: string; action?: React.ReactNode }) {
-  return (
-    <div style={{ color: C.dim, padding: 48, textAlign: 'center', background: C.card, border: `1px dashed ${C.border}`, borderRadius: 14 }}>
-      {icon && <div style={{ fontSize: 34, marginBottom: 8 }}>{icon}</div>}
-      <div style={{ fontSize: 16, fontWeight: 800, color: C.text, marginBottom: 4 }}>{title}</div>
-      {body && <div style={{ fontSize: 13, maxWidth: 460, margin: '0 auto 14px' }}>{body}</div>}
-      {action}
-    </div>
-  );
+/** The shared flat empty state (components/ui/kit) under this kit's old
+ *  `body` name — no dashed box; takes the same primary / Clear-filters actions. */
+export function EmptyState({ body, ...rest }: { icon?: React.ReactNode; title: string; body?: string; action?: React.ReactNode } & EmptyActionProps) {
+  return <KitEmptyState {...rest} text={body} />;
 }
 
 export function AttentionBanner({ red, yellow, noun }: { red: number; yellow: number; noun: string }) {
