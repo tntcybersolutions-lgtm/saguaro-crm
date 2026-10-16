@@ -69,6 +69,44 @@ export function toBudgetLineView(row: Record<string, unknown>): BudgetLineView {
   };
 }
 
+const normKey = (v: unknown) => String(v ?? '').trim().toLowerCase().replace(/\s+/g, ' ');
+const divisionOf = (v: unknown): string | null => {
+  const m = String(v ?? '').trim().match(/^(\d{2})(?:\D|$)/);
+  return m ? m[1] : null;
+};
+
+/**
+ * Which budget line a piece of paper (commitment, purchase order, bill)
+ * belongs to. Paper carries a full cost code ("26 05 00"), a bare CSI
+ * division ("26"), or — on the draft PO a bid award writes — the trade name
+ * ("Electrical"). Matched in that order: the exact cost code, then the line's
+ * description, then the first line in the same CSI division. Null when
+ * nothing fits; the caller leaves that amount off every line rather than
+ * guessing. Pure.
+ */
+export function budgetLineFinder(
+  lines: Array<{ id: string; cost_code?: unknown; description?: unknown; division?: unknown }>,
+): (key: unknown) => string | null {
+  const byCode = new Map<string, string>();
+  const byDesc = new Map<string, string>();
+  const byDiv = new Map<string, string>();
+  const sorted = [...lines].sort((a, b) => normKey(a.cost_code).localeCompare(normKey(b.cost_code)));
+  for (const l of sorted) {
+    const code = normKey(l.cost_code);
+    const desc = normKey(l.description);
+    const div = divisionOf(l.division) || divisionOf(l.cost_code);
+    if (code && !byCode.has(code)) byCode.set(code, l.id);
+    if (desc && !byDesc.has(desc)) byDesc.set(desc, l.id);
+    if (div && !byDiv.has(div)) byDiv.set(div, l.id);
+  }
+  return (key: unknown) => {
+    const k = normKey(key);
+    if (!k) return null;
+    const div = divisionOf(k);
+    return byCode.get(k) ?? byDesc.get(k) ?? (div ? byDiv.get(div) ?? null : null);
+  };
+}
+
 /** Screen field names a caller may send → the real budget_lines columns. */
 const WRITE_ALIASES: Record<string, string> = {
   approved_cos: 'approved_changes',

@@ -192,11 +192,14 @@ export async function POST(req: NextRequest) {
          code that is new gets inserted. Nothing is ever deleted. */
       const { data: existingLines, error: exErr } = await supabase
         .from('budget_lines')
-        .select('id, cost_code')
+        .select('id, cost_code, approved_changes')
         .eq('project_id', projectId)
         .eq('tenant_id', tenantId);
       if (exErr) throw exErr;
       const byCode = new Map((existingLines ?? []).map((l: { id: string; cost_code: string | null }) => [l.cost_code ?? '', l.id]));
+      // Revised = original + approved changes. A re-run used to write revised =
+      // the new original, dropping every approved change on that line.
+      const approvedById = new Map((existingLines ?? []).map((l: { id: string; approved_changes: number | string | null }) => [l.id, Number(l.approved_changes) || 0]));
 
       const toInsert = canonical.filter((l) => !byCode.has(l.cost_code));
       const toUpdate = canonical.filter((l) => byCode.has(l.cost_code));
@@ -213,10 +216,12 @@ export async function POST(req: NextRequest) {
         }
       }
       for (const l of toUpdate) {
+        const lineId = byCode.get(l.cost_code)!;
+        const revised = Math.round((l.original_budget + (approvedById.get(lineId) || 0)) * 100) / 100;
         const { error: upErr } = await supabase
           .from('budget_lines')
-          .update({ original_budget: l.original_budget, revised_budget: l.revised_budget } as never)
-          .eq('id', byCode.get(l.cost_code)!)
+          .update({ original_budget: l.original_budget, revised_budget: revised, updated_at: new Date().toISOString() } as never)
+          .eq('id', lineId)
           .eq('tenant_id', tenantId);
         if (upErr) {
           console.error('[budgets/create] budget_lines update error:', upErr);
