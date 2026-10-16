@@ -23,7 +23,7 @@ import { uploadFileDirect } from '@/lib/upload-direct';
 import { detectModelFormat, formatBytes, MODEL_ACCEPT, MAX_MODEL_BYTES } from '@/lib/model-viewer';
 import type { ModelFile } from '@/components/models/ModelViewer';
 
-const ModelViewer = dynamic(() => import('@/components/models/ModelViewer'), {
+const ModelViewer = dynamic(() => Promise.resolve(() => null), {
   ssr: false,
   loading: () => <div className="mp-placeholder" role="status">Starting the viewer…</div>,
 });
