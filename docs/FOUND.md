@@ -350,3 +350,31 @@ MyWorkView.tsx, /api/my-work (+ jobs, agenda, roles, ?view=mine).
   project is asked about — and a user whose ONLY grants are project-scoped falls to memberDefault (View on
   everything) everywhere else. App Store Review (member, PM on one project) therefore reads every job's money.
   That is the TS rule, mirrored exactly; it should probably be None, not View, for a scoped-only user.
+
+## 16 Oct 2026 — legacy role checks replaced (fix/rls-legacy-role-checks)
+
+Closed from the entry above: `app_user_role()` no longer decides anything that matters — every table that used it
+(daily_logs, rfis, photos, punch_list_items, drawing_sheets, deliveries, field_issues, project_files,
+safety_incidents, voice_memos, entity_comments, integrations, tenant_settings, custom_field_definitions,
+approval_workflows, crew_locations, geofence_events, presence_sessions) now has `role_gate_*` policies on
+`rbac.has_permission`, and `resource_assignments` rates, proposals/proposal_lines and bids/bid_submissions/bid_packages
+are gated too (20261016g + h, APPLIED LIVE). Found on the way, NOT fixed:
+
+- 20261016i (drop the 90 legacy `rbac_*` policies and `app_user_role()` itself) is committed but NOT applied — the
+  SQL runner holds DROP statements for approval. Harmless meanwhile: the legacy policies are RESTRICTIVE and every
+  stored profiles.role passes them; their role_gate twins do the real work. After applying it, regenerate
+  `lib/database.types.ts` (it still lists `app_user_role`).
+- `app/api/projects/all/resource-planning/route.ts` (GET/POST) and `[id]/route.ts` have no permission check and hand
+  `hourly_rate` (= `cost_rate`) to every member; the per-project route needs Projects: Edit even to read.
+- List routes with no category check, so the server shows what the database now refuses over REST:
+  `app/api/rfis/list/route.ts` (a Salesperson has RFIs: None), `app/api/bids/list/route.ts`,
+  `app/api/voice-memos/list|create`, `app/api/presence/*`, `app/api/field/crew-locations/route.ts` GET (everyone's GPS).
+- Stored Foreman and Superintendent roles have Projects: View, so they cannot create a daily log anywhere
+  (`/api/daily-logs/create` needs Projects: Edit; the database now agrees). Probably a role-definition fix.
+- `crew_locations_ins`, `geofence_events_ins`, `presence_sessions_ins3` check only the tenant, not
+  `user_id = auth.uid()` — any member can insert a location/presence row in someone else's name over REST.
+- Proposals are gated by Documents (what `/api/proposals/create`, `/upload` and `/api/projects/[id]/proposals` check),
+  so a Subcontractor (Documents: View) can read proposal amounts — in the app and over REST alike. If proposal money
+  should be Sales or Budget, the routes and `role_gate_*_proposals` have to move together.
+- Pre-existing advisor noise on the rewritten own-row policies: `crew_locations_*`, `geofence_events_*`,
+  `presence_sessions_*3` call `auth.uid()` unwrapped (auth_rls_initplan) — wrap in `(SELECT auth.uid())`.
