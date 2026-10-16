@@ -16,28 +16,28 @@ import { SECTION_META, hourLabel, type MyDayPrefs, type SectionId } from '@/lib/
 
 const CSS = `
 .mdc-scrim{position:fixed;inset:0;z-index:80;background:rgba(5,9,16,.55);backdrop-filter:blur(3px);animation:mdcFade .18s ease-out}
-.mdc{position:fixed;top:0;right:0;bottom:0;z-index:81;width:min(460px,100vw);display:flex;flex-direction:column;background:#141D2B;border-left:1px solid #334155;box-shadow:-24px 0 60px rgba(2,6,23,.55);color:var(--text-primary);animation:mdcIn .26s cubic-bezier(.2,.8,.2,1)}
+.mdc{position:fixed;top:0;right:0;bottom:0;z-index:81;width:min(460px,100vw);display:flex;flex-direction:column;background:var(--md-sheet);border-left:1px solid var(--border-default);box-shadow:-24px 0 60px rgba(2,6,23,.55);color:var(--text-primary);animation:mdcIn .26s cubic-bezier(.2,.8,.2,1)}
 @keyframes mdcIn{from{transform:translateX(24px);opacity:0}to{transform:none;opacity:1}}
 @keyframes mdcUp{from{transform:translateY(24px);opacity:0}to{transform:none;opacity:1}}
 @keyframes mdcFade{from{opacity:0}to{opacity:1}}
 .mdc *{box-sizing:border-box}
 .mdc button{font:inherit}
-.mdc :focus-visible{outline:2px solid #E8FF2A;outline-offset:2px;border-radius:8px}
-.mdc-h{display:flex;align-items:center;gap:12px;padding:20px 20px 14px;border-bottom:1px solid #263247}
-.mdc-h h2{margin:0;font-size:20px;font-weight:900;letter-spacing:-.01em;color:#EDFF6A}
+.mdc :focus-visible{outline:2px solid var(--brand-primary);outline-offset:2px;border-radius:8px}
+.mdc-h{display:flex;align-items:center;gap:12px;padding:20px 20px 14px;border-bottom:1px solid var(--border-subtle)}
+.mdc-h h2{margin:0;font-size:20px;font-weight:900;letter-spacing:-.01em;color:var(--title-section)}
 .mdc-h p{margin:2px 0 0;font-size:13px;color:var(--text-tertiary)}
-.mdc-x{margin-left:auto;display:grid;place-items:center;width:44px;height:44px;border-radius:12px;border:1px solid #334155;background:none;color:var(--text-primary);cursor:pointer}
-.mdc-x:hover{border-color:#E8FF2A;color:#E8FF2A}
+.mdc-x{margin-left:auto;display:grid;place-items:center;width:44px;height:44px;border-radius:12px;border:1px solid var(--border-default);background:none;color:var(--text-primary);cursor:pointer}
+.mdc-x:hover{border-color:var(--brand-primary);color:var(--brand-primary)}
 .mdc-body{flex:1;overflow-y:auto;padding:6px 20px 24px;overscroll-behavior:contain}
 .mdc-sec{padding:18px 0 4px}
-.mdc-sec + .mdc-sec{border-top:1px solid #263247}
+.mdc-sec + .mdc-sec{border-top:1px solid var(--border-subtle)}
 .mdc-lbl{display:flex;align-items:baseline;justify-content:space-between;margin:0 0 10px;font-size:11.5px;font-weight:900;letter-spacing:.12em;text-transform:uppercase;color:var(--text-tertiary)}
 .mdc-lbl span{letter-spacing:0;text-transform:none;font-weight:700;color:var(--text-tertiary)}
 .mdc-list{list-style:none;margin:0;padding:0;display:flex;flex-direction:column;gap:6px}
 .mdc-item{display:grid;grid-template-columns:28px 36px minmax(0,1fr) auto auto;align-items:center;gap:10px;padding:8px 8px 8px 4px;border-radius:12px;background:rgba(255,255,255,.025);border:1px solid transparent;transition:border-color .15s,background .15s,opacity .15s,transform .15s}
 .mdc-item[data-off=true]{opacity:.5}
-.mdc-item[data-drag=true]{border-color:#E8FF2A;background:rgba(232,255,42,.06);transform:scale(1.01)}
-.mdc-item[data-over=true]{box-shadow:0 -2px 0 #E8FF2A}
+.mdc-item[data-drag=true]{border-color:var(--brand-primary);background:rgba(232,255,42,.06);transform:scale(1.01)}
+.mdc-item[data-over=true]{box-shadow:0 -2px 0 var(--brand-primary)}
 .mdc-grip{display:grid;place-items:center;height:40px;color:var(--text-tertiary);cursor:grab}
 .mdc-grip:active{cursor:grabbing}
 .mdc-time{display:grid;place-items:center;width:36px;height:36px;border-radius:10px;color:var(--t);background:color-mix(in srgb,var(--t) 14%,transparent)}
@@ -46,17 +46,17 @@ const CSS = `
 .mdc-name span{display:block;font-size:12px;color:var(--text-tertiary);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
 .mdc-move{display:flex;gap:2px}
 .mdc-move button{display:grid;place-items:center;width:30px;height:36px;border-radius:8px;border:0;background:none;color:var(--text-tertiary);cursor:pointer}
-.mdc-move button:hover:not([disabled]){color:#E8FF2A;background:rgba(255,255,255,.04)}
+.mdc-move button:hover:not([disabled]){color:var(--brand-primary);background:rgba(255,255,255,.04)}
 .mdc-move button[disabled]{opacity:.25;cursor:default}
-.mdc-sw{position:relative;width:48px;height:28px;flex:none;border-radius:999px;border:0;background:#334155;cursor:pointer;transition:background .18s}
-.mdc-sw::after{content:'';position:absolute;top:3px;left:3px;width:22px;height:22px;border-radius:50%;background:#F8FAFC;box-shadow:0 2px 6px rgba(0,0,0,.35);transition:transform .2s cubic-bezier(.2,.8,.2,1)}
-.mdc-sw[aria-checked=true]{background:#E8FF2A}
-.mdc-sw[aria-checked=true]::after{transform:translateX(20px);background:#101722}
+.mdc-sw{position:relative;width:48px;height:28px;flex:none;border-radius:999px;border:0;background:var(--border-default);cursor:pointer;transition:background .18s}
+.mdc-sw::after{content:'';position:absolute;top:3px;left:3px;width:22px;height:22px;border-radius:50%;background:var(--text-primary);box-shadow:0 2px 6px rgba(0,0,0,.35);transition:transform .2s cubic-bezier(.2,.8,.2,1)}
+.mdc-sw[aria-checked=true]{background:var(--brand-primary)}
+.mdc-sw[aria-checked=true]::after{transform:translateX(20px);background:var(--bg-base)}
 .mdc-sw[disabled]{opacity:.4;cursor:default}
-.mdc-seg{display:grid;grid-auto-flow:column;grid-auto-columns:1fr;gap:4px;padding:4px;border-radius:14px;background:rgba(255,255,255,.04);border:1px solid #263247}
+.mdc-seg{display:grid;grid-auto-flow:column;grid-auto-columns:1fr;gap:4px;padding:4px;border-radius:14px;background:rgba(255,255,255,.04);border:1px solid var(--border-subtle)}
 .mdc-seg button{display:flex;flex-direction:column;align-items:center;justify-content:center;gap:6px;min-height:64px;padding:8px 6px;border-radius:10px;border:0;background:none;color:var(--text-secondary);font-size:13px;font-weight:800;cursor:pointer;transition:background .15s,color .15s}
 .mdc-seg button:hover{color:var(--text-primary);background:rgba(255,255,255,.04)}
-.mdc-seg button[aria-checked=true]{background:#E8FF2A;color:#101722}
+.mdc-seg button[aria-checked=true]{background:var(--brand-primary);color:var(--bg-base)}
 .mdc-seg[data-small=true] button{min-height:44px;flex-direction:row}
 .mdc-dens{display:flex;flex-direction:column;gap:3px;width:34px}
 .mdc-dens i{display:block;height:3px;border-radius:2px;background:currentColor;opacity:.8}
@@ -65,35 +65,35 @@ const CSS = `
 .mdc-row b{display:block;font-size:14.5px;font-weight:800}
 .mdc-row span{display:block;font-size:12.5px;color:var(--text-tertiary)}
 .mdc-hours{display:grid;grid-template-columns:1fr 1fr;gap:10px}
-.mdc-step{display:flex;align-items:center;justify-content:space-between;gap:6px;padding:6px;border-radius:14px;background:rgba(255,255,255,.04);border:1px solid #263247}
+.mdc-step{display:flex;align-items:center;justify-content:space-between;gap:6px;padding:6px;border-radius:14px;background:rgba(255,255,255,.04);border:1px solid var(--border-subtle)}
 .mdc-step em{display:block;font-style:normal;font-size:10.5px;font-weight:900;letter-spacing:.12em;text-transform:uppercase;color:var(--text-tertiary);text-align:center}
 .mdc-step b{display:block;font-size:18px;font-weight:900;text-align:center;font-variant-numeric:tabular-nums}
-.mdc-step button{display:grid;place-items:center;width:40px;height:40px;border-radius:10px;border:1px solid #334155;background:none;color:var(--text-primary);cursor:pointer}
-.mdc-step button:hover:not([disabled]){border-color:#E8FF2A;color:#E8FF2A}
+.mdc-step button{display:grid;place-items:center;width:40px;height:40px;border-radius:10px;border:1px solid var(--border-default);background:none;color:var(--text-primary);cursor:pointer}
+.mdc-step button:hover:not([disabled]){border-color:var(--brand-primary);color:var(--brand-primary)}
 .mdc-step button[disabled]{opacity:.3;cursor:default}
-.mdc-day{position:relative;height:30px;margin-top:12px;border-radius:8px;background:linear-gradient(90deg,#0B1220 0%,#1E293B 25%,#334155 50%,#1E293B 75%,#0B1220 100%);overflow:hidden}
+.mdc-day{position:relative;height:30px;margin-top:12px;border-radius:8px;background:linear-gradient(90deg,var(--md-night) 0%,var(--md-dusk) 25%,var(--border-default) 50%,var(--md-dusk) 75%,var(--md-night) 100%);overflow:hidden}
 .mdc-day i{position:absolute;top:0;bottom:0;border-radius:8px;background:linear-gradient(90deg,rgba(232,255,42,.75),rgba(253,186,116,.75));box-shadow:0 0 18px rgba(232,255,42,.35);transition:left .2s,width .2s}
 .mdc-day span{position:absolute;top:50%;transform:translateY(-50%);font-size:10px;font-weight:900;color:var(--text-tertiary)}
-.mdc-f{display:flex;align-items:center;gap:10px;padding:14px 20px;border-top:1px solid #263247;background:#121A27}
+.mdc-f{display:flex;align-items:center;gap:10px;padding:14px 20px;border-top:1px solid var(--border-subtle);background:var(--md-sheet-foot)}
 .mdc-save{display:inline-flex;align-items:center;gap:6px;font-size:13px;font-weight:700;color:var(--text-tertiary)}
-.mdc-save[data-s=saved]{color:#4ADE80}
-.mdc-save[data-s=error]{color:#F87171}
-.mdc-b{display:inline-flex;align-items:center;justify-content:center;gap:8px;min-height:44px;padding:0 16px;border-radius:10px;border:1px solid #334155;background:none;color:var(--text-primary);font-size:14px;font-weight:800;cursor:pointer}
-.mdc-b:hover{border-color:#E8FF2A;color:#E8FF2A}
-.mdc-b[data-k=primary]{margin-left:auto;background:#E8FF2A;border-color:#E8FF2A;color:#101722}
-.mdc-b[data-k=primary]:hover{background:#F0FF70;color:#101722}
+.mdc-save[data-s=saved]{color:var(--success)}
+.mdc-save[data-s=error]{color:var(--danger)}
+.mdc-b{display:inline-flex;align-items:center;justify-content:center;gap:8px;min-height:44px;padding:0 16px;border-radius:10px;border:1px solid var(--border-default);background:none;color:var(--text-primary);font-size:14px;font-weight:800;cursor:pointer}
+.mdc-b:hover{border-color:var(--brand-primary);color:var(--brand-primary)}
+.mdc-b[data-k=primary]{margin-left:auto;background:var(--brand-primary);border-color:var(--brand-primary);color:var(--bg-base)}
+.mdc-b[data-k=primary]:hover{background:var(--action-primary-hover);color:var(--bg-base)}
 @media (max-width:640px){
-  .mdc{top:auto;left:0;width:100vw;max-height:92vh;border-left:0;border-top:1px solid #334155;border-radius:20px 20px 0 0;animation:mdcUp .26s cubic-bezier(.2,.8,.2,1)}
+  .mdc{top:auto;left:0;width:100vw;max-height:92vh;border-left:0;border-top:1px solid var(--border-default);border-radius:20px 20px 0 0;animation:mdcUp .26s cubic-bezier(.2,.8,.2,1)}
   .mdc-item{grid-template-columns:24px 32px minmax(0,1fr) auto auto;gap:8px}
 }
 @media (prefers-reduced-motion: reduce){.mdc,.mdc-scrim,.mdc *{animation:none!important;transition:none!important}}
 `;
 
 const TIME_UI: Record<string, { Icon: React.ElementType; color: string }> = {
-  Morning: { Icon: SunHorizon, color: '#FBBF24' },
-  Midday: { Icon: Sun, color: '#FDE047' },
-  'End of day': { Icon: MoonStars, color: '#C084FC' },
-  'Look ahead': { Icon: Binoculars, color: '#34D399' },
+  Morning: { Icon: SunHorizon, color: 'var(--warning)' },
+  Midday: { Icon: Sun, color: 'var(--kind-todo)' },
+  'End of day': { Icon: MoonStars, color: 'var(--kind-submittal)' },
+  'Look ahead': { Icon: Binoculars, color: 'var(--kind-inspection)' },
 };
 
 function Switch({ on, onChange, label, disabled }: { on: boolean; onChange: (v: boolean) => void; label: string; disabled?: boolean }) {
@@ -195,7 +195,7 @@ export default function MyDayCustomize({ prefs, onChange, onReset, onClose, save
               { v: 'compact', label: 'Compact', icon: <span className="mdc-dens"><i /><i /><i /><i /><i /></span> },
             ]} />
             <div className="mdc-row">
-              <CurrencyCircleDollar size={24} weight="duotone" style={{ color: '#4ADE80', flex: 'none' }} />
+              <CurrencyCircleDollar size={24} weight="duotone" style={{ color: 'var(--success)', flex: 'none' }} />
               <div><b>Show dollar amounts</b><span>Money at stake on rows, sections and jobs</span></div>
               <Switch on={prefs.showMoney} onChange={(v) => set({ showMoney: v })} label="Show dollar amounts" />
             </div>

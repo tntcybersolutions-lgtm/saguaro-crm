@@ -1977,3 +1977,15 @@ a.k-meta-item:hover, .k-link:hover { color: var(--link-hover); }
 .pmHeadTile { width: 48px; height: 48px; border-radius: 12px; }
 .pmEyebrow { font-size: 13px; font-weight: 600; color: var(--text-tertiary); margin-bottom: 2px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
 @media (max-width: 639px) { .pmHeadTile { width: 40px; height: 40px; border-radius: 10px; } }
+
+/* My Day — one accent per kind of work and a job palette (no blue: Chad's rule).
+   Used by components/my-work/MyDayBoard + MyDayCustomize. */
+:root {
+  --kind-bid: #FB923C; --kind-rfi: #F472B6; --kind-submittal: #C084FC; --kind-punch: #A3E635;
+  --kind-todo: #FDE047; --kind-issue: #FB7185; --kind-inspection: #34D399; --kind-task: #A78BFA;
+  --kind-log: #FBBF24; --kind-coi: #D6D3D1; --kind-payapp: #4ADE80; --kind-tm: #F59E0B;
+  --kind-assist: #F87171; --kind-followup: #E879F9; --kind-job: #FDBA74;
+  --job-1: #FB923C; --job-2: #A3E635; --job-3: #F472B6; --job-4: #C084FC;
+  --job-5: #34D399; --job-6: #FDE047; --job-7: #FB7185; --job-8: #A78BFA;
+  --md-planned: #64748B; --md-sheet: #141D2B; --md-sheet-foot: #121A27; --md-night: #0B1220; --md-dusk: #1E293B;
+}

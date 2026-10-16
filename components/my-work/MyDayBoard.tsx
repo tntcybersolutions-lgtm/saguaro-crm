@@ -40,26 +40,26 @@ export type Jobs = Record<string, { name: string; color: string | null }>;
 /* ── Kinds: a designer icon and an accent per kind of work (no blue) ───── */
 
 const KIND_UI: Record<ItemKind, { Icon: React.ElementType; color: string }> = {
-  bid: { Icon: Gavel, color: '#FB923C' },
-  rfi: { Icon: Question, color: '#F472B6' },
-  submittal: { Icon: Stamp, color: '#C084FC' },
-  punch: { Icon: ListChecks, color: '#A3E635' },
-  todo: { Icon: CheckSquare, color: '#FDE047' },
-  issue: { Icon: WarningOctagon, color: '#FB7185' },
-  inspection: { Icon: ClipboardText, color: '#34D399' },
-  task: { Icon: CalendarCheck, color: '#A78BFA' },
-  log: { Icon: Notebook, color: '#FBBF24' },
-  coi: { Icon: ShieldCheck, color: '#D6D3D1' },
-  payapp: { Icon: Receipt, color: '#4ADE80' },
-  tm: { Icon: Timer, color: '#F59E0B' },
-  assist: { Icon: Lifebuoy, color: '#F87171' },
-  followup: { Icon: Phone, color: '#E879F9' },
-  job: { Icon: HardHat, color: '#FDBA74' },
+  bid: { Icon: Gavel, color: 'var(--kind-bid)' },
+  rfi: { Icon: Question, color: 'var(--kind-rfi)' },
+  submittal: { Icon: Stamp, color: 'var(--kind-submittal)' },
+  punch: { Icon: ListChecks, color: 'var(--kind-punch)' },
+  todo: { Icon: CheckSquare, color: 'var(--kind-todo)' },
+  issue: { Icon: WarningOctagon, color: 'var(--kind-issue)' },
+  inspection: { Icon: ClipboardText, color: 'var(--kind-inspection)' },
+  task: { Icon: CalendarCheck, color: 'var(--kind-task)' },
+  log: { Icon: Notebook, color: 'var(--warning)' },
+  coi: { Icon: ShieldCheck, color: 'var(--kind-coi)' },
+  payapp: { Icon: Receipt, color: 'var(--success)' },
+  tm: { Icon: Timer, color: 'var(--kind-tm)' },
+  assist: { Icon: Lifebuoy, color: 'var(--danger)' },
+  followup: { Icon: Phone, color: 'var(--kind-followup)' },
+  job: { Icon: HardHat, color: 'var(--kind-job)' },
 };
 
-const JOB_FALLBACK = ['#FB923C', '#A3E635', '#F472B6', '#C084FC', '#34D399', '#FDE047', '#FB7185', '#A78BFA'];
+const JOB_FALLBACK = ['var(--kind-bid)', 'var(--kind-punch)', 'var(--kind-rfi)', 'var(--kind-submittal)', 'var(--kind-inspection)', 'var(--kind-todo)', 'var(--kind-issue)', 'var(--kind-task)'];
 const jobColor = (pid: string | null, jobs: Jobs) => {
-  if (!pid) return '#94A3B8';
+  if (!pid) return 'var(--text-tertiary)';
   const c = jobs[pid]?.color;
   if (c && /^#[0-9a-f]{6}$/i.test(c)) return c;
   let h = 0;
@@ -93,7 +93,7 @@ const parseDay = (d: string) => new Date(Date.UTC(+d.slice(0, 4), +d.slice(5, 7)
 /* ── Styles ─────────────────────────────────────────────────────────────── */
 
 const CSS = `
-.md{container:md/inline-size;--md-pad:14px;--md-gap:12px;--md-line:var(--sg-border,#334155);--md-text:var(--sg-text,#F8FAFC);--md-2:var(--sg-text-2,#CBD5E1);--md-3:var(--sg-text-3,#94A3B8);--md-neon:var(--brand-primary,#E8FF2A);--md-red:var(--danger,#F87171);--md-amber:var(--warning,#FBBF24);--md-green:var(--success,#4ADE80);--md-gold:#FDBA74;color:var(--md-text);max-width:1320px;margin:0 auto;padding-bottom:64px}
+.md{container:md/inline-size;--md-pad:14px;--md-gap:12px;--md-line:var(--sg-border,var(--border-default));--md-text:var(--sg-text,var(--text-primary));--md-2:var(--sg-text-2,var(--text-secondary));--md-3:var(--sg-text-3,var(--text-tertiary));--md-neon:var(--brand-primary,var(--brand-primary));--md-red:var(--danger,var(--danger));--md-amber:var(--warning,var(--warning));--md-green:var(--success,var(--success));--md-gold:var(--kind-job);color:var(--md-text);max-width:1320px;margin:0 auto;padding-bottom:64px}
 .md[data-density=compact]{--md-pad:8px;--md-gap:8px}
 .md *{box-sizing:border-box}
 .md button{font:inherit}
@@ -108,7 +108,7 @@ const CSS = `
 .md-role{display:inline-flex;align-items:center;height:26px;padding:0 10px;border-radius:999px;font-size:12px;font-weight:700;color:var(--md-2);border:1px solid var(--md-line)}
 .md-scope{display:inline-flex;padding:3px;border-radius:999px;border:1px solid var(--md-line);gap:2px}
 .md-scope button{height:26px;padding:0 12px;border-radius:999px;border:0;background:none;color:var(--md-3);font-size:12px;font-weight:800;cursor:pointer}
-.md-scope button[aria-pressed=true]{background:var(--md-neon);color:#101722}
+.md-scope button[aria-pressed=true]{background:var(--md-neon);color:var(--bg-base)}
 
 .md-press{display:flex;align-items:center;gap:22px;min-width:0}
 .md-ring{flex:none;position:relative;width:118px;height:118px;border:0;background:none;padding:0;cursor:pointer;border-radius:50%}
@@ -138,12 +138,12 @@ const CSS = `
 @keyframes mdPulse{0%{box-shadow:0 0 0 0 rgba(74,222,128,.55)}70%{box-shadow:0 0 0 10px rgba(74,222,128,0)}100%{box-shadow:0 0 0 0 rgba(74,222,128,0)}}
 .md-btn{display:inline-flex;align-items:center;justify-content:center;gap:8px;min-height:44px;padding:0 16px;border-radius:10px;border:1px solid var(--md-line);background:transparent;color:var(--md-text);font-size:14px;font-weight:800;text-decoration:none;cursor:pointer;white-space:nowrap;transition:border-color .15s,background .15s,color .15s}
 .md-btn:hover{border-color:var(--md-neon);color:var(--md-neon)}
-.md-btn[data-k=primary]{background:var(--md-neon);border-color:var(--md-neon);color:#101722}
-.md-btn[data-k=primary]:hover{background:color-mix(in srgb,var(--md-neon) 88%,#fff);color:#101722}
+.md-btn[data-k=primary]{background:var(--md-neon);border-color:var(--md-neon);color:var(--bg-base)}
+.md-btn[data-k=primary]:hover{background:color-mix(in srgb,var(--md-neon) 88%,var(--text-primary));color:var(--bg-base)}
 .md-btn[disabled]{opacity:.5;cursor:default}
 
 /* Filter bar */
-.md-filters{position:sticky;top:0;z-index:5;display:flex;flex-wrap:wrap;align-items:center;gap:8px;padding:12px 0;background:linear-gradient(var(--bg-base,#101722) 80%,transparent)}
+.md-filters{position:sticky;top:0;z-index:5;display:flex;flex-wrap:wrap;align-items:center;gap:8px;padding:12px 0;background:linear-gradient(var(--bg-base,var(--bg-base)) 80%,transparent)}
 .md-search{position:relative;flex:1 1 220px;max-width:360px}
 .md-search input{width:100%;height:40px;padding:0 12px 0 36px;border-radius:10px;border:1px solid var(--md-line);background:rgba(255,255,255,.03);color:var(--md-text);font-size:16px}
 .md-search input::placeholder{color:var(--md-3)}
@@ -161,7 +161,7 @@ const CSS = `
 .md-sec{padding:22px 0 6px}
 .md-sec + .md-sec{border-top:1px solid var(--md-line)}
 .md-sec-h{display:flex;align-items:baseline;gap:12px;margin:0 0 10px}
-.md-sec-h h2{margin:0;font-size:18px;font-weight:900;letter-spacing:-.01em;color:var(--title-section,#EDFF6A)}
+.md-sec-h h2{margin:0;font-size:18px;font-weight:900;letter-spacing:-.01em;color:var(--title-section,var(--title-section))}
 .md-sec-h .md-when{font-size:11px;font-weight:800;letter-spacing:.12em;text-transform:uppercase;color:var(--md-3)}
 .md-sec-h .md-count{margin-left:auto;font-size:13px;font-weight:800;color:var(--md-2);font-variant-numeric:tabular-nums}
 .md-empty{display:flex;align-items:center;gap:10px;padding:14px 0;color:var(--md-2);font-size:14.5px}
@@ -186,14 +186,14 @@ const CSS = `
 .md-job i{width:8px;height:8px;border-radius:50%;flex:none;background:var(--j)}
 .md-job b{font-weight:700;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
 .md-due{position:relative;z-index:1;display:inline-flex;align-items:center;justify-content:center;min-width:84px;height:28px;padding:0 10px;border-radius:999px;font-size:12px;font-weight:800;font-variant-numeric:tabular-nums;color:var(--md-2);border:1px solid var(--md-line);white-space:nowrap}
-.md-due[data-tone=red]{color:#101722;background:var(--md-red);border-color:var(--md-red)}
+.md-due[data-tone=red]{color:var(--bg-base);background:var(--md-red);border-color:var(--md-red)}
 .md-due[data-tone=amber]{color:var(--md-amber);border-color:color-mix(in srgb,var(--md-amber) 55%,transparent);background:color-mix(in srgb,var(--md-amber) 10%,transparent)}
 .md-amt{position:relative;z-index:1;min-width:64px;text-align:right;font-size:14px;font-weight:800;font-variant-numeric:tabular-nums;color:var(--md-text)}
 .md-acts{position:relative;z-index:1;display:flex;align-items:center;gap:6px;justify-content:flex-end}
 .md-act{display:inline-flex;align-items:center;justify-content:center;gap:6px;min-height:36px;min-width:44px;padding:0 12px;border-radius:9px;border:1px solid var(--md-line);background:transparent;color:var(--md-text);font-size:13px;font-weight:800;text-decoration:none;cursor:pointer;white-space:nowrap;transition:border-color .15s,color .15s,background .15s}
 .md-act:hover{border-color:var(--md-neon);color:var(--md-neon)}
-.md-act[data-k=primary]{background:var(--md-neon);border-color:var(--md-neon);color:#101722}
-.md-act[data-k=primary]:hover{background:color-mix(in srgb,var(--md-neon) 88%,#fff);color:#101722}
+.md-act[data-k=primary]{background:var(--md-neon);border-color:var(--md-neon);color:var(--bg-base)}
+.md-act[data-k=primary]:hover{background:color-mix(in srgb,var(--md-neon) 88%,var(--text-primary));color:var(--bg-base)}
 .md-act[data-k=quiet]{border-color:transparent;color:var(--md-3);padding:0 8px}
 .md-act[data-k=quiet]:hover{color:var(--md-green);border-color:transparent}
 .md-act[disabled]{opacity:.5;cursor:default}
@@ -210,13 +210,13 @@ const CSS = `
 .md-tline{position:relative;height:var(--h,96px);margin:4px 0 0;border-top:1px solid var(--md-line);border-bottom:1px solid var(--md-line);background:repeating-linear-gradient(90deg,transparent 0,transparent calc(var(--hw) - 1px),rgba(255,255,255,.05) calc(var(--hw) - 1px),rgba(255,255,255,.05) var(--hw))}
 .md-hours{position:relative;height:22px;margin-top:6px}
 .md-hours span{position:absolute;top:0;transform:translateX(-50%);font-size:11px;font-weight:800;color:var(--md-3);white-space:nowrap}
-.md-ev{position:absolute;display:flex;flex-direction:column;justify-content:center;gap:1px;height:38px;padding:0 10px;border-radius:9px;background:color-mix(in srgb,var(--j) 22%,#1B2636);box-shadow:inset 3px 0 0 var(--j);color:var(--md-text);text-decoration:none;overflow:hidden;min-width:56px;transition:transform .15s}
-.md-ev:hover{transform:translateY(-1px);background:color-mix(in srgb,var(--j) 30%,#1B2636)}
+.md-ev{position:absolute;display:flex;flex-direction:column;justify-content:center;gap:1px;height:38px;padding:0 10px;border-radius:9px;background:color-mix(in srgb,var(--j) 22%,var(--bg-surface));box-shadow:inset 3px 0 0 var(--j);color:var(--md-text);text-decoration:none;overflow:hidden;min-width:56px;transition:transform .15s}
+.md-ev:hover{transform:translateY(-1px);background:color-mix(in srgb,var(--j) 30%,var(--bg-surface))}
 .md-ev b{font-size:12.5px;font-weight:800;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
 .md-ev span{font-size:11px;color:var(--md-2);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
 .md-ev[data-past=true]{opacity:.5}
 .md-now{position:absolute;top:-6px;bottom:-6px;width:2px;background:var(--md-neon);box-shadow:0 0 12px var(--md-neon);z-index:2}
-.md-now::before{content:attr(data-t);position:absolute;top:-20px;left:50%;transform:translateX(-50%);padding:1px 6px;border-radius:6px;background:var(--md-neon);color:#101722;font-size:10.5px;font-weight:900;white-space:nowrap}
+.md-now::before{content:attr(data-t);position:absolute;top:-20px;left:50%;transform:translateX(-50%);padding:1px 6px;border-radius:6px;background:var(--md-neon);color:var(--bg-base);font-size:10.5px;font-weight:900;white-space:nowrap}
 .md-tline-empty{position:absolute;inset:0;display:grid;place-items:center;color:var(--md-3);font-size:13px;font-weight:700}
 .md-anytime{display:flex;flex-wrap:wrap;align-items:center;gap:8px;margin-top:10px}
 .md-anytime > em{font-style:normal;font-size:11px;font-weight:800;letter-spacing:.12em;text-transform:uppercase;color:var(--md-3);margin-right:4px}
@@ -236,13 +236,13 @@ const CSS = `
 .md-stack i[data-t=red]{background:var(--md-red)}
 .md-stack i[data-t=amber]{background:var(--md-amber)}
 .md-stack i[data-t=gold]{background:var(--md-gold)}
-.md-stack i[data-t=grey]{background:#64748B}
+.md-stack i[data-t=grey]{background:var(--md-planned)}
 .md-dl{display:flex;flex-direction:column;align-items:center;line-height:1.1;padding:4px 2px;border-radius:8px;width:100%}
 .md-dl small{font-size:10px;font-weight:800;letter-spacing:.08em;text-transform:uppercase;color:var(--md-3)}
 .md-dl span{font-size:13px;font-weight:800;color:var(--md-2);font-variant-numeric:tabular-nums}
 .md-day[data-weekend=true] .md-dl{opacity:.55}
 .md-day[data-today=true] .md-dl{background:var(--md-neon)}
-.md-day[data-today=true] .md-dl small,.md-day[data-today=true] .md-dl span{color:#101722}
+.md-day[data-today=true] .md-dl small,.md-day[data-today=true] .md-dl span{color:var(--bg-base)}
 .md-day[data-late=true] .md-dl small,.md-day[data-late=true] .md-dl span{color:var(--md-red)}
 .md-day[aria-pressed=true] .md-stack{box-shadow:0 0 0 2px var(--md-neon)}
 .md-day[aria-pressed=true] .md-dl{outline:2px solid var(--md-neon)}
@@ -548,7 +548,7 @@ export default function MyDayBoard(props: MyDayBoardProps) {
         {(anytime.length > 0 || untimed.length > 0) && (
           <div className="md-anytime">
             <em>Anytime today</em>
-            {untimed.map((e) => <Link key={e.id} href={e.href} className="md-pill" style={{ ['--k' as string]: '#E879F9' }}><CalendarCheck size={16} weight="duotone" /><span>{e.title}</span></Link>)}
+            {untimed.map((e) => <Link key={e.id} href={e.href} className="md-pill" style={{ ['--k' as string]: 'var(--kind-followup)' }}><CalendarCheck size={16} weight="duotone" /><span>{e.title}</span></Link>)}
             {anytime.map((it) => { const { Icon, color } = KIND_UI[kindOf(it)]; return <Link key={it.key} href={it.href} className="md-pill" style={{ ['--k' as string]: color }}><Icon size={16} weight="duotone" /><span>{it.title}</span></Link>; })}
           </div>
         )}
@@ -635,7 +635,7 @@ export default function MyDayBoard(props: MyDayBoardProps) {
         <span><i style={{ background: 'var(--md-red)' }} />Late / at risk</span>
         <span><i style={{ background: 'var(--md-amber)' }} />Due soon</span>
         <span><i style={{ background: 'var(--md-gold)' }} />Happening</span>
-        <span><i style={{ background: '#64748B' }} />Planned</span>
+        <span><i style={{ background: 'var(--md-planned)' }} />Planned</span>
       </div>
       {groups.length ? groups.map((g) => (
         <div key={g.key}>
