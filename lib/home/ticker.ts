@@ -14,7 +14,7 @@
  */
 import type { QueueItem } from './rank';
 
-export type TickerTone = 'red' | 'review' | 'yellow' | 'green';
+export type TickerTone = 'red' | 'review' | 'yellow' | 'waiting' | 'green';
 
 export interface TickerItem {
   id: string;
@@ -25,7 +25,7 @@ export interface TickerItem {
   count: number;
 }
 
-export interface TickerSummary { red: number; review: number; yellow: number; green: number }
+export interface TickerSummary { red: number; review: number; yellow: number; green: number; waiting?: number }
 
 export interface ReviewGroup {
   projectId: string;

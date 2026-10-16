@@ -23,10 +23,13 @@ export const HOME_CSS = `
 .fh-in [data-tone=bad]{color:var(--danger)} .fh-in [data-tone=warn]{color:var(--warning)} .fh-in [data-tone=good]{color:var(--success)}
 .fh-in .fl-strip [data-tone] span{color:var(--sg-text-2)}
 .fh-in .fl-strip b span{display:inline;font-size:inherit;color:inherit}
-.fh-in .fl-strip{grid-auto-flow:row;grid-template-columns:repeat(2,minmax(0,1fr));gap:10px;border:0;margin:4px 0 14px}
-.fh-in .fl-strip>div{position:relative;padding:12px;border:1px solid var(--border-default);border-radius:12px;background:var(--bg-surface);box-shadow:var(--shadow-sm)}
-.fh-in .fl-strip>div:last-child{border-right:1px solid var(--border-default)}
-.fh-in .fl-strip b{font-size:22px;font-weight:800;color: var(--text-primary)}
+/* The number strip is a flat scoreboard: two across, hairlines between, no tiles. */
+.fh-in .fl-strip{grid-auto-flow:row;grid-template-columns:repeat(2,minmax(0,1fr));gap:0;margin:4px 0 14px}
+.fh-in .fl-strip>div{position:relative;padding:12px 14px;border:0;border-left:1px solid var(--border-subtle);border-radius:0;background:none;box-shadow:none}
+.fh-in .fl-strip>div:nth-child(2n+1){border-left:0;padding-left:0}
+.fh-in .fl-strip>div:nth-child(n+3){border-top:1px solid var(--border-subtle)}
+.fh-in .fl-strip>div:last-child{border-right:0}
+.fh-in .fl-strip b{font-size:26px;font-weight:800;letter-spacing:-0.01em;color: var(--text-primary)}
 .fh-in .fl-strip span{margin-top:2px;font-size:13px;font-weight:600;letter-spacing:0;text-transform:none}
 .fh-ticker{margin:0;min-width:0}
 .fh-in .hf{margin:14px 0 8px}

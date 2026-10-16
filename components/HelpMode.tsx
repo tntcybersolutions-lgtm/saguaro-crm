@@ -832,15 +832,17 @@ export function HelpModeButton() {
   return (
     <button
       data-tour="help-mode"
+      className="sag-tb-help"
+      data-on={on || undefined}
       onClick={() => window.dispatchEvent(new Event('saguaro-help-mode'))}
       title="Show me how — arrows that point at the next button"
       style={{
-        display: 'flex', alignItems: 'center', gap: 7, height: 36, padding: '0 13px',
-        background: on ? GOLD : 'rgba(255,255,255,0.03)',
-        border: `1px solid ${on ? GOLD : 'var(--border-subtle)'}`,
-        borderRadius: 999,
-        color: on ? 'var(--on-brand)' : 'var(--c-text-2)',
-        fontSize: 13, fontWeight: 800, letterSpacing: '0.01em', cursor: 'pointer',
+        display: 'flex', alignItems: 'center', gap: 7, height: 36, padding: '0 12px',
+        background: on ? GOLD : 'var(--bg-surface-2)',
+        border: `1px solid ${on ? GOLD : 'var(--border-default)'}`,
+        borderRadius: 10,
+        color: on ? 'var(--on-brand)' : 'var(--text-primary)',
+        fontSize: 14, fontWeight: 700, letterSpacing: 0, cursor: 'pointer',
         transition: 'background .15s, color .15s, border-color .15s',
         whiteSpace: 'nowrap',
       }}

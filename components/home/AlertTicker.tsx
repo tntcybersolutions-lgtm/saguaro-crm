@@ -1,30 +1,31 @@
 'use client';
 /**
- * Owner Home alert ticker — the portfolio's state in one glance (the stop-light
- * bar: red urgent · orange to review · yellow coming up · green done today).
- * Back on the flat Home at Chad's request, 2026-10-11.
+ * Home alert line — the day's state in one glance, flat on the page (a
+ * hairline above and below, no box).
  *
- * Left: counts by colour (red urgent · orange to review · yellow coming up ·
- * green done today). Right: a slow-moving strip of one-line alerts, each a
+ * Left: counts by colour — red late · yellow due today · waiting on others ·
+ * orange to review · green done today. Late, today and waiting are My Day's
+ * own numbers (lib/home/day-ticker), so Home and My Day always agree. Right: a slow-moving strip of one-line alerts, each a
  * link to the page that clears it. It pauses while hovered, focused or
  * touched; when everything fits it simply sits still; with reduced motion on
  * it never moves and scrolls sideways by hand instead.
  */
 import React, { useEffect, useLayoutEffect, useRef, useState } from 'react';
 import Link from 'next/link';
-import { WarningCircle, Camera, Clock, CheckCircle, CaretRight } from '@phosphor-icons/react';
+import { WarningCircle, Camera, Clock, CheckCircle, CaretRight, Hourglass } from '@phosphor-icons/react';
 import type { TickerItem, TickerSummary, TickerTone } from '@/lib/home/ticker';
 
 const ICON: Record<TickerTone, React.ReactNode> = {
   red: <WarningCircle size={15} weight="fill" />,
   review: <Camera size={15} weight="fill" />,
   yellow: <Clock size={15} weight="fill" />,
+  waiting: <Hourglass size={15} weight="fill" />,
   green: <CheckCircle size={15} weight="fill" />,
 };
 
 const CSS = `
-.atk { display: flex; align-items: stretch; gap: 0; min-width: 0; width: 100%; max-width: 100%; contain: inline-size; border-radius: 12px; border: 1px solid var(--border-default); background: var(--bg-surface); overflow: hidden; }
-.atkSum { flex: 0 0 auto; display: flex; align-items: center; gap: 14px; padding: 10px 16px; border-right: 1px solid var(--border-subtle); }
+.atk { display: flex; align-items: stretch; gap: 0; min-width: 0; width: 100%; max-width: 100%; contain: inline-size; border-radius: 0; border: 0; border-top: 1px solid var(--border-subtle); border-bottom: 1px solid var(--border-subtle); background: none; overflow: hidden; }
+.atkSum { flex: 0 0 auto; display: flex; align-items: center; gap: 16px; padding: 8px 16px 8px 0; border-right: 1px solid var(--border-subtle); }
 .atkLive { display: inline-flex; align-items: center; gap: 6px; font-size: 13px; font-weight: 700; color: var(--c-text-2); }
 .atkLive i { width: 7px; height: 7px; border-radius: 50%; background: var(--c-green); }
 .atkN { display: inline-flex; align-items: center; gap: 6px; font-size: 13px; font-weight: 800; color: var(--c-text-2); white-space: nowrap; }
@@ -33,6 +34,7 @@ const CSS = `
 .atkN[data-tone="review"] b, .atkN[data-tone="review"] svg { color: var(--c-orange); }
 .atkN[data-tone="yellow"] b, .atkN[data-tone="yellow"] svg { color: var(--warning); }
 .atkN[data-tone="green"] b, .atkN[data-tone="green"] svg { color: var(--c-green); }
+.atkN[data-tone="waiting"] b, .atkN[data-tone="waiting"] svg { color: var(--text-primary); }
 .atkN[data-zero="true"] { opacity: .45; }
 button.atkN { min-height: 44px; padding: 0 6px; margin: 0 -6px; background: none; border: 0; border-radius: 10px; font: inherit; cursor: pointer; }
 button.atkN:disabled { cursor: default; }
@@ -46,8 +48,8 @@ button.atkN[aria-pressed="true"] { background: var(--bg-surface-2); box-shadow: 
 .atkRail:hover .atkTrack, .atkRail:focus-within .atkTrack, .atk[data-paused="true"] .atkTrack { animation-play-state: paused; }
 @keyframes atk-move { from { transform: translateX(0); } to { transform: translateX(-50%); } }
 .atkSet { display: flex; gap: 10px; }
-.atkItem { display: inline-flex; align-items: center; gap: 8px; min-height: 36px; padding: 0 12px; border-radius: 999px; border: 1px solid var(--border-default); background: var(--bg-surface-2); color: var(--c-text); font-size: 14px; font-weight: 700; text-decoration: none; white-space: nowrap; }
-.atkItem:hover { background: var(--bg-hover); }
+.atkItem { display: inline-flex; align-items: center; gap: 8px; min-height: 36px; padding: 0 12px; border-radius: 999px; border: 1px solid var(--border-default); background: none; color: var(--c-text); font-size: 14px; font-weight: 650; text-decoration: none; white-space: nowrap; transition: background-color .15s ease, border-color .15s ease; }
+.atkItem:hover { background: var(--bg-hover); border-color: var(--border-strong); }
 .atkItem:focus-visible { outline: 2px solid var(--link); outline-offset: 2px; }
 .atkItem > svg:first-child { flex: 0 0 auto; }
 .atkItem[data-tone="red"] { border-color: rgba(248,113,113,0.45); background: rgba(248,113,113,0.08); }
@@ -56,6 +58,7 @@ button.atkN[aria-pressed="true"] { background: var(--bg-surface-2); box-shadow: 
 .atkItem[data-tone="review"] > svg:first-child { color: var(--c-orange); }
 .atkItem[data-tone="yellow"] > svg:first-child { color: var(--warning); }
 .atkItem[data-tone="green"] > svg:first-child { color: var(--c-green); }
+.atkItem[data-tone="waiting"] > svg:first-child { color: var(--text-secondary); }
 .atkItem .go { color: var(--c-text-3); }
 .atkFail { padding: 0 14px; font-size: 13px; color: var(--c-text-3); white-space: nowrap; }
 @media (prefers-reduced-motion: reduce) {
@@ -66,7 +69,7 @@ button.atkN[aria-pressed="true"] { background: var(--bg-surface-2); box-shadow: 
 }
 @media (max-width: 767px) {
   .atk { flex-direction: column; }
-  .atkSum { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); border-right: 0; border-bottom: 1px solid var(--border-subtle); gap: 4px; padding: 10px 8px; }
+  .atkSum { display: grid; grid-template-columns: repeat(5, minmax(0, 1fr)); border-right: 0; border-bottom: 1px solid var(--border-subtle); gap: 2px; padding: 8px 0; }
   .atkLive { display: none; }
   .atkN { display: grid; grid-template-columns: auto auto; justify-content: center; align-items: center; column-gap: 5px; row-gap: 2px; font-size: 12px; text-align: center; white-space: normal; line-height: 1.15; }
   .atkN b { font-size: 18px; }
@@ -76,7 +79,8 @@ button.atkN[aria-pressed="true"] { background: var(--bg-surface-2); box-shadow: 
 }
 `;
 
-const COUNTS: Array<[TickerTone, string]> = [['red', 'urgent'], ['review', 'to review'], ['yellow', 'coming up'], ['green', 'done today']];
+/* The words My Day uses, so the two screens read the same. */
+const COUNTS: Array<[TickerTone, string]> = [['red', 'late'], ['yellow', 'due today'], ['waiting', 'waiting'], ['review', 'to review'], ['green', 'done today']];
 
 export default function AlertTicker({ items, summary, failed }: { items: TickerItem[]; summary: TickerSummary; failed?: boolean }) {
   const railRef = useRef<HTMLDivElement>(null);
@@ -123,7 +127,7 @@ export default function AlertTicker({ items, summary, failed }: { items: TickerI
       <div className="atkSum">
         <span className="atkLive"><i aria-hidden /> Live</span>
         {COUNTS.map(([tone, word]) => {
-          const n = summary[tone];
+          const n = summary[tone] ?? 0;
           const any = items.some((i) => i.tone === tone);
           return (
             <button key={tone} type="button" className="atkN" data-tone={tone} data-zero={n ? undefined : 'true'}

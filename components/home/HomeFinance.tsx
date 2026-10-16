@@ -280,13 +280,18 @@ const HF_CSS = `
 .hf-live i{width:8px;height:8px;border-radius:50%;background:${GREEN}}
 .hf-live i[data-busy]{background:${BLUE}}
 
-.hf-card{position:relative;display:block;border-radius:12px;text-decoration:none;color:inherit;overflow:hidden;
-  background:var(--bg-surface);border:1px solid var(--border-default);transition:border-color .15s ease, background-color .15s ease}
-a.hf-card:hover{border-color:var(--border-strong);background:var(--bg-row-hover)}
+/* Flat (no boxed cards): figures sit on the page as one scoreboard, divided
+   by hairlines; panels are a title over a hairline, then the content. */
+.hf-card{position:relative;display:block;border-radius:0;text-decoration:none;color:inherit;overflow:hidden;
+  background:none;border:0;transition:background-color .15s ease}
+a.hf-card:hover{background:var(--bg-row-hover)}
+a.hf-card:hover .hf-k-label{color:var(--text-primary)}
 a.hf-card:focus-visible{outline:2px solid var(--focus-ring);outline-offset:2px}
 
-.hf-kpis{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:10px}
-.hf-kpi{display:flex;flex-direction:column;gap:4px;min-height:118px;padding:14px 14px 12px}
+.hf-kpis{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:0;border-top:1px solid var(--border-subtle);border-bottom:1px solid var(--border-subtle)}
+.hf-kpi{display:flex;flex-direction:column;gap:4px;min-height:112px;padding:14px 14px 12px;border-left:1px solid var(--border-subtle)}
+.hf-kpi:nth-child(2n+1){border-left:0;padding-left:2px}
+.hf-kpi:nth-child(n+3){border-top:1px solid var(--border-subtle)}
 .hf-k-label{font-size:13px;font-weight:600;letter-spacing:0;color:var(--text-secondary)}
 .hf-k-val{font-size:24px;line-height:1.15;font-weight:800;letter-spacing:-.01em;color:var(--text-primary);font-variant-numeric:tabular-nums}
 .hf-k-val[data-tone=good]{color:var(--success)}
@@ -298,12 +303,12 @@ a.hf-card:focus-visible{outline:2px solid var(--focus-ring);outline-offset:2px}
 .hf-k-bar[data-tone=good] i{background:${GREEN}}
 .hf-k-bar[data-tone=warn] i{background:var(--warning)}
 .hf-k-bar[data-tone=bad] i{background:var(--danger)}
-.hf-k-spark{position:absolute;left:0;right:0;bottom:0;height:42px;opacity:.6;pointer-events:none}
+.hf-k-spark{position:absolute;left:0;right:0;bottom:0;height:40px;opacity:.5;pointer-events:none}
 
-.hf-grid{display:grid;grid-template-columns:minmax(0,1fr);gap:12px;margin-top:12px}
-.hf-panel{padding:14px 16px 14px}
-.hf-p-head{display:flex;align-items:flex-start;justify-content:space-between;gap:10px;margin-bottom:8px}
-.hf-p-head h3{margin:0;font-size:16px;font-weight:700;color:var(--text-primary)}
+.hf-grid{display:grid;grid-template-columns:minmax(0,1fr);gap:26px;margin-top:22px}
+.hf-panel{padding:0;overflow:visible}
+.hf-p-head{display:flex;align-items:flex-end;justify-content:space-between;gap:10px;margin-bottom:12px;padding-bottom:10px;border-bottom:1px solid var(--border-subtle)}
+.hf-p-head h3{margin:0;font-size:var(--fs-section);font-weight:700;letter-spacing:-0.005em;color:var(--title-section)}
 .hf-p-head p{margin:3px 0 0;font-size:13px;line-height:1.4;color:var(--text-secondary)}
 .hf-p-act{flex:none;display:inline-flex;align-items:center;min-height:44px;margin:-12px -4px -12px 0;padding:0 4px;font-size:14px;font-weight:600;color:var(--link);text-decoration:none}
 .hf-p-act:hover{color:var(--link-hover)}
@@ -347,10 +352,13 @@ a.hf-card:focus-visible{outline:2px solid var(--focus-ring);outline-offset:2px}
 .hf-stages li small{grid-column:2 / 4;margin-top:-4px;font-size:12px;color:var(--text-tertiary)}
 
 @media (min-width:768px){
-  .hf-kpis{grid-template-columns:repeat(4,minmax(0,1fr));gap:12px}
-  .hf-kpi{min-height:124px;padding:16px}
-  .hf-k-val{font-size:28px}
-  .hf-grid{grid-template-columns:minmax(0,1.7fr) minmax(0,1fr);gap:14px}
+  .hf-kpis{grid-template-columns:repeat(4,minmax(0,1fr))}
+  .hf-kpi{min-height:122px;padding:16px 18px;border-top:0}
+  .hf-kpi:nth-child(2n+1){border-left:1px solid var(--border-subtle);padding-left:18px}
+  .hf-kpi:nth-child(4n+1){border-left:0;padding-left:2px}
+  .hf-kpi:nth-child(n+5){border-top:1px solid var(--border-subtle)}
+  .hf-k-val{font-size:30px}
+  .hf-grid{grid-template-columns:minmax(0,1.7fr) minmax(0,1fr);gap:30px 40px}
   .hf-chart{height:240px}
 }
 @media (prefers-reduced-motion:reduce){.hf-card{transition:none}}

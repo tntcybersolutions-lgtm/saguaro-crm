@@ -265,9 +265,10 @@ function BrandLockup({ collapsed }: { collapsed: boolean }) {
         onMouseLeave={() => setHover(false)}
         style={{
           display: 'flex', alignItems: 'center', gap: 10, minWidth: 0, textDecoration: 'none',
-          padding: '8px 10px', borderRadius: 12,
+          padding: '8px 10px', borderRadius: 10,
+          /* Flat (no boxed tiles): the identity row lights on hover only. */
           background: hover ? 'rgba(148,163,184,0.10)' : 'transparent',
-          border: `1px solid ${hover ? 'rgba(232,255,42,0.3)' : 'var(--border-subtle)'}`,
+          border: '1px solid transparent',
           transition: 'background .15s ease, border-color .15s ease',
         }}
       >
@@ -886,6 +887,7 @@ export default function AppSidebar({
             {!collapsed && (
               <button
                 type="button"
+                className="sg-nav-sec"
                 onClick={() => toggleSection(section.title, !isOpen)}
                 aria-expanded={isOpen}
                 style={{

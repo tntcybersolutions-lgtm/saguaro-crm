@@ -180,16 +180,17 @@ export default function AppTopBar({
       <button
         type="button"
         onClick={onOpenCommandPalette}
-        className="sag-topbar-desktop"
+        className="sag-topbar-desktop sag-tb-search"
+        aria-label="Search everything (Ctrl or Cmd + K)"
         style={{
           display: 'flex',
           alignItems: 'center',
           gap: 8,
-          height: 32,
-          padding: '0 8px 0 10px',
-          background: 'none',
-          border: '1px solid var(--sg-border)',
-          borderRadius: radius.lg,
+          height: 36,
+          padding: '0 8px 0 11px',
+          background: 'var(--bg-surface)',
+          border: '1px solid var(--border-default)',
+          borderRadius: 10,
           color: 'var(--sg-text-2)',
           fontSize: font.size.md,
           fontWeight: font.weight.medium,

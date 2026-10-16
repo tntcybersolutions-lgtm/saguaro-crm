@@ -1031,11 +1031,15 @@ input:-webkit-autofill:focus {
    rgba(255,255,255,0.14), which disappeared against the rail, so seven of
    twenty-two destinations were effectively invisible. A slate thumb reads on
    the rail; the track stays transparent. */
-.sidebarNav { scrollbar-width: thin; scrollbar-color: #475569 transparent; }
-.sidebarNav::-webkit-scrollbar { width: 6px; }
+/* The rail's scrollbar: a thin thumb that shows while the pointer is on the
+   rail — no arrow buttons, no grey gutter. Firefox gets the standard thin bar. */
+.sidebarNav::-webkit-scrollbar { width: 8px; }
+.sidebarNav::-webkit-scrollbar-button { display: none; width: 0; height: 0; }
 .sidebarNav::-webkit-scrollbar-track { background: transparent; }
-.sidebarNav::-webkit-scrollbar-thumb { background: #475569; border-radius: 999px; }
-.sidebarNav::-webkit-scrollbar-thumb:hover { background: #64748B; }
+.sidebarNav::-webkit-scrollbar-thumb { background-color: transparent; border: 2px solid transparent; border-radius: 999px; background-clip: padding-box; }
+.sidebarNav:hover::-webkit-scrollbar-thumb { background-color: var(--border-strong); }
+.sidebarNav::-webkit-scrollbar-thumb:hover { background-color: var(--text-tertiary); }
+@supports not selector(::-webkit-scrollbar) { .sidebarNav { scrollbar-width: thin; scrollbar-color: var(--border-strong) transparent; } }
 
 /* ══════════════════════════════════════════════════════════════════════════
    SAGUARO KIT — the one shared UI (components/ui/kit.tsx). Every class here
@@ -1096,20 +1100,20 @@ input:-webkit-autofill:focus {
 /* A finger needs 44 × 44 (Apple HIG): the dialog close X and every other icon-only kit button. */
 @media (pointer: coarse) { .k-icon-btn { min-width: 44px; min-height: 44px; } }
 
-/* Card — a solid slate panel on the navy page (approved reference, 12 Oct
-   2026): 12px corners, a hairline border, a restrained shadow. The head is the
-   section title over a hairline; a flush body (tables) runs to the edges. */
-.k-card { position: relative; min-width: 0; background: var(--bg-surface); border: 1px solid var(--border-card); border-radius: var(--radius-lg); box-shadow: var(--card-highlight), var(--shadow-sm); padding: 4px 16px 12px; }
-.k-card-head { display: flex; align-items: center; justify-content: space-between; gap: var(--sp-3); min-height: 44px; padding: 10px 0; border-bottom: 1px solid var(--border-subtle); }
+/* Card — a flat section laid on the page (Chad's standing rule, 16 Oct 2026:
+   no boxed cards). No fill, no border box, no shadow: the section title over a
+   hairline carries the structure, the content sits straight on the navy. */
+.k-card { position: relative; min-width: 0; background: none; border: 0; border-radius: 0; box-shadow: none; padding: 0 0 8px; }
+.k-card-head { display: flex; align-items: center; justify-content: space-between; gap: var(--sp-3); min-height: 44px; padding: 12px 0 10px; border-bottom: 1px solid var(--border-subtle); }
 .k-card-title, .pmSecTitle { display: inline-flex; align-items: center; gap: 8px; font-size: var(--fs-section); font-weight: 700; letter-spacing: -0.005em; text-transform: none; color: var(--title-section); line-height: 1.3; text-shadow: none; }
 .k-card-sub { font-size: 13px; color: var(--text-secondary); margin-top: 2px; letter-spacing: normal; text-transform: none; }
 .k-card-body { padding: 12px 0 4px; }
-.k-card-flush { padding: 0; margin: 0 -16px -12px; border-radius: 0 0 var(--radius-lg) var(--radius-lg); overflow: hidden; }
+.k-card-flush { padding: 0; margin: 0; border-radius: 0; overflow: hidden; }
 .k-card-head + .k-card-flush { margin-top: 0; }
 
-/* Stat figures — one slate strip of numbers with hairline separators. The
-   value leads (financial totals are prominent), the label says what it is. */
-.k-stats { display: grid; grid-template-columns: repeat(auto-fit, minmax(140px, 1fr)); background: var(--bg-surface); border: 1px solid var(--border-card); border-radius: var(--radius-lg); box-shadow: var(--card-highlight), var(--shadow-sm); overflow: hidden; }
+/* Stat figures — one scoreboard row on the page: hairlines above, below and
+   between the figures, no box. The value leads, the label says what it is. */
+.k-stats { display: grid; grid-template-columns: repeat(auto-fit, minmax(140px, 1fr)); background: none; border: 0; border-top: 1px solid var(--border-subtle); border-bottom: 1px solid var(--border-subtle); border-radius: 0; box-shadow: none; overflow: hidden; }
 .k-stat { position: relative; display: flex; flex-direction: column; gap: 2px; min-width: 0; padding: 12px 16px; margin: 0 0 -1px -1px; border-left: 1px solid var(--border-subtle); border-bottom: 1px solid var(--border-subtle); background: none; border-radius: 0; box-shadow: none; text-decoration: none; color: inherit; }
 a.k-stat:hover, button.k-stat:hover { background: rgba(148,163,184,0.06); }
 button.k-stat { text-align: left; font: inherit; border-top: 0; border-right: 0; cursor: pointer; }
@@ -1292,8 +1296,8 @@ select.k-select { padding-right: 36px; }
   .k-overlay { padding: 0; align-items: stretch; }
   .k-modal { width: 100%; max-height: none; border-radius: 0; }
   .k-input, .k-textarea, select.k-select { font-size: 16px !important; }
-  .k-card { padding: 4px 12px 10px; }
-  .k-card-flush { margin: 0 -12px -10px; }
+  .k-card { padding: 0 0 6px; }
+  .k-card-flush { margin: 0; }
   .k-card-flush > .k-empty { padding: 14px 12px; }
 }
 
@@ -1460,14 +1464,14 @@ li[data-done="true"] .pj-next-step strong { color: var(--text-tertiary); text-de
    ═══════════════════════════════════════════════════════════════════════════ */
 .sag-topbar { background: var(--bg-base); border-bottom: 1px solid var(--border-subtle); }
 /* Back — a slate pill naming where it goes. 36px tall, 44px to the touch. */
-.sag-tb-back { position: relative; display: inline-flex; align-items: center; gap: 4px; flex: 0 1 auto; min-width: 0; max-width: 280px; height: 36px; padding: 0 12px 0 8px; margin-right: 4px; background: var(--bg-surface-2); border: 1px solid var(--border-default); border-radius: 999px; box-shadow: none; color: var(--sg-text); font-size: 14.5px; font-weight: 700; letter-spacing: normal; cursor: pointer; -webkit-tap-highlight-color: transparent; }
+.sag-tb-back { position: relative; display: inline-flex; align-items: center; gap: 4px; flex: 0 1 auto; min-width: 0; max-width: 280px; height: 36px; padding: 0 12px 0 8px; margin-right: 4px; background: var(--bg-surface-2); border: 1px solid var(--border-default); border-radius: 10px; box-shadow: none; color: var(--sg-text); font-size: 14.5px; font-weight: 700; letter-spacing: normal; cursor: pointer; -webkit-tap-highlight-color: transparent; }
 .sag-tb-back::after { content: ''; position: absolute; inset: -4px 0; }
 .sag-tb-back:hover { background: var(--bg-hover); border-color: var(--border-strong); }
 .sag-tb-back:active { transform: none; opacity: .75; }
 .sag-tb-back:focus-visible { outline: 2px solid var(--focus-ring); outline-offset: 2px; }
 .sag-tb-back > svg { flex: none; color: var(--text-secondary); }
 /* Photos — the desktop's one click to the camera / upload sheet (components/media/QuickMedia). */
-.sag-tb-photo { display: inline-flex; align-items: center; gap: 7px; height: 34px; padding: 0 12px; flex-shrink: 0; border-radius: 10px; border: 1px solid var(--border-default); background: var(--bg-surface-2); color: var(--text-primary); font-size: 14px; font-weight: 700; cursor: pointer; }
+.sag-tb-photo { display: inline-flex; align-items: center; gap: 7px; height: 36px; padding: 0 12px; flex-shrink: 0; border-radius: 10px; border: 1px solid var(--border-default); background: var(--bg-surface-2); color: var(--text-primary); font-size: 14px; font-weight: 700; cursor: pointer; transition: background-color .15s ease, border-color .15s ease; }
 .sag-tb-photo svg { color: var(--text-secondary); }
 .sag-tb-photo:hover { background: var(--bg-hover); border-color: var(--border-strong); }
 .sag-tb-photo:focus-visible { outline: 2px solid var(--focus-ring); outline-offset: 2px; }
@@ -1476,8 +1480,18 @@ li[data-done="true"] .pj-next-step strong { color: var(--text-tertiary); text-de
 .sag-tb-icon { flex: none; width: 44px; height: 44px; display: inline-grid; place-items: center; padding: 0; background: none; border: 0; border-radius: 22px; color: var(--sg-text-2); cursor: pointer; -webkit-tap-highlight-color: transparent; }
 .sag-tb-icon:active { transform: none; }
 .sag-tb-icon:hover { border-color: transparent; }
-.sag-tb-dot { width: 32px; height: 32px; border-radius: 16px; display: inline-flex; align-items: center; justify-content: center; gap: 6px; font-size: 12px; font-weight: 700; line-height: 1; }
-.sag-tb-sage .sag-tb-dot { border: 1px solid var(--border-default); background: var(--bg-surface-2); color: var(--text-primary); }
+.sag-tb-dot { width: 34px; height: 34px; border-radius: 17px; display: inline-flex; align-items: center; justify-content: center; gap: 6px; font-size: 12px; font-weight: 700; line-height: 1; }
+.sag-tb-sage .sag-tb-dot { height: 36px; border-radius: 10px; border: 1px solid var(--border-default); background: var(--bg-surface-2); color: var(--text-primary); transition: background-color .15s ease, border-color .15s ease; }
+.sag-tb-icon:focus-visible { outline: none; }
+.sag-tb-icon:focus-visible .sag-tb-dot, .sag-tb-icon:focus-visible > svg { outline: 2px solid var(--focus-ring); outline-offset: 2px; border-radius: 10px; }
+/* Bell: a quiet round hover, the same size as the avatar beside it. */
+.sag-tb-icon:not(.sag-tb-sage):not(.sag-tb-avatar):hover { background: rgba(148,163,184,0.10); color: var(--text-primary); }
+.sag-tb-help:not([data-on]):hover { background: var(--bg-hover) !important; border-color: var(--border-strong) !important; }
+.sag-tb-help:focus-visible { outline: 2px solid var(--focus-ring); outline-offset: 2px; }
+.sag-tb-search { transition: background-color .15s ease, border-color .15s ease, color .15s ease; }
+.sag-tb-search:hover { background: var(--bg-hover) !important; border-color: var(--border-strong) !important; color: var(--text-primary) !important; }
+.sag-tb-search:focus-visible { outline: 2px solid var(--focus-ring); outline-offset: 2px; }
+@media (min-width: 1280px) { .sag-tb-search { min-width: 200px !important; } }
 .sag-tb-sage .sag-tb-dot svg { color: var(--text-secondary); }
 .sag-tb-sage:hover .sag-tb-dot { background: var(--bg-hover); border-color: var(--border-strong); }
 .sag-tb-avatar .sag-tb-dot { background: var(--bg-surface-2); border: 1px solid var(--border-default); color: var(--text-primary); letter-spacing: .02em; }
@@ -1692,6 +1706,15 @@ li[data-done="true"] .pj-next-step strong { color: var(--text-tertiary); text-de
 .sg-nav-label { font-weight: 600; letter-spacing: -0.005em; }
 .sg-nav-item[data-active="true"] .sg-nav-label, .sg-nav-label[data-active="true"] { color: var(--on-brand); font-weight: 700; }
 .sg-nav-item:not([data-active="true"]):hover { background: rgba(148,163,184,0.10); color: var(--c-text) !important; }
+/* Polish (16 Oct): the label lights up with the row, the selected pill sits in
+   the rail with a machined top edge, a press reads as a press, and the
+   keyboard ring is the brand's. */
+.sg-nav-item:not([data-active="true"]):hover .sg-nav-label { color: var(--text-primary); }
+.sg-nav-item:not([data-active="true"]):active { background: rgba(148,163,184,0.16); }
+.sg-nav-item[data-active="true"] { box-shadow: inset 0 1px 0 rgba(255,255,255,0.35), 0 1px 2px rgba(0,0,0,0.35); }
+.sg-nav-item:focus-visible { outline: 2px solid var(--focus-ring); outline-offset: -2px; }
+.sg-nav-sec:hover svg { color: var(--text-primary); }
+.sg-nav-sec:focus-visible { outline: 2px solid var(--focus-ring); outline-offset: -2px; border-radius: 8px; }
 .sg-nav-head { font-size: 12px; font-weight: 700; letter-spacing: .06em; text-transform: uppercase; color: var(--title-section); text-shadow: none; }
 .sg-brand-name { color: var(--c-text); }
 
@@ -1820,22 +1843,17 @@ li[data-done="true"] .pj-next-step strong { color: var(--text-tertiary); text-de
   .pmHeadActs{flex:1 1 100%;flex-wrap:wrap;justify-content:flex-start}
   .pmHeadActs>*{flex:0 0 auto;max-width:100%}
 }
-/* Section: a slate panel — its title (.pmSecTitle) over a hairline, then the content. */
-.pmSec{position:relative;min-width:0;background:var(--bg-surface);border:1px solid var(--border-card);border-radius:var(--radius-lg);box-shadow:var(--card-highlight),var(--shadow-sm);padding:4px 16px 14px}
+/* Section: flat on the page (no boxed cards) — its title (.pmSecTitle) over a hairline, then the content. */
+.pmSec{position:relative;min-width:0;background:none;border:0;border-radius:0;box-shadow:none;padding:0 0 8px}
 .pmSecHead{display:flex;align-items:center;gap:10px;min-height:44px;padding:10px 0;margin-bottom:12px;border-bottom:1px solid var(--border-subtle)}
 .pmSecSub{font-size:13px;color:var(--text-secondary);margin-top:2px;line-height:1.4}
 .pmSecTray{background:var(--bg-surface);border:1px solid var(--border-card);border-radius:var(--radius-lg)}
 .pmSec .pmSec{background:none;border:0;box-shadow:none;padding:0}
-@media (max-width:767px){.pmSec{padding:4px 12px 12px}}
-/* A table in a section runs edge to edge on a desk, like .k-card-flush; its
-   first and last columns carry the 16px inset. Phones stack rows instead. */
-@media (min-width:768px){
-  .pmSec > div > .k-table-wrap{margin:0 -16px}
-  .pmSec > div > .k-table-wrap:last-child{margin-bottom:-14px}
-  .pmSec:has(> div > .k-table-wrap){overflow:hidden}
-}
-/* Number strip (StatStrip / StatCard): a slate panel of figures, hairlines between. */
-.pmStrip{background:var(--bg-surface);border:1px solid var(--border-card);border-radius:var(--radius-lg);box-shadow:var(--card-highlight),var(--shadow-sm);overflow:hidden;margin-bottom:16px;min-width:0}
+/* The rare raised surface (a tray in a dialog or picker) keeps its padding. */
+.pmSec.pmSecTray{padding:4px 16px 14px}
+@media (max-width:767px){.pmSec.pmSecTray{padding:4px 12px 12px}}
+/* Number strip (StatStrip / StatCard): a scoreboard row on the page — hairlines above, below and between, no box. */
+.pmStrip{background:none;border:0;border-top:1px solid var(--border-subtle);border-bottom:1px solid var(--border-subtle);border-radius:0;box-shadow:none;overflow:hidden;margin-bottom:16px;min-width:0}
 .pmStripGrid{display:grid;grid-template-columns:repeat(auto-fit,minmax(118px,1fr));margin:0 0 -1px -1px}
 .pmFig{position:relative;display:flex;flex-direction:column;gap:2px;min-width:0;min-height:44px;padding:12px 16px;border-left:1px solid var(--border-subtle);border-bottom:1px solid var(--border-subtle);background:none;color:inherit;text-decoration:none;text-align:left;font:inherit;box-sizing:border-box}
 button.pmFig,a.pmFig,div.pmFig[role=button]{cursor:pointer}
@@ -1860,10 +1878,10 @@ a.pmFig:hover,button.pmFig:hover,div.pmFig[role=button]:hover{background:rgba(14
    Full width (the caller's grid fell to one column on a phone): a list row —
    label on the left, value on the right, a hairline under it. */
 .pmFig.pmFigSolo{display:block;padding:0;border:0;height:100%;container-type:inline-size}
-.pmFigIn{display:flex;flex-direction:column;gap:2px;min-width:0;height:100%;min-height:44px;padding:12px 16px;background:var(--bg-surface);border:1px solid var(--border-card);border-radius:var(--radius-lg);box-shadow:var(--card-highlight);box-sizing:border-box}
+.pmFigIn{display:flex;flex-direction:column;gap:2px;min-width:0;height:100%;min-height:44px;padding:8px 14px;background:none;border:0;border-left:2px solid var(--border-default);border-radius:0;box-shadow:none;box-sizing:border-box}
 .pmFigText{display:contents}
 @container (min-width:320px){
-  .pmFigIn{flex-direction:row;align-items:center;gap:12px;padding:12px 16px}
+  .pmFigIn{flex-direction:row;align-items:center;gap:12px;padding:12px 0;border-left:0;border-bottom:1px solid var(--border-subtle)}
   .pmFigIn>.pmFigV{order:2;flex:none;max-width:55%}
   .pmFigText{display:flex;flex-direction:column;gap:2px;order:1;flex:1;min-width:0}
   .pmFigIn .pmFigL{font-size:14px;color:var(--sg-text)}
@@ -1932,7 +1950,10 @@ a.k-meta-item:hover, .k-link:hover { color: var(--link-hover); }
 .k-item-value a { color: var(--link); text-decoration: none; }
 .k-item-action { flex: none; display: inline-flex; gap: 8px; }
 .k-item-chev { flex: none; color: var(--text-tertiary); }
-.k-callout { display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: 12px 16px; padding: 14px 16px; border-radius: var(--radius-lg); background: var(--bg-surface); border: 1px solid var(--border-card); box-shadow: var(--card-highlight), var(--shadow-sm); }
+.k-callout { display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: 12px 16px; padding: 6px 0 6px 16px; border-radius: 0; background: none; border: 0; border-left: 3px solid var(--border-strong); box-shadow: none; }
+.k-callout[data-tone="success"] { border-left-color: var(--success); }
+.k-callout[data-tone="warning"] { border-left-color: var(--warning); }
+.k-callout[data-tone="danger"] { border-left-color: var(--danger); }
 .k-callout-main { display: flex; align-items: flex-start; gap: 12px; min-width: 0; flex: 1 1 320px; }
 .k-callout-ic { display: inline-grid; place-items: center; flex: none; width: 36px; height: 36px; border-radius: 50%; }
 .k-callout[data-tone="info"] .k-callout-ic { background: var(--info-bg); border: 1px solid var(--info-border); color: var(--info-fg); }

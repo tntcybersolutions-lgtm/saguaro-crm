@@ -465,9 +465,9 @@ export default function HeaderProjectPicker() {
 
 const CSS = `
 .jp-wrap { position: relative; flex-shrink: 0; min-width: 0; }
-.jp-trigger { display: flex; align-items: center; gap: 9px; min-height: 40px; max-width: 300px; padding: 4px 10px 4px 5px; border-radius: 12px; cursor: pointer; white-space: nowrap; text-align: left;
+.jp-trigger { display: flex; align-items: center; gap: 9px; min-height: 36px; max-width: 300px; padding: 3px 10px 3px 4px; border-radius: 10px; transition: background-color .15s ease, border-color .15s ease; cursor: pointer; white-space: nowrap; text-align: left;
   background: var(--bg-surface-2); border: 1px solid var(--border-default); color: var(--c-text-2); font-size: 14px; font-weight: 700; }
-.jp-trig-tile { display: inline-grid; place-items: center; width: 28px; height: 28px; border-radius: 8px; flex-shrink: 0; color: var(--text-secondary); background: var(--bg-surface); border: 1px solid var(--border-default); }
+.jp-trig-tile { display: inline-grid; place-items: center; width: 28px; height: 28px; border-radius: 7px; flex-shrink: 0; color: var(--text-secondary); background: var(--bg-surface); border: 1px solid var(--border-default); }
 .jp-trig-text { display: flex; flex-direction: column; min-width: 0; line-height: 1.15; }
 .jp-trig-meta { color: var(--c-text-3); font-size: 12px; font-weight: 700; letter-spacing: .02em; overflow: hidden; text-overflow: ellipsis; }
 .jp-trigger:hover { background: var(--bg-hover); color: var(--c-text); }

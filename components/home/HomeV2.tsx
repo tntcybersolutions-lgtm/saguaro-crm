@@ -27,6 +27,7 @@ import type { FlatHome } from '@/lib/home/flat-build';
 import HomeHeader from './HomeHeader';
 import HomeFinance from './HomeFinance';
 import AlertTicker from './AlertTicker';
+import { dayTicker, type DayFeed } from '@/lib/home/day-ticker';
 import { ActivitySection, AttentionSection, BiddingSection, JobsSection, LinksSection, MoneySection, Prose, WorkRowsSection } from './HomeSections';
 import { HOME_CSS } from './home-css';
 import JobsMapPanel from './JobsMapPanel';
@@ -61,6 +62,13 @@ const fetcher = async (url: string): Promise<HomePayload> => {
   return body as HomePayload;
 };
 
+/* My Day's list — the alert line counts from it, so Home and My Day agree. */
+const dayFetcher = async (url: string): Promise<DayFeed> => {
+  const r = await fetch(url);
+  if (!r.ok) throw new Error(`My Day didn't load (${r.status}).`);
+  return r.json() as Promise<DayFeed>;
+};
+
 const CLOSED = ['completed', 'complete', 'closed', 'cancelled', 'archived', 'lost'];
 
 /** Where each section sits: phone order, and the column on a wide screen. */
@@ -92,6 +100,7 @@ function HomeInner() {
   for (const k of ['view', 'scope', 'project']) { const v = sp.get(k); if (v) qs.set(k, v); }
   const key = `/api/home${qs.toString() ? '?' + qs.toString() : ''}`;
   const { data, error, isLoading, isValidating, mutate } = useSWR<HomePayload>(key, fetcher, { revalidateOnFocus: true, refreshInterval: 120_000, keepPreviousData: true });
+  const { data: dayFeed, error: dayError } = useSWR<DayFeed>('/api/my-work', dayFetcher, { revalidateOnFocus: true, refreshInterval: 120_000, keepPreviousData: true });
   const [saving, setSaving] = useState(false);
   const [saveNote, setSaveNote] = useState<string | null>(null);
   /* Each person can order and hide Home's panels, per view. */
@@ -214,11 +223,16 @@ function HomeInner() {
     body = (
       <>
         {saveNote && <p className="fh-notice" role="status">{saveNote}</p>}
-        {data.ticker && (
-          <div className="fh-ticker">
-            <AlertTicker items={data.ticker.items} summary={data.ticker.summary} failed={data.ticker.state === 'failed'} />
-          </div>
-        )}
+        {(data.ticker || dayFeed) && (() => {
+          // One job picked on Home: only that job's work on the line.
+          const feed = dayFeed && projectId ? { ...dayFeed, items: dayFeed.items.filter((i) => i.projectId === projectId) } : dayFeed;
+          const line = dayTicker(data.ticker, feed);
+          return (
+            <div className="fh-ticker">
+              <AlertTicker items={line.items} summary={line.summary} failed={data.ticker?.state === 'failed' || !!dayError} />
+            </div>
+          );
+        })()}
         {f?.finance && (
           <HomeFinance f={f.finance} strip={f.strip || []} updatedAt={data.generatedAt} timeZone={data.context.timeZone}
             refreshing={isValidating} onRefresh={retry} />

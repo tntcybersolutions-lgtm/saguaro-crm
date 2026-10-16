@@ -33,7 +33,8 @@ const CSS = `
 .sgUi{--fl-line:var(--sg-border);--fl-line-strong:var(--sg-border-strong);--fl-text:var(--sg-text);--fl-text-2:var(--sg-text-2);--fl-text-3:var(--sg-text-3);--fl-surface:var(--sg-surface-solid)}
 /* Sage's read of the data, as the concept's alert card: a status circle, the
    sentence, and its one action as the screen's yellow button. */
-.fl-brief{display:flex;align-items:flex-start;gap:12px;margin:8px 0 12px;padding:14px 16px;border-radius:12px;background:var(--bg-surface);border:1px solid var(--border-card);box-shadow:var(--card-highlight);color:var(--fl-text)}
+.fl-brief{display:flex;align-items:flex-start;gap:12px;margin:8px 0 12px;padding:4px 0 4px 14px;border-radius:0;background:none;border:0;border-left:3px solid var(--border-strong);box-shadow:none;color:var(--fl-text)}
+.fl-brief[data-tone=warning]{border-left-color:var(--warning)}.fl-brief[data-tone=danger]{border-left-color:var(--danger)}.fl-brief[data-tone=success]{border-left-color:var(--success)}
 .fl-brief-ic{flex:none;display:inline-grid;place-items:center;width:36px;height:36px;border-radius:50%;background:var(--info-bg);border:1px solid var(--info-border);color:var(--info-fg)}
 .fl-brief[data-tone=warning] .fl-brief-ic{background:var(--warning-bg);border-color:var(--warning-border);color:var(--warning-fg)}
 .fl-brief[data-tone=danger] .fl-brief-ic{background:var(--danger-bg);border-color:var(--danger-border);color:var(--danger-fg)}
@@ -47,8 +48,9 @@ const CSS = `
 .fl-brief .fl-brief-act:focus-visible{outline:2px solid var(--focus-ring);outline-offset:2px}
 @media (pointer:coarse){.fl-brief .fl-brief-act{min-height:44px}}
 @media (max-width:640px){.fl-brief-body{align-items:stretch}.fl-brief .fl-brief-act{width:100%}}
-.fl-strip{display:grid;grid-auto-flow:column;grid-auto-columns:1fr;margin:0;background:var(--bg-surface);border:1px solid var(--border-card);box-shadow:var(--card-highlight);border-radius:12px;overflow:hidden}
+.fl-strip{display:grid;grid-auto-flow:column;grid-auto-columns:1fr;margin:0;background:none;border:0;border-top:1px solid var(--fl-line);border-bottom:1px solid var(--fl-line);box-shadow:none;border-radius:0;overflow:hidden}
 .fl-strip>div{padding:10px 8px 10px 16px;border-right:1px solid var(--fl-line);min-width:0}
+.fl-strip>div:first-child{padding-left:0}
 .fl-strip>div:last-child{border-right:0}
 .fl-strip b{display:block;font-size:18px;font-weight:700;font-variant-numeric:tabular-nums;color:var(--fl-text);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
 .fl-strip span{display:block;font-size:12px;color:var(--fl-text-3);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
@@ -62,10 +64,10 @@ const CSS = `
 .fl-sec>span:first-child{display:inline-flex;align-items:center;gap:9px;min-width:0}
 .fl-sec .fl-sec-act{position:relative;color:var(--link);-webkit-text-fill-color:currentColor;font-weight:600;letter-spacing:0;text-transform:none;font-size:13px;text-decoration:none;background:none;border:0;padding:0;cursor:pointer}
 .fl-sec .fl-sec-act::after{content:'';position:absolute;inset:-14px -10px}
-.fl-list{list-style:none;margin:0;padding:0;background:var(--bg-surface);border:1px solid var(--border-card);box-shadow:var(--card-highlight);border-radius:12px;overflow:hidden}
+.fl-list{list-style:none;margin:0;padding:0;background:none;border:0;border-top:1px solid var(--fl-line);border-bottom:1px solid var(--fl-line);box-shadow:none;border-radius:0;overflow:hidden}
 .fl-list>li{border-bottom:1px solid var(--fl-line)}
 .fl-list>li:last-child{border-bottom:0}
-.fl-row{display:flex;align-items:center;gap:12px;padding:10px 16px;min-height:58px;color:var(--fl-text);text-decoration:none;background:var(--bg-surface);-webkit-tap-highlight-color:transparent}
+.fl-row{display:flex;align-items:center;gap:12px;padding:10px 8px;min-height:58px;color:var(--fl-text);text-decoration:none;background:transparent;-webkit-tap-highlight-color:transparent}
 a.fl-row:hover,button.fl-row:hover{background:var(--bg-row-hover)}
 a.fl-row:active,button.fl-row:active{background:var(--fl-line)}
 a.fl-row:focus-visible,button.fl-row:focus-visible{outline:2px solid var(--focus-ring);outline-offset:-2px}
@@ -103,7 +105,7 @@ button.fl-row{width:100%;border:0;font:inherit;text-align:left;cursor:pointer}
 .fl-tabs button[aria-selected=true]{background:var(--tab-selected-bg);color:var(--tab-selected-fg);font-weight:700}
 .fl-tabs button:focus-visible{outline:2px solid var(--focus-ring);outline-offset:1px}
 @media (pointer:coarse){.fl-tabs button{min-height:44px}}
-.fl-tool{display:flex;align-items:center;gap:12px;padding:0 16px;min-height:56px;color:var(--fl-text);text-decoration:none;-webkit-tap-highlight-color:transparent}
+.fl-tool{display:flex;align-items:center;gap:12px;padding:0 8px;min-height:56px;color:var(--fl-text);text-decoration:none;-webkit-tap-highlight-color:transparent}
 a.fl-tool:hover{background:var(--bg-row-hover)}
 a.fl-tool:active{background:var(--fl-line)}
 a.fl-tool:focus-visible{outline:2px solid var(--focus-ring);outline-offset:-2px}
@@ -114,8 +116,8 @@ a.fl-tool:focus-visible{outline:2px solid var(--focus-ring);outline-offset:-2px}
 .fl-tool .fl-tc[data-warn=true]{color:var(--warning)}
 /* The concept's "More project tools": a two-column grid of separate tiles,
    each an icon, its name over its count, and a chevron. */
-.fl-list[data-grid]{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:8px;background:none;border:0;border-radius:0;overflow:visible}
-.fl-list[data-grid]>li,.fl-list[data-grid]>li:last-child{border:1px solid var(--fl-line);border-radius:12px;background:var(--bg-surface);overflow:hidden}
+.fl-list[data-grid]{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:0 24px;background:none;border:0;border-radius:0;overflow:visible}
+.fl-list[data-grid]>li,.fl-list[data-grid]>li:last-child{border:0;border-bottom:1px solid var(--fl-line);border-radius:0;background:none;overflow:hidden}
 .fl-list[data-grid] .fl-tool{gap:10px;padding:8px 10px 8px 12px;min-height:60px}
 .fl-list[data-grid] .fl-ti{width:32px;height:32px;border-radius:9px}
 .fl-list[data-grid] .fl-tm{flex-direction:column;align-items:flex-start;justify-content:center;gap:2px}
@@ -126,9 +128,9 @@ a.fl-tool:focus-visible{outline:2px solid var(--focus-ring);outline-offset:-2px}
 .fl-swipe-acts button{width:78px;border:0;font:inherit;font-size:13px;font-weight:700;cursor:pointer;color:var(--fl-text);background:var(--fl-line)}
 .fl-swipe-acts button[data-k=primary]{background:var(--brand-primary);color:var(--on-brand)}
 .fl-swipe-acts button[data-k=good]{background:var(--success);color:var(--on-brand)}
-.fl-swipe-body{position:relative;background:var(--bg-surface);transition:transform .2s cubic-bezier(.2,.7,.3,1)}
+.fl-swipe-body{position:relative;background:var(--bg-base);transition:transform .2s cubic-bezier(.2,.7,.3,1)}
 .fl-swipe-body[data-drag=true]{transition:none}
-.fl-skel{display:flex;align-items:center;gap:12px;padding:12px 16px;min-height:58px;border-bottom:1px solid var(--fl-line)}
+.fl-skel{display:flex;align-items:center;gap:12px;padding:12px 8px;min-height:58px;border-bottom:1px solid var(--fl-line)}
 .fl-skel i{display:block;height:10px;border-radius:5px;background:var(--fl-line);animation:fl-pulse 1.2s ease-in-out infinite}
 @keyframes fl-pulse{50%{opacity:.45}}
 @media (prefers-reduced-motion:reduce){.fl-skel i{animation:none}.fl-swipe-body{transition:none}}

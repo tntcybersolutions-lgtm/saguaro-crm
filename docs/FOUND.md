@@ -292,3 +292,21 @@ show/hide, density, agenda hours, runway length, group-by, dollars, company vs m
 `user_preferences.custom_settings.myDay` (`/api/my-day/prefs`), role defaults until they touch it.
 Files: lib/my-day.ts, lib/my-day-prefs.ts (+ sanity test), components/my-work/MyDayBoard.tsx, MyDayCustomize.tsx,
 MyWorkView.tsx, /api/my-work (+ jobs, agenda, roles, ?view=mine).
+
+## 16 Oct 2026 — Platform polish pass 1 (Chad: "start at home, every page… no cards… polish the nav")
+
+- **Home said "All clear" while My Day said 3 late, 2 waiting.** Home's alert line counted its own queue; My Day
+  counts `/api/my-work`. Home now reads My Day's list for late / due today / waiting (`lib/home/day-ticker.ts`,
+  + sanity test), keeps its own photos-to-review and done-today, and shows the line on every Home view (was owner
+  only). Words match My Day: late · due today · waiting · to review · done today.
+- **Boxed cards, app-wide (Chad's hard rule: no cards).** Fixed at the shared source, so every page that uses them
+  changes at once: kit `Card` (.k-card), `StatRow` (.k-stats), premium `SectionCard` (.pmSec), `StatStrip`
+  (.pmStrip), `StatCard` (.pmFigIn), `Callout` (.k-callout), flat `Brief` / `NumberStrip` / `FlatList` / tool grid
+  (components/ui/flat.tsx), Home's finance figures and panels (HomeFinance) and the alert line (AlertTicker).
+  Sections are a title over a hairline; number strips are one scoreboard row with hairlines; a callout or brief is a
+  rail. Trays inside dialogs and pickers (`SectionCard tray`) keep their surface.
+- **Nav polish (Chad: "looks nice now, don't break — polish a bit").** Rail scrollbar: no arrow buttons or grey
+  gutter, thin thumb on hover. Rows: label lights with the row, pressed state, keyboard ring; the selected pill has a
+  machined top edge. Brand row unboxed. Top bar: every control the same 36px height and 10px corners (back, job
+  picker, search, Photos, Help Me, Sage); search reads as a search field and is wider on big screens; hover and
+  focus states on all of them.
