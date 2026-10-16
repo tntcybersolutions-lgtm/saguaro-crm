@@ -42,7 +42,7 @@ function UniversalSearch() {
     if (term.length < 2) { setHits([]); setOpen(false); return; }
     setBusy(true);
     const h = setTimeout(() => {
-      fetch(`/api/search?q=${encodeURIComponent(term)}`)
+      fetch(`/api/search?q=${encodeURIComponent(term)}&types=lead,job,customer,photo`)
         .then((r) => (r.ok ? r.json() : { results: [] }))
         .then((d) => { setHits(d.results || []); setOpen(true); })
         .catch(() => setHits([]))

@@ -335,6 +335,16 @@ MyWorkView.tsx, /api/my-work (+ jobs, agenda, roles, ?view=mine).
 - `app/api/dashboard/widget-metrics/route.ts` `guard()` returns the fallback on ANY error with nothing logged, so a
   broken widget reads as "no data".
 
+## 16 Oct 2026 — Search everything (feat/search-everything) — found, NOT fixed
+
+- `customer_profiles` has no index on `tenant_id` (every other searched table has one). 19 rows today, so search
+  is unaffected; add `CREATE INDEX IF NOT EXISTS idx_customer_profiles_tenant ON customer_profiles(tenant_id)`
+  before it grows.
+- `drawing_sheets` (0 rows) and `punch_list_items` (0 rows) duplicate `drawings` / `punch_list`. The project
+  screens read `drawings` / `punch_list` (so search does), but `app/api/dashboard/metrics`, `reports/summary`,
+  `intelligence/summary`, `drawings/review-link` and `portal/drawing-review` still reference the empty tables —
+  check whether their counts read zero. Pick one table per record.
+- Legacy `documents` (no tenant_id, no project_id) cannot be searched safely; job files live in `project_files`.
 ## 16 Oct 2026 — role-aware RLS (fix/role-rls) — found, NOT fixed
 
 - `public.app_user_role()` maps every profiles.role it does not recognize (e.g. 'Salesperson', 'Project Manager')
