@@ -161,7 +161,7 @@ const CSS = `
 .md-sec{padding:22px 0 6px}
 .md-sec + .md-sec{border-top:1px solid var(--md-line)}
 .md-sec-h{display:flex;align-items:baseline;gap:12px;margin:0 0 10px}
-.md-sec-h h2{margin:0;font-size:18px;font-weight:900;letter-spacing:-.01em;color:var(--title-section,var(--title-section))}
+.md-sec-h .md-h2{margin:0;font-size:21px;font-weight:900;letter-spacing:-.015em;color:var(--title-section)}
 .md-sec-h .md-when{font-size:11px;font-weight:800;letter-spacing:.12em;text-transform:uppercase;color:var(--md-3)}
 .md-sec-h .md-count{margin-left:auto;font-size:13px;font-weight:800;color:var(--md-2);font-variant-numeric:tabular-nums}
 .md-empty{display:flex;align-items:center;gap:10px;padding:14px 0;color:var(--md-2);font-size:14.5px}
@@ -405,7 +405,7 @@ function Section({ id, count, amount, showMoney, children }: { id: SectionId; co
   return (
     <section className="md-sec" aria-labelledby={`md-${id}`} data-section={id}>
       <header className="md-sec-h">
-        <h2 id={`md-${id}`}>{meta.label}</h2>
+        <div className="md-h2" role="heading" aria-level={2} id={`md-${id}`}>{meta.label}</div>
         <span className="md-when">{meta.time}</span>
         {count != null && <span className="md-count">{count}{showMoney && amount ? ` · ${money(amount)}` : ''}</span>}
       </header>
@@ -477,7 +477,7 @@ export default function MyDayBoard(props: MyDayBoardProps) {
     <section className="md-start" aria-label="Start of day">
       <div className="md-id">
         <div className="md-dow">My Day · {WEEKDAY[d.getUTCDay()]}</div>
-        <h1 className="md-date">{MONTH[d.getUTCMonth()]} {d.getUTCDate()}</h1>
+        <div className="md-date" role="heading" aria-level={1}>{MONTH[d.getUTCMonth()]} {d.getUTCDate()}</div>
         <div className="md-sub">
           {props.roles.slice(0, 3).map((r) => <span key={r} className="md-role">{roleLabel(r)}</span>)}
           {props.canSeeCompany && (
@@ -556,7 +556,7 @@ export default function MyDayBoard(props: MyDayBoardProps) {
     </Section>
   );
 
-  const list = (id: SectionId, rows: MyWorkItem[], empty: string) => (
+  const list = (id: SectionId, rows: MyWorkItem[], empty: string) => (filtered && !rows.length ? null :
     <Section key={id} id={id} count={rows.length} amount={rows.reduce((s, i) => s + Math.abs(i.amount || 0), 0)} showMoney={show}>
       {rows.length ? <Rows items={rows} {...common} label={SECTION_META[id].label} /> : <div className="md-empty"><Check size={18} weight="bold" />{filtered ? 'Nothing here with these filters.' : empty}</div>}
     </Section>
@@ -678,13 +678,13 @@ export default function MyDayBoard(props: MyDayBoardProps) {
 
   const render: Record<SectionId, React.ReactNode> = {
     start,
-    agenda: agendaEl,
+    agenda: filtered ? null : agendaEl,
     late: list('late', placed.late, 'Nothing late. Clean slate.'),
     today: list('today', placed.today, 'Nothing else due today.'),
     waiting: list('waiting', placed.waiting, 'Nobody owes you anything right now.'),
-    wrapup: wrapupEl,
+    wrapup: filtered && !placed.wrapup.length && !placed.tomorrow.length ? null : wrapupEl,
     week: weekEl,
-    jobs: jobsEl,
+    jobs: filtered && !heat.length ? null : jobsEl,
   };
 
   const searchRef = useRef<HTMLInputElement | null>(null);

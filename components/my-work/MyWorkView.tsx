@@ -151,7 +151,8 @@ export default function MyWorkView() {
     setSaveState('saving');
     saveTimer.current = setTimeout(async () => {
       try {
-        const r = await fetch('/api/my-day/prefs', { method: 'PUT', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(body) });
+        // The sheet shows its own Saving / Saved, so the global status box stays out of it.
+        const r = await fetch('/api/my-day/prefs', { method: 'PUT', headers: { 'Content-Type': 'application/json', [STATUS_HEADER]: 'off' }, body: JSON.stringify(body) });
         if (!r.ok) { setSaveState('error'); return; }
         setSaved(next);
         setSaveState('saved');

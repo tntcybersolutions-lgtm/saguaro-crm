@@ -15,8 +15,8 @@ import {
 import { SECTION_META, hourLabel, type MyDayPrefs, type SectionId } from '@/lib/my-day-prefs';
 
 const CSS = `
-.mdc-scrim{position:fixed;inset:0;z-index:80;background:rgba(5,9,16,.55);backdrop-filter:blur(3px);animation:mdcFade .18s ease-out}
-.mdc{position:fixed;top:0;right:0;bottom:0;z-index:81;width:min(460px,100vw);display:flex;flex-direction:column;background:var(--md-sheet);border-left:1px solid var(--border-default);box-shadow:-24px 0 60px rgba(2,6,23,.55);color:var(--text-primary);animation:mdcIn .26s cubic-bezier(.2,.8,.2,1)}
+.mdc-scrim{position:fixed;inset:0;z-index:10040;background:rgba(5,9,16,.28);animation:mdcFade .18s ease-out}
+.mdc{position:fixed;top:0;right:0;bottom:0;z-index:10050;width:min(460px,100vw);display:flex;flex-direction:column;background:var(--md-sheet);border-left:1px solid var(--border-default);box-shadow:-24px 0 60px rgba(2,6,23,.55);color:var(--text-primary);animation:mdcIn .26s cubic-bezier(.2,.8,.2,1)}
 @keyframes mdcIn{from{transform:translateX(24px);opacity:0}to{transform:none;opacity:1}}
 @keyframes mdcUp{from{transform:translateY(24px);opacity:0}to{transform:none;opacity:1}}
 @keyframes mdcFade{from{opacity:0}to{opacity:1}}
@@ -71,9 +71,9 @@ const CSS = `
 .mdc-step button{display:grid;place-items:center;width:40px;height:40px;border-radius:10px;border:1px solid var(--border-default);background:none;color:var(--text-primary);cursor:pointer}
 .mdc-step button:hover:not([disabled]){border-color:var(--brand-primary);color:var(--brand-primary)}
 .mdc-step button[disabled]{opacity:.3;cursor:default}
-.mdc-day{position:relative;height:30px;margin-top:12px;border-radius:8px;background:linear-gradient(90deg,var(--md-night) 0%,var(--md-dusk) 25%,var(--border-default) 50%,var(--md-dusk) 75%,var(--md-night) 100%);overflow:hidden}
+.mdc-day{position:relative;height:14px;margin:12px 0 22px;border-radius:8px;background:linear-gradient(90deg,var(--md-night) 0%,var(--md-dusk) 25%,var(--border-default) 50%,var(--md-dusk) 75%,var(--md-night) 100%);overflow:visible}
 .mdc-day i{position:absolute;top:0;bottom:0;border-radius:8px;background:linear-gradient(90deg,rgba(232,255,42,.75),rgba(253,186,116,.75));box-shadow:0 0 18px rgba(232,255,42,.35);transition:left .2s,width .2s}
-.mdc-day span{position:absolute;top:50%;transform:translateY(-50%);font-size:10px;font-weight:900;color:var(--text-tertiary)}
+.mdc-day span{position:absolute;top:20px;font-size:10px;font-weight:900;color:var(--text-tertiary)}
 .mdc-f{display:flex;align-items:center;gap:10px;padding:14px 20px;border-top:1px solid var(--border-subtle);background:var(--md-sheet-foot)}
 .mdc-save{display:inline-flex;align-items:center;gap:6px;font-size:13px;font-weight:700;color:var(--text-tertiary)}
 .mdc-save[data-s=saved]{color:var(--success)}
