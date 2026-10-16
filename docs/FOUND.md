@@ -310,3 +310,11 @@ MyWorkView.tsx, /api/my-work (+ jobs, agenda, roles, ?view=mine).
   machined top edge. Brand row unboxed. Top bar: every control the same 36px height and 10px corners (back, job
   picker, search, Photos, Help Me, Sage); search reads as a search field and is wider on big screens; hover and
   focus states on all of them.
+- **Every-page sweep 1 (desktop, 138 page loads, 120 screens):** 0 sideways scroll, 0 error text, 0 white
+  backgrounds, 0 "Coming Soon". Fixed what it found: boxed Jobs table (/app/projects), client-portal user and
+  activity stat cards → scoreboard strips, its empty-state line ran 262px past its cell, Document Library box,
+  Intelligence insight cards → rails, network report cards → sections, "Current Payment Due" box (company pay
+  apps), Reviews form box; 20px punch checkboxes and the 11px "dismiss suggestion" ✕ now have 44px tap areas.
+  Kept on purpose: kanban cards (Leads board), dashboard-setup widgets, photo thumbnails, the drawing sheet, chat
+  bubbles, the Settings logo drop zone. Job phase tabs: same machined selected pill as the rail.
+  The franchise Command Center pages redirect for this company (gated, not broken).

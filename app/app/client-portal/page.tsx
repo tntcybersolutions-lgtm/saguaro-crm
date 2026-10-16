@@ -102,16 +102,6 @@ function Toggle({ on, onToggle, label }: { on: boolean; onToggle: () => void; la
   );
 }
 
-/* ── stat box ─────────────────────────────────────────── */
-function Stat({ label, value, color = GOLD }: { label: string; value: string | number; color?: string }) {
-  return (
-    <div style={{ ...card, flex: 1, minWidth: 150 }}>
-      <div style={{ fontSize: 12, color: 'var(--text-tertiary)', marginBottom: 6, fontWeight: 700 }}>{label}</div>
-      <div style={{ fontSize: 26, fontWeight: 800, color, fontVariantNumeric: 'tabular-nums' }}>{value}</div>
-    </div>
-  );
-}
-
 /* ══════════════════════════════════════════════════════════ */
 /* ── MAIN COMPONENT ───────────────────────────────────── */
 /* ══════════════════════════════════════════════════════════ */
@@ -460,13 +450,13 @@ export default function ClientPortalPage() {
         <button onClick={() => setBulkOpen(true)} style={btnOutline}>Bulk Invite</button>
       </div>
 
-      {/* stat cards */}
-      <div style={{ display: 'flex', gap: 14, marginBottom: 22, flexWrap: 'wrap' }}>
-        <Stat label="Total Users" value={users.length} />
-        <Stat label="Active" value={users.filter(u => u.status === 'active').length} color={GREEN} />
-        <Stat label="Pending" value={users.filter(u => u.status === 'pending').length} color={AMBER} />
-        <Stat label="Disabled" value={users.filter(u => u.status === 'disabled').length} color={RED} />
-      </div>
+      {/* The numbers: one flat scoreboard row (no boxed cards). */}
+      <StatStrip items={[
+        { label: 'Total Users', value: users.length },
+        { label: 'Active', value: users.filter(u => u.status === 'active').length, accent: GREEN },
+        { label: 'Pending', value: users.filter(u => u.status === 'pending').length, accent: AMBER },
+        { label: 'Disabled', value: users.filter(u => u.status === 'disabled').length, accent: RED },
+      ]} />
 
       {/* user table — re-housed in the kit's SectionCard */}
       <SectionCard
@@ -491,7 +481,7 @@ export default function ClientPortalPage() {
           </thead>
           <tbody>
             {filteredUsers.length === 0 && (
-              <tr><td colSpan={8} style={{ ...tdS, borderBottom: 'none' }}>
+              <tr><td colSpan={8} style={{ ...tdS, borderBottom: 'none', whiteSpace: 'normal' }}>
                 {search || statusFilter !== 'all' || roleFilter !== 'all' ? (
                   <div style={{ textAlign: 'center', color: DIM, padding: 32 }}>No users match your filters.</div>
                 ) : (
@@ -1041,16 +1031,16 @@ export default function ClientPortalPage() {
         <span style={{ fontSize: 12, color: DIM }}>{filteredLog.length} entries</span>
       </div>
 
-      {/* stats */}
-      <div style={{ display: 'flex', gap: 14, marginBottom: 22, flexWrap: 'wrap' }}>
-        <Stat label="Total Activity" value={actLog.length} color="var(--text-secondary)" />
-        <Stat label="Last 7 Days" value={actLog.filter(e => Date.now() - new Date(e.ts).getTime() < 604800000).length} color={GREEN} />
-        <Stat label="Unique Users" value={new Set(actLog.map(e => e.userId)).size} color={PURPLE} />
-        <Stat label="Today" value={actLog.filter(e => {
+      {/* The numbers: one flat scoreboard row (no boxed cards). */}
+      <StatStrip items={[
+        { label: 'Total Activity', value: actLog.length },
+        { label: 'Last 7 Days', value: actLog.filter(e => Date.now() - new Date(e.ts).getTime() < 604800000).length, accent: GREEN },
+        { label: 'Unique Users', value: new Set(actLog.map(e => e.userId)).size },
+        { label: 'Today', value: actLog.filter(e => {
           const d = new Date(e.ts); const t = new Date();
           return d.getDate() === t.getDate() && d.getMonth() === t.getMonth() && d.getFullYear() === t.getFullYear();
-        }).length} color="var(--text-secondary)" />
-      </div>
+        }).length },
+      ]} />
 
       {/* log entries — re-housed in the kit's SectionCard */}
       <SectionCard flat

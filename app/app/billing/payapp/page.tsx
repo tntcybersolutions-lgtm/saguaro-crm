@@ -254,7 +254,7 @@ export default function PayAppPage() {
             <StatCard key={s.label} label={s.label} value={s.value} icon={s.icon} accent={s.accent} />
           ))}
         </div>
-        <div style={{ marginTop: 14, display: 'flex', justifyContent: 'space-between', alignItems: 'center', gap: 12, flexWrap: 'wrap', padding: '16px 20px', borderRadius: 14, background: 'var(--bg-surface-2)', border: '1px solid var(--border-default)' }}>
+        <div style={{ marginTop: 14, display: 'flex', justifyContent: 'space-between', alignItems: 'center', gap: 12, flexWrap: 'wrap', padding: '14px 0', borderTop: '1px solid var(--border-subtle)', borderBottom: '1px solid var(--border-subtle)' }}>
           <div style={{ fontSize: 12, color: 'var(--c-text-2)', fontWeight: 800 }}>Current Payment Due This Period</div>
           <div style={{ fontSize: 32, fontWeight: 900, color: 'var(--text-primary)', letterSpacing: '-0.02em', fontVariantNumeric: 'tabular-nums' }}>{usd(result.currentPaymentDueCents)}</div>
         </div>

@@ -87,8 +87,11 @@ const CSS = `
   -webkit-tap-highlight-color:transparent;transition:background-color .15s ease,border-color .15s ease}
 .pjx-tab svg{color:var(--text-secondary);flex:none}
 .pjx-tab:hover{background:var(--bg-hover);border-color:var(--border-strong)}
+.pjx-tab:not([data-active]):hover svg{color:var(--text-primary)}
+.pjx-tab:not([data-active]):active{background:var(--bg-surface)}
 .pjx-tab:focus-visible{outline:2px solid var(--focus-ring);outline-offset:2px}
-.pjx-tab[data-active]{background:var(--brand-primary);border-color:var(--brand-primary);color:var(--on-brand);font-weight:700}
+/* The selected phase sits in the bar like the rail's selected row: a machined top edge, no glow. */
+.pjx-tab[data-active]{background:var(--brand-primary);border-color:var(--brand-primary);color:var(--on-brand);font-weight:700;box-shadow:inset 0 1px 0 rgba(255,255,255,0.35),0 1px 2px rgba(0,0,0,0.35)}
 .pjx-tab[data-active] svg{color:var(--on-brand)}
 @media (prefers-reduced-motion:reduce){.pjx-tab{transition:none}}
 @media (max-width:767px){

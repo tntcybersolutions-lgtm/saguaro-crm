@@ -299,7 +299,7 @@ export default function DocumentLibrary({ externalQuery = '', jobId = null }: { 
 }
 
 const CSS = `
-.dl { background: var(--bg-surface); border: 1px solid var(--glass-border); border-top: 2px solid color-mix(in srgb, var(--brand-primary) 70%, transparent); border-radius: 14px; padding: 18px 20px; min-width: 0; }
+.dl { background: none; border: 0; border-radius: 0; padding: 0; min-width: 0; }
 .dl h2 { margin: 0; font-size: 18px; font-weight: 800; color: var(--title-color, #E8FF2A); }
 .dl-head { display: flex; flex-wrap: wrap; gap: 12px; justify-content: space-between; align-items: flex-start; margin-bottom: 14px; }
 .dl-sub { margin: 4px 0 0; font-size: 13px; color: var(--text-tertiary); }
@@ -355,7 +355,7 @@ const CSS = `
 @media (max-width: 1100px) { .dl-row { grid-template-columns: 36px minmax(0, 1fr) 110px 150px; } .dl-job, .dl-status { display: none; } .dl-metaJob { display: inline; color: var(--text-secondary); overflow: hidden; text-overflow: ellipsis; } }
 /* Phone: the title gets the whole width; its buttons sit on a line under it. */
 @media (max-width: 640px) {
-  .dl { padding: 14px; }
+  .dl { padding: 0; }
   .dl-row { grid-template-columns: 32px minmax(0, 1fr); grid-template-areas: "check doc" ". actions"; row-gap: 10px; min-height: 64px; padding: 12px; }
   .dl-check { grid-area: check; align-self: start; padding-top: 10px; }
   .dl-doc { grid-area: doc; }

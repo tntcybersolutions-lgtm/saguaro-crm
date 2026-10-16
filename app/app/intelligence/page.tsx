@@ -173,8 +173,9 @@ const CSS = `
 .igOptName { font-size: var(--fs-sm); color: var(--text-primary); font-weight: 600; }
 .igOptSub { font-size: var(--fs-xs); color: var(--text-tertiary); }
 .igStack { display: flex; flex-direction: column; gap: 16px; }
-.igInsights { display: grid; grid-template-columns: repeat(auto-fit, minmax(280px, 1fr)); gap: 10px; }
-.igInsight { position: relative; overflow: hidden; background: var(--bg-surface-2); border: 1px solid var(--border-subtle); border-radius: var(--radius-sm); padding: 12px 14px 12px 18px; }
+.igInsights { display: grid; grid-template-columns: repeat(auto-fit, minmax(280px, 1fr)); gap: 6px 28px; }
+/* Flat: a rail and the words, no box. */
+.igInsight { position: relative; overflow: hidden; background: none; border: 0; border-radius: 0; padding: 8px 0 8px 16px; }
 .igInsight::before { content: ''; position: absolute; left: 0; top: 0; bottom: 0; width: 3px; background: var(--border-strong); }
 .igInsight[data-tone="late"]::before { background: var(--status-overdue); }
 .igInsight[data-tone="warn"]::before { background: var(--status-under-contract); }

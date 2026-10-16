@@ -48,8 +48,9 @@ const formatFileSize = (bytes: number) => {
 };
 
 const CSS = `
-.netRpts { display: grid; grid-template-columns: repeat(auto-fill, minmax(min(100%, 280px), 1fr)); gap: 12px; }
-.netRpt { display: flex; flex-direction: column; gap: 12px; padding: 14px; border: 1px solid var(--border-subtle); border-radius: var(--radius-md, 12px); background: var(--bg-surface-2); }
+.netRpts { display: grid; grid-template-columns: repeat(auto-fill, minmax(min(100%, 280px), 1fr)); gap: 0 28px; }
+/* Flat (no boxed cards): each report is a section on the page, a hairline under it. */
+.netRpt { display: flex; flex-direction: column; gap: 12px; padding: 16px 0; border: 0; border-bottom: 1px solid var(--border-subtle); border-radius: 0; background: none; }
 .netRptHead { display: flex; gap: 12px; align-items: flex-start; }
 .netRptTitle { font-size: 14px; font-weight: 700; color: var(--text-primary); }
 .netRptDesc { font-size: 13px; color: var(--text-secondary); line-height: 1.45; margin-top: 2px; }

@@ -128,7 +128,8 @@ const TICKER_FX = `
 .sgTickerViewport:hover .sgTickerTrack{animation-play-state:paused}
 .sgTickerItem{transition:background .15s ease,border-color .15s ease}
 .sgTickerItem:hover{background:rgba(255,255,255,0.07)!important;border-color:rgba(255,255,255,0.18)!important}
-.sgTickerX{opacity:.35;transition:opacity .15s ease,color .15s ease}
+.sgTickerX{position:relative;opacity:.35;transition:opacity .15s ease,color .15s ease}
+.sgTickerX::after{content:'';position:absolute;inset:-14px -10px}
 .sgTickerItem:hover .sgTickerX{opacity:.75}
 .sgTickerX:hover{opacity:1!important;color:#F87171!important}
 @media (prefers-reduced-motion: reduce){

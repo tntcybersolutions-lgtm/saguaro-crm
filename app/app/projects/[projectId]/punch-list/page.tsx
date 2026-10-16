@@ -121,8 +121,10 @@ const CSS = `
 .plTitle { display: flex; align-items: center; gap: 10px; max-width: 440px; min-width: 0; }
 .plTitle > span { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; min-width: 0; color: var(--text-primary); font-weight: 600; }
 .plTitle[data-done="true"] > span { color: var(--text-tertiary); text-decoration: line-through; }
-.plCheck { width: 20px; height: 20px; border-radius: 5px; flex-shrink: 0; cursor: pointer; border: 2px solid var(--border-strong); background: transparent; display: inline-flex; align-items: center; justify-content: center; padding: 0; color: var(--on-brand); transition: all .15s; }
+.plCheck { position: relative; width: 20px; height: 20px; border-radius: 5px; flex-shrink: 0; cursor: pointer; border: 2px solid var(--border-strong); background: transparent; display: inline-flex; align-items: center; justify-content: center; padding: 0; color: var(--on-brand); transition: all .15s; }
 .plCheck[aria-checked="true"] { border-color: var(--status-ongoing); background: var(--status-ongoing); }
+/* The box is 20px; the tap target is 44px. */
+.plCheck::after { content: ''; position: absolute; inset: -12px; }
 .plCheck:focus-visible { outline: 2px solid var(--focus-ring); outline-offset: 2px; }
 .plBadges { display: inline-flex; align-items: center; gap: 6px; flex-wrap: wrap; }
 .plLate { color: var(--status-overdue); font-weight: 700; }

@@ -19,7 +19,8 @@ type Review = {
   source: string | null; created_at: string;
 };
 
-const card: React.CSSProperties = { background: RAISED, border: `1px solid ${BORDER}`, borderRadius: 12, padding: 18, marginBottom: 14 };
+// Flat (no boxed cards): a section is a hairline above and the content on the page.
+const card: React.CSSProperties = { background: 'none', borderTop: `1px solid ${BORDER}`, padding: '16px 0 4px', marginBottom: 14 };
 const Stars = ({ n, size = 16 }: { n: number; size?: number }) => (
   <span style={{ color: 'var(--text-primary)', fontSize: size, letterSpacing: 1 }} aria-label={`${n} of 5`}>
     {'★★★★★'.slice(0, n)}<span style={{ color: BORDER }}>{'★★★★★'.slice(n)}</span>
