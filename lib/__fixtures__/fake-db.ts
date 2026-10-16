@@ -59,7 +59,12 @@ export function makeFakeDb() {
     update(obj: unknown) { this.mode = 'update'; this.payload = obj; return this; }
     upsert(row: unknown, o?: { onConflict?: string }) { this.mode = 'upsert'; this.payload = row; this.onConflict = o?.onConflict || 'id'; return this; }
     delete() { this.mode = 'delete'; return this; }
-    eq(c: string, v: unknown) { this.filters.push((r) => r[c] === v); return this; }
+    eq(c: string, v: unknown) {
+      // jsonb text path: "link_context->>pin_id"
+      const [col, key] = c.split('->>');
+      this.filters.push(key ? (r) => String(((r[col] as Row | null) || {})[key] ?? '') === String(v) : (r) => r[c] === v);
+      return this;
+    }
     neq(c: string, v: unknown) { this.filters.push((r) => r[c] !== v); return this; }
     is(c: string, v: unknown) { this.filters.push((r) => (r[c] ?? null) === v); return this; }
     in(c: string, vs: unknown[]) { this.filters.push((r) => vs.includes(r[c])); return this; }
@@ -77,6 +82,13 @@ export function makeFakeDb() {
       let out: Row[] = [];
       if (this.mode === 'insert') {
         const rows: Row[] = (Array.isArray(this.payload) ? this.payload : [this.payload]).map((r: Row) => ({ id: uid(), created_at: new Date(Date.now() + seq).toISOString(), ...r }));
+        if (this.table === 'related_items') {
+          for (const r of rows) {
+            if (t.some((x) => x.tenant_id === r.tenant_id && x.a_type === r.a_type && x.a_id === r.a_id && x.b_type === r.b_type && x.b_id === r.b_id)) {
+              return { data: null, error: { code: '23505', message: 'duplicate key' } };
+            }
+          }
+        }
         if (this.table === 'item_links') {
           for (const r of rows) {
             if (t.some((x) => x.tenant_id === r.tenant_id && x.from_type === r.from_type && x.from_id === r.from_id && x.to_type === r.to_type && x.to_id === r.to_id)) {

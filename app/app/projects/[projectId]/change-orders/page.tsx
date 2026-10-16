@@ -46,6 +46,7 @@ import {
 } from '@/components/ui/kit';
 import Suggest from '@/components/ui/Suggest';
 import { layout } from '@/lib/design-tokens';
+import { useOpenRecord } from '@/lib/ui/open-on-new';
 import { coAmount } from '@/lib/change-order-amount';
 import { approvedChangeTotal, originalContract } from '@/lib/job-contract';
 
@@ -336,6 +337,8 @@ export default function ChangeOrdersPage() {
   },[projectId]);
 
   useEffect(()=>{ load(); },[load]);
+  // Search hit (?open=<id>) lands on that change order's detail.
+  useOpenRecord((id)=>{ if (cos.some((c:any)=>c.id===id)) setSelectedId(id); }, !loading);
 
   /** POST the composer — shared by the Create button and the guard's "Save & leave". */
   async function submitCO(): Promise<boolean>{

@@ -20,6 +20,7 @@ import {
 import { PremiumSurface, ModuleHero, SectionCard, PremiumEmpty, StatStrip, ghostButtonStyle } from '@/components/ui/premium';
 import { moduleAccent } from '@/lib/ui/app-accent';
 import { ModuleSkeleton } from '@/components/ui/PageSkeleton';
+import RelatedItems from '@/components/related/RelatedItems';
 
 const ACCENT = moduleAccent('schedule'); // sage — chips, eyebrow, section markers only
 const GOLD = 'var(--brand-primary)';
@@ -286,6 +287,11 @@ export default function ScheduleTaskDetailPage() {
           <div style={{ ...fieldValueStyle, color: DIM }}>No predecessor — this task can start independently.</div>
         )}
       </SectionCard>
+
+      {/* Related items: the RFIs, submittals and inspections this task waits on */}
+      <div style={{ padding: '8px 4px 0' }}>
+        <RelatedItems type="schedule_task" id={id} projectId={t.project_id} />
+      </div>
     </PremiumSurface>
   );
 }

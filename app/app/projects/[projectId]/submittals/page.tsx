@@ -36,6 +36,7 @@ import { useUnsavedGuard, useComposerDirty } from '@/lib/useUnsavedGuard';
 import UnsavedGuardModal from '@/components/UnsavedGuardModal';
 import { layout } from '@/lib/design-tokens';
 import { localDay } from '@/lib/calendar-day';
+import { useOpenRecord } from '@/lib/ui/open-on-new';
 import WorkflowChain from '@/components/submittals/WorkflowChain';
 import { ballHolder, isWithDesign } from '@/lib/submittal-workflow';
 
@@ -215,6 +216,8 @@ export default function SubmittalsPage(){
     setAuto({});setSelected(sub);setMode('edit');
   }
   function viewSub(sub:any){setSelected(sub);setMode('view');}
+  // Search hit (?open=<id>) lands on that submittal's detail.
+  useOpenRecord((id)=>{const s=submittals.find((x:any)=>x.id===id); if(s) viewSub(s);}, !loading);
   function closePanel(){setSelected(null);setMode(null);}
   /** Abandoning an edit keeps the submittal in view. */
   function closeComposer(){ if(mode==='edit'&&selected){ setMode('view'); return; } closePanel(); }

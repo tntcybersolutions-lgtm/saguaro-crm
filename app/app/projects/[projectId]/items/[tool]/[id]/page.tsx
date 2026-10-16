@@ -4,15 +4,17 @@
  *
  * Header (number, title, status) → workflow strip (who has it, who made it,
  * when it's due) → tabs: General (every field, edit in place) · Comments
- * (thread with files) · Related (links to other items) · Files · History
+ * (thread with files) · Related (Related Items: links to any record on the
+ * job, pins on drawings) · Files · History
  * (every change, who and when). The tool's shape comes from
  * lib/items/registry; the data from /api/items/:tool/:id.
  */
 import React, { useCallback, useEffect, useMemo, useState } from 'react';
-import Link from 'next/link';
 import { useParams } from 'next/navigation';
 import { PageShell, Button, Tabs, Field, Input, Textarea, Select, Toast, useToast, EmptyState } from '@/components/ui/kit';
-import { PencilSimple, FloppyDisk, X, Paperclip, LinkSimple, ChatText, Trash, FileText, ArrowSquareOut, MagnifyingGlass } from '@phosphor-icons/react';
+import { PencilSimple, FloppyDisk, X, Paperclip, ChatText, Trash, FileText, ArrowSquareOut } from '@phosphor-icons/react';
+import RelatedItems from '@/components/related/RelatedItems';
+import { RELATED_TYPE_FOR_TOOL } from '@/lib/related-items';
 import ItemHistory from '@/components/item/ItemHistory';
 import WorkflowChain from '@/components/submittals/WorkflowChain';
 import type { SubmittalLike } from '@/lib/submittal-workflow';
@@ -23,8 +25,6 @@ import { itemTool, itemNumber, nounInSentence, statusLabel, type ItemField, type
 type Item = Record<string, unknown>;
 type FileRow = { id: string; name: string; size: number | null; kind: string | null; by: string | null; at: string; url: string | null };
 type Comment = { id: string; body: string; author_name: string | null; created_at: string; attachments?: { id: string; name: string }[]; is_official?: boolean; mine?: boolean };
-type LinkRow = { linkId: string; type: string; id: string; noun: string; name: string; status: string; projectId: string | null };
-type Hit = { type: string; id: string; noun: string; name: string; status: string };
 
 const money = new Intl.NumberFormat('en-US', { style: 'currency', currency: 'USD', minimumFractionDigits: 2 });
 
@@ -70,7 +70,6 @@ export default function ItemPage() {
   const [item, setItem] = useState<Item | null>(null);
   const [projectName, setProjectName] = useState('');
   const [files, setFiles] = useState<FileRow[]>([]);
-  const [onDrawings, setOnDrawings] = useState<SheetRef[]>([]);
   const [loadErr, setLoadErr] = useState('');
   const [tab, setTab] = useState(type === 'daily_logs' ? 'log' : 'general');
   const [editing, setEditing] = useState(false);
@@ -79,7 +78,7 @@ export default function ItemPage() {
   const [historyKey, setHistoryKey] = useState(0);
 
   const [comments, setComments] = useState<Comment[] | null>(null);
-  const [links, setLinks] = useState<LinkRow[] | null>(null);
+  const [linkCount, setLinkCount] = useState<number | null>(null);
 
   const load = useCallback(async () => {
     if (!tool) return;
@@ -90,7 +89,6 @@ export default function ItemPage() {
     setItem(j.item);
     setProjectName(j.project?.name || '');
     setFiles(Array.isArray(j.files) ? j.files : []);
-    setOnDrawings(Array.isArray(j.drawings) ? j.drawings : []);
   }, [tool, type, id]);
 
   const loadComments = useCallback(async () => {
@@ -100,14 +98,16 @@ export default function ItemPage() {
     if (!r.ok) show(j.error || "Couldn't load comments.", 'bad');
   }, [type, id, show]);
 
-  const loadLinks = useCallback(async () => {
-    const r = await fetch(`/api/items/${type}/${id}/links`, { credentials: 'include', cache: 'no-store' });
+  // The Related count for the tab badge, before the tab is opened.
+  const relType = tool ? RELATED_TYPE_FOR_TOOL[tool.type] : undefined;
+  const loadLinkCount = useCallback(async () => {
+    if (!relType) return;
+    const r = await fetch(`/api/related-items?type=${relType}&id=${id}`, { credentials: 'include', cache: 'no-store' });
     const j = await r.json().catch(() => ({}));
-    setLinks(r.ok && Array.isArray(j.links) ? j.links : []);
-    if (!r.ok) show(j.error || "Couldn't load related items.", 'bad');
-  }, [type, id, show]);
+    setLinkCount(r.ok && Array.isArray(j.items) ? j.items.length : 0);
+  }, [relType, id]);
 
-  useEffect(() => { void load(); void loadComments(); void loadLinks(); }, [load, loadComments, loadLinks]);
+  useEffect(() => { void load(); void loadComments(); void loadLinkCount(); }, [load, loadComments, loadLinkCount]);
 
   const startEdit = () => {
     if (!tool || !item) return;
@@ -138,7 +138,7 @@ export default function ItemPage() {
     show('Saved.');
   };
 
-  const counts = useMemo(() => ({ comments: comments?.length ?? 0, links: links?.length ?? 0, files: files.length }), [comments, links, files]);
+  const counts = useMemo(() => ({ comments: comments?.length ?? 0, links: linkCount ?? 0, files: files.length }), [comments, linkCount, files]);
 
   if (!tool) {
     return <PageShell title="Not found"><EmptyState title="This kind of item doesn't have a page" text="Open it from its list instead." /></PageShell>;
@@ -253,7 +253,11 @@ export default function ItemPage() {
         </section>
       )}
       {tab === 'comments' && <CommentsTab type={type} id={id} projectId={projectId} tool={tool} comments={comments} reload={loadComments} show={show} />}
-      {tab === 'related' && <RelatedTab type={type} id={id} projectId={projectId} tool={tool} links={links} reload={loadLinks} show={show} onDrawings={onDrawings} />}
+      {tab === 'related' && relType && (
+        <section className="ip-section" aria-label="Related items">
+          <RelatedItems type={relType} id={id} projectId={projectId} heading={null} onCount={setLinkCount} />
+        </section>
+      )}
       {tab === 'files' && <FilesTab tool={tool} id={id} projectId={projectId} files={files} reload={load} show={show} />}
       {tab === 'history' && <section className="ip-section"><ItemHistory key={historyKey} entityType={tool.table} entityId={id} /></section>}
     </PageShell>
@@ -349,95 +353,6 @@ function CommentsTab({ type, id, projectId, tool, comments, reload, show }: {
   );
 }
 
-/* ── Related items ────────────────────────────────────────────────────────── */
-
-type SheetRef = { id: string; sheet: string | null; name: string | null; version: string | null; status: string | null; pins: number; href: string };
-
-function RelatedTab({ type, id, projectId, tool, links, reload, show, onDrawings }: {
-  type: string; id: string; projectId: string; tool: ItemTool; links: LinkRow[] | null; reload: () => Promise<void>; show: (m: string, t?: 'good' | 'bad') => void; onDrawings: SheetRef[];
-}) {
-  const [q, setQ] = useState('');
-  const [hits, setHits] = useState<Hit[] | null>(null);
-  const [picking, setPicking] = useState(false);
-
-  useEffect(() => {
-    if (!picking) return;
-    const t = setTimeout(async () => {
-      const r = await fetch(`/api/items/search?projectId=${projectId}&q=${encodeURIComponent(q)}&exclude=${tool.table}:${id}`, { credentials: 'include', cache: 'no-store' });
-      const j = await r.json().catch(() => ({}));
-      setHits(r.ok && Array.isArray(j.items) ? j.items : []);
-    }, 220);
-    return () => clearTimeout(t);
-  }, [q, picking, projectId, tool.table, id]);
-
-  const link = async (h: Hit) => {
-    const r = await fetch(`/api/items/${type}/${id}/links`, {
-      method: 'POST', credentials: 'include', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ toType: h.type, toId: h.id }),
-    });
-    if (!r.ok) { show(await readErr(r, "Couldn't link those items."), 'bad'); return; }
-    show(`Linked ${h.name}.`);
-    setPicking(false); setQ(''); setHits(null);
-    await reload();
-  };
-  const unlink = async (l: LinkRow) => {
-    const r = await fetch(`/api/items/${type}/${id}/links?linkId=${l.linkId}`, { method: 'DELETE', credentials: 'include' });
-    if (!r.ok) { show(await readErr(r, "Couldn't unlink."), 'bad'); return; }
-    await reload();
-  };
-  const already = new Set((links || []).map((l) => `${l.type}:${l.id}`));
-
-  return (
-    <section className="ip-section" aria-label="Related items">
-      <div className="ip-row-head">
-        <span className="ip-muted">{links === null ? 'Loading…' : links.length === 0 ? `Nothing linked yet. Link the RFIs, submittals and punch items that go with this ${nounInSentence(tool)}.` : `${links.length} linked`}</span>
-        <div className="ip-spacer" />
-        <Button icon={<LinkSimple size={15} />} onClick={() => setPicking((p) => !p)}>{picking ? 'Done' : 'Link an item'}</Button>
-      </div>
-      {picking && (
-        <div className="ip-picker">
-          <div className="ip-search"><MagnifyingGlass size={15} /><input autoFocus value={q} onChange={(e) => setQ(e.target.value)} placeholder="Search RFIs, submittals, punch items by number or words" aria-label="Search items to link" /></div>
-          {hits === null ? <div className="ip-loading">Searching…</div> : hits.length === 0 ? <p className="ip-muted">No matching items on this job.</p> : (
-            <ul className="ip-list">
-              {hits.map((h) => (
-                <li key={`${h.type}:${h.id}`}>
-                  <span className="ip-noun">{h.noun}</span><span className="ip-name">{h.name}</span><span className="ip-status">{h.status}</span>
-                  <Button size="sm" disabled={already.has(`${h.type}:${h.id}`)} onClick={() => void link(h)}>{already.has(`${h.type}:${h.id}`) ? 'Linked' : 'Link'}</Button>
-                </li>
-              ))}
-            </ul>
-          )}
-        </div>
-      )}
-      {!!links?.length && (
-        <ul className="ip-list">
-          {links.map((l) => (
-            <li key={l.linkId}>
-              <span className="ip-noun">{l.noun}</span>
-              <Link className="ip-name ip-link" href={`/app/projects/${l.projectId || projectId}/items/${l.type}/${l.id}`}>{l.name}</Link>
-              <span className="ip-status">{l.status}</span>
-              <button type="button" className="ip-icon-btn" aria-label={`Unlink ${l.name}`} onClick={() => void unlink(l)}><X size={14} /></button>
-            </li>
-          ))}
-        </ul>
-      )}
-      {onDrawings.length > 0 && (
-        <>
-          <div className="ip-row-head"><span className="ip-muted">Pinned on {onDrawings.length} drawing{onDrawings.length === 1 ? '' : 's'}</span></div>
-          <ul className="ip-list">
-            {onDrawings.map((d) => (
-              <li key={d.id}>
-                <span className="ip-noun">Sheet</span>
-                <Link className="ip-name ip-link" href={d.href}>{[d.sheet, d.name].filter(Boolean).join(' · ') || 'Drawing'}</Link>
-                <span className="ip-status">{d.version ? `Rev ${d.version}` : ''}{d.status === 'superseded' ? ' · superseded' : ''}</span>
-              </li>
-            ))}
-          </ul>
-        </>
-      )}
-    </section>
-  );
-}
-
 /* ── Files ────────────────────────────────────────────────────────────────── */
 
 function FilesTab({ tool, id, projectId, files, reload, show }: {
@@ -517,15 +432,10 @@ const CSS = `
 .ip-check input{accent-color:var(--brand-primary);width:16px;height:16px}
 .ip-icon-btn{display:inline-flex;align-items:center;justify-content:center;width:32px;height:32px;border:0;border-radius:6px;background:transparent;color:var(--text-tertiary);cursor:pointer}
 .ip-icon-btn:hover{color:var(--text-primary);background:var(--bg-surface-2)}
-.ip-picker{margin:12px 0;border-top:1px solid var(--border-default);border-bottom:1px solid var(--border-default);padding:12px 0}
-.ip-search{display:flex;align-items:center;gap:8px;border:1px solid var(--border-default);border-radius:8px;padding:0 12px;color:var(--text-tertiary)}
-.ip-search input{flex:1;min-height:44px;background:transparent;border:0;color:var(--text-primary);font-size:16px;outline:none}
 .ip-list{list-style:none;margin:8px 0 0;padding:0}
 .ip-list li{display:grid;grid-template-columns:auto minmax(0,1fr) auto auto;align-items:center;gap:12px;min-height:48px;border-bottom:1px solid var(--border-default);font-size:14px;color:var(--text-secondary)}
-.ip-noun{font-size:12px;font-weight:700;text-transform:uppercase;letter-spacing:.04em;color:var(--text-tertiary)}
 .ip-name{color:var(--text-primary);font-weight:600;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
-.ip-link:hover{text-decoration:underline}
 .ip-status{color:var(--text-secondary);font-size:13px}
-@media (max-width:640px){.ip-strip-cell + .ip-strip-cell{border-left:0;padding-left:0}.ip-strip-cell{border-bottom:1px solid var(--border-default)}.ip-list li{grid-template-columns:minmax(0,1fr) auto}.ip-noun,.ip-status{display:none}}
+@media (max-width:640px){.ip-strip-cell + .ip-strip-cell{border-left:0;padding-left:0}.ip-strip-cell{border-bottom:1px solid var(--border-default)}.ip-list li{grid-template-columns:minmax(0,1fr) auto}.ip-status{display:none}}
 `;
 

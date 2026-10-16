@@ -47,6 +47,7 @@ import {
 import { openPdf } from '@/components/PdfViewer';
 import { layout } from '@/lib/design-tokens';
 import { retainageRate, type RetainageLedger } from '@/lib/retainage';
+import RelatedItems from '@/components/related/RelatedItems';
 
 const money = new Intl.NumberFormat('en-US', { style: 'currency', currency: 'USD', minimumFractionDigits: 2, maximumFractionDigits: 2 });
 const fmt = (n:number) => money.format(Number(n)||0);
@@ -168,6 +169,7 @@ const CSS = `
 .pdSplit { display: grid; grid-template-columns: minmax(0, 1fr); gap: 16px; align-items: start; min-width: 0; }
 .pdSplit > * { min-width: 0; }
 .pdMain { display: flex; flex-direction: column; gap: 16px; min-width: 0; }
+.pdRelated { padding: 4px 4px 0; }
 .pdRail { order: -1; display: flex; flex-direction: column; gap: 16px; }
 @container pdws (min-width: 960px) {
   .pdSplit { grid-template-columns: minmax(0, 1fr) clamp(${layout.detailRailMin}px, 28%, ${layout.detailRailMax}px); }
@@ -666,6 +668,11 @@ export default function PayAppDetailPage() {
                   ))}
                 </div>
               </Card>
+
+              {/* Related items: the change orders, invoices and commitments this application bills */}
+              <div className="pdRelated">
+                <RelatedItems type="pay_app" id={id} projectId={projectId} />
+              </div>
             </div>
 
             <aside className="pdRail" aria-label="Pay application details and actions">

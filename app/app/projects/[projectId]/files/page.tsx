@@ -12,7 +12,7 @@
  *         POST /api/files/share  { fileId, channel, to }
  *         POST /api/storage/connectors/:id/export  { fileId }
  */
-import React, { useState, useEffect, useCallback, useMemo } from 'react';
+import React, { useState, useEffect, useCallback, useMemo, useRef } from 'react';
 import { textPrompt, confirmDialog } from '@/lib/ui/async-dialog';
 import { useProjectContext } from '@/lib/hooks/useProjectContext';
 import { humanError } from '@/lib/errors';
@@ -27,6 +27,7 @@ import { FileDropzone } from '@/components/FileDropzone';
 import { FileCropper } from '@/components/FileCropper';
 import { ExternalBrowser } from '@/components/ExternalBrowser';
 import { classifyKind, KIND_LABEL, type FileKind } from '@/lib/filekind';
+import RelatedItems from '@/components/related/RelatedItems';
 import {
   Folder, FolderOpen, DownloadSimple, PencilSimple, FolderSimplePlus, Crop, ShareNetwork,
   Trash, ArrowCounterClockwise, MagnifyingGlass, LinkSimple, EnvelopeSimple, ChatText, MicrosoftTeamsLogo, SlackLogo,
@@ -78,6 +79,7 @@ const FL_CSS = `
 .flKind { font-weight: 800; color: var(--tint); }
 .flCardActs { display: flex; gap: 6px; margin-top: 4px; flex-wrap: wrap; }
 .flPrevMeta { font-size: 13px; color: var(--text-secondary); margin-bottom: 12px; }
+.flRelated { margin-top: 16px; }
 .flLinkedNote { font-size: 12px; color: var(--text-tertiary); margin-top: 12px; line-height: 1.5; }
 @media (max-width: 640px) {
   .flGrid { grid-template-columns: repeat(auto-fill, minmax(160px, 1fr)); }
@@ -119,6 +121,21 @@ export default function FilesPage() {
   // One picture of the job: the library's own files plus the drawings and
   // generated documents filed elsewhere, so the counts and folders are honest.
   const files = useMemo(() => [...ownFiles, ...linked], [ownFiles, linked]);
+  // A Related Items link opens one document: ?file=<id> previews it once the library is in.
+  const fileParamDone = useRef(false);
+  useEffect(() => {
+    if (fileParamDone.current || loading || typeof window === 'undefined') return;
+    fileParamDone.current = true;
+    const u = new URL(window.location.href);
+    const want = u.searchParams.get('file');
+    if (!want) return;
+    u.searchParams.delete('file');
+    window.history.replaceState(null, '', u.pathname + (u.search ? u.search : '') + u.hash);
+    const hit = ownFiles.find((f) => String(f.id) === want);
+    if (hit) setSel(hit);
+    else flash("That document isn't in this job's library any more.", 'bad');
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [loading, ownFiles]);
 
   // Project intelligence — one snapshot; the library walks in knowing the job.
   const { ctx } = useProjectContext(projectId);
@@ -390,6 +407,11 @@ export default function FilesPage() {
         {sel && (
           <>
             <FilePreview kind={kindOf(sel)} url={sel.file_url} name={sel.file_name} />
+            {!isLinked(sel) && (
+              <div className="flRelated">
+                <RelatedItems key={String(sel.id)} type="document" id={String(sel.id)} projectId={projectId} />
+              </div>
+            )}
             {isLinked(sel) && (
               <div className="flLinkedNote">
                 {SOURCE_LABEL[sel.source] || 'Linked'} · shown here for one view of the job. Rename, revise or remove it {sel.source === 'drawing' ? 'in the Drawing Register' : 'in Documents'}.
