@@ -28,8 +28,9 @@ function pickBudgetColumns(body: Record<string, unknown>): Record<string, unknow
 }
 
 export async function GET(req: NextRequest, { params }: { params: { projectId: string } }) {
-  const user = await getUser(req);
-  if (!user) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
+  const g = await requirePermission(req, 'Budget', 'View', { projectId: params.projectId });
+  if (!g.ok) return g.res;
+  const user = g.user;
 
   try {
     const supabase = createServerClient();

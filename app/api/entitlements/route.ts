@@ -31,7 +31,12 @@ export async function GET(req: NextRequest) {
 }
 
 export async function POST(req: NextRequest) {
-  const g = await requirePermission(req, 'Projects', 'Full');
+  /* Switching a paid feature on or off for the company is an account change.
+     It was gated on Projects: Full — which the built-in Salesperson and
+     Project Manager roles both hold — so either could turn on add-ons the
+     company had not bought. The add-on and plan request routes already
+     describe themselves as "the same bar as /api/entitlements": Admin. */
+  const g = await requirePermission(req, 'Admin', 'Full');
   if (!g.ok) return g.res;
   try {
     const b = await req.json().catch(() => ({}));

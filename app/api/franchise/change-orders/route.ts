@@ -14,8 +14,9 @@ const TERMINAL = ['budget_updated', 'rejected'];
 
 export async function GET(req: NextRequest) {
   try {
-    const user = await getUser(req);
-    if (!user) return NextResponse.json({ changeOrders: [] }, { status: 401 });
+    const g = await requirePermission(req, 'Change Orders', 'View');
+    if (!g.ok) return g.res;
+    const user = g.user;
     if (!(await hasFeature(user.tenantId, 'command_center')))
       return NextResponse.json({ changeOrders: [], gated: true }, { status: 403 });
 

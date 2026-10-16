@@ -42,8 +42,9 @@ function rowToPco(r: Row) {
 export async function GET(req: NextRequest, { params }: { params: Promise<{ projectId: string; id: string }> }) {
   const { projectId, id } = await params;
   try {
-    const user = await getUser(req);
-    if (!user) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
+    const g = await requirePermission(req, 'Change Orders', 'View', { projectId: (await params).projectId });
+    if (!g.ok) return g.res;
+    const user = g.user;
 
     const db = createServerClient();
     const { data, error } = await db

@@ -84,6 +84,9 @@ interface NavItem {
      decides what the desktop sidebar shows — everything entitled is shown. */
   core?: boolean;
   accentKey?: string; // module-identity key -> tints the inactive icon + count badge
+  /* The permission this ONE item needs, when it differs from its section's
+     (SECTION_PERMISSION). null = everyone who can sign in. Company scope only. */
+  perm?: PermCategory | null;
 }
 interface NavSection {
   title: string;
@@ -425,24 +428,31 @@ const NAV_SECTIONS: NavSection[] = [
     title: 'Financial',
     zone: 'build',
     items: [
-      { label: 'Invoicing',         href: '/app/invoicing',            icon: CreditCard, accentKey: 'invoices', core: true },
-      { label: 'Billing',           href: '/app/billing',              icon: CurrencyDollar, accentKey: 'financials' },
-      { label: 'Cost Control',      href: '/app/billing/cost-control', icon: ChartLineUp, accentKey: 'financials' },
+      /* Each item names the permission its own API checks, so the rail and the
+         server agree: invoices, cost control and certified payroll read
+         Budget; Billing is the company's SUBSCRIPTION (plan, payment method,
+         cancel) — an owner's screen, not a pay-app one. */
+      { label: 'Invoicing',         href: '/app/invoicing',            icon: CreditCard, accentKey: 'invoices', core: true, perm: 'Budget' },
+      { label: 'Billing',           href: '/app/billing',              icon: CurrencyDollar, accentKey: 'financials', perm: 'Admin' },
+      { label: 'Cost Control',      href: '/app/billing/cost-control', icon: ChartLineUp, accentKey: 'financials', perm: 'Budget' },
       { label: 'Progress Billing',  href: '/app/billing/payapp',       icon: Receipt, accentKey: 'financials' },
-      { label: 'Certified Payroll', href: '/app/certified-payroll',    icon: SealCheck, accentKey: 'financials' },
-      { label: 'Reports',           href: '/app/reports',              icon: ChartBar, accentKey: 'reports' },
+      { label: 'Certified Payroll', href: '/app/certified-payroll',    icon: SealCheck, accentKey: 'financials', perm: 'Budget' },
+      { label: 'Reports',           href: '/app/reports',              icon: ChartBar, accentKey: 'reports', perm: 'Reports' },
     ],
   },
   {
     title: 'Company',
     items: [
       { label: 'People & Access',    href: '/app/people',             icon: Users, accentKey: 'team', core: true },
-      { label: 'Time Clock',         href: '/app/time',               icon: Clock, accentKey: 'time' },
+      /* Everyone clocks in — the phone tab bar has Time for every role. Gating
+         it on Admin with the rest of Company took the clock out of the rail
+         of every salesperson and foreman. Same for asking Sage. */
+      { label: 'Time Clock',         href: '/app/time',               icon: Clock, accentKey: 'time', perm: null },
       { label: 'Fleet',              href: '/app/fleet',              icon: Truck, gate: 'fleet', accentKey: 'fleet' },
       /* Autopilot de-featured: no top-level entry. It lives under Sales →
          Intelligence (a secondary link there) and at its direct URL. */
       { label: 'Approval Workflows', href: '/app/approval-workflows', icon: Flag, accentKey: 'autopilot' },
-      { label: 'Ask Sage',           href: '/app/ask',                icon: Brain, accentKey: 'sage' },
+      { label: 'Ask Sage',           href: '/app/ask',                icon: Brain, accentKey: 'sage', perm: null },
     ],
   },
   {
@@ -727,19 +737,19 @@ export default function AppSidebar({
           /* Company scope gets the same discipline one level up: core tools,
              tools this tenant has records in, and the page you are on. */
           : entitled.filter((item: any) =>
-              isCompanyToolVisible(item.href, companySignals, pathname, showAllTools));
+              isCompanyToolVisible(item.href, companySignals, pathname, showAllTools))
+            /* AND AN ITEM THIS PERSON MAY NOT OPEN IS NOT LISTED. Company
+               scope only: inside a job the rail is one job's tools, and a
+               person who can open the job can see what the job has. An
+               item's own `perm` wins over its section's; null means anyone. */
+            .filter((item: NavItem) => {
+              const cat = item.perm === undefined ? SECTION_PERMISSION[String(section.title)] : item.perm;
+              return !cat || canDo(cat, 'View');
+            });
         return { ...section, items };
       })
       // A section whose every item is hidden takes its header with it.
       .filter((section: any) => section.items.length > 0)
-      /* AND A SECTION THIS PERSON MAY NOT USE DOES NOT APPEAR AT ALL.
-         Company scope only: inside a job the rail is one job's tools, and a
-         person who can open the job can see what the job has. */
-      .filter((section: any) => {
-        if (inProject) return true;
-        const cat = SECTION_PERMISSION[String(section.title)];
-        return !cat || canDo(cat, 'View');
-      })
       /* SECTIONS IN THE ORDER THE WORK HAPPENS.
        *
        * Rendering them in file order put EXECUTION above FINANCIAL, so a

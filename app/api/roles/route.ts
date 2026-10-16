@@ -4,8 +4,9 @@ import { apiError } from '@/lib/api-error';
 import { requirePermission } from '@/lib/permissions';
 
 export async function GET(req: NextRequest) {
-  const user = await getUser(req);
-  if (!user) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
+  const g = await requirePermission(req, 'Admin', 'View');
+  if (!g.ok) return g.res;
+  const user = g.user;
   try {
     const supabase = createServerClient();
     /* A refused read must throw, not resolve to []: the Roles screen re-seeds

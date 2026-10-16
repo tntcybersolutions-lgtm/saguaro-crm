@@ -1,11 +1,13 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { createServerClient, getUser } from '@/lib/supabase-server';
+import { requirePermission } from '@/lib/permissions';
 import { apiError } from '@/lib/api-error';
 import { signFields } from '@/lib/storage-signing';
 
 export async function GET(req: NextRequest, { params }: { params: { projectId: string } }) {
-  const user = await getUser(req);
-  if (!user) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
+  const g = await requirePermission(req, 'Budget', 'View', { projectId: params.projectId });
+  if (!g.ok) return g.res;
+  const user = g.user;
 
   try {
     const supabase = createServerClient();

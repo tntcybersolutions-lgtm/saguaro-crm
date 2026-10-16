@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { createServerClient, getUser } from '@/lib/supabase-server';
+import { requirePermission } from '@/lib/permissions';
 import { apiError } from '@/lib/api-error';
 import { hasFeature } from '@/lib/entitlements-server';
 
@@ -15,8 +16,9 @@ const PENDING = ['draft', 'pricing', 'pm_review', 'architect_review', 'pending_o
  */
 export async function GET(req: NextRequest) {
   try {
-    const user = await getUser(req);
-    if (!user) return NextResponse.json({ budgets: [] }, { status: 401 });
+    const g = await requirePermission(req, 'Budget', 'View');
+    if (!g.ok) return g.res;
+    const user = g.user;
     if (!(await hasFeature(user.tenantId, 'command_center')))
       return NextResponse.json({ budgets: [], gated: true }, { status: 403 });
 

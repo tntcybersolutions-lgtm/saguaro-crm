@@ -3,6 +3,8 @@ import React, { useEffect, useState, useRef, useCallback } from 'react';
 import { safeJsonParse } from '@/lib/safe-json';
 import { useGuardedRouter } from '@/lib/navGuard';
 import { openQuickMedia } from '@/components/media/QuickMedia';
+import { usePermissions } from '@/lib/hooks/usePermissions';
+import type { PermCategory } from '@/lib/permission-categories';
 
 const GOLD   = 'var(--brand-primary)';
 const DARK   = 'var(--bg-base)';
@@ -43,6 +45,15 @@ const NAV_ITEMS: Omit<PaletteItem, 'section'>[] = [
   { id: 'nav-invoicing',  icon: '🧾', label: 'Invoicing',      description: 'Invoices & payments',             href: '/app/invoicing' },
 ];
 
+/* The palette lists the same doors as the rail, so it hides the same ones
+   (components/AppSidebar). Ids absent here are open to everyone. */
+const NAV_PERMISSION: Record<string, PermCategory> = {
+  'nav-reports': 'Reports',
+  'nav-invoicing': 'Budget',
+  'nav-bids': 'Sales',
+  'nav-intel': 'Sales',
+};
+
 // ─── Quick Actions ────────────────────────────────────────────────────────────
 
 const ACTION_ITEMS: Omit<PaletteItem, 'section'>[] = [
@@ -70,6 +81,7 @@ interface Props {
 // ─── Main Component ───────────────────────────────────────────────────────────
 
 export default function CommandPalette({ onScoreBid }: Props) {
+  const { can: canDo } = usePermissions();
   const [open, setOpen] = useState(false);
   const [query, setQuery] = useState('');
   const [focused, setFocused] = useState(0);
@@ -124,7 +136,7 @@ export default function CommandPalette({ onScoreBid }: Props) {
         ? () => { setOpen(false); onScoreBid(); }
         : a.action,
     })),
-    ...NAV_ITEMS.map(n => ({ ...n, section: 'navigation' as const })),
+    ...NAV_ITEMS.filter(n => !NAV_PERMISSION[n.id] || canDo(NAV_PERMISSION[n.id], 'View')).map(n => ({ ...n, section: 'navigation' as const })),
   ];
 
   // Fuzzy filter

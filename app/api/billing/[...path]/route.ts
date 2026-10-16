@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { apiError } from '@/lib/api-error';
 import { getUser } from '@/lib/supabase-server';
+import { requirePermission } from '@/lib/permissions';
 import {
   createCheckoutHandler,
   cancelHandler,
@@ -47,6 +48,16 @@ export async function POST(
     webhook: webhookHandler,
   }[segment];
   if (!handler) return NextResponse.json({ error: 'Not found' }, { status: 404 });
+
+  /* Starting, changing, cancelling or opening the company's subscription is
+     the owner's decision. Every one of these only asked "signed in?", so any
+     member — a salesperson, a foreman — could cancel the plan the whole company
+     runs on. The webhook is Stripe calling, not a person, and keeps its own
+     signature check. */
+  if (segment !== 'webhook') {
+    const g = await requirePermission(req, 'Admin', 'Full');
+    if (!g.ok) return g.res;
+  }
 
   // Until Stripe is connected every one of these would throw inside stripe()
   // and reach the user as a bare 500. Say what is true instead, and log it so

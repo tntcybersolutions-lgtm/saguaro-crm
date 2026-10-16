@@ -6,7 +6,7 @@ import { must } from '@/lib/db-write';
 import { apiError } from '@/lib/api-error';
 import { logActivity, money } from '@/lib/activity';
 import { bidAmount } from '@/lib/bid-amount';
-import { isPastDay } from '@/lib/calendar-day';
+import { coiStatus, type CoiCertRow } from '@/lib/coi-coverage';
 import { dayIn, requestTimeZone } from '@/lib/time-zone';
 import { orValue } from '@/lib/pg-filter';
 
@@ -173,16 +173,16 @@ export async function POST(req: NextRequest, { params }: { params: Promise<{ id:
  */
 async function complianceIssues(db: ReturnType<typeof createServerClient>, tenantId: string, s: Record<string, any>, today: string): Promise<string[]> {
   let subId: string | null = s.sub_id ?? null;
-  type SubRec = { id: string; w9_on_file: boolean | null };
+  type SubRec = { id: string; w9_on_file: boolean | null; insurance_expiry?: string | null };
   let subRec: SubRec | null = null;
   if (subId) {
-    const { data, error } = await db.from('subcontractors').select('id, w9_on_file').eq('tenant_id', tenantId).eq('id', subId).maybeSingle();
+    const { data, error } = await db.from('subcontractors').select('id, w9_on_file, insurance_expiry').eq('tenant_id', tenantId).eq('id', subId).maybeSingle();
     if (error) throw error;
     subRec = (data as SubRec | null) ?? null;
   } else {
     const email = orValue(String(s.contact_email || s.sub_email || '').trim().toLowerCase());
     if (email) {
-      const { data, error } = await db.from('subcontractors').select('id, w9_on_file')
+      const { data, error } = await db.from('subcontractors').select('id, w9_on_file, insurance_expiry')
         .eq('tenant_id', tenantId).or(`email.eq.${email},contact_email.eq.${email}`).limit(1).maybeSingle();
       if (error) throw error;
       subRec = (data as SubRec | null) ?? null;
@@ -196,16 +196,20 @@ async function complianceIssues(db: ReturnType<typeof createServerClient>, tenan
 
   const { data: certs, error: certErr } = await db
     .from('insurance_certificates')
-    .select('expiry_date, status')
+    .select('policy_type, expiry_date, gl_expiry, wc_expiry, auto_expiry, umbrella_expiry, status')
     .eq('tenant_id', tenantId)
     .eq('sub_id', subId);
   if (certErr) throw certErr;
-  if (certs && certs.length > 0) {
-    /* A certificate is good through the END of its expiry day (lib/calendar-day). */
-    const valid = (certs as { expiry_date: string | null; status: string | null }[]).some(
-      (c) => String(c.status || '').toLowerCase() !== 'expired' && (!c.expiry_date || !isPastDay(c.expiry_date, today)),
-    );
-    if (!valid) issues.push('Insurance certificate expired');
+  /* One reading of "insured today", shared with the compliance scorecard
+     (lib/coi-coverage). This check used to run only when the sub had at least
+     one certificate row — a sub with none sailed through — and it counted a
+     row with no expiry date as good, which is exactly what a COI REQUEST is
+     (compliance-autofile writes them pending and undated). Asking for a COI,
+     or never asking, both cleared the gate. */
+  const coi = coiStatus((certs || []) as CoiCertRow[], today, subRec?.insurance_expiry ?? null);
+  if (!coi.hasGL) {
+    const hadAny = (certs || []).some((c: { expiry_date?: string | null; gl_expiry?: string | null }) => c.expiry_date || c.gl_expiry) || !!subRec?.insurance_expiry;
+    issues.push(hadAny ? 'Insurance certificate expired' : 'No insurance certificate on file');
   }
   return issues;
 }

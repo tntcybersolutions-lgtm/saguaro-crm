@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { createServerClient, getUser } from '@/lib/supabase-server';
+import { requirePermission } from '@/lib/permissions';
 import { apiError } from '@/lib/api-error';
 
 export async function GET(req: NextRequest) {
@@ -7,8 +8,9 @@ export async function GET(req: NextRequest) {
   const projectId = searchParams.get('projectId');
 
   try {
-    const user = await getUser(req);
-    if (!user) return NextResponse.json({ changeOrders: [], source: 'unauth' }, { status: 401 });
+    const g = await requirePermission(req, 'Change Orders', 'View');
+    if (!g.ok) return g.res;
+    const user = g.user;
 
     const db = createServerClient();
     let query = db.from('change_orders').select('*').eq('tenant_id', user.tenantId).order('co_number', { ascending: false });
