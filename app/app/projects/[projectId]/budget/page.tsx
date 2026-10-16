@@ -96,8 +96,9 @@ export default function BudgetPage() {
   const [csiDiv, setCsiDiv] = useState('');
   const [autoFill, setAutoFill] = useState<{ code?: boolean; desc?: boolean; amount?: boolean }>({});
 
-  const load = useCallback(async () => {
-    setLoading(true);
+  /** quiet: re-read after a save without blanking the grid to a skeleton. */
+  const load = useCallback(async (quiet = false) => {
+    if (!quiet) setLoading(true);
     setError('');
     try {
       const r = await fetch(`/api/projects/${projectId}/budget`);
@@ -165,10 +166,13 @@ export default function BudgetPage() {
           project_id: projectId,
         }),
       });
-      if (!r.ok) throw new Error(`Request failed (${r.status})`);
-      const d = await r.json();
+      const d = await r.json().catch(() => ({}));
+      // The server's own words (no permission, job not found) — not a generic line.
+      if (!r.ok) throw new Error(d?.error || `Request failed (${r.status})`);
       if (!d.line) throw new Error('save failed');
       setLines(prev => [...prev, d.line as BudgetLine]);
+      // Re-read so the new line carries the job's commitments and bills on its code.
+      void load(true);
       setAddForm({ cost_code: '', description: '', original_budget: '' });
       setCsiDiv('');
       setAutoFill({});
@@ -178,45 +182,54 @@ export default function BudgetPage() {
       return true;
     } catch (e) {
       console.error(e);
-      setAddError('Failed to add the budget line. Please try again.');
-      show('Failed to add the budget line. Please try again.', 'bad');
+      const msg = humanError(e, 'Failed to add the budget line. Please try again.');
+      setAddError(msg);
+      show(msg, 'bad');
     } finally {
       setAdding(false);
     }
     return false;
   }
 
-  async function saveEdit(id: string) {
-    const amount = parseFloat(editAmount) || 0;
+  /* A new original amount: revised moves with it at once (original + approved
+     changes); the forecast and over/under come back from the server, which
+     rolls in commitments and bills. This used to guess the forecast as
+     max(actual, original) — ignoring approved changes and committed cost — and
+     never re-read, so a line with a $2,500 change order fully committed showed
+     $2,500 under budget that was not there. */
+  async function saveOriginal(id: string, amount: number): Promise<boolean> {
     const amountCents = toCents(amount);
-    setLines(prev => prev.map(l => l.id === id ? { ...l, original_budget: amount, revised_budget: toDollars(addCents(amountCents, toCents(l.approved_cos ?? 0))), forecast_cost: toDollars(Math.max(toCents(l.actual_cost ?? 0), amountCents)) } : l));
-    setEditingId(null);
+    setLines(prev => prev.map(l => l.id === id ? { ...l, original_budget: amount, revised_budget: toDollars(addCents(amountCents, toCents(l.approved_cos ?? 0))) } : l));
     try {
       const r = await fetch(`/api/projects/${projectId}/budget`, {
         method: 'PATCH',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ id, original_budget: amount }),
       });
-      if (!r.ok) throw new Error('update failed');
-      show('Budget line updated.');
+      const d = await r.json().catch(() => ({}));
+      if (!r.ok) throw new Error(d?.error || 'update failed');
+      await load(true);
+      return true;
     } catch (e) {
       console.error(e);
-      show('Could not update the budget line. Please try again.', 'bad');
-      load();
+      await load(true);
+      return false;
     }
+  }
+
+  async function saveEdit(id: string) {
+    const amount = parseFloat(editAmount) || 0;
+    setEditingId(null);
+    if (await saveOriginal(id, amount)) show('Budget line updated.');
+    else show('Could not update the budget line. Please try again.', 'bad');
   }
 
   async function handleAdjust(id: string, pct: number) {
     const line = lines.find(l => l.id === id);
     if (!line) return;
-    const newAmtCents = scaleCents(toCents(line.original_budget ?? 0), 1 + pct / 100);
-    const newAmt = toDollars(newAmtCents);
-    setLines(prev => prev.map(l => l.id === id ? { ...l, original_budget: newAmt, revised_budget: toDollars(addCents(newAmtCents, toCents(l.approved_cos ?? 0))), forecast_cost: toDollars(Math.max(toCents(l.actual_cost ?? 0), newAmtCents)) } : l));
-    try {
-      const r = await fetch(`/api/projects/${projectId}/budget`, { method: 'PATCH', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ id, original_budget: newAmt }) });
-      if (!r.ok) throw new Error('update failed');
-      show(`Adjusted ${pct > 0 ? '+' : ''}${pct}%.`);
-    } catch (e) { console.error(e); show('Could not adjust the budget line. Please try again.', 'bad'); load(); }
+    const newAmt = toDollars(scaleCents(toCents(line.original_budget ?? 0), 1 + pct / 100));
+    if (await saveOriginal(id, newAmt)) show(`Adjusted ${pct > 0 ? '+' : ''}${pct}%.`);
+    else show('Could not adjust the budget line. Please try again.', 'bad');
   }
 
   function handleCopy(amount: number) {
@@ -232,7 +245,7 @@ export default function BudgetPage() {
       const r = await fetch(`/api/projects/${projectId}/budget`, { method: 'PATCH', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ id, _delete: true }) });
       if (!r.ok) throw new Error('delete failed');
       show('Budget line deleted.');
-    } catch (e) { console.error(e); show('Could not delete the budget line. Please try again.', 'bad'); load(); }
+    } catch (e) { console.error(e); show('Could not delete the budget line. Please try again.', 'bad'); void load(true); }
   }
 
   function csvCell(v: unknown): string {
@@ -389,7 +402,7 @@ export default function BudgetPage() {
       {!error && <StatRow items={stats} />}
 
       {error ? (
-        <EmptyState icon={<WarningCircle size={22} />} title="Couldn't load the budget" text={error} action={<Button onClick={load}>Try again</Button>} />
+        <EmptyState icon={<WarningCircle size={22} />} title="Couldn't load the budget" text={error} action={<Button onClick={() => void load()}>Try again</Button>} />
       ) : !loading && lines.length === 0 ? (
         <>
           <EmptyState
