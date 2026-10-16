@@ -121,6 +121,9 @@ export interface ToolDef {
   group: GroupKey;
   /** Always listed. Anything else is listed once it has work in it, and otherwise waits under "More tools". */
   core?: boolean;
+  /** The tool's own create flow, relative to the job. An empty tool row opens
+   *  it directly — the list behind it has nothing to show yet. */
+  create?: string;
 }
 
 /**
@@ -130,35 +133,35 @@ export interface ToolDef {
  * has nothing in it is one tap away under "More tools".
  */
 export const TOOLS: ToolDef[] = [
-  { id: 'bid-packages', label: 'Bid Packages', href: '/bid-packages', group: 'precon', core: true },
+  { id: 'bid-packages', label: 'Bid Packages', href: '/bid-packages', group: 'precon', core: true, create: '/bid-packages?new=1' },
   { id: 'takeoff', label: 'Takeoff', href: '/takeoff', group: 'precon', core: true },
   { id: 'estimate', label: 'Estimate', href: '/estimate', group: 'precon' },
   { id: 'proposal', label: 'Proposal', href: '/proposal', group: 'precon' },
 
-  { id: 'drawings', label: 'Drawings', href: '/drawings', group: 'docs', core: true },
+  { id: 'drawings', label: 'Drawings', href: '/drawings', group: 'docs', core: true, create: '/drawings?new=1' },
   { id: 'models', label: 'Models', href: '/models', group: 'docs' },
   { id: 'specs', label: 'Specifications', href: '/specs', group: 'docs', core: true },
-  { id: 'rfis', label: 'RFIs', href: '/rfis', group: 'docs', core: true },
-  { id: 'submittals', label: 'Submittals', href: '/submittals', group: 'docs', core: true },
+  { id: 'rfis', label: 'RFIs', href: '/rfis', group: 'docs', core: true, create: '/rfis?new=1' },
+  { id: 'submittals', label: 'Submittals', href: '/submittals', group: 'docs', core: true, create: '/submittals?new=1' },
   { id: 'files', label: 'Files', href: '/files', group: 'docs', core: true },
-  { id: 'permits', label: 'Permits', href: '/permits', group: 'docs', core: true },
+  { id: 'permits', label: 'Permits', href: '/permits', group: 'docs', core: true, create: '/permits?new=1' },
 
-  { id: 'daily-logs', label: 'Daily Logs', href: '/daily-logs', group: 'field', core: true },
+  { id: 'daily-logs', label: 'Daily Logs', href: '/daily-logs', group: 'field', core: true, create: '/daily-logs?new=1' },
   { id: 'photos', label: 'Photos', href: '/photos', group: 'field', core: true },
-  { id: 'schedule', label: 'Schedule', href: '/schedule', group: 'field', core: true },
-  { id: 'inspections', label: 'Inspections', href: '/inspections', group: 'field', core: true },
+  { id: 'schedule', label: 'Schedule', href: '/schedule', group: 'field', core: true, create: '/schedule?new=1' },
+  { id: 'inspections', label: 'Inspections', href: '/inspections', group: 'field', core: true, create: '/inspections?new=1' },
   { id: 'safety', label: 'Safety', href: '/safety', group: 'field', core: true },
-  { id: 'punch-list', label: 'Punch List', href: '/punch-list', group: 'field', core: true },
-  { id: 'todos', label: 'To-Dos', href: '/todos', group: 'field' },
+  { id: 'punch-list', label: 'Punch List', href: '/punch-list', group: 'field', core: true, create: '/punch-list?new=1' },
+  { id: 'todos', label: 'To-Dos', href: '/todos', group: 'field', create: '/todos?new=1' },
   { id: 'tm-tickets', label: 'T&M Tickets', href: '/tm-tickets', group: 'field' },
   { id: 'crews', label: 'Crews', href: '/crews', group: 'field' },
   { id: 'timesheets', label: 'Timesheets', href: '/timesheets', group: 'field' },
 
   { id: 'budget', label: 'Budget', href: '/budget', group: 'money', core: true },
-  { id: 'pay-apps', label: 'Pay Apps', href: '/pay-apps', group: 'money', core: true },
+  { id: 'pay-apps', label: 'Pay Apps', href: '/pay-apps', group: 'money', core: true, create: '/pay-apps/new' },
   { id: 'change-orders', label: 'Change Orders', href: '/change-orders', group: 'money', core: true },
   { id: 'lien-waivers', label: 'Lien Waivers', href: '/lien-waivers', group: 'money', core: true },
-  { id: 'contracts', label: 'Contracts', href: '/contracts', group: 'money' },
+  { id: 'contracts', label: 'Contracts', href: '/contracts', group: 'money', create: '/contracts/new' },
   { id: 'purchase-orders', label: 'PO & Subcontracts', href: '/purchase-orders', group: 'money' },
   { id: 'invoices', label: 'Client Invoices', href: '/invoices', group: 'money' },
   { id: 'bills', label: 'Bills', href: '/bills', group: 'money' },

@@ -31,6 +31,7 @@ import {
   ChartLineUp, IdentificationBadge, UsersThree, ShieldCheck, AddressBook, Stamp, ChatCircle,
   FlagCheckered, Palette, Robot, Brain, Globe, Laptop, ArrowsSplit, Plug, Shield, WifiHigh, Gear,
   Lightning, ChartBar, Broadcast, MapPin, Info, UserCircle, Archive, Check, WarningCircle,
+  Plus,
 } from '@phosphor-icons/react';
 import { moduleAccent } from '@/lib/ui/app-accent';
 import {
@@ -125,13 +126,20 @@ const usd = (n: number) => '$' + Math.round(Number(n) || 0).toLocaleString('en-U
 function ToolLine({ m, projectId }: { m: ToolRowModel; projectId: string }) {
   const Icon = ICONS[m.tool.id] || Folder;
   const v = m.value;
-  const value = v.loading ? <i className="jx-skel-val" aria-label="Counting" /> : v.text;
+  /* AN EMPTY TOOL OPENS ITS CREATE FORM. The list behind it has nothing to
+     show, so the row says "+ Add" and goes straight to the tool's own create
+     flow (Procore's empty tool). Counted tools keep opening the list. */
+  const addFirst = !v.loading && !v.failed && !v.hasWork && !!m.tool.create;
+  const value = v.loading ? <i className="jx-skel-val" aria-label="Counting" />
+    : addFirst ? <span className="fl-add"><Plus size={13} weight="bold" aria-hidden />Add</span>
+    : v.text;
+  const href = addFirst ? `/app/projects/${projectId}${m.tool.create}` : toolHref(m.tool, projectId);
   /* data-tour keeps the Help Mode walkthroughs (lib/help-tours projectNav)
      pointing at the tool they open. */
   const slug = m.tool.href.replace(/^.*\//, '');
   return (
     <li data-tour={`project-nav-${slug}`} data-tool={m.tool.id}>
-      <ToolRow icon={<Icon size={20} weight="regular" />} label={m.tool.label} value={value} warn={v.warn} href={toolHref(m.tool, projectId)} accent={moduleAccent(m.tool.id).hex} />
+      <ToolRow icon={<Icon size={20} weight="regular" />} label={m.tool.label} value={value} warn={addFirst ? false : v.warn} href={href} accent={moduleAccent(m.tool.id).hex} />
     </li>
   );
 }
@@ -401,7 +409,7 @@ export default function JobPage() {
       <section aria-label="Coming up">
         <SectionLabel action={{ label: 'Schedule', href: `${base}/schedule` }}>Coming up</SectionLabel>
         {!data && !aggError ? <RowSkeleton rows={2} /> : ups.length === 0 ? (
-          <FlatEmpty>Nothing scheduled ahead. <Link href={`${base}/schedule`} className="jx-inline">Add to the schedule ›</Link></FlatEmpty>
+          <FlatEmpty>Nothing scheduled ahead. <Link href={`${base}/schedule?new=1`} className="jx-inline">Add to the schedule ›</Link></FlatEmpty>
         ) : (
           <FlatList label="Coming up">
             {ups.slice(0, 5).map((u) => <li key={u.id}><Row icon={u.kind === 'inspection' ? <MagnifyingGlass size={18} weight="bold" /> : <CalendarBlank size={18} weight="bold" />} tone="info" title={u.title} meta={u.meta} rightSub={upDay(u.date)} href={u.href} /></li>)}

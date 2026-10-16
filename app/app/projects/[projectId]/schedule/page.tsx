@@ -19,6 +19,7 @@
  *   baseline POST   /api/projects/[id]/schedule/baseline
  */
 import React, { useState, useEffect, useLayoutEffect, useCallback, useRef, useMemo } from 'react';
+import { useOpenOnNew } from '@/lib/ui/open-on-new';
 import { useParams } from 'next/navigation';
 import { jobBarStyle } from '@/lib/project-colors';
 import { useProjectColor } from '@/lib/hooks/useProjectColor';
@@ -450,6 +451,8 @@ export default function SchedulePage() {
     return () => window.removeEventListener('keydown', onKey);
   }, [mode]);
 
+  // ?new=1 (the job page's empty tool row) opens the create form.
+  useOpenOnNew(openCreate, !loading);
   function openCreate() { setForm({ ...EMPTY }); setDuration(''); setAuto({}); setMode('create'); setSelected(null); }
   function openEdit(task: any) {
     setForm({

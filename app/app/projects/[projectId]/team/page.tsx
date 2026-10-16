@@ -669,7 +669,7 @@ export default function TeamPage(){
                 </div>
               </div>
             ) : (
-              <EmptyState title="Nobody to assign yet" text="Members can be assigned work once they accept their invite." />
+              <EmptyState title="Nobody to assign yet" text="Members can be assigned work once they accept their invite." primary={{ label: 'Invite Member', icon: <UserPlus size={15} weight="bold" />, onClick: openInvite }} />
             )}
           </Card>
         )}

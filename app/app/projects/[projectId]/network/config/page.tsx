@@ -184,7 +184,7 @@ export default function ConfigGeneratorPage() {
               {loading ? (
                 <EmptyState title="Loading templates…" />
               ) : filteredTemplates.length === 0 ? (
-                <EmptyState icon={<Stack size={22} />} title="No templates found" text="No configuration templates match this manufacturer." />
+                <EmptyState icon={<Stack size={22} />} title="No templates found" text="No configuration templates match this manufacturer." onClearFilters={activeTab !== 'All' ? () => setActiveTab('All') : undefined} />
               ) : (
                 <ItemList>
                   {filteredTemplates.map(tmpl => (

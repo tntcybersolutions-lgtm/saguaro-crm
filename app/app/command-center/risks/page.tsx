@@ -98,7 +98,7 @@ export default function RisksPage() {
             description="Capture what could derail each site — permitting delays, weather, long-lead gaps, design churn. The register scores every risk by likelihood × impact, ranks the portfolio worst-first, and rolls the counts up to the Command Center and KPI dashboard automatically."
             action={<button onClick={() => setAdding(true)} className="pmBtn" style={goldButtonStyle}><Plus size={15} weight="bold" /> Log Your First Risk</button>} />
         ) : (
-          <EmptyState title="Nothing matches this filter" />
+          <EmptyState title="Nothing matches this filter" onClearFilters={() => { setFilter('all'); setQ(''); }} />
         )
       ) : (
         <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(340px, 1fr))', gap: 14 }}>

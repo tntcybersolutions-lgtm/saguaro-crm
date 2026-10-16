@@ -744,6 +744,7 @@ export default function CatalogPage() {
             description={q.trim()
               ? `No catalog items match "${q.trim()}"${vertical === 'all' ? '' : ` in ${titleCase(vertical)}`}. Try a broader term or another vertical.`
               : `The ${vertical === 'all' ? 'catalog' : titleCase(vertical) + ' vertical'} has no priced items yet — seeded reference pricing lands here, and vendor API feeds connect when accounts are linked.`}
+            onClearFilters={q.trim() ? () => setQ('') : undefined}
           />
         ) : (
           <div style={{ overflowX: 'auto' }}>

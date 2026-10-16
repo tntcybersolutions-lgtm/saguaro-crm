@@ -202,7 +202,9 @@ export default function CompliancePage(){
         :filtered.length===0?<PremiumEmpty
             icon={<ShieldCheck size={30} weight="duotone" color="var(--text-secondary)" />}
             title={search||filter!=='all'?'No matching subcontractors':'No subcontractors found'}
-            description={search||filter!=='all'?'Try clearing your search or filter to see all subcontractors.':'Add subs to your projects and Saguaro scores each one automatically — W-9 (25 pts), insurance certificates (40 pts), and lien waivers (35 pts) roll into a single compliance score across every project.'}
+            description={search||filter!=='all'?'No sub matches this search or filter.':'Subs added to a job are scored here automatically.'}
+            onClearFilters={search||filter!=='all'?()=>{setSearch('');setFilter('all');}:undefined}
+            primary={search||filter!=='all'?undefined:{label:'Open a Project',href:'/app/projects'}}
             compact
           />
         :<DataTable<any>

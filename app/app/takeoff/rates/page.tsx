@@ -88,8 +88,8 @@ export default function CostCatalogPage() {
             compact
             icon={<Coins size={30} weight="duotone" color="var(--text-secondary)" />}
             title="No cost rates yet"
-            description="Press “Learn from My Jobs” to compute quantity-weighted rates from your past takeoffs, or edit any rate manually."
-          />
+            description="Rates learn from your past takeoffs."
+            primary={busy ? undefined : { label: 'Learn from My Jobs', icon: <Sparkle size={15} weight="fill" />, onClick: () => { void learn(); } }} perm={['Projects', 'Edit']} />
         ) : list.map((r) => {
           const eff = r.ownCents ?? r.bookCents;
           const editing = edit[r.cost_key] != null;

@@ -284,7 +284,7 @@ function CashFlowContent() {
         rowStyle={p => (p.running_balance < 0 ? { background: 'color-mix(in srgb, var(--danger) 8%, transparent)' } : undefined)}
         isSelected={p => p.idx === expandedRow}
         onRowClick={p => setExpandedRow(expandedRow === p.idx ? null : p.idx)}
-        empty={<EmptyState icon={<CalendarBlank size={22} />} title="No projected periods" text="Bill a pay application or schedule a commitment payment and the months fill in." />}
+        empty={<EmptyState icon={<CalendarBlank size={22} />} title="No projected periods" text="Months fill in as pay apps and commitment payments land." primary={{ label: 'New Pay App', href: `${base}/pay-apps/new` }} perm={['Pay Apps', 'Edit']} />}
       />
 
       {open && (

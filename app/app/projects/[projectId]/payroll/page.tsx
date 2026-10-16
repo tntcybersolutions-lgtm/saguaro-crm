@@ -663,6 +663,12 @@ export default function PayrollPage() {
                 : timeEntries.length > 0
                   ? `The crew has ${timeEntries.length} field time ${timeEntries.length === 1 ? 'entry' : 'entries'} on this job — pick a week ending and import them.`
                   : 'Weekly certified payroll is required on Davis-Bacon and most public work.'}
+              primary={{ label: 'Start a WH-347', icon: <FileText size={15} weight="bold" />, onClick: () => {
+                const el = document.getElementById('payroll-week-ending');
+                el?.scrollIntoView({ behavior: 'smooth', block: 'center' });
+                el?.focus();
+              } }}
+              perm={['Pay Apps', 'Full']}
             />
           }
         />

@@ -889,6 +889,7 @@ export default function NotificationSettingsPage() {
             title="No modules found"
             description={`No modules match "${searchFilter}".`}
             compact
+            onClearFilters={() => setSearchFilter('')}
           />
         )}
 

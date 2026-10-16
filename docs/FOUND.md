@@ -350,3 +350,11 @@ MyWorkView.tsx, /api/my-work (+ jobs, agenda, roles, ?view=mine).
   project is asked about — and a user whose ONLY grants are project-scoped falls to memberDefault (View on
   everything) everywhere else. App Store Review (member, PM on one project) therefore reads every job's money.
   That is the TS rule, mirrored exactly; it should probably be None, not View, for a scoped-only user.
+
+## 16 Oct 2026 — empty-state actions (feat/empty-states-add) — found, NOT fixed
+
+- `components/EmptyState.tsx` (boxed 72px-medallion card + `EmptyInvoices`…`EmptySubmittals` variants) has no importer — dead code that breaks the flat / no-card rule if anyone reaches for it. Delete it.
+- `components/ui/PremiumEmpty.tsx` (the `actionLabel` / `GradientButton` version) has no importer either; every `PremiumEmpty` comes from `components/ui/premium.tsx`. Delete it.
+- DESIGN_SYSTEM.md §3 says an empty state's button that repeats the header's is the slate secondary; the empty-state `primary` is yellow by request, so an empty list can show two yellow buttons (header + list). If Chad wants the old rule back it is one line: `variant="primary"` → `"secondary"` in `components/ui/empty-actions.tsx`.
+- Project tool pages still with no `?new=1` deep link (the job page sends their empty rows to the list instead): specs, files, photos, safety, budget, change-orders, lien-waivers, purchase-orders, invoices, bills, timesheets, tm-tickets, crews, selections.
+
