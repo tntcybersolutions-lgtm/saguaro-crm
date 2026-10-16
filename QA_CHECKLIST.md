@@ -529,6 +529,7 @@ create a session on the macOS runner).
 | company | `/app/reviews` | <12px ×3 | <12px ×3, targets<44 ×1 | yes | Implemented | Implemented | Not reviewed | Not reviewed |
 | company | `/app/roles-permissions` | yellow text ×24, <12px ×28, low contrast ×8 | yellow text ×24, <12px ×28, low contrast ×8 | shared only | Needs review | Needs review | Not reviewed | Not reviewed |
 | company | `/app/sales` | yellow text ×2, <12px ×2 | yellow text ×2, <12px ×2 | shared only | Needs review | Needs review | Not reviewed | Not reviewed |
+| company | `/app/search` (+ ⌘K palette) | new 16 Oct: rows on the surface, 12px floor, chips 44px and palette full-screen at ≤640px | — | yes | Implemented | Implemented | Not reviewed | Not reviewed |
 | company | `/app/schedule` | <12px ×2, cut-off ×15 | <12px ×2, cut-off ×15, targets<44 ×6 | yes | Implemented | Implemented | Not reviewed | Not reviewed |
 | company | `/app/schedule/[scheduleId]` | no data | no data | n/a | Needs review | Needs review | Not reviewed | Not reviewed |
 | company | `/app/service` | <12px ×2 | <12px ×2 | yes | Implemented | Implemented | Not reviewed | Not reviewed |

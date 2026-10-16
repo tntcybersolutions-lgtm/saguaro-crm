@@ -31,6 +31,7 @@ import React, { useState, useEffect, useMemo, useCallback } from 'react';
 import { DataTable, type Column } from '@/components/ui/kit';
 import { StatusPill } from '@/components/ui/Status';
 import Link from 'next/link';
+import { useOpenRecord } from '@/lib/ui/open-on-new';
 import {
   UsersThree, ShieldCheck, WarningCircle, SealCheck, Buildings,
   MagnifyingGlass, Phone, EnvelopeSimple, IdentificationCard, Package, Check, X, Warning,
@@ -150,6 +151,15 @@ export default function SubsAndVendorsPage() {
   }, [subs, q, trade, paperFilter, showInactive]);
 
   const [selectedId, setSelectedId] = useState<string | null>(null);
+  // Search hit (?open=<id>) lands on that company, selected and filtered to —
+  // inactive ones included.
+  useOpenRecord((id) => {
+    const s = subs.find(x => x.id === id);
+    if (!s) return;
+    if (isInactive(s)) setShowInactive(true);
+    if (s.company_name) setQ(s.company_name);
+    setSelectedId(id);
+  }, !loading);
   const columns = useMemo<Column<Sub>[]>(() => [
     {
       key: 'company_name', header: 'Company', primary: true, phone: 'show',

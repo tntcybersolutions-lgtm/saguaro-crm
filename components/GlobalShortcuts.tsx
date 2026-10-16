@@ -61,10 +61,11 @@ export default function GlobalShortcuts({ onProjectSwitch }: GlobalShortcutsProp
         return;
       }
 
-      // Cmd+K — command palette
+      // Cmd+K — command palette (opens it, or closes it when open). The palette
+      // listens for this event and has no ⌘K handler of its own.
       if (mod && !e.shiftKey && e.key.toLowerCase() === 'k') {
         e.preventDefault();
-        window.dispatchEvent(new CustomEvent('open-command-palette'));
+        window.dispatchEvent(new CustomEvent('toggle-command-palette'));
         return;
       }
 
