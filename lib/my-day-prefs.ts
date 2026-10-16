@@ -63,13 +63,15 @@ export function roleDefaults(roles: string[], companyWide: boolean): MyDayPrefs 
     dayEnd: 17,
     scope: 'company',
   };
+  // Every role reads its day in the order the day runs; roles differ in what
+  // shows and how it is tuned, never in the order.
   if (field) {
-    // The field day: clock in, the agenda, today's work, then the log before leaving.
-    return { ...base, order: ['start', 'agenda', 'today', 'late', 'wrapup', 'week', 'waiting', 'jobs'], hidden: ['jobs'], showMoney: false, dayStart: 6, dayEnd: 16 };
+    // The field day starts earlier and is about the crew, not the money.
+    return { ...base, hidden: ['jobs'], showMoney: false, dayStart: 6, dayEnd: 16 };
   }
-  if (top && !field) {
-    // The owner's day: what is late and what money is at stake, by job.
-    return { ...base, order: ['start', 'late', 'jobs', 'today', 'waiting', 'agenda', 'week', 'wrapup'], upcomingGroup: 'job' };
+  if (top) {
+    // The owner's look-ahead groups by job, where the money sits.
+    return { ...base, upcomingGroup: 'job' };
   }
   return base;
 }

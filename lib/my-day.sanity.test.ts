@@ -140,13 +140,16 @@ describe('job heat and grouping', () => {
 });
 
 describe('layout preferences', () => {
-  test('role defaults: field crews start with the agenda, owners with money by job', () => {
-    expect(roleDefaults(['superintendent'], false).order.slice(0, 3)).toEqual(['start', 'agenda', 'today']);
-    expect(roleDefaults(['superintendent'], false).showMoney).toBe(false);
-    const owner = roleDefaults([], true);
-    expect(owner.order.slice(0, 3)).toEqual(['start', 'late', 'jobs']);
-    expect(owner.upcomingGroup).toBe('job');
-    expect(roleDefaults(['project_manager'], false).order).toEqual([...SECTION_IDS]);
+  test('role defaults: every role in the order the day runs, tuned per role', () => {
+    for (const r of [['superintendent'], ['project_manager'], ['owner'], []]) {
+      expect(roleDefaults(r, r[0] === 'owner').order).toEqual([...SECTION_IDS]);
+    }
+    expect(SECTION_IDS.slice(0, 4)).toEqual(['start', 'agenda', 'late', 'today']);
+    const field = roleDefaults(['superintendent'], false);
+    expect(field.showMoney).toBe(false);
+    expect(field.dayStart).toBe(6);
+    expect(field.hidden).toEqual(['jobs']);
+    expect(roleDefaults([], true).upcomingGroup).toBe('job');
   });
   test('clean: every section once, unknowns dropped, start never hidden, bad values fall back', () => {
     const base = roleDefaults([], false);

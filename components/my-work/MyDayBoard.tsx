@@ -100,25 +100,25 @@ const CSS = `
 .md :focus-visible{outline:2px solid var(--md-neon);outline-offset:2px;border-radius:8px}
 
 /* Start band */
-.md-start{position:relative;display:grid;grid-template-columns:minmax(0,1.1fr) minmax(0,1.6fr) minmax(0,1fr);gap:28px;align-items:center;padding:22px 0 24px;border-bottom:1px solid var(--md-line);isolation:isolate}
-.md-start::before{content:'';position:absolute;inset:-40px -10% auto -10%;height:240px;z-index:-1;pointer-events:none;background:radial-gradient(60% 70% at 18% 20%,rgba(232,255,42,.10),transparent 70%),radial-gradient(50% 60% at 82% 0%,rgba(244,114,182,.07),transparent 70%)}
+.md-start{position:relative;display:grid;grid-template-columns:minmax(0,1fr) auto;grid-template-areas:'id side' 'score score';gap:22px 28px;align-items:center;padding:26px 0 26px;border-bottom:1px solid var(--md-line);background:radial-gradient(70% 140% at 0% 0%,rgba(232,255,42,.07),transparent 62%),radial-gradient(40% 120% at 100% 0%,rgba(244,114,182,.05),transparent 70%)}
+.md-id{grid-area:id;min-width:0}
 .md-dow{font-size:12px;font-weight:800;letter-spacing:.14em;text-transform:uppercase;color:var(--md-neon)}
-.md-date{margin:2px 0 0;font-size:clamp(28px,4.2cqi,44px);line-height:1.02;font-weight:900;letter-spacing:-.02em;color:var(--md-text)}
+.md-date{margin:4px 0 0;font-size:clamp(30px,4.4cqi,48px);line-height:1.02;font-weight:900;letter-spacing:-.02em;color:var(--md-text)}
 .md-sub{margin-top:10px;display:flex;flex-wrap:wrap;gap:6px;align-items:center}
 .md-role{display:inline-flex;align-items:center;height:26px;padding:0 10px;border-radius:999px;font-size:12px;font-weight:700;color:var(--md-2);border:1px solid var(--md-line)}
 .md-scope{display:inline-flex;padding:3px;border-radius:999px;border:1px solid var(--md-line);gap:2px}
 .md-scope button{height:26px;padding:0 12px;border-radius:999px;border:0;background:none;color:var(--md-3);font-size:12px;font-weight:800;cursor:pointer}
 .md-scope button[aria-pressed=true]{background:var(--md-neon);color:var(--bg-base)}
 
-.md-press{display:flex;align-items:center;gap:22px;min-width:0}
+.md-press{grid-area:score;display:flex;align-items:center;gap:28px;min-width:0}
 .md-ring{flex:none;position:relative;width:118px;height:118px;border:0;background:none;padding:0;cursor:pointer;border-radius:50%}
 .md-ring svg{display:block;transform:rotate(-90deg)}
 .md-ring b{position:absolute;inset:0;display:grid;place-items:center;align-content:center;font-size:28px;font-weight:900;font-variant-numeric:tabular-nums;letter-spacing:-.02em}
 .md-ring b small{display:block;margin-top:2px;font-size:10px;font-weight:800;letter-spacing:.12em;text-transform:uppercase;color:var(--md-3)}
 .md-nums{flex:1;min-width:0;display:grid;grid-template-columns:repeat(5,minmax(0,1fr));gap:0}
-.md-num{position:relative;display:flex;flex-direction:column;align-items:flex-start;gap:2px;min-width:0;padding:8px 12px;border:0;border-left:1px solid var(--md-line);background:none;color:inherit;text-align:left;cursor:pointer;border-radius:0;transition:background .15s}
+.md-num{position:relative;display:flex;flex-direction:column;align-items:flex-start;gap:6px;min-width:0;padding:10px 18px;border:0;border-left:1px solid var(--md-line);background:none;color:inherit;text-align:left;cursor:pointer;border-radius:0;transition:background .15s}
 .md-num:hover{background:rgba(255,255,255,.035)}
-.md-num b{font-size:clamp(22px,3cqi,34px);font-weight:900;line-height:1;font-variant-numeric:tabular-nums;letter-spacing:-.02em;white-space:nowrap}
+.md-num b{font-size:clamp(26px,3.2cqi,40px);font-weight:900;line-height:1;font-variant-numeric:tabular-nums;letter-spacing:-.02em;white-space:nowrap}
 .md-num span{font-size:11px;font-weight:800;letter-spacing:.1em;text-transform:uppercase;color:var(--md-3);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;max-width:100%}
 .md-num[data-tone=red] b{color:var(--md-red)}
 .md-num[data-tone=amber] b{color:var(--md-amber)}
@@ -127,7 +127,7 @@ const CSS = `
 .md-num[aria-pressed=true]{background:rgba(232,255,42,.07)}
 .md-num[aria-pressed=true]::after{content:'';position:absolute;left:12px;right:12px;bottom:0;height:3px;border-radius:3px;background:var(--md-neon)}
 
-.md-side{display:flex;flex-direction:column;align-items:flex-end;gap:12px;min-width:0}
+.md-side{grid-area:side;display:flex;align-items:center;gap:14px;min-width:0}
 .md-clock{display:flex;align-items:center;gap:12px;min-width:0}
 .md-clock-face{display:flex;flex-direction:column;align-items:flex-end;min-width:0}
 .md-clock-face b{font-size:22px;font-weight:900;font-variant-numeric:tabular-nums;line-height:1.1}
@@ -226,8 +226,8 @@ const CSS = `
 .md-alist{display:none;list-style:none;margin:0;padding:0}
 
 /* Runway */
-.md-runway{display:grid;grid-auto-flow:column;grid-auto-columns:minmax(34px,1fr);gap:6px;align-items:end;height:170px;padding:10px 0 0;overflow-x:auto;scrollbar-width:thin}
-.md-day{display:flex;flex-direction:column;align-items:center;justify-content:flex-end;gap:6px;height:100%;min-width:0;padding:0;border:0;background:none;color:inherit;cursor:pointer;border-radius:10px}
+.md-runway{display:grid;grid-auto-flow:column;grid-auto-columns:minmax(34px,1fr);gap:6px;align-items:end;padding:10px 0 4px;overflow-x:auto;overflow-y:hidden;scrollbar-width:thin}
+.md-day{display:flex;flex-direction:column;align-items:center;justify-content:flex-end;gap:6px;height:168px;min-width:0;padding:0;border:0;background:none;color:inherit;cursor:pointer;border-radius:10px}
 .md-day:hover .md-stack{filter:brightness(1.2)}
 .md-day b{font-size:13px;font-weight:900;font-variant-numeric:tabular-nums;color:var(--md-2)}
 .md-day[data-zero=true] b{color:transparent}
@@ -270,14 +270,14 @@ const CSS = `
 .md-fail{display:flex;align-items:center;gap:10px;flex-wrap:wrap;margin:12px 0;padding:10px 0 10px 14px;border-left:3px solid var(--md-red);font-size:14px}
 
 /* Tablet */
-@container md (max-width: 1100px){
-  .md-start{grid-template-columns:minmax(0,1fr) auto;gap:18px}
-  .md-press{grid-column:1/-1;order:3}
+@container md (max-width: 1000px){
+  .md-press{gap:18px}
+  .md-num{padding:8px 12px}
 }
 /* Phone */
 @container md (max-width: 720px){
-  .md-start{grid-template-columns:minmax(0,1fr);padding-top:12px}
-  .md-side{align-items:stretch;flex-direction:row;justify-content:space-between;flex-wrap:wrap}
+  .md-start{grid-template-columns:minmax(0,1fr);grid-template-areas:'id' 'side' 'score';padding-top:14px}
+  .md-side{justify-content:space-between;flex-wrap:wrap}
   .md-press{flex-direction:column;align-items:stretch;gap:14px}
   .md-ring{align-self:center}
   .md-nums{grid-template-columns:repeat(3,minmax(0,1fr));row-gap:8px}
@@ -475,7 +475,7 @@ export default function MyDayBoard(props: MyDayBoardProps) {
   /* Start band */
   const start = (
     <section className="md-start" aria-label="Start of day">
-      <div>
+      <div className="md-id">
         <div className="md-dow">My Day · {WEEKDAY[d.getUTCDay()]}</div>
         <h1 className="md-date">{MONTH[d.getUTCMonth()]} {d.getUTCDate()}</h1>
         <div className="md-sub">
@@ -495,7 +495,7 @@ export default function MyDayBoard(props: MyDayBoardProps) {
           <button type="button" className="md-num" data-tone={press.today ? 'amber' : 'zero'} aria-pressed={filter.when === 'today'} onClick={() => toggle({ when: 'today' })}><b>{press.today}</b><span>Today</span></button>
           <button type="button" className="md-num" data-tone={press.week ? undefined : 'zero'} aria-pressed={filter.when === 'week'} onClick={() => toggle({ when: 'week' })}><b>{press.week}</b><span>This week</span></button>
           {show && <button type="button" className="md-num" data-tone={press.atStake ? 'green' : 'zero'} aria-pressed={false} onClick={() => toggle({ when: 'today' })} title="Money tied to what is late or due today"><b>{money(press.atStake)}</b><span>At stake</span></button>}
-          <button type="button" className="md-num" data-tone={press.waiting ? undefined : 'zero'} aria-pressed={filter.when === 'waiting'} onClick={() => toggle({ when: 'waiting' })}><b>{press.waiting}</b><span>Waiting on</span></button>
+          <button type="button" className="md-num" data-tone={press.waiting ? undefined : 'zero'} aria-pressed={filter.when === 'waiting'} onClick={() => toggle({ when: 'waiting' })}><b>{press.waiting}</b><span>Waiting on others</span></button>
         </div>
       </div>
       <div className="md-side">
@@ -521,7 +521,7 @@ export default function MyDayBoard(props: MyDayBoardProps) {
   const agendaEl = (
     <Section id="agenda" count={agenda.length + anytime.length} showMoney={false}>
       <div className="md-agenda">
-        <div className="md-tline" style={{ ['--hw' as string]: `${100 / span}%`, ['--h' as string]: `${Math.max(1, lanes.length) * 46 + 12}px` }}>
+        <div className="md-tline" style={{ ['--hw' as string]: `${100 / span}%`, ['--h' as string]: lanes.length ? `${lanes.length * 46 + 12}px` : '52px' }}>
           {lanes.flatMap((lane, li) => lane.map(({ e, s, f }) => {
             const left = Math.max(0, pctOf(s)), right = Math.min(100, pctOf(f));
             if (right <= 0 || left >= 100) return null;
@@ -612,7 +612,7 @@ export default function MyDayBoard(props: MyDayBoardProps) {
     <Section id="week" count={upcoming.length} amount={upcoming.reduce((s, i) => s + Math.abs(i.amount || 0), 0)} showMoney={show}>
       <div className="md-runway" role="group" aria-label={`Work due each day through ${horizon}. Tap a day to filter.`}>
         {cols.map((c) => {
-          const h = c.total ? Math.max(8, (c.total / max) * 118) : 4;
+          const h = c.total ? Math.max(8, (c.total / max) * 100) : 4;
           const late = c.day === 'late';
           const pd = late ? null : parseDay(c.day);
           return (
