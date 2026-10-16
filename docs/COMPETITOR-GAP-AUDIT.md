@@ -35,7 +35,7 @@ and send-to-GC. The remaining true gaps vs the leaders are **universal search**,
 | Profit / margin per job | ✅ | ✅ | ✅ | ✅ booked-profit panel (new) | closed |
 | Estimating / takeoff | ✅ | ✅ | ✅ | ✅ Takeoff Studio | closed |
 | Proposals / bid docs | ✅ | ✅ | ✅ | ✅ proposal + bid packages | closed |
-| **E-signature on proposals** | ✅ | ✅ | ✅ | ⚠️ PDF + send, no in-app e-sign | **gap** |
+| **E-signature on proposals** | ✅ | ✅ | ✅ | ✅ in-app sign link, signed PDF + certificate (Oct 16, 2026 — branch feat/proposal-esign) | closed (pending drive) |
 | Email/message the GC/owner from the deal | ✅ | ✅ | ✅ | ✅ Send-to-GC (new) | closed |
 | Client/owner portal | ✅ | ✅ | ✅ | ✅ client + sub portals | closed |
 | Document management + PDF view | ✅ | ✅ (strong) | ✅ | ✅ docs + PDF viewers | closed |
@@ -73,7 +73,15 @@ Legend: ✅ has it · ~ partial/add-on/uncertain · ❌ absent · ⚠️ Saguaro
    against a deal/job, reusing FileDropzone + the signed-URL storage layer.*
 
 4. **E-signature on proposals.** PDFs can be generated and sent, but signing is
-   out-of-band. The leaders close in-app. *Later: an e-sign step on proposals.*
+   out-of-band. The leaders close in-app. *Built Oct 16, 2026 (feat/proposal-esign):
+   a proposal with line items on the deal page (and on a job's Proposals page)
+   goes out as a single-use, expiring link to `/portals/proposal/[token]`; the
+   customer types their name, draws (or adopts) a signature and ticks the
+   ESIGN/UETA consent, or declines with a reason. Signing locks the terms,
+   stores the signature privately, renders a signed PDF with a signature
+   certificate (signer, time, IP, device, content SHA-256, audit trail) and
+   tells the GC; "Mark Won & Open the Job" is one tap afterwards.
+   Tables: `proposal_signatures`, `proposal_signature_events`; bucket `esign`.*
 
 ## Where Saguaro is already ahead
 
