@@ -28,7 +28,7 @@ export async function GET(req: NextRequest) {
     // Contract money — the same rule the GC's screens read (lib/job-contract).
     const { data: project } = await db
       .from('projects')
-      .select('id, name, status, original_contract_amount, contract_amount, billed_to_date, start_date, end_date, percent_complete')
+      .select('id, name, status, original_contract_amount, original_contract_value, original_contract, revised_contract_value, contract_amount, contract_value, billed_to_date, start_date, end_date, percent_complete')
       .eq('id', projectId)
       .eq('tenant_id', tenantId)
       .single();

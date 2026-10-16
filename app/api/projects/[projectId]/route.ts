@@ -2,7 +2,9 @@ import { NextRequest, NextResponse } from 'next/server';
 import { isJobColor } from '@/lib/project-colors';
 import { createServerClient, getUser } from '@/lib/supabase-server';
 import { requirePermission } from '@/lib/permissions';
-import { toCents, toDollars, sumCents, summarizeContract } from '@/lib/calc';
+import { toCents, toDollars, sumCents } from '@/lib/calc';
+import { contractMoney } from '@/lib/job-contract';
+import { SCHEDULE_DONE, isScheduleDone } from '@/lib/schedule-status';
 import { PUNCH_DONE } from '@/lib/project-lifecycle';
 import { apiError } from '@/lib/api-error';
 import { assignProjectToUser, endProjectAssignment } from '@/lib/project-assignment';
@@ -54,14 +56,18 @@ export async function GET(req: NextRequest, { params }: { params: Promise<{ proj
     const punch = (punchItems || []) as any[];
     const p = project as any;
 
-    // Revised contract = original + APPROVED change orders only (exact cents).
-    // Original = first POSITIVE contract column (see project-report/route.ts):
-    // many projects leave contract_amount at 0 and carry the value elsewhere.
-    let baseContract = Number(p.original_contract_value || p.contract_value || p.original_contract || p.contract_amount || 0) || 0;
+    /* Revised contract = original + APPROVED change orders — the one rule the
+       overview's snapshot, the owner portal and cash flow read
+       (lib/job-contract). This route read contract_value / contract_amount as
+       the ORIGINAL and then added approved COs; both already carry them on
+       jobs like Pima, so the job summary counted every approved CO twice
+       ($2,667,300 on a $2,539,650 contract). */
+    const prime = ((subs || []) as any[]).find((c) => String(c.contract_type || '').toLowerCase() === 'prime') ?? null;
+    let contract = contractMoney({ project: p, prime, changeOrders: cos });
     /* An ACCEPTED proposal version is the contract. Projects accepted before
        /api/proposals/[id]/status began writing the contract columns still
        carry $0 there — fall back to the accepted amount rather than $0. */
-    if (baseContract <= 0) {
+    if (contract.original <= 0) {
       const { data: acc } = await db
         .from('proposals')
         .select('amount, total_amount, status')
@@ -71,18 +77,9 @@ export async function GET(req: NextRequest, { params }: { params: Promise<{ proj
         .order('created_at', { ascending: false })
         .limit(1);
       const row = (acc || [])[0] as { amount: unknown; total_amount: unknown } | undefined;
-      if (row) baseContract = Number(row.amount) || Number(row.total_amount) || 0;
+      if (row) contract = contractMoney({ project: p, prime, acceptedProposal: row, changeOrders: cos });
     }
-    const contractSummary = summarizeContract(
-      toCents(baseContract),
-      cos.map((co: any) => ({
-        id: String(co.id),
-        description: String(co.description ?? ''),
-        amount: toCents(co.amount || 0),
-        status: co.status,
-      })),
-    );
-    const contractSumToDate = toDollars(contractSummary.revisedContract);
+    const contractSumToDate = toDollars(toCents(contract.current));
     const totalBilledToDate = apps.length > 0 ? toDollars(toCents(apps[0].total_completed_stored || 0)) : 0;
 
     // Budget health aggregates — exact-cents sums, no float reduction.
@@ -147,10 +144,11 @@ export async function GET(req: NextRequest, { params }: { params: Promise<{ proj
       schedulePhases: (schedulePhases || []).map((t: any) => ({
         id: t.id,
         name: t.name,
-        status: t.status,
+        // One vocabulary (lib/schedule-status): 'complete' and 'completed' are both finished.
+        status: isScheduleDone(t.status, t.pct_complete) ? SCHEDULE_DONE : t.status,
         planned_end: t.end_date,
-        actual_end: t.status === 'complete' ? t.end_date : null,
-        forecast_end: t.status === 'complete' ? null : t.end_date,
+        actual_end: isScheduleDone(t.status, t.pct_complete) ? t.end_date : null,
+        forecast_end: isScheduleDone(t.status, t.pct_complete) ? null : t.end_date,
       })),
       alerts: (alerts || []).map((a: any) => ({ ...a, title: a.alert_type, message: a.body })),
     });

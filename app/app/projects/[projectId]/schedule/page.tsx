@@ -44,19 +44,29 @@ import Suggest from '@/components/ui/Suggest';
 import { localDay } from '@/lib/calendar-day';
 import { baselineSummary, finishVariance, varianceLabel } from '@/lib/schedule-baseline';
 import { computeCpm, lookahead, type CpmOutput } from '@/lib/schedule-cpm';
+import { SCHEDULE_STATUSES, SCHEDULE_STATUS_LABELS, normalizeScheduleStatus, reconcileScheduleProgress, isScheduleDone } from '@/lib/schedule-status';
 
-const STATUSES = ['not_started', 'in_progress', 'completed', 'delayed', 'on_hold'];
-const STATUS_LABELS: Record<string, string> = {
-  not_started: 'Not Started', in_progress: 'In Progress',
-  completed: 'Completed', delayed: 'Delayed', on_hold: 'On Hold',
-};
+/* One status vocabulary for every schedule screen and route (lib/schedule-status).
+   Rows are normalized on load, so a legacy `complete` reads as Completed. */
+const STATUSES: readonly string[] = SCHEDULE_STATUSES;
+const STATUS_LABELS: Record<string, string> = SCHEDULE_STATUS_LABELS;
+const normTask = (t: any) => ({ ...t, status: normalizeScheduleStatus(t?.status) ?? 'not_started' });
+/** The form's status after the bar moves: full is Completed, leaving Completed
+ *  or starting a Not Started task makes it In Progress (or Not Started at 0). */
+function statusForPct(pct: number, current: string): string {
+  if (pct >= 100) return 'completed';
+  if (current === 'completed' || (pct > 0 && current === 'not_started')) return pct > 0 ? 'in_progress' : 'not_started';
+  return current;
+}
 /** Progress-fill colour per status — status tokens only, never the brand yellow. */
 const STATUS_FILL: Record<string, string> = {
   not_started: 'var(--text-tertiary)', in_progress: 'var(--status-ongoing)',
   completed: 'var(--status-completed)', delayed: 'var(--status-overdue)', on_hold: 'var(--status-lead)',
+  blocked: 'var(--status-overdue)',
 };
 const STATUS_TONE: Record<string, BadgeTone> = {
   not_started: 'neutral', in_progress: 'ongoing', completed: 'completed', delayed: 'overdue', on_hold: 'lead',
+  blocked: 'overdue',
 };
 const PHASES = ['Pre-Construction', 'Foundation', 'Framing', 'MEP Rough', 'Insulation',
   'Drywall', 'Finishes', 'MEP Trim', 'Punch List', 'Closeout', 'Other'];
@@ -276,7 +286,7 @@ function GanttChart({ tasks, jobHex, selectedId, onSelect, cpm, critOnly, zoom }
           const left = pct(task.start_date);
           const width = Math.max(.5, pct(task.end_date) - left);
           const fill = STATUS_FILL[task.status] || 'var(--text-tertiary)';
-          const isDone = task.status === 'completed' || task.status === 'complete';
+          const isDone = isScheduleDone(task.status);
           const hasBase = !!(task.baseline_start && task.baseline_end);
           const v = finishVariance(task);
           const c = cpm.byId[String(task.id)];
@@ -395,13 +405,14 @@ export default function SchedulePage() {
       setLoadError('');
       const h = await getAuthHeaders();
       const r = await fetch(`/api/schedule/list?projectId=${projectId}`, { headers: h });
-      if (!r.ok) throw new Error('Failed to load data');
-      const d = await r.json();
-      setTasks(d.tasks || []);
+      const d = await r.json().catch(() => ({}));
+      // The route's own message and its support ref (apiError), not a generic line.
+      if (!r.ok) throw new Error(`${d.error || 'Failed to load the schedule. Please try again.'}${d.ref ? ` (ref ${d.ref})` : ''}`);
+      setTasks((d.tasks || []).map(normTask));
     } catch (e) {
       console.error(e);
       setTasks([]);
-      setLoadError('Failed to load. Please try again.');
+      setLoadError(e instanceof Error && e.message ? e.message : 'Failed to load. Please try again.');
     } finally { setLoading(false); }
   }, [projectId]);
 
@@ -413,7 +424,7 @@ export default function SchedulePage() {
       const r = await fetch(`/api/schedule/list?projectId=${projectId}`, { headers: h });
       if (!r.ok) return;
       const d = await r.json();
-      setTasks(d.tasks || []);
+      setTasks((d.tasks || []).map(normTask));
     } catch { /* background refresh — keep the optimistic rows */ }
   }, [projectId]);
 
@@ -504,7 +515,8 @@ export default function SchedulePage() {
     if (!form.name.trim()) { showToast('Task name is required.', 'error'); return false; }
     // Optimistic save (house pattern: budget saveEdit) — tasks patch and the
     // modal closes instantly; the network settles in the background.
-    const snapshot = { ...form, pct_complete: Number(form.pct_complete) || 0 };
+    // Status and the bar agree before the row is shown or sent (lib/schedule-status).
+    const snapshot = { ...form, pct_complete: Number(form.pct_complete) || 0, ...reconcileScheduleProgress({ status: form.status, pct: Number(form.pct_complete) || 0 }) };
     const prevMode = mode, prevSelected = selected;
     setSaving(true);
     try {
@@ -517,11 +529,11 @@ export default function SchedulePage() {
         const r = await fetch('/api/schedule/create', {
           method: 'POST',
           headers: { ...h, 'Content-Type': 'application/json' },
-          body: JSON.stringify({ ...form, projectId }),
+          body: JSON.stringify({ ...snapshot, projectId }),
         });
         if (!r.ok) { setTasks(prev => prev.filter((t: any) => t.id !== tempId)); throw new Error(await r.text()); }
         const d = await r.json();
-        if (d.task) setTasks(prev => prev.map((t: any) => t.id === tempId ? d.task : t));
+        if (d.task) setTasks(prev => prev.map((t: any) => t.id === tempId ? normTask(d.task) : t));
         revalidate();
       } else if (mode === 'edit' && selected) {
         const prevTask = selected;
@@ -531,7 +543,7 @@ export default function SchedulePage() {
         const r = await fetch(`/api/schedule/${prevTask.id}`, {
           method: 'PUT',
           headers: { ...h, 'Content-Type': 'application/json' },
-          body: JSON.stringify({ ...form, pct_complete: Number(form.pct_complete) || 0 }),
+          body: JSON.stringify(snapshot),
         });
         if (!r.ok) { setTasks(prev => prev.map((t: any) => t.id === prevTask.id ? prevTask : t)); throw new Error(await r.text()); }
         revalidate();
@@ -972,10 +984,10 @@ export default function SchedulePage() {
 
           <FormGrid cols={2}>
             <Field label="Status">
-              <Select value={form.status} onChange={e => setForm(f => ({ ...f, status: e.target.value }))} options={STATUSES.map(s => ({ value: s, label: STATUS_LABELS[s] }))} />
+              <Select value={form.status} onChange={e => { const status = e.target.value; setForm(f => ({ ...f, status, pct_complete: status === 'completed' ? 100 : status === 'not_started' ? 0 : f.pct_complete })); }} options={STATUSES.map(s => ({ value: s, label: STATUS_LABELS[s] }))} />
             </Field>
             <Field label="% Complete">
-              <Input type="number" min={0} max={100} value={form.pct_complete} onChange={e => setForm(f => ({ ...f, pct_complete: Number(e.target.value) }))} />
+              <Input type="number" min={0} max={100} value={form.pct_complete} onChange={e => { const pct = Number(e.target.value); setForm(f => ({ ...f, pct_complete: pct, status: statusForPct(pct, f.status) })); }} />
             </Field>
             <Field label="Assigned To" hint={(ctx?.subs || []).length > 0 ? `${ctx!.subs.length} sub${ctx!.subs.length === 1 ? '' : 's'} on the project roster — start typing to pick one.` : undefined}>
               <Suggest className="k-input" value={form.assigned_to}

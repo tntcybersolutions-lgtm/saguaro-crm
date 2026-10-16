@@ -1,6 +1,8 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { createServerClient, getUser } from '@/lib/supabase-server';
 import { requirePermission } from '@/lib/permissions';
+import { apiError } from '@/lib/api-error';
+import { reconcileScheduleProgress } from '@/lib/schedule-status';
 
 export async function PUT(req: NextRequest, { params }: { params: Promise<{ id: string }> }) {
   const g = await requirePermission(req, 'Schedule', 'Edit');
@@ -23,26 +25,14 @@ export async function PUT(req: NextRequest, { params }: { params: Promise<{ id: 
     if (startDate !== undefined) fields.start_date = startDate;
     const endDate = body.end_date ?? body.endDate;
     if (endDate !== undefined) fields.end_date = endDate;
+    /* pct_complete and status are two writers of one fact, in one vocabulary
+       (lib/schedule-status): 100 % is `completed`, a started bar is in
+       progress, Completed fills the bar, Not Started empties it. This route
+       used to write `complete`, which the job schedule's labels, badges and
+       "Tasks Complete" tile do not know — a task set to 100 % showed a raw
+       "complete" and was not counted as finished. */
     const pctComplete = body.pct_complete ?? body.pctComplete ?? body.percent_complete ?? body.percentComplete;
-    if (pctComplete !== undefined) fields.pct_complete = pctComplete;
-    if (body.status !== undefined) fields.status = body.status;
-    // pct_complete and status are two writers of one fact. Keep them agreeing:
-    // 100 % is complete, a started bar is in progress, complete means 100 %,
-    // not started means 0 %. (Pima's 15 tasks sat at 100 % / not_started.)
-    const pctNum = pctComplete !== undefined ? Number(pctComplete) : NaN;
-    if (body.status === undefined && Number.isFinite(pctNum)) {
-      if (pctNum >= 100) fields.status = 'complete';
-      else if (pctNum > 0) fields.status = 'in_progress';
-      else fields.status = 'not_started';
-    } else if (body.status !== undefined && pctComplete === undefined) {
-      if (body.status === 'complete') fields.pct_complete = 100;
-      else if (body.status === 'not_started') fields.pct_complete = 0;
-    } else if (body.status !== undefined && Number.isFinite(pctNum)) {
-      // Both sent and disagreeing (the composer sends both): the bar wins.
-      if (pctNum >= 100 && body.status !== 'complete') fields.status = 'complete';
-      else if (pctNum > 0 && pctNum < 100 && body.status === 'not_started') fields.status = 'in_progress';
-      else if (pctNum <= 0 && body.status === 'complete') fields.pct_complete = 100;
-    }
+    Object.assign(fields, reconcileScheduleProgress({ status: body.status, pct: pctComplete }));
     // Dependency: single predecessor task (uuid) — empty string clears it.
     const predecessorId = body.predecessor_id ?? body.predecessorId;
     if (predecessorId !== undefined) fields.predecessor_id = predecessorId || null;
@@ -55,8 +45,8 @@ export async function PUT(req: NextRequest, { params }: { params: Promise<{ id: 
       .eq('tenant_id', user.tenantId);
     if (error) throw error;
     return NextResponse.json({ success: true });
-  } catch {
-    return NextResponse.json({ error: 'Internal server error' }, { status: 500 });
+  } catch (e) {
+    return apiError('schedule/[id] PUT', e, "Couldn't save the task. Please try again.");
   }
 }
 
@@ -75,7 +65,7 @@ export async function DELETE(req: NextRequest, { params }: { params: Promise<{ i
       .eq('tenant_id', user.tenantId);
     if (error) throw error;
     return NextResponse.json({ success: true });
-  } catch {
-    return NextResponse.json({ error: 'Internal server error' }, { status: 500 });
+  } catch (e) {
+    return apiError('schedule/[id] DELETE', e, "Couldn't delete the task. Please try again.");
   }
 }

@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { createServerClient, getUser } from '@/lib/supabase-server';
+import { apiError } from '@/lib/api-error';
 
 export async function GET(req: NextRequest) {
   const user = await getUser(req);
@@ -17,7 +18,10 @@ export async function GET(req: NextRequest) {
     const { data, error } = await query;
     if (error) throw error;
     return NextResponse.json({ tasks: data || [], source: 'live' });
-  } catch {
-    return NextResponse.json({ tasks: [], source: 'error' }, { status: 500 });
+  } catch (e) {
+    /* Was a bare `catch {}`: a failed read came back as an empty schedule
+       with nothing in the logs to say why. Now the real error is logged with
+       a correlation id (`ref`), and the screen can show it. */
+    return apiError('schedule/list', e, "Couldn't load the schedule. Please try again.");
   }
 }

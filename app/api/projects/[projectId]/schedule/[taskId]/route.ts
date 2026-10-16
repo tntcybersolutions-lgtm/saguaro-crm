@@ -3,6 +3,7 @@ import { createServerClient, getUser } from '@/lib/supabase-server';
 import { requirePermission } from '@/lib/permissions';
 
 import { apiError } from '@/lib/api-error';
+import { reconcileScheduleProgress } from '@/lib/schedule-status';
 /**
  * Per-task schedule update.
  *
@@ -49,6 +50,14 @@ export async function PATCH(
     if (body.percent_complete !== undefined && updates.pct_complete === undefined) {
       updates.pct_complete = body.percent_complete;
     }
+    // Status and the bar agree, in one vocabulary (lib/schedule-status) —
+    // this route wrote whatever spelling the client sent.
+    if (updates.status !== undefined || updates.pct_complete !== undefined) {
+      const agreed = reconcileScheduleProgress({ status: updates.status, pct: updates.pct_complete });
+      delete updates.status;
+      delete updates.pct_complete;
+      Object.assign(updates, agreed);
+    }
     if (Object.keys(updates).length === 0) {
       return NextResponse.json({ error: 'No updatable fields provided' }, { status: 400 });
     }
@@ -58,6 +67,7 @@ export async function PATCH(
       .update(updates as never)
       .eq('id', taskId)
       .eq('project_id', projectId)
+      .eq('tenant_id', user.tenantId)
       .select()
       .single();
     if (error) {
@@ -66,7 +76,6 @@ export async function PATCH(
     }
     return NextResponse.json({ task: data });
   } catch (err) {
-    console.error('[schedule/taskId/PATCH]', err);
-    return NextResponse.json({ error: 'Internal server error' }, { status: 500 });
+    return apiError('projects/projectId/schedule/taskId PATCH', err, "Couldn't save the task. Please try again.");
   }
 }

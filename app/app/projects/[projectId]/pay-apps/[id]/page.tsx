@@ -46,6 +46,7 @@ import {
 } from '@/components/ui/kit';
 import { openPdf } from '@/components/PdfViewer';
 import { layout } from '@/lib/design-tokens';
+import { retainageRate, type RetainageLedger } from '@/lib/retainage';
 
 const money = new Intl.NumberFormat('en-US', { style: 'currency', currency: 'USD', minimumFractionDigits: 2, maximumFractionDigits: 2 });
 const fmt = (n:number) => money.format(Number(n)||0);
@@ -96,6 +97,8 @@ interface PayApp {
   retainage_amount: number;
   total_earned_less_retainage: number;
   prev_payments: number;
+  less_previous_certificates?: number | string | null;
+  total_retainage?: number | string | null;
   current_payment_due: number;
   submitted_date: string;
   approved_date: string;
@@ -207,6 +210,9 @@ export default function PayAppDetailPage() {
   const setToast = (t:{msg:string;type:'success'|'error'}) => show(t.msg, t.type==='success'?'good':'bad');
   const [downloading, setDownloading] = useState(false);
   const [loadError, setLoadError] = useState('');
+  /** Server-read retainage ledger: held on the prior app, released before this
+   *  one, and G702 line 7 (lib/retainage). Null until the app loads. */
+  const [ledger, setLedger] = useState<RetainageLedger | null>(null);
 
   // Project intelligence — the detail walks in knowing the contract, the prior
   // application, and every lien waiver tied to this one (single reads on mount).
@@ -249,7 +255,8 @@ export default function PayAppDetailPage() {
       const d = await r.json();
       if (d.error) throw new Error(d.error);
       setPayApp(d.payApp);
-      setLines((d.lineItems || []).map((l: SovLine) => calcLine(l, d.payApp?.retainage_percent || 10)));
+      setLedger(d.retainage ?? null);
+      setLines((d.lineItems || []).map((l: SovLine) => calcLine(l, retainageRate(d.payApp?.retainage_percent))));
     } catch (e: unknown) {
       console.error(e);
       const msg = humanError(e, 'Failed to load the pay application.');
@@ -263,7 +270,8 @@ export default function PayAppDetailPage() {
 
   useEffect(() => { load(); }, [load]);
 
-  const retPct = payApp?.retainage_percent || 10;
+  // A 0 % release app stays 0 % — never the 10 % default (lib/retainage).
+  const retPct = retainageRate(payApp?.retainage_percent);
   const isDraft = payApp?.status === 'draft';
   const canEdit = isDraft && editMode;
 
@@ -275,7 +283,19 @@ export default function PayAppDetailPage() {
   const sovCompleted  = sovPrev + sovThis + sovMats;
   const sovRetainage  = Math.round(sovCompleted * (retPct / 100) * 100) / 100;
   const sovEarned     = sovCompleted - sovRetainage;
-  const sovPayment    = Math.max(0, sovEarned - sovPrev * (1 - retPct / 100));
+  /* G702 line 7 = line 6 of the previous application, as certified. Re-deriving
+     it from this app's rate (sovPrev × (1 − rate)) was right only while the
+     rate never changed: on a release app at 0 % it swallowed the release and
+     under-stated the payment due by the whole retainage. */
+  const storedPrev    = Number(payApp?.less_previous_certificates);
+  const lessPrevCerts = ledger ? ledger.previousCertificates
+    : Number.isFinite(storedPrev) && payApp?.less_previous_certificates != null ? storedPrev
+    : Math.round(sovPrev * (1 - retPct / 100) * 100) / 100;
+  const sovPayment    = Math.max(0, Math.round((sovEarned - lessPrevCerts) * 100) / 100);
+  // Released on this app = the drop from what the prior app held (live while a draft is edited).
+  const heldBefore      = ledger?.heldBefore ?? 0;
+  const releasedThisApp = ledger && ledger.priorAppNumber != null ? Math.max(0, Math.round((heldBefore - sovRetainage) * 100) / 100) : 0;
+  const releasedToDate  = (ledger?.releasedBefore ?? 0) + releasedThisApp;
 
   function updateLine(i: number, field: keyof SovLine, val: string) {
     setLines(prev => {
@@ -619,7 +639,7 @@ export default function PayAppDetailPage() {
                     { label: '4. Total Completed & Stored to Date', value: fmt(sovCompleted) },
                     { label: `5. Retainage (${retPct}%)`, value: fmt(sovRetainage) },
                     { label: '6. Total Earned Less Retainage (4–5)', value: fmt(sovEarned) },
-                    { label: '7. Less Previous Certificates for Payment', value: fmt(sovPrev * (1 - retPct / 100)) },
+                    { label: '7. Less Previous Certificates for Payment', value: fmt(lessPrevCerts) },
                     { label: '8. Current Payment Due (6–7)', value: fmt(sovPayment), strong: true, large: true },
                     { label: '9. Balance to Finish, Including Retainage', value: fmt(contractToDate - sovCompleted + sovRetainage) },
                   ].map(row => (
@@ -690,9 +710,17 @@ export default function PayAppDetailPage() {
 
               <Card title="Retainage Tracking">
                 <LadderRow label="Rate" value={`${retPct}%`} strong />
+                {ledger?.priorAppNumber != null && <LadderRow label={`Held on App #${ledger.priorAppNumber}`} value={fmt(heldBefore)} />}
                 <LadderRow label="Held This App" value={fmt(sovRetainage)} />
-                <LadderRow label="Released to Date" value={fmt(0)} />
-                <div className="pdNext" style={{ marginTop: 8 }}>Released at closeout — nothing released on this application.</div>
+                <LadderRow label="Released This App" value={fmt(releasedThisApp)} />
+                <LadderRow label="Released to Date" value={ledger ? fmt(releasedToDate) : '—'} strong />
+                <div className="pdNext" style={{ marginTop: 8 }}>
+                  {!ledger ? 'Loading the retainage history for this job.'
+                    : releasedThisApp > 0 ? `${fmt(releasedThisApp)} released on this application — it is part of the ${fmt(sovPayment)} payment due.`
+                    : releasedToDate > 0 ? `${fmt(releasedToDate)} released on earlier applications. Nothing released on this one.`
+                    : retPct > 0 ? `Held at ${retPct}% — released when an application bills a lower rate.`
+                    : 'Billed at 0% — no retainage held.'}
+                </div>
               </Card>
             </aside>
           </div>

@@ -2,6 +2,8 @@ import { NextRequest, NextResponse } from 'next/server';
 import { createServerClient } from '@/lib/supabase-server';
 import { onPayAppApproved } from '@/lib/triggers';
 import { runInBackground } from '@/lib/background';
+import { apiError } from '@/lib/api-error';
+import { retainageLedger } from '@/lib/retainage';
 
 export async function GET(
   req: NextRequest,
@@ -20,20 +22,28 @@ export async function GET(
       .single();
     if (error || !pa) return NextResponse.json({ error: 'Not found' }, { status: 404 });
 
-    const [projectRes, sovRes] = await Promise.all([
+    const [projectRes, sovRes, siblingsRes] = await Promise.all([
       pa.project_id
-        ? db.from('projects').select('*').eq('id', pa.project_id).maybeSingle()
+        ? db.from('projects').select('*').eq('id', pa.project_id).eq('tenant_id', String(pa.tenant_id)).maybeSingle()
         : Promise.resolve({ data: null }),
-      db.from('schedule_of_values').select('*').eq('pay_app_id', pa.id).order('sort_order', { ascending: true }),
+      db.from('schedule_of_values').select('*').eq('pay_app_id', pa.id).eq('tenant_id', String(pa.tenant_id)).order('sort_order', { ascending: true }),
+      /* The owner sees the same G702 line 7 and retainage released as the GC
+         (lib/retainage), not the unfilled prev_payments text column. */
+      pa.project_id
+        ? db.from('pay_applications')
+            .select('id, app_number, total_retainage, retainage_amount, total_earned_less_retainage, less_previous_certificates, deleted_at')
+            .eq('tenant_id', String(pa.tenant_id)).eq('project_id', pa.project_id)
+        : Promise.resolve({ data: [pa] }),
     ]);
 
     return NextResponse.json({
       payApp: pa,
       project: projectRes.data || null,
       lineItems: sovRes.data || [],
+      retainage: retainageLedger((siblingsRes.data || []) as any[], String(pa.id)),
     });
-  } catch {
-    return NextResponse.json({ error: "Internal server error" }, { status: 500 });
+  } catch (e) {
+    return apiError('owner-portal/approve GET', e, "Couldn't load this pay application. Please try again.");
   }
 }
 

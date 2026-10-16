@@ -10,7 +10,8 @@
  */
 import type { SupabaseClient } from '@supabase/supabase-js';
 import type { Database } from './database.types';
-import { toCents, sumCents, summarizeContract } from '@/lib/calc';
+import { toCents, sumCents } from '@/lib/calc';
+import { contractMoney } from '@/lib/job-contract';
 
 /** cents → compact whole-dollar string, e.g. "$1,240,000". */
 function usd(cents: number): string {
@@ -45,10 +46,10 @@ export async function buildProjectContext(
       { data: alerts },
       { data: dailyLogs },
     ] = await Promise.all([
-      db.from('projects').select('name, project_number, status, phase, percent_complete, city, state, project_type, type, original_contract_value, contract_value, original_contract, contract_amount, start_date, target_finish_date, end_date').eq('id', projectId).eq('tenant_id', tenantId).single(),
-      db.from('contracts').select('party_name, party_company, vendor_name, counterparty_name, trade, amount, status').eq('project_id', projectId).eq('tenant_id', tenantId).order('created_at', { ascending: false }),
+      db.from('projects').select('name, project_number, status, phase, percent_complete, city, state, project_type, type, original_contract_amount, original_contract_value, original_contract, revised_contract_value, contract_value, contract_amount, start_date, target_finish_date, end_date').eq('id', projectId).eq('tenant_id', tenantId).single(),
+      db.from('contracts').select('contract_type, party_name, party_company, vendor_name, counterparty_name, trade, amount, contract_amount, original_amount, status').eq('project_id', projectId).eq('tenant_id', tenantId).order('created_at', { ascending: false }),
       db.from('pay_applications').select('total_completed_stored, app_number').eq('project_id', projectId).eq('tenant_id', tenantId).order('app_number', { ascending: false }),
-      db.from('change_orders').select('title, amount, status').eq('project_id', projectId).eq('tenant_id', tenantId).order('created_at', { ascending: false }),
+      db.from('change_orders').select('title, amount, cost_impact, status').eq('project_id', projectId).eq('tenant_id', tenantId).order('created_at', { ascending: false }),
       db.from('rfis').select('subject, status, due_date').eq('project_id', projectId).eq('tenant_id', tenantId).order('created_at', { ascending: false }),
       db.from('budget_lines').select('original_budget, committed, actual, projected').eq('project_id', projectId).eq('tenant_id', tenantId),
       db.from('schedule_phases').select('name, status, percent_complete, start_date, end_date').eq('project_id', projectId).eq('tenant_id', tenantId).order('sort_order', { ascending: true }),
@@ -68,11 +69,16 @@ export async function buildProjectContext(
     const alertRows = (alerts || []) as any[];
     const log = (dailyLogs || [])[0] as any | undefined;
 
-    // Contract: original + APPROVED COs (exact cents), same source-column fallback as the project route.
-    const contract = summarizeContract(
-      toCents(p.original_contract_value || p.contract_value || p.original_contract || p.contract_amount || 0),
-      cos.map((co) => ({ id: '', description: '', amount: toCents(co.amount || 0), status: co.status })),
-    );
+    // Contract: original + APPROVED COs — the one rule every screen reads
+    // (lib/job-contract). The old chain read contract_value / contract_amount
+    // as the original, and both already carry approved COs on some jobs.
+    const prime = subRows.find((c) => String(c.contract_type || '').toLowerCase() === 'prime') ?? null;
+    const money = contractMoney({ project: p, prime, changeOrders: cos });
+    const contract = {
+      originalContract: toCents(money.original),
+      approvedChangeOrders: toCents(money.approvedChanges),
+      revisedContract: toCents(money.current),
+    };
     const billedCents = apps.length > 0 ? toCents(apps[0].total_completed_stored || 0) : 0;
 
     // Budget health — exact-cents sums.

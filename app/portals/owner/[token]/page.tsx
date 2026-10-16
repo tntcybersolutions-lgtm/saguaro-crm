@@ -2,9 +2,11 @@
 import React, { useState, useEffect } from 'react';
 import { useParams } from 'next/navigation';
 import { Cactus, Check, FilePdf, Warning, X } from '@phosphor-icons/react';
+import { retainageHeld, retainageRate, type RetainageLedger } from '@/lib/retainage';
 
 const GOLD='var(--brand-primary)',DARK='var(--bg-base)',RAISED='var(--bg-surface)',BORDER='rgba(255,255,255,0.12)',DIM='var(--text-secondary)',TEXT='#FFFFFF',GREEN='#4ADE80',RED='#F87171';
-const fmt=(n:number)=>'$'+((n||0).toLocaleString('en-US',{minimumFractionDigits:2,maximumFractionDigits:2}));
+// Postgres numerics arrive as strings; a string's toLocaleString() does not group digits.
+const fmt=(n:unknown)=>'$'+((Number(n)||0).toLocaleString('en-US',{minimumFractionDigits:2,maximumFractionDigits:2}));
 
 export default function OwnerApprovalPortal() {
   const { token } = useParams<{ token: string }>();
@@ -53,6 +55,15 @@ export default function OwnerApprovalPortal() {
   const pa = data.payApp;
   const project = data.project || {};
   const lineItems = data.lineItems || [];
+  /* G702 figures from the live columns, one reader with the GC's screens
+     (lib/retainage): a 0 % release app reads 0 %, line 7 is the previous
+     application's line 6, and line 3 is line 1 + line 2 when not stored. */
+  const ledger: RetainageLedger | null = data.retainage ?? null;
+  const retPct = retainageRate(pa.retainage_percent);
+  const held = retainageHeld(pa);
+  const contractToDate = Number(pa.contract_sum_to_date) || ((Number(pa.contract_sum) || 0) + (Number(pa.change_orders_total) || 0));
+  const completedToDate = Number(pa.total_completed_stored ?? pa.total_completed) || 0;
+  const lessPrevious = ledger ? ledger.previousCertificates : Number(pa.less_previous_certificates ?? pa.prev_payments) || 0;
 
   if (action) return (
     <div style={{ minHeight:'100vh',background:DARK,display:'flex',alignItems:'center',justifyContent:'center',fontFamily:'system-ui,sans-serif' }}>
@@ -94,9 +105,9 @@ export default function OwnerApprovalPortal() {
         {/* KPI Row */}
         <div style={{ display:'grid',gridTemplateColumns:'repeat(4,1fr)',gap:14,marginBottom:24 }}>
           {[
-            ['Contract Sum to Date', fmt(pa.contract_sum_to_date||0)],
+            ['Contract Sum to Date', fmt(contractToDate)],
             ['This Period', fmt(pa.this_period||0)],
-            ['Retainage', fmt(pa.retainage_amount||0)],
+            ['Retainage', fmt(held)],
             ['Current Payment Due', fmt(pa.current_payment_due||0)],
           ].map(([l,v]:any)=>(
             <div key={l} style={{ background:RAISED,border:`1px solid ${BORDER}`,borderRadius:10,padding:'14px 16px' }}>
@@ -113,13 +124,14 @@ export default function OwnerApprovalPortal() {
             {[
               ['Original Contract Sum', fmt(pa.contract_sum||0)],
               ['Net Change by Change Orders', fmt(pa.change_orders_total||0)],
-              ['Contract Sum to Date', fmt(pa.contract_sum_to_date||0)],
-              ['Total Completed &amp; Stored to Date', fmt(pa.total_completed||0)],
-              ['Retainage ('+(pa.retainage_percent||10)+'%)', '(' + fmt(pa.retainage_amount||0) + ')'],
+              ['Contract Sum to Date', fmt(contractToDate)],
+              ['Total Completed &amp; Stored to Date', fmt(completedToDate)],
+              ['Retainage ('+retPct+'%)', '(' + fmt(held) + ')'],
+              ...(ledger && ledger.releasedThisApp > 0 ? [['Retainage Released This Application', fmt(ledger.releasedThisApp)]] : []),
               ['Total Earned Less Retainage', fmt(pa.total_earned_less_retainage||0)],
-              ['Less Previous Certificates', '(' + fmt(pa.prev_payments||0) + ')'],
+              ['Less Previous Certificates', '(' + fmt(lessPrevious) + ')'],
               ['Current Payment Due', fmt(pa.current_payment_due||0)],
-              ['Balance to Finish (incl. Retainage)', fmt(Math.max(0,(pa.contract_sum_to_date||0)-(pa.total_earned_less_retainage||0)))],
+              ['Balance to Finish (incl. Retainage)', fmt(Math.max(0,contractToDate-(Number(pa.total_earned_less_retainage)||0)))],
             ].map(([l,v]:any)=>(
               <div key={l} style={{ display:'flex',justifyContent:'space-between',padding:'7px 0',borderBottom:'1px solid rgba(255,255,255,0.12)',fontSize:13 }}>
                 <span style={{ color:DIM }} dangerouslySetInnerHTML={{ __html:l }} />

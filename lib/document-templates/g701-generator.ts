@@ -6,7 +6,8 @@ import {
   saveDocument,
 } from '../pdf-engine';
 import { brandDoc, drawBrandHeader, stampFooters, DOC } from './report-theme';
-import { coAmount } from '@/lib/change-order-amount';
+import { coAmount, coTotal } from '@/lib/change-order-amount';
+import { originalContract as originalContractSum } from '@/lib/job-contract';
 
 export interface G701Input {
   /* What the GC typed on the contract form. Values still derive from the
@@ -201,7 +202,11 @@ export async function generateG701(input: G701Input): Promise<{
     color: DOC.ink,
   });
 
-  const originalContract = (project as any)?.contract_amount || 0;
+  /* contract_amount is the REVISED contract (approving a CO adds to it), so
+     reading it as the original and adding the prior COs counted them twice.
+     One rule for the original (lib/job-contract); ctx.changeOrders are the
+     job's approved COs. */
+  const originalContract = originalContractSum(project as any, coTotal(ctx.changeOrders as any[]));
   const netPriorCOs = ctx.changeOrders
     .filter((c: any) => c.id !== input.changeOrderId)
     .reduce((s: number, c: any) => s + coAmount(c), 0);

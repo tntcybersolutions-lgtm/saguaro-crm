@@ -15,6 +15,7 @@ import { must } from '@/lib/db-write';
 import { apiError } from '@/lib/api-error';
 import { fmtDate } from '@/lib/format-date';
 import { architectName, ownerName } from '@/lib/project-parties';
+import { retainageLedger, retainageRate } from '@/lib/retainage';
 
 export async function POST(req: NextRequest) {
   const g = await requirePermission(req, 'Documents', 'Edit');
@@ -43,8 +44,20 @@ export async function POST(req: NextRequest) {
     // ── Money math: everything in exact integer cents via @/lib/calc ──
     // DB stores dollars → convert to cents before any arithmetic, back to
     // dollars only when handing values to the PDF (which renders dollars).
-    const retainagePercent = Number(pa.retainage_percent) || 10;
-    const previousPaymentsLessRetainage = toCents(pa.prev_payments || 0);
+    /* A 0 % release application prints 0 % — `|| 10` re-held the retainage
+       it released. Line 7 is the previous application's line 6, read from the
+       job's ledger (lib/retainage); it used to read prev_payments, a text
+       column nothing fills, so every PDF printed $0 there and billed the
+       whole contract-to-date again on line 8. */
+    const retainagePercent = retainageRate(pa.retainage_percent);
+    const { data: siblings, error: sibErr } = await db
+      .from('pay_applications')
+      .select('id, app_number, total_retainage, retainage_amount, total_earned_less_retainage, less_previous_certificates, deleted_at')
+      .eq('tenant_id', user.tenantId)
+      .eq('project_id', pa.project_id);
+    if (sibErr) throw sibErr;
+    const ledger = retainageLedger(siblings as any[], String(pa.id));
+    const previousPaymentsLessRetainage = toCents(ledger.previousCertificates);
 
     /* schedule_of_values stores prev_completed / this_period / stored_materials.
        These read work_from_prev / work_this_period / materials_stored, which are
@@ -152,7 +165,10 @@ export async function POST(req: NextRequest) {
       total_completed: toDollars(calc.completedAndStoredTotal),
       percent_complete: calc.percentComplete,
       retainage_amount: toDollars(calc.retainageTotal),
+      // total_retainage is the column every screen reads first (lib/retainage).
+      total_retainage: toDollars(calc.retainageTotal),
       total_earned_less_retainage: toDollars(calc.totalEarnedLessRetainage),
+      less_previous_certificates: toDollars(previousPaymentsLessRetainage),
       current_payment_due: toDollars(calc.currentPaymentDue),
       /* net_amount_due is NOT a column on pay_applications. Writing it made
          Postgres reject the whole update with 42703, must() threw, and the

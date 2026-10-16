@@ -47,6 +47,7 @@ import { useLiveStatus } from '@/lib/hooks/useLiveStatus';
 import NudgeRing from '@/components/intelligence/NudgeRing';
 import { ANCHOR_PAY_APPS_DUE } from '@/lib/suggestions';
 import { openPdf } from '@/components/PdfViewer';
+import { retainageRate } from '@/lib/retainage';
 
 // MONEY: several DB numerics round-trip as strings — coerce before any math/format.
 const money = new Intl.NumberFormat('en-US', { style: 'currency', currency: 'USD', minimumFractionDigits: 2, maximumFractionDigits: 2 });
@@ -283,7 +284,7 @@ export default function PayAppsPage() {
     : [
         { label:'Revised Contract', value:fmt(revised), sub:`${fmt(original)} original ${coTotal>=0?'+':'-'} ${fmt(Math.abs(coTotal))} approved COs`, icon:<Scales size={15}/>, href:`/app/projects/${projectId}/contracts` },
         { label:'Billed to Date', value:fmt(ctxBilled), sub: revised > 0 ? `${Math.round((ctxBilled / revised) * 1000) / 10}% of revised · ${payApps.length} application${payApps.length===1?'':'s'}` : `No contract value set · ${payApps.length} application${payApps.length===1?'':'s'}`, icon:<Receipt size={15}/> },
-        { label:'Retainage Held', value:fmt(retainageHeld), sub:`Held to date · ${Number(ctxMoney?.retainagePct)||10}% per contract`, icon:<Vault size={15}/> },
+        { label:'Retainage Held', value:fmt(retainageHeld), sub:`Held to date · ${retainageRate(ctxMoney?.retainagePct)}% per contract`, icon:<Vault size={15}/> },
         { label:'Paid to Date', value:fmt(ctxPaid), tone: outstandingCertified>0 ? 'warn' : ctxPaid>0 ? 'good' : 'default', sub: outstandingCertified>0 ? `${fmt(outstandingCertified)} certified, unpaid` : 'All certified money collected', icon:<Wallet size={15}/>, onClick: pendingApproval>0 ? () => setStatusFilter(s => (s==='submitted' ? 'all' : 'submitted')) : undefined, active: pendingApproval>0 ? statusFilter==='submitted' : undefined },
         { label:'Lien Waivers', value: waiverTotals.total>0 ? `${waiverTotals.signed} of ${waiverTotals.total}` : '—', tone: waiverTotals.total>0 ? (waiverTotals.signed===waiverTotals.total ? 'good' : 'warn') : 'default', sub: waiverTotals.total>0 ? 'Signed — payment is waiver-gated' : 'Generate at owner approval', icon:<Lock size={15}/>, href:`/app/projects/${projectId}/lien-waivers` },
       ];

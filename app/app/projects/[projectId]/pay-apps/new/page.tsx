@@ -30,6 +30,7 @@ import {
   type StatItem,
 } from '@/components/ui/kit';
 import { layout } from '@/lib/design-tokens';
+import { retainageRate } from '@/lib/retainage';
 
 const money = new Intl.NumberFormat('en-US', { style: 'currency', currency: 'USD', minimumFractionDigits: 2, maximumFractionDigits: 2 });
 const fmt = (n:number) => money.format(Number(n)||0);
@@ -124,6 +125,8 @@ export default function NewPayAppPage() {
   const { ctx } = useProjectContext(projectId);
   const [appNumber,setAppNumber]     = useState<number|null>(null);
   const [rolledForward,setRolledForward] = useState(false);
+  /** G702 line 7 — line 6 of the last application (from the seed route). */
+  const [prevCerts,setPrevCerts]     = useState<number|null>(null);
   const [auto,setAuto]               = useState<{period?:boolean;sum?:boolean;ret?:boolean}>({});
 
   // Seed money defaults once the shared snapshot arrives. One-time (ref-guarded)
@@ -153,6 +156,7 @@ export default function NewPayAppPage() {
         const r = await fetch(`/api/pay-apps/create?projectId=${projectId}`);
         const seed = await r.json();
         if(seed.nextAppNumber) setAppNumber(seed.nextAppNumber);
+        if(typeof seed.previousCertificates==='number') setPrevCerts(seed.previousCertificates);
         // A restored draft owns the SOV + retainage — the seeder never stomps it.
         if(Array.isArray(seed.priorSov) && seed.priorSov.length>0 && !draftRestoredRef.current){
           setLines(seed.priorSov.map((s:any,i:number)=>({
@@ -195,7 +199,8 @@ export default function NewPayAppPage() {
   // is cleared first, so the deferred requestLeave navigates without prompting.
   useEffect(()=>{ if(leaveTo) guard.requestLeave(leaveTo); },[leaveTo, guard.requestLeave]); // eslint-disable-line react-hooks/exhaustive-deps
 
-  const pct = Math.max(0,Math.min(100,Number(retainagePct)||10));
+  // A typed 0 is a 0 % release app, never the 10 % default (lib/retainage).
+  const pct = retainageRate(retainagePct);
 
   function recalcLine(l:SovLine):SovLine{
     const total = (l.workFromPrev||0)+(l.workThisPeriod||0)+(l.materialsStored||0);
@@ -228,7 +233,10 @@ export default function NewPayAppPage() {
   const totalCompleted   = prevTotal+thisPeriodTotal+matsTotal;
   const retainageAmt     = totalCompleted*(pct/100);
   const earnedLessRet    = totalCompleted - retainageAmt;
-  const paymentDue       = Math.max(0, earnedLessRet - prevTotal*(1-pct/100));
+  // Line 8 = line 6 − line 7, where line 7 is what the last app certified. On a
+  // release app (rate cut to 0 %) that difference carries the released retainage.
+  const lessPrev         = prevCerts ?? prevTotal*(1-pct/100);
+  const paymentDue       = Math.max(0, earnedLessRet - lessPrev);
   const contractSumNum   = Number(contractSum)||0;
 
   // Contract intelligence (from /api/project-context)
@@ -320,6 +328,7 @@ export default function NewPayAppPage() {
         <ItemRow title="Materials stored" value={fmt(matsTotal)}/>
         <ItemRow title="Total completed" value={fmt(totalCompleted)}/>
         <ItemRow title={`Retainage (${pct}%)`} value={fmt(retainageAmt)}/>
+        {lessPrev>0 && <ItemRow title="Less previous certificates" value={fmt(lessPrev)}/>}
         <ItemRow title="Balance to finish" value={fmt(Math.max(0,(contractSumNum+coTotal)-totalCompleted))}/>
       </ItemList>
       <div className="pnDue"><span>Payment due</span><b>{fmt(paymentDue)}</b></div>

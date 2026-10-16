@@ -3,6 +3,7 @@ import { createServerClient, getUser } from '@/lib/supabase-server';
 import { requirePermission } from '@/lib/permissions';
 import { apiError } from '@/lib/api-error';
 import { assertProjectInTenant } from '@/lib/assert-project';
+import { reconcileScheduleProgress } from '@/lib/schedule-status';
 
 export async function POST(req: NextRequest) {
   const g = await requirePermission(req, 'Schedule', 'Edit');
@@ -25,17 +26,11 @@ export async function POST(req: NextRequest) {
     const phase = body.phase ?? '';
     const trade = body.trade ?? null;
     const pctRaw = body.pct_complete ?? body.pctComplete ?? body.percent_complete ?? body.percentComplete;
-    let status: string = body.status ?? 'not_started';
-    let pctComplete = Number(pctRaw ?? 0) || 0;
-    // One fact, two columns — see the PATCH route.
-    if (body.status === undefined && pctRaw !== undefined) status = pctComplete >= 100 ? 'complete' : pctComplete > 0 ? 'in_progress' : 'not_started';
-    else if (pctRaw === undefined && status === 'complete') pctComplete = 100;
-    else if (pctRaw !== undefined) {
-      // Both sent and disagreeing (the composer sends both): the bar wins.
-      if (pctComplete >= 100 && status !== 'complete') status = 'complete';
-      else if (pctComplete > 0 && pctComplete < 100 && status === 'not_started') status = 'in_progress';
-      else if (pctComplete <= 0 && status === 'complete') pctComplete = 100;
-    }
+    // One fact, two columns, one vocabulary — see lib/schedule-status. (This
+    // wrote `complete`; the schedule screens only know `completed`.)
+    const agreed = reconcileScheduleProgress({ status: body.status, pct: pctRaw });
+    const status: string = agreed.status ?? 'not_started';
+    const pctComplete = agreed.pct_complete ?? 0;
     const predecessorId = body.predecessor_id ?? body.predecessorId ?? null;
     const db = createServerClient();
     // projectId comes from the body: it must be one of the caller's jobs.

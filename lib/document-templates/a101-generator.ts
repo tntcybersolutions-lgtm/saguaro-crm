@@ -5,6 +5,8 @@ import {
   fmtCurrency,
   saveDocument,
 } from '../pdf-engine';
+import { coTotal } from '@/lib/change-order-amount';
+import { originalContract as originalContractSum } from '@/lib/job-contract';
 import { brandDoc, drawBrandHeader, stampFooters, DOC } from './report-theme';
 
 export interface A101Input {
@@ -21,6 +23,9 @@ export async function generateA101(input: A101Input): Promise<{
   const ctx = await getProjectContext(input.projectId);
   const { project } = ctx;
   const p = project as any;
+  /* The agreement's Contract Sum is the ORIGINAL contract. contract_amount is
+     the revised one once a change order is approved (lib/job-contract). */
+  const agreementSum = originalContractSum(p, coTotal(ctx.changeOrders as any[]));
 
   /* Anything the GC typed on the contract form wins over what the database
      guessed. Blank is not an override — an empty box means "you had it right". */
@@ -219,7 +224,7 @@ export async function generateA101(input: A101Input): Promise<{
     font: bold,
     color: DOC.accentOnBand,
   });
-  page1.drawText(fmtCurrency(Number(pick('contractSum', p?.contract_amount || 0)) || 0), {
+  page1.drawText(fmtCurrency(Number(pick('contractSum', agreementSum)) || 0), {
     x: 380,
     y: y + 7,
     size: 13,
@@ -403,7 +408,7 @@ export async function generateA101(input: A101Input): Promise<{
 
   const pdfBytes = await pdf.save();
   const pdfUrl = await saveDocument(input.projectId, 'a101', pdfBytes, {
-    contractAmount: Number(pick('contractSum', p?.contract_amount || 0)) || 0,
+    contractAmount: Number(pick('contractSum', agreementSum)) || 0,
     retainagePct,
     ownerName: pick('ownerName', (ctx.owner as any)?.name || ''),
     contractorName: pick('contractorName', p?.gc_entity?.name || ''),

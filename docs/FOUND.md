@@ -251,3 +251,25 @@ STILL OPEN:
 - 2026-10-15 (Submittal workflow): `app/api/submittals/[id]/route.ts:20,67,90` bare `catch {}` with a generic 500 instead of `apiError()` (§3); `app/api/submittals/[id]/review/route.ts:44-47` same.
 - 2026-10-15 (Submittal workflow): `lib/job-page.sanity.test.ts` fails on main before this branch — "every tool page under the job has a row — commitments".
 - 2026-10-15 (Submittal workflow): the submittals list screen's status list (`pending…revise_resubmit`) differs from the item registry's (`draft`, `approved_as_noted`, `closed` too), so a row set to `approved_as_noted` from the full page shows a raw label in the list.
+
+## 16 Oct 2026 — the four 15 Oct entries, fixed (`fix/found-oct16`, Chad: "fix the 4 bugs in FOUND.md")
+
+- Pay app "Released to Date" fixed at $0 → `lib/retainage.ts` reads the job's ledger (released = every drop in the held
+  balance; line 7 = the prior app's line 6). Detail screen, `/api/pay-apps/[id]` GET/PUT, the G702 PDF and the owner
+  portal all read it. Same class fixed: `retainage_percent || 10` turned a 0 % release app into 10 % (detail, new-app
+  wizard, PDF, owner portal, project-context, cash flow); the PDF and owner portal read line 7 from `prev_payments`
+  (a text column nothing fills) so the PDF printed $0 there and wrote the whole earned amount back as payment due; the
+  detail Save deleted the SOV and then failed the re-insert on a null `project_id` (now insert-then-delete, job from the row).
+- Contract double-count → `lib/job-contract.ts originalContract`: original columns first, then prime, then a REVISED
+  column (`revised_contract_value`, `contract_amount` — the CO trigger adds to it) less approved COs, then
+  `contract_value`, then the accepted proposal. Used by the job summary (`/api/projects/[projectId]`: Pima read
+  $2,667,300 → $2,539,650), project-context (Camelback / Desert Vista read a $0 original), owner portal, cash flow,
+  Sage's project context, the G701 and the A101.
+- Schedule `complete` vs `completed` → `lib/schedule-status.ts`; every writer (`/api/schedule/create`, `/api/schedule/[id]`,
+  `/api/projects/[projectId]/schedule/[taskId]`) stores `completed`; job schedule, company schedule, task detail,
+  project-context and the job summary read both. The 3 stored `complete` rows (Sonoran Ridge) were set to `completed`.
+- Swallowed errors in the schedule routes → `apiError` with a ref (list, [id] PUT/DELETE, [taskId] PATCH); the job
+  schedule shows the ref when the list fails. Also pay-apps/[id] and owner-portal GET.
+- STILL OPEN (same class, not done this pass — speed): 294 other `catch {}` blocks across ~200 API routes still return a
+  bare 500 with nothing logged. Mechanical codemod to `apiError`; one PR on its own.
+- Dead code noted: `lib/document-templates/g702-generator.ts` (imported nowhere) still reads `contract_amount` as line 1.

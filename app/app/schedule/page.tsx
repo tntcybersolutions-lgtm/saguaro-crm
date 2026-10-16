@@ -37,6 +37,7 @@ import { AutoChip, InsightRow } from '@/components/ui/premium';
 import { tradeOptions } from '@/lib/taxonomy';
 import { useUnsavedGuard, useComposerDirty } from '@/lib/useUnsavedGuard';
 import UnsavedGuardModal from '@/components/UnsavedGuardModal';
+import { SCHEDULE_STATUSES, normalizeScheduleStatus } from '@/lib/schedule-status';
 
 interface ScheduleTask {
   id: string;
@@ -61,17 +62,20 @@ interface Project { id: string; name: string; }
 const STATUS_MAP: Record<string, { label: string; tone: BadgeTone; css: string }> = {
   not_started: { label: 'Not Started', tone: 'closed', css: 'var(--status-closed)' },
   in_progress: { label: 'In Progress', tone: 'lead', css: 'var(--status-lead)' },
-  complete: { label: 'Complete', tone: 'ongoing', css: 'var(--status-ongoing)' },
+  completed: { label: 'Completed', tone: 'completed', css: 'var(--status-completed)' },
   blocked: { label: 'Blocked', tone: 'overdue', css: 'var(--status-overdue)' },
   delayed: { label: 'Delayed', tone: 'under_contract', css: 'var(--status-under-contract)' },
   on_hold: { label: 'On Hold', tone: 'under_contract', css: 'var(--status-under-contract)' },
 };
-const STATUS_OPTIONS = ['not_started', 'in_progress', 'complete', 'blocked'] as const;
+/* One vocabulary with the job schedule and every route (lib/schedule-status).
+   This page wrote and counted `complete`; the job schedule only knew
+   `completed`, so finished tasks read as Not Started (and overdue) here. */
+const STATUS_OPTIONS = SCHEDULE_STATUSES;
 const STATUS_SELECT_OPTIONS = STATUS_OPTIONS.map((s) => ({ value: s, label: STATUS_MAP[s].label }));
-const STATUS_RANK: Record<string, number> = { blocked: 0, in_progress: 1, not_started: 2, delayed: 3, on_hold: 3, complete: 4 };
+const STATUS_RANK: Record<string, number> = { blocked: 0, in_progress: 1, not_started: 2, delayed: 3, on_hold: 3, completed: 4 };
 
 function statusCfg(s?: string | null) {
-  return STATUS_MAP[(s ?? 'not_started').toLowerCase()] ?? STATUS_MAP.not_started;
+  return STATUS_MAP[normalizeScheduleStatus(s) ?? 'not_started'] ?? STATUS_MAP.not_started;
 }
 type StatusFilter = 'all' | 'overdue' | (typeof STATUS_OPTIONS)[number];
 
@@ -100,9 +104,9 @@ function todayUTC(): number {
   return Date.UTC(n.getFullYear(), n.getMonth(), n.getDate());
 }
 function coerce(raw: any): ScheduleTask {
-  return { ...raw, pct_complete: raw.pct_complete == null ? 0 : Number(raw.pct_complete) };
+  return { ...raw, pct_complete: raw.pct_complete == null ? 0 : Number(raw.pct_complete), status: normalizeScheduleStatus(raw.status) ?? 'not_started' };
 }
-const isLate = (t: ScheduleTask) => !!t.end_date && ymdToUTC(t.end_date) < todayUTC() && t.status !== 'complete';
+const isLate = (t: ScheduleTask) => !!t.end_date && ymdToUTC(t.end_date) < todayUTC() && t.status !== 'completed';
 
 const NEED_NAME = 'Give the task a name.';
 const NEED_PROJECT = 'Pick the project this task belongs to.';
@@ -370,7 +374,7 @@ export default function SchedulePage() {
   // Stats describe the project in view (the project filter), not the search.
   const stats = useMemo(() => {
     const total = byProject.length;
-    const complete = byProject.filter(t => t.status === 'complete').length;
+    const complete = byProject.filter(t => t.status === 'completed').length;
     const inProgress = byProject.filter(t => t.status === 'in_progress').length;
     const overdue = byProject.filter(isLate).length;
     return { total, complete, inProgress, overdue };
@@ -386,7 +390,7 @@ export default function SchedulePage() {
     : [
         { label: 'Total Tasks', value: stats.total, sub: statusFilter !== 'all' || search ? 'Click to show everything' : projectFilter ? 'On this project' : 'Across every project', onClick: statusFilter !== 'all' || search ? () => { setStatusFilter('all'); setSearch(''); } : undefined },
         { label: 'In Progress', value: stats.inProgress, tone: stats.inProgress > 0 ? 'good' : 'default', sub: statusFilter === 'in_progress' ? 'Filtered — click to clear' : 'Crews on it now', onClick: () => toggleStatus('in_progress') },
-        { label: 'Complete', value: stats.complete, tone: stats.complete > 0 ? 'good' : 'default', sub: statusFilter === 'complete' ? 'Filtered — click to clear' : stats.total > 0 ? `${Math.round((stats.complete / stats.total) * 100)}% of the plan` : 'Nothing planned yet', onClick: () => toggleStatus('complete') },
+        { label: 'Complete', value: stats.complete, tone: stats.complete > 0 ? 'good' : 'default', sub: statusFilter === 'completed' ? 'Filtered — click to clear' : stats.total > 0 ? `${Math.round((stats.complete / stats.total) * 100)}% of the plan` : 'Nothing planned yet', onClick: () => toggleStatus('completed') },
         { label: 'Overdue', value: stats.overdue, tone: stats.overdue > 0 ? 'bad' : 'default', sub: statusFilter === 'overdue' ? 'Filtered — click to clear' : stats.overdue > 0 ? 'Past their end date, not complete' : 'Nothing slipped', onClick: () => toggleStatus('overdue') },
       ];
 
@@ -406,17 +410,17 @@ export default function SchedulePage() {
     ) },
     // pct_complete can round-trip as TEXT — numeric sort, not lexicographic.
     { key: 'pct_complete', phone: 'show', header: 'Progress', accessor: t => Number(t.pct_complete) || 0, render: t => (
-      <PctEditor task={t} saving={savingId === t.id} onSave={(n) => patchTask(t.id, { pct_complete: n, status: n >= 100 ? 'complete' : n > 0 ? 'in_progress' : 'not_started' })} />
+      <PctEditor task={t} saving={savingId === t.id} onSave={(n) => patchTask(t.id, { pct_complete: n, status: n >= 100 ? 'completed' : n > 0 ? 'in_progress' : 'not_started' })} />
     ) },
     { key: 'status', phone: 'show', header: 'Status', accessor: t => STATUS_RANK[t.status] ?? 9, render: t => (
-      <StatusEditor task={t} saving={savingId === t.id} onSave={(s) => patchTask(t.id, s === 'complete' ? { status: s, pct_complete: 100 } : s === 'not_started' ? { status: s, pct_complete: 0 } : { status: s })} />
+      <StatusEditor task={t} saving={savingId === t.id} onSave={(s) => patchTask(t.id, s === 'completed' ? { status: s, pct_complete: 100 } : s === 'not_started' ? { status: s, pct_complete: 0 } : { status: s })} />
     ) },
   ];
   const rowActions = (t: ScheduleTask): Action[] => {
     const busy = savingId === t.id;
     return [
       { label: 'Open Task', icon: <ArrowSquareOut size={15} />, href: `/app/schedule/${t.id}` },
-      { label: 'Mark Complete', icon: <CheckCircle size={15} />, onClick: () => patchTask(t.id, { status: 'complete', pct_complete: 100 }), hidden: t.status === 'complete', disabled: busy },
+      { label: 'Mark Complete', icon: <CheckCircle size={15} />, onClick: () => patchTask(t.id, { status: 'completed', pct_complete: 100 }), hidden: t.status === 'completed', disabled: busy },
       { label: 'Delete Task', icon: <Trash size={15} />, onClick: () => deleteTask(t.id), tone: 'danger', disabled: busy },
     ];
   };
@@ -511,7 +515,7 @@ export default function SchedulePage() {
       >
         {form.projectId && (
           <div className="scLadder">
-            <InsightRow label="Tasks on This Project" value={`${formProjectTasks.length} · ${formProjectTasks.filter(t => t.status === 'complete').length} complete`} />
+            <InsightRow label="Tasks on This Project" value={`${formProjectTasks.length} · ${formProjectTasks.filter(t => t.status === 'completed').length} complete`} />
             <InsightRow label="Critical Path" value={String(ctx?.schedule?.criticalCount ?? 0)} strong={(ctx?.schedule?.criticalCount ?? 0) > 0} />
             <InsightRow label="Next Milestone" value={ctx?.schedule?.nextTasks?.[0]?.name ? `${ctx.schedule.nextTasks[0].name}${ctx.schedule.nextTasks[0].startDate ? ` · starts ${fmtDate(String(ctx.schedule.nextTasks[0].startDate))}` : ''}` : 'Nothing queued yet'} />
           </div>

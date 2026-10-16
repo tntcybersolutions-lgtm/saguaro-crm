@@ -12,6 +12,7 @@
  */
 import React, { useState, useEffect, useCallback } from 'react';
 import { humanError } from '@/lib/errors';
+import { isScheduleDone, normalizeScheduleStatus } from '@/lib/schedule-status';
 import { useParams, useRouter } from 'next/navigation';
 import {
   ArrowLeft, Warning, CalendarBlank, GitBranch, ClipboardText, ChartBar,
@@ -50,14 +51,15 @@ interface Project { id: string; name: string; }
 const STATUS_MAP: Record<string, { label: string; color: string }> = {
   not_started: { label: 'Not Started', color: 'var(--status-closed)' }, // hex — composed into hex-alpha chip fills
   in_progress: { label: 'In Progress', color: BLUE },
-  complete: { label: 'Complete', color: GREEN },
+  completed: { label: 'Completed', color: GREEN },
   blocked: { label: 'Blocked', color: RED },
   delayed: { label: 'Delayed', color: ORANGE },
   on_hold: { label: 'On Hold', color: ORANGE },
 };
 
 function statusCfg(status?: string | null): { label: string; color: string } {
-  const key = (status ?? 'not_started').toLowerCase();
+  // Legacy `complete` reads as Completed (lib/schedule-status) — it fell to Not Started here.
+  const key = normalizeScheduleStatus(status) ?? 'not_started';
   return STATUS_MAP[key] ?? STATUS_MAP.not_started;
 }
 
@@ -176,7 +178,7 @@ export default function ScheduleTaskDetailPage() {
   const t = task as ScheduleTask;
   const cfg = statusCfg(t.status);
   const pct = t.pct_complete ?? 0;
-  const overdue = !!t.end_date && new Date(t.end_date) < new Date() && (t.status ?? '') !== 'complete';
+  const overdue = !!t.end_date && new Date(t.end_date) < new Date() && !isScheduleDone(t.status, (t as any).pct_complete);
 
   return (
     <PremiumSurface>

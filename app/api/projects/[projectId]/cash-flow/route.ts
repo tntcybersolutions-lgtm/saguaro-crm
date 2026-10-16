@@ -3,6 +3,7 @@ import { createServerClient, getUser } from '@/lib/supabase-server';
 import { apiError } from '@/lib/api-error';
 import { requestDay } from '@/lib/time-zone';
 import { contractMoney } from '@/lib/job-contract';
+import { retainageRate } from '@/lib/retainage';
 import { buildCommitments, isLiveCommitment } from '@/lib/commitments';
 import { projectCashFlow } from '@/lib/cash-flow-projection';
 
@@ -43,7 +44,7 @@ export async function GET(
 
     const { data: project, error: pErr } = await db
       .from('projects')
-      .select('id, name, status, original_contract_amount, contract_amount, retainage_pct, start_date, end_date')
+      .select('id, name, status, contract_amount, original_contract_amount, original_contract_value, original_contract, revised_contract_value, contract_value, retainage_pct, start_date, end_date')
       .eq('id', projectId)
       .eq('tenant_id', t)
       .maybeSingle();
@@ -99,7 +100,7 @@ export async function GET(
     }, null);
     const billedToDate = N(latest?.total_completed_stored);
     const retainageHeld = N(latest?.total_retainage ?? latest?.retainage_held);
-    const retainagePct = N(latest?.retainage_percent) || N(p.retainage_pct) || 10;
+    const retainagePct = retainageRate(latest?.retainage_percent, retainageRate(p.retainage_pct));
 
     const unpaidPayApps = payApps
       .filter((a) => SENT_UNPAID.has(low(a.status)))

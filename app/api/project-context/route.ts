@@ -4,6 +4,8 @@ import { applyMarkupStack } from '@/lib/takeoff/engine';
 import { requestDay } from '@/lib/time-zone';
 import { apiError } from '@/lib/api-error';
 import { contractMoney } from '@/lib/job-contract';
+import { retainageRate } from '@/lib/retainage';
+import { isScheduleDone } from '@/lib/schedule-status';
 
 /**
  * GET ?projectId= — the project intelligence snapshot every add/create screen
@@ -37,7 +39,7 @@ export async function GET(req: NextRequest) {
     projectQ, contractsQ, cosQ, payAppsQ, budgetQ, subsQ, packagesQ,
     invoicesQ, billsQ, posQ, rfisQ, submittalsQ, tasksQ, logQ, takeoffsQ, contactsQ, punchQ, proposalsQ, modelsQ, meetingsQ,
   ] = await Promise.all([
-    safe(db.from('projects').select('id, name, color, status, closeout_date, address, project_number, owner_name, owner_email, architect_name, start_date, end_date, percent_complete, contract_amount, original_contract_amount, retainage_pct, phase, setup_step, setup_complete').eq('id', projectId).eq('tenant_id', t).single()),
+    safe(db.from('projects').select('id, name, color, status, closeout_date, address, project_number, owner_name, owner_email, architect_name, start_date, end_date, percent_complete, contract_amount, original_contract_amount, original_contract_value, original_contract, revised_contract_value, contract_value, retainage_pct, phase, setup_step, setup_complete').eq('id', projectId).eq('tenant_id', t).single()),
     safe(db.from('contracts').select('id, contract_type, title, party_name, vendor_name, amount, contract_amount, original_amount, approved_changes, invoiced_amount, paid_amount, status, retainage_pct, trade').eq('project_id', projectId).eq('tenant_id', t)),
     safe(db.from('change_orders').select('id, co_number, title, status, cost_impact, amount').eq('project_id', projectId).eq('tenant_id', t)),
     safe(db.from('pay_applications').select('id, app_number, period_from, period_to, status, current_payment_due, total_completed_stored, retainage_percent, contract_sum').eq('project_id', projectId).eq('tenant_id', t).order('app_number', { ascending: false }).limit(12)),
@@ -142,7 +144,8 @@ export async function GET(req: NextRequest) {
   } catch (e) {
     return apiError('project-context', e, "Couldn't load this job.");
   }
-  const upcoming = tasks.filter((tk) => (tk.end_date ?? tk.start_date ?? '') >= today && tk.status !== 'complete');
+  // Finished tasks are not upcoming — either spelling, or a full bar (lib/schedule-status).
+  const upcoming = tasks.filter((tk) => (tk.end_date ?? tk.start_date ?? '') >= today && !isScheduleDone(tk.status, tk.pct_complete));
 
   const res = NextResponse.json({
     project: {
@@ -165,7 +168,8 @@ export async function GET(req: NextRequest) {
       billedToDate,
       billedPct: originalContract + approvedCoTotal > 0 ? Math.round((billedToDate / (originalContract + approvedCoTotal)) * 1000) / 10 : 0,
       paidToDate,
-      retainagePct: N(lastPayApp?.retainage_percent) || N(p.retainage_pct) || 10,
+      // 0 % (a release app, or a job with no retainage) stays 0 % (lib/retainage).
+      retainagePct: retainageRate(lastPayApp?.retainage_percent, retainageRate(p.retainage_pct)),
       payAppCount: payApps.length,
       /* Pay apps that actually went to the owner. A draft — including the
          $0 one auto-created when a job is won — is not billing anyone. */
@@ -241,12 +245,12 @@ export async function GET(req: NextRequest) {
       meetings: N((meetingsQ as any)?.count),
     },
     schedule: {
-      criticalCount: tasks.filter((tk) => tk.is_critical && tk.status !== 'complete').length,
+      criticalCount: tasks.filter((tk) => tk.is_critical && !isScheduleDone(tk.status, tk.pct_complete)).length,
       nextTasks: upcoming.slice(0, 3).map((tk) => ({ id: tk.id, name: tk.name, startDate: tk.start_date, endDate: tk.end_date, trade: tk.trade, pctComplete: N(tk.pct_complete) })),
     },
     recent: { lastDailyLogDate: lastLog?.log_date ?? null, dailyLogDays },
     defaults: {
-      retainagePct: N(lastPayApp?.retainage_percent) || N(p.retainage_pct) || 10,
+      retainagePct: retainageRate(lastPayApp?.retainage_percent, retainageRate(p.retainage_pct)),
       nextPayAppNumber: payApps.reduce((m, a) => Math.max(m, N(a.app_number)), 0) + 1,
       nextCoNumber: cos.reduce((m, c) => Math.max(m, N(c.co_number)), 0) + 1,
       nextInvoiceNumber: invoices.length + 1,
