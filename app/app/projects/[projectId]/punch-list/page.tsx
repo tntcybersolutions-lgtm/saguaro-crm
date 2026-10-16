@@ -47,7 +47,7 @@ import RadioEvidence, {
   stripRadioProvenance,
 } from '@/components/RadioEvidence';
 import { layout } from '@/lib/design-tokens';
-import { useOpenOnNew } from '@/lib/ui/open-on-new';
+import { useOpenOnNew, useOpenRecord } from '@/lib/ui/open-on-new';
 
 // Priorities are STORED lowercase ('low'|'medium'|'high'|'critical') and
 // DISPLAYED capitalized. Legacy rows may carry capitalized values — every
@@ -263,6 +263,8 @@ export default function PunchListPage(){
   function viewItem(item:any){
     setSelected(item);setMode('view');
   }
+  // Search hit (?open=<id>) lands on that punch item's detail.
+  useOpenRecord((id)=>{const it=items.find((x:any)=>x.id===id); if(it) viewItem(it);}, !loading);
   function closePanel(){setSelected(null);setMode(null);}
 
   /* ── Unsaved-work protection (R14): only the create drawer arms the guard —

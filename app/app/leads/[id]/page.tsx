@@ -15,7 +15,7 @@
  */
 import React, { useCallback, useEffect, useRef, useState } from 'react';
 import { useParams, useRouter } from 'next/navigation';
-import { ArrowRight, EnvelopeSimple, UploadSimple, DownloadSimple, CheckCircle, WarningCircle, Trash, PencilSimple, User, Phone, Megaphone, MapPin, CalendarBlank, CurrencyDollar, Gauge, CalendarCheck, Funnel, Note, Users, Paperclip, Buildings, Flag } from '@phosphor-icons/react';
+import { ArrowRight, EnvelopeSimple, UploadSimple, DownloadSimple, CheckCircle, WarningCircle, Trash, PencilSimple, User, Phone, Megaphone, MapPin, CalendarBlank, CurrencyDollar, Gauge, CalendarCheck, Funnel, Note, Users, Paperclip, Buildings, Flag, FileText, SealCheck } from '@phosphor-icons/react';
 import { confirmDialog } from '@/lib/ui/async-dialog';
 import { useToast } from '@/components/Toast';
 import { humanError } from '@/lib/errors';
@@ -24,6 +24,10 @@ import { LEAD_STAGES, LEAD_SOURCES, normaliseStage } from '@/lib/lead-stages';
 import { localDay } from '@/lib/calendar-day';
 import { BUILDING_TYPES } from '@/lib/contractor-trades';
 import { FileTypeBadge } from '@/components/FileTypeBadge';
+import ProposalSignPanel from '@/components/proposals/ProposalSignPanel';
+import ProposalEditor, { type EditableProposal } from '@/components/proposals/ProposalEditor';
+import { FlatStyles, SectionLabel, FlatList, Row, Brief } from '@/components/ui/flat';
+import { money, SIGN_STATUS_LABEL, type ProposalLineItem, type SignStatus } from '@/lib/proposal-esign-core';
 import {
   PageShell, Card, StatRow, Badge, Button, DataTable, EmptyState,
   FormModal, Field, Input, Textarea, Select, FormGrid, DateInput,
@@ -61,6 +65,11 @@ type Lead = {
 type Activity = {
   id: string; lead_id: string; activity_type: string; description: string;
   scheduled_at: string | null; created_at: string;
+};
+type DealProposal = EditableProposal & {
+  id: string; proposal_number: string | null; total: number; status: string | null; locked_at: string | null;
+  signed_at: string | null; signed_by: string | null; created_at: string; line_items: ProposalLineItem[];
+  latest_request: { status: SignStatus; signed_at: string | null; signed_name: string | null; on_sign: 'flag' | 'win' } | null;
 };
 type MediaItem = {
   id: string; name: string; content_type: string | null; size_bytes: number | null;
@@ -138,6 +147,11 @@ export default function DealPage() {
   const [editError, setEditError] = useState<string | null>(null);
   const [deleting, setDeleting] = useState(false);
 
+  // The proposal on this deal, and its e-signature (components/proposals).
+  const [proposals, setProposals] = useState<DealProposal[]>([]);
+  const [proposalError, setProposalError] = useState('');
+  const [editor, setEditor] = useState<null | { proposal: DealProposal | null }>(null);
+
   const load = useCallback(async () => {
     setLoading(true);
     setError('');
@@ -176,6 +190,19 @@ export default function DealPage() {
     }
   }, [id]);
   useEffect(() => { void loadMedia(); }, [loadMedia]);
+
+  const loadProposals = useCallback(async () => {
+    try {
+      const r = await fetch(`/api/leads/${id}/proposals`);
+      const j = await r.json().catch(() => ({}));
+      if (!r.ok) throw new Error(j.error || "Couldn't load this deal's proposal.");
+      setProposals((j.proposals || []) as DealProposal[]);
+      setProposalError('');
+    } catch (e) {
+      setProposalError(humanError(e, "Couldn't load this deal's proposal."));
+    }
+  }, [id]);
+  useEffect(() => { void loadProposals(); }, [loadProposals]);
 
   const onUpload = useCallback(async (files: FileList | null) => {
     if (!files || !files.length || uploading) return;
@@ -306,6 +333,15 @@ export default function DealPage() {
     }
   }, [lead, id, converting, router, showToast]);
 
+  /* A signed proposal's one tap: Won, then the job (Path 13's handoff, which
+     also carries the signed proposal across as the contract). A deal already
+     linked to a job only needs the stage. */
+  const markWonAndOpen = useCallback(async () => {
+    if (!lead) return;
+    if (lead.project_id) { await moveStage('Won'); return; }
+    await convert();
+  }, [lead, moveStage, convert]);
+
   const openEdit = useCallback(() => {
     if (!lead) return;
     setForm(formFromLead(lead));
@@ -405,6 +441,9 @@ export default function DealPage() {
   ];
 
   const isLost = stage === 'Lost';
+  const currentProposal = proposals[0] ?? null;
+  const olderProposals = proposals.slice(1);
+  const proposalSigned = currentProposal?.latest_request?.status === 'signed';
   const prob = lead.probability != null && lead.probability !== '' ? Math.max(0, Math.min(100, Number(lead.probability))) : null;
   /* Calendar days as 'YYYY-MM-DD' strings: new Date('2026-10-16') is UTC
      midnight, which made a follow-up due today read "Overdue" all day long
@@ -488,6 +527,64 @@ export default function DealPage() {
         <StagePicker stages={OPEN_STAGES} value={isLost ? null : stage} onSelect={(st) => void moveStage(st)} busy={savingStage} label="Deal stage" />
       </Card>
 
+      {/* Proposal + e-signature — the customer signs in the app, not out of band. */}
+      <section aria-labelledby="deal-proposal">
+        <FlatStyles />
+        <SectionLabel id="deal-proposal" action={proposals.length && !proposalError ? { label: 'New Version', onClick: () => setEditor({ proposal: null }) } : undefined}>Proposal</SectionLabel>
+        {proposalError ? (
+          <EmptyState icon={<WarningCircle size={22} />} title="Proposal didn't load" text={proposalError} action={<Button onClick={() => void loadProposals()}>Retry</Button>} />
+        ) : !currentProposal ? (
+          <EmptyState title="No proposal yet" text="Build it here with line items, then send it for signature." action={<Button icon={<FileText size={15} />} onClick={() => setEditor({ proposal: null })}>Create Proposal</Button>} />
+        ) : (
+          <>
+            {proposalSigned && !isWon && (
+              <Brief tone="success" icon={<SealCheck size={18} weight="fill" />} action={{ label: converting || savingStage === 'Won' ? 'Opening…' : lead.project_id ? 'Mark Won' : 'Mark Won & Open the Job', onClick: () => void markWonAndOpen() }}>
+                <b>{currentProposal.latest_request?.signed_name || 'Your customer'}</b> signed {currentProposal.title} for <b>{money(currentProposal.total)}</b>{currentProposal.latest_request?.signed_at ? ` on ${fmtDate(currentProposal.latest_request.signed_at)}` : ''}.
+              </Brief>
+            )}
+            <FlatList label="Proposal">
+              <li>
+                <Row
+                  icon={<FileText size={18} weight="bold" />}
+                  tone={proposalSigned ? 'success' : 'neutral'}
+                  title={`${currentProposal.title}${currentProposal.proposal_number ? ` · ${currentProposal.proposal_number}` : ''}`}
+                  meta={`${currentProposal.line_items.length} line item${currentProposal.line_items.length === 1 ? '' : 's'}${currentProposal.valid_until ? ` · valid until ${fmtDate(currentProposal.valid_until)}` : ''}${currentProposal.locked_at ? ' · signed, terms locked' : ''}`}
+                  right={money(currentProposal.total)}
+                  action={!currentProposal.locked_at ? <Button size="sm" icon={<PencilSimple size={14} />} onClick={() => setEditor({ proposal: currentProposal })}>Edit</Button> : undefined}
+                />
+              </li>
+            </FlatList>
+            <div style={{ paddingTop: 12 }}>
+              <ProposalSignPanel
+                key={currentProposal.id}
+                proposalId={currentProposal.id}
+                defaultSigner={{ name: lead.contact_name || '', email: lead.email || '' }}
+                winLabel="move this deal to Won"
+                canSend={currentProposal.total > 0}
+                onChanged={() => { void loadProposals(); void load(); }}
+              />
+            </div>
+            {olderProposals.length > 0 && (
+              <>
+                <SectionLabel>Earlier Versions</SectionLabel>
+                <FlatList label="Earlier versions">
+                  {olderProposals.map((p) => (
+                    <li key={p.id}>
+                      <Row
+                        icon={<FileText size={18} weight="bold" />}
+                        title={`${p.title}${p.proposal_number ? ` · ${p.proposal_number}` : ''}`}
+                        meta={p.latest_request ? SIGN_STATUS_LABEL[p.latest_request.status] : 'Not sent'}
+                        right={money(p.total)}
+                      />
+                    </li>
+                  ))}
+                </FlatList>
+              </>
+            )}
+          </>
+        )}
+      </section>
+
       <div style={{ display: 'grid', gap: 16, gridTemplateColumns: 'repeat(auto-fit, minmax(min(100%, 420px), 1fr))', alignItems: 'start' }}>
         <Card icon={<User size={17} weight="bold" />} title="Contact & Details">
           <ItemList>
@@ -570,6 +667,15 @@ export default function DealPage() {
             : <EmptyState title="No files yet" text="Upload proposals, plans or site photos so the whole team works from the same files." />}
         />
       </Card>
+
+      <ProposalEditor
+        open={!!editor}
+        onClose={() => setEditor(null)}
+        leadId={id}
+        initial={editor?.proposal ?? null}
+        defaultTitle={`Proposal for ${lead.company_name || lead.contact_name || 'your project'}`}
+        onSaved={() => { showToast('Proposal saved.', 'success'); void loadProposals(); }}
+      />
 
       {/* Send to the GC — message the deal's contact (P5) */}
       <FormModal
