@@ -20,7 +20,8 @@ import { confirmDialog } from '@/lib/ui/async-dialog';
 import { useToast } from '@/components/Toast';
 import { humanError } from '@/lib/errors';
 import { fmtDate as fmtDateSafe } from '@/lib/format-date';
-import { LEAD_STAGES, LEAD_SOURCES } from '@/lib/lead-stages';
+import { LEAD_STAGES, LEAD_SOURCES, normaliseStage } from '@/lib/lead-stages';
+import { localDay } from '@/lib/calendar-day';
 import { BUILDING_TYPES } from '@/lib/contractor-trades';
 import { FileTypeBadge } from '@/components/FileTypeBadge';
 import {
@@ -125,6 +126,7 @@ export default function DealPage() {
 
   // Deal media hub: files/photos/docs/videos attached to this deal.
   const [media, setMedia] = useState<MediaItem[]>([]);
+  const [mediaError, setMediaError] = useState('');
   const [uploading, setUploading] = useState(false);
 
   // Edit / delete the deal itself. The deal page could move a stage and log a
@@ -161,10 +163,17 @@ export default function DealPage() {
   useEffect(() => { void load(); }, [load]);
 
   const loadMedia = useCallback(async () => {
+    /* Non-fatal — the deal still renders — but a failed read is said, not
+       shown as "0 files on this deal". */
     try {
       const r = await fetch(`/api/leads/${id}/media`);
-      if (r.ok) { const j = await r.json(); setMedia((j.media || []) as MediaItem[]); }
-    } catch { /* non-fatal: the deal still renders without its files */ }
+      if (!r.ok) throw new Error((await r.json().catch(() => ({}))).error || "Couldn't load this deal's files.");
+      const j = await r.json();
+      setMedia((j.media || []) as MediaItem[]);
+      setMediaError('');
+    } catch (e) {
+      setMediaError(humanError(e, "Couldn't load this deal's files."));
+    }
   }, [id]);
   useEffect(() => { void loadMedia(); }, [loadMedia]);
 
@@ -228,7 +237,7 @@ export default function DealPage() {
   /* The spine: move the deal to a stage. One PATCH, which normalises casing;
      won_at / lost_at are stamped here so every pipeline reader agrees at once. */
   const moveStage = useCallback(async (stage: string) => {
-    if (!lead || stage === lead.stage || savingStage) return;
+    if (!lead || stage === normaliseStage(lead.stage) || savingStage) return;
     const now = new Date().toISOString();
     const patch: Record<string, unknown> = {
       stage,
@@ -282,7 +291,13 @@ export default function DealPage() {
       const r = await fetch(`/api/leads/${id}/convert`, { method: 'POST' });
       const j = await r.json().catch(() => ({}));
       if (!r.ok) throw new Error(j.error || 'Could not open the job');
-      showToast(j.alreadyConverted ? 'Opening the existing job…' : 'Job created — opening it…', 'success');
+      const failedFiles: string[] = j.files?.failed ?? [];
+      showToast(
+        j.alreadyConverted ? 'Opening the existing job…'
+          : failedFiles.length ? `Job created — ${failedFiles.length} file${failedFiles.length === 1 ? '' : 's'} could not be copied (${failedFiles.join(', ')}). Opening it…`
+          : 'Job created — opening it…',
+        failedFiles.length ? 'error' : 'success',
+      );
       if (j.nextUrl) router.push(j.nextUrl as string);
     } catch (e) {
       showToast(humanError(e, 'Could not open the job.'), 'error');
@@ -371,7 +386,10 @@ export default function DealPage() {
     );
   }
 
-  const isWon = lead.stage === 'Won';
+  /* Read the stage through the one vocabulary (lib/lead-stages), so the bar,
+     the badge and the Won handoff agree with the board on any casing. */
+  const stage = normaliseStage(lead.stage);
+  const isWon = stage === 'Won';
 
   const mediaColumns: Column<MediaItem>[] = [
     {
@@ -386,15 +404,18 @@ export default function DealPage() {
     { key: 'created_at', header: 'Added', render: (m) => fmtDate(m.created_at) },
   ];
 
-  const isLost = lead.stage === 'Lost';
+  const isLost = stage === 'Lost';
   const prob = lead.probability != null && lead.probability !== '' ? Math.max(0, Math.min(100, Number(lead.probability))) : null;
-  const overdue = !!lead.next_action_date && !isWon && !isLost && new Date(lead.next_action_date) < new Date(new Date().toDateString());
+  /* Calendar days as 'YYYY-MM-DD' strings: new Date('2026-10-16') is UTC
+     midnight, which made a follow-up due today read "Overdue" all day long
+     anywhere west of Greenwich. */
+  const overdue = !!lead.next_action_date && !isWon && !isLost && lead.next_action_date.slice(0, 10) < localDay();
 
   return (
     <PageShell
       crumbs={[...CRUMBS, { label: lead.company_name || 'Deal' }]}
       title={lead.company_name || 'Untitled Deal'}
-      badge={<Badge tone={STAGE_TONE[lead.stage || ''] ?? 'neutral'} dot>{lead.stage || 'Unstaged'}</Badge>}
+      badge={<Badge tone={STAGE_TONE[stage] ?? 'neutral'} dot>{lead.stage ? stage : 'Unstaged'}</Badge>}
       meta={
         <>
           {lead.contact_name && <MetaItem icon={<User size={14} />}>{lead.contact_name}</MetaItem>}
@@ -414,11 +435,13 @@ export default function DealPage() {
           >
             Email the GC
           </Button>
-          {isWon && (lead.project_id ? (
-            <Button variant="primary" href={`/app/projects/${lead.project_id}`} icon={<ArrowRight size={15} />}>View the Job</Button>
-          ) : (
+          {/* A deal already linked to a job links to it at any stage; the
+              handoff that opens one is offered once the deal is Won. */}
+          {lead.project_id ? (
+            <Button variant="primary" href={`/app/projects/${lead.project_id}/overview`} icon={<ArrowRight size={15} />}>View the Job</Button>
+          ) : isWon && (
             <Button variant="primary" onClick={convert} disabled={converting} icon={<ArrowRight size={15} />}>{converting ? 'Opening…' : 'Open the Job'}</Button>
-          ))}
+          )}
           <Button variant="danger" icon={<Trash size={15} />} onClick={deleteDeal} disabled={deleting}>{deleting ? 'Deleting…' : 'Delete Deal'}</Button>
         </>
       }
@@ -446,7 +469,7 @@ export default function DealPage() {
           title={lead.next_action || 'No next step yet'}
           text={lead.next_action
             ? (lead.next_action_date ? `${overdue ? 'Was due' : 'Due'} ${fmtDate(lead.next_action_date)}.` : 'No date set.')
-            : 'Add the next step and a date so this deal shows up on My Work.'}
+            : 'Add the next step and a date so this deal shows up on My Day.'}
           actions={<Button icon={<PencilSimple size={15} />} onClick={openEdit}>{lead.next_action ? 'Change' : 'Add Next Step'}</Button>}
         />
       )}
@@ -462,7 +485,7 @@ export default function DealPage() {
           <Badge tone="closed">Lost</Badge>
         )}
       >
-        <StagePicker stages={OPEN_STAGES} value={isLost ? null : lead.stage} onSelect={(st) => void moveStage(st)} busy={savingStage} label="Deal stage" />
+        <StagePicker stages={OPEN_STAGES} value={isLost ? null : stage} onSelect={(st) => void moveStage(st)} busy={savingStage} label="Deal stage" />
       </Card>
 
       <div style={{ display: 'grid', gap: 16, gridTemplateColumns: 'repeat(auto-fit, minmax(min(100%, 420px), 1fr))', alignItems: 'start' }}>
@@ -526,7 +549,7 @@ export default function DealPage() {
         flush
         icon={<Paperclip size={17} weight="bold" />}
         title="Files & Media"
-        subtitle={`${media.length} file${media.length === 1 ? '' : 's'} on this deal`}
+        subtitle={mediaError ? 'Files could not be loaded' : `${media.length} file${media.length === 1 ? '' : 's'} on this deal`}
         actions={
           <>
             <input ref={fileRef} type="file" multiple hidden disabled={uploading} onChange={(e) => { void onUpload(e.target.files); e.currentTarget.value = ''; }} />
@@ -542,7 +565,9 @@ export default function DealPage() {
           rowKey={(m) => m.id}
           onRowClick={(m) => window.open(m.url, '_blank', 'noopener,noreferrer')}
           rowActions={(m) => [{ label: 'Download', icon: <DownloadSimple size={14} />, inline: true, href: m.url }, { label: 'Remove', icon: <Trash size={14} />, tone: 'danger', onClick: () => void removeMedia(m) }]}
-          empty={<EmptyState title="No files yet" text="Upload proposals, plans or site photos so the whole team works from the same files." />}
+          empty={mediaError
+            ? <EmptyState icon={<WarningCircle size={22} />} title="Files didn't load" text={mediaError} action={<Button onClick={() => void loadMedia()}>Retry</Button>} />
+            : <EmptyState title="No files yet" text="Upload proposals, plans or site photos so the whole team works from the same files." />}
         />
       </Card>
 

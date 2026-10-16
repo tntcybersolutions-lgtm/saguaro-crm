@@ -13,7 +13,7 @@ import { humanError } from '@/lib/errors';
 import { fmtDate as fmtDateSafe } from '@/lib/format-date';
 import MarkOutcomeModal from '@/components/bids/MarkOutcomeModal';
 import { BUILDING_TYPES } from '@/lib/contractor-trades';
-import { summariseByStage, LEAD_SOURCES } from '@/lib/lead-stages';
+import { summariseByStage, normaliseStage, LEAD_STAGES, LEAD_SOURCES } from '@/lib/lead-stages';
 import { useUnsavedGuard, useComposerDirty } from '@/lib/useUnsavedGuard';
 import UnsavedGuardModal from '@/components/UnsavedGuardModal';
 import {
@@ -24,7 +24,8 @@ import {
 import { localDay } from '@/lib/calendar-day';
 
 /* ─── Constants ─── */
-const STAGES = ['New', 'Contacted', 'Qualified', 'Proposal', 'Negotiation', 'Won', 'Lost'] as const;
+/* The one stage vocabulary (lib/lead-stages) — never a local copy. */
+const STAGES = LEAD_STAGES;
 type Stage = typeof STAGES[number];
 /* Stages read as the six fixed status colors (lib/status-colors). */
 const STAGE_TONE: Record<Stage, BadgeTone> = {
@@ -40,7 +41,7 @@ type Lead = {
   id: string; company_name: string; contact_name: string; contact_email: string;
   contact_phone: string; source: string; estimated_value: number; stage: Stage;
   notes: string; tags: string[]; created_at: string; updated_at: string;
-  project_type?: string | null; next_action_date?: string | null;
+  project_type?: string | null; next_action?: string | null; next_action_date?: string | null;
   /* Who owns this deal. Stored since lead_pipeline existed and read by
      nothing, so an owner could not tell who was producing. */
   assigned_to?: string | null;
@@ -69,8 +70,11 @@ const plus3d = () => {
   const d = new Date(Date.now() + 3 * 86400000);
   return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`;
 };
+/* Calendar days, compared as 'YYYY-MM-DD' strings. `new Date('2026-10-16')`
+   is UTC midnight — west of Greenwich a follow-up due TODAY read as overdue
+   on its own due date. */
 const isOverdue = (l: Lead) =>
-  !!l.next_action_date && l.stage !== 'Won' && l.stage !== 'Lost' && new Date(l.next_action_date) < new Date();
+  !!l.next_action_date && l.stage !== 'Won' && l.stage !== 'Lost' && String(l.next_action_date).slice(0, 10) < localDay();
 
 const emptyLead = (): Partial<Lead> => ({
   company_name: '', contact_name: '', contact_email: '', contact_phone: '',
@@ -119,6 +123,7 @@ export default function LeadsPage() {
   const [detailLead, setDetailLead] = useState<Lead | null>(null);
   const [activities, setActivities] = useState<Activity[]>([]);
   const [actLoading, setActLoading] = useState(false);
+  const [actError, setActError] = useState('');
   const [actForm, setActForm] = useState({ activity_type: 'call', description: '', scheduled_at: '' });
   const [emailForm, setEmailForm] = useState({ subject: '', message: '' });
   const [emailSending, setEmailSending] = useState(false);
@@ -141,6 +146,10 @@ export default function LeadsPage() {
       // eslint-disable-next-line @typescript-eslint/no-explicit-any
       setLeads((d.leads ?? []).map((l: any) => ({
         ...l,
+        /* Every reader of the stage goes through the one vocabulary, so a row
+           written in another casing by an older path still lands in its
+           column instead of vanishing from the board (Path 10). */
+        stage: normaliseStage(l.stage) as Stage,
         contact_email: l.contact_email ?? l.email ?? '',
         contact_phone: l.contact_phone ?? l.phone ?? '',
         tags: Array.isArray(l.tags) ? l.tags : [],
@@ -164,8 +173,11 @@ export default function LeadsPage() {
       if (!r.ok) throw new Error('Failed to load activities');
       const d = await r.json();
       setActivities(d.activities ?? []);
-    } catch {
+      setActError('');
+    } catch (e) {
+      /* A failed read is not "no activities logged yet". */
       setActivities([]);
+      setActError(humanError(e, "Couldn't load this lead's activity."));
     } finally {
       setActLoading(false);
     }
@@ -272,6 +284,7 @@ export default function LeadsPage() {
         tags: editLead.tags || [],
         // Parsed by both POST /api/leads and PATCH /api/leads/[id] (verified).
         project_type: editLead.project_type || null,
+        next_action: editLead.next_action?.trim() || null,
         next_action_date: editLead.next_action_date || null,
       };
       const r = await fetch(url, {
@@ -279,7 +292,7 @@ export default function LeadsPage() {
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify(body),
       });
-      if (!r.ok) throw new Error(await r.text());
+      if (!r.ok) throw new Error((await r.json().catch(() => ({}))).error || "Couldn't save the lead.");
       setShowModal(false);
       setEditLead(null);
       showToast(isEdit ? 'Lead updated.' : 'Lead created.', 'success');
@@ -302,7 +315,7 @@ export default function LeadsPage() {
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ stage: newStage }),
       });
-      if (!r.ok) throw new Error('Failed to update stage');
+      if (!r.ok) throw new Error((await r.json().catch(() => ({}))).error || "Couldn't move the lead.");
       setLeads(prev => prev.map(l => l.id === lead.id ? { ...l, stage: newStage } : l));
       // On Won/Lost, capture the outcome + reason into the bid learner.
       if (newStage === 'Won' || newStage === 'Lost') {
@@ -347,7 +360,7 @@ export default function LeadsPage() {
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify(actForm),
       });
-      if (!r.ok) throw new Error('Failed to create activity');
+      if (!r.ok) throw new Error((await r.json().catch(() => ({}))).error || "Couldn't add the activity.");
       setActForm({ activity_type: 'call', description: '', scheduled_at: '' });
       fetchActivities(detailLead.id);
     } catch (e) {
@@ -755,6 +768,9 @@ export default function LeadsPage() {
             >
               <DateInput value={editLead.next_action_date || ''} onChange={e => setEditLead({ ...editLead, next_action_date: e.target.value })} />
             </Field>
+            <Field label="Next Action" hint="What happens on that date. It is the line this lead shows on My Day.">
+              <Input value={editLead.next_action || ''} onChange={e => setEditLead({ ...editLead, next_action: e.target.value })} placeholder="e.g. Call to qualify scope and budget" />
+            </Field>
             <Field label="Tags" hint={(editLead.tags || []).length ? 'Click a tag to remove it.' : 'Type a tag and press Enter.'}>
               <div style={{ display: 'flex', flexDirection: 'column', gap: 6 }}>
                 <div style={{ display: 'flex', gap: 6 }}>
@@ -870,6 +886,8 @@ export default function LeadsPage() {
               </form>
               {actLoading ? (
                 <div className="k-hint">Loading activities…</div>
+              ) : actError ? (
+                <div className="k-hint" role="alert" style={{ color: 'var(--danger)' }}>{actError}</div>
               ) : activities.length === 0 ? (
                 <div className="k-board-empty">No activities logged yet. Add the first one above.</div>
               ) : (

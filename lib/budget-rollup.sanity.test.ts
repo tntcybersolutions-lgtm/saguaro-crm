@@ -22,6 +22,7 @@ const B = 'bbbbbbbb-0000-4000-8000-000000000002';
 const JOB = 'aaaaaaaa-0000-4000-8000-0000000000a1';
 const L1 = 'aaaaaaaa-0000-4000-8000-0000000000b1';
 const L2 = 'aaaaaaaa-0000-4000-8000-0000000000b2';
+const LI1 = 'aaaaaaaa-0000-4000-8000-0000000000c1';
 const ADMIN = { id: 'aaaaaaaa-0000-4000-8000-00000000ad01', tenantId: A, email: 'admin@a.test' };
 
 const get = async () => (await GET(new NextRequest(`https://saguarocontrol.net/api/projects/${JOB}/budget`), { params: { projectId: JOB } })).json();
@@ -34,10 +35,13 @@ beforeEach(() => {
     { id: L1, tenant_id: A, project_id: JOB, cost_code: '26 05 00', description: 'Electrical', original_budget: 200000, approved_changes: 10000, committed: 5000, actual: 40000, projected: 0, percent_complete: 20 },
     { id: L2, tenant_id: A, project_id: JOB, cost_code: '03 30 00', description: 'Concrete', original_budget: 150000, approved_changes: 0, committed: 90000, actual: 10000, projected: 120000, percent_complete: 10 },
   );
+  /* commitments.budget_line_item_id references budget_LINE_ITEMS (the live
+     FK), never budget_lines — the line is found through that row's code. */
+  fake.T('budget_line_items').push({ id: LI1, tenant_id: A, project_id: JOB, cost_code: '26 05 00', csi_division: '26' });
   fake.T('commitments').push(
-    { id: 'c1', tenant_id: A, project_id: JOB, budget_line_item_id: L1, current_amount: 180000, status: 'executed' },
-    { id: 'c2', tenant_id: A, project_id: JOB, budget_line_item_id: L1, original_amount: 20000, approved_changes: 2500, current_amount: null, status: 'approved' },
-    { id: 'c3', tenant_id: A, project_id: JOB, budget_line_item_id: L1, current_amount: 999999, status: 'void' },
+    { id: 'c1', tenant_id: A, project_id: JOB, budget_line_item_id: LI1, current_amount: 180000, status: 'executed' },
+    { id: 'c2', tenant_id: A, project_id: JOB, budget_line_item_id: null, csi_division: '26', original_amount: 20000, approved_changes: 2500, current_amount: null, status: 'approved' },
+    { id: 'c3', tenant_id: A, project_id: JOB, budget_line_item_id: LI1, current_amount: 999999, status: 'void' },
   );
   fake.T('purchase_orders').push(
     { id: 'p1', tenant_id: A, project_id: JOB, cost_code: ' 26 05 00 ', total: 7500, status: 'issued' },
@@ -66,10 +70,22 @@ describe('budget roll-ups', () => {
 
   test("a bid award's commitment and its draft PO count once", async () => {
     const PKG = 'aaaaaaaa-0000-4000-8000-0000000000e1';
-    fake.T('commitments').push({ id: 'c4', tenant_id: A, project_id: JOB, budget_line_item_id: L2, original_amount: 60000, current_amount: 60000, status: 'active', bid_package_id: PKG });
-    fake.T('purchase_orders').push({ id: 'p3', tenant_id: A, project_id: JOB, cost_code: '03 30 00', total: 60000, status: 'draft', notes: `Auto-generated on bid award (package ${PKG}). Committed cost.` });
+    // The award trigger leaves budget_line_item_id and csi_division empty when the
+    // package has no division; the award PO carries the trade name instead.
+    fake.T('commitments').push({ id: 'c4', tenant_id: A, project_id: JOB, budget_line_item_id: null, csi_division: null, original_amount: 60000, current_amount: 60000, status: 'active', bid_package_id: PKG });
+    fake.T('purchase_orders').push({ id: 'p3', tenant_id: A, project_id: JOB, cost_code: 'Concrete', total: 60000, status: 'draft', notes: `Auto-generated on bid award (package ${PKG}). Committed cost.` });
     const c = (await get()).lines.find((l: { id: string }) => l.id === L2);
     expect(c.committed_cost).toBe(60000);
+    expect(c.committed_source).toBe('commitments');
+  });
+
+  test('the contract is original + approved change orders (lib/job-contract)', async () => {
+    fake.T('projects')[0].original_contract_amount = 950000;
+    fake.T('change_orders').push(
+      { id: 'co1', tenant_id: A, project_id: JOB, status: 'approved', amount: 50000 },
+      { id: 'co2', tenant_id: A, project_id: JOB, status: 'pending', amount: 9999 },
+    );
+    expect((await get()).contract).toBe(1000000);
   });
 
   test('a line with no commitments keeps what was entered', async () => {

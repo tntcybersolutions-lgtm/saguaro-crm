@@ -16,7 +16,7 @@ import { PHASE_CHOICES, type ProjectPhase } from '@/lib/project-phase';
 import UnsavedGuardModal from '@/components/UnsavedGuardModal';
 import { PROJECT_TEMPLATES, templateByKey } from '@/lib/project-templates';
 import ProjectPreview from '@/components/projects/ProjectPreview';
-import { BUILDING_TYPES } from '@/lib/contractor-trades';
+import { BUILDING_TYPES, CATEGORY_BY_BUILDING_TYPE } from '@/lib/contractor-trades';
 import { SECTORS } from '@/lib/taxonomy';
 import { Buildings, MapPin, UsersThree, Sparkle, CurrencyDollar, ShieldCheck, Hash, Scales, WarningCircle, ArrowRight, Stack } from '@phosphor-icons/react';
 import { useProjects } from '@/lib/hooks/useProjects';
@@ -45,19 +45,7 @@ const PROJECT_CATEGORIES = [
   {value:'remodel',label:'Remodel / TI'},
 ];
 
-// Canonical building type (lib/contractor-trades BUILDING_TYPES) -> DB category enum.
-const CATEGORY_BY_BUILDING_TYPE: Record<string,string> = {
-  'Commercial Office':'commercial','Medical Office / MOB':'healthcare','Hospital / Healthcare':'healthcare',
-  'Retail':'commercial','Restaurant / Food Service':'commercial','Industrial / Warehouse':'industrial',
-  'Manufacturing / Production':'industrial','Cold Storage / Refrigerated':'industrial','Data Center':'industrial',
-  'Laboratory / R&D':'industrial','Educational — K-12':'education','Educational — Higher Ed / University':'education',
-  'Government / Municipal':'government','Courthouse / Justice':'government','Religious / Institutional':'commercial',
-  'Hospitality / Hotel':'commercial','Multi-Family Residential (5+ units)':'multifamily','Single-Family Residential':'residential',
-  'Senior Living / Assisted Living':'healthcare','Mixed-Use':'mixed_use','Sports & Recreation':'commercial',
-  'Arena / Stadium':'commercial','Parking Structure':'commercial','Auto Dealership':'commercial',
-  'Grocery / Supermarket':'commercial','Tenant Improvement (TI)':'remodel','Historic Renovation':'remodel',
-  'Civil / Infrastructure':'industrial','Other':'commercial',
-};
+// Building type -> DB category enum: one shared map (lib/contractor-trades), also used by the won-lead handoff.
 
 const CONTRACT_TYPES = ['Lump Sum GMP','Cost Plus Fixed Fee','Cost Plus Percentage','Unit Price','Design-Build'];
 

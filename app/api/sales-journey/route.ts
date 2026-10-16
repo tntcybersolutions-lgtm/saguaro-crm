@@ -6,8 +6,10 @@
  * Answers one question per step: is there any evidence this has happened.
  * Never returns rows.
  *
- * Cost: every query is `select('id', { count: 'exact', head: true })`, so the
- * database counts and sends nothing back. The client caches for five minutes —
+ * Cost: every query but one is `select('id', { count: 'exact', head: true })`,
+ * so the database counts and sends nothing back. The qualified count reads the
+ * stage column and buckets it with the shared lib/lead-stages function, so it
+ * agrees with the board and the sales overview by construction. The client caches for five minutes —
  * "has this company ever taken a lead" does not change between two clicks.
  *
  * A query that FAILS omits its field rather than reporting 0, exactly as
@@ -18,7 +20,7 @@ import { NextRequest, NextResponse } from 'next/server';
 import { requirePermission } from '@/lib/permissions';
 import { createServerClient, getUser } from '@/lib/supabase-server';
 import { apiError } from '@/lib/api-error';
-import { QUALIFIED_STAGES } from '@/lib/sales-journey';
+import { summariseByStage, qualifiedValue } from '@/lib/lead-stages';
 
 export async function GET(req: NextRequest) {
   const g = await requirePermission(req, 'Sales', 'View');
@@ -33,8 +35,12 @@ export async function GET(req: NextRequest) {
     const [leads, activities, qualified, customers, bidPackages, projects] = await Promise.all([
       db.from('lead_pipeline').select('id', head).eq('tenant_id', t),
       db.from('lead_activities').select('id', head).eq('tenant_id', t),
-      db.from('lead_pipeline').select('id', head).eq('tenant_id', t)
-        .in('stage', QUALIFIED_STAGES as unknown as string[]),
+      /* "Qualified" is counted by the SAME function the board and the sales
+         overview bucket with (summariseByStage → qualifiedValue, Path 14), not
+         a database `IN`: Postgres IN is case-sensitive, so a 'qualified' or
+         'closed won' row written by any older path would be invisible here
+         while the board counts it. One column per lead, never sent back. */
+      db.from('lead_pipeline').select('stage').eq('tenant_id', t).limit(10000),
       db.from('customer_profiles').select('id', head).eq('tenant_id', t),
       db.from('bid_packages').select('id', head).eq('tenant_id', t),
       db.from('projects').select('id', head).eq('tenant_id', t),
@@ -48,7 +54,8 @@ export async function GET(req: NextRequest) {
       signals: {
         leads: n(leads),
         activities: n(activities),
-        qualified: n(qualified),
+        qualified: qualified.error ? undefined
+          : qualifiedValue(summariseByStage((qualified.data || []) as Array<{ stage: string | null }>)).count,
         customers: n(customers),
         bidPackages: n(bidPackages),
         projects: n(projects),

@@ -3,7 +3,8 @@ import { createServerClient, getUser } from '@/lib/supabase-server';
 import { requirePermission } from '@/lib/permissions';
 import { apiError } from '@/lib/api-error';
 import { isClosedStatus, isDoneStatus } from '@/lib/project-lifecycle';
-import { summariseByStage } from '@/lib/lead-stages';
+import { summariseByStage, isWon, isLost, isUndecided } from '@/lib/lead-stages';
+import { requestDay, addDays } from '@/lib/time-zone';
 
 export const dynamic = 'force-dynamic';
 
@@ -57,21 +58,26 @@ export async function GET(req: NextRequest) {
     const todos = todosRes.error ? [] : (todosRes.data || []);
 
     const num = (v: unknown) => Number(v) || 0;
-    /** Today as a calendar day at local midnight — see the header. */
-    const today = new Date();
-    today.setHours(0, 0, 0, 0);
-    const dayOf = (s: unknown): Date | null => {
-      const m = /^(\d{4})-(\d{2})-(\d{2})/.exec(String(s || ''));
-      if (!m) return null;
-      return new Date(Number(m[1]), Number(m[2]) - 1, Number(m[3]));
-    };
-    const inDays = (d: Date, n: number) => {
-      const x = new Date(today); x.setDate(x.getDate() + n); return d <= x;
+    /* Today is the PERSON's calendar day (device zone, else the company's),
+       never the server's: on Vercel the server day is UTC, so from 5 pm in
+       Arizona a follow-up due today was already "late" here while My Day —
+       which reads requestDay — still had it under Today. 'YYYY-MM-DD' strings
+       compare correctly as strings. */
+    const { today } = await requestDay(req.headers, db, t, 'sales/overview');
+    const weekOut = addDays(today, 7);
+    const dayOf = (s: unknown): string | null => {
+      const m = /^(\d{4}-\d{2}-\d{2})/.exec(String(s || ''));
+      return m ? m[1] : null;
     };
 
-    const open = leads.filter(l => !l.won_at && !l.lost_at);
-    const won = leads.filter(l => !!l.won_at);
-    const lost = leads.filter(l => !!l.lost_at);
+    /* Open / won / lost by the STAGE — the same field the board buckets on —
+       not by the won_at / lost_at stamps. The board's "Move to Won" never
+       stamped won_at, so a deal could sit in Won on the board and still be
+       counted as open pipeline here (Path 14). Stamps are now kept in step on
+       the server, but the stage stays the one truth every reader shares. */
+    const open = leads.filter(l => isUndecided(l.stage));
+    const won = leads.filter(l => isWon(l.stage));
+    const lost = leads.filter(l => isLost(l.stage));
 
     /* Pipeline twice: what it is worth if everything lands, and what it is
        worth weighted by the odds the salesperson themselves recorded. A raw
@@ -91,10 +97,13 @@ export async function GET(req: NextRequest) {
        does not care which screen it was written on. */
     const followUps: Array<{ id: string; what: string; who: string; due: string; source: string; leadId?: string; projectId?: string }> = [];
     for (const l of open) {
+      /* A follow-up DATE is a follow-up, with or without the words: a lead
+         created on the board gets a date 3 days out and no next_action text,
+         and My Day lists it as "Follow up" — so must this. */
       const d = dayOf(l.next_action_date);
-      if (!d || !l.next_action) continue;
+      if (!d) continue;
       followUps.push({
-        id: `lead:${l.id}`, what: String(l.next_action),
+        id: `lead:${l.id}`, what: String(l.next_action || 'Follow up'),
         who: String(l.company_name || l.contact_name || 'Lead'),
         due: String(l.next_action_date), source: 'lead', leadId: String(l.id),
       });
@@ -115,10 +124,10 @@ export async function GET(req: NextRequest) {
     }
 
     const overdue = followUps.filter(f => { const d = dayOf(f.due); return d ? d < today : false; });
-    const dueToday = followUps.filter(f => { const d = dayOf(f.due); return d ? d.getTime() === today.getTime() : false; });
+    const dueToday = followUps.filter(f => dayOf(f.due) === today);
     const upcoming = followUps.filter(f => {
       const d = dayOf(f.due);
-      return d ? d > today && inDays(d, 7) : false;
+      return d ? d > today && d <= weekOut : false;
     });
 
     const activeProjects = projects.filter(p => !isClosedStatus(p.status));

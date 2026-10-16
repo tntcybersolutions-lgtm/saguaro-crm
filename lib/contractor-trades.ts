@@ -276,6 +276,25 @@ export const BUILDING_TYPES: readonly string[] = [
   'Other',
 ] as const;
 
+/**
+ * Building type → projects.project_type category. A job carries both: the
+ * category (`project_type`, the short enum the lists filter on) and the
+ * building type (`building_type`). Shared by the new-project form and the
+ * won-lead handoff (/api/leads/[id]/convert) so both file a job the same way.
+ */
+export const CATEGORY_BY_BUILDING_TYPE: Record<string, string> = {
+  'Commercial Office': 'commercial', 'Medical Office / MOB': 'healthcare', 'Hospital / Healthcare': 'healthcare',
+  'Retail': 'commercial', 'Restaurant / Food Service': 'commercial', 'Industrial / Warehouse': 'industrial',
+  'Manufacturing / Production': 'industrial', 'Cold Storage / Refrigerated': 'industrial', 'Data Center': 'industrial',
+  'Laboratory / R&D': 'industrial', 'Educational — K-12': 'education', 'Educational — Higher Ed / University': 'education',
+  'Government / Municipal': 'government', 'Courthouse / Justice': 'government', 'Religious / Institutional': 'commercial',
+  'Hospitality / Hotel': 'commercial', 'Multi-Family Residential (5+ units)': 'multifamily', 'Single-Family Residential': 'residential',
+  'Senior Living / Assisted Living': 'healthcare', 'Mixed-Use': 'mixed_use', 'Sports & Recreation': 'commercial',
+  'Arena / Stadium': 'commercial', 'Parking Structure': 'commercial', 'Auto Dealership': 'commercial',
+  'Grocery / Supermarket': 'commercial', 'Tenant Improvement (TI)': 'remodel', 'Historic Renovation': 'remodel',
+  'Civil / Infrastructure': 'industrial', 'Other': 'commercial',
+};
+
 // ─── Company / Contractor Type ────────────────────────────────────────────────
 // Used in: onboarding, company profile, subs list
 
