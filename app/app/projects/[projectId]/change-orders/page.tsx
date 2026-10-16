@@ -47,6 +47,7 @@ import {
 import Suggest from '@/components/ui/Suggest';
 import { layout } from '@/lib/design-tokens';
 import { coAmount } from '@/lib/change-order-amount';
+import { approvedChangeTotal, originalContract } from '@/lib/job-contract';
 
 const money = new Intl.NumberFormat('en-US', { style: 'currency', currency: 'USD', minimumFractionDigits: 2, maximumFractionDigits: 2 });
 const fmt = (n:number) => money.format(n||0);
@@ -244,16 +245,9 @@ export default function ChangeOrdersPage() {
   const [coSearch,setCoSearch] = useState('');
   const [coStatusFilter,setCoStatusFilter] = useState('all');
 
-  // project contract sum for running total
-  const [contractSum,setContractSum] = useState(0);
-
   // /api/project-context snapshot — the screen walks in knowing the contract
   // money, CO history, bid packages, and schedule before the GC types anything.
   const { ctx } = useProjectContext(projectId);
-  useEffect(()=>{
-    const original = Number(ctx?.money?.originalContract)||0;
-    if(original>0) setContractSum(prev=>prev||original);
-  },[ctx]);
 
   // form
   const [fTitle,setFTitle]         = useState('');
@@ -310,11 +304,23 @@ export default function ChangeOrdersPage() {
     }
   }
 
+  /* Until /api/project-context answers, the job row is the fallback — read
+     through lib/job-contract's originalContract. This effect used to set the
+     ORIGINAL to projects.contract_amount, which already carries every approved
+     CO (and it ran after, and over, the context's figure). The page then added
+     the approved COs again: Pima showed an original of $2,539,650 and a revised
+     contract of $2,667,300 against a real $2,412,000 / $2,539,650. */
   const { projects: allProjects } = useProjects();
-  useEffect(() => {
+  // G702 line 1 — the ORIGINAL contract. The context's figure when it has
+  // one; otherwise derived from the job row once the CO log has loaded (an
+  // empty log would read the CO-inclusive contract_amount as the original).
+  const contractSum = useMemo(() => {
+    const fromCtx = Number(ctx?.money?.originalContract) || 0;
+    if (fromCtx > 0) return fromCtx;
+    if (loading) return 0;
     const project = (allProjects as any[]).find((p: any) => p.id === projectId);
-    if (project?.contract_amount) setContractSum(Number(project.contract_amount) || 0);
-  }, [allProjects, projectId]);
+    return project ? originalContract(project, approvedChangeTotal(cos)) : 0;
+  }, [ctx, loading, allProjects, projectId, cos]);
 
   const load = useCallback(async()=>{
     setLoading(true); setLoadError('');

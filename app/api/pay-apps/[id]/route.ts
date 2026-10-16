@@ -5,6 +5,8 @@ import { toCents, toDollars, percentOf, subCents, computePayApp } from '@/lib/ca
 import { must } from '@/lib/db-write';
 import { apiError } from '@/lib/api-error';
 import { retainageLedger, retainageRate } from '@/lib/retainage';
+import { onPayAppApproved } from '@/lib/triggers';
+import { runInBackground } from '@/lib/background';
 
 export async function GET(req: NextRequest, { params }: { params: Promise<{ id: string }> }) {
   const { id } = await params;
@@ -88,14 +90,28 @@ export async function PUT(req: NextRequest, { params }: { params: Promise<{ id: 
        every prior period from line 4 on each save.) */
     const sovEdit = Array.isArray(body.lineItems) && body.lineItems.length > 0;
     const workEdited = sovEdit ? undefined : (body.work_completed ?? body.workCompleted ?? body.thisPeriod);
+    /* A G703 line's three money columns, under any of the names a caller
+       uses: the live columns (prev_completed / this_period /
+       stored_materials), the detail sheet's work_* names, or camelCase. The
+       compute and the stored row read the SAME resolved figure — the insert
+       used to read only the work_* names, so a line sent with the live names
+       was stored as zeros while the header was computed from real money. */
+    const lineMoney = (item: any) => ({
+      prev: Number(item.work_from_prev ?? item.workFromPrev ?? item.prev_completed) || 0,
+      thisPeriod: Number(item.work_this_period ?? item.workThisPeriod ?? item.this_period) || 0,
+      stored: Number(item.materials_stored ?? item.materialsStored ?? item.stored_materials) || 0,
+    });
+    /* Per-line results from the engine (completed, %, balance, retainage),
+       so the stored G703 line always cross-foots with the stored G702. */
+    let engineLines: Array<{ completedAndStored: number; percentComplete: number; balanceToFinish: number; retainage: number }> | null = null;
     /* The row being edited: its job (schedule_of_values.project_id is NOT NULL
        and the detail sheet never sends it — every save used to delete the SOV
        and then fail the re-insert on a null project_id) and its money inputs. */
     let ex: any = null;
-    if (sovEdit || Array.isArray(body.lineItems)) {
+    if (sovEdit || Array.isArray(body.lineItems) || workEdited !== undefined) {
       const { data: existing, error: exErr } = await db
         .from('pay_applications')
-        .select('id, project_id, app_number, retainage_percent, less_previous_certificates, contract_sum, change_orders_total')
+        .select('id, project_id, app_number, retainage_percent, less_previous_certificates, contract_sum, change_orders_total, prev_completed')
         .eq('id', id)
         .eq('tenant_id', user.tenantId)
         .maybeSingle();
@@ -123,30 +139,33 @@ export async function PUT(req: NextRequest, { params }: { params: Promise<{ id: 
       }
       const prevCerts = toCents(prevCertsDollars);
       const r = computePayApp({
-        lines: (body.lineItems as any[]).map((item: any, i: number) => ({
-          id: String(i + 1),
-          description: String(item.description || ''),
-          scheduledValue: toCents(Number(item.scheduled_value ?? item.scheduledValue) || 0),
-          fromPrevious: toCents(Number(item.work_from_prev ?? item.workFromPrev ?? item.prev_completed) || 0),
-          thisPeriod: toCents(Number(item.work_this_period ?? item.workThisPeriod ?? item.this_period) || 0),
-          storedMaterials: toCents(Number(item.materials_stored ?? item.materialsStored ?? item.stored_materials) || 0),
-        })),
+        lines: (body.lineItems as any[]).map((item: any, i: number) => {
+          const lm = lineMoney(item);
+          return {
+            id: String(i + 1),
+            description: String(item.description || ''),
+            scheduledValue: toCents(Number(item.scheduled_value ?? item.scheduledValue) || 0),
+            fromPrevious: toCents(lm.prev),
+            thisPeriod: toCents(lm.thisPeriod),
+            storedMaterials: toCents(lm.stored),
+          };
+        }),
         retainagePercent: rate,
         previousPaymentsLessRetainage: prevCerts,
       });
-      const sum = (k: 'fromPrevious' | 'thisPeriod' | 'storedMaterials') => (body.lineItems as any[]).reduce((s2: number, item: any) => {
-        const v = k === 'fromPrevious' ? (item.work_from_prev ?? item.workFromPrev ?? item.prev_completed)
-          : k === 'thisPeriod' ? (item.work_this_period ?? item.workThisPeriod ?? item.this_period)
-          : (item.materials_stored ?? item.materialsStored ?? item.stored_materials);
-        return s2 + toCents(Number(v) || 0);
-      }, 0);
+      engineLines = r.lines;
+      const sum = (k: 'prev' | 'thisPeriod' | 'stored') => (body.lineItems as any[]).reduce((s2: number, item: any) => s2 + toCents(lineMoney(item)[k]), 0);
       const contractToDate = toCents((Number(ex.contract_sum) || 0) + (Number(ex.change_orders_total) || 0));
       Object.assign(headerFields, {
         retainage_percent: rate,
-        prev_completed: toDollars(sum('fromPrevious')),
+        prev_completed: toDollars(sum('prev')),
         this_period: toDollars(sum('thisPeriod')),
-        stored_materials: toDollars(sum('storedMaterials')),
+        stored_materials: toDollars(sum('stored')),
         total_completed_stored: toDollars(r.completedAndStoredTotal),
+        // The text mirrors create and the G702 PDF write; kept in step so no
+        // reader of the older names sees the figure from before this save.
+        total_completed: toDollars(r.completedAndStoredTotal),
+        retainage_amount: toDollars(r.retainageTotal),
         percent_complete: contractToDate > 0 ? Math.round((r.completedAndStoredTotal / contractToDate) * 10000) / 100 : r.percentComplete,
         total_retainage: toDollars(r.retainageTotal),
         total_earned_less_retainage: toDollars(r.totalEarnedLessRetainage),
@@ -172,15 +191,28 @@ export async function PUT(req: NextRequest, { params }: { params: Promise<{ id: 
         if (!Number.isFinite(prevPaymentsDollars)) prevPaymentsDollars = Number((existing as any)?.less_previous_certificates ?? 0) || 0;
       }
       const workCents = toCents(Number(workEdited) || 0);
-      const retainageCents = percentOf(workCents, retainagePercent);
-      const earnedCents = subCents(workCents, retainageCents);
+      /* The amount sent is THIS PERIOD's work (G702 4b). Completed to date
+         (line 4) is the work from previous applications plus it — storing
+         the period alone as line 4 dropped every earlier period, and
+         retainage and the payment due were then computed on that short
+         figure. The same defect the SOV branch above already fixed. */
+      const prevSent = body.prev_completed ?? body.prevCompleted;
+      const prevCents = toCents(
+        prevSent !== undefined && prevSent !== null && String(prevSent).trim() !== ''
+          ? Number(prevSent) || 0
+          : Number(ex?.prev_completed) || 0,
+      );
+      const toDateCents = prevCents + workCents;
+      const retainageCents = percentOf(toDateCents, retainagePercent);
+      const earnedCents = subCents(toDateCents, retainageCents);
       // current payment due = earned-less-retainage − previous certificates.
       // (Bug fix: prior payments were previously omitted, over-billing any project
       // with earlier certificates.)
       const currentDueCents = subCents(earnedCents, toCents(prevPaymentsDollars));
+      headerFields.prev_completed = toDollars(prevCents);
       headerFields.this_period = toDollars(workCents);
-      headerFields.total_completed_stored = toDollars(workCents);
-      headerFields.total_completed = toDollars(workCents);
+      headerFields.total_completed_stored = toDollars(toDateCents);
+      headerFields.total_completed = toDollars(toDateCents);
       headerFields.total_retainage = toDollars(retainageCents);
       headerFields.retainage_amount = toDollars(retainageCents);
       headerFields.total_earned_less_retainage = toDollars(earnedCents);
@@ -207,22 +239,31 @@ export async function PUT(req: NextRequest, { params }: { params: Promise<{ id: 
       let keepIds: string[] = [];
       if (body.lineItems.length > 0) {
         const { data: inserted, error: liErr } = await db.from('schedule_of_values').insert(
-          body.lineItems.map((item: any, i: number) => ({
-            tenant_id: user.tenantId,
-            project_id: ex?.project_id,
-            pay_app_id: id,
-            line_number: i + 1,
-            description: item.description,
-            scheduled_value: item.scheduled_value ?? item.scheduledValue ?? 0,
-            prev_completed: item.work_from_prev ?? item.workFromPrev ?? 0,
-            this_period: item.work_this_period ?? item.workThisPeriod ?? 0,
-            stored_materials: item.materials_stored ?? item.materialsStored ?? 0,
-            total_completed: item.total_completed ?? item.totalCompleted ?? 0,
-            percent_complete: item.percent_complete ?? item.percentComplete ?? 0,
-            balance_to_finish: item.balance_to_finish ?? item.balanceToFinish ?? 0,
-            retainage: item.retainage ?? 0,
-            cost_code: item.csi_code ?? item.csiCode,
-          }))
+          body.lineItems.map((item: any, i: number) => {
+            const lm = lineMoney(item);
+            const el = engineLines?.[i];
+            return {
+              tenant_id: user.tenantId,
+              project_id: ex?.project_id,
+              pay_app_id: id,
+              line_number: i + 1,
+              // description is NOT NULL on schedule_of_values.
+              description: String(item.description ?? ''),
+              scheduled_value: Number(item.scheduled_value ?? item.scheduledValue) || 0,
+              prev_completed: lm.prev,
+              this_period: lm.thisPeriod,
+              stored_materials: lm.stored,
+              // Derived by the engine, never the client's arithmetic.
+              total_completed: el ? toDollars(el.completedAndStored) : lm.prev + lm.thisPeriod + lm.stored,
+              percent_complete: el ? el.percentComplete : Number(item.percent_complete ?? item.percentComplete) || 0,
+              balance_to_finish: el ? toDollars(el.balanceToFinish) : Number(item.balance_to_finish ?? item.balanceToFinish) || 0,
+              retainage: el ? toDollars(el.retainage) : Number(item.retainage) || 0,
+              /* The column is cost_code. A row loaded from the database carries
+                 cost_code, not csi_code, so reading csi_code alone wiped every
+                 line's cost code the first time a draft was saved. */
+              cost_code: item.cost_code ?? item.csi_code ?? item.csiCode ?? null,
+            };
+          })
         ).select('id');
         if (liErr) throw liErr;
         keepIds = ((inserted as Array<{ id: string }> | null) || []).map((r) => r.id);
@@ -286,6 +327,27 @@ export async function PATCH(req: NextRequest, { params }: { params: Promise<{ id
       return NextResponse.json({ success: true });
     }
 
+    /* A status written here is still an approval. The register's bulk
+       Approve used this PATCH, so an app approved that way got no
+       approved_at and no conditional lien waivers — the approval cascade
+       only ran from POST /approve. Moving INTO approved now runs the same
+       cascade (it skips subs that already hold a waiver for this app). */
+    let becameApproved = false;
+    if (typeof updates.status === 'string') {
+      updates.status = String(updates.status).toLowerCase();
+      if (updates.status === 'approved') {
+        // Approving takes the same permission as POST /approve.
+        const full = await requirePermission(req, 'Pay Apps', 'Full');
+        if (!full.ok) return full.res;
+        const { data: before, error: bErr } = await db
+          .from('pay_applications').select('status').eq('id', id).eq('tenant_id', user.tenantId).maybeSingle();
+        if (bErr) throw bErr;
+        if (!before) return NextResponse.json({ error: 'Not found' }, { status: 404 });
+        becameApproved = String((before as { status?: string | null }).status || '') !== 'approved';
+        if (becameApproved) updates.approved_at = new Date().toISOString();
+      }
+    }
+
     const { data, error } = await db
       .from('pay_applications')
       .update(updates)
@@ -294,6 +356,7 @@ export async function PATCH(req: NextRequest, { params }: { params: Promise<{ id
       .select()
       .single();
     if (error) throw error;
+    if (becameApproved) runInBackground(onPayAppApproved(id), 'onPayAppApproved');
     return NextResponse.json({ payApp: data });
   } catch (e) {
     return apiError('pay-apps/[id] PATCH', e, "Couldn't save the pay application. Please try again.");

@@ -3,6 +3,7 @@ import { createServerClient, getUser } from '@/lib/supabase-server';
 import { requirePermission } from '@/lib/permissions';
 import { must } from '@/lib/db-write';
 import { apiError, apiFail } from '@/lib/api-error';
+import { applyChangeOrderMoney } from '@/lib/change-order-cascade';
 
 const ALLOWED_CO_COLUMNS = [
   'project_id', 'title', 'description', 'amount', 'status', 'reason', 'submitted_by', 'co_number',
@@ -47,36 +48,47 @@ export async function GET(_req: NextRequest, { params }: { params: Promise<{ id:
   }
 }
 
-export async function PUT(req: NextRequest, { params }: { params: Promise<{ id: string }> }) {
+/** PUT and PATCH write the same allow-listed columns. A write that changes
+ *  the status, or the amount of an approved CO, moves the contract and the
+ *  budget (lib/change-order-cascade) — this editor used to set
+ *  status: 'approved' with no cascade at all. Deciding a CO (approved /
+ *  rejected) takes the same Full permission as /approve and /reject. */
+async function writeChangeOrder(req: NextRequest, id: string, scope: string) {
   const g = await requirePermission(req, 'Change Orders', 'Edit');
   if (!g.ok) return g.res;
-  const { id } = await params;
   try {
     const body = await req.json();
     const db = g.db;
+    const updates = filterCoBody(body);
+    if (typeof updates.status === 'string') {
+      updates.status = String(updates.status).toLowerCase();
+      if (updates.status === 'approved' || updates.status === 'rejected') {
+        const full = await requirePermission(req, 'Change Orders', 'Full');
+        if (!full.ok) return full.res;
+      }
+    }
+    const { data: before, error: bErr } = await db.from('change_orders').select('*')
+      .eq('id', id).eq('tenant_id', g.user.tenantId).maybeSingle();
+    if (bErr) throw bErr;
+    if (!before) return apiFail('Change order not found', 404);
     // Tenant-scope the write — g.db is the service-role client (RLS bypassed).
-    const { data, error } = await db.from('change_orders').update(filterCoBody(body)).eq('id', id).eq('tenant_id', g.user.tenantId).select().single();
+    const { data, error } = await db.from('change_orders').update(updates).eq('id', id).eq('tenant_id', g.user.tenantId).select().single();
     if (error) throw error;
+    await applyChangeOrderMoney(db, g.user.tenantId, before as never, data as never);
     return NextResponse.json({ changeOrder: data });
   } catch (e) {
-    return apiError('change-orders/[id] PUT', e);
+    return apiError(scope, e);
   }
 }
 
-export async function PATCH(req: NextRequest, { params }: { params: Promise<{ id: string }> }) {
-  const g = await requirePermission(req, 'Change Orders', 'Edit');
-  if (!g.ok) return g.res;
+export async function PUT(req: NextRequest, { params }: { params: Promise<{ id: string }> }) {
   const { id } = await params;
-  try {
-    const body = await req.json();
-    const db = g.db;
-    // Tenant-scope the write — g.db is the service-role client (RLS bypassed).
-    const { data, error } = await db.from('change_orders').update(filterCoBody(body)).eq('id', id).eq('tenant_id', g.user.tenantId).select().single();
-    if (error) throw error;
-    return NextResponse.json({ changeOrder: data });
-  } catch (e) {
-    return apiError('change-orders/[id] PATCH', e);
-  }
+  return writeChangeOrder(req, id, 'change-orders/[id] PUT');
+}
+
+export async function PATCH(req: NextRequest, { params }: { params: Promise<{ id: string }> }) {
+  const { id } = await params;
+  return writeChangeOrder(req, id, 'change-orders/[id] PATCH');
 }
 
 export async function DELETE(_req: NextRequest, { params }: { params: Promise<{ id: string }> }) {
@@ -86,12 +98,14 @@ export async function DELETE(_req: NextRequest, { params }: { params: Promise<{ 
   try {
     const db = g.db;
     // Verify tenant ownership before deleting anything (service-role bypasses RLS).
-    const { data: owned } = await db.from('change_orders').select('id').eq('id', id).eq('tenant_id', g.user.tenantId).single();
+    const { data: owned } = await db.from('change_orders').select('*').eq('id', id).eq('tenant_id', g.user.tenantId).single();
     if (!owned) return NextResponse.json({ error: 'Not found' }, { status: 404 });
     // Delete line items first (tenant-scoped)
     await must(db.from('change_order_line_items').delete().eq('change_order_id', id).eq('tenant_id', g.user.tenantId), 'change_order_line_items delete');
     const { error } = await db.from('change_orders').delete().eq('id', id).eq('tenant_id', g.user.tenantId);
     if (error) throw error;
+    // Deleting an approved CO takes it off the contract and the budget.
+    await applyChangeOrderMoney(db, g.user.tenantId, owned as never, null);
     return NextResponse.json({ success: true });
   } catch (e) {
     return apiError('change-orders/[id] DELETE', e);

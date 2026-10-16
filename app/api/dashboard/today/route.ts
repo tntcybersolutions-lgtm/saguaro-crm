@@ -5,6 +5,7 @@ import { apiError } from '@/lib/api-error';
 import { embed } from '@/lib/db-embeds';
 import { addDays, requestDay } from '@/lib/time-zone';
 import { daysUntilDay } from '@/lib/calendar-day';
+import { PLACEHOLDER_WAIVER_PREFIX } from '@/lib/project-lifecycle';
 
 export async function GET(req: NextRequest) {
   try {
@@ -85,9 +86,14 @@ export async function GET(req: NextRequest) {
         .from('lien_waivers')
         .select('id, project_id, claimant_name, amount, projects(name)')
         .eq('tenant_id', tenantId).eq('status', 'pending')
+        .is('deleted_at', null)
         .order('created_at', { ascending: true })
-        .limit(50);
-      const pending = waivers || [];
+        .limit(200);
+      /* "[Award pending] …" rows are budget placeholders for packages nobody
+         has been awarded yet — no one can sign them. Counting them said
+         "32 lien waivers awaiting signature" on a tenant with 4 real ones;
+         Home (lib/home/build) already leaves them out. */
+      const pending = (waivers || []).filter((w: any) => !String(w.claimant_name || '').startsWith(PLACEHOLDER_WAIVER_PREFIX));
       if (pending.length > 0) {
         const first: any = pending[0];
         actions.push({

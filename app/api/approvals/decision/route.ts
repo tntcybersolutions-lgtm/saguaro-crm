@@ -4,6 +4,9 @@ import { requirePermission } from '@/lib/permissions';
 import { metaFor, pickAmount, itemLabel, moduleLabel, type EntityMeta } from '@/lib/approvals';
 import { must } from '@/lib/db-write';
 import { apiError } from '@/lib/api-error';
+import { applyChangeOrderMoney } from '@/lib/change-order-cascade';
+import { onChangeOrderApproved, onPayAppApproved } from '@/lib/triggers';
+import { runInBackground } from '@/lib/background';
 
 export const dynamic = 'force-dynamic';
 
@@ -121,15 +124,38 @@ export async function POST(req: NextRequest) {
       } else if (decision === 'rejected' && meta.hasRejectedAt) {
         patch.rejected_at = nowIso;
       }
-      const { error: upErr } = await db
+      /* A decision here is the same decision as the module's own Approve /
+         Reject, so it carries the same consequences. It used to flip the
+         status and stop: an approved change order never reached the contract
+         or the budget, and an approved pay application filed no lien waivers. */
+      let coBefore: Record<string, unknown> | null = null;
+      if (meta.table === 'change_orders') {
+        const { data: full, error: fErr } = await db.from('change_orders').select('*')
+          .eq('id', body.entityId).eq('tenant_id', user.tenantId).maybeSingle();
+        if (fErr) throw fErr;
+        coBefore = (full as Record<string, unknown> | null) ?? null;
+      }
+      const { data: updatedRow, error: upErr } = await db
         .from(meta.table)
         .update(patch)
         .eq('id', body.entityId)
-        .eq('tenant_id', user.tenantId);
+        .eq('tenant_id', user.tenantId)
+        .select('*')
+        .maybeSingle();
       if (upErr) {
         return NextResponse.json({ error: 'Failed to update item status' }, { status: 500 });
       }
       entityUpdated = true;
+      const wasApproved = String(row.status || '').toLowerCase() === 'approved';
+      if (meta.table === 'change_orders' && coBefore && updatedRow) {
+        await applyChangeOrderMoney(db, user.tenantId, coBefore as never, updatedRow as never);
+        if (decision === 'approved' && !wasApproved) {
+          runInBackground(onChangeOrderApproved(body.entityId, { money: false }), 'onChangeOrderApproved');
+        }
+      }
+      if (meta.table === 'pay_applications' && decision === 'approved' && !wasApproved) {
+        runInBackground(onPayAppApproved(body.entityId), 'onPayAppApproved');
+      }
     }
 
     // ---- Audit row (best-effort) ----

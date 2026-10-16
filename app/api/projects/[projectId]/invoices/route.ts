@@ -13,7 +13,7 @@ export async function GET(req: NextRequest, { params }: { params: { projectId: s
     if (!project) return NextResponse.json({ error: 'Not found' }, { status: 404 });
     const url = new URL(req.url);
     const status = url.searchParams.get('status');
-    let q = supabase.from('invoices').select('*').eq('project_id', params.projectId);
+    let q = supabase.from('invoices').select('*').eq('project_id', params.projectId).eq('tenant_id', user.tenantId);
     if (status) q = q.eq('status', status);
     const { data, error } = await q.order('created_at', { ascending: false });
     if (error) throw error;
