@@ -597,7 +597,7 @@ function EstimatePage() {
                 </form>
               )}
               <div className="teScroll" style={{ maxHeight: 360 }}>
-                {sheets.length === 0 && <EmptyState title="No sheets yet" text="Add one to begin." />}
+                {sheets.length === 0 && <EmptyState title="No sheets yet" primary={{ label: 'Add Sheet', onClick: () => setAddingSheet(true) }} />}
                 {sheets.map(s => (
                   <button
                     key={s.id}
@@ -637,7 +637,7 @@ function EstimatePage() {
             >
               {assemblyOpen && (
                 <div className="teScroll" style={{ maxHeight: 220 }}>
-                  {assemblies.length === 0 && <EmptyState title="No assemblies found" />}
+                  {assemblies.length === 0 && <EmptyState title="No assemblies yet" primary={{ label: 'New Assembly', href: '/app/takeoff/assemblies?new=1' }} />}
                   {assemblies.map(a => (
                     <button key={a.id} type="button" className="teSheet" onClick={() => applyAssembly(a)} title="Start a line item from this assembly">
                       <span className="teSheetText">

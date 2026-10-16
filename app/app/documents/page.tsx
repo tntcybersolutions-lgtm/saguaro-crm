@@ -929,6 +929,8 @@ export default function DocumentsPage() {
                 icon={<Clipboard size={30} weight="duotone" color="var(--text-secondary)" />}
                 title={closeoutItems.length > 0 ? 'No Closeout Items Match' : 'No Closeout Items Yet'}
                 description={closeoutItems.length > 0 ? 'Clear the search above to see the full checklist.' : 'Closeout items (warranties, O&M manuals, as-builts, certificates) added to this project will appear here.'}
+                onClearFilters={closeoutItems.length > 0 ? () => setQuery('') : undefined}
+                primary={closeoutItems.length > 0 ? undefined : { label: 'Open Closeout', href: `/app/projects/${selectedProject}/closeout` }}
               />
             ) : (
               visCloseout.map((item, idx) => {

@@ -749,7 +749,7 @@ export default function ApprovalWorkflowsPage() {
         {tab === 'history' && (
           <SectionCard flush title="Decision History" icon={<ClipboardText size={17} weight="duotone" color="var(--text-secondary)" />}>
             {filteredHistory.length === 0 ? (
-              <PremiumEmpty compact icon={<ClipboardText size={30} weight="duotone" color="var(--text-secondary)" />} title="No history yet" description="No decided items match your filters." />
+              <PremiumEmpty compact icon={<ClipboardText size={30} weight="duotone" color="var(--text-secondary)" />} title={moduleFilter || historyFilter !== 'all' ? 'No decisions match' : 'No history yet'} description={moduleFilter || historyFilter !== 'all' ? 'Nothing decided matches these filters.' : 'Approved and rejected items land here.'} onClearFilters={moduleFilter || historyFilter !== 'all' ? () => { setModuleFilter(''); setHistoryFilter('all'); } : undefined} />
             ) : (
               <div style={{ overflowX: 'auto' }}>
                 <table className="k-table" style={{ width: '100%', borderCollapse: 'collapse' }}>

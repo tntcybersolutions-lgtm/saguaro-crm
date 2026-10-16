@@ -3,6 +3,7 @@ import { useEditRights } from '@/lib/hooks/usePermissions';
 import { jsonRequest } from '@/lib/list-view';
 import type { BulkEdit } from '@/components/ui/kit';
 import React, { useState, useEffect, useCallback } from 'react';
+import { useOpenOnNew } from '@/lib/ui/open-on-new';
 import { confirmDialog } from '@/lib/ui/async-dialog';
 import { useProjectContext } from '@/lib/hooks/useProjectContext';
 import { humanError } from '@/lib/errors';
@@ -295,6 +296,8 @@ export default function DrawingsPage(){
     return()=>window.removeEventListener('keydown',onKey);
   },[isPhone,railOpen,metaOpen,mode]);
 
+  // ?new=1 (the job page's empty tool row) opens the create form.
+  useOpenOnNew(openCreate, !loading);
   function openCreate(){
     setForm({...EMPTY_FORM,revision_date:todayIso()});
     setAutoFields({date:true});

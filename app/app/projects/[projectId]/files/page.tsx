@@ -257,7 +257,10 @@ export default function FilesPage() {
     ? <EmptyState icon={<Trash size={22} />} title="Trash is empty" text="Deleted files land here and can be restored." />
     : files.length > 0
       ? <EmptyState icon={<MagnifyingGlass size={22} />} title="No files match" text="Try a different search or filter." action={filtersActive ? <Button onClick={clearFilters}>Clear filters</Button> : undefined} />
-      : <EmptyState icon={<Folder size={22} />} title="No files yet" text="Drop files above or import from the cloud." />;
+      : <EmptyState icon={<Folder size={22} />} title="No files yet" text="Drop files above."
+          primary={{ label: 'Upload Files', icon: <UploadSimple size={15} weight="bold" />, onClick: () => pickUpload() }}
+          secondary={{ label: 'Import from cloud', icon: <CloudArrowDown size={15} weight="bold" />, onClick: () => setShowImport(true) }}
+          perm={['Documents', 'Edit']} />;
 
   const pickUpload = () => document.querySelector<HTMLInputElement>('.flDrop input[type="file"]')?.click();
 

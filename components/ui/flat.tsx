@@ -114,6 +114,8 @@ a.fl-tool:focus-visible{outline:2px solid var(--focus-ring);outline-offset:-2px}
 .fl-tool .fl-tn{min-width:0;font-size:15px;font-weight:600;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
 .fl-tool .fl-tc{font-size:13px;color:var(--fl-text-2);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
 .fl-tool .fl-tc[data-warn=true]{color:var(--warning)}
+/* An empty tool's "+ Add" (the job page): the row opens the create form. */
+.fl-tool .fl-add{display:inline-flex;align-items:center;gap:4px;color:var(--text-primary);font-weight:700}
 /* The concept's "More project tools": a two-column grid of separate tiles,
    each an icon, its name over its count, and a chevron. */
 .fl-list[data-grid]{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:0 24px;background:none;border:0;border-radius:0;overflow:visible}

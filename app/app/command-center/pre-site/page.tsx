@@ -72,7 +72,9 @@ export default function PreSitePage() {
             <PremiumEmpty
               icon={<Clipboard size={32} weight="duotone" color="var(--text-secondary)" />}
               title="No pre-site checklist for this site"
-              description={`Sites launched from the template come pre-loaded with the ${PRESITE_CHECKLIST.length}-point pre-site feasibility inspection.`}
+              description={`Sites launched from the template carry the ${PRESITE_CHECKLIST.length}-point inspection.`}
+              primary={{ label: 'Launch New Site', href: '/app/command-center/rollout?new=1' }}
+              perm={['Admin', 'Full']}
             />
           </SectionCard>
         ) : (

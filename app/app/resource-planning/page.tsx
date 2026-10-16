@@ -406,6 +406,8 @@ export default function ResourcePlanningPage() {
     }
   };
 
+  const openNewAssignment = () => { setEditId(null); setFormErr(null); setForm({ status: 'assigned', hours_per_day: 8, days_per_week: 5, hourly_rate: 0, certifications: [], trade: 'General', role: 'Laborer', start_date: localToday() }); setShowForm(true); };
+
   const editAssignment = (a: Assignment) => {
     setFormErr(null);
     setForm({ ...a });
@@ -489,7 +491,7 @@ export default function ResourcePlanningPage() {
         {saving && <Spinner />}
         <button onClick={exportCSV} style={ghostButtonStyle} className="pmBtn"><DownloadSimple size={15} weight="bold" /> Export CSV</button>
         <button onClick={() => { load(); }} style={ghostButtonStyle} className="pmBtn"><ArrowsClockwise size={15} weight="bold" /> Refresh</button>
-        <button onClick={() => { setEditId(null); setFormErr(null); setForm({ status: 'assigned', hours_per_day: 8, days_per_week: 5, hourly_rate: 0, certifications: [], trade: 'General', role: 'Laborer', start_date: localToday() }); setShowForm(true); }} style={goldButtonStyle} className="pmBtn"><Plus size={15} weight="bold" /> New Assignment</button>
+        <button onClick={openNewAssignment} style={goldButtonStyle} className="pmBtn"><Plus size={15} weight="bold" /> New Assignment</button>
       </>}
     />
 
@@ -674,7 +676,7 @@ export default function ResourcePlanningPage() {
               </div>)}
             </div>
             {/* Rows */}
-            {gridData.rows.length === 0 && <PremiumEmpty compact icon={<UsersThree size={30} weight="duotone" color="var(--text-secondary)" />} title="No assignment data" description="Create assignments to populate the grid." />}
+            {gridData.rows.length === 0 && <PremiumEmpty compact icon={<UsersThree size={30} weight="duotone" color="var(--text-secondary)" />} title={hasFilters ? 'No assignments match filters' : 'No assignment data'} onClearFilters={hasFilters ? clearFilters : undefined} primary={{ label: 'New Assignment', onClick: openNewAssignment }} />}
             {gridData.rows.map(row => <React.Fragment key={row.name}>
               {/* Person total row */}
               <div style={{ display: 'grid', gridTemplateColumns: `160px 140px repeat(${gridData.GRID_WEEKS}, 1fr)`, background: conflictPersons.has(row.name) ? `color-mix(in srgb, ${RED} 3%, transparent)` : `color-mix(in srgb, ${BG} 38%, transparent)`, borderBottom: `1px solid color-mix(in srgb, ${BORDER} 8%, transparent)`, minHeight: 32, alignItems: 'center' }}>
@@ -719,7 +721,7 @@ export default function ResourcePlanningPage() {
               })}
             </div>
             {/* Rows */}
-            {filteredPeople.length === 0 && <PremiumEmpty compact icon={<CalendarBlank size={30} weight="duotone" color="var(--text-secondary)" />} title="No assignments match filters" description="Adjust filters or create new assignments." />}
+            {filteredPeople.length === 0 && <PremiumEmpty compact icon={<CalendarBlank size={30} weight="duotone" color="var(--text-secondary)" />} title={hasFilters ? 'No assignments match filters' : 'No assignments yet'} onClearFilters={hasFilters ? clearFilters : undefined} primary={{ label: 'New Assignment', onClick: openNewAssignment }} />}
             {filteredPeople.map(([name, asns]) => {
               const isConflict = conflictPersons.has(name);
               return <div key={name} style={{ display: 'grid', gridTemplateColumns: `180px repeat(${TIMELINE_WEEKS},1fr)`, borderBottom: `1px solid color-mix(in srgb, ${BORDER} 8%, transparent)`, minHeight: 36, alignItems: 'center', background: isConflict ? `color-mix(in srgb, ${RED} 3%, transparent)` : 'transparent' }}>
@@ -756,7 +758,7 @@ export default function ResourcePlanningPage() {
 
       {/* ========== PEOPLE LIST ========== */}
       {!loading && tab === 'people' && <Card title={`People & Assignments (${filteredPeople.length})`} icon={<UsersThree size={17} weight="duotone" color="var(--text-secondary)" />}>
-        {filteredPeople.length === 0 && <PremiumEmpty compact icon={<UsersThree size={30} weight="duotone" color="var(--text-secondary)" />} title="No people found" description="No people match the current filters." />}
+        {filteredPeople.length === 0 && <PremiumEmpty compact icon={<UsersThree size={30} weight="duotone" color="var(--text-secondary)" />} title={hasFilters ? 'No people match these filters' : 'No people yet'} onClearFilters={hasFilters ? clearFilters : undefined} primary={{ label: 'New Assignment', onClick: openNewAssignment }} />}
         {filteredPeople.map(([name, asns]) => {
           const util = utilization.find(u => u.name === name);
           const isConflict = conflictPersons.has(name);
@@ -808,7 +810,7 @@ export default function ResourcePlanningPage() {
 
       {/* ========== PROJECT STAFFING ========== */}
       {!loading && tab === 'staffing' && <div>
-        {projects.length === 0 && <Card title="Project Staffing" icon={<Buildings size={17} weight="duotone" color="var(--text-secondary)" />}><PremiumEmpty compact icon={<Buildings size={30} weight="duotone" color="var(--text-secondary)" />} title="No projects found" description="Create a project to staff it here." /></Card>}
+        {projects.length === 0 && <Card title="Project Staffing" icon={<Buildings size={17} weight="duotone" color="var(--text-secondary)" />}><PremiumEmpty compact icon={<Buildings size={30} weight="duotone" color="var(--text-secondary)" />} title="No projects found" primary={{ label: 'New Project', href: '/app/projects/new' }} /></Card>}
         {projects.map(proj => {
           const projAsns = filtered.filter(a => a.project_id === proj.id);
           if (filterProject && filterProject !== proj.id) return null;
@@ -906,7 +908,7 @@ export default function ResourcePlanningPage() {
             return <div key={w} style={{ fontSize: 12, fontWeight: 700, color: DIM, textAlign: 'center', padding: 6 }}>{`${d.getMonth() + 1}/${d.getDate()}`} - {`${addDays(d, 6).getMonth() + 1}/${addDays(d, 6).getDate()}`}</div>;
           })}
         </div>
-        {availability.length === 0 && <PremiumEmpty compact icon={<UsersThree size={30} weight="duotone" color="var(--text-secondary)" />} title="No people tracked yet" description="Add assignments to see availability." />}
+        {availability.length === 0 && <PremiumEmpty compact icon={<UsersThree size={30} weight="duotone" color="var(--text-secondary)" />} title="No people tracked yet" primary={{ label: 'New Assignment', onClick: openNewAssignment }} />}
         {availability.map(a => <div key={a.name} style={{ display: 'grid', gridTemplateColumns: '200px repeat(4,1fr)', gap: 2, marginBottom: 2 }}>
           <div style={{ padding: '6px 8px', fontSize: 12, color: TEXT, fontWeight: 600, background: `color-mix(in srgb, ${RAISED} 50%, transparent)`, borderRadius: 3, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
             {a.name} <span style={{ fontSize: 12, color: DIM }}>({a.trade} - {a.role})</span>

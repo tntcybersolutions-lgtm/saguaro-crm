@@ -1111,6 +1111,7 @@ export default function CustomersPage() {
               icon={<UsersThree size={26} weight="duotone" color="var(--text-secondary)" />}
               title="No matches"
               description="No customers match your filters."
+              onClearFilters={() => { setSearch(''); setFilterStatus('all'); setFilterSource('all'); setFilterState('all'); }}
             />
           ) : (
             <DataTable<Customer>

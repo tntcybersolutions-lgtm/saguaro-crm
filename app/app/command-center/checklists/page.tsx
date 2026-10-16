@@ -81,7 +81,8 @@ export default function ChecklistsPage() {
       : groups.length === 0 ? (
         <SectionCard flat>
           <PremiumEmpty icon={<CheckCircle size={32} weight="duotone" color="var(--text-secondary)" />} title="No checklist for this site"
-            description="Sites launched from the standardized template come pre-loaded with the full Phase 1–4 checklist." />
+            description="Sites launched from the template carry the Phase 1–4 checklist."
+            primary={{ label: 'Launch New Site', href: '/app/command-center/rollout?new=1' }} perm={['Admin', 'Full']} />
         </SectionCard>
       ) : (
         <>

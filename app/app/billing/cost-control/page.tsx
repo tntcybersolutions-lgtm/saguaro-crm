@@ -207,7 +207,7 @@ export default function CostControlPage() {
       {showHistory && (
         <SectionCard title="Saved Cost Reports" icon={<ClockCounterClockwise size={17} weight="duotone" color="var(--text-secondary)" />} flush style={{ marginBottom: 16 }}>
           {reports.length === 0 ? (
-            <PremiumEmpty compact icon={<ClockCounterClockwise size={30} weight="duotone" color="var(--text-secondary)" />} title="No saved reports yet" description="Save a cost report to start building history." />
+            <PremiumEmpty compact icon={<ClockCounterClockwise size={30} weight="duotone" color="var(--text-secondary)" />} title="No saved reports yet" primary={rows.length && !viewingId ? { label: 'Save Cost Report', onClick: () => { void saveReport(); } } : undefined} perm={['Budget', 'Edit']} />
           ) : (
             reports.map((rep) => (
               <div key={rep.id} style={{ display: 'flex', alignItems: 'center', gap: 12, padding: '12px 20px', borderTop: `1px solid ${LINE}`, cursor: 'pointer' }} onClick={() => viewReport(rep)}>
@@ -246,7 +246,7 @@ export default function CostControlPage() {
             <span>Cost Code / Description</span><span style={{ textAlign: 'right' }}>Budget</span><span style={{ textAlign: 'right' }}>Changes</span><span style={{ textAlign: 'right' }}>Committed</span><span style={{ textAlign: 'right' }}>Actual</span><span style={{ textAlign: 'right' }}>Projected</span><span style={{ textAlign: 'right' }}>Variance</span><span />
           </div>
           {rows.length === 0 && !loading && (
-            <PremiumEmpty compact icon={<Table size={30} weight="duotone" color="var(--text-secondary)" />} title="No cost lines yet" description="This project has no budget lines, purchase orders, or invoices — or pick another project." />
+            <PremiumEmpty compact icon={<Table size={30} weight="duotone" color="var(--text-secondary)" />} title="No cost lines yet" description="No budget lines, purchase orders or invoices on this job." primary={!viewingId ? { label: 'Add Cost Code', onClick: addRow } : undefined} perm={['Budget', 'Edit']} />
           )}
           {rows.map((l) => {
             const rr = r.rows.find((x) => x.id === l.id)!;

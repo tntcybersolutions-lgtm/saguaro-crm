@@ -116,7 +116,7 @@ export default function VerifyHubPage() {
             </SectionCard>
           ) : (
             <SectionCard flat>
-              <PremiumEmpty compact icon={<Camera size={26} weight="duotone" color="var(--text-secondary)" />} title="Nothing matches this filter" description="Clear the search or switch status filters to see the rest of the queue." />
+              <PremiumEmpty compact icon={<Camera size={26} weight="duotone" color="var(--text-secondary)" />} title="Nothing matches this filter" onClearFilters={() => { setFilter('all'); setQ(''); }} />
             </SectionCard>
           )
         ) : (

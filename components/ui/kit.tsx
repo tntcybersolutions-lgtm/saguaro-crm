@@ -21,6 +21,7 @@ import { createPortal } from 'react-dom';
 import { type Icon as PhosphorIcon, CaretRight, CaretDown, CaretUp, CaretLeft, DotsSixVertical, Funnel, CheckSquare, Star, UsersThree, Trash, ArrowCounterClockwise, FloppyDisk, BookmarkSimple, Rows, Columns, DownloadSimple, DotsThree, MagnifyingGlass, X, EnvelopeSimple, Phone, User, Buildings, MapPin, CalendarBlank, CurrencyDollar, Flag, Tag, Hash, Note, Info } from '@phosphor-icons/react';
 import { useSortedRows, type SortState, type SortDir } from './premium';
 import { SortBar } from './sort';
+import { EmptyActions, hasEmptyActions, type EmptyActionProps } from './empty-actions';
 import { STATUS_COLORS, type StatusKind } from '@/lib/status-colors';
 import { initialsOf, monoToken } from '@/lib/directory-view';
 import {
@@ -1457,10 +1458,14 @@ export function DetailList({ items }: { items: [string, React.ReactNode][] }) {
 
 // ─── EmptyState ──────────────────────────────────────────────────────────────
 
-/** Nothing here yet — flat (2026-10-10): one plain line and one action. The
- *  title leads the line, the text finishes it; `icon` is accepted and not drawn. */
-export function EmptyState({ icon, title, text, action }: { icon?: React.ReactNode; title: string; text?: React.ReactNode; action?: React.ReactNode }) {
+/** Nothing here yet — flat (2026-10-10): icon, one plain line and the action.
+ *  The title leads the line, the text finishes it. Laid on the surface, never
+ *  a boxed card. Pass `primary` (+ optional `secondary`, `perm`) for the create
+ *  action, `onClearFilters` when a filter emptied the list, or a ready-made
+ *  `action` node. See components/ui/empty-actions.tsx. */
+export function EmptyState({ icon, title, text, action, primary, secondary, perm, onClearFilters }: { icon?: React.ReactNode; title: string; text?: React.ReactNode; action?: React.ReactNode } & EmptyActionProps) {
   const t = title.trim();
+  const structured = hasEmptyActions({ primary, secondary, onClearFilters });
   return (
     <div className="k-empty">
       {icon && <IconTile size={36}>{icon}</IconTile>}
@@ -1468,7 +1473,12 @@ export function EmptyState({ icon, title, text, action }: { icon?: React.ReactNo
         <span className="k-empty-title">{t}</span>
         {text ? <>{/[.!?…]$/.test(t) ? ' ' : '. '}<span className="k-empty-text">{text}</span></> : null}
       </p>
-      {action && <div className="k-empty-act">{action}</div>}
+      {(action || structured) && (
+        <div className="k-empty-act">
+          {structured && <EmptyActions primary={primary} secondary={secondary} perm={perm} onClearFilters={onClearFilters} />}
+          {action}
+        </div>
+      )}
     </div>
   );
 }

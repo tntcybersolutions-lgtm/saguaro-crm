@@ -76,7 +76,9 @@ export default function VendorsPage() {
             <PremiumEmpty
               icon={<Truck size={32} weight="duotone" color="var(--text-secondary)" />}
               title="No vendor deliveries scheduled"
-              description="Long-lead procurement and equipment installs (Full-Swing, AV, switchgear) appear here as a coordinated cross-site timeline."
+              description="Long-lead items and installs line up here across sites."
+              primary={{ label: 'Add Long-Lead Item', href: '/app/command-center/long-lead?new=1' }}
+              perm={['Admin', 'Full']}
             />
           </SectionCard>
         ) : (

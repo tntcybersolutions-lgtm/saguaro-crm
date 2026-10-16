@@ -163,7 +163,7 @@ export default function OacPage() {
         sortedActions.length === 0 ? (
           <SectionCard flat>
             <PremiumEmpty icon={<CheckCircle size={32} weight="duotone" color="var(--text-secondary)" />} title="No action items"
-              description="Action items captured in OAC meetings show up here — assigned, dated, and checkable from anywhere." />
+              description="Items captured in OAC meetings land here." primary={{ label: 'Log Meeting', onClick: () => setLogging(true) }} perm={['Admin', 'Full']} />
           </SectionCard>
         ) : (
           <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>

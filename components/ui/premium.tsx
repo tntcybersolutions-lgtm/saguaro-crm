@@ -18,6 +18,7 @@ import React from 'react';
 import { Check } from '@phosphor-icons/react';
 import { moduleAccent } from '@/lib/ui/app-accent';
 import { STATUS_COLORS } from '@/lib/status-colors';
+import { EmptyActions, hasEmptyActions, type EmptyActionProps } from './empty-actions';
 
 // Brand hooks (white-label re-themes these via WhiteLabelProvider) ------------
 const GOLD = 'var(--brand-primary)';        // #E8FF2A — the primary action / selected item
@@ -373,6 +374,10 @@ export function PremiumEmpty({
   action,
   tone = 'default',
   compact = false,
+  primary,
+  secondary,
+  perm,
+  onClearFilters,
 }: {
   icon?: React.ReactNode;
   title: string;
@@ -380,8 +385,9 @@ export function PremiumEmpty({
   action?: React.ReactNode;
   tone?: 'default' | 'error';
   compact?: boolean;
-}) {
+} & EmptyActionProps) {
   const t = title.trim();
+  const structured = hasEmptyActions({ primary, secondary, onClearFilters });
   const joiner = /[.!?…]$/.test(t) ? ' ' : '. ';
   return (
     <div className="pmEmpty" data-tone={tone === 'error' ? 'error' : undefined} role={tone === 'error' ? 'alert' : undefined} style={compact ? { padding: '8px 0' } : undefined}>
@@ -391,7 +397,12 @@ export function PremiumEmpty({
         </span>
       )}
       <p className="pmEmptyLine"><b>{t}</b>{description ? <>{joiner}{description}</> : null}</p>
-      {action && <div className="pmEmptyActs">{action}</div>}
+      {(action || structured) && (
+        <div className="pmEmptyActs">
+          {structured && <EmptyActions primary={primary} secondary={secondary} perm={perm} onClearFilters={onClearFilters} />}
+          {action}
+        </div>
+      )}
     </div>
   );
 }

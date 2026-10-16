@@ -1353,7 +1353,12 @@ select.k-select { padding-right: 36px; }
 .k-empty-line { flex: 1 1 260px; min-width: 0; margin: 0; font-size: 14px; line-height: 1.5; color: var(--text-secondary); }
 .sag-app .k-empty-title, .k-empty-title { font-size: inherit; font-weight: 600; color: var(--sg-text); }
 .k-empty-text { font-size: inherit; color: var(--sg-text-2); }
-.k-empty-act { flex: 0 0 auto; }
+.k-empty-act { flex: 0 0 auto; display: flex; flex-wrap: wrap; gap: 8px; align-items: center; }
+/* The add action where the list would be (components/ui/empty-actions.tsx):
+   a 44px target on every screen, and a gated-away action leaves no gap. */
+:is(.k-empty-act, .pmEmptyActs) > .k-btn { min-height: var(--control-h-touch); }
+:is(.k-empty-act, .pmEmptyActs):empty { display: none; }
+@media (max-width: 420px) { :is(.k-empty-act, .pmEmptyActs) { flex: 1 1 100%; } }
 .k-table-empty .k-empty { padding: 4px 0; }
 /* A flush card body runs edge to edge, so an empty state in it pads itself. */
 .k-card-flush > .k-empty { padding: 14px 16px; }

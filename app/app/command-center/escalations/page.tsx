@@ -132,7 +132,7 @@ export default function EscalationsPage() {
         ) : (
           <SectionCard flat>
             <PremiumEmpty compact icon={<Flag size={26} weight="duotone" color="var(--text-secondary)" />} title="Nothing matches this filter"
-              description="No escalation matches the current severity or search. Clear the filters to see the full list." />
+              description="No escalation matches the current severity or search." onClearFilters={() => { setFilter('all'); setQ(''); }} />
           </SectionCard>
         )
       ) : (

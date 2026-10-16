@@ -1,5 +1,6 @@
 'use client';
 import { useMemo, useState } from 'react';
+import { useOpenOnNew } from '@/lib/ui/open-on-new';
 import SaguaroDatePicker from '@/components/SaguaroDatePicker';
 import Link from 'next/link';
 import { Package, ArrowRight, Plus } from '@phosphor-icons/react';
@@ -22,6 +23,8 @@ export default function LongLeadPage() {
   const [q, setQ] = useState('');
   const [adding, setAdding] = useState(false);
   const [busy, setBusy] = useState<Record<string, boolean>>({});
+  // `?new=1` opens the add form (the vendor timeline's empty state links here).
+  useOpenOnNew(() => setAdding(true), true);
   async function advance(it: any) {
     if (busy[it.id]) return;
     setBusy((b) => ({ ...b, [it.id]: true }));
@@ -106,7 +109,7 @@ export default function LongLeadPage() {
         ) : (
           <SectionCard flat>
             <PremiumEmpty compact icon={<Package size={26} weight="duotone" color="var(--text-secondary)" />} title="Nothing matches this filter"
-              description="No item matches the current severity or search. Clear the filters to see the full tracker." />
+              description="No item matches the current severity or search." onClearFilters={() => { setFilter('all'); setQ(''); }} />
           </SectionCard>
         )
       ) : (

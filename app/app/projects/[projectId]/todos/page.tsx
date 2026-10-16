@@ -10,6 +10,7 @@
 import { jsonRequest } from '@/lib/list-view';
 import { useEditRights } from '@/lib/hooks/usePermissions';
 import React, { useState, useEffect, useCallback } from 'react';
+import { useOpenOnNew } from '@/lib/ui/open-on-new';
 import { useProjectContext } from '@/lib/hooks/useProjectContext';
 import { useParams } from 'next/navigation';
 import {
@@ -123,6 +124,8 @@ export default function TodosPage() {
   const roster = Array.from(new Set([...team.map(m => m.name), ...subs.map(s => s.companyName)].filter(Boolean)));
 
   // Prefilled add flow: due a week out, medium priority.
+  // ?new=1 (the job page's empty tool row) opens the create form.
+  useOpenOnNew(openCreate, !loading);
   function openCreate() {
     const due = new Date(Date.now() + 7 * 86400000);
     setForm({ ...EMPTY_FORM, due_date: localIso(due) });
@@ -262,7 +265,7 @@ export default function TodosPage() {
       action={<Button variant="primary" icon={<Plus size={15} weight="bold" />} onClick={openCreate}>Add task</Button>}
     />
   ) : filter === 'completed' && completedCount === 0 ? (
-    <EmptyState title="Nothing completed yet" text={`${activeCount} task${activeCount === 1 ? ' is' : 's are'} still active.`} />
+    <EmptyState title="Nothing completed yet" text={`${activeCount} task${activeCount === 1 ? ' is' : 's are'} still active.`} action={<Button onClick={() => setFilter('all')}>Show all</Button>} />
   ) : filter === 'active' && activeCount === 0 ? (
     <EmptyState title="No active tasks" text="Every task is checked off." action={<Button onClick={() => setFilter('all')}>Show all</Button>} />
   ) : (

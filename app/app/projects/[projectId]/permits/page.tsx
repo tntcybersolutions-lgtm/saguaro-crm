@@ -19,6 +19,7 @@
 import { jsonRequest } from '@/lib/list-view';
 import { useEditRights } from '@/lib/hooks/usePermissions';
 import React, { useState, useEffect, useCallback, useRef } from 'react';
+import { useOpenOnNew } from '@/lib/ui/open-on-new';
 import { useProjectContext } from '@/lib/hooks/useProjectContext';
 import { useParams } from 'next/navigation';
 import SaguaroDatePicker from '../../../../../components/SaguaroDatePicker';
@@ -250,6 +251,8 @@ export default function PermitsPage() {
     }
   }
 
+  // ?new=1 (the job page's empty tool row) opens the create form.
+  useOpenOnNew(openCreate, !loading);
   function openCreate() {
     setForm({
       ...EMPTY_FORM,

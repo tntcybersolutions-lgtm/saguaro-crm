@@ -322,7 +322,7 @@ export default function WifiManagerPage() {
               empty={aps.length === 0
                 ? <EmptyState icon={<Broadcast size={22} />} title="No access points logged yet" text="Track installed APs here, or design the placement first in Signal Studio."
                     action={<Button icon={<ArrowUpRight size={15} />} href={studioHref}>Open Signal Studio</Button>} />
-                : <EmptyState title={`No access points on floor ${selectedFloor}`} text="Pick another floor or add one here." />}
+                : <EmptyState title={`No access points on floor ${selectedFloor}`} primary={{ label: 'Add AP', icon: <Broadcast size={15} />, onClick: openAp }} perm={['Projects', 'Edit']} />}
             />
           </Card>
         </>

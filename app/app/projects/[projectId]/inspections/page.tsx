@@ -24,6 +24,7 @@
 import { itemBulkEdit } from '@/lib/items/bulk';
 import { useEditRights } from '@/lib/hooks/usePermissions';
 import React, { useState, useEffect, useCallback, useRef } from 'react';
+import { useOpenOnNew } from '@/lib/ui/open-on-new';
 import { confirmDialog } from '@/lib/ui/async-dialog';
 import { useProjectContext } from '@/lib/hooks/useProjectContext';
 import { useParams } from 'next/navigation';
@@ -272,6 +273,8 @@ export default function InspectionsPage() {
 
   // Prefilled schedule flow: date today, the last inspector/agency of record,
   // and the next milestone type (or the failed type for a re-inspection).
+  // ?new=1 (the job page's empty tool row) opens the create form.
+  useOpenOnNew(() => openCreate(), !loading);
   function openCreate(prefType?: string) {
     const lastWithInspector = byDateDesc.find(i => i.inspector);
     const lastWithAgency = byDateDesc.find(i => i.agency);
