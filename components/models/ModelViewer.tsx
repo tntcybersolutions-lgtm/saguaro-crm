@@ -17,7 +17,24 @@ import {
   detectModelFormat, formatBytes, formatDistance, modelErrorMessage, MAX_MODEL_BYTES,
   type LengthUnit, type ModelFormat,
 } from '@/lib/model-viewer';
-import { ModelEngine, type Axis, type ElementProps, type Level, type ToolMode, type ViewName } from './model-engine';
+import type { ModelEngine, Axis, ElementProps, Level, ToolMode, ViewName } from './model-engine';
+
+// The engine (three.js + loaders) is bundled separately by esbuild into
+// /vendor/model-engine.js (tools/build-model-engine.mjs, run in prebuild) and
+// loaded here at runtime. Keeping it out of webpack is what keeps the Vercel
+// build under its memory limit. Only types come from ./model-engine above.
+const ENGINE_URL = '/vendor/model-engine.js';
+let enginePromise: Promise<typeof import('./model-engine')> | null = null;
+function loadEngineModule(): Promise<typeof import('./model-engine')> {
+  if (!enginePromise) {
+    enginePromise = import(/* webpackIgnore: true */ ENGINE_URL).catch((err: unknown) => {
+      enginePromise = null; // let the next attempt retry instead of caching the failure
+      console.error('[models] engine failed to load', err);
+      throw new Error('The 3D viewer could not load. Check your connection and try again.');
+    });
+  }
+  return enginePromise;
+}
 
 export interface ModelFile {
   id: string;
@@ -115,8 +132,11 @@ export default function ModelViewer({ file }: { file: ModelFile }) {
       if ((file.file_size || 0) > MAX_MODEL_BYTES) {
         throw new Error(`This model is too large to open here (${formatBytes(file.file_size)}). The limit is ${formatBytes(MAX_MODEL_BYTES)}.`);
       }
+      setPhase({ kind: 'loading', stage: 'Starting the 3D viewer', percent: null });
+      const { ModelEngine: Engine } = await loadEngineModule();
+      if (cancelled) return;
       try {
-        engine = new ModelEngine(host, {
+        engine = new Engine(host, {
           onSelect: (id) => { if (!cancelled) setSelected(id); },
           onMeasure: (meters, points) => { if (!cancelled) setMeasure({ meters, points }); },
           onLevels: (l) => { if (!cancelled) setLevels(l); },
