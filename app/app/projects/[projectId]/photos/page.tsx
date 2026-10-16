@@ -59,6 +59,7 @@ import {
   parseTileSize, TILE_SIZES, type TileSize,
 } from '@/lib/photo-views';
 import SubInbox from '@/components/media/SubInbox';
+import RelatedItems from '@/components/related/RelatedItems';
 import SendToJobDialog, { type MoveItem } from '@/components/media/SendToJobDialog';
 import { useUploadQueue } from '@/lib/useUploadQueue';
 import { uploadPhoto, uploadVideo, fmtDuration } from '@/lib/media-upload';
@@ -102,6 +103,7 @@ const isVideo=(p:any)=>p?.media==='video';
    the library show one picture of the job. They are edited in Files, not here. */
 const FILES_ALBUM='From Files';
 const isFromFiles=(p:any)=>p?.source==='files'||p?.read_only===true;
+const isSavedId=(id:unknown)=>/^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(String(id||''));
 /** "ZZ-AUDIT_jobsite-photo-1.jpg" -> "ZZ AUDIT jobsite photo 1" */
 const titleFromFileName=(name:string)=>name.replace(/\.[^.]+$/,'').replace(/[-_]+/g,' ').replace(/\s+/g,' ').trim();
 
@@ -136,6 +138,7 @@ const CSS = `
 .phDetail { display: grid; grid-template-columns: minmax(0, 1fr); gap: 16px; align-items: start; min-width: 0; }
 .phDetail > * { min-width: 0; }
 .phRail { order: -1; }
+.phRelated { padding: 16px 4px 0; }
 @container phdetail (min-width: 720px) {
   .phDetail { grid-template-columns: minmax(0, 1fr) clamp(${layout.detailRailMin}px, 34%, ${layout.detailRailMax}px); }
   .phRail { order: 0; position: sticky; top: 16px; }
@@ -464,6 +467,20 @@ export default function PhotosPage(){
     if(u.searchParams.get('inbox')==='1'){ setInboxFocus(true); u.searchParams.delete('inbox'); changed=true; }
     if(changed) window.history.replaceState(null,'',u.pathname+(u.search?u.search:'')+u.hash);
   },[]);
+  // A Related Items link opens one photo: ?photo=<id> selects it once the list is in.
+  const photoParamDone=useRef(false);
+  useEffect(()=>{
+    if(photoParamDone.current||typeof window==='undefined'||photos.length===0) return;
+    photoParamDone.current=true;
+    const u=new URL(window.location.href);
+    const want=u.searchParams.get('photo');
+    if(!want) return;
+    const hit=photos.find(p=>String(p.id)===want);
+    u.searchParams.delete('photo');
+    window.history.replaceState(null,'',u.pathname+(u.search?u.search:'')+u.hash);
+    if(hit) viewPhoto(hit);
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  },[photos]);
   // Dragging files anywhere over the page opens the drop sheet.
   const onPageDragEnter=(e:React.DragEvent)=>{
     if(!uploadOpen&&!mode&&e.dataTransfer?.types?.includes('Files')){ e.preventDefault(); setUploadOpen(true); }
@@ -1208,6 +1225,11 @@ export default function PhotosPage(){
               </div>
             </div>
           </Card>
+          {!selectedFromFiles && isSavedId(selected.id) && (
+            <div className="phRelated">
+              <RelatedItems key={String(selected.id)} type="photo" id={String(selected.id)} projectId={projectId}/>
+            </div>
+          )}
         </aside>
       </div>
     </div>

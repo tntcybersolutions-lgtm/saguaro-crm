@@ -11,7 +11,10 @@
  * Markups save one row each to drawing_markups (B1 contract: space 'image',
  * w/h = a 1000-wide reference, geometry in those units) and every person on
  * the job sees them. Measure uses the sheet's scale, set once with Calibrate.
- * Pins (RFI / punch / note) create or link real items.
+ * Pins (RFI / punch / note) create or link real items; a pin on an item is a
+ * Related Items link with a location, so the item says "Pinned on A-101" and
+ * opens back here at ?pin=<id>. The Related tab lists every record linked to
+ * the sheet (below the workspace on narrow screens).
  *
  * Sheet links: sheet numbers in the PDF text (A-501, 5/A-501) that name a
  * current sheet on the job become click-through hotspots — computed on view
@@ -26,6 +29,7 @@ import Link from 'next/link';
 import { useParams, useRouter } from 'next/navigation';
 import { Badge, Button, EmptyState, type BadgeTone } from '@/components/ui/kit';
 import { sheetKey } from '@/lib/drawing-revisions';
+import RelatedItems from '@/components/related/RelatedItems';
 import { buildSheetIndex, computeAutoLinks, autoLinkLabel, type AutoLink, type Box, type TextItemLite } from '@/lib/drawing-autolinks';
 import {
   Cursor, Hand, PencilSimple, Highlighter, LineSegment, ArrowUpRight, Square, Circle, Cloud, TextT,
@@ -326,7 +330,9 @@ export default function DrawingWorkspace() {
   const [showPins, setShowPins] = useState(true);
   const [selMarkup, setSelMarkup] = useState<string | null>(null);
   const [activePin, setActivePin] = useState<string | null>(null);
-  const [tab, setTab] = useState<'markups' | 'pins' | 'revs'>('markups');
+  const [tab, setTab] = useState<'markups' | 'pins' | 'revs' | 'related'>('markups');
+  const [relatedCount, setRelatedCount] = useState<number | null>(null);
+  const pinParamDone = useRef(false);
   const [busy, setBusy] = useState(false);
   const [saveState, setSaveState] = useState<'idle' | 'saving' | 'saved' | 'failed'>('idle');
   const [msg, setMsg] = useState<{ text: string; ok?: boolean } | null>(null);
@@ -376,6 +382,15 @@ export default function DrawingWorkspace() {
     if (r.ok) setMarkups((j.markups || []) as Markup[]);
   }, [projectId, drawingId]);
   useEffect(() => { loadSheet(); loadMarkups(); }, [loadSheet, loadMarkups]);
+  /* Opened from a record's "Pinned on A-101": go to that pin's page and select it. */
+  useEffect(() => {
+    if (!sheet || pinParamDone.current || typeof window === 'undefined') return;
+    pinParamDone.current = true;
+    const want = new URL(window.location.href).searchParams.get('pin');
+    const hit = want ? sheet.pins.find((p) => p.id === want) : null;
+    if (!hit) return;
+    setPage(hit.page || 1); setActivePin(hit.id); setTab('pins'); setShowPins(true);
+  }, [sheet]);
   useEffect(() => {
     fetch(`/api/drawings/list?projectId=${projectId}`).then((r) => r.json()).then((j) => setList((j.drawings || []) as ListRow[])).catch(() => setList([]));
   }, [projectId]);
@@ -701,6 +716,7 @@ export default function DrawingWorkspace() {
   const autoLive = showAuto && (tool === 'select' || tool === 'pan');
 
   return (
+    <>
     <div className="dz" ref={rootRef}>
       <style dangerouslySetInnerHTML={{ __html: CSS }} />
       <input ref={fileRef} type="file" accept="application/pdf,image/*" hidden onChange={(e) => { const f = e.target.files?.[0]; if (f) void uploadRevision(f); e.target.value = ''; }} />
@@ -942,7 +958,7 @@ export default function DrawingWorkspace() {
         {/* ── side panel ── */}
         <aside className="dz-side">
           <div className="dz-tabs" role="tablist">
-            {([['markups', 'Markups', pageMarkups.length], ['pins', 'Pins', sheet?.pins.length ?? 0], ['revs', 'Revisions', sheet?.revisions.length ?? 0]] as const).map(([k, l, n]) => (
+            {([['markups', 'Markups', pageMarkups.length], ['pins', 'Pins', sheet?.pins.length ?? 0], ['related', 'Related', relatedCount ?? 0], ['revs', 'Revisions', sheet?.revisions.length ?? 0]] as const).map(([k, l, n]) => (
               <button key={k} type="button" role="tab" aria-selected={tab === k} data-on={tab === k || undefined} onClick={() => setTab(k)}>{l}<span>{n}</span></button>
             ))}
           </div>
@@ -996,6 +1012,11 @@ export default function DrawingWorkspace() {
                 </div>
               );
             }))}
+            {tab === 'related' && (
+              <div className="dz-related">
+                <RelatedItems key={`related-${(sheet?.pins || []).map((p) => p.id).join(',')}`} type="drawing" id={drawingId} projectId={projectId} heading={null} onCount={setRelatedCount} />
+              </div>
+            )}
             {tab === 'revs' && (
               <ol className="dz-tl">
                 {(sheet?.revisions || []).map((r) => (
@@ -1026,6 +1047,11 @@ export default function DrawingWorkspace() {
         <span className="dz-showhide">{showMarkups ? <Eye size={13} /> : <EyeSlash size={13} />}</span>
       </footer>
     </div>
+    {/* Narrow screens hide the side panel: the sheet's related records sit under the workspace. */}
+    <div className="dz-related-m">
+      <RelatedItems key={`related-${(sheet?.pins || []).map((p) => p.id).join(',')}`} type="drawing" id={drawingId} projectId={projectId} onCount={setRelatedCount} />
+    </div>
+    </>
   );
 }
 
@@ -1065,6 +1091,9 @@ const CSS = `
 .dz-toggle input{accent-color:var(--dz-hot)}
 .dz-body{flex:1;min-height:0;min-width:0;display:grid;grid-template-columns:88px minmax(0,1fr) minmax(240px,300px)}
 @media (max-width:1100px){.dz-body{grid-template-columns:88px minmax(0,1fr)}.dz-side{display:none}.dz-props{padding-left:12px}}
+.dz-related{padding:4px 6px}
+.dz-related-m{display:none}
+@media (max-width:1100px){.dz-related-m{display:block;padding:20px 0 8px}}
 .dz-tools{display:flex;flex-direction:column;align-items:center;gap:2px;padding:8px 6px;background:var(--dz-chrome);border-right:1px solid var(--dz-line);overflow:visible;position:relative;z-index:3}
 .dz-tgroup{display:grid;grid-template-columns:repeat(2,36px);gap:3px;padding-bottom:6px;margin-bottom:6px;border-bottom:1px solid var(--dz-line)}
 .dz-tgroup-end{border:0;margin-top:auto}

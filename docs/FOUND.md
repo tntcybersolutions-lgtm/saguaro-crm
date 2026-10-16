@@ -334,3 +334,12 @@ MyWorkView.tsx, /api/my-work (+ jobs, agenda, roles, ?view=mine).
   "Copper State Dev.") and is reachable at /app/kit by any signed-in user. Gate it to platform owners or remove.
 - `app/api/dashboard/widget-metrics/route.ts` `guard()` returns the fallback on ANY error with nothing logged, so a
   broken widget reads as "no data".
+
+## 16 Oct 2026 — Related Items (feat/related-items) — found, NOT fixed
+
+- `photo_entity_links` (0 rows; `app/api/projects/[projectId]/photos/*`) is a third photo-to-record link table
+  beside `related_items` and `photos.punch_list_item_id`. Fold it into `related_items` or drop it.
+- `item_links` (0 rows) has no reader or writer left — `/api/items/:tool/:id/links` was replaced by
+  `/api/related-items`, and the migration copied its rows. Drop the table once the PR is live.
+- No detail screen exists for invoices, safety incidents or commitments' own `commitments` table; their
+  Related Items links open the list page (`lib/related-items.ts` `href`).

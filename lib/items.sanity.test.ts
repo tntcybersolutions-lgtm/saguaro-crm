@@ -25,7 +25,8 @@ jest.mock('@/lib/storage-signing', () => ({ signStoredUrl: async (_b: string, p:
 import { NextRequest } from 'next/server';
 import { GET as getItem, PATCH as patchItem } from '@/app/api/items/[tool]/[id]/route';
 import { GET as listComments, POST as addComment, DELETE as delComment } from '@/app/api/items/[tool]/[id]/comments/route';
-import { GET as listLinks, POST as addLink, DELETE as delLink } from '@/app/api/items/[tool]/[id]/links/route';
+import { GET as listLinks, POST as addLink, DELETE as delLink } from '@/app/api/related-items/route';
+import { GET as searchRelated } from '@/app/api/related-items/search/route';
 import { GET as search } from '@/app/api/items/search/route';
 
 const A = 'aaaaaaaa-0000-4000-8000-000000000001';
@@ -154,37 +155,70 @@ describe('item page — comments', () => {
   });
 });
 
-describe('item page — related items', () => {
-  test('link both ways, refuse duplicates, self and other companies, unlink', async () => {
+describe('related items — one link, shown on both records', () => {
+  const links = (type: string, id: string) => listLinks(req(`/api/related-items?type=${type}&id=${id}`));
+  const link = (from: [string, string], to: [string, string]) =>
+    addLink(req('/api/related-items', 'POST', { from: { type: from[0], id: from[1] }, to: { type: to[0], id: to[1] } }));
+
+  test('link both ways, refuse duplicates (either order), self and other companies, unlink', async () => {
     currentUser = ADMIN;
-    const add = await addLink(req(`/api/items/rfis/${RFI}/links`, 'POST', { toType: 'submittals', toId: SUB }), p('rfis', RFI));
+    const add = await link(['rfi', RFI], ['submittal', SUB]);
     expect(add.status).toBe(201);
-    const fromRfi = await (await listLinks(req(`/api/items/rfis/${RFI}/links`), p('rfis', RFI))).json();
-    expect(fromRfi.links).toEqual([expect.objectContaining({ type: 'submittals', id: SUB, name: 'Submittal #08 71 00-1 · Door hardware package', status: 'Submitted' })]);
-    const fromSub = await (await listLinks(req(`/api/items/submittals/${SUB}/links`), p('submittals', SUB))).json();
-    expect(fromSub.links).toEqual([expect.objectContaining({ type: 'rfis', id: RFI, name: 'RFI #7 · Door hardware at level 2' })]);
-    expect((await addLink(req(`/api/items/rfis/${RFI}/links`, 'POST', { toType: 'submittals', toId: SUB }), p('rfis', RFI))).status).toBe(409);
-    expect((await addLink(req(`/api/items/rfis/${RFI}/links`, 'POST', { toType: 'rfis', toId: RFI }), p('rfis', RFI))).status).toBe(400);
-    expect((await addLink(req(`/api/items/rfis/${RFI}/links`, 'POST', { toType: 'rfis', toId: RFI_B }), p('rfis', RFI))).status).toBe(404);
-    const del = await delLink(req(`/api/items/submittals/${SUB}/links?linkId=${fromSub.links[0].linkId}`, 'DELETE'), p('submittals', SUB));
+    // Stored once, in the fixed order (submittal > rfi by type).
+    expect(fake.T('related_items')).toEqual([expect.objectContaining({ a_type: 'rfi', a_id: RFI, b_type: 'submittal', b_id: SUB, tenant_id: A, project_id: JOB, created_by: ADMIN.id })]);
+    const fromRfi = await (await links('rfi', RFI)).json();
+    expect(fromRfi.items).toEqual([expect.objectContaining({ type: 'submittal', id: SUB, number: 'Submittal #08 71 00-1', title: 'Door hardware package', status: 'submitted', href: `/app/projects/${JOB}/items/submittals/${SUB}` })]);
+    const fromSub = await (await links('submittal', SUB)).json();
+    expect(fromSub.items).toEqual([expect.objectContaining({ type: 'rfi', id: RFI, number: 'RFI #7', title: 'Door hardware at level 2' })]);
+    expect((await link(['rfi', RFI], ['submittal', SUB])).status).toBe(409);
+    expect((await link(['submittal', SUB], ['rfi', RFI])).status).toBe(409);
+    expect((await link(['rfi', RFI], ['rfi', RFI])).status).toBe(400);
+    expect((await link(['rfi', RFI], ['rfi', RFI_B])).status).toBe(404);
+    expect((await link(['rfi', RFI], ['rfi', RFI_JOB2])).status).toBe(400);
+    expect((await link(['rfi', RFI], ['bogus', SUB])).status).toBe(400);
+    const del = await delLink(req(`/api/related-items?linkId=${fromSub.items[0].linkId}`, 'DELETE'));
     expect(del.status).toBe(200);
-    expect((await (await listLinks(req(`/api/items/rfis/${RFI}/links`), p('rfis', RFI))).json()).links).toEqual([]);
+    expect((await (await links('rfi', RFI)).json()).items).toEqual([]);
     expect(fake.T('rfis').find((x) => x.id === RFI)).toBeTruthy();
   });
 
-  test('a Foreman (RFIs: View) cannot link', async () => {
-    currentUser = FOREMAN;
-    expect((await addLink(req(`/api/items/rfis/${RFI}/links`, 'POST', { toType: 'submittals', toId: SUB }), p('rfis', RFI))).status).toBe(403);
+  test('another company cannot read, add or remove links on this company\'s records', async () => {
+    currentUser = ADMIN;
+    const add = await (await link(['rfi', RFI], ['punch_item', PUNCH])).json();
+    currentUser = OTHER;
+    expect((await links('rfi', RFI)).status).toBe(404);
+    expect((await link(['rfi', RFI_B], ['rfi', RFI])).status).toBe(404);
+    expect((await delLink(req(`/api/related-items?linkId=${add.link.id}`, 'DELETE'))).status).toBe(404);
+    expect(fake.T('related_items')).toHaveLength(1);
   });
 
-  test('search finds items on this job by words, not itself, not other jobs or companies', async () => {
+  test('a Foreman (RFIs and Submittals: View) cannot link; Sales (no RFIs) cannot see the RFI side', async () => {
+    currentUser = FOREMAN;
+    expect((await link(['rfi', RFI], ['submittal', SUB])).status).toBe(403);
+    currentUser = ADMIN;
+    await link(['punch_item', PUNCH], ['submittal', SUB]);
+    await link(['punch_item', PUNCH], ['rfi', RFI]);
+    currentUser = SALES;
+    const seen = await (await links('punch_item', PUNCH)).json();
+    expect(seen.items.map((i: { type: string }) => i.type)).toEqual([]); // Sales has neither RFIs nor Submittals
+  });
+
+  test('picker search finds records on this job by words or number, not itself, not other jobs or companies', async () => {
+    currentUser = ADMIN;
+    const j = await (await searchRelated(req(`/api/related-items/search?projectId=${JOB}&q=door&exclude=rfi:${RFI}`))).json();
+    expect(j.items.map((i: { number: string; title: string }) => `${i.number} · ${i.title}`)).toEqual(['Submittal #08 71 00-1 · Door hardware package']);
+    const byNumber = await (await searchRelated(req(`/api/related-items/search?projectId=${JOB}&q=${encodeURIComponent('Punch #3')}`))).json();
+    expect(byNumber.items.map((i: { type: string; id: string }) => `${i.type}:${i.id}`)).toEqual([`punch_item:${PUNCH}`]);
+    const all = await (await searchRelated(req(`/api/related-items/search?projectId=${JOB}&q=`))).json();
+    expect(all.items).toHaveLength(3);
+    currentUser = OTHER;
+    expect((await searchRelated(req(`/api/related-items/search?projectId=${JOB}&q=door`))).status).toBe(404);
+  });
+
+  test('item search (drawing pin picker) still finds items by words', async () => {
     currentUser = ADMIN;
     const j = await (await search(req(`/api/items/search?projectId=${JOB}&q=door&exclude=rfis:${RFI}`))).json();
     expect(j.items.map((i: { name: string }) => i.name)).toEqual(['Submittal #08 71 00-1 · Door hardware package']);
-    const all = await (await search(req(`/api/items/search?projectId=${JOB}&q=`))).json();
-    expect(all.items).toHaveLength(3);
-    currentUser = OTHER;
-    expect((await search(req(`/api/items/search?projectId=${JOB}&q=door`))).status).toBe(404);
   });
 });
 
@@ -219,9 +253,9 @@ describe('item page — change orders and inspections', () => {
   });
   test('link a CO to an RFI and find it in search', async () => {
     currentUser = ADMIN;
-    expect((await addLink(req(`/api/items/rfis/${RFI}/links`, 'POST', { toType: 'change_orders', toId: CO }), p('rfis', RFI))).status).toBe(201);
-    const fromCo = await (await listLinks(req(`/api/items/change_orders/${CO}/links`), p('change_orders', CO))).json();
-    expect(fromCo.links).toEqual([expect.objectContaining({ type: 'rfis', name: 'RFI #7 · Door hardware at level 2' })]);
+    expect((await addLink(req('/api/related-items', 'POST', { from: { type: 'rfi', id: RFI }, to: { type: 'change_order', id: CO } }))).status).toBe(201);
+    const fromCo = await (await listLinks(req(`/api/related-items?type=change_order&id=${CO}`))).json();
+    expect(fromCo.items).toEqual([expect.objectContaining({ type: 'rfi', number: 'RFI #7', title: 'Door hardware at level 2' })]);
     const found = await (await search(req(`/api/items/search?projectId=${JOB}&q=dampers`))).json();
     expect(found.items.map((i: { name: string }) => i.name)).toEqual(['CO #4 · Added fire dampers']);
   });
