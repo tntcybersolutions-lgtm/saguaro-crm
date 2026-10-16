@@ -62,6 +62,8 @@ const STATUS_META: Record<string,{label:string;tone:BadgeTone;next?:string;nextL
   approved:  {label:'Approved',  tone:'ongoing',        next:'certified',  nextLabel:'Certify',         action:'certify'},
   certified: {label:'Certified', tone:'ongoing',        next:'paid',       nextLabel:'Mark Paid',       action:'paid'},
   paid:      {label:'Paid',      tone:'completed'},
+  /* Returned by the owner (or the approvals inbox): edit the SOV, resubmit. */
+  rejected:  {label:'Returned',  tone:'overdue',        next:'submitted',  nextLabel:'Resubmit to Owner', action:'submit'},
 };
 
 interface SovLine {
@@ -282,7 +284,7 @@ export default function PayAppDetailPage() {
 
   // A 0 % release app stays 0 % — never the 10 % default (lib/retainage).
   const retPct = retainageRate(payApp?.retainage_percent);
-  const isDraft = payApp?.status === 'draft';
+  const isDraft = payApp?.status === 'draft' || payApp?.status === 'rejected';
   const canEdit = isDraft && editMode;
 
   // Live totals from SOV lines
@@ -671,6 +673,7 @@ export default function PayAppDetailPage() {
                 <div className="pdSection">
                   <div className="pdNext">
                     {payApp.status === 'draft' && 'Draft — edit the schedule of values, then submit the G702/G703 packet to the owner.'}
+                    {payApp.status === 'rejected' && `Returned for revision${(payApp as any).rejection_reason ? `: “${(payApp as any).rejection_reason}”` : ''}. Fix the schedule of values, then resubmit.`}
                     {payApp.status === 'submitted' && 'With the owner. Approval generates conditional lien waivers for the subs.'}
                     {payApp.status === 'approved' && 'Approved by the owner. Certify once the architect signs off.'}
                     {payApp.status === 'certified' && `Certified. Mark Paid releases ${fmt(sovPayment)}${wBlocking > 0 ? ` — currently held by ${wBlocking} unsigned waiver${wBlocking===1?'':'s'}` : ''}.`}

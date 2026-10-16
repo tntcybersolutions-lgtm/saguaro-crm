@@ -45,7 +45,8 @@ export async function getCloseoutChecklist(
     const { data: lienWaivers } = await supabaseAdmin
       .from('lien_waivers')
       .select('waiver_type')
-      .eq('project_id', projectId);
+      .eq('project_id', projectId)
+      .is('deleted_at', null);
 
     const subs = await subsOnProject(supabaseAdmin as any, projectId);
 

@@ -1,6 +1,7 @@
 import { NextResponse, type NextRequest } from 'next/server';
 import { createServerClient, getUser } from '@/lib/supabase-server';
 import { apiError } from '@/lib/api-error';
+import { isSubPortalExpired } from '@/lib/sub-portal-expiry';
 
 export const dynamic = 'force-dynamic';
 
@@ -17,7 +18,7 @@ export async function GET(req: NextRequest) {
 
     const { data: sessions, error } = await db
       .from('portal_sub_sessions')
-      .select('id, sub_id, sub_company, sub_contact_name, sub_email, project_id, token, status, last_login_at, created_at, tenant_id')
+      .select('id, sub_id, sub_company, sub_contact_name, sub_email, project_id, token, status, expires_at, last_login_at, created_at, tenant_id')
       .eq('tenant_id', user.tenantId)
       .order('created_at', { ascending: false })
       .limit(100);
@@ -56,6 +57,8 @@ export async function GET(req: NextRequest) {
         company_name: (s.sub_id && subMap[s.sub_id]?.company_name) || row.sub_company || row.sub_email || null,
         contact_name: (s.sub_id && subMap[s.sub_id]?.contact_name) || row.sub_contact_name || null,
         project_name: projectMap[s.project_id!] || null,
+        // Past its 90 days: the sub's link no longer opens; Resend reissues it.
+        expired: s.status === 'active' && isSubPortalExpired((s as { expires_at?: string | null }).expires_at),
       };
     });
 

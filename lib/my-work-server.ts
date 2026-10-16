@@ -297,13 +297,38 @@ export async function collectMyWork(a: CollectArgs): Promise<Collected> {
     // Decided-or-not is read through lib/lead-stages (the one vocabulary the
     // board and the sales overview use), not a case-sensitive `NOT IN
     // (Won,Lost)` — which also dropped every lead with no stage at all.
+    //
+    // Owners and admins also see their TEAM's follow-ups that are due today
+    // or overdue — the calls about to be missed — each labeled with whose it
+    // is. Everyone else keeps the per-person queue.
     safe('followups', async () => {
-      const r = await rows(db.from('lead_pipeline')
-        .select('id, company_name, contact_name, next_action, next_action_date, stage, estimated_value')
-        .eq('tenant_id', t).not('next_action_date', 'is', null)
-        .lte('next_action_date', todayOnly ? today : addDays(today, 14))
-        .or(`assigned_to.eq.${safeId},assigned_to.is.null`).order('next_action_date', { ascending: true }).limit(CAP));
-      return followUpItems(r.filter((l) => isUndecided(l.stage)).map((l) => ({ ...l, stage: normaliseStage(l.stage) })) as never, ctx);
+      const cols = 'id, company_name, contact_name, next_action, next_action_date, stage, estimated_value, assigned_to';
+      const [mine, team] = await Promise.all([
+        rows(db.from('lead_pipeline').select(cols)
+          .eq('tenant_id', t).not('next_action_date', 'is', null)
+          .lte('next_action_date', todayOnly ? today : addDays(today, 14))
+          .or(`assigned_to.eq.${safeId},assigned_to.is.null`).order('next_action_date', { ascending: true }).limit(CAP)),
+        companyWide
+          ? rows(db.from('lead_pipeline').select(cols)
+              .eq('tenant_id', t).not('next_action_date', 'is', null)
+              .lte('next_action_date', today)
+              .not('assigned_to', 'is', null).neq('assigned_to', uid)
+              .order('next_action_date', { ascending: true }).limit(CAP))
+          : Promise.resolve([] as Row[]),
+      ]);
+      const teamOpen = team.filter((l) => isUndecided(l.stage));
+      // Whose follow-up it is, by name (a teammate's profile in this tenant).
+      const ownerIds = [...new Set(teamOpen.map((l) => String(l.assigned_to)).filter(Boolean))];
+      const nameOf = new Map<string, string>();
+      if (ownerIds.length) {
+        const people = await rows(db.from('profiles').select('id, full_name, first_name, email').eq('tenant_id', t).in('id', ownerIds));
+        for (const p of people) nameOf.set(String(p.id), String(p.full_name || p.first_name || p.email || '').trim());
+      }
+      const all: Row[] = [
+        ...mine.filter((l) => isUndecided(l.stage)).map((l) => ({ ...l, assignee_name: null })),
+        ...teamOpen.map((l) => ({ ...l, assignee_name: nameOf.get(String(l.assigned_to)) || 'a teammate' })),
+      ];
+      return followUpItems(all.map((l) => ({ ...l, stage: normaliseStage(l.stage) })) as never, ctx);
     }),
 
     // Jobs starting in the next month, and whether they have a schedule yet.

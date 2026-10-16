@@ -95,7 +95,9 @@ for (const file of files) {
        Checked against information_schema before this line was written, not
        assumed. That sub tokens never expire is a design question worth
        raising with the owner, but it is not these routes' bug. */
-    if (!checksExpiry && m[1] === 'portal_client_sessions') missing.push('expiry');
+    /* 2026-10-16: portal_sub_sessions now has expires_at too (90 days from
+       the last send — lib/sub-portal-expiry), so both tables are checked. */
+    if (!checksExpiry) missing.push('expiry');
 
     if (missing.length) {
       findings.push({ file: rel, line, table: m[1], missing, usesCanonical });

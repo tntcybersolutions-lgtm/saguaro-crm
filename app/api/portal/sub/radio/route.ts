@@ -27,7 +27,7 @@ async function auth(req: NextRequest) {
   const token = req.nextUrl.searchParams.get('token') || req.headers.get('x-portal-token');
   if (!token) return null;
   const db = createServerClient() as any;
-  const { data: session } = await db.from('portal_sub_sessions').select('*').eq('token', token).eq('status', 'active').single();
+  const { data: session } = await db.from('portal_sub_sessions').select('*').eq('token', token).gt('expires_at', new Date().toISOString()).eq('status', 'active').single();
   return session ? { db, session: session as any } : null;
 }
 

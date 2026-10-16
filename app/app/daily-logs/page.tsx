@@ -271,8 +271,14 @@ export default function DailyLogsPage() {
           const d = await r.json();
           carry = d.carryForward || null;
           clockCrew = Number(d.crewCount) || 0;
+        } else {
+          console.warn('[daily-logs] prefill answered', r.status, '— carrying from the last loaded log instead');
         }
-      } catch { /* prefill unavailable — fall back to the loaded log list */ }
+      } catch (prefillErr) {
+        // No server carry-forward (offline or a failed read): the last log
+        // already on screen is the fallback, so the button still works.
+        console.warn('[daily-logs] prefill unavailable — carrying from the last loaded log', prefillErr);
+      }
       const prev = prevLogFor(pid);
       setForm(f => ({
         ...f,

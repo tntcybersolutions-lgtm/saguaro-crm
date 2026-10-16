@@ -438,12 +438,17 @@ export default function TimeClockPage() {
     inflight.current = true; setBusy(true); setMsg('');
     try {
       const g = await geo();
-      const meal = Number(openShift.meal_break_mins ?? 30) || 0;
+      /* The break is the shift's own recorded break, never a guess. Before the
+         server status loaded this read `?? 30` and docked half an hour off
+         every such clock-out. With no recorded value nothing is sent and the
+         server uses the shift row's break (0 when none was taken). */
+      const recorded = openShift.meal_break_mins;
+      const meal = recorded === null || recorded === undefined || String(recorded).trim() === '' ? null : Math.max(0, Number(recorded) || 0);
       const heldShift = String(openShift.id).startsWith(SAVED_SHIFT);
       const r = await postClock('/api/timeclock/out', {
         // A shift opened offline has no server id yet — the server closes whichever shift is open.
         ...(heldShift ? {} : { shiftId: openShift.id }),
-        breakMinutes: meal,
+        ...(meal === null ? {} : { breakMinutes: meal }),
         ...(g ? { lat: g.lat, lng: g.lng } : {}),
         clientTime: new Date().toISOString(),
       }, 'Clock out');
@@ -555,7 +560,7 @@ export default function TimeClockPage() {
   };
 
   const clockedIn = !!openShift;
-  const openManualFor = (e: any) => { setManualErr(''); setManual({ id: e.id, date: e.work_date, in: e.clock_in ? new Date(e.clock_in).toTimeString().slice(0, 5) : '07:00', out: e.clock_out ? new Date(e.clock_out).toTimeString().slice(0, 5) : '15:30', meal: String(e.meal_break_mins ?? 30), csi: e.csi_division || '' }); };
+  const openManualFor = (e: any) => { setManualErr(''); setManual({ id: e.id, date: e.work_date, in: e.clock_in ? new Date(e.clock_in).toTimeString().slice(0, 5) : '07:00', out: e.clock_out ? new Date(e.clock_out).toTimeString().slice(0, 5) : '15:30', meal: String(e.meal_break_mins ?? 0), csi: e.csi_division || '' }); };
   // The job is picked in the dialog (time_entries.project_id is required) —
   // pre-filled from the console picker when one is already chosen.
   const openAddTime = () => { setManualErr(''); setManual({ date: localDay(), in: '07:00', out: '15:30', meal: '30', csi: csiDiv, project: projectId || (projects.length === 1 ? projects[0].id : '') }); };

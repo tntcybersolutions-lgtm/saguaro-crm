@@ -50,7 +50,7 @@ export async function POST(req: NextRequest) {
       const waiverId = typeof body.waiverId === 'string' ? body.waiverId : '';
       if (!UUID.test(waiverId)) return NextResponse.json({ error: 'waiverId is not valid' }, { status: 400 });
       const { data: w, error: wErr } = await db.from('lien_waivers').select('*')
-        .eq('id', waiverId).eq('tenant_id', user.tenantId).eq('project_id', projectId).maybeSingle();
+        .eq('id', waiverId).eq('tenant_id', user.tenantId).eq('project_id', projectId).is('deleted_at', null).maybeSingle();
       if (wErr) throw wErr;
       if (!w) return NextResponse.json({ error: 'That lien waiver is not on this job.' }, { status: 404 });
       const row = w as Record<string, any>;
