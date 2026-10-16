@@ -241,7 +241,7 @@ export default function TimeClockPage() {
       if (!user?.email) return;
       // Resolve the signed-in user's tenant so every write is tenant-scoped (RLS/NOT NULL) — without
       // this, the employees insert below is silently rejected and the page hangs on "Resolving…".
-      const { data: prof } = await sb.from('profiles').select('tenant_id').eq('id', user.id).maybeSingle();
+      const { data: prof } = await sb.from('profiles').select('tenant_id, full_name').eq('id', user.id).maybeSingle();
       const tid = (prof as any)?.tenant_id ?? user.id;
       setTenantId(tid);
       // The API resolves the caller to an employees row server-side; prefer its answer so this page
@@ -256,7 +256,16 @@ export default function TimeClockPage() {
       if (!e) {
         const byEmail = await sb.from('employees').select(empCols).eq('email', user.email).maybeSingle();
         e = byEmail.data;
-        if (!e) { const ins = await sb.from('employees').insert({ tenant_id: tid, email: user.email, first_name: user.email.split('@')[0], last_name: '—', is_active: true }).select(empCols).maybeSingle(); e = ins.data; }
+        if (!e) {
+          // Real name from the login profile; empty surname when unknown (never a "—" placeholder,
+          // which printed "Avery —" everywhere because full_name is first || ' ' || last).
+          const pn = String((prof as any)?.full_name ?? '').trim().split(/\s+/).filter(Boolean);
+          const local = user.email.split('@')[0].split(/[._+-]+/).filter(Boolean);
+          const words = pn.length ? pn : local;
+          const cap = (w: string) => (w ? w[0].toUpperCase() + w.slice(1) : w);
+          const ins = await sb.from('employees').insert({ tenant_id: tid, email: user.email, first_name: cap(words[0] || 'Team'), last_name: words.slice(1).map(cap).join(' '), is_active: true }).select(empCols).maybeSingle();
+          e = ins.data;
+        }
       }
       if (e) { setEmp(e); loadEntries(e.id); }
     })();

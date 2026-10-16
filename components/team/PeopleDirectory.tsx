@@ -14,7 +14,7 @@ import { ListToolbar } from '@/components/ui/ListToolbar';
 const GOLD = 'var(--brand-primary)', DARK = 'var(--bg-base)', RAISED = 'var(--bg-surface)', BORDER = 'rgba(255,255,255,0.12)';
 const DIM = 'var(--text-secondary)', TEXT = 'var(--text-primary)', GREEN = 'var(--success)', RED = 'var(--danger)', AMBER = 'var(--warning)';
 /* eslint-disable @typescript-eslint/no-explicit-any */
-const nameOf = (e: any) => (e?.full_name || `${e?.first_name ?? ''} ${e?.last_name ?? ''}`).trim() || 'Unnamed';
+const nameOf = (e: any) => ([e?.first_name, e?.last_name].filter((p: any) => p && p !== '—').join(' ').trim() || String(e?.full_name ?? '').replace(/\s*—\s*$/, '').trim() || e?.email || 'Unnamed');
 const initials = (n: string) => n.split(' ').map((w) => w[0]).slice(0, 2).join('').toUpperCase();
 const INC_TYPES = [
   { v: 'warning', l: 'Warning', c: AMBER, I: ChatDots }, { v: 'incident', l: 'Incident', c: RED, I: Warning },

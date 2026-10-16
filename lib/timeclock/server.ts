@@ -102,6 +102,30 @@ export function toShift(row: ShiftRow): Shift {
 
 /* ── employee resolution ─────────────────────────────────────────────────── */
 
+/**
+ * The person's name for a new employees row: profile full_name first, then the
+ * email local part. Returns an empty last name rather than a placeholder.
+ * Exported so every place that creates an employee from a login names it the
+ * same way.
+ */
+export async function realNameFor(
+  db: TimeclockDb,
+  user: { id: string },
+  email: string,
+): Promise<{ first: string; last: string }> {
+  const cap = (s: string) => (s ? s[0].toUpperCase() + s.slice(1) : s);
+  const { data: prof } = await db.from('profiles').select('full_name').eq('id', user.id).maybeSingle();
+  const profName = String((prof as { full_name?: string | null } | null)?.full_name ?? '').trim();
+  if (profName && profName.toLowerCase() !== email.toLowerCase()) {
+    const words = profName.split(/\s+/).filter(Boolean).map(cap);
+    return { first: words[0], last: words.slice(1).join(' ') };
+  }
+  const local = (email.split('@')[0] || 'team').trim();
+  const parts = local.split(/[._+-]+/).filter(Boolean).map(cap);
+  return { first: parts[0] || 'Team', last: parts.slice(1).join(' ') };
+}
+
+
 const EMPLOYEE_COLUMNS = 'id, tenant_id, full_name, first_name, last_name, email';
 
 interface EmployeeLookupRow {
@@ -115,7 +139,7 @@ interface EmployeeLookupRow {
 
 function displayName(row: EmployeeLookupRow, fallback: string): string {
   const joined = [row.first_name, row.last_name].filter((p) => p && p !== '—').join(' ').trim();
-  return (row.full_name || joined || row.email || fallback).trim() || fallback;
+  return (joined || row.full_name || row.email || fallback).trim() || fallback;
 }
 
 /**
@@ -180,16 +204,13 @@ export async function resolveEmployee(
     if (hit) return { id: hit.id, name: displayName(hit, fallbackName), tenantId, created: false };
   }
 
-  // 4) Create honestly. first_name/last_name are NOT NULL, so the email local
-  //    part is split on '.' when it looks like one (jane.doe@ → Jane Doe) and
-  //    otherwise the surname is left as the em-dash placeholder the web time
-  //    page already uses — an obviously-unfilled field, not invented data.
-  const local = (email.split('@')[0] || 'team').trim();
-  const parts = local.split(/[._-]+/).filter(Boolean);
-  const cap = (s: string) => (s ? s[0].toUpperCase() + s.slice(1) : s);
-  const first = cap(parts[0] || 'Team');
-  const last = parts.length > 1 ? cap(parts.slice(1).join(' ')) : '—';
-
+  // 4) Create honestly, with the person's REAL name. Their login profile
+  //    carries the name they signed up with — use it. Only when the profile
+  //    has none is the email local part split (jane.doe@ → Jane Doe). The
+  //    surname is left EMPTY when unknown: an em-dash placeholder used to sit
+  //    here and printed "Avery —" on every roster, schedule and timesheet,
+  //    because full_name is generated as first || ' ' || last.
+  const { first, last } = await realNameFor(db, user, email);
   const { data: created, error: insErr } = await db
     .from('employees')
     .insert({
