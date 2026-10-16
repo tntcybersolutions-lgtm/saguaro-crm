@@ -396,3 +396,5 @@ are gated too (20261016g + h, APPLIED LIVE). Found on the way, NOT fixed:
   should be Sales or Budget, the routes and `role_gate_*_proposals` have to move together.
 - Pre-existing advisor noise on the rewritten own-row policies: `crew_locations_*`, `geofence_events_*`,
   `presence_sessions_*3` call `auth.uid()` unwrapped (auth_rls_initplan) — wrap in `(SELECT auth.uid())`.
+- `proposal_signatures` / `proposal_signature_events` (20261016p, merged while this branch was open) are readable
+  tenant-wide with no role gate — signer names, emails and IPs; gate them with Documents like `proposals`.
