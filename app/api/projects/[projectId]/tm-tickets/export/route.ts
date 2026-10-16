@@ -138,6 +138,8 @@ export async function POST(req: NextRequest, { params }: { params: { projectId: 
 
 export async function GET(req: NextRequest, { params }: { params: { projectId: string } }) {
   const { projectId } = params;
+  const g = await requirePermission(req, 'Projects', 'View', { projectId });
+  if (!g.ok) return g.res;
   const { searchParams } = new URL(req.url);
   const idsParam = searchParams.get('ids');
   const ids = idsParam ? idsParam.split(',').map((s) => s.trim()).filter(Boolean) : [];

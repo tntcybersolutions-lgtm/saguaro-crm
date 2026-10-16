@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { createServerClient, getUser } from '@/lib/supabase-server';
+import { requirePermission } from '@/lib/permissions';
 import { costControl, type CostLine } from '@/lib/finance';
 import { manualLinesFromReport, savedOverrides } from '@/lib/cost-report-lines';
 import { apiError } from '@/lib/api-error';
@@ -27,8 +28,9 @@ const DEAD_PO = new Set(['cancelled', 'canceled', 'void', 'voided', 'rejected', 
 const ACTUAL_INV = new Set(['approved', 'paid', 'partial', 'partially_paid', 'partially paid']);
 
 export async function GET(req: NextRequest) {
-  const user = await getUser(req);
-  if (!user) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
+  const g = await requirePermission(req, 'Budget', 'View');
+  if (!g.ok) return g.res;
+  const user = g.user;
 
   const projectId = req.nextUrl.searchParams.get('project_id') || req.nextUrl.searchParams.get('projectId');
   if (!projectId) return NextResponse.json({ error: 'project_id is required' }, { status: 400 });

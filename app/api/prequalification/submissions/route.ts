@@ -9,7 +9,8 @@ export async function GET(req: NextRequest) {
     const db = createServerClient();
     const { data, error } = await db
       .from('prequalification_submissions')
-      .select('*')
+      // The directory record, for the trade and the company name the portal row lacks.
+      .select('*, subcontractors(company_name, trade)')
       .eq('tenant_id', user.tenantId)
       .order('created_at', { ascending: false });
     if (error) throw error;

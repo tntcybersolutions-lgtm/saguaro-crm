@@ -143,16 +143,29 @@ function RadarChart({ scores, maxScores, size = 220 }: { scores: Record<string, 
    omit the nested arrays/objects the UI iterates (documents, scores, answers,
    questions, requiredDocs). Coerce every such field to a safe default so the
    dashboard's .some()/.forEach()/.map() calls never crash. */
+/* The portal writes a submission as vendor_name / vendor_email / score with
+   status 'submitted' (app/api/prequalification/portal/[token]). This read
+   sub_name / sub_email / total_score and knew no 'submitted' status — so every
+   real submission arrived nameless, scored 0%, and with no Start Review button
+   (actions exist only for 'pending' and 'under_review'). A returned form IS
+   awaiting review: 'submitted' reads as 'pending'. */
+const SUB_STATUSES: SubStatus[] = ['pending', 'under_review', 'approved', 'rejected'];
+function submissionStatus(raw: unknown): SubStatus {
+  const v = String(raw ?? '').toLowerCase();
+  if (v === 'submitted' || v === '') return 'pending';
+  return (SUB_STATUSES as string[]).includes(v) ? (v as SubStatus) : 'pending';
+}
+
 function normalizeSubmission(s: any): Submission {
   return {
     id: String(s?.id ?? uid()),
-    sub_name: s?.sub_name ?? s?.name ?? '',
-    sub_email: s?.sub_email ?? s?.email ?? '',
-    sub_trade: s?.sub_trade ?? s?.trade ?? '',
-    status: (s?.status as SubStatus) ?? 'pending',
+    sub_name: s?.sub_name ?? s?.vendor_name ?? s?.subcontractors?.company_name ?? s?.name ?? '',
+    sub_email: s?.sub_email ?? s?.vendor_email ?? s?.email ?? '',
+    sub_trade: s?.sub_trade ?? s?.subcontractors?.trade ?? s?.trade ?? '',
+    status: submissionStatus(s?.status),
     submitted_at: s?.submitted_at ?? s?.created_at ?? '',
     expires_at: s?.expires_at ?? '',
-    total_score: Number(s?.total_score ?? 0),
+    total_score: Number(s?.total_score ?? s?.score ?? 0),
     max_score: Number(s?.max_score ?? 0),
     scores: (s?.scores && typeof s.scores === 'object') ? s.scores : {},
     answers: (s?.answers && typeof s.answers === 'object') ? s.answers : {},
@@ -219,6 +232,10 @@ export default function PrequalificationPage() {
   /* ─── Fetch data ─── */
   const fetchData = useCallback(async () => {
     setLoading(true);
+    setError('');
+    /* A refused read is not an empty list. Every non-OK answer here used to
+       become [] in silence, so a 500 or a 403 drew "No Submissions Found". */
+    const failed: string[] = [];
     try {
       const [tRes, sRes, iRes] = await Promise.allSettled([
         fetch('/api/prequalification/templates'),
@@ -230,17 +247,18 @@ export default function PrequalificationPage() {
         const d = await tRes.value.json();
         const raw = Array.isArray(d) ? d : (d.templates ?? d.data ?? []);
         setTemplates((Array.isArray(raw) ? raw : []).map(normalizeTemplate));
-      } else { setTemplates([]); }
+      } else { setTemplates([]); failed.push('templates'); }
       if (sRes.status === 'fulfilled' && sRes.value.ok) {
         const d = await sRes.value.json();
         const raw = Array.isArray(d) ? d : (d.submissions ?? d.data ?? []);
         setSubmissions((Array.isArray(raw) ? raw : []).map(normalizeSubmission));
-      } else { setSubmissions([]); }
+      } else { setSubmissions([]); failed.push('submissions'); }
       if (iRes.status === 'fulfilled' && iRes.value.ok) {
         const d = await iRes.value.json();
         const raw = Array.isArray(d) ? d : (d.invites ?? d.data ?? []);
         setInvites((Array.isArray(raw) ? raw : []).map(normalizeInvite));
-      } else { setInvites([]); }
+      } else { setInvites([]); failed.push('invites'); }
+      if (failed.length) setError(`Could not load your prequalification ${failed.join(' and ')}. Please try again.`);
     } catch (e: any) {
       console.error(e);
       setError(humanError(e, 'Failed to load prequalification data. Please try again.'));

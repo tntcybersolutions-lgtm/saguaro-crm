@@ -4,7 +4,7 @@ import { DataTable, type Column } from '@/components/ui/kit';
 import { StatusPill } from '@/components/ui/Status';
 import Link from 'next/link';
 import { ShieldCheck, FileText, Signature, MagnifyingGlass, Envelope, UsersThree, ArrowRight, Check, X, Warning } from '@phosphor-icons/react';
-import { PremiumSurface, ModuleHero, SectionCard, PremiumEmpty, StatStrip, FlowSteps, InsightRow, IconChip, goldButtonStyle, ghostButtonStyle } from '@/components/ui/premium';
+import { PremiumSurface, ModuleHero, SectionCard, PremiumEmpty, StatStrip, FlowSteps, InsightRow, IconChip, goldButtonStyle, ghostButtonStyle, railStyle } from '@/components/ui/premium';
 import { moduleAccent } from '@/lib/ui/app-accent';
 import { FlatStyles, FlatList, Row } from '@/components/ui/flat';
 import NudgeRing from '@/components/intelligence/NudgeRing';
@@ -41,14 +41,24 @@ export default function CompliancePage(){
   const [selected, setSelected] = useState<any>(null);
   const [filter, setFilter] = useState<'all'|'compliant'|'at_risk'|'non_compliant'>('all');
   const [search, setSearch] = useState('');
+  const [loadError, setLoadError] = useState<string | null>(null);
 
-  useEffect(()=>{
+  /* A failed load is not an empty scorecard. This read r.json() off any
+     response and swallowed the rest, so a 500 rendered "No subcontractors
+     found" — which on this screen reads as "nobody is out of compliance". */
+  const load = useCallback(()=>{
+    setLoading(true);
+    setLoadError(null);
     fetch('/api/compliance')
-      .then(r=>r.json())
-      .then(d=>{ setSubs(d.subs||[]); setSummary(d.summary||null); })
-      .catch(()=>{})
+      .then(async r=>{
+        const d = await r.json().catch(()=>({}));
+        if(!r.ok) throw new Error(d?.error || 'Could not load compliance.');
+        setSubs(Array.isArray(d.subs)?d.subs:[]); setSummary(d.summary||null);
+      })
+      .catch((e:unknown)=>setLoadError(e instanceof Error?e.message:'Could not load compliance.'))
       .finally(()=>setLoading(false));
   },[]);
+  useEffect(()=>{ load(); },[load]);
 
   const filtered = subs.filter(s=>{
     if(filter!=='all'&&s.compliance!==filter) return false;
@@ -152,7 +162,10 @@ export default function CompliancePage(){
     ]}/>}
 
     {/* Scorecard + detail split */}
-    <div style={{display:'grid',gridTemplateColumns:selected?'1fr 360px':'1fr',gap:20,transition:'grid-template-columns .2s',alignItems:'start'}}>
+    {/* .pmSplit stacks the detail under the scorecard below 900px. The inline
+        '1fr 360px' grid it replaces put a 360px rail beside the table on a
+        390px phone, so opening a sub pushed the page sideways. */}
+    <div className={selected?'pmSplit':undefined} style={selected?railStyle(360,{gap:20}):{display:'grid',gridTemplateColumns:'minmax(0,1fr)',gap:20,alignItems:'start'}}>
       {/* NudgeRing pulses the scorecard when the suggestion engine flags an
           expired / expiring insurance certificate (ticker deep links land on
           this anchor). */}
@@ -164,9 +177,9 @@ export default function CompliancePage(){
       >
         {/* Search + filter toolbar */}
         <div style={{display:'flex',gap:10,alignItems:'center',flexWrap:'wrap',marginBottom:16}}>
-          <div style={{position:'relative',flex:'0 0 auto'}}>
+          <div style={{position:'relative',flex:'0 1 240px',minWidth:0}}>
             <MagnifyingGlass size={15} weight="bold" color={DIM} style={{position:'absolute',left:12,top:'50%',transform:'translateY(-50%)',pointerEvents:'none'}} />
-            <input value={search} onChange={e=>setSearch(e.target.value)} placeholder="Search subcontractors…" style={{padding:'8px 14px 8px 34px',background:'rgba(255,255,255,0.04)',border:`1px solid ${BORDER}`,borderRadius:9,color:TEXT,fontSize:13,outline:'none',width:240}}/>
+            <input value={search} onChange={e=>setSearch(e.target.value)} placeholder="Search subcontractors…" style={{padding:'8px 14px 8px 34px',background:'rgba(255,255,255,0.04)',border:`1px solid ${BORDER}`,borderRadius:9,color:TEXT,fontSize:13,outline:'none',width:240,maxWidth:'100%',boxSizing:'border-box'}}/>
           </div>
           <div style={{display:'flex',gap:6,flexWrap:'wrap'}}>
             {(['all','compliant','at_risk','non_compliant'] as const).map(f=>(
@@ -178,6 +191,14 @@ export default function CompliancePage(){
         </div>
 
         {loading?<div style={{textAlign:'center',padding:40,color:DIM}}>Loading compliance data…</div>
+        :loadError?<PremiumEmpty
+            icon={<Warning size={30} weight="duotone" color={RED} />}
+            title="Could not load compliance"
+            description={loadError}
+            tone="error"
+            action={<button type="button" onClick={load} style={goldButtonStyle}>Try Again</button>}
+            compact
+          />
         :filtered.length===0?<PremiumEmpty
             icon={<ShieldCheck size={30} weight="duotone" color="var(--text-secondary)" />}
             title={search||filter!=='all'?'No matching subcontractors':'No subcontractors found'}
@@ -199,7 +220,7 @@ export default function CompliancePage(){
       {selected&&<SectionCard
         icon={<ShieldCheck size={17} weight="duotone" color="var(--text-secondary)" />}
         title={selected.name}
-        action={<button onClick={()=>setSelected(null)} style={{background:'rgba(255,255,255,0.04)',border:`1px solid ${BORDER}`,borderRadius:8,color:DIM,fontSize:16,cursor:'pointer',lineHeight:1,width:28,height:28,display:'inline-flex',alignItems:'center',justifyContent:'center'}}>×</button>}
+        action={<button type="button" aria-label="Close" onClick={()=>setSelected(null)} style={{background:'rgba(255,255,255,0.04)',border:`1px solid ${BORDER}`,borderRadius:8,color:DIM,fontSize:18,cursor:'pointer',lineHeight:1,width:44,height:44,display:'inline-flex',alignItems:'center',justifyContent:'center'}}>×</button>}
       >
         <div style={{marginBottom:16}}>
           <div style={{fontSize:12,fontWeight:700,color:DIM,marginBottom:6}}>Compliance Score</div>

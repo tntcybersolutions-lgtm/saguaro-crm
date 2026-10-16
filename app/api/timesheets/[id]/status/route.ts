@@ -3,6 +3,7 @@ import { createServerClient, getUser } from '@/lib/supabase-server';
 import { must } from '@/lib/db-write';
 import { requestDay } from '@/lib/time-zone';
 import { apiError } from '@/lib/api-error';
+import { getEffectivePermissions, hasPermission } from '@/lib/permissions';
 
 /**
  * Timesheet / time-clock status transition.
@@ -24,6 +25,22 @@ export async function PATCH(req: NextRequest, { params }: { params: Promise<{ id
     }
 
     const db = createServerClient();
+
+    /* Clocking out is everyone's; approving or rejecting hours is a manager's.
+       This route serves both, and checked only "signed in", so any member could
+       approve their own week (approved_by stamped as themselves) and send it
+       to payroll. The decision now needs the same right the job's timesheet
+       screen needs to edit entries. */
+    if (status === 'approved' || status === 'rejected') {
+      const perms = await getEffectivePermissions(db, user.id, user.tenantId);
+      if (!hasPermission(perms, 'Projects', 'Edit')) {
+        return NextResponse.json(
+          { error: "Your role doesn't allow this (Projects: change). Ask your company admin for access.", reason: 'forbidden' },
+          { status: 403 },
+        );
+      }
+    }
+
     const updatePayload: Record<string, any> = { status };
 
     // A submitted/completed transition is the clock-out punch — stamp the

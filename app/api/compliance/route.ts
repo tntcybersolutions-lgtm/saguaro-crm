@@ -1,7 +1,8 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { createServerClient, getUser } from '@/lib/supabase-server';
-import { addDays, requestDay } from '@/lib/time-zone';
+import { requestDay } from '@/lib/time-zone';
 import { apiError } from '@/lib/api-error';
+import { coiStatus, type CoiCertRow } from '@/lib/coi-coverage';
 
 export const dynamic = 'force-dynamic';
 
@@ -9,11 +10,15 @@ export async function GET(req: NextRequest) {
   const user = await getUser(req);
   if (!user) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
 
+  /* Every read below used to be `const { data } = await …` with the error
+     dropped on the floor. A failed query became "no subcontractors found", and
+     the screen said so with total confidence. Now any failure is a real error
+     with a correlation id, and the page says it could not load. */
+  try {
   const db = createServerClient();
   const tenantId = user.tenantId;
   const { searchParams } = new URL(req.url);
   const projectId = searchParams.get('projectId') || undefined;
-
   // A subcontractor belongs to the tenant, not to a project — one sub works a
   // dozen jobs. The project link and the contract value live on the join table
   // project_subcontractors. This route used to select contract_amount,
@@ -25,7 +30,8 @@ export async function GET(req: NextRequest) {
     .select('subcontractor_id, project_id, contract_amount, is_compliant, status')
     .eq('tenant_id', tenantId);
   if (projectId) assignQuery = assignQuery.eq('project_id', projectId);
-  const { data: assignments } = await assignQuery;
+  const { data: assignments, error: assignErr } = await assignQuery;
+  if (assignErr) throw assignErr;
 
   // subId -> { contract total across the projects in scope, the projects }
   const assignMap = new Map<string, { contract: number; projects: string[] }>();
@@ -44,54 +50,59 @@ export async function GET(req: NextRequest) {
     return NextResponse.json({ subs: [], summary: { total: 0, compliant: 0, at_risk: 0, non_compliant: 0, avg_score: null } });
   }
 
+  /* Inactive companies stay on file but are not scored. Filtered here rather
+     than with .neq('status','inactive'): in PostgREST that also drops every
+     row whose status is NULL, and it misses 'Inactive' spelled with a capital —
+     the Subs & Vendors list compares case-insensitively, so this does too. */
   let subQuery = db
     .from('subcontractors')
-    .select('id, company_name, trade, email, status, w9_on_file')
+    .select('id, company_name, trade, email, contact_email, status, w9_on_file, insurance_expiry')
     .eq('tenant_id', tenantId)
-    .neq('status', 'inactive')
     .order('company_name', { ascending: true });
   if (projectId) subQuery = subQuery.in('id', [...assignMap.keys()]);
-  const { data: subs } = await subQuery;
+  const { data: allSubs, error: subErr } = await subQuery;
+  if (subErr) throw subErr;
+  const subs = (allSubs || []).filter((s) => String((s as { status?: string | null }).status || '').trim().toLowerCase() !== 'inactive');
 
   if (!subs || subs.length === 0) {
     return NextResponse.json({ subs: [], summary: { total: 0, compliant: 0, at_risk: 0, non_compliant: 0, avg_score: null } });
   }
 
   // Current / expiring on the company's day (device, else company zone) — not the server's UTC day.
-  let today: string;
-  try {
-    ({ today } = await requestDay(req.headers, db, tenantId, 'compliance'));
-  } catch (e) {
-    return apiError('compliance', e, "Couldn't load compliance.");
-  }
-  const in30 = addDays(today, 30);
+  const { today } = await requestDay(req.headers, db, tenantId, 'compliance');
   const subIds = subs.map((s: any) => s.id);
 
   // Fetch all insurance certificates for these subs
-  const { data: certs } = await db
+  // Every coverage column (lib/coi-coverage COI_CERT_COLUMNS), not just policy_type + expiry_date.
+  const { data: certs, error: certErr } = await db
     .from('insurance_certificates')
-    .select('sub_id, policy_type, expiry_date, status')
+    .select('sub_id, policy_type, expiry_date, gl_expiry, wc_expiry, auto_expiry, umbrella_expiry, status')
     .eq('tenant_id', tenantId)
     .in('sub_id', subIds);
+  if (certErr) throw certErr;
 
   // Fetch all lien waivers for these subs
-  const { data: waivers } = await db
+  const { data: waivers, error: waiverErr } = await db
     .from('lien_waivers')
     .select('subcontractor_id, status, signed_at')
     .eq('tenant_id', tenantId)
+    .is('deleted_at', null)
     .in('subcontractor_id', subIds);
+  if (waiverErr) throw waiverErr;
 
   // w9_requests has no subcontractor foreign key at all — a request is raised
   // against a vendor_email, because a W-9 goes out to whoever is getting paid,
   // sub or not. Email is the only join there is.
-  const subEmails = (subs as any[]).map((s) => (s.email || '').toLowerCase()).filter(Boolean);
-  const { data: w9s } = subEmails.length
+  const emailOf = (s: any) => String(s.email || s.contact_email || '').trim().toLowerCase();
+  const subEmails = (subs as any[]).map(emailOf).filter(Boolean);
+  const { data: w9s, error: w9Err } = subEmails.length
     ? await db
         .from('w9_requests')
         .select('vendor_email, status, submitted_at')
         .eq('tenant_id', tenantId)
         .in('vendor_email', subEmails)
-    : { data: [] as any[] };
+    : { data: [] as any[], error: null };
+  if (w9Err) throw w9Err;
 
   const certMap = new Map<string, any[]>();
   const waiverMap = new Map<string, any[]>();
@@ -120,19 +131,19 @@ export async function GET(req: NextRequest) {
   const scoredSubs = (subs as any[]).map((sub) => {
     const subCerts = certMap.get(sub.id) || [];
     const subWaivers = waiverMap.get(sub.id) || [];
-    const w9 = w9Map.get((sub.email || '').toLowerCase());
+    const w9 = w9Map.get(emailOf(sub));
 
     // W-9 status (25 points). subcontractors carries a w9_on_file boolean; the
     // request lifecycle (pending / submitted) lives in w9_requests.
     const w9Status = sub.w9_on_file === true ? 'approved' : (w9?.status || 'not_requested');
     const w9Score = w9Status === 'submitted' || w9Status === 'approved' ? 25 : w9Status === 'pending' ? 10 : 0;
 
-    // Insurance status (40 points) — check for active GL and WC certs
-    const activeCerts = subCerts.filter((c: any) => c.expiry_date && c.expiry_date >= today);
-    const expiringCerts = subCerts.filter((c: any) => c.expiry_date && c.expiry_date >= today && c.expiry_date <= in30);
-    const hasGL = activeCerts.some((c: any) => c.policy_type?.toLowerCase().includes('gl') || c.policy_type?.toLowerCase().includes('general'));
-    const hasWC = activeCerts.some((c: any) => c.policy_type?.toLowerCase().includes('wc') || c.policy_type?.toLowerCase().includes('workers'));
-    const insScore = (hasGL ? 20 : 0) + (hasWC ? 20 : 0) - (expiringCerts.length > 0 ? 5 : 0);
+    // Insurance status (40 points) — current GL and WC, read from every
+    // coverage on the certificate (an ACORD 25 carries both on one row).
+    const coi = coiStatus(subCerts as CoiCertRow[], today, sub.insurance_expiry);
+    const hasGL = coi.hasGL;
+    const hasWC = coi.hasWC;
+    const insScore = (hasGL ? 20 : 0) + (hasWC ? 20 : 0) - (coi.expiringCerts > 0 ? 5 : 0);
 
     // Lien waiver status (35 points)
     const totalWaivers = subWaivers.length;
@@ -140,7 +151,10 @@ export async function GET(req: NextRequest) {
     const waiverScore = totalWaivers === 0 ? 25 : Math.round((signedWaivers / totalWaivers) * 35);
 
     const score = Math.max(0, Math.min(100, w9Score + insScore + waiverScore));
-    const compliance = score >= 80 ? 'compliant' : score >= 50 ? 'at_risk' : 'non_compliant';
+    /* No current liability coverage is not a points problem, it is a hold: the
+       award gate refuses that sub, so the scorecard must not call them "at
+       risk" while a W-9 and signed waivers carry the score to 60. */
+    const compliance = !hasGL ? 'non_compliant' : score >= 80 ? 'compliant' : score >= 50 ? 'at_risk' : 'non_compliant';
 
     const assigned = assignMap.get(sub.id);
 
@@ -148,7 +162,7 @@ export async function GET(req: NextRequest) {
       id: sub.id,
       name: sub.company_name,
       trade: sub.trade,
-      email: sub.email,
+      email: sub.email || sub.contact_email || null,
       contract_amount: assigned?.contract || 0,
       project_id: projectId || assigned?.projects[0] || null,
       project_ids: assigned?.projects || [],
@@ -156,8 +170,9 @@ export async function GET(req: NextRequest) {
       compliance,
       w9: { status: w9Status, score: w9Score },
       insurance: {
-        active_certs: activeCerts.length,
-        expiring_certs: expiringCerts.length,
+        active_certs: coi.activeCerts || (hasGL ? 1 : 0),
+        expiring_certs: coi.expiringCerts,
+        soonest_expiry: coi.soonestExpiry,
         has_gl: hasGL,
         has_wc: hasWC,
         score: Math.max(0, insScore),
@@ -180,4 +195,7 @@ export async function GET(req: NextRequest) {
   };
 
   return NextResponse.json({ subs: scoredSubs, summary });
+  } catch (e) {
+    return apiError('compliance', e, "Couldn't load compliance. Please try again.");
+  }
 }

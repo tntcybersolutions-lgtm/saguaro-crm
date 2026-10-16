@@ -5,8 +5,9 @@ import { signFields } from '@/lib/storage-signing';
 import { apiError } from '@/lib/api-error';
 
 export async function GET(req: NextRequest, { params }: { params: { projectId: string } }) {
-  const user = await getUser(req);
-  if (!user) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
+  const g = await requirePermission(req, 'Budget', 'View', { projectId: params.projectId });
+  if (!g.ok) return g.res;
+  const user = g.user;
   try {
     const supabase = createServerClient();
     const { data: project } = await supabase.from('projects').select('id').eq('id', params.projectId).eq('tenant_id', user.tenantId).single();

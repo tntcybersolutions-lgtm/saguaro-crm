@@ -77,6 +77,8 @@ export interface WidgetMetrics {
   'photo-feed': { count: number; recent: { url: string; caption: string | null }[] };
   'action-items': { text: string; priority: string }[];
   'weather': { location: string | null };
+  /** Widget ids this person's role may not see; the route withholds their data. */
+  'restricted': string[];
 }
 
 const fetcher = async (url: string) => {
@@ -87,12 +89,15 @@ const fetcher = async (url: string) => {
 
 /** Live tenant widget metrics — shared by builder previews and the home dashboard. */
 export function useWidgetMetrics() {
-  const { data, error, isLoading, mutate } = useSWR<{ metrics: Partial<WidgetMetrics> }>(
+  const { data, error, isLoading, mutate } = useSWR<{ metrics: Partial<WidgetMetrics>; restricted?: string[] }>(
     '/api/dashboard/widget-metrics',
     fetcher,
     { refreshInterval: 60_000, revalidateOnFocus: true, dedupingInterval: 10_000 },
   );
-  return { metrics: data?.metrics ?? null, loading: isLoading, error, revalidate: mutate };
+  return {
+    metrics: data ? { ...data.metrics, restricted: Array.isArray(data.restricted) ? data.restricted : [] } : null,
+    loading: isLoading, error, revalidate: mutate,
+  };
 }
 
 /* ─── Saved layout (what the home dashboard renders) ─────────────────── */
@@ -204,6 +209,10 @@ export function WidgetBody({
   if (!metrics) {
     return <div style={{ color: W.DIM, fontSize: 13, textAlign: 'center', padding: '8px 0', opacity: 0.7 }}>{loading ? 'Loading live data…' : 'Live data unavailable'}</div>;
   }
+
+  /* Withheld by role (the route never computed it) — say so, rather than
+     "No budget data" over a company that has plenty. */
+  if (metrics.restricted?.includes(catalogId)) return <Muted>Not included in your role</Muted>;
 
   switch (catalogId) {
     case 'project-summary': {

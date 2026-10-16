@@ -29,7 +29,7 @@ export const runtime = 'nodejs';
  * This static segment wins over the /api/billing/[...path] catch-all.
  */
 export async function POST(req: NextRequest) {
-  const g = await requirePermission(req, 'Projects', 'Full');
+  const g = await requirePermission(req, 'Admin', 'Full');
   if (!g.ok) return g.res;
   try {
     const b = await req.json().catch(() => ({} as Record<string, unknown>));

@@ -8,8 +8,9 @@ import { retainageLedger, retainageRate } from '@/lib/retainage';
 
 export async function GET(req: NextRequest, { params }: { params: Promise<{ id: string }> }) {
   const { id } = await params;
-  const user = await getUser(req);
-  if (!user) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
+  const g = await requirePermission(req, 'Pay Apps', 'View');
+  if (!g.ok) return g.res;
+  const user = g.user;
   try {
     const db = createServerClient();
     const [{ data: payApp, error: paErr }, { data: lineItems, error: liErr }] = await Promise.all([
