@@ -2,7 +2,14 @@
 /**
  * Builds the SQL for the role-aware RLS proof matrix.
  *
- *   node tools/rls-proof-matrix.mjs [--with-migration <file.sql>]... > proof.sql
+ *   node tools/rls-proof-matrix.mjs [--set money|legacy] [--personas a,b] [--brief] [--with-migration <file.sql>]... > proof.sql
+ *
+ * --set money  (default) the 51 money/HR/admin tables of #229 and their browser probes.
+ * --set legacy the tables that leaned on public.app_user_role() (20261016g),
+ *              resource_assignments rates (20261016h), proposals and bids. Test it with
+ *              --with-migration g and h; 20261016i holds DROP statements, which the SQL
+ *              runner will not run unattended (and which change no answer for any
+ *              current user — see that file).
  *
  * The output is ONE script that is always rolled back: it ends by raising an
  * exception whose message is the JSON matrix, so nothing it does is ever
@@ -29,8 +36,20 @@ import fs from 'node:fs';
 
 const args = process.argv.slice(2);
 const migrations = [];
+let SET = 'money';
+/** --personas owner,sales,... keeps the report under the SQL runner's error-message limit. */
+let ONLY = null;
+/** --brief reports only the probes whose answer changed, plus every browser probe. */
+let BRIEF = false;
 for (let i = 0; i < args.length; i++) {
   if (args[i] === '--with-migration') migrations.push(args[++i]);
+  else if (args[i] === '--set') SET = args[++i];
+  else if (args[i] === '--personas') ONLY = new Set(args[++i].split(','));
+  else if (args[i] === '--brief') BRIEF = true;
+}
+if (SET !== 'money' && SET !== 'legacy') {
+  console.error(`unknown --set ${SET} (money | legacy)`);
+  process.exit(2);
 }
 
 const SAGUARO = '692d8793-4d9f-4c43-a935-bf56cc637553';
@@ -50,7 +69,7 @@ const SYNTH = [
   { key: 's_sub', n: 5, role: 'Subcontractor' },
 ].map((s) => ({ ...s, uid: `00000000-0000-4000-8000-0000000000${String(s.n).padStart(2, '0')}`, email: `rls-proof-${s.key}@example.invalid` }));
 
-export const TABLES = [
+export const MONEY_TABLES = [
   'pay_applications', 'pay_application_lines', 'pay_app_line_items', 'owner_pay_applications',
   'owner_pay_app_line_items', 'schedule_of_values', 'sov_line_items', 'prime_contract_sov',
   'portal_sub_pay_apps', 'portal_sub_pay_app_line_items', 'invoices', 'invoice_line_items', 'bills',
@@ -64,9 +83,107 @@ export const TABLES = [
   'employee_project_assignments', 'projects',
 ];
 
+/** Tables 20261016g/h change, plus the 15 #229 tables whose legacy rbac_* policies it removes. */
+export const LEGACY_TABLES = [
+  'daily_logs', 'deliveries', 'field_issues', 'punch_list_items', 'voice_memos', 'drawing_sheets', 'rfis',
+  'safety_incidents', 'photos', 'project_files', 'approval_workflows', 'integrations', 'tenant_settings',
+  'custom_field_definitions', 'entity_comments', 'resource_assignments', 'proposals', 'proposal_lines',
+  'bid_packages', 'bid_submissions', 'bids', 'crew_locations', 'geofence_events', 'presence_sessions',
+  'api_keys', 'bills', 'budget_lines', 'budgets', 'change_order_line_items', 'change_orders', 'contracts',
+  'invoice_line_items', 'invoices', 'pay_applications', 'purchase_orders', 'role_definitions',
+  'schedule_of_values', 'time_entries', 'webhook_endpoints',
+];
+export const TABLES = SET === 'legacy' ? LEGACY_TABLES : MONEY_TABLES;
+const GATE_CATEGORIES = ['Projects', 'RFIs', 'Submittals', 'Safety', 'Documents', 'Schedule', 'Budget', 'Change Orders', 'Admin'];
+
 const lit = (s) => `'${String(s).replace(/'/g, "''")}'`;
 const claims = (p) => JSON.stringify({ sub: p.uid, role: 'authenticated', email: p.email, aud: 'authenticated' });
-const ALL = [...REAL, ...SYNTH];
+const ALL = [...REAL, ...SYNTH].filter((p) => !ONLY || ONLY.has(p.key));
+
+// Browser / REST probes per set, spliced into pg_temp.rls_phase below.
+const MONEY_PROBES = `    -- app/app/people + PeopleDirectory roster list (no pay columns)
+    PERFORM pg_temp.rls_probe(p_phase, p.persona, 'browser:people.roster',
+      'SELECT count(*) FROM (SELECT id, first_name, last_name, full_name, title, trade, email, phone, is_active, osha_10_certified, osha_30_certified, forklift_certified FROM public.employees) x');
+    -- PeopleDirectory detail (CURRENT prod): select('*')
+    PERFORM pg_temp.rls_probe(p_phase, p.persona, 'browser:people.detail_select_star',
+      'SELECT count(*) FROM (SELECT * FROM public.employees) x');
+    -- PeopleDirectory detail (this PR): explicit non-pay columns
+    PERFORM pg_temp.rls_probe(p_phase, p.persona, 'browser:people.detail_no_pay',
+      'SELECT count(*) FROM (SELECT id, first_name, last_name, full_name, title, trade, email, phone, employment_type, is_active, specialties, certifications FROM public.employees) x');
+    -- PeopleDirectory saveEdit (CURRENT prod): update someone else incl. pay rate
+    PERFORM pg_temp.rls_probe(p_phase, p.persona, 'browser:people.update_other',
+      'WITH u AS (UPDATE public.employees SET regular_rate = regular_rate WHERE id = ' || v_other || ' RETURNING 1) SELECT count(*) FROM u');
+    -- PeopleDirectory addEmp (CURRENT prod): insert someone else with a rate
+    PERFORM pg_temp.rls_probe(p_phase, p.persona, 'browser:people.insert_other',
+      'WITH i AS (INSERT INTO public.employees (tenant_id, first_name, last_name, email, regular_rate, is_active) VALUES (' || v_tid || ', ''Proof'', ''Person'', ''rls-proof-other@example.invalid'', 1, true) RETURNING 1) SELECT count(*) FROM i');
+    -- PeopleDirectory incident list
+    PERFORM pg_temp.rls_probe(p_phase, p.persona, 'browser:people.incidents', 'SELECT count(*) FROM public.employee_incidents');
+    -- Time clock, first use (app/app/time), one statement per browser request:
+    -- create MY employee row, read my own rates (CURRENT prod reads them in the
+    -- browser), log my hours, read them back, edit them, submit my week.
+    -- 1 = every step succeeded.
+    PERFORM pg_temp.rls_probe(p_phase, p.persona, 'browser:time.self_flow', format($q$
+      SELECT pg_temp.rls_own_cycle(%1$s, %2$L, %3$s)$q$, v_tid, p.email, v_proj));
+    -- Everyone's hours (labor cost / rates) via REST
+    PERFORM pg_temp.rls_probe(p_phase, p.persona, 'rest:time_entries_all', 'SELECT count(*) FROM public.time_entries');
+    -- T&M ticket → change event (app/app/projects/[id]/tm-tickets)
+    PERFORM pg_temp.rls_probe(p_phase, p.persona, 'browser:tm.change_event_insert',
+      'WITH i AS (INSERT INTO public.change_events (tenant_id, project_id, title, status) VALUES (' || v_tid || ', ' || v_proj || ', ''RLS proof'', ''open'') RETURNING 1) SELECT count(*) FROM i');
+    -- What a token holder could do over REST that the browser code never does
+    PERFORM pg_temp.rls_probe(p_phase, p.persona, 'rest:employees_with_pay_rate',
+      'SELECT count(*) FROM public.employees WHERE coalesce(regular_rate,0) > 0 OR coalesce(overtime_rate,0) > 0');
+    PERFORM pg_temp.rls_probe(p_phase, p.persona, 'rest:update_one_invoice',
+      'WITH u AS (UPDATE public.invoices SET updated_at = updated_at WHERE id IN (SELECT id FROM public.invoices ORDER BY created_at LIMIT 1) RETURNING 1) SELECT count(*) FROM u');
+    -- Delete is not replayed (the SQL runner holds deletes for approval);
+    -- the delete gate is the same function at Full, read here directly.
+    PERFORM pg_temp.rls_probe(p_phase, p.persona, 'gate:pay_apps_full', 'SELECT CASE WHEN rbac.has_permission(''Pay Apps'', ''Full'') THEN 1 ELSE 0 END');
+    PERFORM pg_temp.rls_probe(p_phase, p.persona, 'gate:admin_view', 'SELECT CASE WHEN rbac.has_permission(''Admin'', ''View'') THEN 1 ELSE 0 END');
+    PERFORM pg_temp.rls_probe(p_phase, p.persona, 'rest:edit_one_role_definition',
+      'WITH u AS (UPDATE public.role_definitions SET permissions = permissions WHERE id IN (SELECT id FROM public.role_definitions ORDER BY created_at LIMIT 1) RETURNING 1) SELECT count(*) FROM u');
+`;
+
+const LEGACY_PROBES = `    -- Level per category as the database sees it: 0 None, 1 View, 2 Edit, 3 Full.
+    FOREACH t IN ARRAY ARRAY[${GATE_CATEGORIES.map(lit).join(', ')}] LOOP
+      PERFORM pg_temp.rls_probe(p_phase, p.persona, 'level:' || t, format(
+        'SELECT (rbac.has_permission(%1$L, ''View''))::int + (rbac.has_permission(%1$L, ''Edit''))::int + (rbac.has_permission(%1$L, ''Full''))::int', t));
+    END LOOP;
+    -- The legacy check itself (E42883 once 20261016i has dropped it).
+    PERFORM pg_temp.rls_probe(p_phase, p.persona, 'legacy:app_user_role_is_admin',
+      'SELECT CASE WHEN public.app_user_role() = ''admin'' THEN 1 ELSE 0 END');
+    -- A no-op REST write on one visible row of every table (1 = allowed, 0 = refused or nothing visible).
+    FOREACH t IN ARRAY ARRAY[${TABLES.map(lit).join(', ')}] LOOP
+      PERFORM pg_temp.rls_probe(p_phase, p.persona, 'upd:' || t, format(
+        'WITH u AS (UPDATE public.%1$I SET %2$I = %2$I WHERE id IN (SELECT id FROM public.%1$I ORDER BY id LIMIT 1) RETURNING 1) SELECT count(*) FROM u',
+        t, CASE WHEN t = 'resource_assignments' THEN 'notes' ELSE 'id' END));
+    END LOOP;
+    -- REST inserts a token holder could send.
+    PERFORM pg_temp.rls_probe(p_phase, p.persona, 'ins:rfis',
+      'WITH i AS (INSERT INTO public.rfis (tenant_id, project_id, subject, question) VALUES (' || v_tid || ', ' || v_proj || ', ''RLS proof'', ''proof'') RETURNING 1) SELECT count(*) FROM i');
+    PERFORM pg_temp.rls_probe(p_phase, p.persona, 'ins:daily_logs',
+      'WITH i AS (INSERT INTO public.daily_logs (tenant_id, project_id) VALUES (' || v_tid || ', ' || v_proj || ') RETURNING 1) SELECT count(*) FROM i');
+    PERFORM pg_temp.rls_probe(p_phase, p.persona, 'ins:comment_on_rfi',
+      'WITH i AS (INSERT INTO public.entity_comments (tenant_id, entity_type, entity_id, body) VALUES (' || v_tid || ', ''rfis'', gen_random_uuid(), ''proof'') RETURNING 1) SELECT count(*) FROM i');
+    PERFORM pg_temp.rls_probe(p_phase, p.persona, 'ins:integration',
+      'WITH i AS (INSERT INTO public.integrations (tenant_id, provider) VALUES (' || v_tid || ', ''rls-proof'') RETURNING 1) SELECT count(*) FROM i');
+    -- Other people's location / presence rows.
+    FOREACH t IN ARRAY ARRAY['crew_locations', 'geofence_events', 'presence_sessions'] LOOP
+      PERFORM pg_temp.rls_probe(p_phase, p.persona, 'others:' || t, format(
+        'SELECT count(*) FROM public.%I WHERE user_id IS DISTINCT FROM auth.uid()', t));
+    END LOOP;
+    -- resource_assignments: rates vs everything else (E42501 = column refused).
+    PERFORM pg_temp.rls_probe(p_phase, p.persona, 'col:resource_rates',
+      'SELECT count(cost_rate) + count(hourly_rate) FROM public.resource_assignments');
+    PERFORM pg_temp.rls_probe(p_phase, p.persona, 'col:resource_no_rates',
+      'SELECT count(*) FROM (SELECT id, project_id, resource_name, role, start_date, end_date, hours_per_day, status, notes FROM public.resource_assignments) x');
+    -- The browser's own reads and writes in current main still work (time clock, People roster, T&M).
+    PERFORM pg_temp.rls_probe(p_phase, p.persona, 'browser:people.roster',
+      'SELECT count(*) FROM (SELECT id, first_name, last_name, full_name, title, trade, email, phone, is_active, osha_10_certified, osha_30_certified, forklift_certified FROM public.employees) x');
+    -- app/app/time as it is in main since #229 (rates come from /api/team/employees, not the browser).
+    PERFORM pg_temp.rls_probe(p_phase, p.persona, 'browser:time.self_flow', format($q$
+      SELECT pg_temp.rls_own_cycle_main(%1$s, %2$L, %3$s)$q$, v_tid, p.email, v_proj));
+    PERFORM pg_temp.rls_probe(p_phase, p.persona, 'browser:tm.change_event_insert',
+      'WITH i AS (INSERT INTO public.change_events (tenant_id, project_id, title, status) VALUES (' || v_tid || ', ' || v_proj || ', ''RLS proof'', ''open'') RETURNING 1) SELECT count(*) FROM i');
+`;
 
 const setup = `
 CREATE TEMP TABLE rls_proof (phase text, persona text, probe text, n bigint, err text);
@@ -114,46 +231,7 @@ BEGIN
     SELECT quote_literal(id::text) INTO v_other FROM public.employees ORDER BY created_at LIMIT 1;
     v_proj := coalesce(v_proj, 'NULL'); v_other := coalesce(v_other, 'NULL');
 
-    -- app/app/people + PeopleDirectory roster list (no pay columns)
-    PERFORM pg_temp.rls_probe(p_phase, p.persona, 'browser:people.roster',
-      'SELECT count(*) FROM (SELECT id, first_name, last_name, full_name, title, trade, email, phone, is_active, osha_10_certified, osha_30_certified, forklift_certified FROM public.employees) x');
-    -- PeopleDirectory detail (CURRENT prod): select('*')
-    PERFORM pg_temp.rls_probe(p_phase, p.persona, 'browser:people.detail_select_star',
-      'SELECT count(*) FROM (SELECT * FROM public.employees) x');
-    -- PeopleDirectory detail (this PR): explicit non-pay columns
-    PERFORM pg_temp.rls_probe(p_phase, p.persona, 'browser:people.detail_no_pay',
-      'SELECT count(*) FROM (SELECT id, first_name, last_name, full_name, title, trade, email, phone, employment_type, is_active, specialties, certifications FROM public.employees) x');
-    -- PeopleDirectory saveEdit (CURRENT prod): update someone else incl. pay rate
-    PERFORM pg_temp.rls_probe(p_phase, p.persona, 'browser:people.update_other',
-      'WITH u AS (UPDATE public.employees SET regular_rate = regular_rate WHERE id = ' || v_other || ' RETURNING 1) SELECT count(*) FROM u');
-    -- PeopleDirectory addEmp (CURRENT prod): insert someone else with a rate
-    PERFORM pg_temp.rls_probe(p_phase, p.persona, 'browser:people.insert_other',
-      'WITH i AS (INSERT INTO public.employees (tenant_id, first_name, last_name, email, regular_rate, is_active) VALUES (' || v_tid || ', ''Proof'', ''Person'', ''rls-proof-other@example.invalid'', 1, true) RETURNING 1) SELECT count(*) FROM i');
-    -- PeopleDirectory incident list
-    PERFORM pg_temp.rls_probe(p_phase, p.persona, 'browser:people.incidents', 'SELECT count(*) FROM public.employee_incidents');
-    -- Time clock, first use (app/app/time), one statement per browser request:
-    -- create MY employee row, read my own rates (CURRENT prod reads them in the
-    -- browser), log my hours, read them back, edit them, submit my week.
-    -- 1 = every step succeeded.
-    PERFORM pg_temp.rls_probe(p_phase, p.persona, 'browser:time.self_flow', format($q$
-      SELECT pg_temp.rls_own_cycle(%1$s, %2$L, %3$s)$q$, v_tid, p.email, v_proj));
-    -- Everyone's hours (labor cost / rates) via REST
-    PERFORM pg_temp.rls_probe(p_phase, p.persona, 'rest:time_entries_all', 'SELECT count(*) FROM public.time_entries');
-    -- T&M ticket → change event (app/app/projects/[id]/tm-tickets)
-    PERFORM pg_temp.rls_probe(p_phase, p.persona, 'browser:tm.change_event_insert',
-      'WITH i AS (INSERT INTO public.change_events (tenant_id, project_id, title, status) VALUES (' || v_tid || ', ' || v_proj || ', ''RLS proof'', ''open'') RETURNING 1) SELECT count(*) FROM i');
-    -- What a token holder could do over REST that the browser code never does
-    PERFORM pg_temp.rls_probe(p_phase, p.persona, 'rest:employees_with_pay_rate',
-      'SELECT count(*) FROM public.employees WHERE coalesce(regular_rate,0) > 0 OR coalesce(overtime_rate,0) > 0');
-    PERFORM pg_temp.rls_probe(p_phase, p.persona, 'rest:update_one_invoice',
-      'WITH u AS (UPDATE public.invoices SET updated_at = updated_at WHERE id IN (SELECT id FROM public.invoices ORDER BY created_at LIMIT 1) RETURNING 1) SELECT count(*) FROM u');
-    -- Delete is not replayed (the SQL runner holds deletes for approval);
-    -- the delete gate is the same function at Full, read here directly.
-    PERFORM pg_temp.rls_probe(p_phase, p.persona, 'gate:pay_apps_full', 'SELECT CASE WHEN rbac.has_permission(''Pay Apps'', ''Full'') THEN 1 ELSE 0 END');
-    PERFORM pg_temp.rls_probe(p_phase, p.persona, 'gate:admin_view', 'SELECT CASE WHEN rbac.has_permission(''Admin'', ''View'') THEN 1 ELSE 0 END');
-    PERFORM pg_temp.rls_probe(p_phase, p.persona, 'rest:edit_one_role_definition',
-      'WITH u AS (UPDATE public.role_definitions SET permissions = permissions WHERE id IN (SELECT id FROM public.role_definitions ORDER BY created_at LIMIT 1) RETURNING 1) SELECT count(*) FROM u');
-    RESET ROLE;
+${SET === 'legacy' ? LEGACY_PROBES : MONEY_PROBES}    RESET ROLE;
   END LOOP;
 END $f$;
 
@@ -175,7 +253,27 @@ BEGIN
     VALUES (p_tid, v_emp, 'Proof Self', current_date, 8, 0, 'submitted', now());
   RETURN 1;
 END $f$;
-GRANT EXECUTE ON FUNCTION pg_temp.rls_probe(text, text, text, text), pg_temp.rls_own_cycle(uuid, text, uuid) TO authenticated;
+
+-- The same flow as app/app/time does it in main after #229 + 20261016f: the
+-- browser selects only the non-pay employee columns.
+CREATE FUNCTION pg_temp.rls_own_cycle_main(p_tid uuid, p_email text, p_proj uuid) RETURNS bigint
+LANGUAGE plpgsql AS $f$
+DECLARE v_emp uuid; n bigint;
+BEGIN
+  INSERT INTO public.employees (tenant_id, email, first_name, last_name, is_active) VALUES (p_tid, p_email, 'Proof', 'Self', true) RETURNING id INTO v_emp;
+  PERFORM id, full_name, first_name, email FROM public.employees WHERE id = v_emp;
+  IF NOT FOUND THEN RAISE EXCEPTION 'own employee row not readable'; END IF;
+  INSERT INTO public.time_entries (tenant_id, employee_id, project_id, work_date, clock_in, clock_out, hours_worked, regular_hours, overtime_hours, status, entry_type)
+    VALUES (p_tid, v_emp, p_proj, current_date, now() - interval '8 hours', now(), 8, 8, 0, 'pending', 'regular');
+  SELECT count(*) INTO n FROM public.time_entries WHERE employee_id = v_emp;
+  IF n <> 1 THEN RAISE EXCEPTION 'own entry not readable (%)', n; END IF;
+  UPDATE public.time_entries SET meal_break_mins = 30 WHERE employee_id = v_emp;
+  GET DIAGNOSTICS n = ROW_COUNT; IF n <> 1 THEN RAISE EXCEPTION 'own entry not editable'; END IF;
+  INSERT INTO public.timesheets (tenant_id, employee_id, employee_name, week_ending, hours_regular, hours_overtime, status, submitted_at)
+    VALUES (p_tid, v_emp, 'Proof Self', current_date, 8, 0, 'submitted', now());
+  RETURN 1;
+END $f$;
+GRANT EXECUTE ON FUNCTION pg_temp.rls_probe(text, text, text, text), pg_temp.rls_own_cycle(uuid, text, uuid), pg_temp.rls_own_cycle_main(uuid, text, uuid) TO authenticated;
 `;
 
 const finish = `
@@ -191,7 +289,7 @@ BEGIN
          SELECT x.persona, p.ord,
                 count(*) FILTER (WHERE x.probe LIKE 'rows:%' AND x.bv IS NOT DISTINCT FROM coalesce(x.av, x.bv)) same,
                 string_agg(CASE WHEN x.probe LIKE 'rows:%' AND x.av IS NOT NULL AND x.bv <> x.av THEN substr(x.probe, 6) || ' ' || x.bv || '>' || x.av END, ', ' ORDER BY x.probe) changed,
-                string_agg(CASE WHEN x.probe NOT LIKE 'rows:%' THEN x.probe || ' ' || x.bv || coalesce('>' || x.av, '') END, ', ' ORDER BY x.probe) probes
+                string_agg(CASE WHEN x.probe NOT LIKE 'rows:%'${BRIEF ? " AND (x.bv IS DISTINCT FROM x.av OR x.probe LIKE 'browser:%')" : ''} THEN x.probe || ' ' || x.bv || coalesce('>' || x.av, '') END, ', ' ORDER BY x.probe) probes
            FROM m x JOIN pg_temp.rls_personas p ON p.persona = x.persona GROUP BY x.persona, p.ord)
   SELECT string_agg(persona || ' | same=' || same || ' | changed: ' || coalesce(changed, '-') || ' | ' || coalesce(probes, ''), ' ## ' ORDER BY ord) INTO j FROM per;
   RAISE EXCEPTION 'RLS_PROOF %', j;
