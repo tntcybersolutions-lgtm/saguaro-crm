@@ -34,6 +34,7 @@ import {
   type BadgeTone, type StatItem,
 } from '@/components/ui/kit';
 import { ModuleSkeleton } from '@/components/ui/PageSkeleton';
+import RelatedItems from '@/components/related/RelatedItems';
 import SaguaroDatePicker from '@/components/SaguaroDatePicker';
 import { layout } from '@/lib/design-tokens';
 
@@ -108,6 +109,7 @@ const CSS = `
 .dldDetail > * { min-width: 0; }
 .dldMain { display: flex; flex-direction: column; gap: 16px; min-width: 0; }
 .dldRail { order: -1; }
+.dldRelated { padding: 16px 4px 0; }
 @container dlddetail (min-width: 860px) {
   .dldDetail { grid-template-columns: minmax(0, 1fr) clamp(${layout.detailRailMin}px, 30%, ${layout.detailRailMax}px); }
   .dldRail { order: 0; position: sticky; top: 16px; }
@@ -646,6 +648,9 @@ export default function DailyLogDetailPage() {
                   </div>
                 </div>
               </Card>
+              <div className="dldRelated">
+                <RelatedItems type="daily_log" id={id} projectId={l.project_id} />
+              </div>
             </aside>
           </div>
         </div>

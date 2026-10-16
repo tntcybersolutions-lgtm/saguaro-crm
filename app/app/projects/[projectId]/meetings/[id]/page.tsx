@@ -16,6 +16,7 @@ import {
   PageShell, Badge, Button, EmptyState, Select, FormGrid, Field, Input, Textarea, MetaItem, Toast, useToast,
   type BadgeTone,
 } from '@/components/ui/kit';
+import RelatedItems from '@/components/related/RelatedItems';
 import {
   CalendarBlank, Clock, MapPin, Printer, ArrowRight, PaperPlaneTilt, Plus, Trash, WarningCircle, Database, UsersThree,
 } from '@phosphor-icons/react';
@@ -355,6 +356,11 @@ export default function MeetingPage() {
         {/* ── General notes ── */}
         <div style={sectionHead}><h2 style={h2}>Notes</h2></div>
         <Textarea aria-label="General notes" rows={4} value={m.notes || ''} onChange={(e) => editMeeting({ notes: e.target.value })} />
+
+        {/* ── Related items: the RFIs, change orders and drawings this meeting covered ── */}
+        <div style={{ marginTop: 28 }}>
+          <RelatedItems type="meeting" id={id} projectId={projectId} />
+        </div>
       </div>
       <Toast message={toast?.message || null} tone={toast?.tone} />
     </PageShell>
