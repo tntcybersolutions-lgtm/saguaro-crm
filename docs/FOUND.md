@@ -292,3 +292,8 @@ show/hide, density, agenda hours, runway length, group-by, dollars, company vs m
 `user_preferences.custom_settings.myDay` (`/api/my-day/prefs`), role defaults until they touch it.
 Files: lib/my-day.ts, lib/my-day-prefs.ts (+ sanity test), components/my-work/MyDayBoard.tsx, MyDayCustomize.tsx,
 MyWorkView.tsx, /api/my-work (+ jobs, agenda, roles, ?view=mine).
+
+## 16 Oct 2026 — Path 1 code walk (logged, NOT fixed)
+- `app/api/daily-logs/create/route.ts:78` — `catch { /* stay manual for the day */ }` swallows the weather-autofill failure with no log (§3 forbidden pattern).
+- `app/api/daily-logs/[id]/route.ts:50` — PUT never checks a row matched, so an id from another tenant or a missing id returns `{success:true}` having changed nothing.
+- `app/api/daily-logs/list/route.ts:16` — list does not filter `deleted_at IS NULL` (column exists on `daily_logs`) and hard-caps at 1000 rows with no signal to the client.
