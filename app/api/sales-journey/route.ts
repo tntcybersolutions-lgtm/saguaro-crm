@@ -15,13 +15,15 @@
  * a failed count must never do that.
  */
 import { NextRequest, NextResponse } from 'next/server';
+import { requirePermission } from '@/lib/permissions';
 import { createServerClient, getUser } from '@/lib/supabase-server';
 import { apiError } from '@/lib/api-error';
 import { QUALIFIED_STAGES } from '@/lib/sales-journey';
 
 export async function GET(req: NextRequest) {
-  const user = await getUser(req);
-  if (!user) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
+  const g = await requirePermission(req, 'Sales', 'View');
+  if (!g.ok) return g.res;
+  const user = g.user;
 
   try {
     const db = createServerClient();
