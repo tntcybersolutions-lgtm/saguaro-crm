@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { getUser, createServerClient } from '@/lib/supabase-server';
+import { requirePermission } from '@/lib/permissions';
 import { apiError } from '@/lib/api-error';
 
 export const runtime = 'nodejs';
@@ -10,8 +11,9 @@ const MAX_BYTES = 5 * 1024 * 1024;
 /** POST /api/branding/logo — multipart upload of the tenant logo to the public
  *  `branding` bucket (tenant-prefixed), persists the URL to tenants.settings. */
 export async function POST(req: NextRequest) {
-  const user = await getUser(req);
-  if (!user) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
+  const g = await requirePermission(req, 'Admin', 'Full');
+  if (!g.ok) return g.res;
+  const user = g.user;
 
   const form = await req.formData().catch(() => null);
   const file = form?.get('file');

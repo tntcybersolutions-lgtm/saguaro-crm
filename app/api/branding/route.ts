@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { getUser, createServerClient } from '@/lib/supabase-server';
+import { requirePermission } from '@/lib/permissions';
 
 import { apiError } from '@/lib/api-error';
 export const runtime = 'nodejs';
@@ -37,8 +38,9 @@ function safeHex(v: unknown): string | null {
 
 /** PUT /api/branding — saves { company_name, logo_url } to tenants.settings */
 export async function PUT(req: NextRequest) {
-  const user = await getUser(req);
-  if (!user) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
+  const g = await requirePermission(req, 'Admin', 'Full');
+  if (!g.ok) return g.res;
+  const user = g.user;
 
   const body = await req.json().catch(() => ({}));
   const company_name  = typeof body.company_name === 'string' ? body.company_name.trim() : undefined;

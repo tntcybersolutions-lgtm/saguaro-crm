@@ -3,6 +3,7 @@ import { createServerClient, getUser } from '@/lib/supabase-server';
 import { signUrl } from '@/lib/storage-signing';
 import { addDays, requestDay } from '@/lib/time-zone';
 import { apiError } from '@/lib/api-error';
+import { getEffectivePermissions, hasPermission, type PermCategory } from '@/lib/permissions';
 
 export const dynamic = 'force-dynamic';
 
@@ -27,6 +28,26 @@ export async function GET(req: NextRequest) {
     return apiError('dashboard/widget-metrics', e, "Couldn't load the dashboard.");
   }
   const in7 = addDays(today, 7);
+
+  /* The widgets a role may not see are not computed at all. Budget overview
+     and the change-order summary are contract value, billings and CO dollars;
+     /api/dashboard/stats already withheld those from anyone without the
+     right, and this route — which feeds the same dashboard — served them to
+     every signed-in user. Withheld widgets come back null and are named in
+     `restricted`, so the card says why it is empty instead of "No data". */
+  const perms = await getEffectivePermissions(db, user.id, t);
+  const can = (c: PermCategory) => hasPermission(perms, c, 'View');
+  const WIDGET_PERMISSION: Record<string, PermCategory> = {
+    'budget-overview': 'Budget',
+    'change-order-summary': 'Change Orders',
+    'rfi-tracker': 'RFIs',
+    'submittal-status': 'Submittals',
+    'safety-metrics': 'Safety',
+  };
+  const restricted = Object.keys(WIDGET_PERMISSION).filter((w) => !can(WIDGET_PERMISSION[w]));
+  const allowed = (w: string) => !restricted.includes(w);
+  const skip = <T,>(w: string, fn: () => Promise<T>): (() => Promise<T | null>) =>
+    allowed(w) ? fn : async () => null;
 
   const guard = async <T,>(fn: () => Promise<T>, fallback: T): Promise<T> => {
     try { return await fn(); } catch { return fallback; }
@@ -53,7 +74,7 @@ export async function GET(req: NextRequest) {
     }, { active: 0, precon: 0, closeout: 0, onHold: 0, total: 0 }),
 
     /* budget-overview */
-    guard(async () => {
+    guard(skip('budget-overview', async () => {
       const [{ data: proj }, { data: pay }, { data: cos }] = await Promise.all([
         db.from('projects').select('contract_value').eq('tenant_id', t).eq('status', 'active'),
         db.from('pay_applications').select('current_payment_due').eq('tenant_id', t).in('status', ['submitted', 'approved']),
@@ -63,7 +84,7 @@ export async function GET(req: NextRequest) {
       const billed = sum(pay, 'current_payment_due');
       const co = sum(cos, 'amount');
       return { budget: b, billed, changeOrders: co, remaining: Math.max(0, b - billed) };
-    }, { budget: 0, billed: 0, changeOrders: 0, remaining: 0 }),
+    }), { budget: 0, billed: 0, changeOrders: 0, remaining: 0 }),
 
     /* schedule-status */
     guard(async () => {
@@ -82,7 +103,7 @@ export async function GET(req: NextRequest) {
     }, { onTrack: 0, atRisk: 0, delayed: 0, total: 0 }),
 
     /* safety-metrics */
-    guard(async () => {
+    guard(skip('safety-metrics', async () => {
       const { data } = await db.from('safety_incidents')
         .select('incident_date, near_miss, osha_recordable').eq('tenant_id', t)
         .order('incident_date', { ascending: false });
@@ -92,20 +113,20 @@ export async function GET(req: NextRequest) {
       const last = rows.map(r => r.incident_date).filter(Boolean)[0];
       const daysSafe = last ? Math.max(0, Math.floor((Date.now() - new Date(last as string).getTime()) / 864e5)) : null;
       return { incidents: rows.length, nearMisses, recordable, daysSafe };
-    }, { incidents: 0, nearMisses: 0, recordable: 0, daysSafe: null as number | null }),
+    }), { incidents: 0, nearMisses: 0, recordable: 0, daysSafe: null as number | null }),
 
     /* rfi-tracker */
-    guard(async () => {
+    guard(skip('rfi-tracker', async () => {
       const { data } = await db.from('rfis').select('status, due_date').eq('tenant_id', t);
       const rows = data || [];
       const open = rows.filter(r => (r.status || '') === 'open').length;
       const overdue = rows.filter(r => (r.status || '') === 'open' && r.due_date && String(r.due_date).slice(0, 10) < today).length;
       const closed = rows.filter(r => ['closed', 'answered'].includes(r.status || '')).length;
       return { open, overdue, closed };
-    }, { open: 0, overdue: 0, closed: 0 }),
+    }), { open: 0, overdue: 0, closed: 0 }),
 
     /* submittal-status */
-    guard(async () => {
+    guard(skip('submittal-status', async () => {
       const { data } = await db.from('submittals').select('status').eq('tenant_id', t);
       const rows = data || [];
       const inSet = (...s: string[]) => rows.filter(r => s.includes(r.status || '')).length;
@@ -115,10 +136,10 @@ export async function GET(req: NextRequest) {
         rejected: inSet('rejected'),
         resubmit: inSet('resubmit', 'revise_and_resubmit'),
       };
-    }, { pending: 0, approved: 0, rejected: 0, resubmit: 0 }),
+    }), { pending: 0, approved: 0, rejected: 0, resubmit: 0 }),
 
     /* change-order-summary */
-    guard(async () => {
+    guard(skip('change-order-summary', async () => {
       const { data } = await db.from('change_orders').select('status, amount').eq('tenant_id', t);
       const rows = data || [];
       const isApproved = (r: any) => (r.status || '') === 'approved';
@@ -130,7 +151,7 @@ export async function GET(req: NextRequest) {
         rejectedAmt: sum(rows.filter(isRejected), 'amount'),
         pendingCount: pending.length,
       };
-    }, { pendingAmt: 0, approvedAmt: 0, rejectedAmt: 0, pendingCount: 0 }),
+    }), { pendingAmt: 0, approvedAmt: 0, rejectedAmt: 0, pendingCount: 0 }),
 
     /* upcoming-deadlines (merge submittals + rfis + punch) */
     guard(async () => {
@@ -193,6 +214,7 @@ export async function GET(req: NextRequest) {
   ]);
 
   return NextResponse.json({
+    restricted,
     metrics: {
       'project-summary': projectSummary,
       'budget-overview': budget,

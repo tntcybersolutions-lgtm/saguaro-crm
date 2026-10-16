@@ -250,6 +250,9 @@ export async function POST(req: NextRequest, { params }: { params: Promise<{ pro
 
 export async function GET(req: NextRequest, { params }: { params: Promise<{ projectId: string; id: string }> }) {
   const { projectId, id } = await params;
+  // Reading a change order's dollars needs the same right as reading the list.
+  const g = await requirePermission(req, 'Change Orders', 'View', { projectId });
+  if (!g.ok) return g.res;
   // GET defaults to streaming the raw PDF unless ?json=1 is passed.
   const wantsJson = req.nextUrl.searchParams.get('json') === '1';
   return handle(req, projectId, id, !wantsJson);

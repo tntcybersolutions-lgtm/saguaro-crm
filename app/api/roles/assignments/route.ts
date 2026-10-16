@@ -10,8 +10,9 @@ import { requirePermission } from '@/lib/permissions';
  * tables where available, with safe fallbacks.
  */
 export async function GET(req: NextRequest) {
-  const user = await getUser(req);
-  if (!user) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
+  const g = await requirePermission(req, 'Admin', 'View');
+  if (!g.ok) return g.res;
+  const user = g.user;
   try {
     const db = createServerClient();
 

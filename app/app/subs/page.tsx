@@ -127,7 +127,14 @@ export default function SubsAndVendorsPage() {
     [subs],
   );
 
-  const lacksPaper = (s: Sub) => s.w9_on_file !== true || !s.insurance_expiry || (parseDay(s.insurance_expiry)?.getTime() ?? 0) < Date.now();
+  /* Same reading as the Insurance pill: a COI is good through the END of its
+     expiry day. Comparing midnight to "now" called a certificate that expires
+     today missing while its pill said "0d left". */
+  const lacksPaper = (s: Sub) => {
+    if (s.w9_on_file !== true) return true;
+    const st = expiryState(s.insurance_expiry).status;
+    return st === 'not_on_file' || st === 'expired';
+  };
   const isInactive = (s: Sub) => String(s.status || '').toLowerCase() === 'inactive';
   const inactiveCount = subs.filter(isInactive).length;
   const shown = useMemo(() => {
@@ -199,9 +206,16 @@ export default function SubsAndVendorsPage() {
   ], []);
 
   /* The number that matters is not how many subs there are, it is how many
-     cannot be awarded work today. */
-  const missingPaper = subs.filter(lacksPaper).length;
-  const prequalified = subs.filter(s => s.prequalified === true).length;
+     cannot be awarded work today.
+
+     Counted over the WORKING list — the same companies "On File" counts and the
+     table shows. It used to count inactive companies too: on production the
+     tile read "6 Paperwork Missing" while every one of the six was inactive,
+     so tapping it filtered the table down to "Nothing matches that". A number
+     that opens an empty list teaches people to stop trusting the numbers. */
+  const working = subs.filter(s => !isInactive(s));
+  const missingPaper = working.filter(lacksPaper).length;
+  const prequalified = working.filter(s => s.prequalified === true).length;
 
   return (
     <PremiumSurface>
@@ -228,7 +242,7 @@ export default function SubsAndVendorsPage() {
         title="Directory"
         subtitle="Added from any job; available on every job after."
         icon={<UsersThree size={17} weight="duotone" color="var(--text-secondary)" />}
-        action={<span style={{ fontSize: 12, color: DIM }}>{shown.length} of {subs.length}</span>}
+        action={<span style={{ fontSize: 12, color: DIM }}>{shown.length} of {showInactive ? subs.length : working.length}</span>}
         flush
       >
         <div style={{ display: 'flex', gap: 10, flexWrap: 'wrap', padding: '14px 20px', borderBottom: `1px solid ${BORDER}` }}>
@@ -255,7 +269,7 @@ export default function SubsAndVendorsPage() {
               type="button"
               aria-pressed={showInactive}
               onClick={() => setShowInactive(v => !v)}
-              style={{ padding: '9px 12px', minHeight: 40, background: showInactive ? 'var(--selected-control-bg)' : 'var(--bg-surface-2)', color: showInactive ? 'var(--selected-control-fg)' : TEXT, border: `1px solid ${BORDER}`, borderRadius: 8, fontSize: 13, fontWeight: 600, cursor: 'pointer' }}
+              style={{ padding: '9px 12px', minHeight: 44, background: showInactive ? 'var(--selected-control-bg)' : 'var(--bg-surface-2)', color: showInactive ? 'var(--selected-control-fg)' : TEXT, border: `1px solid ${BORDER}`, borderRadius: 8, fontSize: 13, fontWeight: 600, cursor: 'pointer' }}
             >
               {showInactive ? 'Hide inactive' : `Show inactive (${inactiveCount})`}
             </button>
@@ -283,8 +297,8 @@ export default function SubsAndVendorsPage() {
           <PremiumEmpty
             icon={<MagnifyingGlass size={30} weight="duotone" color="var(--text-secondary)" />}
             title="Nothing matches that"
-            description="No company on file matches your search or trade filter."
-            action={<button onClick={() => { setQ(''); setTrade(''); }} style={goldButtonStyle}>Clear Filters</button>}
+            description={paperFilter ? 'No company in this view is missing paperwork.' : 'No company on file matches your search or trade filter.'}
+            action={<button type="button" onClick={() => { setQ(''); setTrade(''); setPaperFilter(false); }} style={goldButtonStyle}>Clear Filters</button>}
           />
         ) : (
           <DataTable<Sub>

@@ -1,10 +1,12 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { createServerClient, getUser } from '@/lib/supabase-server';
+import { requirePermission } from '@/lib/permissions';
 import { apiError } from '@/lib/api-error';
 
 export async function GET(req: NextRequest, { params }: { params: { projectId: string } }) {
-  const user = await getUser(req);
-  if (!user) return NextResponse.json({ proposals: [] }, { status: 200 });
+  const g = await requirePermission(req, 'Documents', 'View', { projectId: params.projectId });
+  if (!g.ok) return g.res;
+  const user = g.user;
   try {
     const supabase = createServerClient();
     const { data, error } = await supabase

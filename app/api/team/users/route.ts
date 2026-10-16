@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { createServerClient, getUser } from '@/lib/supabase-server';
 import { apiError } from '@/lib/api-error';
+import { getEffectivePermissions, hasPermission } from '@/lib/permissions';
 
 export const dynamic = 'force-dynamic';
 
@@ -29,12 +30,24 @@ export async function GET(req: NextRequest) {
     if (error) throw error;
 
     /* Honest last-active: auth.users.last_sign_in_at (service role). Only the
-       ids in THIS tenant's profiles are exposed. */
+       ids in THIS tenant's profiles are exposed — and only to someone who
+       manages access. The roster itself feeds every assignee picker (leads,
+       approvals, project ownership), so it stays open to the team; when each
+       person last signed in is an admin's question, and it was going to every
+       salesperson and foreman who opened a dropdown. */
+    const perms = await getEffectivePermissions(db, user.id, user.tenantId);
+    const canSeeActivity = hasPermission(perms, 'Admin', 'View');
     const lastSign = new Map<string, string | null>();
-    try {
-      const { data: authList } = await db.auth.admin.listUsers({ page: 1, perPage: 1000 });
-      for (const au of authList?.users ?? []) lastSign.set(au.id, au.last_sign_in_at ?? null);
-    } catch { /* non-fatal — lastSignInAt stays null */ }
+    if (canSeeActivity) {
+      // Non-fatal — the roster still loads with lastSignInAt null — but logged.
+      try {
+        const { data: authList, error: authErr } = await db.auth.admin.listUsers({ page: 1, perPage: 1000 });
+        if (authErr) console.error('[team/users] last sign-in lookup failed', authErr.message);
+        for (const au of authList?.users ?? []) lastSign.set(au.id, au.last_sign_in_at ?? null);
+      } catch (e) {
+        console.error('[team/users] last sign-in lookup threw', e);
+      }
+    }
 
     const users = (data ?? []).map((p) => ({
       id: p.id,

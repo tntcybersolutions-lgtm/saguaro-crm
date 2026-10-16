@@ -31,7 +31,7 @@ const PREFIX = 'plan_request:';
 const esc = (s: string) => s.replace(/[&<>"']/g, (c) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c] as string));
 
 export async function POST(req: NextRequest) {
-  const g = await requirePermission(req, 'Projects', 'Full');
+  const g = await requirePermission(req, 'Admin', 'Full');
   if (!g.ok) return g.res;
   const b = (await req.json().catch(() => ({}))) as Record<string, unknown>;
   const planId = String(b.planId || '');

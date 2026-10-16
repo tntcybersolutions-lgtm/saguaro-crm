@@ -34,8 +34,9 @@ export async function GET(_req: NextRequest, { params }: { params: Promise<{ id:
     const { id } = await params;
     // Authenticate + tenant-scope the read — service-role bypasses RLS, so an
     // id-only read would leak another tenant's change order.
-    const user = await getUser(_req);
-    if (!user) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
+    const g = await requirePermission(_req, 'Change Orders', 'View');
+    if (!g.ok) return g.res;
+    const user = g.user;
     const db = createServerClient();
     const { data, error } = await db.from('change_orders').select('*').eq('id', id).eq('tenant_id', user.tenantId).maybeSingle();
     if (error) throw error;

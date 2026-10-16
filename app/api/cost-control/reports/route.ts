@@ -21,8 +21,9 @@ async function verifyProject(db: ReturnType<typeof createServerClient>, projectI
 }
 
 export async function GET(req: NextRequest) {
-  const user = await getUser(req);
-  if (!user) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
+  const g = await requirePermission(req, 'Budget', 'View');
+  if (!g.ok) return g.res;
+  const user = g.user;
 
   const projectId = req.nextUrl.searchParams.get('project_id') || req.nextUrl.searchParams.get('projectId');
   if (!projectId) return NextResponse.json({ error: 'project_id is required' }, { status: 400 });

@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { createServerClient, getUser } from '@/lib/supabase-server';
+import { requirePermission } from '@/lib/permissions';
 import {
   createPayApplicationHandler,
   submitPayAppHandler,
@@ -16,8 +17,9 @@ export async function GET(
 
   // GET /api/pay-apps/list?projectId=... (fallback — dedicated list/route.ts takes priority)
   if (segment === 'list' || !segment) {
-    const user = await getUser(req);
-    if (!user) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
+    const g = await requirePermission(req, 'Pay Apps', 'View');
+    if (!g.ok) return g.res;
+    const user = g.user;
     const { searchParams } = new URL(req.url);
     const projectId = searchParams.get('projectId') || '';
     try {
