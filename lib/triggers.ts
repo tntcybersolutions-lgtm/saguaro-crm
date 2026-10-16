@@ -23,6 +23,7 @@ import { bidAmount } from '@/lib/bid-amount';
 import { bidDueDay } from '@/lib/bid-deadline';
 import { orValue } from '@/lib/pg-filter';
 import { coAmount } from '@/lib/change-order-amount';
+import { applyChangeOrderMoney } from '@/lib/change-order-cascade';
 import { ownerContact, architectContact, gcContact } from '@/lib/project-parties';
 
 /* Fallback is the live domain. It used to be a Vercel preview URL that no
@@ -163,28 +164,49 @@ export async function onPayAppApproved(payAppId: string): Promise<void> {
       .select('subcontractor_id, contract_amount, status, subcontractors(company_name, email, contact_email)')
       .eq('project_id', project.id)
       .eq('tenant_id', project.tenant_id)
-      .neq('status', 'inactive');
+      // `.neq` alone drops a membership whose status is NULL (NULL <> 'inactive'
+      // is not true in SQL), so a sub added without a status never got a waiver.
+      .or('status.is.null,status.neq.inactive');
     if (memErr) console.error('[onPayAppApproved] membership query failed', memErr);
+    /* Every active sub on the job owes a waiver for this period, whether or not
+       an email is on file. A sub with no email used to be skipped outright —
+       no waiver row, so nothing for the GC to chase and nothing gating the
+       payment. Now the waiver is filed; only the email is skipped. */
     const activeSubs = ((memberships as any[]) || [])
+      .filter((m) => m.subcontractor_id)
       .map((m) => ({
-        subId: m.subcontractor_id,
+        subId: String(m.subcontractor_id),
         contractAmount: Number(m.contract_amount) || 0,
         company: m.subcontractors?.company_name || 'Subcontractor',
-        email: m.subcontractors?.email || m.subcontractors?.contact_email || null,
-      }))
-      .filter((s) => s.email);
+        email: (m.subcontractors?.email || m.subcontractors?.contact_email || null) as string | null,
+      }));
+    /* Approval arrives by more than one door (Approve, the register's bulk
+       approve, the owner's link, the approvals inbox). Each runs this cascade,
+       so it must be safe to run twice: a sub that already holds a live waiver
+       for THIS application is not filed a second one. */
+    const { data: existingW, error: exWErr } = await db
+      .from('lien_waivers')
+      .select('subcontractor_id, sub_id')
+      .eq('tenant_id', project.tenant_id)
+      .eq('pay_application_id', payAppId)
+      .is('deleted_at', null);
+    if (exWErr) console.error('[onPayAppApproved] existing waiver read failed', exWErr);
+    const covered = new Set(((existingW as any[]) || []).map((w) => String(w.subcontractor_id || w.sub_id || '')).filter(Boolean));
     // Count what ACTUALLY happened — the approval notification below reports these
     // numbers verbatim. It never claims "waivers generated for all subs" on faith.
-    const allMembers = ((memberships as any[]) || []).length;
-    const noEmail = allMembers - activeSubs.length;
+    const allMembers = activeSubs.length;
+    const alreadyHad = activeSubs.filter((s) => covered.has(s.subId)).length;
     let waiversCreated = 0;
     let waiversFailed = 0;
-    if (activeSubs.length > 0) {
+    let notEmailed = 0;
+    // A failed read of the existing waivers must not turn into duplicates.
+    if (activeSubs.length > 0 && !exWErr) {
       // Period amount: current payment due split by each sub's share of total
       // contract value (falls back to an even split when amounts are zero).
       const periodTotal = Number(pa.current_payment_due) || 0;
       const contractTotal = activeSubs.reduce((s, x) => s + x.contractAmount, 0);
       for (const sub of activeSubs) {
+        if (covered.has(sub.subId)) continue;
         const share = contractTotal > 0 ? sub.contractAmount / contractTotal : 1 / activeSubs.length;
         const waiverAmount = Math.round(periodTotal * share * 100) / 100;
         const { data: waiver, error: wErr } = await db.from('lien_waivers').insert({
@@ -193,17 +215,19 @@ export async function onPayAppApproved(payAppId: string): Promise<void> {
           sub_id: sub.subId,
           subcontractor_id: sub.subId,
           pay_application_id: payAppId,
+          application_number: pa.app_number ?? null,
           waiver_type: 'conditional_progress',
           state: project.state || 'AZ',
           amount: waiverAmount,
           company_name: sub.company,
           claimant_name: sub.company,
+          contact_email: sub.email,
           through_date: pa.period_to,
           status: 'pending',
         } as never).select().single();
         if (wErr || !waiver) { console.error('[onPayAppApproved] waiver insert failed', wErr); waiversFailed++; continue; }
         waiversCreated++;
-        const w = waiver as any;
+        if (!sub.email) { notEmailed++; continue; }
         await sendLienWaiverRequest(
           sub.email, sub.company, project.name, waiverAmount,
           `${APP_URL}/portals/sub/login`
@@ -216,9 +240,11 @@ export async function onPayAppApproved(payAppId: string): Promise<void> {
     const waiverLine = (() => {
       const parts: string[] = [];
       if (waiversCreated > 0) parts.push(`${waiversCreated} conditional lien waiver${waiversCreated === 1 ? '' : 's'} generated`);
+      if (alreadyHad > 0) parts.push(`${alreadyHad} sub${alreadyHad === 1 ? '' : 's'} already had a waiver for this application`);
       if (waiversFailed > 0) parts.push(`${waiversFailed} failed to generate — generate ${waiversFailed === 1 ? 'it' : 'them'} manually`);
-      if (noEmail > 0) parts.push(`${noEmail} sub${noEmail === 1 ? '' : 's'} skipped (no email on file)`);
+      if (notEmailed > 0) parts.push(`${notEmailed} not emailed (no email on file) — send ${notEmailed === 1 ? 'it' : 'them'} from Lien Waivers`);
       if (memErr) parts.push('subcontractor list could not be read — no waivers were generated');
+      if (exWErr) parts.push('existing waivers could not be read — no waivers were generated');
       if (!parts.length) parts.push(allMembers === 0 ? 'no subcontractors on this project — no waivers generated' : 'no waivers generated');
       return parts.join('; ');
     })();
@@ -820,7 +846,7 @@ export async function onRFIAnswered(rfiId: string): Promise<void> {
 }
 
 // ─── Change Orders ────────────────────────────────────────────────────────────
-export async function onChangeOrderApproved(changeOrderId: string): Promise<void> {
+export async function onChangeOrderApproved(changeOrderId: string, opts: { money?: boolean } = {}): Promise<void> {
   try {
     const db = adminClient();
     // Plain fetch + separate project lookup — the projects(*) embed silently
@@ -838,61 +864,16 @@ export async function onChangeOrderApproved(changeOrderId: string): Promise<void
        read it as a number once, falling back to amount (lib/change-order-amount). */
     const impact = coAmount(c);
 
-    // Update project contract sum
-    const { data: currentProject } = await db.from('projects').select('contract_amount').eq('id', project.id).single();
-    if (currentProject) {
-      // Number() both sides — contract_amount round-trips as a STRING from the
-      // live column, and `"100000" + 5000` CONCATENATES ("1000005000"), silently
-      // corrupting the project's contract value on every CO approval.
-      const newSum = (Number((currentProject as any).contract_amount) || 0) + impact;
-      await must(db.from('projects').update({ contract_amount: newSum }).eq('id', project.id), 'projects update');
-    }
-
-    // Contracts module: revised_amount is GENERATED from original + approved_changes,
-    // so the prime contract's approved_changes MUST move on CO approval or the
-    // module shows a stale contract value forever.
-    const { data: prime } = await db
-      .from('contracts')
-      .select('id, approved_changes')
-      .eq('project_id', project.id)
-      .eq('contract_type', 'prime')
-      .limit(1)
-      .maybeSingle();
-    if (prime) {
-      await must(db
-        .from('contracts')
-        .update({ approved_changes: (Number((prime as any).approved_changes) || 0) + impact } as never)
-        .eq('id', (prime as any).id), 'contracts write');
-    }
-
-    // Sync budget line committed cost. LIVE change_orders has NO cost_code column
-    // (the old c.cost_code check was permanently undefined = silently dead) —
-    // resolve the CSI through the CO's related bid package instead.
-    let coCode: string | null = null;
-    if (c.related_bid_package_id) {
-      const { data: coPkg } = await db
-        .from('bid_packages')
-        .select('csi_codes, csi_division')
-        .eq('id', c.related_bid_package_id)
-        .maybeSingle();
-      coCode = ((coPkg as any)?.csi_codes?.[0]) || (coPkg as any)?.csi_division || null;
-    }
-    if (coCode) {
-      const div = String(coCode).slice(0, 2);
-      const { data: budgetLine } = await db
-        .from('budget_lines')
-        .select('id, committed')
-        .eq('project_id', project.id)
-        .or(`cost_code.eq.${coCode},division.eq.${div}`)
-        .limit(1)
-        .maybeSingle();
-      if (budgetLine) {
-        const bl = budgetLine as any;
-        await must(db
-          .from('budget_lines')
-          .update({ committed: (Number(bl.committed) || 0) + impact })
-          .eq('id', bl.id), 'budget_lines write');
-      }
+    /* The money — contract sum, prime contract, budget approved changes —
+       goes through lib/change-order-cascade, the one rule every CO route
+       uses. It used to be done here by increments (contract_amount += impact,
+       budget_lines.COMMITTED += impact): not safe to run twice, never
+       reversed on a reject, and the budget figure it moved was the wrong one.
+       The routes that change a CO's status apply the money themselves and
+       pass { money: false }; this default covers a CO created already
+       approved (lib/selection-pick). */
+    if (opts.money !== false) {
+      await applyChangeOrderMoney(db, String(c.tenant_id || project.tenant_id), { ...c, status: 'pending' }, c);
     }
 
     const ownerEmail = ownerContact(project).email;

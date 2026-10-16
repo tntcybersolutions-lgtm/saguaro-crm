@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from 'next/server';
 import { requirePermission } from '@/lib/permissions';
 import { createNotification } from '@/lib/notifications';
 import { apiError } from '@/lib/api-error';
+import { applyChangeOrderMoney } from '@/lib/change-order-cascade';
 
 export async function PUT(req: NextRequest, { params }: { params: Promise<{ id: string }> }) {
   const { id } = await params;
@@ -11,6 +12,11 @@ export async function PUT(req: NextRequest, { params }: { params: Promise<{ id: 
     const user = g.user;
     const body = await req.json().catch(() => ({}));
     const db = g.db;
+
+    const { data: before, error: bErr } = await db.from('change_orders').select('*')
+      .eq('id', id).eq('tenant_id', user.tenantId).maybeSingle();
+    if (bErr) throw bErr;
+    if (!before) return NextResponse.json({ error: 'Change order not found' }, { status: 404 });
 
     const { data: co, error } = await db
       .from('change_orders')
@@ -27,6 +33,10 @@ export async function PUT(req: NextRequest, { params }: { params: Promise<{ id: 
       .single();
 
     if (error) throw error;
+
+    /* Rejecting a CO that was approved takes it back off the contract and the
+       budget. Nothing used to: the contract kept the amount forever. */
+    await applyChangeOrderMoney(db, user.tenantId, before as never, co as never);
 
     const c = co as Record<string, unknown>;
     const project = c?.projects as Record<string, unknown> | undefined;

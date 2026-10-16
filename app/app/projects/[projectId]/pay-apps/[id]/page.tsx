@@ -50,8 +50,11 @@ import { retainageRate, type RetainageLedger } from '@/lib/retainage';
 
 const money = new Intl.NumberFormat('en-US', { style: 'currency', currency: 'USD', minimumFractionDigits: 2, maximumFractionDigits: 2 });
 const fmt = (n:number) => money.format(Number(n)||0);
-/** Date-only values parse at local noon ('T12:00:00') so they never shift a day under UTC. */
-const fmtDate = (s:string|null|undefined) => s ? new Date(String(s).slice(0,10)+'T12:00:00').toLocaleDateString('en-US',{month:'short',day:'numeric',year:'numeric'}) : '—';
+/** Date-only values parse at local noon ('T12:00:00') so they never shift a day under UTC;
+ *  a full timestamp (submitted_at / approved_at) is read as the instant it is. */
+const fmtDate = (s:string|null|undefined) => s
+  ? (String(s).length > 10 ? new Date(String(s)) : new Date(String(s).slice(0,10)+'T12:00:00')).toLocaleDateString('en-US',{month:'short',day:'numeric',year:'numeric'})
+  : '—';
 
 const STATUS_META: Record<string,{label:string;tone:BadgeTone;next?:string;nextLabel?:string;action?:string}> = {
   draft:     {label:'Draft',     tone:'neutral',        next:'submitted',  nextLabel:'Submit to Owner', action:'submit'},
@@ -77,6 +80,7 @@ interface SovLine {
   balance_to_finish: number;
   retainage: number;
   csi_code?: string;
+  cost_code?: string | null;
 }
 
 interface PayApp {
@@ -100,9 +104,15 @@ interface PayApp {
   less_previous_certificates?: number | string | null;
   total_retainage?: number | string | null;
   current_payment_due: number;
-  submitted_date: string;
-  approved_date: string;
-  certified_date: string;
+  /* The columns are submitted_at / approved_at / certified_at; there are no
+     *_date columns on pay_applications, so the rail read '—' for every
+     date. The *_date names stay optional for an older payload. */
+  submitted_at?: string | null;
+  approved_at?: string | null;
+  certified_at?: string | null;
+  submitted_date?: string | null;
+  approved_date?: string | null;
+  certified_date?: string | null;
   owner_name: string;
   architect_name: string;
   notes: string;
@@ -366,7 +376,8 @@ export default function PayAppDetailPage() {
             percent_complete: l.percent_complete,
             balance_to_finish: l.balance_to_finish,
             retainage: l.retainage,
-            csi_code: l.csi_code,
+            // The column is cost_code; a loaded row never carries csi_code.
+            cost_code: l.cost_code ?? l.csi_code ?? null,
           })),
         }),
       });
@@ -463,6 +474,9 @@ export default function PayAppDetailPage() {
   );
 
   const meta = STATUS_META[payApp.status] || STATUS_META.draft;
+  const submittedOn = payApp.submitted_at ?? payApp.submitted_date ?? null;
+  const approvedOn = payApp.approved_at ?? payApp.approved_date ?? null;
+  const certifiedOn = payApp.certified_at ?? payApp.certified_date ?? null;
   const appNum = (payApp as any).app_number ?? payApp.application_number ?? '';
   const contractToDate = Number(payApp.contract_sum_to_date) || Number(payApp.contract_sum) || 0;
   const completePct = contractToDate > 0 ? Math.round((sovCompleted / contractToDate) * 100) : (Number(payApp.percent_complete) || 0);
@@ -545,7 +559,7 @@ export default function PayAppDetailPage() {
       total: (list) => fmt(Math.round(completedOf(list) * (retPct / 100) * 100) / 100),
       render: (r) => fmt(r.l.retainage),
     },
-    { key: 'csi_code', header: 'CSI', hidden: true, phone: 'hide', accessor: (r) => r.l.csi_code || '' },
+    { key: 'csi_code', header: 'CSI', hidden: true, phone: 'hide', accessor: (r) => r.l.cost_code || r.l.csi_code || '' },
   ];
   const sovRows: SovRow[] = lines.map((l, i) => ({ l, i }));
 
@@ -554,9 +568,9 @@ export default function PayAppDetailPage() {
     { title: 'Draft & Schedule of Values', done: true,
       body: `${lines.length} SOV line${lines.length === 1 ? '' : 's'} — ${fmt(sovScheduled)} scheduled.` },
     { title: 'Submitted to Owner', done: stageRank >= 1,
-      body: stageRank >= 1 ? `Sent${payApp.submitted_date ? ` ${fmtDate(payApp.submitted_date)}` : ''}.` : 'Not sent yet.' },
+      body: stageRank >= 1 ? `Sent${submittedOn ? ` ${fmtDate(submittedOn)}` : ''}.` : 'Not sent yet.' },
     { title: 'Owner Approval', done: stageRank >= 2,
-      body: stageRank >= 2 ? `Approved${payApp.approved_date ? ` ${fmtDate(payApp.approved_date)}` : ''} — conditional waivers generated.` : 'Waiting on the owner.' },
+      body: stageRank >= 2 ? `Approved${approvedOn ? ` ${fmtDate(approvedOn)}` : ''} — conditional waivers generated.` : 'Waiting on the owner.' },
     { title: 'Lien Waivers Signed', done: stageRank >= 2 && wTotal > 0 && wBlocking === 0,
       body: wTotal > 0
         ? `${wSigned} of ${wTotal} signed${wBlocking > 0 ? ` — ${wBlocking} still gate payment` : ' — payment gate clear'}.`
@@ -668,9 +682,9 @@ export default function PayAppDetailPage() {
                     ['Owner', payApp.owner_name || ''],
                     ['Architect', payApp.architect_name || ''],
                     ['Retainage', `${retPct}%`],
-                    ['Submitted', fmtDate(payApp.submitted_date)],
-                    ['Approved', fmtDate(payApp.approved_date)],
-                    ['Certified', fmtDate(payApp.certified_date)],
+                    ['Submitted', fmtDate(submittedOn)],
+                    ['Approved', fmtDate(approvedOn)],
+                    ['Certified', fmtDate(certifiedOn)],
                     ['Paid', payApp.status === 'paid' ? 'Yes' : '—'],
                   ]} />
                 </div>

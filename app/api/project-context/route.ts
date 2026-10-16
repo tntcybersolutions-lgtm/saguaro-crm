@@ -130,7 +130,12 @@ export async function GET(req: NextRequest) {
   const originalContract = contract.original;
   const approvedCoTotal = contract.approvedChanges;
   const lastPayApp = payApps[0] ?? null;
-  const billedToDate = lastPayApp ? N(lastPayApp.total_completed_stored) : 0;
+  /* Billed to date = completed-to-date (G702 line 4, already cumulative) on
+     the latest application that has gone to the owner. A draft has billed
+     nobody: reading the newest app of any status counted a draft's work as
+     billed the moment it was typed. Same rule as projects.billed_to_date. */
+  const lastSentPayApp = payApps.find((a) => SENT_PAY_APP_STATUSES.includes(String(a.status ?? '').toLowerCase())) ?? null;
+  const billedToDate = lastSentPayApp ? N(lastSentPayApp.total_completed_stored) : 0;
   const paidToDate = payApps.filter((a) => a.status === 'paid').reduce((s, a) => s + N(a.current_payment_due), 0);
 
   const openStatuses = ['open', 'pending', 'submitted', 'in_review', 'draft'];

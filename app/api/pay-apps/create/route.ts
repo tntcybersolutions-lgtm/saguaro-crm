@@ -203,6 +203,10 @@ export async function POST(req: NextRequest) {
       contractSumToDate: number; thisPeriod: number; totalCompletedStored: number;
       percentComplete: number; totalRetainage: number; totalEarnedLessRetainage: number; currentPaymentDue: number;
     };
+    /* G702 lines 4a / 4b / 4c — work from previous applications, work this
+       period, materials stored — as the SOV sums them. Null on the lump-sum
+       path, where the header figures above stand. */
+    let sovParts: { prev: number; thisPeriod: number; stored: number } | null = null;
 
     if (rawLines.length > 0) {
       const lines = rawLines.map((it, i) => ({
@@ -217,11 +221,18 @@ export async function POST(req: NextRequest) {
         storedMaterials: toCents(Number(it.materialsStored ?? it.stored_materials ?? 0) || 0),
       }));
       const r = computePayApp({ lines, retainagePercent, previousPaymentsLessRetainage: toCents(prevPaymentsDollars) });
+      const sumOf = (k: 'fromPrevious' | 'thisPeriod' | 'storedMaterials') => toDollars(lines.reduce((s, l) => s + l[k], 0));
+      sovParts = { prev: sumOf('fromPrevious'), thisPeriod: sumOf('thisPeriod'), stored: sumOf('storedMaterials') };
       m = {
         // Contract + approved COs; the SOV scheduled total is only an honest
         // fallback when the project carries no contract amount at all.
         contractSumToDate: contractPlusCos > 0 ? contractPlusCos : toDollars(r.scheduledTotal),
-        thisPeriod: toDollars(r.completedAndStoredTotal),
+        /* THIS PERIOD only (G702 4b). It used to store completedAndStoredTotal
+           — the cumulative to-date figure — so the register's "This Period"
+           column, which sums apps, counted every earlier period again: a
+           roll-forward App #6 on Pima wrote $2,539,650 for a $0 period and the
+           column read $5,079,300 against $2,539,650 actually billed. */
+        thisPeriod: sovParts.thisPeriod,
         totalCompletedStored: toDollars(r.completedAndStoredTotal),
         percentComplete: r.percentComplete,
         totalRetainage: toDollars(r.retainageTotal),
@@ -239,7 +250,7 @@ export async function POST(req: NextRequest) {
         percent_complete: pl.percentComplete,
         balance_to_finish: toDollars(pl.balanceToFinish),
         retainage: toDollars(pl.retainage),
-        cost_code: rawLines[i].csiCode ?? rawLines[i].csi_code,
+        cost_code: rawLines[i].csiCode ?? rawLines[i].csi_code ?? rawLines[i].cost_code ?? null,
       }));
     } else {
       // Lump-sum path (mobile): "work this period" + cumulative roll-forward from the prior app.
@@ -272,9 +283,11 @@ export async function POST(req: NextRequest) {
       contract_sum: originalContractSum,
       change_orders_total: changeOrdersTotal,
       contract_sum_to_date: m.contractSumToDate,
-      prev_completed: prevCompletedDollars,
+      // With a schedule of values, 4a / 4b / 4c are the SOV's own sums (they
+      // cross-foot to line 4); the client's header figures are not trusted.
+      prev_completed: sovParts ? sovParts.prev : prevCompletedDollars,
       this_period: m.thisPeriod,
-      stored_materials: body.materialsStored || 0,
+      stored_materials: sovParts ? sovParts.stored : (Number(body.materialsStored) || 0),
       total_completed_stored: m.totalCompletedStored,
       total_completed: m.totalCompletedStored,
       percent_complete: m.percentComplete,
