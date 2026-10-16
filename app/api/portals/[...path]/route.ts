@@ -2,6 +2,8 @@ import { NextRequest, NextResponse } from 'next/server';
 import { createServerClient } from '@/lib/supabase-server';
 import { must } from '@/lib/db-write';
 import { apiError } from '@/lib/api-error';
+import { onPayAppApproved } from '@/lib/triggers';
+import { runInBackground } from '@/lib/background';
 
 export async function GET(
   req: NextRequest,
@@ -60,15 +62,35 @@ export async function POST(
   const db = createServerClient();
 
   try {
-    // POST /api/portals/owner/:token
-    // Live pay_applications columns: status, approval_notes. owner_notes ->
-    // approval_notes. NOTE: there is no owner_approval_token column in the live
-    // schema, so this lookup cannot resolve a row — see flagged item.
+    // POST /api/portals/owner/:token — the owner's Approve / Reject on
+    // /owner-portal/approve/[token] (the page posts HERE).
+    // owner_approval_token IS a live column (unique); the older note saying it
+    // was missing is wrong. The token is the credential, as on the signing
+    // portal. This now does what /api/owner-portal/approve/[token] does: it
+    // refuses a token that was already used, stamps approved_at, and on an
+    // approval runs the same cascade as the GC's Approve — conditional lien
+    // waivers for every sub on the job. It used to certify the application
+    // and stop: no approved_at, no waivers, and the link worked forever.
     if (portalType === 'owner' && token) {
-      const body = await req.json();
-      const { decision, notes } = body;
+      const body = await req.json().catch(() => ({}));
+      const { decision, notes } = body as { decision?: string; notes?: string };
+      if (decision !== 'approved' && decision !== 'rejected') {
+        return NextResponse.json({ error: 'Choose Approve or Reject.' }, { status: 400 });
+      }
+      const { data: existing, error: exErr } = await db
+        .from('pay_applications').select('id, approved_at').eq('owner_approval_token', token).maybeSingle();
+      if (exErr) throw exErr;
+      if (!existing) return NextResponse.json({ error: 'Pay application not found' }, { status: 404 });
+      if ((existing as { approved_at?: string | null }).approved_at) {
+        return NextResponse.json({ error: 'This pay application has already been reviewed.' }, { status: 409 });
+      }
       const newStatus = decision === 'approved' ? 'certified' : 'draft';
-      await must(db.from('pay_applications').update({ status: newStatus, approval_notes: notes }).eq('owner_approval_token', token), 'pay_applications update');
+      const patch: Record<string, unknown> = { status: newStatus, approval_notes: notes ?? null };
+      if (decision === 'approved') patch.approved_at = new Date().toISOString();
+      await must(db.from('pay_applications').update(patch).eq('owner_approval_token', token), 'pay_applications update');
+      if (decision === 'approved') {
+        runInBackground(onPayAppApproved(String((existing as { id: string }).id)), 'onPayAppApproved');
+      }
       return NextResponse.json({ success: true });
     }
 

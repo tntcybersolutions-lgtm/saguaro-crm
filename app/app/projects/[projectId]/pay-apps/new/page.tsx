@@ -48,6 +48,8 @@ interface SovLine {
   percentComplete: number;
   balanceToFinish: number;
   retainage: number;
+  /** The line's cost code, carried from the prior application's SOV. */
+  csiCode?: string | null;
 }
 
 function blankLine(n:number):SovLine{
@@ -163,6 +165,9 @@ export default function NewPayAppPage() {
             lineNumber:i+1, description:s.description||'',
             scheduledValue:s.scheduledValue||0, workFromPrev:s.workFromPrev||0,
             workThisPeriod:0, materialsStored:0, percentComplete:0, balanceToFinish:0, retainage:0,
+            // The seed returns each line's cost code; dropping it here filed
+            // every rolled-forward line with no cost code.
+            csiCode:s.csiCode ?? null,
           })));
           setRolledForward(true);
         }
@@ -277,6 +282,7 @@ export default function NewPayAppPage() {
           percentComplete: l.percentComplete,
           balanceToFinish: l.balanceToFinish,
           retainage: l.retainage,
+          csiCode: l.csiCode ?? null,
         })),
       };
 

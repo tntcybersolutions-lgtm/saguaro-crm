@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { requirePermission } from '@/lib/permissions';
 import { apiError } from '@/lib/api-error';
+import { applyChangeOrderMoney } from '@/lib/change-order-cascade';
 
 export const dynamic = 'force-dynamic';
 
@@ -50,6 +51,19 @@ export async function PATCH(req: NextRequest, { params }: { params: Promise<{ id
       return NextResponse.json({ error: 'No updatable fields provided' }, { status: 400 });
     }
 
+    if (typeof patch.status === 'string') {
+      patch.status = String(patch.status).toLowerCase();
+      // Deciding a CO takes the same permission as POST /approve and /reject.
+      if (patch.status === 'approved' || patch.status === 'rejected') {
+        const full = await requirePermission(req, 'Change Orders', 'Full');
+        if (!full.ok) return full.res;
+      }
+    }
+    const { data: before, error: bErr } = await db.from('change_orders').select('*')
+      .eq('id', id).eq('tenant_id', user.tenantId).maybeSingle();
+    if (bErr) throw bErr;
+    if (!before) return NextResponse.json({ error: 'Change order not found' }, { status: 404 });
+
     const { data, error } = await db
       .from('change_orders')
       .update(patch)
@@ -58,6 +72,10 @@ export async function PATCH(req: NextRequest, { params }: { params: Promise<{ id
       .select()
       .single();
     if (error) throw error;
+    /* Edit Amount on an APPROVED change order changes the contract by the
+       difference; a status written here is still an approval or a reversal.
+       Both used to leave the contract and the budget on the old figure. */
+    await applyChangeOrderMoney(db, user.tenantId, before as never, data as never);
     return NextResponse.json({ changeOrder: data, success: true });
   } catch (e) {
     return apiError('change-orders/[id]/update PATCH', e);

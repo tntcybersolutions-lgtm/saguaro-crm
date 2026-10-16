@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from 'next/server';
 import { createServerClient, getUser } from '@/lib/supabase-server';
 import { requirePermission } from '@/lib/permissions';
 import { apiError } from '@/lib/api-error';
+import { stampPayment, type InvoiceMoneyRow } from '@/lib/invoice-payment';
 
 export async function PATCH(req: NextRequest, { params }: { params: { id: string } }) {
   const g = await requirePermission(req, 'Budget', 'Edit');
@@ -30,16 +31,21 @@ export async function PATCH(req: NextRequest, { params }: { params: { id: string
     }
 
     if (updates.status !== undefined && updates.status !== null) updates.status = String(updates.status).toLowerCase();
+    const { data: cur, error: curErr } = await db.from('invoices').select('status, amount, tax, total, paid_at, paid_amount')
+      .eq('id', params.id).eq('tenant_id', user.tenantId).maybeSingle();
+    if (curErr) throw curErr;
+    if (!cur) return NextResponse.json({ error: 'Invoice not found' }, { status: 404 });
     // Money is server-canonical: any amount/tax change recomputes total from
     // the merged row — client-sent totals are never trusted.
     if (updates.amount !== undefined || updates.tax !== undefined) {
-      const { data: cur } = await db.from('invoices').select('amount, tax').eq('id', params.id).eq('tenant_id', user.tenantId).single();
       const amt = updates.amount !== undefined ? Number(updates.amount) || 0 : Number((cur as any)?.amount) || 0;
       const tx = updates.tax !== undefined ? Number(updates.tax) || 0 : Number((cur as any)?.tax) || 0;
       updates.amount = amt; updates.tax = tx; updates.total = amt + tx;
     } else if (updates.total !== undefined) {
       updates.total = Number(updates.total) || 0;
     }
+    // Status → Paid records the payment: when, and how much (lib/invoice-payment).
+    stampPayment(updates, cur as InvoiceMoneyRow);
     const { data, error } = await db.from('invoices').update(updates).eq('id', params.id).eq('tenant_id', user.tenantId).select().single();
     if (error) throw error;
     return NextResponse.json({ success: true, invoice: data });
