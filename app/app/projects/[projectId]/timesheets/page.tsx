@@ -115,9 +115,14 @@ export default function TimesheetsPage() {
     setLoadError(false);
     try {
       const res = await fetch(`/api/projects/${projectId}/timesheets?week=${weekFilter}`);
+      /* A failed read (401 / 404 / 500) parses as { error } — without this check
+         it set an empty list, so a reviewer saw "no time this week" instead of an
+         error, and the composer auto-opened as if nobody had clocked in. */
+      if (!res.ok) throw new Error(`timesheets ${res.status}`);
       const json = await res.json();
       setEntries(json.entries || []);
-    } catch {
+    } catch (e) {
+      console.error('[timesheets] load failed', e);
       setEntries([]);
       setLoadError(true);
     } finally {
@@ -132,11 +137,11 @@ export default function TimesheetsPage() {
   // Cancel stays cancelled.
   const autoOpenedRef = useRef(false);
   useEffect(() => {
-    if (!loading && entries.length === 0 && !autoOpenedRef.current) {
+    if (!loading && !loadError && entries.length === 0 && !autoOpenedRef.current) {
       autoOpenedRef.current = true;
       setShowForm(true);
     }
-  }, [loading, entries.length]);
+  }, [loading, loadError, entries.length]);
 
   const currentWeekStart = getWeekStart(new Date());
   const lastWeekStart = addDays(currentWeekStart, -7);

@@ -23,6 +23,7 @@ import { useProjectContext } from '@/lib/hooks/useProjectContext';
 import { unloggedWorkdays } from '@/lib/daily-log-gap';
 import SaguaroDatePicker from '@/components/SaguaroDatePicker';
 import { humanError } from '@/lib/errors';
+import { reasonFromResponse } from '@/lib/ui/status-fetch';
 import { useParams } from 'next/navigation';
 import { getAuthHeaders } from '@/lib/supabase-browser';
 import { sendOrSave, listSaved, updateSaved, removeSaved, savedRowId, savedIdOf, isOffline } from '@/lib/offline/outbox';
@@ -43,6 +44,11 @@ import { SUB_TRADES } from '@/lib/construction-intelligence';
 import { layout } from '@/lib/design-tokens';
 import OwnerUpdateModal from '@/components/owner-update/OwnerUpdateModal';
 import { useOpenOnNew } from '@/lib/ui/open-on-new';
+
+/** A refusal the server already worded for a GC (apiError, or the 409 "a log
+ *  already exists for this day"). Shown as-is: humanError would flatten the 409
+ *  to "That already exists.", and the raw response text was a JSON blob. */
+class ServerSaid extends Error {}
 
 /** Date-only values parse at local noon ('T12:00:00') so they never shift a day under UTC. */
 /** Today as YYYY-MM-DD on the user's wall clock. toISOString() is the UTC day —
@@ -463,7 +469,7 @@ export default function DailyLogsPage(){
           showToast("Saved on this phone — it sends when you're back online.");
         } else {
           const r = res.response;
-          if(!r.ok){ setLogs(prev=>prev.filter((l:any)=>l.id!==tempId)); throw new Error(await r.text()); }
+          if(!r.ok){ setLogs(prev=>prev.filter((l:any)=>l.id!==tempId)); throw new ServerSaid(await reasonFromResponse(r)); }
           const d = await r.json();
           if(d.log) setLogs(prev=>prev.map((l:any)=>l.id===tempId?d.log:l));
           revalidate();
@@ -485,7 +491,7 @@ export default function DailyLogsPage(){
             setLogs(prev=>prev.map((l:any)=>l.id===prevLog.id?{...l,_offline:true}:l));
             showToast("Saved on this phone — it sends when you're back online.");
           } else {
-            if(!res.response.ok){ setLogs(prev=>prev.map((l:any)=>l.id===prevLog.id?prevLog:l)); throw new Error(await res.response.text()); }
+            if(!res.response.ok){ setLogs(prev=>prev.map((l:any)=>l.id===prevLog.id?prevLog:l)); throw new ServerSaid(await reasonFromResponse(res.response)); }
             revalidate();
           }
         }
@@ -493,7 +499,7 @@ export default function DailyLogsPage(){
       guard.clearDraft();
       return true;
     }catch(e:any){
-      console.error(e); showToast(humanError(e,'Save failed. Please try again.'),'bad');
+      console.error(e); showToast(e instanceof ServerSaid ? e.message : humanError(e,'Save failed. Please try again.'),'bad');
       // Rollback already applied — reopen the panel with the input intact.
       setForm(snapshot); setMode(prevMode); setSelected(prevSelected);
     }
