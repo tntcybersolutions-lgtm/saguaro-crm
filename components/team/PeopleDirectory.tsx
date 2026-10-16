@@ -8,7 +8,7 @@
 import { useEffect, useMemo, useState, useCallback } from 'react';
 import SaguaroDatePicker from '@/components/SaguaroDatePicker';
 import { getSupabaseBrowser } from '@/lib/supabase-browser';
-import { UsersThree, Plus, PencilSimple, Trash, X, SealCheck, Warning, Star, FirstAid, Eye, ChatDots, Folder, CurrencyDollar, Phone, Envelope, MapPin, Briefcase } from '@phosphor-icons/react';
+import { UsersThree, Plus, PencilSimple, Trash, X, SealCheck, Warning, Star, FirstAid, Eye, ChatDots, Folder, CurrencyDollar, Phone, Envelope, MapPin, Briefcase, CaretLeft } from '@phosphor-icons/react';
 import { ListToolbar } from '@/components/ui/ListToolbar';
 
 const GOLD = 'var(--brand-primary)', DARK = 'var(--bg-base)', RAISED = 'var(--bg-surface)', BORDER = 'rgba(255,255,255,0.12)';
@@ -106,15 +106,33 @@ export function PeopleDirectory() {
   return (
     <div style={{ background: DARK, color: TEXT, minHeight: '100vh', fontFamily: 'system-ui,Segoe UI,sans-serif' }}>
       <div className="k-frame">
-        <div style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
+        <div className="pdHead" style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
           <UsersThree size={26} weight="fill" color="var(--text-secondary)" />
           <div style={{ flex: 1 }}><h1 className="k-title" style={{ margin: 0 }}>People</h1><p style={{ color: DIM, margin: 0, fontSize: 14 }}>Your crew — records, certifications, assignments, and incident history.</p></div>
           <button onClick={() => { setF({ employment_type: 'hourly' }); setSaveErr(null); setAdding(true); }} style={{ ...btn, display: 'inline-flex', alignItems: 'center', gap: 6 }}><Plus size={15} weight="bold" />Add Employee</button>
         </div>
 
-        <div style={{ display: 'grid', gridTemplateColumns: 'minmax(0, 340px) minmax(0, 1fr)', gap: 16, marginTop: 20, alignItems: 'start' }}>
+        {/* Phones: one column, list OR record. Side by side pushed the record off
+            the right edge, so tapping a person looked like nothing happened. */}
+        <style>{`
+          .pdBack { display: none; }
+          @media (max-width: 820px) {
+            .pdGrid { grid-template-columns: minmax(0, 1fr) !important; }
+            .pdGrid.pdHasSel .pdRoster { display: none; }
+            .pdGrid:not(.pdHasSel) .pdDetail { display: none; }
+            .pdBack { display: inline-flex; }
+            .pdList { max-height: none !important; overflow: visible !important; }
+            .pdHead { flex-wrap: wrap; }
+            .pdHead > button { min-height: 44px; }
+            .pdRow { min-height: 56px; }
+            .pdHero { flex-wrap: wrap; }
+            .pdHero > button { min-height: 44px; }
+            .pdDetail input, .pdDetail select, .pdDetail textarea { font-size: 16px !important; }
+          }
+        `}</style>
+        <div className={`pdGrid${selId ? ' pdHasSel' : ''}`} style={{ display: 'grid', gridTemplateColumns: 'minmax(0, 340px) minmax(0, 1fr)', gap: 16, marginTop: 20, alignItems: 'start' }}>
           {/* roster */}
-          <div>
+          <div className="pdRoster">
             <div style={{ marginBottom: 10 }}>
               <ListToolbar
                 module="people"
@@ -125,9 +143,9 @@ export function PeopleDirectory() {
                 count={{ shown: filtered.length, total: emps.length }}
               />
             </div>
-            <div style={{ display: 'flex', flexDirection: 'column', gap: 8, maxHeight: '72vh', overflowY: 'auto' }}>
+            <div className="pdList" style={{ display: 'flex', flexDirection: 'column', gap: 8, maxHeight: '72vh', overflowY: 'auto' }}>
               {filtered.length === 0 ? <div style={{ color: DIM, fontSize: 13, padding: 12 }}>{emps.length ? 'No matches' : 'No employees yet — add your first.'}</div> : filtered.map((e) => (
-                <button key={e.id} onClick={() => setSelId(e.id)} style={{ display: 'flex', alignItems: 'center', gap: 10, textAlign: 'left', background: selId === e.id ? 'var(--brand-primary-12)' : RAISED, border: `1px solid ${selId === e.id ? GOLD : BORDER}`, borderRadius: 10, padding: 10, cursor: 'pointer', color: TEXT }}>
+                <button key={e.id} className="pdRow" onClick={() => { setSelId(e.id); if (typeof window !== 'undefined' && window.matchMedia('(max-width: 820px)').matches) window.scrollTo({ top: 0 }); }} style={{ display: 'flex', alignItems: 'center', gap: 10, textAlign: 'left', background: selId === e.id ? 'var(--brand-primary-12)' : RAISED, border: `1px solid ${selId === e.id ? GOLD : BORDER}`, borderRadius: 10, padding: 10, cursor: 'pointer', color: TEXT }}>
                   <div style={{ width: 38, height: 38, borderRadius: 19, background: 'var(--bg-surface-2)', display: 'flex', alignItems: 'center', justifyContent: 'center', color: 'var(--text-primary)', fontWeight: 800, fontSize: 13 }}>{initials(nameOf(e))}</div>
                   <div style={{ flex: 1, minWidth: 0 }}><div style={{ fontWeight: 700, fontSize: 14 }}>{nameOf(e)}</div><div style={{ color: DIM, fontSize: 13 }}>{[e.title, e.trade].filter(Boolean).join(' · ') || 'No title'}</div></div>
                   {e.osha_30_certified ? <span style={{ fontSize: 12, color: GREEN, fontWeight: 700 }}>OSHA30</span> : e.osha_10_certified ? <span style={{ fontSize: 12, color: GREEN, fontWeight: 700 }}>OSHA10</span> : null}
@@ -137,12 +155,13 @@ export function PeopleDirectory() {
           </div>
 
           {/* detail */}
-          <div>
+          <div className="pdDetail">
+            <button className="pdBack" onClick={() => setSelId(null)} style={{ alignItems: 'center', gap: 6, background: 'none', border: 'none', color: TEXT, fontSize: 15, fontWeight: 700, cursor: 'pointer', padding: '0 0 12px', minHeight: 44 }}><CaretLeft size={18} weight="bold" />All crew</button>
             {!detail ? (
               <div style={{ background: RAISED, border: `1px solid ${BORDER}`, borderRadius: 12, padding: 40, textAlign: 'center', color: DIM }}>Select an employee to view their record.</div>
             ) : (
               <div style={{ display: 'flex', flexDirection: 'column', gap: 14 }}>
-                <div style={{ background: RAISED, border: `1px solid ${BORDER}`, borderRadius: 12, padding: 18, display: 'flex', alignItems: 'center', gap: 14 }}>
+                <div className="pdHero" style={{ background: RAISED, border: `1px solid ${BORDER}`, borderRadius: 12, padding: 18, display: 'flex', alignItems: 'center', gap: 14 }}>
                   <div style={{ width: 56, height: 56, borderRadius: 28, background: 'var(--bg-surface-2)', display: 'flex', alignItems: 'center', justifyContent: 'center', color: 'var(--text-primary)', fontWeight: 800, fontSize: 19 }}>{initials(nameOf(detail))}</div>
                   <div style={{ flex: 1 }}><div style={{ fontSize: 20, fontWeight: 800 }}>{nameOf(detail)}</div><div style={{ color: DIM, fontSize: 14 }}>{[detail.title, detail.trade].filter(Boolean).join(' · ') || 'No title'}</div></div>
                   <button onClick={() => { setF({ first_name: detail.first_name ?? '', last_name: detail.last_name ?? '', title: detail.title ?? '', trade: detail.trade ?? '', email: detail.email ?? '', phone: detail.phone ?? '', address: detail.address ?? '', regular_rate: String(detail.regular_rate ?? ''), overtime_rate: String(detail.overtime_rate ?? ''), emergency_contact_name: detail.emergency_contact_name ?? '', emergency_contact_phone: detail.emergency_contact_phone ?? '' }); setEditing(true); }} style={{ ...btn, background: 'transparent', color: TEXT, border: `1px solid ${BORDER}`, display: 'inline-flex', gap: 6, alignItems: 'center' }}><PencilSimple size={14} />Edit</button>
