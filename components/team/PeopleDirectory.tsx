@@ -114,7 +114,7 @@ export function PeopleDirectory() {
 
         {/* Phones: one column, list OR record. Side by side pushed the record off
             the right edge, so tapping a person looked like nothing happened. */}
-        <style>{`
+        <style dangerouslySetInnerHTML={{ __html: `
           .pdBack { display: none; }
           @media (max-width: 820px) {
             .pdGrid { grid-template-columns: minmax(0, 1fr) !important; }
@@ -129,7 +129,7 @@ export function PeopleDirectory() {
             .pdHero > button { min-height: 44px; }
             .pdDetail input, .pdDetail select, .pdDetail textarea { font-size: 16px !important; }
           }
-        `}</style>
+        ` }} />
         <div className={`pdGrid${selId ? ' pdHasSel' : ''}`} style={{ display: 'grid', gridTemplateColumns: 'minmax(0, 340px) minmax(0, 1fr)', gap: 16, marginTop: 20, alignItems: 'start' }}>
           {/* roster */}
           <div className="pdRoster">

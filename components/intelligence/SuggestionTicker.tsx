@@ -243,7 +243,7 @@ export default function SuggestionTicker({ style }: { style?: React.CSSPropertie
         ...style,
       }}
     >
-      <style>{TICKER_FX}</style>
+      <style dangerouslySetInnerHTML={{ __html: TICKER_FX }} />
 
       {/* Left cap — live pulse + counts + honest total $ at stake */}
       <div style={{
