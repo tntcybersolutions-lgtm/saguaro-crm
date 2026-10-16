@@ -21,7 +21,7 @@
  *   list      GET    /api/pay-apps/list?projectId=
  *   waivers   GET    /api/lien-waivers/list?projectId=
  *   reorder   PATCH  /api/pay-apps/[id]   { sort_order }
- *   approve   PATCH  /api/pay-apps/[id]   { status: 'approved' }   (bulk)
+ *   approve   POST   /api/pay-apps/[id]/approve                     (bulk)
  *   pdf       POST   /api/documents/pay-application
  *   delete    DELETE /api/pay-apps/[id]
  * Live status (useLiveStatus) and the NudgeRing anchor are unchanged; the
@@ -144,10 +144,13 @@ export default function PayAppsPage() {
     const approved = new Set<string>();
     for (const pa of list) {
       try {
-        const r = await fetch(`/api/pay-apps/${pa.id}`, {
-          method: 'PATCH',
+        /* The approve route — the same door as the detail page's Approve —
+           so a bulk approval also stamps approved_at and files the subs'
+           conditional lien waivers. A raw status PATCH did neither. */
+        const r = await fetch(`/api/pay-apps/${pa.id}/approve`, {
+          method: 'POST',
           headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ status: 'approved' }),
+          body: JSON.stringify({ projectId }),
         });
         if (r.ok) approved.add(pa.id);
       } catch (e) {
