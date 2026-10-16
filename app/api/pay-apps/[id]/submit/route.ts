@@ -3,6 +3,7 @@ import { requirePermission } from '@/lib/permissions';
 import { onPayAppSubmitted } from '@/lib/triggers';
 import { randomUUID } from 'crypto';
 import { runInBackground } from '@/lib/background';
+import { apiError } from '@/lib/api-error';
 
 export async function POST(req: NextRequest, { params }: { params: Promise<{ id: string }> }) {
   const g = await requirePermission(req, 'Pay Apps', 'Edit');
@@ -31,7 +32,7 @@ export async function POST(req: NextRequest, { params }: { params: Promise<{ id:
     if (error) throw error;
     runInBackground(onPayAppSubmitted(id), 'onPayAppSubmitted');
     return NextResponse.json({ success: true, owner_approval_token });
-  } catch {
-    return NextResponse.json({ error: "Internal server error" }, { status: 500 });
+  } catch (e) {
+    return apiError('pay-apps/[id]/submit POST', e);
   }
 }

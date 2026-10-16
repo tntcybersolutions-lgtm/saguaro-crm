@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { createServerClient, getUser } from '@/lib/supabase-server';
 import { requirePermission } from '@/lib/permissions';
+import { apiError } from '@/lib/api-error';
 
 export const dynamic = 'force-dynamic';
 
@@ -22,8 +23,8 @@ export async function GET(req: NextRequest, { params }: { params: { projectId: s
       counts[s] = (counts[s] || 0) + 1;
     }
     return NextResponse.json({ counts, total: (data || []).length });
-  } catch {
-    return NextResponse.json({ error: 'Internal server error' }, { status: 500 });
+  } catch (e) {
+    return apiError('projects/[projectId]/selections/batch-status GET', e);
   }
 }
 
@@ -57,8 +58,8 @@ async function batchUpdate(req: NextRequest, params: { projectId: string }) {
     if (error) throw error;
 
     return NextResponse.json({ success: true, updated: (data || []).length, ids: (data || []).map(r => (r as Record<string, unknown>).id) });
-  } catch {
-    return NextResponse.json({ error: 'Internal server error' }, { status: 500 });
+  } catch (e) {
+    return apiError('projects/[projectId]/selections/batch-status GET', e);
   }
 }
 

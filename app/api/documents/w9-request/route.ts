@@ -3,6 +3,7 @@ import { createServerClient, getUser } from '@/lib/supabase-server';
 import { requirePermission } from '@/lib/permissions';
 import { sendW9Request } from '@/lib/email';
 import crypto from 'crypto';
+import { apiError } from '@/lib/api-error';
 
 const APP_URL = process.env.NEXT_PUBLIC_APP_URL || 'https://saguarocontrol.net';
 
@@ -18,8 +19,8 @@ export async function GET(req: NextRequest) {
     const { data, error } = await query;
     if (error) throw error;
     return NextResponse.json({ w9Requests: data || [] });
-  } catch {
-    return NextResponse.json({ w9Requests: [], error: "Internal server error" }, { status: 500 });
+  } catch (e) {
+    return apiError('documents/w9-request GET', e, undefined, 500, { w9Requests: [] });
   }
 }
 
@@ -67,7 +68,7 @@ export async function POST(req: NextRequest) {
     }
 
     return NextResponse.json({ w9, portalUrl, success: true, emailed: true });
-  } catch {
-    return NextResponse.json({ error: "Internal server error" }, { status: 500 });
+  } catch (e) {
+    return apiError('documents/w9-request POST', e);
   }
 }

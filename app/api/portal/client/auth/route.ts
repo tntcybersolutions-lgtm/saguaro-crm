@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from 'next/server';
 import { createServerClient } from '@/lib/supabase-server';
 import { checkRateLimit, getClientIP } from '@/lib/rate-limit';
 import { must } from '@/lib/db-write';
+import { apiError } from '@/lib/api-error';
 
 /** Authenticate a portal session via token */
 async function getPortalSession(req: NextRequest) {
@@ -82,8 +83,8 @@ export async function POST(req: NextRequest) {
       },
       project,
     });
-  } catch {
-    return NextResponse.json({ error: "Internal server error" }, { status: 500 });
+  } catch (e) {
+    return apiError('portal/client/auth POST', e);
   }
 }
 
@@ -115,7 +116,7 @@ export async function GET(req: NextRequest) {
       },
       project,
     });
-  } catch {
-    return NextResponse.json({ error: "Internal server error" }, { status: 500 });
+  } catch (e) {
+    return apiError('portal/client/auth GET', e);
   }
 }

@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { createServerClient } from '@/lib/supabase-server';
 import { getPortalSession, PORTAL_PERMS } from '@/lib/portal-auth';
+import { apiError } from '@/lib/api-error';
 
 /** GET — list messages for project channel */
 export async function GET(req: NextRequest) {
@@ -38,8 +39,8 @@ export async function GET(req: NextRequest) {
       messages: messages || [],
       unread_count: unreadCount || 0,
     });
-  } catch {
-    return NextResponse.json({ error: "Internal server error" }, { status: 500 });
+  } catch (e) {
+    return apiError('portal/client/messages GET', e);
   }
 }
 
@@ -81,8 +82,8 @@ export async function POST(req: NextRequest) {
     if (error) throw error;
 
     return NextResponse.json({ message });
-  } catch {
-    return NextResponse.json({ error: "Internal server error" }, { status: 500 });
+  } catch (e) {
+    return apiError('portal/client/messages POST', e);
   }
 }
 
@@ -125,7 +126,7 @@ export async function PATCH(req: NextRequest) {
     }
 
     return NextResponse.json({ success: true });
-  } catch {
-    return NextResponse.json({ error: "Internal server error" }, { status: 500 });
+  } catch (e) {
+    return apiError('portal/client/messages PATCH', e);
   }
 }

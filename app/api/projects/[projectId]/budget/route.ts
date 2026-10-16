@@ -127,8 +127,7 @@ export async function POST(req: NextRequest, { params }: { params: { projectId: 
     if (error) throw error;
     return NextResponse.json({ success: true, line: toBudgetLineView(data as Record<string, unknown>) });
   } catch (err) {
-    console.error('[budget/POST]', err);
-    return NextResponse.json({ error: 'Internal server error' }, { status: 500 });
+    return apiError('projects/[projectId]/budget POST', err);
   }
 }
 
@@ -192,7 +191,6 @@ export async function PATCH(req: NextRequest, { params }: { params: { projectId:
     if (error) throw error;
     return NextResponse.json({ success: true });
   } catch (err) {
-    console.error('[budget/PATCH]', err);
-    return NextResponse.json({ error: 'Internal server error' }, { status: 500 });
+    return apiError('projects/[projectId]/budget PATCH', err);
   }
 }

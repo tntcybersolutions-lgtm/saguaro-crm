@@ -3,6 +3,7 @@ import { createServerClient, getUser } from '@/lib/supabase-server';
 import { requirePermission } from '@/lib/permissions';
 import { signStoredUrl } from '@/lib/storage-signing';
 import { classifyKind } from '@/lib/filekind';
+import { apiError } from '@/lib/api-error';
 
 export const runtime = 'nodejs';
 /* eslint-disable @typescript-eslint/no-explicit-any */
@@ -82,6 +83,6 @@ export async function POST(req: NextRequest) {
     const poster = posterPath ? await signStoredUrl(BUCKET, posterPath, 3600).catch(() => null) : null;
     return NextResponse.json({ success: true, file: { ...row, url: signed, file_url: signed, ...(poster ? { poster_url: poster } : {}) } });
   } catch (e: any) {
-    return NextResponse.json({ error: `Could not record upload: ${e?.message || 'server error'}` }, { status: 500 });
+    return apiError('files/record POST', e);
   }
 }

@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from 'next/server';
 import { createServerClient, getUser } from '@/lib/supabase-server';
 import { requirePermission } from '@/lib/permissions';
 import type { Database } from '@/lib/database.types';
+import { apiError } from '@/lib/api-error';
 
 export async function GET(
   req: NextRequest,
@@ -46,8 +47,8 @@ export async function GET(
     if (error) throw error;
 
     return NextResponse.json({ measurements: data || [] });
-  } catch {
-    return NextResponse.json({ error: 'Internal server error' }, { status: 500 });
+  } catch (e) {
+    return apiError('takeoff-projects/[id]/measurements GET', e);
   }
 }
 
@@ -106,7 +107,7 @@ export async function POST(
     if (error) throw error;
 
     return NextResponse.json({ measurement: data }, { status: 201 });
-  } catch {
-    return NextResponse.json({ error: 'Internal server error' }, { status: 500 });
+  } catch (e) {
+    return apiError('takeoff-projects/[id]/measurements POST', e);
   }
 }

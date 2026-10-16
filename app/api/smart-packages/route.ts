@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { createServerClient } from '@/lib/supabase-server';
+import { apiError } from '@/lib/api-error';
 
 /**
  * GET /api/smart-packages  (public — no auth required)
@@ -22,7 +23,7 @@ export async function GET(_req: NextRequest) {
 
     if (error) throw error;
     return NextResponse.json({ packages: data || [] });
-  } catch {
-    return NextResponse.json({ error: 'Internal server error' }, { status: 500 });
+  } catch (e) {
+    return apiError('smart-packages GET', e);
   }
 }

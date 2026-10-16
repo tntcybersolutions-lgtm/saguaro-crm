@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { getUser } from '@/lib/supabase-server';
 import { requirePermission } from '@/lib/permissions';
+import { apiError } from '@/lib/api-error';
 
 /* ------------------------------------------------------------------ */
 /*  POST  /api/integrations/webhooks/test                             */
@@ -159,7 +160,7 @@ export async function POST(req: NextRequest) {
       payload_sent: payload,
       result: testResult,
     });
-  } catch {
-    return NextResponse.json({ error: 'Internal server error' }, { status: 500 });
+  } catch (e) {
+    return apiError('integrations/webhooks/test POST', e);
   }
 }

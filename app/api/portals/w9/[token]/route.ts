@@ -3,6 +3,7 @@ import { createServerClient } from '@/lib/supabase-server';
 import { sendW9Request } from '@/lib/email';
 import { generateW9, saveDocument } from '@/lib/pdf-engine';
 import { must } from '@/lib/db-write';
+import { apiError } from '@/lib/api-error';
 
 export async function GET(req: NextRequest, { params }: { params: Promise<{ token: string }> }) {
   const { token } = await params;
@@ -18,8 +19,8 @@ export async function GET(req: NextRequest, { params }: { params: Promise<{ toke
         status: w.status,
       }
     });
-  } catch {
-    return NextResponse.json({ error: "Internal server error" }, { status: 500 });
+  } catch (e) {
+    return apiError('portals/w9/[token] GET', e);
   }
 }
 
@@ -76,7 +77,7 @@ export async function POST(req: NextRequest, { params }: { params: Promise<{ tok
     }
 
     return NextResponse.json({ success: true, pdfUrl });
-  } catch {
-    return NextResponse.json({ error: "Internal server error" }, { status: 500 });
+  } catch (e) {
+    return apiError('portals/w9/[token] POST', e);
   }
 }

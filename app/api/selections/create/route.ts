@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from 'next/server';
 import { createServerClient, getUser } from '@/lib/supabase-server';
 import { assertProjectInTenant } from '@/lib/assert-project';
 import type { Database } from '@/lib/database.types';
+import { apiError } from '@/lib/api-error';
 
 export async function POST(req: NextRequest) {
   const user = await getUser(req);
@@ -48,7 +49,7 @@ export async function POST(req: NextRequest) {
     const { data, error } = await db.from('selections').insert(insert as Database['public']['Tables']['selections']['Insert']).select().single();
     if (error) throw error;
     return NextResponse.json({ success: true, selection: data });
-  } catch {
-    return NextResponse.json({ error: 'Internal server error' }, { status: 500 });
+  } catch (e) {
+    return apiError('selections/create POST', e);
   }
 }

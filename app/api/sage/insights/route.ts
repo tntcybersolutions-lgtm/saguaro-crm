@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { getUser, createServerClient } from '@/lib/supabase-server';
 import { must } from '@/lib/db-write';
+import { apiError } from '@/lib/api-error';
 
 interface DismissBody {
   insightId: string;
@@ -28,8 +29,8 @@ export async function GET(req: NextRequest) {
       .limit(10);
 
     return NextResponse.json({ insights: data ?? [] });
-  } catch {
-    return NextResponse.json({ error: 'Internal server error' }, { status: 500 });
+  } catch (e) {
+    return apiError('sage/insights GET', e);
   }
 }
 
@@ -60,7 +61,7 @@ export async function POST(req: NextRequest) {
       .eq('metadata->>user_id', user.id), 'sage_proactive_insights write');
 
     return NextResponse.json({ success: true });
-  } catch {
-    return NextResponse.json({ error: 'Internal server error' }, { status: 500 });
+  } catch (e) {
+    return apiError('sage/insights POST', e);
   }
 }

@@ -99,7 +99,7 @@ export async function POST(req: NextRequest, { params }: { params: { projectId: 
     const { data, error } = await supabase.from('submittals').insert(record as Database['public']['Tables']['submittals']['Insert']).select().single();
     if (error) throw error;
     return NextResponse.json({ submittal: data }, { status: 201 });
-  } catch {
-    return NextResponse.json({ error: 'Internal server error' }, { status: 500 });
+  } catch (e) {
+    return apiError('projects/[projectId]/submittals POST', e);
   }
 }

@@ -3,6 +3,7 @@ import { NextRequest, NextResponse } from 'next/server';
 import { createServerClient, getUser } from '@/lib/supabase-server';
 import type { Database } from '@/lib/database.types';
 import { must } from '@/lib/db-write';
+import { apiError } from '@/lib/api-error';
 
 /**
  * POST /api/recommendations/generate
@@ -186,7 +187,7 @@ JSON only, no markdown:`;
       ai_recommendations_created: aiCount,
       total_created: climateCount + aiCount,
     });
-  } catch {
-    return NextResponse.json({ error: 'Internal server error' }, { status: 500 });
+  } catch (e) {
+    return apiError('recommendations/generate POST', e);
   }
 }

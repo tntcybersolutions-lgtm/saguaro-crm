@@ -38,8 +38,8 @@ export async function PATCH(req: NextRequest, { params }: { params: { projectId:
       return apiError('projects/projectId/correspondence/id', error, "Failed to update", status);
     }
     return NextResponse.json({ item: data });
-  } catch {
-    return NextResponse.json({ error: 'Failed to update' }, { status: 500 });
+  } catch (e) {
+    return apiError('projects/[projectId]/correspondence/[id] PATCH', e, 'Failed to update');
   }
 }
 
@@ -73,7 +73,7 @@ export async function POST(req: NextRequest, { params }: { params: { projectId: 
       });
     if (error) return NextResponse.json({ success: true });
     return NextResponse.json({ success: true });
-  } catch {
-    return NextResponse.json({ error: 'Failed to record read receipt' }, { status: 500 });
+  } catch (e) {
+    return apiError('projects/[projectId]/correspondence/[id] POST', e, 'Failed to record read receipt');
   }
 }

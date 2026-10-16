@@ -3,6 +3,7 @@ import { createServerClient, getUser } from '@/lib/supabase-server';
 import { requirePermission } from '@/lib/permissions';
 import { WEBHOOK_EVENT_CATALOG } from '@/lib/webhook-events';
 import { must } from '@/lib/db-write';
+import { apiError } from '@/lib/api-error';
 
 /* ------------------------------------------------------------------ */
 /*  Available Zapier triggers and actions for Saguaro                 */
@@ -52,8 +53,8 @@ export async function GET(req: NextRequest) {
       registered_webhooks: webhooks || [],
       documentation_url: '/app/integrations/api-docs',
     });
-  } catch {
-    return NextResponse.json({ error: 'Internal server error' }, { status: 500 });
+  } catch (e) {
+    return apiError('integrations/zapier GET', e);
   }
 }
 
@@ -166,7 +167,7 @@ export async function POST(req: NextRequest) {
       },
       message: 'Webhook registered successfully. Store the secret securely.',
     }, { status: 201 });
-  } catch {
-    return NextResponse.json({ error: 'Internal server error' }, { status: 500 });
+  } catch (e) {
+    return apiError('integrations/zapier POST', e);
   }
 }

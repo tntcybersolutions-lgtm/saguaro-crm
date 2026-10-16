@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { createServerClient, getUser } from '@/lib/supabase-server';
 import type { Database } from '@/lib/database.types';
+import { apiError } from '@/lib/api-error';
 
 /**
  * GET /api/materials/selections?customer_id=xxx&project_id=yyy&category=flooring
@@ -39,8 +40,8 @@ export async function GET(req: NextRequest) {
     if (error) throw error;
 
     return NextResponse.json({ selections: data || [] });
-  } catch {
-    return NextResponse.json({ error: 'Internal server error' }, { status: 500 });
+  } catch (e) {
+    return apiError('materials/selections GET', e);
   }
 }
 
@@ -82,8 +83,8 @@ export async function POST(req: NextRequest) {
 
     if (error) throw error;
     return NextResponse.json({ selection: data }, { status: 201 });
-  } catch {
-    return NextResponse.json({ error: 'Internal server error' }, { status: 500 });
+  } catch (e) {
+    return apiError('materials/selections POST', e);
   }
 }
 
@@ -123,8 +124,8 @@ export async function PATCH(req: NextRequest) {
 
     if (error) throw error;
     return NextResponse.json({ selection: data });
-  } catch {
-    return NextResponse.json({ error: 'Internal server error' }, { status: 500 });
+  } catch (e) {
+    return apiError('materials/selections PATCH', e);
   }
 }
 
@@ -152,7 +153,7 @@ export async function DELETE(req: NextRequest) {
 
     if (error) throw error;
     return NextResponse.json({ success: true });
-  } catch {
-    return NextResponse.json({ error: 'Internal server error' }, { status: 500 });
+  } catch (e) {
+    return apiError('materials/selections DELETE', e);
   }
 }

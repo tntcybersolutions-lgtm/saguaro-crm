@@ -75,7 +75,8 @@ export async function POST(req: NextRequest) {
             ? 'image/webp'
             : 'image/jpeg';
       }
-    } catch {
+    } catch (e) {
+      console.error('[design/generate] photo download failed', e);
       await tryWrite(db.from('design_sessions').update({
         status: 'error',
         error_message: 'Failed to download original photo',
@@ -216,7 +217,9 @@ Return ONLY valid JSON, no markdown wrapping.`;
         Connection: 'keep-alive',
       },
     });
-  } catch {
-    return new Response('Internal server error', { status: 500 });
+  } catch (e) {
+    // A streaming endpoint answers in text; the real error goes to the log.
+    console.error('[design/generate POST]', e);
+    return new Response('Something went wrong on our end. Please try again.', { status: 500 });
   }
 }

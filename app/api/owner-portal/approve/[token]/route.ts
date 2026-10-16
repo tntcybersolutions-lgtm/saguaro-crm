@@ -99,7 +99,7 @@ export async function POST(
       runInBackground(onPayAppApproved((updated as { id: string }).id), 'onPayAppApproved');
     }
     return NextResponse.json({ success: true });
-  } catch {
-    return NextResponse.json({ error: "Internal server error" }, { status: 500 });
+  } catch (e) {
+    return apiError('owner-portal/approve/[token] POST', e);
   }
 }

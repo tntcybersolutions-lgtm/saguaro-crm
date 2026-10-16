@@ -140,8 +140,7 @@ export async function POST(req: NextRequest) {
       const w = await sendWelcome(cleanEmail, fullName, company.trim()).then(() => null, (e) => e);
       if (w) console.error('[signup] welcome email failed:', w);
     } catch (err) {
-      console.error('[signup] provisioning exception:', err);
-      return NextResponse.json({ error: 'Could not finish creating your company. Please contact support.' }, { status: 500 });
+      return apiError('auth/signup POST', err, 'Could not finish creating your company. Please contact support.');
     }
   }
 

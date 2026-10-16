@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { createServerClient, getUser } from '@/lib/supabase-server';
 import { requirePermission } from '@/lib/permissions';
+import { apiError } from '@/lib/api-error';
 
 /* ------------------------------------------------------------------ */
 /*  DELETE /api/integrations/api-keys/[id]                            */
@@ -28,7 +29,7 @@ export async function DELETE(req: NextRequest, ctx: { params: Promise<{ id: stri
     if (!data) return NextResponse.json({ error: 'Not found' }, { status: 404 });
 
     return NextResponse.json({ success: true, id: data.id, revoked_at: data.revoked_at });
-  } catch {
-    return NextResponse.json({ error: 'Internal server error' }, { status: 500 });
+  } catch (e) {
+    return apiError('integrations/api-keys/[id] DELETE', e);
   }
 }

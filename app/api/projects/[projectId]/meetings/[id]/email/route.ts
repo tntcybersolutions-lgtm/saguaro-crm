@@ -3,6 +3,7 @@ import { createServerClient, getUser } from '@/lib/supabase-server';
 import { requirePermission } from '@/lib/permissions';
 import { sendEmail } from '@/lib/email';
 import { must } from '@/lib/db-write';
+import { apiError } from '@/lib/api-error';
 
 export const runtime = 'nodejs';
 export const dynamic = 'force-dynamic';
@@ -84,8 +85,7 @@ export async function POST(
       .eq('project_id', projectId), 'meetings write');
 
     return NextResponse.json({ success: true, message: 'Meeting minutes sent', to });
-  } catch {
-    console.error('[meetings/email] send failed');
-    return NextResponse.json({ error: 'Failed to send minutes' }, { status: 500 });
+  } catch (e) {
+    return apiError('projects/[projectId]/meetings/[id]/email POST', e, 'Failed to send minutes');
   }
 }

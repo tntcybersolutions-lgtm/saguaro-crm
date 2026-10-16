@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { createServerClient } from '@/lib/supabase-server';
+import { apiError } from '@/lib/api-error';
 
 /** GET — the sub's full timestamped history: every upload, submission, and
  *  completion logged through portal_activity for this session. */
@@ -25,7 +26,7 @@ export async function GET(req: NextRequest) {
       .limit(200);
     if (error) throw error;
     return NextResponse.json({ events: events || [] });
-  } catch {
-    return NextResponse.json({ error: 'Internal server error' }, { status: 500 });
+  } catch (e) {
+    return apiError('portal/sub/activity GET', e);
   }
 }

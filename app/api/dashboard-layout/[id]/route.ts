@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { createServerClient, getUser } from '@/lib/supabase-server';
+import { apiError } from '@/lib/api-error';
 
 export const dynamic = 'force-dynamic';
 
@@ -66,8 +67,8 @@ export async function PATCH(req: NextRequest, { params }: { params: { id: string
       .single();
     if (error) throw error;
     return NextResponse.json(flatten(data));
-  } catch {
-    return NextResponse.json({ error: 'Internal server error' }, { status: 500 });
+  } catch (e) {
+    return apiError('dashboard-layout/[id] PATCH', e);
   }
 }
 
@@ -83,7 +84,7 @@ export async function DELETE(req: NextRequest, { params }: { params: { id: strin
       .eq('user_id', user.id);
     if (error) throw error;
     return NextResponse.json({ ok: true });
-  } catch {
-    return NextResponse.json({ error: 'Internal server error' }, { status: 500 });
+  } catch (e) {
+    return apiError('dashboard-layout/[id] DELETE', e);
   }
 }

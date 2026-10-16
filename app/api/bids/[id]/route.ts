@@ -21,8 +21,8 @@ export async function PATCH(req: NextRequest, { params }: { params: { id: string
       .eq('tenant_id', user.tenantId);
     if (error) return apiError('bids/id', error, undefined, 500);
     return NextResponse.json({ success: true });
-  } catch {
-    return NextResponse.json({ error: 'Failed to update bid' }, { status: 500 });
+  } catch (e) {
+    return apiError('bids/[id] PATCH', e, 'Failed to update bid');
   }
 }
 
@@ -39,7 +39,7 @@ export async function DELETE(req: NextRequest, { params }: { params: { id: strin
       .eq('tenant_id', user.tenantId);
     if (error) return apiError('bids/id', error, undefined, 500);
     return NextResponse.json({ success: true });
-  } catch {
-    return NextResponse.json({ error: 'Failed to delete bid' }, { status: 500 });
+  } catch (e) {
+    return apiError('bids/[id] DELETE', e, 'Failed to delete bid');
   }
 }

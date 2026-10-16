@@ -5,6 +5,7 @@ import { requirePermission } from '@/lib/permissions';
 import type { Database } from '@/lib/database.types';
 import { onRFICreated } from '@/lib/triggers';
 import { runInBackground } from '@/lib/background';
+import { apiError } from '@/lib/api-error';
 
 export async function POST(req: NextRequest) {
   const g = await requirePermission(req, 'RFIs', 'Edit');
@@ -86,11 +87,6 @@ export async function POST(req: NextRequest) {
 
     return NextResponse.json({ success: true, rfi: data });
   } catch (err: unknown) {
-    const msg = 'Internal server error';
-    console.error('[rfis/create] error:', msg);
-    return NextResponse.json(
-      { error: `[rfis/create] Database error: ${msg}` },
-      { status: 500 }
-    );
+    return apiError('rfis/create POST', err);
   }
 }

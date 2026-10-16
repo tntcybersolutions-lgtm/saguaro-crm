@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { createServerClient } from '@/lib/supabase-server';
+import { apiError } from '@/lib/api-error';
 
 /**
  * Upgrade cost defaults (install cost range) when not specified in roi_configs.
@@ -176,7 +177,7 @@ export async function POST(req: NextRequest) {
       ten_year_net_savings: Math.round(tenYearNetSavings),
       breakdown,
     });
-  } catch {
-    return NextResponse.json({ error: 'Internal server error' }, { status: 500 });
+  } catch (e) {
+    return apiError('roi/calculate POST', e);
   }
 }

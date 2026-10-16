@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { createServerClient, getUser } from '@/lib/supabase-server';
+import { apiError } from '@/lib/api-error';
 
 /**
  * GET /api/recommendations?customer_id=xxx&accepted=true&category=energy
@@ -38,8 +39,8 @@ export async function GET(req: NextRequest) {
     if (error) throw error;
 
     return NextResponse.json({ recommendations: data || [] });
-  } catch {
-    return NextResponse.json({ error: 'Internal server error' }, { status: 500 });
+  } catch (e) {
+    return apiError('recommendations GET', e);
   }
 }
 
@@ -75,7 +76,7 @@ export async function PATCH(req: NextRequest) {
 
     if (error) throw error;
     return NextResponse.json({ recommendation: data });
-  } catch {
-    return NextResponse.json({ error: 'Internal server error' }, { status: 500 });
+  } catch (e) {
+    return apiError('recommendations PATCH', e);
   }
 }

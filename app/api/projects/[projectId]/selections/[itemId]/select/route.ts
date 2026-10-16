@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from 'next/server';
 import { createServerClient, getUser } from '@/lib/supabase-server';
 import { requirePermission } from '@/lib/permissions';
 import { must } from '@/lib/db-write';
+import { apiError } from '@/lib/api-error';
 
 export const dynamic = 'force-dynamic';
 
@@ -83,8 +84,8 @@ async function choose(req: NextRequest, params: { projectId: string; itemId: str
     }
 
     return NextResponse.json({ selection: data, optionId });
-  } catch {
-    return NextResponse.json({ error: 'Internal server error' }, { status: 500 });
+  } catch (e) {
+    return apiError('projects/[projectId]/selections/[itemId]/select', e);
   }
 }
 

@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { createServerClient, getUser } from '@/lib/supabase-server';
 import { requirePermission } from '@/lib/permissions';
+import { apiError } from '@/lib/api-error';
 
 export async function PATCH(req: NextRequest, { params }: { params: { projectId: string; id: string } }) {
   const g = await requirePermission(req, 'Safety', 'Edit');
@@ -16,9 +17,6 @@ export async function PATCH(req: NextRequest, { params }: { params: { projectId:
     if (error) throw error;
     return NextResponse.json({ incident: data });
   } catch (e: unknown) {
-    // A raw Error's text is the database's words, not ours — log it, show the line we wrote.
-    console.error('[projects/projectId/incidents/id]', e);
-    const msg = "Failed";
-    return NextResponse.json({ error: 'Internal server error' }, { status: 500 });
+    return apiError('projects/[projectId]/incidents/[id] PATCH', e);
   }
 }

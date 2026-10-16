@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { createServerClient, getUser } from '@/lib/supabase-server';
 import type { Database } from '@/lib/database.types';
+import { apiError } from '@/lib/api-error';
 
 export async function POST(req: NextRequest) {
   const user = await getUser(req);
@@ -42,8 +43,6 @@ export async function POST(req: NextRequest) {
     if (error) throw error;
     return NextResponse.json({ success: true, permit: data });
   } catch (err: unknown) {
-    const msg = 'Internal server error';
-    console.error('[permits/create] error:', msg);
-    return NextResponse.json({ error: `Failed to create permit: ${msg}` }, { status: 500 });
+    return apiError('permits/create POST', err);
   }
 }

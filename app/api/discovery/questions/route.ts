@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { createServerClient } from '@/lib/supabase-server';
+import { apiError } from '@/lib/api-error';
 
 /**
  * GET /api/discovery/questions?category=lifestyle  (public — no auth required)
@@ -30,7 +31,7 @@ export async function GET(req: NextRequest) {
     if (error) throw error;
 
     return NextResponse.json({ questions: data || [] });
-  } catch {
-    return NextResponse.json({ error: 'Internal server error' }, { status: 500 });
+  } catch (e) {
+    return apiError('discovery/questions GET', e);
   }
 }

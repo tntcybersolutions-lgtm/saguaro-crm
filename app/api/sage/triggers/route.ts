@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { getUser, createServerClient } from '@/lib/supabase-server';
 import { must } from '@/lib/db-write';
+import { apiError } from '@/lib/api-error';
 
 type TriggerType =
   | 'budget_threshold'
@@ -151,7 +152,7 @@ export async function POST(req: NextRequest) {
       .eq('id', triggerRow.id), 'sage_trigger_events write');
 
     return NextResponse.json({ success: true, insightCreated: true });
-  } catch {
-    return NextResponse.json({ error: 'Internal server error' }, { status: 500 });
+  } catch (e) {
+    return apiError('sage/triggers POST', e);
   }
 }

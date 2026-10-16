@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { createServerClient, getUser } from '@/lib/supabase-server';
 import { requirePermission } from '@/lib/permissions';
+import { apiError } from '@/lib/api-error';
 
 export async function GET(
   req: NextRequest,
@@ -23,8 +24,8 @@ export async function GET(
     if (error || !data) return NextResponse.json({ error: 'Not found' }, { status: 404 });
 
     return NextResponse.json({ lineItem: data });
-  } catch {
-    return NextResponse.json({ error: 'Internal server error' }, { status: 500 });
+  } catch (e) {
+    return apiError('takeoff-projects/[id]/line-items/[itemId] GET', e);
   }
 }
 
@@ -95,8 +96,8 @@ export async function PATCH(
     if (error) throw error;
 
     return NextResponse.json({ lineItem: data });
-  } catch {
-    return NextResponse.json({ error: 'Internal server error' }, { status: 500 });
+  } catch (e) {
+    return apiError('takeoff-projects/[id]/line-items/[itemId] PATCH', e);
   }
 }
 
@@ -121,7 +122,7 @@ export async function DELETE(
     if (error) throw error;
 
     return NextResponse.json({ success: true });
-  } catch {
-    return NextResponse.json({ error: 'Internal server error' }, { status: 500 });
+  } catch (e) {
+    return apiError('takeoff-projects/[id]/line-items/[itemId] DELETE', e);
   }
 }

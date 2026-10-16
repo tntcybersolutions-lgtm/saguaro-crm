@@ -396,7 +396,9 @@ to a few tool calls per reply.`.trim(),
         'Connection': 'keep-alive',
       },
     });
-  } catch {
-    return new Response('Internal server error', { status: 500 });
+  } catch (e) {
+    // A streaming endpoint answers in text; the real error goes to the log.
+    console.error('[sage/chat POST]', e);
+    return new Response('Something went wrong on our end. Please try again.', { status: 500 });
   }
 }

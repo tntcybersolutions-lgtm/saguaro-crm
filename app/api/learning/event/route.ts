@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { requirePermission } from '@/lib/permissions';
 import { recordLearning, type LearningKind } from '@/lib/learning';
+import { apiError } from '@/lib/api-error';
 
 /**
  * POST /api/learning/event — narrow client-side receipt for accepted
@@ -36,7 +37,7 @@ export async function POST(req: NextRequest) {
       meta: body.meta && typeof body.meta === 'object' && !Array.isArray(body.meta) ? body.meta : {},
     });
     return NextResponse.json({ ok: true });
-  } catch {
-    return NextResponse.json({ error: 'Internal server error' }, { status: 500 });
+  } catch (e) {
+    return apiError('learning/event POST', e);
   }
 }

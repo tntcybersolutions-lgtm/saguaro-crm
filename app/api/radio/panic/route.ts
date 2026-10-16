@@ -3,6 +3,7 @@ import { requirePermission } from '@/lib/permissions';
 import { createServerClient } from '@/lib/supabase-server';
 import { createNotification } from '@/lib/notifications';
 import { must } from '@/lib/db-write';
+import { apiError } from '@/lib/api-error';
 
 /**
  * Saguaro Radio — PANIC.
@@ -128,7 +129,7 @@ export async function POST(req: NextRequest) {
     } catch { /* SMS is best-effort */ }
 
     return NextResponse.json({ message: msg, notified: userIds.length, smsSent }, { status: 201 });
-  } catch {
-    return NextResponse.json({ error: 'Internal server error' }, { status: 500 });
+  } catch (e) {
+    return apiError('radio/panic POST', e);
   }
 }

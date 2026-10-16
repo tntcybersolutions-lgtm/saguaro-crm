@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { createServerClient } from '@/lib/supabase-server';
 import { requirePermission } from '@/lib/permissions';
+import { apiError } from '@/lib/api-error';
 
 /**
  * Crews API — web parity with the mobile Crews screen (app/crews.tsx).
@@ -71,8 +72,7 @@ export async function GET(
       })),
     });
   } catch (e: any) {
-    console.error('[crews GET]', e?.message ?? e);
-    return NextResponse.json({ error: 'Failed to load crews' }, { status: 500 });
+    return apiError('projects/[projectId]/crews GET', e, 'Failed to load crews');
   }
 }
 
@@ -183,7 +183,6 @@ export async function POST(
     if (error) throw error;
     return NextResponse.json({ success: true, crew: created });
   } catch (e: any) {
-    console.error('[crews POST]', e?.message ?? e);
-    return NextResponse.json({ error: 'Failed to save crew' }, { status: 500 });
+    return apiError('projects/[projectId]/crews POST', e, 'Failed to save crew');
   }
 }

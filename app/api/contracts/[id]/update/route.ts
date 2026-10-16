@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from 'next/server';
 import { createServerClient, getUser } from '@/lib/supabase-server';
 import { requirePermission } from '@/lib/permissions';
 import { must } from '@/lib/db-write';
+import { apiError } from '@/lib/api-error';
 
 export async function PATCH(req: NextRequest, { params }: { params: Promise<{ id: string }> }) {
   const { id } = await params;
@@ -94,7 +95,6 @@ export async function PATCH(req: NextRequest, { params }: { params: Promise<{ id
 
     return NextResponse.json({ success: true, contract: updated });
   } catch (e) {
-    console.error('[contracts/update]', e);
-    return NextResponse.json({ error: 'Internal server error' }, { status: 500 });
+    return apiError('contracts/[id]/update PATCH', e);
   }
 }

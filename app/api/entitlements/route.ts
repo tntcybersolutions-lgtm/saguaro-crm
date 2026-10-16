@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from 'next/server';
 import { requirePermission } from '@/lib/permissions';
 import { createServerClient } from '@/lib/supabase-server';
 import { must } from '@/lib/db-write';
+import { apiError } from '@/lib/api-error';
 
 /**
  * Tenant add-on management.
@@ -24,8 +25,8 @@ export async function GET(req: NextRequest) {
     const res = NextResponse.json({ entitlements: data || [] });
     res.headers.set('Cache-Control', 'private, max-age=60');
     return res;
-  } catch {
-    return NextResponse.json({ error: 'Internal server error' }, { status: 500 });
+  } catch (e) {
+    return apiError('entitlements GET', e);
   }
 }
 
@@ -49,7 +50,7 @@ export async function POST(req: NextRequest) {
     if (existing) await must(db.from('tenant_entitlements').update(row as never).eq('id', (existing as any).id), 'tenant_entitlements update');
     else await must(db.from('tenant_entitlements').insert(row as never), 'tenant_entitlements insert');
     return NextResponse.json({ ok: true, featureKey, status, expires_at });
-  } catch {
-    return NextResponse.json({ error: 'Internal server error' }, { status: 500 });
+  } catch (e) {
+    return apiError('entitlements POST', e);
   }
 }

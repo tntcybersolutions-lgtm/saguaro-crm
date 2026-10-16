@@ -3,6 +3,7 @@ import { createServerClient, getUser } from '@/lib/supabase-server';
 import { getPdfPageCount, generateThumbnail } from '@/lib/blueprint-processor';
 import { requirePermission } from '@/lib/permissions';
 import { must } from '@/lib/db-write';
+import { apiError } from '@/lib/api-error';
 
 export const runtime = 'nodejs';
 
@@ -161,7 +162,6 @@ export async function POST(
     });
 
   } catch (err: unknown) {
-    console.error('[takeoff/upload]', err);
-    return NextResponse.json({ error: 'The blueprint could not be uploaded. Please try again.' }, { status: 500 });
+    return apiError('takeoff/[id]/upload POST', err, 'The blueprint could not be uploaded. Please try again.');
   }
 }

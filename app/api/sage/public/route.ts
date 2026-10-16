@@ -2,6 +2,7 @@ import Anthropic from '@anthropic-ai/sdk';
 import { NextRequest, NextResponse } from 'next/server';
 import { buildSagePublicPromptV6 } from '@/lib/sage-prompts-v6';
 import { publicAiLimiter } from '@/lib/rate-limit';
+import { apiError } from '@/lib/api-error';
 
 interface PublicMessage {
   role: string;
@@ -52,7 +53,7 @@ export async function POST(req: NextRequest) {
       response.content[0]?.type === 'text' ? response.content[0].text : '';
 
     return NextResponse.json({ response: text });
-  } catch {
-    return NextResponse.json({ error: 'Internal server error' }, { status: 500 });
+  } catch (e) {
+    return apiError('sage/public POST', e);
   }
 }

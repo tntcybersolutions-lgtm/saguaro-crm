@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { createServerClient, getUser } from '@/lib/supabase-server';
+import { apiError } from '@/lib/api-error';
 
 const ALLOWED_FIELDS = new Set([
   'theme',
@@ -60,7 +61,6 @@ export async function PATCH(req: NextRequest) {
 
     return NextResponse.json({ preferences: data });
   } catch (err) {
-    console.error('[user-preferences PATCH] unexpected', err);
-    return NextResponse.json({ error: 'Internal server error' }, { status: 500 });
+    return apiError('user-preferences/update PATCH', err);
   }
 }

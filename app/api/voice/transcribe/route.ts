@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { getUser } from '@/lib/supabase-server';
+import { apiError } from '@/lib/api-error';
 
 // Transcribe a recorded audio clip to text via OpenAI Whisper.
 // Used by the mobile field app (daily-report voice-to-fill): the app records
@@ -57,10 +58,6 @@ export async function POST(req: NextRequest) {
     const data = (await res.json()) as { text?: string };
     return NextResponse.json({ text: data.text || '' });
   } catch (err: unknown) {
-    // A raw Error's text is the database's words, not ours — log it, show the line we wrote.
-    console.error('[voice/transcribe]', err);
-    const msg = "Internal server error";
-    console.error('[voice/transcribe] error:', msg);
-    return NextResponse.json({ error: 'Failed to transcribe audio' }, { status: 500 });
+    return apiError('voice/transcribe POST', err, 'Failed to transcribe audio');
   }
 }

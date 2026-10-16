@@ -66,9 +66,6 @@ export async function POST(req: NextRequest) {
     if (error) throw error;
     return NextResponse.json({ report: data }, { status: 201 });
   } catch (e: unknown) {
-    // A raw Error's text is the database's words, not ours — log it, show the line we wrote.
-    console.error('[reports/saved]', e);
-    const msg = "Failed to save report";
-    return NextResponse.json({ error: msg }, { status: 500 });
+    return apiError('reports/saved POST', e, "Failed to save report");
   }
 }

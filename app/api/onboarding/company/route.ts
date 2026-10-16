@@ -17,6 +17,7 @@
  */
 import { NextRequest, NextResponse } from 'next/server';
 import { createServerClient, getUser } from '@/lib/supabase-server';
+import { apiError } from '@/lib/api-error';
 
 export async function POST(req: NextRequest) {
   const res = NextResponse.json({ ok: true });
@@ -84,8 +85,7 @@ export async function POST(req: NextRequest) {
       console.error('[onboarding/company] profile update error:', profileErr.message);
     }
   } catch (err) {
-    console.error('[onboarding/company] exception:', err);
-    return NextResponse.json({ error: 'Could not save company details. Please try again.' }, { status: 500 });
+    return apiError('onboarding/company POST', err, 'Could not save company details. Please try again.');
   }
 
   return res;

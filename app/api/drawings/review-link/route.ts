@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from 'next/server';
 import { requirePermission } from '@/lib/permissions';
 import { createServerClient } from '@/lib/supabase-server';
 import crypto from 'crypto';
+import { apiError } from '@/lib/api-error';
 
 export const runtime = 'nodejs';
 export const dynamic = 'force-dynamic';
@@ -84,8 +85,7 @@ export async function POST(req: NextRequest) {
       { status: 201 },
     );
   } catch (e: unknown) {
-    console.error('[review-link POST] failed:', e instanceof Error ? e.message : e);
-    return NextResponse.json({ error: 'Internal server error' }, { status: 500 });
+    return apiError('drawings/review-link POST', e);
   }
 }
 
@@ -112,8 +112,7 @@ export async function GET(req: NextRequest) {
     }));
     return NextResponse.json({ links });
   } catch (e: unknown) {
-    console.error('[review-link GET] failed:', e instanceof Error ? e.message : e);
-    return NextResponse.json({ error: 'Internal server error' }, { status: 500 });
+    return apiError('drawings/review-link GET', e);
   }
 }
 
@@ -132,7 +131,6 @@ export async function DELETE(req: NextRequest) {
     if (error) throw error;
     return NextResponse.json({ ok: true });
   } catch (e: unknown) {
-    console.error('[review-link DELETE] failed:', e instanceof Error ? e.message : e);
-    return NextResponse.json({ error: 'Internal server error' }, { status: 500 });
+    return apiError('drawings/review-link DELETE', e);
   }
 }

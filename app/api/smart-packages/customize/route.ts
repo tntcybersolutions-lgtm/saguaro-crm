@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { createServerClient, getUser } from '@/lib/supabase-server';
+import { apiError } from '@/lib/api-error';
 
 /**
  * POST /api/smart-packages/customize
@@ -129,7 +130,7 @@ export async function POST(req: NextRequest) {
         ten_year_net_savings: Math.round(tenYearNetSavings),
       },
     });
-  } catch {
-    return NextResponse.json({ error: 'Internal server error' }, { status: 500 });
+  } catch (e) {
+    return apiError('smart-packages/customize POST', e);
   }
 }

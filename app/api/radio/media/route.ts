@@ -3,6 +3,7 @@ import { requirePermission } from '@/lib/permissions';
 import { createServerClient } from '@/lib/supabase-server';
 import { createNotification } from '@/lib/notifications';
 import { runInBackground } from '@/lib/background';
+import { apiError } from '@/lib/api-error';
 
 const BUCKET = 'project-files';
 const MAX_BYTES = 50 * 1024 * 1024;
@@ -52,7 +53,7 @@ export async function POST(req: NextRequest) {
     ), 'radio notify');
 
     return NextResponse.json({ message: msg }, { status: 201 });
-  } catch {
-    return NextResponse.json({ error: 'Internal server error' }, { status: 500 });
+  } catch (e) {
+    return apiError('radio/media POST', e);
   }
 }

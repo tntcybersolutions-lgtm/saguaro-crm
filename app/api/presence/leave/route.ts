@@ -29,7 +29,6 @@ export async function DELETE(req: NextRequest) {
 
     return NextResponse.json({ ok: true });
   } catch (err: any) {
-    console.error('Presence leave error:', err);
-    return NextResponse.json({ error: 'Internal server error' }, { status: 500 });
+    return apiError('presence/leave DELETE', err);
   }
 }

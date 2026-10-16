@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from 'next/server';
 import { createServerClient, getUser } from '@/lib/supabase-server';
 import { requirePermission } from '@/lib/permissions';
 import { generateG701 } from '@/lib/document-templates/g701-generator';
+import { apiError } from '@/lib/api-error';
 
 export async function POST(req: NextRequest) {
   const g = await requirePermission(req, 'Documents', 'Edit');
@@ -40,8 +41,6 @@ export async function POST(req: NextRequest) {
 
     return NextResponse.json({ pdfUrl, success: true });
   } catch (err: unknown) {
-    const message = 'Document generation failed';
-    console.error('[documents/g701]', err);
-    return NextResponse.json({ error: message }, { status: 500 });
+    return apiError('documents/g701 POST', err, 'Document generation failed');
   }
 }

@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { createServerClient, getUser } from '@/lib/supabase-server';
 import { requirePermission } from '@/lib/permissions';
+import { apiError } from '@/lib/api-error';
 
 export const dynamic = 'force-dynamic';
 
@@ -68,9 +69,8 @@ async function handle(
       compliance_flagged: flagged,
       compliance_flag_reason: flagged ? reason : '',
     });
-  } catch {
-    console.error('[prequalification/flag] error');
-    return NextResponse.json({ error: 'Internal server error' }, { status: 500 });
+  } catch (e) {
+    return apiError('projects/[projectId]/prequalification/[id]/flag', e);
   }
 }
 

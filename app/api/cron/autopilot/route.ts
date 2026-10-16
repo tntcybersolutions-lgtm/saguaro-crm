@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { createServerClient } from '@/lib/supabase-server';
 import { runAutopilotScan } from '@/lib/autopilot/scan';
+import { apiError } from '@/lib/api-error';
 
 export const dynamic = 'force-dynamic';
 export const maxDuration = 60;
@@ -30,7 +31,7 @@ export async function GET(req: NextRequest) {
       }
     }
     return NextResponse.json({ success: true, tenantsScanned, alertsCreated });
-  } catch {
-    return NextResponse.json({ error: 'Internal server error' }, { status: 500 });
+  } catch (e) {
+    return apiError('cron/autopilot GET', e);
   }
 }

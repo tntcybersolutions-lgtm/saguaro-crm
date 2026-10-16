@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from 'next/server';
 import { createServerClient, getUser } from '@/lib/supabase-server';
 import { assertProjectInTenant } from '@/lib/assert-project';
 import { requirePermission } from '@/lib/permissions';
+import { apiError } from '@/lib/api-error';
 
 export async function POST(req: NextRequest) {
   const g = await requirePermission(req, 'Submittals', 'Edit');
@@ -48,7 +49,7 @@ export async function POST(req: NextRequest) {
     }).select().single();
     if (error) throw error;
     return NextResponse.json({ success: true, submittal: data });
-  } catch {
-    return NextResponse.json({ error: 'Internal server error' }, { status: 500 });
+  } catch (e) {
+    return apiError('submittals/create POST', e);
   }
 }

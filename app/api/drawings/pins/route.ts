@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { createServerClient, getUser } from '@/lib/supabase-server';
+import { apiError } from '@/lib/api-error';
 
 export async function GET(req: NextRequest) {
   const user = await getUser(req);
@@ -29,11 +30,6 @@ export async function GET(req: NextRequest) {
 
     return NextResponse.json({ pins: data || [] });
   } catch (err: unknown) {
-    const msg = 'Internal server error';
-    console.error('[drawings/pins] error:', msg);
-    return NextResponse.json(
-      { error: `[drawings/pins] Database error: ${msg}` },
-      { status: 500 }
-    );
+    return apiError('drawings/pins GET', err);
   }
 }

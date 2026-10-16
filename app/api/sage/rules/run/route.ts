@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from 'next/server';
 import { getUser, createServerClient } from '@/lib/supabase-server';
 import { loadAutomationRules, logSageActivity } from '@/lib/sage-brain';
 import { must } from '@/lib/db-write';
+import { apiError } from '@/lib/api-error';
 
 /**
  * POST /api/sage/rules/run — R18 execution: "Sage auto-acts under a rule, logged."
@@ -355,7 +356,7 @@ export async function POST(req: NextRequest) {
         ? `${plural(totalDrafts, 'draft')} produced. Nothing was sent — Sage has no send channel; every draft is also logged to your activity trail.`
         : 'All enabled rules evaluated against live data — no triggers matched right now.',
     });
-  } catch {
-    return NextResponse.json({ error: 'Failed to run rules' }, { status: 500 });
+  } catch (e) {
+    return apiError('sage/rules/run POST', e, 'Failed to run rules');
   }
 }

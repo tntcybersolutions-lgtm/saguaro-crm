@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { createServerClient, getUser } from '@/lib/supabase-server';
+import { apiError } from '@/lib/api-error';
 
 export async function POST(req: NextRequest) {
   const user = await getUser(req);
@@ -26,7 +27,7 @@ export async function POST(req: NextRequest) {
     }).select().single();
     if (error) throw error;
     return NextResponse.json({ success: true, costCode: data });
-  } catch {
-    return NextResponse.json({ error: 'Internal server error' }, { status: 500 });
+  } catch (e) {
+    return apiError('cost-codes/create POST', e);
   }
 }

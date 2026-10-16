@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { createServerClient } from '@/lib/supabase-server';
 import { companyPaymentAccount, invoiceBalanceCents, invoiceIsPayable, onlinePaymentsConfigured } from '@/lib/online-payments';
+import { apiError } from '@/lib/api-error';
 
 /**
  * Public tokenized invoice view — GET ?token=<public_token>.
@@ -72,7 +73,7 @@ export async function GET(req: NextRequest) {
       balance: invoiceBalanceCents(inv) / 100,
       payOnline: invoiceIsPayable(inv) && onlinePaymentsConfigured() && (await companyPaymentAccount(db, inv.tenant_id)).ready,
     });
-  } catch {
-    return NextResponse.json({ error: 'Internal server error' }, { status: 500 });
+  } catch (e) {
+    return apiError('portal/invoice GET', e);
   }
 }

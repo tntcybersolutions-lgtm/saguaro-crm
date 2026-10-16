@@ -56,8 +56,8 @@ export async function POST(req: NextRequest, { params }: { params: { projectId: 
       return apiError('projects/projectId/favorites', error, "Failed to add favorite", 500);
     }
     return NextResponse.json({ favorite: data });
-  } catch {
-    return NextResponse.json({ error: 'Failed to add favorite' }, { status: 500 });
+  } catch (e) {
+    return apiError('projects/[projectId]/favorites POST', e, 'Failed to add favorite');
   }
 }
 
@@ -77,7 +77,7 @@ export async function DELETE(req: NextRequest, { params }: { params: { projectId
       .eq('user_id', user.id)
       .eq('item_id', itemId), 'favorites write');
     return NextResponse.json({ success: true });
-  } catch {
-    return NextResponse.json({ error: 'Failed to remove favorite' }, { status: 500 });
+  } catch (e) {
+    return apiError('projects/[projectId]/favorites DELETE', e, 'Failed to remove favorite');
   }
 }

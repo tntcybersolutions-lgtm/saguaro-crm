@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { createServerClient } from '@/lib/supabase-server';
 import { signUrl } from '@/lib/storage-signing';
+import { apiError } from '@/lib/api-error';
 
 export const runtime = 'nodejs';
 export const dynamic = 'force-dynamic';
@@ -151,8 +152,7 @@ export async function GET(req: NextRequest) {
       sheetId: link.drawing_sheet_id || null,
     });
   } catch (e: unknown) {
-    console.error('[portal drawing-review] failed:', e instanceof Error ? e.message : e);
-    return NextResponse.json({ error: 'Internal server error' }, { status: 500 });
+    return apiError('portal/drawing-review GET', e);
   }
 }
 
@@ -306,8 +306,7 @@ export async function POST(req: NextRequest) {
     if (error) throw error;
     return NextResponse.json({ ok: true, saved: saved || [] });
   } catch (e: unknown) {
-    console.error('[portal drawing-review POST] failed:', e instanceof Error ? e.message : e);
-    return NextResponse.json({ error: 'Internal server error' }, { status: 500 });
+    return apiError('portal/drawing-review POST', e);
   }
 }
 
@@ -362,8 +361,7 @@ export async function DELETE(req: NextRequest) {
     if (error) throw error;
     return NextResponse.json({ ok: true });
   } catch (e: unknown) {
-    console.error('[portal drawing-review DELETE] failed:', e instanceof Error ? e.message : e);
-    return NextResponse.json({ error: 'Internal server error' }, { status: 500 });
+    return apiError('portal/drawing-review DELETE', e);
   }
 }
 
@@ -403,7 +401,6 @@ export async function PATCH(req: NextRequest) {
     if (error) throw error;
     return NextResponse.json({ ok: true, row: updated || null });
   } catch (e: unknown) {
-    console.error('[portal drawing-review PATCH] failed:', e instanceof Error ? e.message : e);
-    return NextResponse.json({ error: 'Internal server error' }, { status: 500 });
+    return apiError('portal/drawing-review PATCH', e);
   }
 }

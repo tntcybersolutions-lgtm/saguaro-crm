@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from 'next/server';
 import { createServerClient } from '@/lib/supabase-server';
 import { requirePermission } from '@/lib/permissions';
 import { generateJHA } from '@/lib/document-templates/jha-generator';
+import { apiError } from '@/lib/api-error';
 
 export async function POST(req: NextRequest) {
   const g = await requirePermission(req, 'Documents', 'Edit');
@@ -44,8 +45,6 @@ export async function POST(req: NextRequest) {
 
     return NextResponse.json({ pdfUrl: result.pdfUrl, success: true });
   } catch (err: unknown) {
-    const message = 'Document generation failed';
-    console.error('[documents/jha]', err);
-    return NextResponse.json({ error: message }, { status: 500 });
+    return apiError('documents/jha POST', err, 'Document generation failed');
   }
 }

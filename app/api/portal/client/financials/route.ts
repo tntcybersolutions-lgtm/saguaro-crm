@@ -3,6 +3,7 @@ import { createServerClient } from '@/lib/supabase-server';
 import { getPortalSession, PORTAL_PERMS } from '@/lib/portal-auth';
 import { toCents, toDollars, addCents, subCents } from '@/lib/calc';
 import { companyPaymentAccount, invoiceBalanceCents, invoiceIsPayable, onlinePaymentsConfigured } from '@/lib/online-payments';
+import { apiError } from '@/lib/api-error';
 
 /** GET — financial summary for the client portal financials tab */
 export async function GET(req: NextRequest) {
@@ -93,7 +94,7 @@ export async function GET(req: NextRequest) {
     }));
 
     return NextResponse.json({ invoices, budget_lines, payments, payOnline });
-  } catch {
-    return NextResponse.json({ error: "Internal server error" }, { status: 500 });
+  } catch (e) {
+    return apiError('portal/client/financials GET', e);
   }
 }

@@ -11,6 +11,7 @@ import {
   type ShiftRow,
 } from '@/lib/timeclock/server';
 import { TIME_ZONE_HEADER } from '@/lib/time-zone';
+import { apiError } from '@/lib/api-error';
 
 /**
  * GET /api/timeclock/status — "am I on the clock, and what have I logged?"
@@ -105,7 +106,6 @@ export async function GET(req: NextRequest) {
       employee: { id: employee.id, name: employee.name },
     });
   } catch (err) {
-    console.error('[timeclock/status]', err instanceof Error ? err.message : err);
-    return NextResponse.json({ error: 'Could not read your clock status' }, { status: 500 });
+    return apiError('timeclock/status GET', err, 'Could not read your clock status');
   }
 }

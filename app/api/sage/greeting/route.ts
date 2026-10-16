@@ -5,6 +5,7 @@ import {
   generatePersonalizedGreeting,
   buildSuggestionChips,
 } from '@/lib/sage-intelligence-v6';
+import { apiError } from '@/lib/api-error';
 
 export async function GET(req: NextRequest) {
   try {
@@ -32,7 +33,7 @@ export async function GET(req: NextRequest) {
       pendingInsightsCount: intelligence.pendingInsights.length,
       relationshipDepth: intelligence.relationshipDepth,
     });
-  } catch {
-    return NextResponse.json({ error: 'Internal server error' }, { status: 500 });
+  } catch (e) {
+    return apiError('sage/greeting GET', e);
   }
 }

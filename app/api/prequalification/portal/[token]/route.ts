@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from 'next/server';
 import { createServerClient } from '@/lib/supabase-server';
 import type { Database } from '@/lib/database.types';
 import { must } from '@/lib/db-write';
+import { apiError } from '@/lib/api-error';
 
 export const runtime = 'nodejs';
 /* eslint-disable @typescript-eslint/no-explicit-any */
@@ -138,8 +139,8 @@ export async function GET(_req: NextRequest, { params }: { params: Promise<{ tok
         : null,
       submitted: alreadySubmitted,
     });
-  } catch {
-    return NextResponse.json({ error: 'Internal server error' }, { status: 500 });
+  } catch (e) {
+    return apiError('prequalification/portal/[token] GET', e);
   }
 }
 
@@ -223,7 +224,7 @@ export async function POST(req: NextRequest, { params }: { params: Promise<{ tok
       .eq('id', invite.id), 'prequalification_invites write');
 
     return NextResponse.json({ success: true });
-  } catch {
-    return NextResponse.json({ error: 'Internal server error' }, { status: 500 });
+  } catch (e) {
+    return apiError('prequalification/portal/[token] POST', e);
   }
 }

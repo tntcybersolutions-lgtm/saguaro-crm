@@ -7,6 +7,7 @@ import {
 import { createServerClient } from '@/lib/supabase-server';
 import { createNotification } from '@/lib/notifications';
 import { runInBackground } from '@/lib/background';
+import { apiError } from '@/lib/api-error';
 
 /**
  * Work Routing Engine — project ownership assignments.
@@ -81,8 +82,8 @@ export async function GET(req: NextRequest) {
       .limit(100);
     if (error) throw error;
     return NextResponse.json({ assignments: data || [] });
-  } catch {
-    return NextResponse.json({ error: 'Internal server error' }, { status: 500 });
+  } catch (e) {
+    return apiError('work-assignments GET', e);
   }
 }
 
@@ -126,8 +127,8 @@ export async function POST(req: NextRequest) {
         .eq('tenant_id', g.user.tenantId);
       if (error) throw error;
       return NextResponse.json({ ok: true });
-    } catch {
-      return NextResponse.json({ error: 'Internal server error' }, { status: 500 });
+    } catch (e) {
+      return apiError('work-assignments POST', e);
     }
   }
 
@@ -250,7 +251,7 @@ export async function POST(req: NextRequest) {
     ), 'notify assignee');
 
     return NextResponse.json({ assignment }, { status: 201 });
-  } catch {
-    return NextResponse.json({ error: 'Internal server error' }, { status: 500 });
+  } catch (e) {
+    return apiError('work-assignments POST', e);
   }
 }

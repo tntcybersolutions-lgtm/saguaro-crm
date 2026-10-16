@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from 'next/server';
 import { createServerClient, getUser } from '@/lib/supabase-server';
 import { requirePermission } from '@/lib/permissions';
 import { generatePreliminaryNotice } from '@/lib/document-templates/preliminary-notice-generator';
+import { apiError } from '@/lib/api-error';
 
 export async function POST(req: NextRequest) {
   const g = await requirePermission(req, 'Documents', 'Edit');
@@ -39,8 +40,6 @@ export async function POST(req: NextRequest) {
 
     return NextResponse.json({ pdfUrl, success: true });
   } catch (err: unknown) {
-    const message = 'Document generation failed';
-    console.error('[documents/preliminary-notice]', err);
-    return NextResponse.json({ error: message }, { status: 500 });
+    return apiError('documents/preliminary-notice POST', err, 'Document generation failed');
   }
 }

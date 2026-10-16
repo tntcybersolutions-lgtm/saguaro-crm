@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { createServerClient, getUser } from '@/lib/supabase-server';
 import { requirePermission } from '@/lib/permissions';
+import { apiError } from '@/lib/api-error';
 
 export const dynamic = 'force-dynamic';
 
@@ -20,8 +21,8 @@ export async function GET(req: NextRequest, { params }: { params: { projectId: s
     if (error) throw error;
     if (!data) return NextResponse.json({ error: 'Not found' }, { status: 404 });
     return NextResponse.json({ selection: data });
-  } catch {
-    return NextResponse.json({ error: 'Internal server error' }, { status: 500 });
+  } catch (e) {
+    return apiError('projects/[projectId]/selections/[itemId] GET', e);
   }
 }
 
@@ -54,8 +55,8 @@ export async function PATCH(req: NextRequest, { params }: { params: { projectId:
     if (error) throw error;
     if (!data) return NextResponse.json({ error: 'Not found' }, { status: 404 });
     return NextResponse.json({ selection: data });
-  } catch {
-    return NextResponse.json({ error: 'Internal server error' }, { status: 500 });
+  } catch (e) {
+    return apiError('projects/[projectId]/selections/[itemId] PATCH', e);
   }
 }
 
@@ -74,7 +75,7 @@ export async function DELETE(req: NextRequest, { params }: { params: { projectId
       .eq('tenant_id', user.tenantId);
     if (error) throw error;
     return NextResponse.json({ success: true });
-  } catch {
-    return NextResponse.json({ error: 'Internal server error' }, { status: 500 });
+  } catch (e) {
+    return apiError('projects/[projectId]/selections/[itemId] DELETE', e);
   }
 }

@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { createServerClient, getUser } from '@/lib/supabase-server';
 import type { Database } from '@/lib/database.types';
+import { apiError } from '@/lib/api-error';
 
 export async function POST(req: NextRequest) {
   const user = await getUser(req);
@@ -45,11 +46,6 @@ export async function POST(req: NextRequest) {
     if (error2) throw error2;
     return NextResponse.json({ success: true, message: data2 });
   } catch (err: unknown) {
-    const msg = 'Internal server error';
-    console.error('[messages/send] error:', msg);
-    return NextResponse.json(
-      { error: `[messages/send] Database error: ${msg}` },
-      { status: 500 }
-    );
+    return apiError('messages/send POST', err);
   }
 }

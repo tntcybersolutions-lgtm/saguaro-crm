@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { createServerClient, getUser } from '@/lib/supabase-server';
 import { requirePermission } from '@/lib/permissions';
+import { apiError } from '@/lib/api-error';
 
 export async function PATCH(req: NextRequest, { params }: { params: { projectId: string; actionId: string } }) {
   const g = await requirePermission(req, 'Safety', 'Edit');
@@ -70,8 +71,6 @@ export async function PATCH(req: NextRequest, { params }: { params: { projectId:
 
     return NextResponse.json({ action: data });
   } catch (err: unknown) {
-    const msg = 'Internal server error';
-    console.error('[safety/corrective-actions/PATCH] error:', msg);
-    return NextResponse.json({ error: `Failed to update corrective action: ${msg}` }, { status: 500 });
+    return apiError('projects/[projectId]/safety/corrective-actions/[actionId] PATCH', err);
   }
 }

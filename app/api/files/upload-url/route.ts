@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { createServerClient, getUser } from '@/lib/supabase-server';
 import { requirePermission } from '@/lib/permissions';
+import { apiError } from '@/lib/api-error';
 
 export const runtime = 'nodejs';
 /* eslint-disable @typescript-eslint/no-explicit-any */
@@ -39,6 +40,6 @@ export async function POST(req: NextRequest) {
 
     return NextResponse.json({ bucket: BUCKET, path, token: data.token, signedUrl: data.signedUrl });
   } catch (e: any) {
-    return NextResponse.json({ error: `Could not start upload: ${e?.message || 'server error'}` }, { status: 500 });
+    return apiError('files/upload-url POST', e);
   }
 }

@@ -4,6 +4,7 @@ import { sendEmail } from '@/lib/email';
 import { runReport } from '@/lib/reports/run';
 import { generateReportData, isRunnableReportType } from '@/lib/reports/generate';
 import { companyDay } from '@/lib/time-zone';
+import { apiError } from '@/lib/api-error';
 
 export const dynamic = 'force-dynamic';
 export const maxDuration = 120;
@@ -147,8 +148,7 @@ export async function GET(req: NextRequest) {
       errors,
     });
   } catch (e) {
-    console.error('[cron/report-schedules]', e);
-    return NextResponse.json({ error: 'Internal server error' }, { status: 500 });
+    return apiError('cron/report-schedules GET', e);
   }
 }
 

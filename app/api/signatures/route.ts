@@ -29,8 +29,8 @@ export async function GET(req: NextRequest) {
     if (error) throw error;
 
     return NextResponse.json({ data: data || [] });
-  } catch {
-    return NextResponse.json({ error: 'Failed to load signatures' }, { status: 500 });
+  } catch (e) {
+    return apiError('signatures GET', e, 'Failed to load signatures');
   }
 }
 

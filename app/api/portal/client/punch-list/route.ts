@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { createServerClient } from '@/lib/supabase-server';
+import { apiError } from '@/lib/api-error';
 
 async function getPortalSession(req: NextRequest) {
   const token =
@@ -58,8 +59,8 @@ export async function GET(req: NextRequest) {
     };
 
     return NextResponse.json({ items: all, summary });
-  } catch {
-    return NextResponse.json({ error: "Internal server error" }, { status: 500 });
+  } catch (e) {
+    return apiError('portal/client/punch-list GET', e);
   }
 }
 
@@ -119,7 +120,7 @@ export async function POST(req: NextRequest) {
     if (updateError) throw updateError;
 
     return NextResponse.json({ item: updated });
-  } catch {
-    return NextResponse.json({ error: "Internal server error" }, { status: 500 });
+  } catch (e) {
+    return apiError('portal/client/punch-list POST', e);
   }
 }

@@ -263,7 +263,7 @@ export async function GET(
       const bids: BidRecord[] = data ?? [];
       return NextResponse.json({ bids, stats: computeBidStats(bids), source: 'live' });
     } catch (err: unknown) {
-      return NextResponse.json({ error: "Internal server error" }, { status: 500 });
+      return apiError('[...path] GET', err);
     }
   }
 
@@ -293,9 +293,7 @@ export async function GET(
       if (error) throw error;
       return NextResponse.json({ projects: data ?? [] });
     } catch (err: unknown) {
-      const msg = 'Internal server error';
-      console.error('[api/catch-all] projects error:', msg);
-      return NextResponse.json({ error: 'Internal server error' }, { status: 500 });
+      return apiError('[...path] GET', err);
     }
   }
 
@@ -324,9 +322,7 @@ export async function GET(
       if (error) throw error;
       return NextResponse.json({ rfis: data || [] });
     } catch (err: unknown) {
-      const msg = 'Internal server error';
-      console.error('[api/catch-all] rfis error:', msg);
-      return NextResponse.json({ error: 'Internal server error' }, { status: 500 });
+      return apiError('[...path] GET', err);
     }
   }
 
@@ -347,9 +343,7 @@ export async function GET(
       if (error) throw error;
       return NextResponse.json({ changeOrders: data || [] });
     } catch (err: unknown) {
-      const msg = 'Internal server error';
-      console.error('[api/catch-all] change-orders error:', msg);
-      return NextResponse.json({ error: 'Internal server error' }, { status: 500 });
+      return apiError('[...path] GET', err);
     }
   }
 
@@ -375,9 +369,7 @@ export async function GET(
       if (error) throw error;
       return NextResponse.json({ alerts: data ?? [] });
     } catch (err: unknown) {
-      const msg = 'Internal server error';
-      console.error('[api/catch-all] autopilot/alerts error:', msg);
-      return NextResponse.json({ error: 'Internal server error' }, { status: 500 });
+      return apiError('[...path] GET', err);
     }
   }
 
@@ -420,9 +412,7 @@ export async function GET(
       if (error) throw error;
       return NextResponse.json({ packages: data ?? [] });
     } catch (err: unknown) {
-      const msg = 'Internal server error';
-      console.error('[api/catch-all] bid-packages error:', msg);
-      return NextResponse.json({ error: 'Internal server error' }, { status: 500 });
+      return apiError('[...path] GET', err);
     }
   }
 
@@ -437,9 +427,7 @@ export async function GET(
       const invitedSubs: InvitedSub[] = (data.bid_package_invites || []).map((inv: any) => ({ id: inv.id, company_name: inv.subs?.company_name || 'Unknown', contact_name: inv.subs?.contact_name || '', email: inv.subs?.email || '', status: inv.status, bid_amount: inv.bid_amount, invited_at: inv.invited_at, responded_at: inv.responded_at }));
       return NextResponse.json({ bidPackage: { ...data, invited_subs: invitedSubs, sov_items: data.sov_items || [] } });
     } catch (err: unknown) {
-      const msg = 'Internal server error';
-      console.error('[api/catch-all] bid-packages/:id error:', msg);
-      return NextResponse.json({ error: 'Internal server error' }, { status: 500 });
+      return apiError('[...path] GET', err);
     }
   }
 
@@ -483,9 +471,7 @@ export async function POST(
       if (error) throw error;
       return NextResponse.json({ success: true, bidPackage: data });
     } catch (err: unknown) {
-      const msg = 'Internal server error';
-      console.error('[api/catch-all] bid-packages/create error:', msg);
-      return NextResponse.json({ error: 'Internal server error' }, { status: 500 });
+      return apiError('[...path] POST', err);
     }
   }
 
@@ -517,7 +503,7 @@ export async function POST(
       const result: ScoreResponse = { score: Math.max(0, Math.min(100, Math.round(parsed.score ?? 50))), recommendation: ['bid', 'pass', 'negotiate'].includes(parsed.recommendation) ? parsed.recommendation : 'bid', reasoning: parsed.reasoning ?? '', suggestedMargin: parseFloat((parsed.suggestedMargin ?? ourMargin).toFixed(1)), riskFactors: Array.isArray(parsed.riskFactors) ? parsed.riskFactors : [], winProbability: Math.max(0, Math.min(100, Math.round(parsed.winProbability ?? 50))) };
       return NextResponse.json({ ...result, source: 'ai' });
     } catch (err: unknown) {
-      return NextResponse.json({ error: "Internal server error" }, { status: 500 });
+      return apiError('[...path] POST', err);
     }
   }
 
@@ -536,9 +522,7 @@ export async function POST(
       if (error) throw error;
       return NextResponse.json({ success: true, changeOrder: data });
     } catch (err: unknown) {
-      const msg = 'Internal server error';
-      console.error('[api/catch-all] change-orders/create error:', msg);
-      return NextResponse.json({ error: 'Internal server error' }, { status: 500 });
+      return apiError('[...path] POST', err);
     }
   }
 
@@ -597,8 +581,7 @@ export async function POST(
         return NextResponse.json({ error: 'That alert was not found' }, { status: 404 });
       }
     } catch (err) {
-      console.error('[api/autopilot/dismiss] failed:', err);
-      return NextResponse.json({ error: "Couldn't dismiss that alert — try again" }, { status: 500 });
+      return apiError('[...path] POST', err, "Couldn't dismiss that alert — try again");
     }
     return NextResponse.json({ success: true });
   }
@@ -613,7 +596,9 @@ export async function POST(
       const { data, error } = await supabaseAdmin.from('change_orders').update({ status: 'approved', approved_at: new Date().toISOString() }).eq('id', seg1).eq('tenant_id', user.tenantId).select('id').maybeSingle();
       if (error) throw error;
       if (!data) return NextResponse.json({ error: 'Change order not found' }, { status: 404 });
-    } catch (err) { console.error('[api/change-orders/approve] failed:', err); return NextResponse.json({ error: 'Failed to approve change order' }, { status: 500 }); }
+    } catch (err) {
+      return apiError('[...path] POST', err, 'Failed to approve change order');
+    }
     return NextResponse.json({ success: true });
   }
 

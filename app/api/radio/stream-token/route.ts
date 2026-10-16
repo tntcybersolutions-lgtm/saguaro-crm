@@ -3,6 +3,7 @@ import { createHmac } from 'crypto';
 import { requirePermission } from '@/lib/permissions';
 import { createServerClient } from '@/lib/supabase-server';
 import { hasEntitlement, upsell } from '@/lib/entitlements';
+import { apiError } from '@/lib/api-error';
 
 /**
  * Saguaro Radio — LIVE STREAMING add-on (the paid tier-3 "fast feature").
@@ -102,7 +103,7 @@ export async function POST(req: NextRequest) {
       room, canPublish: true, ttlSecs: 15 * 60,
     });
     return NextResponse.json({ token, url, room, expiresInSecs: 15 * 60 });
-  } catch {
-    return NextResponse.json({ error: 'Internal server error' }, { status: 500 });
+  } catch (e) {
+    return apiError('radio/stream-token POST', e);
   }
 }

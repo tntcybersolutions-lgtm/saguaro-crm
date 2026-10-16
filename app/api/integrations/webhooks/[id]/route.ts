@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from 'next/server';
 import { createServerClient, getUser } from '@/lib/supabase-server';
 import { requirePermission } from '@/lib/permissions';
 import { WEBHOOK_EVENTS } from '../route';
+import { apiError } from '@/lib/api-error';
 
 /* ------------------------------------------------------------------ */
 /*  /api/integrations/webhooks/[id]                                   */
@@ -59,8 +60,8 @@ export async function PUT(req: NextRequest, ctx: { params: Promise<{ id: string 
     if (!data) return NextResponse.json({ error: 'Not found' }, { status: 404 });
 
     return NextResponse.json({ webhook: data });
-  } catch {
-    return NextResponse.json({ error: 'Internal server error' }, { status: 500 });
+  } catch (e) {
+    return apiError('integrations/webhooks/[id] PUT', e);
   }
 }
 
@@ -85,7 +86,7 @@ export async function DELETE(req: NextRequest, ctx: { params: Promise<{ id: stri
     if (!data) return NextResponse.json({ error: 'Not found' }, { status: 404 });
 
     return NextResponse.json({ success: true, id: data.id });
-  } catch {
-    return NextResponse.json({ error: 'Internal server error' }, { status: 500 });
+  } catch (e) {
+    return apiError('integrations/webhooks/[id] DELETE', e);
   }
 }

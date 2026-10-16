@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from 'next/server';
 import { createServerClient } from '@/lib/supabase-server';
 import { requirePermission } from '@/lib/permissions';
 import { toUi, toDbPatch, PATCH_COLUMN, type WarrantyRow } from '@/lib/warranty-claims-shape';
+import { apiError } from '@/lib/api-error';
 
 export async function PATCH(req: NextRequest, { params }: { params: { projectId: string; id: string } }) {
   const g = await requirePermission(req, 'Safety', 'Edit');
@@ -37,10 +38,6 @@ export async function PATCH(req: NextRequest, { params }: { params: { projectId:
     if (!data) return NextResponse.json({ error: 'Warranty claim not found.' }, { status: 404 });
     return NextResponse.json({ claim: toUi(data as WarrantyRow) });
   } catch (e: unknown) {
-    console.error('[warranty-claims/PATCH]', e);
-    // A raw Error's text is the database's words, not ours — log it, show the line we wrote.
-    console.error('[projects/projectId/warranty-claims/id]', e);
-    const msg = "Failed to update the warranty claim.";
-    return NextResponse.json({ error: msg }, { status: 500 });
+    return apiError('projects/[projectId]/warranty-claims/[id] PATCH', e, "Failed to update the warranty claim.");
   }
 }

@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from 'next/server';
 import { createServerClient, getUser } from '@/lib/supabase-server';
 import { safeFilename, todayStamp, EXPORT_CONTENT_TYPE, type ReportColumn } from '@/lib/report-export';
 import { generateExecReportPdf } from '@/lib/document-templates/exec-report-generator';
+import { apiError } from '@/lib/api-error';
 
 export const runtime = 'nodejs';
 export const dynamic = 'force-dynamic';
@@ -107,8 +108,7 @@ export async function GET(req: NextRequest, { params }: { params: Promise<{ id: 
         'Content-Disposition': `attachment; filename="${fileName}"`,
       },
     });
-  } catch {
-    console.error('[takeoff-projects/[id]/export/pdf] export failed');
-    return NextResponse.json({ error: 'Export failed' }, { status: 500 });
+  } catch (e) {
+    return apiError('takeoff-projects/[id]/export/pdf GET', e, 'Export failed');
   }
 }

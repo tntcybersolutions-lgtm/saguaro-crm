@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { createServerClient } from '@/lib/supabase-server';
 import { getPortalSession, PORTAL_PERMS } from '@/lib/portal-auth';
+import { apiError } from '@/lib/api-error';
 
 /** GET — list pending approvals for project */
 export async function GET(req: NextRequest) {
@@ -31,8 +32,8 @@ export async function GET(req: NextRequest) {
     if (error) throw error;
 
     return NextResponse.json({ approvals: approvals || [] });
-  } catch {
-    return NextResponse.json({ error: "Internal server error" }, { status: 500 });
+  } catch (e) {
+    return apiError('portal/client/approvals GET', e);
   }
 }
 
@@ -100,7 +101,7 @@ export async function POST(req: NextRequest) {
     if (updateError) throw updateError;
 
     return NextResponse.json({ approval: updated });
-  } catch {
-    return NextResponse.json({ error: "Internal server error" }, { status: 500 });
+  } catch (e) {
+    return apiError('portal/client/approvals POST', e);
   }
 }

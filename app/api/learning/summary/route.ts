@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { requirePermission } from '@/lib/permissions';
 import { learningSummary } from '@/lib/learning';
+import { apiError } from '@/lib/api-error';
 
 /** GET ?days=30 — the provable "Saguaro saved you X hours and surfaced $Y"
  *  receipt: totals + the recent automation events behind them. */
@@ -13,7 +14,7 @@ export async function GET(req: NextRequest) {
     const res = NextResponse.json(summary);
     res.headers.set('Cache-Control', 'private, max-age=60');
     return res;
-  } catch {
-    return NextResponse.json({ error: 'Internal server error' }, { status: 500 });
+  } catch (e) {
+    return apiError('learning/summary GET', e);
   }
 }

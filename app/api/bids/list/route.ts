@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { createServerClient, getUser } from '@/lib/supabase-server';
+import { apiError } from '@/lib/api-error';
 
 export async function GET(req: NextRequest) {
   const user = await getUser(req);
@@ -14,7 +15,6 @@ export async function GET(req: NextRequest) {
     if (error) throw error;
     return NextResponse.json({ bids: data });
   } catch (err) {
-    console.error('[bids/list]', err);
-    return NextResponse.json({ error: 'Failed to list bids' }, { status: 500 });
+    return apiError('bids/list GET', err, 'Failed to list bids');
   }
 }

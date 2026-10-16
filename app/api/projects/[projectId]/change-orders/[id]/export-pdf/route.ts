@@ -4,6 +4,7 @@ import { requirePermission } from '@/lib/permissions';
 import { PDFDocument, StandardFonts, PageSizes } from 'pdf-lib';
 import { DOC } from '@/lib/document-templates/report-theme';
 import { must } from '@/lib/db-write';
+import { apiError } from '@/lib/api-error';
 
 export const runtime = 'nodejs';
 export const dynamic = 'force-dynamic';
@@ -235,8 +236,8 @@ async function handle(req: NextRequest, projectId: string, id: string, wantsFile
     } catch { /* non-fatal */ }
 
     return NextResponse.json({ success: true, url, download_url: url, data_url: dataUrl });
-  } catch {
-    return NextResponse.json({ error: 'PDF export failed' }, { status: 500 });
+  } catch (e) {
+    return apiError('projects/[projectId]/change-orders/[id]/export-pdf', e, 'PDF export failed');
   }
 }
 

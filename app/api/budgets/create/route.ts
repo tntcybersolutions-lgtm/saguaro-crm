@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { requirePermission } from '@/lib/permissions';
 import { CSI_DIVISIONS } from '@/lib/construction-intelligence';
+import { apiError } from '@/lib/api-error';
 
 export async function POST(req: NextRequest) {
   // Was fully unauthenticated (tenant derived from project). Now requires Budget/Edit.
@@ -239,10 +240,6 @@ export async function POST(req: NextRequest) {
       lineItemCount: lineItems.length,
     });
   } catch (err: unknown) {
-    // A raw Error's text is the database's words, not ours — log it, show the line we wrote.
-    console.error('[budgets/create]', err);
-    const message = "Failed to create budget";
-    console.error('[budgets/create]', err);
-    return NextResponse.json({ error: message }, { status: 500 });
+    return apiError('budgets/create POST', err, "Failed to create budget");
   }
 }

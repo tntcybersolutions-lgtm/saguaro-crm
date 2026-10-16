@@ -8,6 +8,7 @@ import {
 } from 'pdf-lib';
 import { DOC } from '@/lib/document-templates/report-theme';
 import { requestDay } from '@/lib/time-zone';
+import { apiError } from '@/lib/api-error';
 
 export const runtime = 'nodejs';
 export const dynamic = 'force-dynamic';
@@ -233,8 +234,8 @@ export async function POST(req: NextRequest, { params }: { params: Promise<{ pro
     ]);
 
     return await respond(rfis, pname, day.today);
-  } catch {
-    return NextResponse.json({ error: 'RFI export failed' }, { status: 500 });
+  } catch (e) {
+    return apiError('projects/[projectId]/rfis/export POST', e, 'RFI export failed');
   }
 }
 
@@ -255,7 +256,7 @@ export async function GET(req: NextRequest, { params }: { params: Promise<{ proj
     ]);
 
     return await respond(rfis, pname, day.today);
-  } catch {
-    return NextResponse.json({ error: 'RFI export failed' }, { status: 500 });
+  } catch (e) {
+    return apiError('projects/[projectId]/rfis/export GET', e, 'RFI export failed');
   }
 }

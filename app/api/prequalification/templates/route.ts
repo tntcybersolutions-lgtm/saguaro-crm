@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from 'next/server';
 import { createServerClient, getUser } from '@/lib/supabase-server';
 import { requirePermission } from '@/lib/permissions';
 import type { Database } from '@/lib/database.types';
+import { apiError } from '@/lib/api-error';
 
 export async function GET(req: NextRequest) {
   const user = await getUser(req);
@@ -15,8 +16,8 @@ export async function GET(req: NextRequest) {
       .order('created_at', { ascending: false });
     if (error) throw error;
     return NextResponse.json({ data });
-  } catch {
-    return NextResponse.json({ error: 'Internal server error' }, { status: 500 });
+  } catch (e) {
+    return apiError('prequalification/templates GET', e);
   }
 }
 
@@ -70,7 +71,7 @@ export async function POST(req: NextRequest) {
       .single();
     if (error) throw error;
     return NextResponse.json({ data }, { status: 201 });
-  } catch {
-    return NextResponse.json({ error: 'Internal server error' }, { status: 500 });
+  } catch (e) {
+    return apiError('prequalification/templates POST', e);
   }
 }

@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { createServerClient, getUser } from '@/lib/supabase-server';
 import { requirePermission } from '@/lib/permissions';
+import { apiError } from '@/lib/api-error';
 
 export async function GET(
   req: NextRequest,
@@ -48,8 +49,8 @@ export async function GET(
       sheets: sheetsRes.data || [],
       lineItems: lineItemsRes.data || [],
     });
-  } catch {
-    return NextResponse.json({ error: 'Internal server error' }, { status: 500 });
+  } catch (e) {
+    return apiError('takeoff-projects/[id] GET', e);
   }
 }
 
@@ -87,8 +88,8 @@ export async function PATCH(
     if (error) throw error;
 
     return NextResponse.json({ takeoffProject: data });
-  } catch {
-    return NextResponse.json({ error: 'Internal server error' }, { status: 500 });
+  } catch (e) {
+    return apiError('takeoff-projects/[id] PATCH', e);
   }
 }
 
@@ -112,7 +113,7 @@ export async function DELETE(
     if (error) throw error;
 
     return NextResponse.json({ success: true });
-  } catch {
-    return NextResponse.json({ error: 'Internal server error' }, { status: 500 });
+  } catch (e) {
+    return apiError('takeoff-projects/[id] DELETE', e);
   }
 }

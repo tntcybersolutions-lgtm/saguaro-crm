@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { createServerClient } from '@/lib/supabase-server';
+import { apiError } from '@/lib/api-error';
 
 /**
  * POST /api/smart-packages/customize-public   (public — no auth required)
@@ -137,7 +138,7 @@ export async function POST(req: NextRequest) {
       applied: true,
       cost_multiplier: parseFloat(costMult.toFixed(2)),
     });
-  } catch {
-    return NextResponse.json({ error: 'Internal server error' }, { status: 500 });
+  } catch (e) {
+    return apiError('smart-packages/customize-public POST', e);
   }
 }

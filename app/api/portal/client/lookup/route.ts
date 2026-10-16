@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from 'next/server';
 import { createServerClient } from '@/lib/supabase-server';
 import { sendEmail } from '@/lib/email';
 import { checkRateLimit, getClientIP } from '@/lib/rate-limit';
+import { apiError } from '@/lib/api-error';
 
 export const dynamic = 'force-dynamic';
 
@@ -68,7 +69,6 @@ export async function POST(req: NextRequest) {
 
     return NextResponse.json({ message: GENERIC_MESSAGE });
   } catch (err) {
-    console.error('[portal/client/lookup]', err);
-    return NextResponse.json({ error: 'Lookup failed. Please try again.' }, { status: 500 });
+    return apiError('portal/client/lookup POST', err, 'Lookup failed. Please try again.');
   }
 }

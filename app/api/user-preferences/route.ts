@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { createServerClient, getUser } from '@/lib/supabase-server';
+import { apiError } from '@/lib/api-error';
 
 const DEFAULT_PREFERENCES = {
   theme: 'dark',
@@ -45,7 +46,6 @@ export async function GET(req: NextRequest) {
 
     return NextResponse.json({ preferences: data });
   } catch (err) {
-    console.error('[user-preferences GET] unexpected', err);
-    return NextResponse.json({ error: 'Internal server error' }, { status: 500 });
+    return apiError('user-preferences GET', err);
   }
 }

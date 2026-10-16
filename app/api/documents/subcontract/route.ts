@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from 'next/server';
 import { createServerClient, getUser } from '@/lib/supabase-server';
 import { requirePermission } from '@/lib/permissions';
 import { generateSubcontract } from '@/lib/document-templates/subcontract-generator';
+import { apiError } from '@/lib/api-error';
 
 export async function POST(req: NextRequest) {
   const g = await requirePermission(req, 'Documents', 'Edit');
@@ -41,8 +42,6 @@ export async function POST(req: NextRequest) {
 
     return NextResponse.json({ pdfUrl, success: true });
   } catch (err: unknown) {
-    const message = 'Document generation failed';
-    console.error('[documents/subcontract]', err);
-    return NextResponse.json({ error: message }, { status: 500 });
+    return apiError('documents/subcontract POST', err, 'Document generation failed');
   }
 }

@@ -91,10 +91,6 @@ export async function POST(req: NextRequest, { params }: { params: { projectId: 
     if (error) throw error;
     return NextResponse.json({ success: true, items });
   } catch (err: unknown) {
-    // A raw Error's text is the database's words, not ours — log it, show the line we wrote.
-    console.error('[projects/projectId/closeout/checklist]', err);
-    const msg = "Internal server error";
-    console.error('[closeout/checklist] POST error:', msg);
-    return NextResponse.json({ error: `Failed to save closeout checklist: ${msg}` }, { status: 500 });
+    return apiError('projects/[projectId]/closeout/checklist POST', err);
   }
 }

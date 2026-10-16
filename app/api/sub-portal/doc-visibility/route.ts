@@ -75,7 +75,7 @@ export async function PATCH(req: NextRequest) {
     if (error) throw error;
 
     return NextResponse.json({ data: { docId, visibleToSubs } });
-  } catch {
-    return NextResponse.json({ error: 'Internal server error' }, { status: 500 });
+  } catch (e) {
+    return apiError('sub-portal/doc-visibility PATCH', e);
   }
 }

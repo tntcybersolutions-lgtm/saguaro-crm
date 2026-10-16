@@ -11,6 +11,7 @@ import {
   type ReportColumn,
 } from '@/lib/report-export';
 import { generateExecReportPdf } from '@/lib/document-templates/exec-report-generator';
+import { apiError } from '@/lib/api-error';
 
 export const runtime = 'nodejs';
 export const dynamic = 'force-dynamic';
@@ -111,9 +112,8 @@ async function build(req: NextRequest, projectId: string, ids: string[], format:
         'Content-Disposition': `attachment; filename="${safeTitle}-${dateStamp}.pdf"`,
       },
     });
-  } catch {
-    console.error('[daily-logs/export] export failed');
-    return NextResponse.json({ error: 'Export failed' }, { status: 500 });
+  } catch (e) {
+    return apiError('projects/[projectId]/daily-logs/export', e, 'Export failed');
   }
 }
 

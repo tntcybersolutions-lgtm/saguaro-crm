@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from 'next/server';
 import { createServerClient, getUser } from '@/lib/supabase-server';
 import { requirePermission } from '@/lib/permissions';
 import type { Database } from '@/lib/database.types';
+import { apiError } from '@/lib/api-error';
 
 export async function POST(req: NextRequest) {
   const g = await requirePermission(req, 'Documents', 'Edit');
@@ -48,8 +49,6 @@ export async function POST(req: NextRequest) {
     if (error) throw error;
     return NextResponse.json({ success: true, proposal: data });
   } catch (err: unknown) {
-    const msg = 'Internal server error';
-    console.error('[proposals/create] error:', msg);
-    return NextResponse.json({ error: `Failed to create proposal: ${msg}` }, { status: 500 });
+    return apiError('proposals/create POST', err);
   }
 }

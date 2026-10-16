@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { createServerClient, getUser } from '@/lib/supabase-server';
+import { apiError } from '@/lib/api-error';
 
 export async function POST(req: NextRequest) {
   try {
@@ -66,7 +67,6 @@ export async function POST(req: NextRequest) {
 
     return NextResponse.json({ success: true, entry: data }, { status: 201 });
   } catch (err) {
-    console.error('[audit-trail POST] unexpected', err);
-    return NextResponse.json({ error: 'Internal server error' }, { status: 500 });
+    return apiError('audit-trail/log POST', err);
   }
 }

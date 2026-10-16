@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from 'next/server';
 import { createServerClient, getUser } from '@/lib/supabase-server';
 import { requirePermission } from '@/lib/permissions';
 import { must } from '@/lib/db-write';
+import { apiError } from '@/lib/api-error';
 
 const XERO_CLIENT_ID = process.env.XERO_CLIENT_ID || '';
 const XERO_REDIRECT_URI = process.env.XERO_REDIRECT_URI || '';
@@ -112,7 +113,7 @@ export async function POST(req: NextRequest) {
     }
 
     return NextResponse.json({ error: 'Invalid action' }, { status: 400 });
-  } catch {
-    return NextResponse.json({ error: 'Internal server error' }, { status: 500 });
+  } catch (e) {
+    return apiError('integrations/xero POST', e);
   }
 }

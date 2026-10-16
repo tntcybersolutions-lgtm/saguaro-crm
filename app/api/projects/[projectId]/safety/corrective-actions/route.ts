@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from 'next/server';
 import { createServerClient, getUser } from '@/lib/supabase-server';
 import { requirePermission } from '@/lib/permissions';
 import { requestDay } from '@/lib/time-zone';
+import { apiError } from '@/lib/api-error';
 
 export async function GET(req: NextRequest, { params }: { params: { projectId: string } }) {
   const user = await getUser(req);
@@ -43,13 +44,9 @@ export async function GET(req: NextRequest, { params }: { params: { projectId: s
 
     return NextResponse.json({ actions: data || [] });
   } catch (err: unknown) {
-    // A raw Error's text is the database's words, not ours — log it, show the line we wrote.
-    console.error('[projects/projectId/safety/corrective-actions]', err);
-    const detail = "Internal server error";
-    console.error('[safety/corrective-actions] GET error:', detail);
     // An empty list here reads as "no outstanding corrective actions" — a safety
     // all-clear. A failed read must surface as an error the UI can retry.
-    return NextResponse.json({ error: 'Failed to load corrective actions', detail }, { status: 500 });
+    return apiError('projects/[projectId]/safety/corrective-actions GET', err, 'Failed to load corrective actions');
   }
 }
 
@@ -125,8 +122,6 @@ export async function POST(req: NextRequest, { params }: { params: { projectId: 
 
     return NextResponse.json({ action: data });
   } catch (err: unknown) {
-    const msg = 'Internal server error';
-    console.error('[safety/corrective-actions] POST error:', msg);
-    return NextResponse.json({ error: `Failed to create corrective action: ${msg}` }, { status: 500 });
+    return apiError('projects/[projectId]/safety/corrective-actions POST', err);
   }
 }

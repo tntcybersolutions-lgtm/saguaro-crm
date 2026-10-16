@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { createServerClient } from '@/lib/supabase-server';
 import { getPortalSession, PORTAL_PERMS } from '@/lib/portal-auth';
+import { apiError } from '@/lib/api-error';
 
 /** GET — list documents visible to client, grouped by category */
 export async function GET(req: NextRequest) {
@@ -71,7 +72,7 @@ export async function GET(req: NextRequest) {
       grouped,
       categories: Object.keys(grouped),
     });
-  } catch {
-    return NextResponse.json({ error: "Internal server error" }, { status: 500 });
+  } catch (e) {
+    return apiError('portal/client/documents GET', e);
   }
 }

@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from 'next/server';
 import { createServerClient } from '@/lib/supabase-server';
 import { requirePermission } from '@/lib/permissions';
 import { summarizeContract, toCents, toDollars, type ChangeOrder } from '@/lib/calc';
+import { apiError } from '@/lib/api-error';
 
 export async function PATCH(req: NextRequest, { params }: { params: { projectId: string; id: string } }) {
   const g = await requirePermission(req, 'Budget', 'Edit', { projectId: params.projectId });
@@ -48,10 +49,6 @@ export async function PATCH(req: NextRequest, { params }: { params: { projectId:
     if (!data) return NextResponse.json({ error: 'Contract not found.' }, { status: 404 });
     return NextResponse.json({ contract: data });
   } catch (e: unknown) {
-    console.error('[projects/contracts/PATCH]', e);
-    // A raw Error's text is the database's words, not ours — log it, show the line we wrote.
-    console.error('[projects/projectId/contracts/id]', e);
-    const msg = "Failed to update the contract.";
-    return NextResponse.json({ error: msg }, { status: 500 });
+    return apiError('projects/[projectId]/contracts/[id] PATCH', e, "Failed to update the contract.");
   }
 }

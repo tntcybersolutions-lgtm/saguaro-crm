@@ -4,6 +4,7 @@ import { createServerClient } from '@/lib/supabase-server';
 import { createNotification } from '@/lib/notifications';
 import { sendEmail } from '@/lib/email';
 import { addonByKey } from '@/lib/addons';
+import { apiError } from '@/lib/api-error';
 
 export const dynamic = 'force-dynamic';
 export const runtime = 'nodejs';
@@ -123,7 +124,7 @@ export async function POST(req: NextRequest) {
     });
 
     return NextResponse.json({ ok: true, featureKey, action, persisted });
-  } catch {
-    return NextResponse.json({ error: 'Internal server error' }, { status: 500 });
+  } catch (e) {
+    return apiError('billing/addon-request POST', e);
   }
 }

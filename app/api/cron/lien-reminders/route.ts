@@ -124,7 +124,7 @@ export async function GET(req: NextRequest) {
     }
 
     return NextResponse.json({ success: true, scanned: (deadlines || []).length, notified, emailed });
-  } catch {
-    return NextResponse.json({ error: 'Internal server error' }, { status: 500 });
+  } catch (e) {
+    return apiError('cron/lien-reminders GET', e);
   }
 }

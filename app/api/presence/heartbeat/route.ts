@@ -46,7 +46,6 @@ export async function POST(req: NextRequest) {
 
     return NextResponse.json({ ok: true });
   } catch (err: any) {
-    console.error('Presence heartbeat error:', err);
-    return NextResponse.json({ error: 'Internal server error' }, { status: 500 });
+    return apiError('presence/heartbeat POST', err);
   }
 }

@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { createServerClient, getUser } from '@/lib/supabase-server';
+import { apiError } from '@/lib/api-error';
 
 export async function POST(req: NextRequest) {
   try {
@@ -25,8 +26,6 @@ export async function POST(req: NextRequest) {
 
     return NextResponse.json({ success: true });
   } catch (err: unknown) {
-    const msg = 'Internal server error';
-    console.error('[autopilot/dismiss] error:', msg);
-    return NextResponse.json({ error: 'Internal server error' }, { status: 500 });
+    return apiError('autopilot/dismiss POST', err);
   }
 }

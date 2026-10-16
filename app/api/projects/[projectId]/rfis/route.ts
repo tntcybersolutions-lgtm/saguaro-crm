@@ -92,10 +92,7 @@ export async function POST(req: NextRequest, { params }: { params: Promise<{ pro
 
     if (error) throw error;
     return NextResponse.json({ success: true, rfi: data });
-  } catch {
-    return NextResponse.json(
-      { error: '[projects/rfis] Database error: Internal server error' },
-      { status: 500 }
-    );
+  } catch (e) {
+    return apiError('projects/[projectId]/rfis POST', e, '[projects/rfis] Database error: Internal server error');
   }
 }

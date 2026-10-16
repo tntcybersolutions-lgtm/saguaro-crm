@@ -1,4 +1,5 @@
 import { NextResponse } from 'next/server';
+import { apiError } from './api-error';
 
 export function ok(data: unknown, status = 200) {
   return NextResponse.json({ data }, { status });
@@ -16,7 +17,7 @@ export function notFound(message = 'Not found') {
   return NextResponse.json({ error: message }, { status: 404 });
 }
 
-export function serverError(err: unknown) {
-  console.error('[api]', err);
-  return NextResponse.json({ error: 'Internal server error' }, { status: 500 });
+/** Same contract as apiError: the real error is logged with a correlation id, the caller gets a safe message + `ref`. */
+export function serverError(err: unknown, scope = 'api') {
+  return apiError(scope, err);
 }

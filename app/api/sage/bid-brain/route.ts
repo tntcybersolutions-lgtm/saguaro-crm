@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { getUser } from '@/lib/supabase-server';
 import { loadBidBrain } from '@/lib/sage-brain';
+import { apiError } from '@/lib/api-error';
 
 /**
  * R17 — Bid brain: win-rate by markup band from real bid history, with
@@ -14,7 +15,7 @@ export async function GET(req: NextRequest) {
   try {
     const analysis = await loadBidBrain(user.tenantId);
     return NextResponse.json({ analysis });
-  } catch {
-    return NextResponse.json({ error: 'Failed to analyze bid history' }, { status: 500 });
+  } catch (e) {
+    return apiError('sage/bid-brain GET', e, 'Failed to analyze bid history');
   }
 }

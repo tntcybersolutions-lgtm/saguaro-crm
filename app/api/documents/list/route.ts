@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { createServerClient, getUser } from '@/lib/supabase-server';
 import { signStoredUrl } from '@/lib/storage-signing';
+import { apiError } from '@/lib/api-error';
 
 export async function GET(req: NextRequest) {
   const user = await getUser(req);
@@ -21,7 +22,7 @@ export async function GET(req: NextRequest) {
       (data || []).map(async (d: any) => ({ ...d, pdf_url: await signStoredUrl('documents', d.pdf_url) })),
     );
     return NextResponse.json({ documents });
-  } catch {
-    return NextResponse.json({ documents: [], error: "Internal server error" }, { status: 500 });
+  } catch (e) {
+    return apiError('documents/list GET', e, undefined, 500, { documents: [] });
   }
 }

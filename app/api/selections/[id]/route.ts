@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { createServerClient, getUser } from '@/lib/supabase-server';
+import { apiError } from '@/lib/api-error';
 
 export async function PUT(req: NextRequest, { params }: { params: Promise<{ id: string }> }) {
   const { id } = await params;
@@ -39,8 +40,8 @@ export async function PUT(req: NextRequest, { params }: { params: Promise<{ id: 
     if (error) throw error;
     if (!data) return NextResponse.json({ error: 'Not found' }, { status: 404 });
     return NextResponse.json({ success: true, selection: data });
-  } catch {
-    return NextResponse.json({ error: 'Internal server error' }, { status: 500 });
+  } catch (e) {
+    return apiError('selections/[id] PUT', e);
   }
 }
 
@@ -53,7 +54,7 @@ export async function DELETE(req: NextRequest, { params }: { params: Promise<{ i
     const { error } = await db.from('selections').delete().eq('id', id).eq('tenant_id', user.tenantId);
     if (error) throw error;
     return NextResponse.json({ success: true });
-  } catch {
-    return NextResponse.json({ error: 'Internal server error' }, { status: 500 });
+  } catch (e) {
+    return apiError('selections/[id] DELETE', e);
   }
 }

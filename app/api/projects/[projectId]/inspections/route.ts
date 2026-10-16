@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { createServerClient, getUser } from '@/lib/supabase-server';
+import { apiError } from '@/lib/api-error';
 
 export async function GET(req: NextRequest, { params }: { params: { projectId: string } }) {
   const user = await getUser(req);
@@ -15,8 +16,6 @@ export async function GET(req: NextRequest, { params }: { params: { projectId: s
     if (error) throw error;
     return NextResponse.json({ inspections: data || [] });
   } catch (err: unknown) {
-    const msg = 'Internal server error';
-    console.error('[project/inspections] error:', msg);
-    return NextResponse.json({ error: `Failed to fetch inspections: ${msg}` }, { status: 500 });
+    return apiError('projects/[projectId]/inspections GET', err);
   }
 }

@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from 'next/server';
 import { createServerClient, getUser } from '@/lib/supabase-server';
 import { requirePermission } from '@/lib/permissions';
 import { metaFor } from '@/lib/approvals';
+import { apiError } from '@/lib/api-error';
 
 export const dynamic = 'force-dynamic';
 
@@ -38,8 +39,8 @@ export async function PATCH(req: NextRequest, { params }: { params: Promise<{ id
       .single();
     if (error) throw error;
     return NextResponse.json({ workflow: data, success: true });
-  } catch {
-    return NextResponse.json({ error: 'Internal server error' }, { status: 500 });
+  } catch (e) {
+    return apiError('approvals/workflows/[id] PATCH', e);
   }
 }
 
@@ -62,7 +63,7 @@ export async function DELETE(req: NextRequest, { params }: { params: Promise<{ i
       .eq('tenant_id', user.tenantId);
     if (error) throw error;
     return NextResponse.json({ success: true });
-  } catch {
-    return NextResponse.json({ error: 'Internal server error' }, { status: 500 });
+  } catch (e) {
+    return apiError('approvals/workflows/[id] DELETE', e);
   }
 }

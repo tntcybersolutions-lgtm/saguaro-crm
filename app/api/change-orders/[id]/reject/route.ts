@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { requirePermission } from '@/lib/permissions';
 import { createNotification } from '@/lib/notifications';
+import { apiError } from '@/lib/api-error';
 
 export async function PUT(req: NextRequest, { params }: { params: Promise<{ id: string }> }) {
   const { id } = await params;
@@ -44,9 +45,7 @@ export async function PUT(req: NextRequest, { params }: { params: Promise<{ id: 
 
     return NextResponse.json({ success: true, changeOrder: co });
   } catch (err: unknown) {
-    const msg = 'Internal server error';
-    console.error('[change-orders/reject]', msg);
-    return NextResponse.json({ error: `Failed to reject change order: ${msg}` }, { status: 500 });
+    return apiError('change-orders/[id]/reject PUT', err);
   }
 }
 

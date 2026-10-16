@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { createServerClient, getUser } from '@/lib/supabase-server';
 import { requirePermission } from '@/lib/permissions';
+import { apiError } from '@/lib/api-error';
 
 export async function PATCH(req: NextRequest, { params }: { params: { projectId: string; id: string } }) {
   const g = await requirePermission(req, 'Projects', 'Edit');
@@ -32,11 +33,7 @@ export async function PATCH(req: NextRequest, { params }: { params: { projectId:
     if (!data) return NextResponse.json({ error: 'Timesheet entry not found.' }, { status: 404 });
     return NextResponse.json({ timesheet: data });
   } catch (e: unknown) {
-    console.error('[timesheets/PATCH]', e);
-    // A raw Error's text is the database's words, not ours — log it, show the line we wrote.
-    console.error('[projects/projectId/timesheets/id]', e);
-    const msg = "Failed to update the timesheet entry.";
-    return NextResponse.json({ error: msg }, { status: 500 });
+    return apiError('projects/[projectId]/timesheets/[id] PATCH', e, "Failed to update the timesheet entry.");
   }
 }
 
@@ -49,5 +46,7 @@ export async function DELETE(req: NextRequest, { params }: { params: { projectId
     const { error } = await supabase.from('timesheets').delete().eq('id', params.id).eq('project_id', params.projectId).eq('tenant_id', user.tenantId);
     if (error) throw error;
     return NextResponse.json({ ok: true });
-  } catch { return NextResponse.json({ error: 'Failed' }, { status: 500 }); }
+  } catch (e) {
+    return apiError('projects/[projectId]/timesheets/[id] DELETE', e);
+  }
 }

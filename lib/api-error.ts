@@ -36,17 +36,20 @@ function correlationId(): string {
  * @param err    the caught exception, logged in full
  * @param client what to show the user. Write it for a GC, not an engineer.
  * @param status defaults to 500
+ * @param extra  fields a caller already reads on failure (e.g. `tasks: []`),
+ *               kept so a screen's empty-state shape does not change
  */
 export function apiError(
   scope: string,
   err: unknown,
   client = 'Something went wrong on our end. Please try again.',
-  status = 500
+  status = 500,
+  extra?: Record<string, unknown>
 ): NextResponse {
   const ref = correlationId();
   // Full detail, server-side only. Never reaches the response body.
   console.error(`[${scope}] ref=${ref}`, err);
-  return NextResponse.json({ error: client, ref }, { status });
+  return NextResponse.json({ ...(extra || {}), error: client, ref }, { status });
 }
 
 /**

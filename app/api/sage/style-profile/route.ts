@@ -7,6 +7,7 @@ import {
   type SageStyleDimensions,
 } from '@/lib/sage-brain';
 import { must } from '@/lib/db-write';
+import { apiError } from '@/lib/api-error';
 
 /**
  * R16 — Transparent communication style profile.
@@ -24,8 +25,8 @@ export async function GET(req: NextRequest) {
   try {
     const profile = await loadOrComputeStyleProfile(user.id, user.tenantId);
     return NextResponse.json({ profile });
-  } catch {
-    return NextResponse.json({ error: 'Failed to load style profile' }, { status: 500 });
+  } catch (e) {
+    return apiError('sage/style-profile GET', e, 'Failed to load style profile');
   }
 }
 
@@ -50,8 +51,8 @@ export async function POST(req: NextRequest) {
       summary: 'Style profile recomputed from platform content at user request.',
     });
     return NextResponse.json({ profile });
-  } catch {
-    return NextResponse.json({ error: 'Failed to recompute style profile' }, { status: 500 });
+  } catch (e) {
+    return apiError('sage/style-profile POST', e, 'Failed to recompute style profile');
   }
 }
 
@@ -138,7 +139,7 @@ export async function PUT(req: NextRequest) {
         ? {}
         : { note: 'Style profile storage is not migrated yet (064_sage_brain.sql) — this change will not survive until the migration is applied.' }),
     });
-  } catch {
-    return NextResponse.json({ error: 'Failed to update style profile' }, { status: 500 });
+  } catch (e) {
+    return apiError('sage/style-profile PUT', e, 'Failed to update style profile');
   }
 }

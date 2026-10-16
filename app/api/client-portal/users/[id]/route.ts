@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { createServerClient, getUser } from '@/lib/supabase-server';
+import { apiError } from '@/lib/api-error';
 
 export const dynamic = 'force-dynamic';
 
@@ -29,8 +30,7 @@ export async function GET(
     }
     return NextResponse.json({ user: data });
   } catch (err) {
-    console.error('[client-portal/users/[id] GET]', err);
-    return NextResponse.json({ error: 'Internal server error' }, { status: 500 });
+    return apiError('client-portal/users/[id] GET', err);
   }
 }
 
@@ -73,8 +73,7 @@ export async function PATCH(
     if (error) throw error;
     return NextResponse.json({ user: data });
   } catch (err) {
-    console.error('[client-portal/users/[id] PATCH]', err);
-    return NextResponse.json({ error: 'Failed to update user' }, { status: 500 });
+    return apiError('client-portal/users/[id] PATCH', err, 'Failed to update user');
   }
 }
 
@@ -100,7 +99,6 @@ export async function DELETE(
     if (error) throw error;
     return NextResponse.json({ success: true });
   } catch (err) {
-    console.error('[client-portal/users/[id] DELETE]', err);
-    return NextResponse.json({ error: 'Failed to delete user' }, { status: 500 });
+    return apiError('client-portal/users/[id] DELETE', err, 'Failed to delete user');
   }
 }

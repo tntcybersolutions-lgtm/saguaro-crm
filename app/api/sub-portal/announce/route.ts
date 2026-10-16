@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from 'next/server';
 import { createServerClient, getUser } from '@/lib/supabase-server';
 import { sendEmail } from '@/lib/email';
 import type { Database } from '@/lib/database.types';
+import { apiError } from '@/lib/api-error';
 
 export const dynamic = 'force-dynamic';
 
@@ -133,7 +134,6 @@ export async function POST(req: NextRequest) {
       announcement,
     });
   } catch (err) {
-    console.error('[sub-portal/announce]', err);
-    return NextResponse.json({ error: 'Internal server error' }, { status: 500 });
+    return apiError('sub-portal/announce POST', err);
   }
 }

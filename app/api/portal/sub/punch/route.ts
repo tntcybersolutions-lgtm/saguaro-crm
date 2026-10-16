@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from 'next/server';
 import { createServerClient } from '@/lib/supabase-server';
 import { signStoredUrl } from '@/lib/storage-signing';
 import { must } from '@/lib/db-write';
+import { apiError } from '@/lib/api-error';
 
 const BUCKET = 'project-files';
 
@@ -40,8 +41,8 @@ export async function GET(req: NextRequest) {
       }),
     );
     return NextResponse.json({ punch_items: signed });
-  } catch {
-    return NextResponse.json({ error: 'Internal server error' }, { status: 500 });
+  } catch (e) {
+    return apiError('portal/sub/punch GET', e);
   }
 }
 
@@ -100,7 +101,7 @@ export async function POST(req: NextRequest) {
     } as never), 'portal_activity insert');
 
     return NextResponse.json({ success: true });
-  } catch {
-    return NextResponse.json({ error: 'Could not complete the punch item. Please try again.' }, { status: 500 });
+  } catch (e) {
+    return apiError('portal/sub/punch POST', e, 'Could not complete the punch item. Please try again.');
   }
 }

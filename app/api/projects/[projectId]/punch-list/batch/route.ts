@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { createServerClient, getUser } from '@/lib/supabase-server';
 import { requirePermission } from '@/lib/permissions';
+import { apiError } from '@/lib/api-error';
 
 export const dynamic = 'force-dynamic';
 
@@ -63,8 +64,8 @@ export async function PATCH(
 
     if (error) throw error;
     return NextResponse.json({ success: true, updated: (data || []).length });
-  } catch {
-    return NextResponse.json({ error: 'Failed to update punch items' }, { status: 500 });
+  } catch (e) {
+    return apiError('projects/[projectId]/punch-list/batch PATCH', e, 'Failed to update punch items');
   }
 }
 
@@ -102,7 +103,7 @@ export async function DELETE(
 
     if (error) throw error;
     return NextResponse.json({ success: true, deleted: (data || []).length });
-  } catch {
-    return NextResponse.json({ error: 'Failed to delete punch items' }, { status: 500 });
+  } catch (e) {
+    return apiError('projects/[projectId]/punch-list/batch DELETE', e, 'Failed to delete punch items');
   }
 }

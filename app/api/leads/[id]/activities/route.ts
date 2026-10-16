@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from 'next/server';
 import { createServerClient, getUser } from '@/lib/supabase-server';
 import { requirePermission } from '@/lib/permissions';
 import { must } from '@/lib/db-write';
+import { apiError } from '@/lib/api-error';
 
 export async function GET(req: NextRequest, { params }: { params: { id: string } }) {
   const user = await getUser(req);
@@ -20,8 +21,7 @@ export async function GET(req: NextRequest, { params }: { params: { id: string }
   } catch (e: unknown) {
     /* This returned { activities: [] } with a 200, so a failed read looked
        exactly like a lead with no activity. */
-    console.error('[leads/activities] read failed:', e);
-    return NextResponse.json({ error: 'Could not load the activity log' }, { status: 500 });
+    return apiError('leads/[id]/activities GET', e, 'Could not load the activity log');
   }
 }
 
@@ -44,9 +44,6 @@ export async function POST(req: NextRequest, { params }: { params: { id: string 
     await must(supabase.from('lead_pipeline').update({ updated_at: new Date().toISOString() }).eq('id', params.id).eq('tenant_id', user.tenantId), 'lead_pipeline update');
     return NextResponse.json({ activity: data }, { status: 201 });
   } catch (e: unknown) {
-    // A raw Error's text is the database's words, not ours — log it, show the line we wrote.
-    console.error('[leads/id/activities]', e);
-    const msg = "Failed";
-    return NextResponse.json({ error: 'Internal server error' }, { status: 500 });
+    return apiError('leads/[id]/activities POST', e);
   }
 }

@@ -3,6 +3,7 @@ import { createServerClient, getUser } from '@/lib/supabase-server';
 import { requirePermission } from '@/lib/permissions';
 import { signFields } from '@/lib/storage-signing';
 import { must } from '@/lib/db-write';
+import { apiError } from '@/lib/api-error';
 
 /** GET — List project photos with optional filters */
 export async function GET(req: NextRequest, { params }: { params: { projectId: string } }) {
@@ -113,9 +114,7 @@ export async function GET(req: NextRequest, { params }: { params: { projectId: s
     // 'project-files' bucket is private — sign photo URLs on read.
     return NextResponse.json({ photos: await signFields(photos, ['url', 'thumbnail_url', 'markup_url']) });
   } catch (err: unknown) {
-    const msg = 'Internal server error';
-    console.error('[projects/photos GET]', msg);
-    return NextResponse.json({ error: `Failed to fetch photos: ${msg}` }, { status: 500 });
+    return apiError('projects/[projectId]/photos GET', err);
   }
 }
 
@@ -248,8 +247,6 @@ export async function POST(req: NextRequest, { params }: { params: { projectId: 
       },
     });
   } catch (err: unknown) {
-    const msg = 'Internal server error';
-    console.error('[projects/photos POST]', msg);
-    return NextResponse.json({ error: `Failed to upload photo: ${msg}` }, { status: 500 });
+    return apiError('projects/[projectId]/photos POST', err);
   }
 }

@@ -57,8 +57,8 @@ export async function PUT(req: NextRequest, { params }: { params: Promise<{ id: 
     const { data, error } = await db.from('change_orders').update(filterCoBody(body)).eq('id', id).eq('tenant_id', g.user.tenantId).select().single();
     if (error) throw error;
     return NextResponse.json({ changeOrder: data });
-  } catch {
-    return NextResponse.json({ error: "Internal server error" }, { status: 500 });
+  } catch (e) {
+    return apiError('change-orders/[id] PUT', e);
   }
 }
 
@@ -73,8 +73,8 @@ export async function PATCH(req: NextRequest, { params }: { params: Promise<{ id
     const { data, error } = await db.from('change_orders').update(filterCoBody(body)).eq('id', id).eq('tenant_id', g.user.tenantId).select().single();
     if (error) throw error;
     return NextResponse.json({ changeOrder: data });
-  } catch {
-    return NextResponse.json({ error: "Internal server error" }, { status: 500 });
+  } catch (e) {
+    return apiError('change-orders/[id] PATCH', e);
   }
 }
 
@@ -92,7 +92,7 @@ export async function DELETE(_req: NextRequest, { params }: { params: Promise<{ 
     const { error } = await db.from('change_orders').delete().eq('id', id).eq('tenant_id', g.user.tenantId);
     if (error) throw error;
     return NextResponse.json({ success: true });
-  } catch {
-    return NextResponse.json({ error: "Internal server error" }, { status: 500 });
+  } catch (e) {
+    return apiError('change-orders/[id] DELETE', e);
   }
 }

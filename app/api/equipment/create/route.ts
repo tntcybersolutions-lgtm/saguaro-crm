@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from 'next/server';
 import { createServerClient, getUser } from '@/lib/supabase-server';
 import type { Database } from '@/lib/database.types';
 import { requestDay } from '@/lib/time-zone';
+import { apiError } from '@/lib/api-error';
 
 export async function POST(req: NextRequest) {
   const user = await getUser(req);
@@ -42,11 +43,6 @@ export async function POST(req: NextRequest) {
     if (error) throw error;
     return NextResponse.json({ success: true, entry: data });
   } catch (err: unknown) {
-    const msg = 'Internal server error';
-    console.error('[equipment/create] error:', msg);
-    return NextResponse.json(
-      { error: `[equipment/create] Database error: ${msg}` },
-      { status: 500 }
-    );
+    return apiError('equipment/create POST', err);
   }
 }

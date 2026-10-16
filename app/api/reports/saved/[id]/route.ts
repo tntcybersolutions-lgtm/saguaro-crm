@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from 'next/server';
 import { createServerClient, getUser } from '@/lib/supabase-server';
 import { requirePermission } from '@/lib/permissions';
 import { ENTITY_MAP } from '@/lib/report-entities';
+import { apiError } from '@/lib/api-error';
 
 export const dynamic = 'force-dynamic';
 
@@ -56,10 +57,7 @@ export async function PUT(req: NextRequest, { params }: { params: { id: string }
     if (!data) return NextResponse.json({ error: 'Not found' }, { status: 404 });
     return NextResponse.json({ report: data });
   } catch (e: unknown) {
-    // A raw Error's text is the database's words, not ours — log it, show the line we wrote.
-    console.error('[reports/saved/id]', e);
-    const msg = "Failed to update report";
-    return NextResponse.json({ error: msg }, { status: 500 });
+    return apiError('reports/saved/[id] PUT', e, "Failed to update report");
   }
 }
 
@@ -78,9 +76,6 @@ export async function DELETE(req: NextRequest, { params }: { params: { id: strin
     if (error) throw error;
     return NextResponse.json({ ok: true });
   } catch (e: unknown) {
-    // A raw Error's text is the database's words, not ours — log it, show the line we wrote.
-    console.error('[reports/saved/id]', e);
-    const msg = "Failed to delete report";
-    return NextResponse.json({ error: msg }, { status: 500 });
+    return apiError('reports/saved/[id] DELETE', e, "Failed to delete report");
   }
 }

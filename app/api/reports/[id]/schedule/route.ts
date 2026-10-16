@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from 'next/server';
 import { createServerClient, getUser } from '@/lib/supabase-server';
 import { requirePermission } from '@/lib/permissions';
 import { requestDay } from '@/lib/time-zone';
+import { apiError } from '@/lib/api-error';
 
 export const dynamic = 'force-dynamic';
 
@@ -55,8 +56,8 @@ export async function PUT(req: NextRequest, { params }: { params: { id: string }
   try {
     const result = await saveSchedule(req, params.id, user.tenantId);
     return NextResponse.json(result);
-  } catch {
-    return NextResponse.json({ error: 'Internal server error' }, { status: 500 });
+  } catch (e) {
+    return apiError('reports/[id]/schedule PUT', e);
   }
 }
 
@@ -68,7 +69,7 @@ export async function POST(req: NextRequest, { params }: { params: { id: string 
   try {
     const result = await saveSchedule(req, params.id, user.tenantId);
     return NextResponse.json(result);
-  } catch {
-    return NextResponse.json({ error: 'Internal server error' }, { status: 500 });
+  } catch (e) {
+    return apiError('reports/[id]/schedule POST', e);
   }
 }

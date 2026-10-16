@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { createServerClient, getUser } from '@/lib/supabase-server';
+import { apiError } from '@/lib/api-error';
 
 export async function GET(req: NextRequest) {
   const user = await getUser(req);
@@ -17,7 +18,7 @@ export async function GET(req: NextRequest) {
     const { data, error } = await query;
     if (error) throw error;
     return NextResponse.json({ selections: data || [], source: 'live' });
-  } catch {
-    return NextResponse.json({ selections: [], source: 'error' }, { status: 500 });
+  } catch (e) {
+    return apiError('selections/list GET', e, undefined, 500, { selections: [], source: 'error' });
   }
 }

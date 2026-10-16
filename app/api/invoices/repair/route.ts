@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from 'next/server';
 import { createServerClient } from '@/lib/supabase-server';
 import { requirePermission } from '@/lib/permissions';
 import { must } from '@/lib/db-write';
+import { apiError } from '@/lib/api-error';
 
 /**
  * One-time (idempotent) invoice normalizer for the caller's tenant:
@@ -35,7 +36,7 @@ export async function GET(req: NextRequest) {
       }
     }
     return NextResponse.json({ ok: true, scanned: (rows || []).length, totalsFixed, statusesFixed });
-  } catch {
-    return NextResponse.json({ error: 'Internal server error' }, { status: 500 });
+  } catch (e) {
+    return apiError('invoices/repair GET', e);
   }
 }

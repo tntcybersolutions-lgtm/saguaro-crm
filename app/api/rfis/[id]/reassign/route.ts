@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { createServerClient, getUser } from '@/lib/supabase-server';
 import { requirePermission } from '@/lib/permissions';
+import { apiError } from '@/lib/api-error';
 
 export const dynamic = 'force-dynamic';
 
@@ -67,9 +68,8 @@ async function reassign(
       assigned_to_name: assignedTo,
       ball_in_court: ballInCourt,
     });
-  } catch {
-    console.error('[rfis/reassign] error');
-    return NextResponse.json({ error: 'Internal server error' }, { status: 500 });
+  } catch (e) {
+    return apiError('rfis/[id]/reassign', e);
   }
 }
 

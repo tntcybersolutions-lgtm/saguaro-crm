@@ -3,6 +3,7 @@ import { createServerClient, getUser } from '@/lib/supabase-server';
 import { requirePermission } from '@/lib/permissions';
 import { toUi, type WarrantyRow } from '@/lib/warranty-claims-shape';
 import { requestDay } from '@/lib/time-zone';
+import { apiError } from '@/lib/api-error';
 
 export async function GET(req: NextRequest, { params }: { params: { projectId: string } }) {
   const user = await getUser(req);
@@ -22,8 +23,7 @@ export async function GET(req: NextRequest, { params }: { params: { projectId: s
   } catch (e) {
     // A failed read must NOT render as "no claims" — that reads as an all-clear on
     // a project that may have open defects. Surface it so the page shows a retry.
-    console.error('[warranty-claims/GET]', e);
-    return NextResponse.json({ error: 'Failed to load warranty claims.' }, { status: 500 });
+    return apiError('projects/[projectId]/warranty-claims GET', e, 'Failed to load warranty claims.');
   }
 }
 
@@ -95,10 +95,6 @@ export async function POST(req: NextRequest, { params }: { params: { projectId: 
     }
     throw lastError;
   } catch (e: unknown) {
-    console.error('[warranty-claims/POST]', e);
-    // A raw Error's text is the database's words, not ours — log it, show the line we wrote.
-    console.error('[projects/projectId/warranty-claims]', e);
-    const msg = "Failed to create the warranty claim.";
-    return NextResponse.json({ error: msg }, { status: 500 });
+    return apiError('projects/[projectId]/warranty-claims POST', e, "Failed to create the warranty claim.");
   }
 }

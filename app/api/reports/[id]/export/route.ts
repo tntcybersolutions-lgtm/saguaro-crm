@@ -258,8 +258,7 @@ export async function GET(req: NextRequest, { params }: { params: { id: string }
         'Content-Disposition': `attachment; filename="${safeTitle}-${dateStamp}.pdf"`,
       },
     });
-  } catch {
-    console.error('[reports/[id]/export] export failed');
-    return NextResponse.json({ error: 'Export failed' }, { status: 500 });
+  } catch (e) {
+    return apiError('reports/[id]/export GET', e, 'Export failed');
   }
 }

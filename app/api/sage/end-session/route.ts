@@ -6,6 +6,7 @@ import {
   generateProactiveInsights,
   type ProjectSnapshot,
 } from '@/lib/sage-intelligence-v6';
+import { apiError } from '@/lib/api-error';
 
 interface SessionMessage {
   role: string;
@@ -69,7 +70,7 @@ export async function POST(req: NextRequest) {
         follow_up_worthy: summary.follow_up_worthy,
       },
     });
-  } catch {
-    return NextResponse.json({ error: 'Internal server error' }, { status: 500 });
+  } catch (e) {
+    return apiError('sage/end-session POST', e);
   }
 }

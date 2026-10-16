@@ -5,6 +5,7 @@ import {
   submitPayAppHandler,
   recordPaymentHandler,
 } from '../../../../pay-app-workflow';
+import { apiError } from '@/lib/api-error';
 
 export async function GET(
   req: NextRequest,
@@ -26,9 +27,9 @@ export async function GET(
       const { data, error } = await query;
       if (error) throw error;
       return NextResponse.json({ payApps: data ?? [], source: 'live' });
-    } catch {
-      return NextResponse.json({ error: "Internal server error" }, { status: 500 });
-  }
+    } catch (e) {
+      return apiError('pay-apps/[...path] GET', e);
+    }
   }
 
   return NextResponse.json({ error: 'Not found' }, { status: 404 });

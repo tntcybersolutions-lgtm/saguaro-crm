@@ -61,7 +61,7 @@ export async function PATCH(req: NextRequest, { params }: { params: { projectId:
     }
 
     return NextResponse.json({ error: 'Nothing to update' }, { status: 400 });
-  } catch {
-    return NextResponse.json({ error: 'Failed to update notifications' }, { status: 500 });
+  } catch (e) {
+    return apiError('projects/[projectId]/notifications PATCH', e, 'Failed to update notifications');
   }
 }

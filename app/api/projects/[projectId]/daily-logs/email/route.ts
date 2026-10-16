@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from 'next/server';
 import { createServerClient, getUser } from '@/lib/supabase-server';
 import { requirePermission } from '@/lib/permissions';
 import { sendEmail } from '@/lib/email';
+import { apiError } from '@/lib/api-error';
 
 export const runtime = 'nodejs';
 export const dynamic = 'force-dynamic';
@@ -96,8 +97,7 @@ export async function POST(req: NextRequest, { params }: { params: { projectId: 
     }
 
     return NextResponse.json({ success: true, sent: rows.length, to });
-  } catch {
-    console.error('[daily-logs/email] send failed');
-    return NextResponse.json({ error: 'Failed to email daily logs' }, { status: 500 });
+  } catch (e) {
+    return apiError('projects/[projectId]/daily-logs/email POST', e, 'Failed to email daily logs');
   }
 }

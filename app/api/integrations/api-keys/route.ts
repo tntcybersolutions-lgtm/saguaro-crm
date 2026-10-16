@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from 'next/server';
 import { createHash, randomBytes } from 'node:crypto';
 import { createServerClient, getUser } from '@/lib/supabase-server';
 import { requirePermission } from '@/lib/permissions';
+import { apiError } from '@/lib/api-error';
 
 /* ------------------------------------------------------------------ */
 /*  /api/integrations/api-keys                                        */
@@ -25,8 +26,8 @@ export async function GET(req: NextRequest) {
 
     if (error) throw error;
     return NextResponse.json({ keys: data ?? [] });
-  } catch {
-    return NextResponse.json({ error: 'Internal server error' }, { status: 500 });
+  } catch (e) {
+    return apiError('integrations/api-keys GET', e);
   }
 }
 
@@ -69,7 +70,7 @@ export async function POST(req: NextRequest) {
 
     // Return the full key exactly ONCE — it is never retrievable again.
     return NextResponse.json({ key: data, secret: fullKey }, { status: 201 });
-  } catch {
-    return NextResponse.json({ error: 'Internal server error' }, { status: 500 });
+  } catch (e) {
+    return apiError('integrations/api-keys POST', e);
   }
 }

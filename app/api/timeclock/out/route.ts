@@ -13,6 +13,7 @@ import {
   type ShiftRow,
   punchTime,
 } from '@/lib/timeclock/server';
+import { apiError } from '@/lib/api-error';
 
 /**
  * POST /api/timeclock/out
@@ -116,7 +117,6 @@ export async function POST(req: NextRequest) {
 
     return NextResponse.json({ ok: true, shift: toShift(updated as ShiftRow), hours });
   } catch (err) {
-    console.error('[timeclock/out]', err instanceof Error ? err.message : err);
-    return NextResponse.json({ ok: false, error: 'Could not clock you out' }, { status: 500 });
+    return apiError('timeclock/out POST', err, 'Could not clock you out', 500, { ok: false });
   }
 }

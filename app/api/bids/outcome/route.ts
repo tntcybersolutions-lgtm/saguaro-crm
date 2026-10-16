@@ -22,6 +22,7 @@ import { NextRequest } from 'next/server';
 import { createServerClient } from '@/lib/supabase-server';
 import { requirePermission } from '@/lib/permissions';
 import { recordBidOutcome, type OutcomeBody } from '@/lib/bid-outcome';
+import { apiError } from '@/lib/api-error';
 
 export const runtime = 'nodejs';
 
@@ -41,7 +42,6 @@ export async function POST(req: NextRequest) {
     if (!r.ok) return Response.json({ error: r.error }, { status: r.status });
     return Response.json({ success: true, bidHistoryId: r.bidHistoryId, outcome: r.outcome, linesRecorded: r.linesRecorded, learned: r.learned });
   } catch (e) {
-    console.error('[bids/outcome]', e);
-    return Response.json({ error: 'Could not record the bid outcome. Please try again.' }, { status: 500 });
+    return apiError('bids/outcome POST', e, 'Could not record the bid outcome. Please try again.');
   }
 }

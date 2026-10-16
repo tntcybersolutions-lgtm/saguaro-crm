@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { createServerClient, getUser } from '@/lib/supabase-server';
 import { requirePermission } from '@/lib/permissions';
+import { apiError } from '@/lib/api-error';
 
 export async function POST(req: NextRequest, { params }: { params: Promise<{ id: string }> }) {
   const g = await requirePermission(req, 'Submittals', 'Full');
@@ -43,8 +44,6 @@ export async function POST(req: NextRequest, { params }: { params: Promise<{ id:
 
     return NextResponse.json({ status: newStatus, submittal });
   } catch (err: unknown) {
-    const msg = 'Internal server error';
-    console.error('[submittals/review] error:', msg);
-    return NextResponse.json({ error: `Failed to submit review: ${msg}` }, { status: 500 });
+    return apiError('submittals/[id]/review POST', err);
   }
 }

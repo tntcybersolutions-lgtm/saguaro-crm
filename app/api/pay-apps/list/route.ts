@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { createServerClient, getUser } from '@/lib/supabase-server';
+import { apiError } from '@/lib/api-error';
 
 export async function GET(req: NextRequest) {
   const { searchParams } = new URL(req.url);
@@ -23,9 +24,6 @@ export async function GET(req: NextRequest) {
     if (error) throw error;
     return NextResponse.json({ payApps: data || [], source: 'live' });
   } catch (e) {
-    // A raw Error's text is the database's words, not ours — log it, show the line we wrote.
-    console.error('[pay-apps/list]', e);
-    const message = "Unknown error";
-    return NextResponse.json({ payApps: [], source: 'error', error: message }, { status: 500 });
+    return apiError('pay-apps/list GET', e, undefined, 500, { payApps: [], source: 'error' });
   }
 }

@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from 'next/server';
 import { createServerClient, getUser } from '@/lib/supabase-server';
 import { requirePermission } from '@/lib/permissions';
 import { must } from '@/lib/db-write';
+import { apiError } from '@/lib/api-error';
 
 export const dynamic = 'force-dynamic';
 
@@ -214,7 +215,6 @@ export async function POST(req: NextRequest) {
       external_push: 'deferred',
     });
   } catch (err) {
-    console.error('[network/wizard/apply POST]', err);
-    return NextResponse.json({ error: 'Internal server error' }, { status: 500 });
+    return apiError('network/wizard/apply POST', err);
   }
 }

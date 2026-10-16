@@ -60,7 +60,6 @@ export async function PATCH(req: NextRequest, { params }: { params: Promise<{ id
     }
     return NextResponse.json({ success: true, ticket: data });
   } catch (err) {
-    console.error('[tm-tickets/update]', err);
-    return NextResponse.json({ error: 'Internal server error' }, { status: 500 });
+    return apiError('tm-tickets/[id]/update PATCH', err);
   }
 }

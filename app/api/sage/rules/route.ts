@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { getUser, createServerClient } from '@/lib/supabase-server';
 import { loadAutomationRules, logSageActivity } from '@/lib/sage-brain';
+import { apiError } from '@/lib/api-error';
 
 /**
  * R18 — Consent-first automation rules.
@@ -78,8 +79,8 @@ export async function POST(req: NextRequest) {
 
     const rules = await loadAutomationRules(user.id);
     return NextResponse.json({ ok: true, id: created?.id, rules });
-  } catch {
-    return NextResponse.json({ error: 'Failed to create rule' }, { status: 500 });
+  } catch (e) {
+    return apiError('sage/rules POST', e, 'Failed to create rule');
   }
 }
 
@@ -114,8 +115,8 @@ export async function PATCH(req: NextRequest) {
 
     const rules = await loadAutomationRules(user.id);
     return NextResponse.json({ ok: true, rules });
-  } catch {
-    return NextResponse.json({ error: 'Failed to update rule' }, { status: 500 });
+  } catch (e) {
+    return apiError('sage/rules PATCH', e, 'Failed to update rule');
   }
 }
 
@@ -152,7 +153,7 @@ export async function DELETE(req: NextRequest) {
 
     const rules = await loadAutomationRules(user.id);
     return NextResponse.json({ ok: true, rules });
-  } catch {
-    return NextResponse.json({ error: 'Failed to revoke rule' }, { status: 500 });
+  } catch (e) {
+    return apiError('sage/rules DELETE', e, 'Failed to revoke rule');
   }
 }

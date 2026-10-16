@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from 'next/server';
 import { createServerClient, getUser } from '@/lib/supabase-server';
 import { runAutopilotScan } from '@/lib/autopilot/scan';
 import { requestDay } from '@/lib/time-zone';
+import { apiError } from '@/lib/api-error';
 
 /** On-demand "Run Scan Now" — the same engine the 24/7 cron runs, scoped to this user's tenant. */
 export async function POST(req: NextRequest) {
@@ -13,7 +14,7 @@ export async function POST(req: NextRequest) {
     const { today } = await requestDay(req.headers, db, user.tenantId, 'autopilot/run');
     const { alertsCreated, summary } = await runAutopilotScan(db, user.tenantId, body.projectId || null, { today });
     return NextResponse.json({ success: true, summary, alertsCreated });
-  } catch {
-    return NextResponse.json({ error: 'Internal server error' }, { status: 500 });
+  } catch (e) {
+    return apiError('autopilot/run POST', e);
   }
 }

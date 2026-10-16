@@ -114,7 +114,6 @@ export async function POST(req: NextRequest, { params }: { params: { projectId: 
 
     return NextResponse.json({ item: data, emailed: true, recipients: result.recipients });
   } catch (e) {
-    console.error('[correspondence/POST]', e);
-    return NextResponse.json({ error: 'Failed to create correspondence' }, { status: 500 });
+    return apiError('projects/[projectId]/correspondence POST', e, 'Failed to create correspondence');
   }
 }

@@ -3,6 +3,7 @@ import { NextRequest } from 'next/server';
 import { getPublicSagePrompt } from '@/lib/sage-prompts';
 import { isSageEngineConfigured, SAGE_ENGINE_UNCONFIGURED_MESSAGE } from '@/lib/sage-brain';
 import { marketingChatLimiter } from '@/lib/rate-limit';
+import { apiError } from '@/lib/api-error';
 
 const client = new Anthropic();
 
@@ -69,7 +70,6 @@ export async function POST(req: NextRequest) {
       },
     });
   } catch (error) {
-    console.error('Marketing chat error:', error);
-    return Response.json({ error: 'Sage is unavailable right now. Please try again.' }, { status: 500 });
+    return apiError('chat/marketing POST', error, 'Sage is unavailable right now. Please try again.');
   }
 }

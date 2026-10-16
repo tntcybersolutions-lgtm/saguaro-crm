@@ -59,7 +59,7 @@ export async function POST(req: NextRequest) {
     } as never).select().single();
     if (error) throw error;
     return NextResponse.json({ delegation: data, success: true });
-  } catch {
-    return NextResponse.json({ error: 'Internal server error' }, { status: 500 });
+  } catch (e) {
+    return apiError('approvals/delegations POST', e);
   }
 }

@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { createServerClient, getUser } from '@/lib/supabase-server';
 import { toCents, toDollars, addCents } from '@/lib/calc';
+import { apiError } from '@/lib/api-error';
 
 /**
  * GET /api/prevailing-wage
@@ -187,12 +188,6 @@ export async function GET(req: NextRequest) {
       disclaimer,
     });
   } catch (err) {
-    // A raw Error's text is the database's words, not ours — log it, show the line we wrote.
-    console.error('[prevailing-wage]', err);
-    const message = "Failed to load prevailing wage data.";
-    return NextResponse.json(
-      { states: [], counties: [], determinations: [], rates: [], match: null, error: message, source: 'error' },
-      { status: 500 },
-    );
+    return apiError('prevailing-wage GET', err, "Failed to load prevailing wage data.", 500, { states: [], counties: [], determinations: [], rates: [], match: null, source: 'error' });
   }
 }

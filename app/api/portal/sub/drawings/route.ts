@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { createServerClient } from '@/lib/supabase-server';
 import { signStoredUrl } from '@/lib/storage-signing';
+import { apiError } from '@/lib/api-error';
 
 /** GET — read-only CURRENT drawing set for the sub's project, signed for viewing/
  *  download. Grouped client-side by discipline; superseded sheets are excluded. */
@@ -39,7 +40,7 @@ export async function GET(req: NextRequest) {
       })),
     );
     return NextResponse.json({ drawings: signed });
-  } catch {
-    return NextResponse.json({ error: 'Internal server error' }, { status: 500 });
+  } catch (e) {
+    return apiError('portal/sub/drawings GET', e);
   }
 }

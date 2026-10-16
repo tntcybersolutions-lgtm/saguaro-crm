@@ -88,7 +88,7 @@ export async function POST(req: NextRequest, { params }: { params: Promise<{ pro
 
     if (error) throw error;
     return NextResponse.json({ id: (co as Record<string, unknown> | null)?.id, changeOrder: co, success: true });
-  } catch {
-    return NextResponse.json({ error: 'Internal server error' }, { status: 500 });
+  } catch (e) {
+    return apiError('projects/[projectId]/change-orders POST', e);
   }
 }

@@ -3,6 +3,7 @@ import { createServerClient, getUser } from '@/lib/supabase-server';
 import { requirePermission } from '@/lib/permissions';
 import { onRFIAnswered } from '@/lib/triggers';
 import { runInBackground } from '@/lib/background';
+import { apiError } from '@/lib/api-error';
 
 export const dynamic = 'force-dynamic';
 
@@ -107,8 +108,7 @@ export async function POST(
     runInBackground(onRFIAnswered(id), 'onRFIAnswered');
 
     return NextResponse.json({ success: true });
-  } catch {
-    console.error('[rfis/respond] error');
-    return NextResponse.json({ error: 'Internal server error' }, { status: 500 });
+  } catch (e) {
+    return apiError('rfis/[id]/respond POST', e);
   }
 }

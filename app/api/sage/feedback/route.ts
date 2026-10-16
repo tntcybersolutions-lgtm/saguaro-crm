@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { getUser } from '@/lib/supabase-server';
 import { learnFromFeedback } from '@/lib/sage-intelligence-v6';
+import { apiError } from '@/lib/api-error';
 
 interface FeedbackBody {
   messageId: string;
@@ -29,7 +30,7 @@ export async function POST(req: NextRequest) {
     );
 
     return NextResponse.json({ success: true });
-  } catch {
-    return NextResponse.json({ error: 'Internal server error' }, { status: 500 });
+  } catch (e) {
+    return apiError('sage/feedback POST', e);
   }
 }

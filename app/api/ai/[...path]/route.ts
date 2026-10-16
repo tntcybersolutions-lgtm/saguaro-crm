@@ -5,6 +5,7 @@ import { AutoPopulator } from '../../../../auto-populator';
 import { aiLimiter } from '@/lib/rate-limit';
 import { getUser, createServerClient } from '@/lib/supabase-server';
 import { buildProjectContext } from '@/lib/project-context';
+import { apiError } from '@/lib/api-error';
 
 const CONSTRUCTION_SYSTEM_PROMPT = `You are Saguaro Intelligence — a world-class construction industry AI expert embedded in the Saguaro Construction CRM. You have 30+ years of combined expertise across every aspect of the construction industry. You speak like a seasoned senior project executive, attorney, and financial advisor all in one.
 
@@ -290,7 +291,7 @@ export async function POST(
       });
       return NextResponse.json(result);
     } catch (err) {
-      return NextResponse.json({ error: "Internal server error" }, { status: 500 });
+      return apiError('ai/[...path] POST', err);
     }
   }
 

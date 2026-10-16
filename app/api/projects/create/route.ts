@@ -7,6 +7,7 @@ import { onProjectCreated } from '@/lib/triggers';
 import { templateByKey } from '@/lib/project-templates';
 import { logActivity } from '@/lib/activity';
 import { runInBackground } from '@/lib/background';
+import { apiError } from '@/lib/api-error';
 
 export async function POST(req: NextRequest) {
   try {
@@ -172,7 +173,6 @@ export async function POST(req: NextRequest) {
 
     return NextResponse.json({ projectId, project, success: true });
   } catch (err) {
-    console.error('[projects/create]', err);
-    return NextResponse.json({ error: 'Internal server error' }, { status: 500 });
+    return apiError('projects/create POST', err);
   }
 }

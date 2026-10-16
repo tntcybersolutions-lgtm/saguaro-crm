@@ -149,7 +149,7 @@ export async function POST(req: NextRequest, { params }: { params: Promise<{ pro
 
     if (error) throw error;
     return NextResponse.json({ id: (pco as Row | null)?.id, potential_change_order: rowToPco(pco as Row), success: true });
-  } catch {
-    return NextResponse.json({ error: 'Internal server error' }, { status: 500 });
+  } catch (e) {
+    return apiError('projects/[projectId]/potential-change-orders POST', e);
   }
 }

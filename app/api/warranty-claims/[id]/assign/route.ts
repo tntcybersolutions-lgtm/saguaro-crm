@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { createServerClient, getUser } from '@/lib/supabase-server';
 import { requirePermission } from '@/lib/permissions';
+import { apiError } from '@/lib/api-error';
 
 export const dynamic = 'force-dynamic';
 
@@ -43,8 +44,8 @@ async function assignClaim(req: NextRequest, id: string) {
       .single();
     if (error) throw error;
     return NextResponse.json({ claim: data, ok: true });
-  } catch {
-    return NextResponse.json({ error: 'Failed to assign claim' }, { status: 500 });
+  } catch (e) {
+    return apiError('warranty-claims/[id]/assign', e, 'Failed to assign claim');
   }
 }
 

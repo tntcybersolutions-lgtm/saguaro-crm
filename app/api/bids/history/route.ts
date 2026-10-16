@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { createServerClient, getUser } from '@/lib/supabase-server';
+import { apiError } from '@/lib/api-error';
 
 const EMPTY_STATS = {
   totalBids: 0, wonBids: 0, lostBids: 0, pendingBids: 0,
@@ -53,7 +54,7 @@ export async function GET(req: NextRequest) {
     };
 
     return NextResponse.json({ bids, stats, source: 'live' });
-  } catch {
-    return NextResponse.json({ bids: [], stats: EMPTY_STATS, source: 'error' }, { status: 500 });
+  } catch (e) {
+    return apiError('bids/history GET', e, undefined, 500, { bids: [], stats: EMPTY_STATS, source: 'error' });
   }
 }

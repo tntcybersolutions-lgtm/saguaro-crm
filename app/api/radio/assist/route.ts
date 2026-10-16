@@ -3,6 +3,7 @@ import { requirePermission } from '@/lib/permissions';
 import { createServerClient } from '@/lib/supabase-server';
 import { createNotification } from '@/lib/notifications';
 import { runInBackground } from '@/lib/background';
+import { apiError } from '@/lib/api-error';
 
 /**
  * Saguaro Radio — assistance queue (GroupTalk "Queue" parity).
@@ -42,8 +43,8 @@ export async function POST(req: NextRequest) {
       ))), 'radio notify');
     }
     return NextResponse.json({ assist: row }, { status: 201 });
-  } catch {
-    return NextResponse.json({ error: 'Internal server error' }, { status: 500 });
+  } catch (e) {
+    return apiError('radio/assist POST', e);
   }
 }
 
@@ -57,8 +58,8 @@ export async function GET(req: NextRequest) {
     if (projectId) q = q.eq('project_id', projectId);
     const { data } = await q.limit(100);
     return NextResponse.json({ queue: data || [] });
-  } catch {
-    return NextResponse.json({ error: 'Internal server error' }, { status: 500 });
+  } catch (e) {
+    return apiError('radio/assist GET', e);
   }
 }
 
@@ -89,7 +90,7 @@ export async function PATCH(req: NextRequest) {
       ), 'radio notify');
     }
     return NextResponse.json({ assist: data });
-  } catch {
-    return NextResponse.json({ error: 'Internal server error' }, { status: 500 });
+  } catch (e) {
+    return apiError('radio/assist PATCH', e);
   }
 }

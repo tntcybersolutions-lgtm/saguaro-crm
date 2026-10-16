@@ -4,6 +4,7 @@ import { createServerClient, getUser } from '@/lib/supabase-server';
 import { requirePermission } from '@/lib/permissions';
 import { must } from '@/lib/db-write';
 import { fmtDate } from '@/lib/format-date';
+import { apiError } from '@/lib/api-error';
 
 /**
  * POST /api/payroll/generate
@@ -263,9 +264,6 @@ export async function POST(req: NextRequest) {
 
     return NextResponse.json({ downloadUrl: pdfUrl, id: certifiedPayrollId });
   } catch (err) {
-    // A raw Error's text is the database's words, not ours — log it, show the line we wrote.
-    console.error('[payroll/generate]', err);
-    const message = "Failed to generate certified payroll.";
-    return NextResponse.json({ error: message }, { status: 500 });
+    return apiError('payroll/generate POST', err, "Failed to generate certified payroll.");
   }
 }

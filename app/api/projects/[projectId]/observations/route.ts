@@ -73,7 +73,7 @@ export async function POST(req: NextRequest, { params }: { params: { projectId: 
     // Do not fabricate a fake `obs-…` id on failure — surface the real error.
     if (error) { console.error('[observations/POST]', error); return apiError('projects/projectId/observations', error, "Failed to create observation", 500); }
     return NextResponse.json({ observation: data });
-  } catch {
-    return NextResponse.json({ error: 'Failed to create observation' }, { status: 500 });
+  } catch (e) {
+    return apiError('projects/[projectId]/observations POST', e, 'Failed to create observation');
   }
 }

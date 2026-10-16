@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from 'next/server';
 import { requirePermission } from '@/lib/permissions';
 import { createServerClient } from '@/lib/supabase-server';
 import { must } from '@/lib/db-write';
+import { apiError } from '@/lib/api-error';
 
 /**
  * Crew location — ON-SHIFT, DISCLOSED tracking for dispatch + the human heatmap.
@@ -48,8 +49,8 @@ export async function POST(req: NextRequest) {
     } as never).then(() => {}, () => {});
 
     return NextResponse.json({ ok: true });
-  } catch {
-    return NextResponse.json({ error: 'Internal server error' }, { status: 500 });
+  } catch (e) {
+    return apiError('radio/location POST', e);
   }
 }
 
@@ -111,7 +112,7 @@ export async function GET(req: NextRequest) {
     return NextResponse.json({
       crew: rows.map((r) => ({ ...r, name: names.get(r.user_id) || 'Team member' })),
     });
-  } catch {
-    return NextResponse.json({ error: 'Internal server error' }, { status: 500 });
+  } catch (e) {
+    return apiError('radio/location GET', e);
   }
 }

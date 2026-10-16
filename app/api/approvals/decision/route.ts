@@ -3,6 +3,7 @@ import { createServerClient, getUser } from '@/lib/supabase-server';
 import { requirePermission } from '@/lib/permissions';
 import { metaFor, pickAmount, itemLabel, moduleLabel, type EntityMeta } from '@/lib/approvals';
 import { must } from '@/lib/db-write';
+import { apiError } from '@/lib/api-error';
 
 export const dynamic = 'force-dynamic';
 
@@ -193,7 +194,7 @@ export async function POST(req: NextRequest) {
       entityUpdated,
       decisionRecorded,
     });
-  } catch {
-    return NextResponse.json({ error: 'Internal server error' }, { status: 500 });
+  } catch (e) {
+    return apiError('approvals/decision POST', e);
   }
 }

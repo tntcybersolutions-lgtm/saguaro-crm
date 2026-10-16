@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from 'next/server';
 import { requirePermission } from '@/lib/permissions';
 import { computeSuggestions } from '@/lib/suggestions';
 import { recordLearning } from '@/lib/learning';
+import { apiError } from '@/lib/api-error';
 
 /**
  * GET /api/suggestions
@@ -27,8 +28,7 @@ export async function GET(req: NextRequest) {
     const feed = await computeSuggestions(db, user.tenantId);
     return NextResponse.json(feed);
   } catch (err) {
-    console.error('[suggestions/GET]', err);
-    return NextResponse.json({ error: 'Internal server error' }, { status: 500 });
+    return apiError('suggestions GET', err);
   }
 }
 
@@ -74,7 +74,6 @@ export async function POST(req: NextRequest) {
     });
     return NextResponse.json({ ok: true });
   } catch (err) {
-    console.error('[suggestions/POST]', err);
-    return NextResponse.json({ error: 'Internal server error' }, { status: 500 });
+    return apiError('suggestions POST', err);
   }
 }

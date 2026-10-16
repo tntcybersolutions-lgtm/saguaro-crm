@@ -3,6 +3,7 @@ import { requirePermission } from '@/lib/permissions';
 import { createServerClient } from '@/lib/supabase-server';
 import { signStoredUrl } from '@/lib/storage-signing';
 import { must } from '@/lib/db-write';
+import { apiError } from '@/lib/api-error';
 
 const BUCKET = 'project-files';
 const MAX_BYTES = 25 * 1024 * 1024;
@@ -61,8 +62,8 @@ export async function GET(req: NextRequest) {
       .eq('tenant_id', g.user.tenantId).eq('channel_id', channelId)
       .order('created_at', { ascending: false });
     return NextResponse.json({ links: data || [] });
-  } catch {
-    return NextResponse.json({ error: 'Internal server error' }, { status: 500 });
+  } catch (e) {
+    return apiError('radio/guest GET', e);
   }
 }
 
@@ -132,8 +133,8 @@ export async function POST(req: NextRequest) {
     } as never).select().single();
     if (error) throw error;
     return NextResponse.json({ link, url: `/portals/radio/${(link as any).token}` }, { status: 201 });
-  } catch {
-    return NextResponse.json({ error: 'Internal server error' }, { status: 500 });
+  } catch (e) {
+    return apiError('radio/guest POST', e);
   }
 }
 
@@ -147,7 +148,7 @@ export async function DELETE(req: NextRequest) {
     await must(db.from('radio_guest_links').update({ revoked_at: new Date().toISOString() } as never)
       .eq('id', b.linkId).eq('tenant_id', g.user.tenantId), 'radio_guest_links update');
     return NextResponse.json({ ok: true });
-  } catch {
-    return NextResponse.json({ error: 'Internal server error' }, { status: 500 });
+  } catch (e) {
+    return apiError('radio/guest DELETE', e);
   }
 }

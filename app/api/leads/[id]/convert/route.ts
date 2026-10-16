@@ -3,6 +3,7 @@ import { nextJobColor } from '@/lib/project-colors';
 import { createServerClient } from '@/lib/supabase-server';
 import { requirePermission } from '@/lib/permissions';
 import { normaliseStage } from '@/lib/lead-stages';
+import { apiError } from '@/lib/api-error';
 
 /**
  * POST /api/leads/[id]/convert — win a lead and open its job.
@@ -105,7 +106,6 @@ export async function POST(req: NextRequest, { params }: { params: { id: string 
       { status: 201 },
     );
   } catch (err) {
-    console.error('[leads/convert]', err instanceof Error ? err.message : err);
-    return NextResponse.json({ error: 'Could not convert the lead to a project' }, { status: 500 });
+    return apiError('leads/[id]/convert POST', err, 'Could not convert the lead to a project');
   }
 }

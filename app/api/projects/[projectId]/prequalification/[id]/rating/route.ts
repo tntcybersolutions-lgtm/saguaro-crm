@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { createServerClient, getUser } from '@/lib/supabase-server';
 import { requirePermission } from '@/lib/permissions';
+import { apiError } from '@/lib/api-error';
 
 export const dynamic = 'force-dynamic';
 
@@ -39,9 +40,8 @@ async function handle(
       .eq('tenant_id', user.tenantId);
     if (error) throw error;
     return NextResponse.json({ success: true, field_rating: rating });
-  } catch {
-    console.error('[prequalification/rating] error');
-    return NextResponse.json({ error: 'Internal server error' }, { status: 500 });
+  } catch (e) {
+    return apiError('projects/[projectId]/prequalification/[id]/rating', e);
   }
 }
 

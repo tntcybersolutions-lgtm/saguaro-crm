@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { createServerClient, getUser } from '@/lib/supabase-server';
 import type { Database } from '@/lib/database.types';
+import { apiError } from '@/lib/api-error';
 
 export async function GET(req: NextRequest) {
   const user = await getUser(req);
@@ -15,8 +16,8 @@ export async function GET(req: NextRequest) {
       .order('created_at', { ascending: false });
     if (error) throw error;
     return NextResponse.json({ data });
-  } catch {
-    return NextResponse.json({ error: 'Internal server error' }, { status: 500 });
+  } catch (e) {
+    return apiError('client-portal/users GET', e);
   }
 }
 
@@ -41,7 +42,7 @@ export async function POST(req: NextRequest) {
       .single();
     if (error) throw error;
     return NextResponse.json({ data });
-  } catch {
-    return NextResponse.json({ error: 'Internal server error' }, { status: 500 });
+  } catch (e) {
+    return apiError('client-portal/users POST', e);
   }
 }

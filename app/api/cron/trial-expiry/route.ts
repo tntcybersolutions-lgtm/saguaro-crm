@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { createServerClient } from '@/lib/supabase-server';
 import { sendTrialExpiring } from '@/lib/email';
+import { apiError } from '@/lib/api-error';
 
 export async function GET(req: NextRequest) {
   // Same guard as every other cron: only Vercel Cron (Bearer CRON_SECRET) may run
@@ -42,7 +43,7 @@ export async function GET(req: NextRequest) {
     }
 
     return NextResponse.json({ success: true, sent });
-  } catch {
-    return NextResponse.json({ error: "Internal server error" }, { status: 500 });
+  } catch (e) {
+    return apiError('cron/trial-expiry GET', e);
   }
 }

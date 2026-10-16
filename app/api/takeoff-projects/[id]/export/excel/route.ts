@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { createServerClient, getUser } from '@/lib/supabase-server';
 import { buildXlsx, safeFilename, todayStamp, EXPORT_CONTENT_TYPE, type ReportColumn } from '@/lib/report-export';
+import { apiError } from '@/lib/api-error';
 
 export const runtime = 'nodejs';
 export const dynamic = 'force-dynamic';
@@ -105,8 +106,7 @@ export async function GET(req: NextRequest, { params }: { params: Promise<{ id: 
         'Content-Disposition': `attachment; filename="${fileName}"`,
       },
     });
-  } catch {
-    console.error('[takeoff-projects/[id]/export/excel] export failed');
-    return NextResponse.json({ error: 'Export failed' }, { status: 500 });
+  } catch (e) {
+    return apiError('takeoff-projects/[id]/export/excel GET', e, 'Export failed');
   }
 }

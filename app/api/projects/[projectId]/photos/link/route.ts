@@ -87,13 +87,9 @@ export async function GET(req: NextRequest, { params }: { params: { projectId: s
     if (error) throw error;
     return NextResponse.json({ links: data || [] });
   } catch (err: unknown) {
-    // A raw Error's text is the database's words, not ours — log it, show the line we wrote.
-    console.error('[projects/projectId/photos/link]', err);
-    const detail = "Internal server error";
-    console.error('[photos/link GET]', detail);
     // A failed read must not render as "no linked photos" — surface it so the
     // UI can show an error state with a retry.
-    return NextResponse.json({ error: 'Failed to load photo links', detail }, { status: 500 });
+    return apiError('projects/[projectId]/photos/link GET', err, 'Failed to load photo links');
   }
 }
 
@@ -155,8 +151,6 @@ export async function DELETE(req: NextRequest, { params }: { params: { projectId
 
     return NextResponse.json({ success: true });
   } catch (err: unknown) {
-    const msg = 'Internal server error';
-    console.error('[photos/link DELETE]', msg);
-    return NextResponse.json({ error: `Failed to unlink: ${msg}` }, { status: 500 });
+    return apiError('projects/[projectId]/photos/link DELETE', err);
   }
 }

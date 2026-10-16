@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from 'next/server';
 import { createServerClient, getUser } from '@/lib/supabase-server';
 import { requirePermission } from '@/lib/permissions';
 import type { Database } from '@/lib/database.types';
+import { apiError } from '@/lib/api-error';
 
 export async function GET(
   req: NextRequest,
@@ -38,12 +39,7 @@ export async function GET(
     if (error2) throw error2;
     return NextResponse.json({ messages: data2 || [] });
   } catch (err: unknown) {
-    const msg = 'Internal server error';
-    console.error('[projects/messages GET] error:', msg);
-    return NextResponse.json(
-      { error: `[projects/messages GET] Database error: ${msg}` },
-      { status: 500 }
-    );
+    return apiError('projects/[projectId]/messages GET', err);
   }
 }
 
@@ -97,11 +93,6 @@ export async function POST(
     if (error2) throw error2;
     return NextResponse.json({ success: true, message: data2 });
   } catch (err: unknown) {
-    const msg = 'Internal server error';
-    console.error('[projects/messages POST] error:', msg);
-    return NextResponse.json(
-      { error: `[projects/messages POST] Database error: ${msg}` },
-      { status: 500 }
-    );
+    return apiError('projects/[projectId]/messages POST', err);
   }
 }

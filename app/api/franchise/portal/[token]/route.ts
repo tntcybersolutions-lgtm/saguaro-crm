@@ -3,6 +3,7 @@ import { createServerClient } from '@/lib/supabase-server';
 import { computeHealth } from '@/lib/portfolio-health';
 import { STAGE_META } from '@/lib/franchise-template';
 import { requestDay } from '@/lib/time-zone';
+import { apiError } from '@/lib/api-error';
 
 /**
  * PUBLIC franchisee portal feed. Access control IS the unguessable token — it maps
@@ -59,7 +60,7 @@ export async function GET(_req: NextRequest, { params }: { params: { token: stri
       milestones: { next: nextUp, recentlyCompleted: recentDone },
       verifications: verifiedRecent,
     });
-  } catch {
-    return NextResponse.json({ error: 'error' }, { status: 500 });
+  } catch (e) {
+    return apiError('franchise/portal/[token] GET', e);
   }
 }

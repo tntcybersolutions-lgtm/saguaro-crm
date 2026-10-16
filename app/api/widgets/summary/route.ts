@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { createServerClient, getUser } from '@/lib/supabase-server';
 import { addDays, requestDay, startOfDayIn } from '@/lib/time-zone';
+import { apiError } from '@/lib/api-error';
 
 /**
  * GET /api/widgets/summary
@@ -132,7 +133,7 @@ export async function GET(req: NextRequest) {
         { label: 'Punch List', url: '/app/my-work', icon: 'check' },
       ],
     });
-  } catch {
-    return NextResponse.json({ error: 'Internal server error' }, { status: 500 });
+  } catch (e) {
+    return apiError('widgets/summary GET', e);
   }
 }

@@ -270,6 +270,10 @@ STILL OPEN:
   project-context and the job summary read both. The 3 stored `complete` rows (Sonoran Ridge) were set to `completed`.
 - Swallowed errors in the schedule routes → `apiError` with a ref (list, [id] PUT/DELETE, [taskId] PATCH); the job
   schedule shows the ref when the list fails. Also pay-apps/[id] and owner-portal GET.
-- STILL OPEN (same class, not done this pass — speed): 294 other `catch {}` blocks across ~200 API routes still return a
-  bare 500 with nothing logged. Mechanical codemod to `apiError`; one PR on its own.
+- ~~294 other `catch {}` blocks across ~200 API routes still return a bare 500 with nothing logged~~ **Fixed 16 Oct
+  (`fix/all-swallowed-errors`, Chad: "fix all fully"):** 457 catch blocks in 329 route files now return `apiError`
+  (real error logged with a ref; any fields a screen reads on failure, e.g. `tasks: []`, kept via apiError's new
+  `extra`). Raw `e.message` no longer reaches a response from these. `lib/api-response serverError` goes through
+  apiError too. The 4 streaming endpoints (Sage chat, discovery chat, design generate) keep their text reply and now log.
+  Left on purpose: ~112 comment-only catches that are best-effort by design (JSON body parse, optional weather, etc.).
 - Dead code noted: `lib/document-templates/g702-generator.ts` (imported nowhere) still reads `contract_amount` as line 1.

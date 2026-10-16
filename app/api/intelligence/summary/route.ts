@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { requirePermission } from '@/lib/permissions';
+import { apiError } from '@/lib/api-error';
 
 /**
  * GET /api/intelligence/summary?projectIds=a,b,c
@@ -566,7 +567,6 @@ export async function GET(req: NextRequest) {
       generatedAt: new Date().toISOString(),
     });
   } catch (err) {
-    console.error('[intelligence/summary/GET]', err);
-    return NextResponse.json({ error: 'Internal server error' }, { status: 500 });
+    return apiError('intelligence/summary GET', err);
   }
 }

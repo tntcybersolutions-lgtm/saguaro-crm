@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { createServerClient, getUser } from '@/lib/supabase-server';
 import { requirePermission } from '@/lib/permissions';
+import { apiError } from '@/lib/api-error';
 
 export const dynamic = 'force-dynamic';
 
@@ -34,8 +35,8 @@ async function updateStatus(req: NextRequest, id: string) {
       .single();
     if (error) throw error;
     return NextResponse.json({ claim: data, ok: true });
-  } catch {
-    return NextResponse.json({ error: 'Failed to update status' }, { status: 500 });
+  } catch (e) {
+    return apiError('warranty-claims/[id]/status', e, 'Failed to update status');
   }
 }
 

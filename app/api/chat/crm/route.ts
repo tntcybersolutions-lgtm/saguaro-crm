@@ -10,6 +10,7 @@ import {
   SAGE_ENGINE_UNCONFIGURED_MESSAGE,
 } from '@/lib/sage-brain';
 import { requestDay } from '@/lib/time-zone';
+import { apiError } from '@/lib/api-error';
 
 const client = new Anthropic();
 
@@ -2490,7 +2491,6 @@ TOOL USE GUIDANCE:
     });
 
   } catch (error) {
-    console.error('CRM chat error:', error);
-    return Response.json({ error: 'Sage is unavailable right now. Please try again.' }, { status: 500 });
+    return apiError('chat/crm POST', error, 'Sage is unavailable right now. Please try again.');
   }
 }

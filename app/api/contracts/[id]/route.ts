@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { createServerClient, getUser } from '@/lib/supabase-server';
 import { requirePermission } from '@/lib/permissions';
+import { apiError } from '@/lib/api-error';
 
 export async function GET(req: NextRequest, { params }: { params: Promise<{ id: string }> }) {
   const { id } = await params;
@@ -18,8 +19,8 @@ export async function GET(req: NextRequest, { params }: { params: Promise<{ id: 
 
     if (error || !data) return NextResponse.json({ error: 'Not found' }, { status: 404 });
     return NextResponse.json({ contract: data });
-  } catch {
-    return NextResponse.json({ error: 'Internal server error' }, { status: 500 });
+  } catch (e) {
+    return apiError('contracts/[id] GET', e);
   }
 }
 
@@ -54,8 +55,8 @@ export async function PATCH(req: NextRequest, { params }: { params: Promise<{ id
 
     if (error) throw error;
     return NextResponse.json({ contract: data });
-  } catch {
-    return NextResponse.json({ error: 'Internal server error' }, { status: 500 });
+  } catch (e) {
+    return apiError('contracts/[id] PATCH', e);
   }
 }
 
@@ -75,7 +76,7 @@ export async function DELETE(req: NextRequest, { params }: { params: Promise<{ i
 
     if (error) throw error;
     return NextResponse.json({ success: true });
-  } catch {
-    return NextResponse.json({ error: 'Internal server error' }, { status: 500 });
+  } catch (e) {
+    return apiError('contracts/[id] DELETE', e);
   }
 }

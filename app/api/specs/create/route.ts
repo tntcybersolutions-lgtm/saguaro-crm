@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { createServerClient, getUser } from '@/lib/supabase-server';
+import { apiError } from '@/lib/api-error';
 
 export async function POST(req: NextRequest) {
   const user = await getUser(req);
@@ -27,10 +28,6 @@ export async function POST(req: NextRequest) {
     // The web specs page reads `json.spec`; keep `specification` for any other caller.
     return NextResponse.json({ success: true, spec: data, specification: data });
   } catch (err: unknown) {
-    // A raw Error's text is the database's words, not ours — log it, show the line we wrote.
-    console.error('[specs/create]', err);
-    const msg = "Internal server error";
-    console.error('[specs/create] error:', msg);
-    return NextResponse.json({ error: `Failed to create spec: ${msg}` }, { status: 500 });
+    return apiError('specs/create POST', err);
   }
 }

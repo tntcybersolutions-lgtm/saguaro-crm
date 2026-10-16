@@ -3,6 +3,7 @@ import { createServerClient, getUser } from '@/lib/supabase-server';
 import { requirePermission } from '@/lib/permissions';
 import { must } from '@/lib/db-write';
 import { orValue } from '@/lib/pg-filter';
+import { apiError } from '@/lib/api-error';
 
 export async function POST(req: NextRequest) {
   const g = await requirePermission(req, 'Budget', 'Edit');
@@ -72,7 +73,7 @@ export async function POST(req: NextRequest) {
     }
 
     return NextResponse.json({ bill: data });
-  } catch {
-    return NextResponse.json({ error: 'Internal server error' }, { status: 500 });
+  } catch (e) {
+    return apiError('bills/create POST', e);
   }
 }

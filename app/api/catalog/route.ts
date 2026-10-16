@@ -3,6 +3,7 @@ import { requirePermission, hasPermission } from '@/lib/permissions';
 import { isPlatformAdmin } from '@/lib/platform-admin';
 import { signStoredUrl } from '@/lib/storage-signing';
 import { hasLiveStock } from './stock';
+import { apiError } from '@/lib/api-error';
 
 /** GET ?vertical=&q= — Materials Catalog price-comparison snapshot.
  *
@@ -199,7 +200,7 @@ export async function GET(req: NextRequest) {
          tenant admin, and the write behind it is now platform-admin only — a
          page-wide answer to a per-row question. item.canEditImage replaces it. */
     });
-  } catch {
-    return NextResponse.json({ error: 'Internal server error' }, { status: 500 });
+  } catch (e) {
+    return apiError('catalog GET', e);
   }
 }

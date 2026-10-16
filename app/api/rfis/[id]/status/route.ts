@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { createServerClient, getUser } from '@/lib/supabase-server';
 import { requirePermission } from '@/lib/permissions';
+import { apiError } from '@/lib/api-error';
 
 export const dynamic = 'force-dynamic';
 
@@ -49,8 +50,7 @@ export async function PATCH(
     if (error) throw error;
 
     return NextResponse.json({ success: true, status });
-  } catch {
-    console.error('[rfis/status] error');
-    return NextResponse.json({ error: 'Internal server error' }, { status: 500 });
+  } catch (e) {
+    return apiError('rfis/[id]/status PATCH', e);
   }
 }

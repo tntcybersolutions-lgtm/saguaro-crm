@@ -13,6 +13,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { requireApiKey } from '@/lib/api-key-auth';
 import { createServerClient } from '@/lib/supabase-server';
+import { apiError } from '@/lib/api-error';
 
 export const dynamic = 'force-dynamic';
 
@@ -40,7 +41,7 @@ export async function GET(req: NextRequest) {
     const { data, error } = await q;
     if (error) throw error;
     return NextResponse.json({ data: data ?? [], has_more: (data?.length ?? 0) === limit });
-  } catch {
-    return NextResponse.json({ error: 'Internal server error' }, { status: 500 });
+  } catch (e) {
+    return apiError('v1/rfis GET', e);
   }
 }

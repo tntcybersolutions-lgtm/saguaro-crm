@@ -37,7 +37,7 @@ export async function PATCH(req: NextRequest, { params }: { params: { projectId:
       return apiError('projects/projectId/tm-tickets/id', error, "Failed to update ticket", status);
     }
     return NextResponse.json({ ticket: data });
-  } catch {
-    return NextResponse.json({ error: 'Failed to update ticket' }, { status: 500 });
+  } catch (e) {
+    return apiError('projects/[projectId]/tm-tickets/[id] PATCH', e, 'Failed to update ticket');
   }
 }

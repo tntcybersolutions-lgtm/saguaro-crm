@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { requirePermission } from '@/lib/permissions';
+import { apiError } from '@/lib/api-error';
 
 // Real safety_incidents columns that a caller may set.
 const ALLOWED_INCIDENT_COLUMNS = [
@@ -63,10 +64,6 @@ export async function POST(req: NextRequest) {
     if (error) throw error;
     return NextResponse.json({ success: true, incident: data });
   } catch (err: unknown) {
-    // A raw Error's text is the database's words, not ours — log it, show the line we wrote.
-    console.error('[safety/incidents/create]', err);
-    const msg = "Internal server error";
-    console.error('[safety/incidents/create] error:', msg);
-    return NextResponse.json({ error: `Failed to create safety incident: ${msg}` }, { status: 500 });
+    return apiError('safety/incidents/create POST', err);
   }
 }

@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { createServerClient, getUser } from '@/lib/supabase-server';
 import { requirePermission } from '@/lib/permissions';
+import { apiError } from '@/lib/api-error';
 
 export const dynamic = 'force-dynamic';
 
@@ -50,10 +51,6 @@ export async function POST(req: NextRequest, { params }: { params: Promise<{ id:
 
     return NextResponse.json({ success: true, url, proposal: data });
   } catch (err: unknown) {
-    // A raw Error's text is the database's words, not ours — log it, show the line we wrote.
-    console.error('[proposals/id/upload]', err);
-    const msg = "Internal server error";
-    console.error('[proposals/[id]/upload] error:', msg);
-    return NextResponse.json({ error: `Failed to upload proposal PDF: ${msg}` }, { status: 500 });
+    return apiError('proposals/[id]/upload POST', err);
   }
 }

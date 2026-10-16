@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { createServerClient, getUser } from '@/lib/supabase-server';
 import { must } from '@/lib/db-write';
+import { apiError } from '@/lib/api-error';
 
 /**
  * GET /api/discovery/answers?customer_id=xxx
@@ -27,8 +28,8 @@ export async function GET(req: NextRequest) {
 
     if (error) throw error;
     return NextResponse.json({ answers: data || [] });
-  } catch {
-    return NextResponse.json({ error: 'Internal server error' }, { status: 500 });
+  } catch (e) {
+    return apiError('discovery/answers GET', e);
   }
 }
 
@@ -127,8 +128,8 @@ export async function POST(req: NextRequest) {
       answer,
       upsells_created: upsellCount,
     }, { status: 201 });
-  } catch {
-    return NextResponse.json({ error: 'Internal server error' }, { status: 500 });
+  } catch (e) {
+    return apiError('discovery/answers POST', e);
   }
 }
 

@@ -9,6 +9,7 @@
  */
 import { NextRequest, NextResponse } from 'next/server';
 import { requirePermission } from '@/lib/permissions';
+import { apiError } from '@/lib/api-error';
 
 export const runtime = 'nodejs';
 
@@ -45,7 +46,7 @@ export async function GET(req: NextRequest) {
     if (fErr) throw fErr;
 
     return NextResponse.json({ winRate, wins, losses, factors: factors || [] });
-  } catch {
-    return NextResponse.json({ winRate: null, wins: 0, losses: 0, factors: [] }, { status: 500 });
+  } catch (e) {
+    return apiError('bids/win-factors GET', e, undefined, 500, { winRate: null, wins: 0, losses: 0, factors: [] });
   }
 }

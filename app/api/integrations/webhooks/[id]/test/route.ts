@@ -3,6 +3,7 @@ import { createHmac } from 'node:crypto';
 import { createServerClient, getUser } from '@/lib/supabase-server';
 import { requirePermission } from '@/lib/permissions';
 import { tryWrite } from '@/lib/db-write';
+import { apiError } from '@/lib/api-error';
 
 /* ------------------------------------------------------------------ */
 /*  POST /api/integrations/webhooks/[id]/test                         */
@@ -86,7 +87,7 @@ export async function POST(req: NextRequest, ctx: { params: Promise<{ id: string
       event_type: eventType,
       ...(errorMsg ? { error: errorMsg } : {}),
     });
-  } catch {
-    return NextResponse.json({ error: 'Internal server error' }, { status: 500 });
+  } catch (e) {
+    return apiError('integrations/webhooks/[id]/test POST', e);
   }
 }

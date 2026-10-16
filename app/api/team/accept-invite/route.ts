@@ -28,6 +28,7 @@ import { createServerClient, getUser } from '@/lib/supabase-server';
 import { grantInvitedRole, findInviteByToken } from '@/lib/invite-role';
 import { createNotification } from '@/lib/notifications';
 import { must } from '@/lib/db-write';
+import { apiError } from '@/lib/api-error';
 
 const INVITE_TTL_DAYS = 7;
 
@@ -113,8 +114,7 @@ export async function GET(req: NextRequest) {
       acceptedAt: invite.accepted_at || null,
     });
   } catch (err) {
-    console.error('[accept-invite GET] exception:', err);
-    return NextResponse.json({ valid: false, reason: 'error', error: 'Could not load this invitation.' }, { status: 500 });
+    return apiError('team/accept-invite GET', err, 'Could not load this invitation.', 500, { valid: false, reason: 'error' });
   }
 }
 
@@ -303,7 +303,6 @@ export async function POST(req: NextRequest) {
       redirect: '/app',
     });
   } catch (err) {
-    console.error('[accept-invite POST] exception:', err);
-    return NextResponse.json({ error: 'Could not accept the invitation.', reason: 'error' }, { status: 500 });
+    return apiError('team/accept-invite POST', err, 'Could not accept the invitation.', 500, { reason: 'error' });
   }
 }

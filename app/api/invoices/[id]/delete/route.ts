@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { createServerClient, getUser } from '@/lib/supabase-server';
 import { requirePermission } from '@/lib/permissions';
+import { apiError } from '@/lib/api-error';
 
 export async function DELETE(req: NextRequest, { params }: { params: { id: string } }) {
   const g = await requirePermission(req, 'Budget', 'Full');
@@ -12,7 +13,6 @@ export async function DELETE(req: NextRequest, { params }: { params: { id: strin
     if (error) throw error;
     return NextResponse.json({ success: true });
   } catch (err) {
-    console.error('[invoices/delete]', err);
-    return NextResponse.json({ error: 'Failed to delete invoice' }, { status: 500 });
+    return apiError('invoices/[id]/delete DELETE', err, 'Failed to delete invoice');
   }
 }

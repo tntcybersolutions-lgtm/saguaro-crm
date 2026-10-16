@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { createServerClient, getUser } from '@/lib/supabase-server';
 import { requirePermission } from '@/lib/permissions';
+import { apiError } from '@/lib/api-error';
 
 export async function PATCH(req: NextRequest, { params }: { params: { projectId: string; id: string } }) {
   const g = await requirePermission(req, 'Projects', 'Edit');
@@ -30,7 +31,7 @@ export async function PATCH(req: NextRequest, { params }: { params: { projectId:
     // Surface a real failure instead of echoing the request back as a fake success.
     if (error || !data) return NextResponse.json({ error: 'Failed to update submission' }, { status: error?.code === 'PGRST116' ? 404 : 500 });
     return NextResponse.json({ submission: data });
-  } catch {
-    return NextResponse.json({ error: 'Failed to update submission' }, { status: 500 });
+  } catch (e) {
+    return apiError('projects/[projectId]/forms/submissions/[id] PATCH', e, 'Failed to update submission');
   }
 }

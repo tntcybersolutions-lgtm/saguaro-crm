@@ -18,6 +18,7 @@ import {
 } from '@/lib/timeclock/server';
 import { must } from '@/lib/db-write';
 import { TIME_ZONE_HEADER } from '@/lib/time-zone';
+import { apiError } from '@/lib/api-error';
 
 /**
  * POST /api/timeclock/in
@@ -128,7 +129,6 @@ export async function POST(req: NextRequest) {
 
     return NextResponse.json({ ok: true, shift: toShift(shiftRow), alreadyOpen: false }, { status: 201 });
   } catch (err) {
-    console.error('[timeclock/in]', err instanceof Error ? err.message : err);
-    return NextResponse.json({ ok: false, error: 'Could not clock you in' }, { status: 500 });
+    return apiError('timeclock/in POST', err, 'Could not clock you in', 500, { ok: false });
   }
 }

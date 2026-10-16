@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { createServerClient, getUser } from '@/lib/supabase-server';
+import { apiError } from '@/lib/api-error';
 
 export const dynamic = 'force-dynamic';
 
@@ -30,7 +31,6 @@ export async function POST(
     }
     return NextResponse.json({ success: true, user: data });
   } catch (err) {
-    console.error('[client-portal/users/[id]/resend]', err);
-    return NextResponse.json({ error: 'Failed to resend invite' }, { status: 500 });
+    return apiError('client-portal/users/[id]/resend POST', err, 'Failed to resend invite');
   }
 }

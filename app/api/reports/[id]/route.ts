@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from 'next/server';
 import { createServerClient, getUser } from '@/lib/supabase-server';
 import { requirePermission } from '@/lib/permissions';
 import { requestDay } from '@/lib/time-zone';
+import { apiError } from '@/lib/api-error';
 
 export const dynamic = 'force-dynamic';
 
@@ -82,8 +83,8 @@ export async function PUT(req: NextRequest, { params }: { params: { id: string }
   try {
     const data = await update(req, params.id, user.tenantId);
     return NextResponse.json({ report: flatten(data) });
-  } catch {
-    return NextResponse.json({ error: 'Internal server error' }, { status: 500 });
+  } catch (e) {
+    return apiError('reports/[id] PUT', e);
   }
 }
 
@@ -95,8 +96,8 @@ export async function PATCH(req: NextRequest, { params }: { params: { id: string
   try {
     const data = await update(req, params.id, user.tenantId);
     return NextResponse.json({ report: flatten(data) });
-  } catch {
-    return NextResponse.json({ error: 'Internal server error' }, { status: 500 });
+  } catch (e) {
+    return apiError('reports/[id] PATCH', e);
   }
 }
 
@@ -114,7 +115,7 @@ export async function DELETE(req: NextRequest, { params }: { params: { id: strin
       .eq('tenant_id', user.tenantId);
     if (error) throw error;
     return NextResponse.json({ ok: true });
-  } catch {
-    return NextResponse.json({ error: 'Internal server error' }, { status: 500 });
+  } catch (e) {
+    return apiError('reports/[id] DELETE', e);
   }
 }

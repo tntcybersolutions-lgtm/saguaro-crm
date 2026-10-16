@@ -6,6 +6,7 @@ import { transcribeRadioVoice } from '@/lib/transcribe';
 import { stampPresentAtSend } from '@/lib/radio-receipts';
 import { must } from '@/lib/db-write';
 import { runInBackground } from '@/lib/background';
+import { apiError } from '@/lib/api-error';
 
 const BUCKET = 'project-files';
 const MAX_BYTES = 25 * 1024 * 1024; // 25MB — minutes of audio, not uploads gone wrong
@@ -91,7 +92,7 @@ export async function POST(req: NextRequest) {
     ), 'radio notify');
 
     return NextResponse.json({ message: msg }, { status: 201 });
-  } catch {
-    return NextResponse.json({ error: 'Internal server error' }, { status: 500 });
+  } catch (e) {
+    return apiError('radio/voice POST', e);
   }
 }

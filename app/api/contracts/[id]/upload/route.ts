@@ -3,6 +3,7 @@ import { createServerClient } from '@/lib/supabase-server';
 import { requirePermission } from '@/lib/permissions';
 import { signStoredUrl } from '@/lib/storage-signing';
 import { must } from '@/lib/db-write';
+import { apiError } from '@/lib/api-error';
 
 export const runtime = 'nodejs';
 export const dynamic = 'force-dynamic';
@@ -89,13 +90,6 @@ export async function POST(req: NextRequest, { params }: { params: Promise<{ id:
     const signed = await signStoredUrl(BUCKET, publicUrl, 3600);
     return NextResponse.json({ success: true, pdf_url: signed, file_url: signed, url: signed });
   } catch (err: unknown) {
-    // A raw Error's text is the database's words, not ours — log it, show the line we wrote.
-    console.error('[contracts/id/upload]', err);
-    const msg = "server error";
-    console.error('[contracts/upload] error:', msg);
-    return NextResponse.json(
-      { error: 'Failed to upload the signed contract. Please try again.' },
-      { status: 500 },
-    );
+    return apiError('contracts/[id]/upload POST', err, 'Failed to upload the signed contract. Please try again.');
   }
 }

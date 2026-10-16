@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { requirePermission } from '@/lib/permissions';
 import { sendInvoiceEmail } from '@/lib/email';
+import { apiError } from '@/lib/api-error';
 
 export async function POST(req: NextRequest, { params }: { params: { id: string } }) {
   const g = await requirePermission(req, 'Budget', 'Edit');
@@ -68,7 +69,6 @@ export async function POST(req: NextRequest, { params }: { params: { id: string 
 
     return NextResponse.json({ success: true, emailed: true, to: invoice.vendor_email });
   } catch (err) {
-    console.error('[invoices/send]', err);
-    return NextResponse.json({ error: 'Failed to send invoice' }, { status: 500 });
+    return apiError('invoices/[id]/send POST', err, 'Failed to send invoice');
   }
 }

@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { createServerClient } from '@/lib/supabase-server';
 import { requirePermission } from '@/lib/permissions';
+import { apiError } from '@/lib/api-error';
 
 const RESET_REDIRECT =
   `${process.env.NEXT_PUBLIC_APP_URL || 'https://saguarocontrol.net'}/reset-password`;
@@ -44,7 +45,7 @@ export async function POST(req: NextRequest, { params }: { params: Promise<{ id:
     }
 
     return NextResponse.json({ success: true });
-  } catch {
-    return NextResponse.json({ error: 'Internal server error' }, { status: 500 });
+  } catch (e) {
+    return apiError('team/users/[id]/reset-password POST', e);
   }
 }

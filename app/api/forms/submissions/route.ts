@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { createServerClient, getUser } from '@/lib/supabase-server';
+import { apiError } from '@/lib/api-error';
 
 export async function GET(req: NextRequest) {
   try {
@@ -33,8 +34,7 @@ export async function GET(req: NextRequest) {
 
     return NextResponse.json({ submissions: data || [] });
   } catch (err: any) {
-    console.error('[forms/submissions] GET error', err);
-    return NextResponse.json({ error: "Couldn't load form submissions. Please try again." }, { status: 500 });
+    return apiError('forms/submissions GET', err, "Couldn't load form submissions. Please try again.");
   }
 }
 
@@ -100,7 +100,6 @@ export async function POST(req: NextRequest) {
 
     return NextResponse.json({ submission: data }, { status: 201 });
   } catch (err: any) {
-    console.error('[forms/submissions] POST error', err);
-    return NextResponse.json({ error: "Couldn't save your form submission. Please try again." }, { status: 500 });
+    return apiError('forms/submissions POST', err, "Couldn't save your form submission. Please try again.");
   }
 }

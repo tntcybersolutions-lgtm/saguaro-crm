@@ -3,6 +3,7 @@ import { randomBytes } from 'node:crypto';
 import { createServerClient, getUser } from '@/lib/supabase-server';
 import { requirePermission } from '@/lib/permissions';
 import { WEBHOOK_EVENT_NAMES } from '@/lib/webhook-events';
+import { apiError } from '@/lib/api-error';
 
 /* ------------------------------------------------------------------ */
 /*  /api/integrations/webhooks                                        */
@@ -39,8 +40,8 @@ export async function GET(req: NextRequest) {
 
     if (error) throw error;
     return NextResponse.json({ webhooks: data ?? [], available_events: WEBHOOK_EVENTS });
-  } catch {
-    return NextResponse.json({ error: 'Internal server error' }, { status: 500 });
+  } catch (e) {
+    return apiError('integrations/webhooks GET', e);
   }
 }
 
@@ -82,7 +83,7 @@ export async function POST(req: NextRequest) {
 
     if (error) throw error;
     return NextResponse.json({ webhook: data }, { status: 201 });
-  } catch {
-    return NextResponse.json({ error: 'Internal server error' }, { status: 500 });
+  } catch (e) {
+    return apiError('integrations/webhooks POST', e);
   }
 }

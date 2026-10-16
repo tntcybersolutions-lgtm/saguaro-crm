@@ -11,6 +11,7 @@ import { NextRequest } from 'next/server';
 import { createServerClient } from '@/lib/supabase-server';
 import { requirePermission } from '@/lib/permissions';
 import { learnTenantRates } from '@/lib/takeoff-learn';
+import { apiError } from '@/lib/api-error';
 
 export const runtime = 'nodejs';
 
@@ -25,7 +26,6 @@ export async function POST(req: NextRequest) {
     const result = await learnTenantRates(supabase, user.tenantId);
     return Response.json(result);
   } catch (e) {
-    console.error('[takeoff/cost-rates/learn]', e);
-    return Response.json({ error: 'Could not learn from your takeoff history. Please try again.' }, { status: 500 });
+    return apiError('takeoff/cost-rates/learn POST', e, 'Could not learn from your takeoff history. Please try again.');
   }
 }

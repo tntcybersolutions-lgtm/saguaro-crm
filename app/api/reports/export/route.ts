@@ -15,6 +15,7 @@ import {
   computeCurrencyTotals,
   resolveBrandingValues,
 } from '@/lib/document-templates/exec-report-generator';
+import { apiError } from '@/lib/api-error';
 
 export const runtime = 'nodejs';
 
@@ -110,8 +111,7 @@ export async function POST(req: NextRequest) {
     }
 
     return NextResponse.json({ error: `Unknown format: ${format}` }, { status: 400 });
-  } catch {
-    console.error('[reports/export] export failed');
-    return NextResponse.json({ error: 'Export failed' }, { status: 500 });
+  } catch (e) {
+    return apiError('reports/export POST', e, 'Export failed');
   }
 }

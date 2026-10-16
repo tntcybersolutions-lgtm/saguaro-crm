@@ -5,6 +5,7 @@ import { sendPrequalInvite } from '@/lib/email';
 import type { Database } from '@/lib/database.types';
 import crypto from 'crypto';
 import { must } from '@/lib/db-write';
+import { apiError } from '@/lib/api-error';
 
 const APP_URL = process.env.NEXT_PUBLIC_APP_URL || 'https://saguarocontrol.net';
 
@@ -25,8 +26,8 @@ export async function GET(req: NextRequest) {
       .order('created_at', { ascending: false });
     if (error) throw error;
     return NextResponse.json({ data });
-  } catch {
-    return NextResponse.json({ error: 'Internal server error' }, { status: 500 });
+  } catch (e) {
+    return apiError('prequalification/invites GET', e);
   }
 }
 
@@ -117,7 +118,7 @@ export async function POST(req: NextRequest) {
       emailSent: emailResult.sent,
       emailError: emailResult.error ?? null,
     });
-  } catch {
-    return NextResponse.json({ error: 'Internal server error' }, { status: 500 });
+  } catch (e) {
+    return apiError('prequalification/invites POST', e);
   }
 }

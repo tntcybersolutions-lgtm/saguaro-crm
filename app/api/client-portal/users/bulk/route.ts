@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { createServerClient, getUser } from '@/lib/supabase-server';
+import { apiError } from '@/lib/api-error';
 
 export const dynamic = 'force-dynamic';
 
@@ -48,7 +49,6 @@ export async function POST(req: NextRequest) {
 
     return NextResponse.json({ users: data ?? [] });
   } catch (err) {
-    console.error('[client-portal/users/bulk]', err);
-    return NextResponse.json({ error: 'Bulk invite failed' }, { status: 500 });
+    return apiError('client-portal/users/bulk POST', err, 'Bulk invite failed');
   }
 }

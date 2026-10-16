@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { createServerClient } from '@/lib/supabase-server';
+import { apiError } from '@/lib/api-error';
 
 /**
  * POST /api/customers/geo  (public — no auth required)
@@ -118,8 +119,8 @@ export async function POST(req: NextRequest) {
         : null,
       roi_config_found: !!roiConfig,
     });
-  } catch {
-    return NextResponse.json({ error: 'Internal server error' }, { status: 500 });
+  } catch (e) {
+    return apiError('customers/geo POST', e);
   }
 }
 

@@ -120,7 +120,7 @@ export async function POST(req: NextRequest) {
       .single();
     if (error) throw error;
     return NextResponse.json({ claim: toClaim(data as DbClaim) }, { status: 201 });
-  } catch {
-    return NextResponse.json({ error: 'Failed to create claim' }, { status: 500 });
+  } catch (e) {
+    return apiError('warranty-claims POST', e, 'Failed to create claim');
   }
 }

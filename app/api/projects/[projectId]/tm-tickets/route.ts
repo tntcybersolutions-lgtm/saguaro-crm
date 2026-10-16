@@ -84,7 +84,6 @@ export async function POST(req: NextRequest, { params }: { params: { projectId: 
     }
     return NextResponse.json({ ticket: data }, { status: 201 });
   } catch (err) {
-    console.error('[tm-tickets/POST]', err);
-    return NextResponse.json({ error: 'Failed to create T&M ticket' }, { status: 500 });
+    return apiError('projects/[projectId]/tm-tickets POST', err, 'Failed to create T&M ticket');
   }
 }

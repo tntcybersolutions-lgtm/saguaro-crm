@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { createServerClient } from '@/lib/supabase-server';
 import { getPortalSession, PORTAL_PERMS } from '@/lib/portal-auth';
+import { apiError } from '@/lib/api-error';
 
 /** GET — list payment history */
 export async function GET(req: NextRequest) {
@@ -33,8 +34,8 @@ export async function GET(req: NextRequest) {
     };
 
     return NextResponse.json({ payments: all, summary });
-  } catch {
-    return NextResponse.json({ error: "Internal server error" }, { status: 500 });
+  } catch (e) {
+    return apiError('portal/client/payments GET', e);
   }
 }
 

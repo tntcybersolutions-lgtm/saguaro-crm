@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from 'next/server';
 import { createServerClient, getUser } from '@/lib/supabase-server';
 import { requirePermission } from '@/lib/permissions';
 import { signUrl } from '@/lib/storage-signing';
+import { apiError } from '@/lib/api-error';
 export async function POST(req: NextRequest) {
   const g = await requirePermission(req, 'Documents', 'Edit');
   if (!g.ok) return g.res;
@@ -34,7 +35,6 @@ export async function POST(req: NextRequest) {
     /* This swallowed the reason silently, which is why "photos are not saving"
        had no server-side trail to follow. The client still gets a generic
        message; the log gets the truth. */
-    console.error('[photos/create]', e);
-    return NextResponse.json({ error: 'The photo could not be saved. Please try again.' }, { status: 500 });
+    return apiError('photos/create POST', e, 'The photo could not be saved. Please try again.');
   }
 }

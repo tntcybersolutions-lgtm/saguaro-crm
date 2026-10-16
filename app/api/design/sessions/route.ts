@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { createServerClient, getUser } from '@/lib/supabase-server';
 import { requirePermission } from '@/lib/permissions';
+import { apiError } from '@/lib/api-error';
 
 /**
  * GET /api/design/sessions?customer_id=xxx
@@ -27,8 +28,8 @@ export async function GET(req: NextRequest) {
 
     if (error) throw error;
     return NextResponse.json({ sessions: data || [] });
-  } catch {
-    return NextResponse.json({ error: 'Internal server error' }, { status: 500 });
+  } catch (e) {
+    return apiError('design/sessions GET', e);
   }
 }
 
@@ -70,7 +71,7 @@ export async function POST(req: NextRequest) {
 
     if (error) throw error;
     return NextResponse.json({ session: data }, { status: 201 });
-  } catch {
-    return NextResponse.json({ error: 'Internal server error' }, { status: 500 });
+  } catch (e) {
+    return apiError('design/sessions POST', e);
   }
 }

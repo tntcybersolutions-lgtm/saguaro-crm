@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from 'next/server';
 import { createServerClient, getUser } from '@/lib/supabase-server';
 import { sendPushToTenant } from '@/lib/push';
 import type { Database } from '@/lib/database.types';
+import { apiError } from '@/lib/api-error';
 
 const APP_URL = process.env.NEXT_PUBLIC_APP_URL || 'https://saguarocontrol.net';
 
@@ -48,11 +49,6 @@ export async function POST(req: NextRequest) {
 
     return NextResponse.json({ success: true, notification: data });
   } catch (err: unknown) {
-    const msg = 'Internal server error';
-    console.error('[notifications/push] error:', msg);
-    return NextResponse.json(
-      { error: `[notifications/push] Database error: ${msg}` },
-      { status: 500 }
-    );
+    return apiError('notifications/push POST', err);
   }
 }

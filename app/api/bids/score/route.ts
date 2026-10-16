@@ -4,6 +4,7 @@ import { scoreBidOpportunity, buildBidHistoryContext } from '@/lib/construction-
 import { createServerClient } from '@/lib/supabase-server';
 import { requirePermission } from '@/lib/permissions';
 import { requestDay } from '@/lib/time-zone';
+import { apiError } from '@/lib/api-error';
 
 export async function POST(req: NextRequest) {
   const g = await requirePermission(req, 'Projects', 'Edit');
@@ -83,10 +84,7 @@ export async function POST(req: NextRequest) {
     persistedId = (inserted as { id: string } | null)?.id ?? null;
   } catch (e) {
     // Persistence failed — report it honestly rather than pretending it saved.
-    return NextResponse.json(
-      { error: 'Scored the bid but failed to save it. Please try again.', score: result.score },
-      { status: 500 },
-    );
+    return apiError('bids/score POST', e, 'Scored the bid but failed to save it. Please try again.', 500, { score: result.score });
   }
 
   const roundedMargin = Math.round(suggestedMargin * 10) / 10;

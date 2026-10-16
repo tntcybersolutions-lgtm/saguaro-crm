@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { createServerClient, getUser } from '@/lib/supabase-server';
 import { requirePermission } from '@/lib/permissions';
+import { apiError } from '@/lib/api-error';
 
 export const dynamic = 'force-dynamic';
 
@@ -114,8 +115,8 @@ async function applyUpdate(req: NextRequest, projectId: string, id: string) {
       .single();
     if (error) throw error;
     return NextResponse.json({ potential_change_order: rowToPco(data as Row), success: true });
-  } catch {
-    return NextResponse.json({ error: 'Internal server error' }, { status: 500 });
+  } catch (e) {
+    return apiError('projects/[projectId]/potential-change-orders/[id] GET', e);
   }
 }
 
@@ -148,7 +149,7 @@ export async function DELETE(req: NextRequest, { params }: { params: Promise<{ p
       .eq('project_id', projectId);
     if (error) throw error;
     return NextResponse.json({ success: true });
-  } catch {
-    return NextResponse.json({ error: 'Internal server error' }, { status: 500 });
+  } catch (e) {
+    return apiError('projects/[projectId]/potential-change-orders/[id] DELETE', e);
   }
 }

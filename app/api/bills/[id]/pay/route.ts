@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { requirePermission } from '@/lib/permissions';
+import { apiError } from '@/lib/api-error';
 
 export async function PATCH(req: NextRequest, { params }: { params: { id: string } }) {
   const g = await requirePermission(req, 'Budget', 'Full');
@@ -24,7 +25,6 @@ export async function PATCH(req: NextRequest, { params }: { params: { id: string
 
     return NextResponse.json({ success: true, bill: data });
   } catch (err) {
-    console.error('[bills/pay] error:', err);
-    return NextResponse.json({ error: 'Failed to mark bill as paid' }, { status: 500 });
+    return apiError('bills/[id]/pay PATCH', err, 'Failed to mark bill as paid');
   }
 }

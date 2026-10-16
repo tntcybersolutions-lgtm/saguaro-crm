@@ -3,6 +3,7 @@ import { createServerClient, getUser } from '@/lib/supabase-server';
 import { requirePermission } from '@/lib/permissions';
 import { onRFIAnswered } from '@/lib/triggers';
 import { runInBackground } from '@/lib/background';
+import { apiError } from '@/lib/api-error';
 
 export async function POST(
   req: NextRequest,
@@ -54,8 +55,6 @@ export async function POST(
 
     return NextResponse.json({ success: true });
   } catch (err: unknown) {
-    const msg = 'Internal server error';
-    console.error('[rfis/answer] error:', msg);
-    return NextResponse.json({ error: 'Internal server error' }, { status: 500 });
+    return apiError('rfis/[id]/answer POST', err);
   }
 }

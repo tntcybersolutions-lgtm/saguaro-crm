@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { createServerClient, getUser } from '@/lib/supabase-server';
 import { requirePermission } from '@/lib/permissions';
+import { apiError } from '@/lib/api-error';
 
 export async function PATCH(req: NextRequest, { params }: { params: { id: string } }) {
   const g = await requirePermission(req, 'Budget', 'Edit');
@@ -40,7 +41,6 @@ export async function PATCH(req: NextRequest, { params }: { params: { id: string
     if (!data) return NextResponse.json({ error: 'Purchase order not found.' }, { status: 404 });
     return NextResponse.json({ success: true, purchase_order: data });
   } catch (err) {
-    console.error('[purchase-orders/update]', err);
-    return NextResponse.json({ error: 'Failed to update purchase order' }, { status: 500 });
+    return apiError('purchase-orders/[id]/update PATCH', err, 'Failed to update purchase order');
   }
 }

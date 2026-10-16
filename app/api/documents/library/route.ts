@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { createServerClient } from '@/lib/supabase-server';
 import { requirePermission } from '@/lib/permissions';
+import { apiError } from '@/lib/api-error';
 
 /**
  * Document Library — every generated document (pay apps, invoices, waivers,
@@ -39,8 +40,8 @@ export async function GET(req: NextRequest) {
     const out = ((docs || []) as any[]).map((d) => ({ ...d, projectName: names[d.project_id] ?? null }));
     const types = Array.from(new Set(out.map((d) => d.doc_type))).sort();
     return NextResponse.json({ docs: out, types });
-  } catch {
-    return NextResponse.json({ error: 'Internal server error' }, { status: 500 });
+  } catch (e) {
+    return apiError('documents/library GET', e);
   }
 }
 
@@ -62,7 +63,7 @@ export async function POST(req: NextRequest) {
     const { data: signed, error } = await db.storage.from('documents').createSignedUrl(path, 3600);
     if (error || !signed?.signedUrl) throw error || new Error('sign failed');
     return NextResponse.json({ url: signed.signedUrl });
-  } catch {
-    return NextResponse.json({ error: 'Could not open the document.' }, { status: 500 });
+  } catch (e) {
+    return apiError('documents/library POST', e, 'Could not open the document.');
   }
 }

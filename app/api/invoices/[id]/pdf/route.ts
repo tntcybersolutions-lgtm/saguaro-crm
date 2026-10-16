@@ -3,6 +3,7 @@ import { createServerClient } from '@/lib/supabase-server';
 import { requirePermission } from '@/lib/permissions';
 import { generateInvoicePdf } from '@/lib/document-templates/invoice-generator';
 import { must } from '@/lib/db-write';
+import { apiError } from '@/lib/api-error';
 
 /**
  * POST — generate (or regenerate) the branded invoice PDF via the pdf engine,
@@ -22,7 +23,6 @@ export async function POST(req: NextRequest, { params }: { params: Promise<{ id:
       .eq('id', id).eq('tenant_id', g.user.tenantId), 'invoices write');
     return NextResponse.json({ pdfUrl, invoiceNumber });
   } catch (err) {
-    console.error('[invoices/pdf]', err);
-    return NextResponse.json({ error: 'Could not generate the invoice PDF.' }, { status: 500 });
+    return apiError('invoices/[id]/pdf POST', err, 'Could not generate the invoice PDF.');
   }
 }

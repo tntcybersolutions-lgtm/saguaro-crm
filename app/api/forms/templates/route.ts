@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { createServerClient, getUser } from '@/lib/supabase-server';
+import { apiError } from '@/lib/api-error';
 
 export async function GET(req: NextRequest) {
   try {
@@ -37,8 +38,7 @@ export async function GET(req: NextRequest) {
 
     return NextResponse.json({ templates: data || [] });
   } catch (err: any) {
-    console.error('[forms/templates] GET error', err);
-    return NextResponse.json({ error: "Couldn't load form templates. Please try again." }, { status: 500 });
+    return apiError('forms/templates GET', err, "Couldn't load form templates. Please try again.");
   }
 }
 
@@ -87,7 +87,6 @@ export async function POST(req: NextRequest) {
 
     return NextResponse.json({ template: data }, { status: 201 });
   } catch (err: any) {
-    console.error('[forms/templates] POST error', err);
-    return NextResponse.json({ error: "Couldn't save the form template. Please try again." }, { status: 500 });
+    return apiError('forms/templates POST', err, "Couldn't save the form template. Please try again.");
   }
 }
