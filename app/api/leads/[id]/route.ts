@@ -2,7 +2,7 @@ import { NextRequest, NextResponse } from 'next/server';
 import { createServerClient, getUser } from '@/lib/supabase-server';
 import { requirePermission } from '@/lib/permissions';
 import { must } from '@/lib/db-write';
-import { normaliseStage } from '@/lib/lead-stages';
+import { normaliseStage, stageStamps } from '@/lib/lead-stages';
 import { apiError } from '@/lib/api-error';
 
 // GET /api/leads/[id] — one lead, tenant-scoped. The deal page (Path 12,
@@ -43,8 +43,26 @@ export async function PATCH(req: NextRequest, { params }: { params: { id: string
     for (const k of allowed) if (body[k] !== undefined) updates[k] = body[k];
 
     // Canonicalise stage casing on write so the pipeline vocabulary can never
-    // split again (MUST-PASS Path 10). Keep won_at/lost_at stamping in step.
+    // split again (MUST-PASS Path 10).
     if (updates.stage !== undefined) updates.stage = normaliseStage(updates.stage as string);
+
+    // Read the deal first: a missing / other-company id is a 404, not a 500
+    // from .single() on zero rows; and the stage move needs the old stage.
+    const { data: current, error: curErr } = await supabase
+      .from('lead_pipeline').select('id, stage').eq('id', params.id).eq('tenant_id', user.tenantId).maybeSingle();
+    if (curErr) throw curErr;
+    if (!current) return NextResponse.json({ error: 'Lead not found' }, { status: 404 });
+
+    // won_at / lost_at follow the stage on the SERVER, for every caller. Only
+    // the deal page used to stamp them; the board's "Move to Won" sent the
+    // stage alone, so a deal could read Won on the board and still count as
+    // open pipeline on the sales overview (Path 14). An unchanged stage
+    // (the board's Edit always resends it) leaves both stamps alone.
+    if (updates.stage !== undefined) {
+      const stamps = stageStamps(current.stage, updates.stage as string, new Date().toISOString());
+      if (stamps) Object.assign(updates, stamps);
+      else { delete updates.won_at; delete updates.lost_at; }
+    }
 
     // Map the page's alternate field names onto real columns.
     if (body.name !== undefined && body.contact_name === undefined) updates.contact_name = body.name;

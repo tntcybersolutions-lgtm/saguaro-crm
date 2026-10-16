@@ -51,6 +51,26 @@ export function normaliseStage(raw: string | null | undefined, fallback: LeadSta
 export const isWon = (s: string | null | undefined) => normaliseStage(s) === 'Won';
 export const isLost = (s: string | null | undefined) => normaliseStage(s) === 'Lost';
 export const isOpen = (s: string | null | undefined) => (OPEN_STAGES as readonly string[]).includes(normaliseStage(s));
+/** Neither Won nor Lost — the deal is still being worked. Unlike isOpen(), a
+ *  genuinely unknown stage still counts as being worked rather than vanishing. */
+export const isUndecided = (s: string | null | undefined) => !isWon(s) && !isLost(s);
+
+/**
+ * won_at / lost_at for a stage move. The STAGE is the truth every reader
+ * buckets on; these stamps only record when it was decided. A move into Won
+ * stamps won_at and clears lost_at (and the reverse); a move back into an open
+ * stage clears both, so a reopened deal is not still counted as won anywhere.
+ * Returns null when the stage did not actually change — re-saving a deal's
+ * notes must not reset the day it was won.
+ */
+export function stageStamps(
+  prev: string | null | undefined,
+  next: string | null | undefined,
+  nowIso: string,
+): { won_at: string | null; lost_at: string | null } | null {
+  if (stageKey(prev) === stageKey(next)) return null;
+  return { won_at: isWon(next) ? nowIso : null, lost_at: isLost(next) ? nowIso : null };
+}
 
 /* ──────────────────────────────────────────────────────────────────────────
  * ONE aggregation (MUST-PASS Path 14 — the numbers agree everywhere).
