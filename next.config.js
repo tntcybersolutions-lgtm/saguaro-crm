@@ -14,6 +14,10 @@ const nextConfig = {
   },
   experimental: {
     largePageDataBytes: 10 * 1024 * 1024,
+    // Vercel's standard build box is close to its memory ceiling on this app
+    // (OOM-killed once the 3D Models chunk was added). Fewer parallel
+    // workers keeps the peak under it; build time grows a little.
+    cpus: 2,
     // pdfjs-dist's legacy build is a Node-native lib (used server-side by
     // /api/heatmap/parse-vector). Keep it external so it's require()'d at
     // runtime instead of bundled — avoids webpack mangling its in-process
