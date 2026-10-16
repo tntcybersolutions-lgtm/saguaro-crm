@@ -56,7 +56,7 @@ export const SALES_STEPS: SalesStep[] = [
   {
     key: 'worked',
     title: 'Work it and set the next action',
-    desc: 'Log the call. Say what happens next and when. That date is what puts it on your day in My Work.',
+    desc: 'Log the call. Say what happens next and when. That date is what puts it on My Day.',
     href: '/app/leads',
   },
   {

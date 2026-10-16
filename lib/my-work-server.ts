@@ -27,6 +27,7 @@ import {
 import { addDays } from '@/lib/time-zone';
 import { toDay } from '@/lib/calendar-day';
 import { isClosedStatus } from '@/lib/project-lifecycle';
+import { isUndecided, normaliseStage } from '@/lib/lead-stages';
 
 type Db = { from: (t: string) => any };
 type Row = Record<string, any>;
@@ -293,13 +294,16 @@ export async function collectMyWork(a: CollectArgs): Promise<Collected> {
 
     // Sales follow-ups hang off a lead, not a job: mine and unassigned ones.
     // Won and Lost owe nobody a call. The queue looks two weeks ahead.
+    // Decided-or-not is read through lib/lead-stages (the one vocabulary the
+    // board and the sales overview use), not a case-sensitive `NOT IN
+    // (Won,Lost)` — which also dropped every lead with no stage at all.
     safe('followups', async () => {
       const r = await rows(db.from('lead_pipeline')
         .select('id, company_name, contact_name, next_action, next_action_date, stage, estimated_value')
-        .eq('tenant_id', t).not('next_action_date', 'is', null).not('stage', 'in', '(Won,Lost)')
+        .eq('tenant_id', t).not('next_action_date', 'is', null)
         .lte('next_action_date', todayOnly ? today : addDays(today, 14))
         .or(`assigned_to.eq.${safeId},assigned_to.is.null`).order('next_action_date', { ascending: true }).limit(CAP));
-      return followUpItems(r as never, ctx);
+      return followUpItems(r.filter((l) => isUndecided(l.stage)).map((l) => ({ ...l, stage: normaliseStage(l.stage) })) as never, ctx);
     }),
 
     // Jobs starting in the next month, and whether they have a schedule yet.
