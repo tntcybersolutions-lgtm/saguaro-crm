@@ -1709,6 +1709,13 @@ li[data-done="true"] .pj-next-step strong { color: var(--text-tertiary); text-de
   .sag-app select:not([multiple]):not([size]) {
     align-items: center;
     padding-right: 36px;
+    /* base-select draws the chosen value as a flex row with overflow visible,
+       so a long value (a predecessor task, a job name) ran past the field and
+       over the next column. Clip at the content box: the text stops before
+       the chevron, the field never spills. */
+    min-width: 0;
+    overflow: clip;
+    overflow-clip-margin: content-box;
   }
   .sag-app select:not([multiple]):not([size])::picker-icon { display: none; } /* the chevron is already drawn */
   .sag-app select:not([multiple]):not([size])::picker(select) {

@@ -277,3 +277,6 @@ STILL OPEN:
   apiError too. The 4 streaming endpoints (Sage chat, discovery chat, design generate) keep their text reply and now log.
   Left on purpose: ~112 comment-only catches that are best-effort by design (JSON body parse, optional weather, etc.).
 - Dead code noted: `lib/document-templates/g702-generator.ts` (imported nowhere) still reads `contract_amount` as line 1.
+- 16 Oct (Chad: "fix the drift on words NO OVERLAP"): every dropdown in the app (Chrome/Edge customizable select)
+  let a long chosen value run past the field — schedule Predecessor names ran over the Progress bar. Fixed once in
+  `app/globals.css` (clip at the content box); verified live on /app/schedule.
