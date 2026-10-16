@@ -12,6 +12,7 @@ import { logActivity } from '@/lib/activity';
 import { runInBackground } from '@/lib/background';
 import { must, tryWrite } from '@/lib/db-write';
 import { apiError } from '@/lib/api-error';
+import { acceptProposal } from '@/lib/proposal-accept';
 
 /* eslint-disable @typescript-eslint/no-explicit-any */
 
@@ -194,6 +195,29 @@ export async function POST(req: NextRequest, { params }: { params: { id: string 
       }), 'convert: owner contact');
     }
 
+    // 4b) The deal's proposals move onto the job, and a SIGNED one is the
+    //     contract: its amount goes into every contract column and the budget
+    //     starts from the takeoff (lib/proposal-accept). The job already
+    //     exists, so a failure here is logged and reported, never a 500.
+    let contractFromProposal: string | null = null;
+    try {
+      await must(loose.from('proposals').update({ project_id: projectId })
+        .eq('lead_id', id).eq('tenant_id', tenantId).is('project_id', null), 'convert: proposals onto the job');
+      await must(loose.from('proposal_signatures').update({ project_id: projectId })
+        .eq('lead_id', id).eq('tenant_id', tenantId).is('project_id', null), 'convert: signature requests onto the job');
+      const { data: signedProps, error: spErr } = await loose.from('proposals').select('id, title')
+        .eq('lead_id', id).eq('tenant_id', tenantId).not('locked_at', 'is', null)
+        .order('signed_at', { ascending: false }).limit(1);
+      if (spErr) throw spErr;
+      const sp = (signedProps as Array<{ id: string; title: string | null }> | null)?.[0];
+      if (sp) {
+        await acceptProposal(loose, tenantId, sp.id);
+        contractFromProposal = sp.title || 'the signed proposal';
+      }
+    } catch (e) {
+      console.error('[leads/convert] carrying the proposals onto the job failed', id, e);
+    }
+
     // 5) The deal's files, COPIED onto the job's Files (the deal keeps its own,
     //    so deleting the deal later never breaks the job). Counted, not assumed.
     const { data: media, error: mediaErr } = await loose.from('deal_media')
@@ -238,7 +262,7 @@ export async function POST(req: NextRequest, { params }: { params: { id: string 
     });
 
     return NextResponse.json(
-      { ok: true, projectId, customerId, nextUrl: `/app/projects/${projectId}/overview`, files: { carried, failed } },
+      { ok: true, projectId, customerId, nextUrl: `/app/projects/${projectId}/overview`, files: { carried, failed }, contractFromProposal },
       { status: 201 },
     );
   } catch (err) {
