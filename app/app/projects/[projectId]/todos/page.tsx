@@ -7,6 +7,8 @@
  * Create  POST  /api/projects/:id/todos         { title, description, assigned_to, due_date, priority, status:'open' }
  * Done    PATCH /api/todos/:id/complete
  */
+import { jsonRequest } from '@/lib/list-view';
+import { useEditRights } from '@/lib/hooks/usePermissions';
 import React, { useState, useEffect, useCallback } from 'react';
 import { useOpenOnNew } from '@/lib/ui/open-on-new';
 import { useProjectContext } from '@/lib/hooks/useProjectContext';
@@ -82,6 +84,7 @@ export default function TodosPage() {
   });
   const [saving, setSaving] = useState(false);
   const { toast, show } = useToast(4000);
+  const rights = useEditRights('Projects');
   const [filter, setFilter] = useState<FilterTab>('all');
   const [search, setSearch] = useState('');
   const [priorityFilter, setPriorityFilter] = useState('all');
@@ -309,6 +312,16 @@ export default function TodosPage() {
         <Card flush>
           <DataTable<TodoItem>
             tableId="project-todos"
+            bulkEdit={{
+              noun: 'task',
+              allowed: rights.edit,
+              status: {
+                options: [{ value: 'complete', label: 'Done' }],
+                // The same route as the row's checkbox; a done task is left as it is.
+                apply: (t) => t.complete ? Promise.resolve(new Response('{}', { status: 200 })) : jsonRequest(`/api/todos/${t.id}/complete`, 'PATCH'),
+              },
+              onDone: () => { void fetchTodos(); },
+            }}
             exportName="todos"
             columns={columns}
             rows={filtered}

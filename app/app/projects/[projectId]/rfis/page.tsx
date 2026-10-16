@@ -14,7 +14,10 @@
  *   close    PATCH  /api/rfis/[id]        (status 'closed' + closed_at)
  *   delete   DELETE /api/rfis/[id]
  *   detail   GET    /api/rfis/[id]        (impacts, radio provenance)
+ *   bulk     PATCH  /api/items/rfis/[id]  (status / ball in court / due, one per row — lib/items/bulk)
  */
+import { useEditRights } from '@/lib/hooks/usePermissions';
+import { itemBulkEdit } from '@/lib/items/bulk';
 import React, { useState, useEffect, useCallback, useRef } from 'react';
 import { confirmDialog } from '@/lib/ui/async-dialog';
 import { useProjectContext } from '@/lib/hooks/useProjectContext';
@@ -198,6 +201,7 @@ export default function RFIsPage() {
   const [answeredBy, setAnsweredBy] = useState('');
   const [submittingAnswer, setSubmittingAnswer] = useState(false);
   const { toast, show } = useToast(4000);
+  const rights = useEditRights('RFIs');
 
   // Filters
   const [search, setSearch] = useState('');
@@ -554,31 +558,6 @@ export default function RFIsPage() {
     }
   }
 
-  /** Close every checked RFI that is still open (one PATCH each, same route as Close). */
-  async function bulkClose(list: RFI[]) {
-    const open = list.filter(r => r.status !== 'closed');
-    if (!open.length) { show('Those RFIs are already closed.'); return; }
-    const ok = await confirmDialog({
-      title: `Close ${open.length} RFI${open.length === 1 ? '' : 's'}?`,
-      message: 'They move to Closed and drop out of overdue tracking.',
-      confirmLabel: 'Close',
-    });
-    if (!ok) return;
-    const results = await Promise.all(open.map(async r => {
-      try {
-        const res = await fetch(`/api/rfis/${r.id}`, {
-          method: 'PATCH',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ status: 'closed', closed_at: new Date().toISOString() }),
-        });
-        return res.ok;
-      } catch { return false; }
-    }));
-    const done = results.filter(Boolean).length;
-    show(done === open.length ? `${done} RFI${done === 1 ? '' : 's'} closed.` : `${done} of ${open.length} closed. Try the rest again.`, done === open.length ? undefined : 'bad');
-    revalidate();
-  }
-
   async function deleteRfi(rfi: RFI) {
     if (!(await confirmDialog({ title: 'Please confirm', message: `Delete RFI #${rfi.rfi_number}? This cannot be undone.`, confirmLabel: 'Delete', danger: true }))) return;
     setRfis(prev => prev.filter(r => r.id !== rfi.id));
@@ -878,7 +857,13 @@ export default function RFIsPage() {
         rowActions={rfiActions}
         tableId="project-rfis"
         exportName="rfis"
-        bulkActions={list => [{ label: `Close ${list.length}`, icon: <CheckCircle size={14} />, onClick: () => { void bulkClose(list); } }]}
+        bulkEdit={itemBulkEdit<RFI>('rfis', {
+          allowed: rights.edit,
+          canDelete: rights.full,
+          deleteUrl: r => `/api/rfis/${r.id}`,
+          people: rfis.map(ballInCourt),
+          onDone: () => { void revalidate(); },
+        })}
         empty={
           <EmptyState
             icon={<Question size={22} />}

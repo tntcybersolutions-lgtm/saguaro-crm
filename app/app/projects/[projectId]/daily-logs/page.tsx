@@ -17,6 +17,8 @@
  * Headcount comes from the clocks, weather from NWS — the create route stamps
  * conditions server-side whenever the fields are left blank.
  */
+import { itemBulkEdit } from '@/lib/items/bulk';
+import { useEditRights } from '@/lib/hooks/usePermissions';
 import React, { useState, useEffect, useCallback, useRef } from 'react';
 import { confirmDialog } from '@/lib/ui/async-dialog';
 import { useProjectContext } from '@/lib/hooks/useProjectContext';
@@ -247,6 +249,7 @@ export default function DailyLogsPage(){
   const [saving,setSaving]   = useState(false);
   const [deleting,setDeleting]=useState(false);
   const { toast, show: showToast } = useToast(4000);
+  const rights = useEditRights('Projects');
   // Homeowner Update: drafted from these logs, approved before it is sent.
   const [ownerUpdateOpen, setOwnerUpdateOpen] = useState(false);
   const [search,setSearch]   = useState('');
@@ -749,6 +752,7 @@ export default function DailyLogsPage(){
         onRowClick={viewLog}
         rowActions={logActions}
         tableId="project-daily-logs"
+        bulkEdit={itemBulkEdit('daily_logs', { allowed: rights.edit, canDelete: rights.full, deleteUrl: r => `/api/daily-logs/${r.id}`, onDone: () => { void revalidate(); } })}
         exportName="daily-logs"
         isSelected={isSel}
         empty={

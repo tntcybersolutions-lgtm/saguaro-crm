@@ -56,3 +56,22 @@ export function usePermissions() {
     can,
   };
 }
+
+/**
+ * Edit rights for a list's bulk actions. FAILS CLOSED, unlike usePermissions:
+ * a bulk bar that appears for a read-only seat invites a dozen refusals at
+ * once, so until the permissions are known there is no bulk bar at all. The
+ * server routes refuse regardless — this only decides what to show.
+ *
+ *   const rights = useEditRights('RFIs');
+ *   <DataTable bulkEdit={{ allowed: rights.edit, remove: { allowed: rights.full, … } }} />
+ */
+export function useEditRights(category: PermCategory): { edit: boolean; full: boolean; resolved: boolean } {
+  const { permissions, resolved } = usePermissions();
+  if (!resolved || !permissions) return { edit: false, full: false, resolved };
+  return {
+    edit: meetsLevel(permissions[category], 'Edit'),
+    full: meetsLevel(permissions[category], 'Full'),
+    resolved,
+  };
+}
