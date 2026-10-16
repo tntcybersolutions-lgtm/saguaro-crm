@@ -44,7 +44,15 @@ to stop.
 - Reopen and confirm it persisted with today's practice date, not a UTC date
 - API: `app/api/daily-logs`
 - Taps at 390px: MEASURE
-- STATUS: NOT VERIFIED
+- Code walk 16 Oct 2026 (no fix needed): page exists; `/api/daily-logs/{list,create,[id]}` exist; create reads
+  camel+snake keys the client sends (projectId, logDate, workPerformed, crewCount, ...) — CODE-VERIFIED;
+  every insert column exists in live `daily_logs` (Supabase information_schema) — CODE-VERIFIED; all three routes
+  auth-guard and filter `tenant_id`; create also checks project-in-tenant — CODE-VERIFIED; client reads `logs`,
+  list returns `logs`; detail reads `log`, route returns `log` — CODE-VERIFIED; row links `/app/daily-logs/[id]`
+  and `/app/projects/[projectId]/daily-logs` resolve to real page.tsx, `/app/projects/new` exists — CODE-VERIFIED.
+  Practice date (not UTC) when no date sent: `requestDay` — NEEDS-LIVE-RUN. Save → reopen → fields persisted,
+  tap count at 390px, 409 duplicate-day message — NEEDS-LIVE-RUN.
+- STATUS: CODE-VERIFIED — AWAITING LIVE RUN
 
 ### Path 2 — Clock in and clock out
 - Open `app/app/time/page.tsx` (474 lines), clock in, clock out
