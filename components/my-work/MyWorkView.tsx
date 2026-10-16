@@ -114,7 +114,8 @@ export default function MyWorkView() {
   }, []);
   const scope = (draft ?? saved)?.scope ?? 'company';
 
-  const { data, error, isLoading, mutate } = useSWR<Payload>(saved === undefined ? null : scope === 'mine' ? '/api/my-work?view=mine' : '/api/my-work', fetcher, {
+  // The work and the layout load together; a saved "My jobs" view refetches once it arrives.
+  const { data, error, isLoading, mutate } = useSWR<Payload>(scope === 'mine' ? '/api/my-work?view=mine' : '/api/my-work', fetcher, {
     refreshInterval: 60_000, revalidateOnFocus: true, dedupingInterval: 10_000, keepPreviousData: true,
   });
 

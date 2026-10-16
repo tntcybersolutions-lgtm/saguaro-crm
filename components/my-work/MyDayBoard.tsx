@@ -120,6 +120,8 @@ const CSS = `
 .md-num:hover{background:rgba(255,255,255,.035)}
 .md-num b{font-size:clamp(26px,3.2cqi,40px);font-weight:900;line-height:1;font-variant-numeric:tabular-nums;letter-spacing:-.02em;white-space:nowrap}
 .md-num span{font-size:11px;font-weight:800;letter-spacing:.1em;text-transform:uppercase;color:var(--md-3);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;max-width:100%}
+.md-num span em{font-style:normal}
+.md-short{display:none}
 .md-num[data-tone=red] b{color:var(--md-red)}
 .md-num[data-tone=amber] b{color:var(--md-amber)}
 .md-num[data-tone=green] b{color:var(--md-green)}
@@ -282,6 +284,8 @@ const CSS = `
   .md-ring{align-self:center}
   .md-nums{grid-template-columns:repeat(3,minmax(0,1fr));row-gap:8px}
   .md-num{border-left:0;padding:8px 6px}
+  .md-long{display:none}
+  .md-short{display:inline}
   .md-row{grid-template-columns:4px 36px minmax(0,1fr) auto;padding-right:0}
   .md-ic{width:36px;height:36px}
   .md-amt{display:none}
@@ -495,7 +499,7 @@ export default function MyDayBoard(props: MyDayBoardProps) {
           <button type="button" className="md-num" data-tone={press.today ? 'amber' : 'zero'} aria-pressed={filter.when === 'today'} onClick={() => toggle({ when: 'today' })}><b>{press.today}</b><span>Today</span></button>
           <button type="button" className="md-num" data-tone={press.week ? undefined : 'zero'} aria-pressed={filter.when === 'week'} onClick={() => toggle({ when: 'week' })}><b>{press.week}</b><span>This week</span></button>
           {show && <button type="button" className="md-num" data-tone={press.atStake ? 'green' : 'zero'} aria-pressed={false} onClick={() => toggle({ when: 'today' })} title="Money tied to what is late or due today"><b>{money(press.atStake)}</b><span>At stake</span></button>}
-          <button type="button" className="md-num" data-tone={press.waiting ? undefined : 'zero'} aria-pressed={filter.when === 'waiting'} onClick={() => toggle({ when: 'waiting' })}><b>{press.waiting}</b><span>Waiting on others</span></button>
+          <button type="button" className="md-num" data-tone={press.waiting ? undefined : 'zero'} aria-pressed={filter.when === 'waiting'} onClick={() => toggle({ when: 'waiting' })}><b>{press.waiting}</b><span><em className="md-long">Waiting on others</em><em className="md-short">Waiting</em></span></button>
         </div>
       </div>
       <div className="md-side">
