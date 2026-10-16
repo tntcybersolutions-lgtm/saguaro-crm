@@ -2,7 +2,7 @@ import { NextRequest, NextResponse } from 'next/server';
 import { createServerClient, getUser } from '@/lib/supabase-server';
 import { apiError } from '@/lib/api-error';
 import { requirePermission } from '@/lib/permissions';
-import { normaliseStage } from '@/lib/lead-stages';
+import { normaliseStage, stageStamps } from '@/lib/lead-stages';
 import type { Database } from '@/lib/database.types';
 
 export async function GET(req: NextRequest) {
@@ -52,7 +52,19 @@ export async function POST(req: NextRequest) {
       probability: body.probability ?? 50,
       assigned_to: body.assigned_to ?? null,
       notes: body.notes ?? body.description ?? null,
+      // What to do next — the title the follow-up carries on My Day and the
+      // sales overview. Was dropped on create, so every new lead's follow-up
+      // read only "Follow up".
+      next_action: typeof body.next_action === 'string' && body.next_action.trim() ? body.next_action.trim() : null,
     };
+    if (!String(insert.company_name ?? '').trim()) {
+      return NextResponse.json({ error: 'company_name is required' }, { status: 400 });
+    }
+    // A lead created straight into Won/Lost carries its decision stamp, the
+    // same as a stage move does (lib/lead-stages stageStamps).
+    const stamps = stageStamps(null, insert.stage as string, new Date().toISOString());
+    if (stamps?.won_at) insert.won_at = stamps.won_at;
+    if (stamps?.lost_at) insert.lost_at = stamps.lost_at;
 
     // location is the single geographic text column; combine any address parts.
     const loc = [body.address, body.city, body.state, body.zip].filter(Boolean).join(', ');

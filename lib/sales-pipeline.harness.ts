@@ -24,6 +24,8 @@ import {
   stageKey,
   QUALIFIED_STAGES,
   UNSTAGED,
+  stageStamps,
+  isUndecided,
 } from './lead-stages';
 import { QUALIFIED_STAGES as JOURNEY_QUALIFIED_STAGES } from './sales-journey';
 
@@ -107,5 +109,15 @@ assert.notDeepEqual(
 );
 assert.equal(oldQualified.count, board.count - 1, 'old board dropped exactly the legacy qualified row');
 ok(`old board under-counted by the dropped legacy row (${oldQualified.count} vs ${board.count}) — fixed`);
+
+/* ── 5. won_at / lost_at follow the stage (server-side, every caller) ───── */
+const NOW = '2026-10-16T12:00:00.000Z';
+assert.deepEqual(stageStamps('Proposal', 'Won', NOW), { won_at: NOW, lost_at: null }, 'move to Won stamps won_at');
+assert.deepEqual(stageStamps('Won', 'Proposal', NOW), { won_at: null, lost_at: null }, 'reopening clears both stamps');
+assert.deepEqual(stageStamps('Negotiation', 'Lost', NOW), { won_at: null, lost_at: NOW }, 'move to Lost stamps lost_at');
+assert.equal(stageStamps('Won', 'won', NOW), null, 'same stage (any casing) leaves the stamps alone');
+// open/won/lost by stage — the overview and My Day split the same way as the board:
+assert.equal(rows.filter((l) => isUndecided(l.stage)).length, rows.filter((l) => !['Won', 'Lost'].includes(stageKey(l.stage))).length);
+ok('stage moves stamp won_at / lost_at in step; open = not Won/Lost everywhere');
 
 console.log(`\nPath 14 harness: ${passed}/${passed} checks passed — the numbers agree.`);
