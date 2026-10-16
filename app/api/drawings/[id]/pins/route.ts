@@ -18,6 +18,8 @@ import { apiError } from '@/lib/api-error';
 import { pinEntityFor, toolForPin } from '@/lib/drawing-revisions';
 import { itemTool } from '@/lib/items/registry';
 import { viewableTools } from '@/lib/items/server';
+import { relatedTypeForPin } from '@/lib/related-items';
+import { linkPin, unlinkPin } from '@/lib/related-items-server';
 
 /** 'punch' → 'punch_item'; everything else passes through. */
 function normalizeEntityType(et: unknown): string | null {
@@ -117,6 +119,12 @@ export async function POST(req: NextRequest, { params }: { params: Promise<{ id:
 
     const { data, error } = await db.from('drawing_pins').insert(row).select().single()
     if (error) throw error
+    // A pin on an item is a Related Items link with a location: the item now
+    // shows "Pinned on <sheet>" and the sheet lists the item.
+    const relType = relatedTypeForPin(et)
+    if (entity_id && relType) {
+      await linkPin(db, user, { id: data.id, drawingId: id, projectId: drawing.project_id, type: relType, recordId: String(entity_id), x, y, page: Number(row.page_number) || 1 })
+    }
     return NextResponse.json({ pin: data })
   } catch (e: unknown) {
     const msg = e instanceof Error ? e.message : String(e)
@@ -137,13 +145,29 @@ export async function DELETE(req: NextRequest, { params }: { params: Promise<{ i
     if (!pinId) return NextResponse.json({ error: 'pinId required' }, { status: 400 })
 
     const db = createServerClient()
-    const { error } = await db
+    const { data: gone, error } = await db
       .from('drawing_pins')
       .delete()
       .eq('id', pinId)
       .eq('drawing_id', id)
       .eq('tenant_id', user.tenantId)
+      .select('id, project_id, entity_type, entity_id')
     if (error) throw error
+    // The pin's Related Items link goes with it — unless the same item is
+    // pinned on this sheet again, in which case the link moves to that pin.
+    await unlinkPin(db, user.tenantId, pinId)
+    const removed = (gone || [])[0] as { project_id: string | null; entity_type: string | null; entity_id: string | null } | undefined
+    const relType = relatedTypeForPin(removed?.entity_type)
+    if (removed?.entity_id && relType) {
+      const { data: other, error: otherErr } = await db.from('drawing_pins')
+        .select('id, x_pct, y_pct, page_number')
+        .eq('tenant_id', user.tenantId).eq('drawing_id', id).eq('entity_id', removed.entity_id)
+        .order('created_at', { ascending: false }).limit(1).maybeSingle()
+      if (otherErr) throw otherErr
+      if (other) {
+        await linkPin(db, user, { id: other.id, drawingId: id, projectId: removed.project_id, type: relType, recordId: removed.entity_id, x: Number(other.x_pct) || 0, y: Number(other.y_pct) || 0, page: Number(other.page_number) || 1 })
+      }
+    }
     return NextResponse.json({ success: true })
   } catch (e: unknown) {
     const msg = e instanceof Error ? e.message : String(e)

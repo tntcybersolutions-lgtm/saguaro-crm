@@ -28,6 +28,7 @@ import { GET as getSheet } from '@/app/api/drawings/[id]/sheet/route';
 import { POST as addPin, DELETE as delPin } from '@/app/api/drawings/[id]/pins/route';
 import { GET as getItem } from '@/app/api/items/[tool]/[id]/route';
 import { GET as search } from '@/app/api/items/search/route';
+import { GET as relatedOf, DELETE as unlinkRelated } from '@/app/api/related-items/route';
 import { nextRevision, sheetKey } from '@/lib/drawing-revisions';
 
 const A = 'aaaaaaaa-0000-4000-8000-000000000001';
@@ -123,6 +124,29 @@ describe('drawing pins', () => {
     expect(sheet.pins[2]).toMatchObject({ title: 'Field-verify beam pocket', item: null });
     const item = await (await getItem(req(`/api/items/rfis/${RFI}`), { params: Promise.resolve({ tool: 'rfis', id: RFI }) })).json();
     expect(item.drawings).toEqual([expect.objectContaining({ sheet: 'E-101', pins: 1, href: `/app/projects/${JOB}/drawings/${D1}` })]);
+  });
+
+  test('a pin is a Related Items link: the RFI says "Pinned on E-101", the sheet lists the RFI, removing the pin unlinks', async () => {
+    const pin = await (await addPin(req(`/api/drawings/${D1}/pins`, 'POST', { x_pct: 0.25, y_pct: 0.4, entity_type: 'rfis', entity_id: RFI, page_number: 2 }), idp(D1))).json();
+    const fromRfi = await (await relatedOf(req(`/api/related-items?type=rfi&id=${RFI}`))).json();
+    expect(fromRfi.items).toEqual([expect.objectContaining({
+      type: 'drawing', id: D1, number: 'E-101', href: `/app/projects/${JOB}/drawings/${D1}?pin=${pin.pin.id}`,
+      pin: { drawingId: D1, sheet: 'E-101', x: 0.25, y: 0.4, page: 2, pinId: pin.pin.id },
+    })]);
+    const fromSheet = await (await relatedOf(req(`/api/related-items?type=drawing&id=${D1}`))).json();
+    expect(fromSheet.items).toEqual([expect.objectContaining({ type: 'rfi', id: RFI, number: 'RFI-007' })]);
+    // Pin the same RFI again: still one link, now at the newer pin.
+    const pin2 = await (await addPin(req(`/api/drawings/${D1}/pins`, 'POST', { x_pct: 0.6, y_pct: 0.7, entity_type: 'rfis', entity_id: RFI }), idp(D1))).json();
+    expect(fake.T('related_items')).toHaveLength(1);
+    expect(fake.T('related_items')[0].link_context).toMatchObject({ pin_id: pin2.pin.id, x: 0.6, y: 0.7 });
+    // Remove the newer pin: the link falls back to the older one.
+    expect((await delPin(req(`/api/drawings/${D1}/pins?pinId=${pin2.pin.id}`, 'DELETE'), idp(D1))).status).toBe(200);
+    expect(fake.T('related_items')[0].link_context).toMatchObject({ pin_id: pin.pin.id, x: 0.25, page: 2 });
+    // Unlink from the RFI's side: the pin comes off the sheet too.
+    const linkId = (await (await relatedOf(req(`/api/related-items?type=rfi&id=${RFI}`))).json()).items[0].linkId;
+    expect((await unlinkRelated(req(`/api/related-items?linkId=${linkId}`, 'DELETE'))).status).toBe(200);
+    expect(fake.T('related_items')).toHaveLength(0);
+    expect(fake.T('drawing_pins').filter((x) => x.entity_id === RFI)).toHaveLength(0);
   });
 
   test("a pin can't point at another job's item, nothing at all, or something the person can't see", async () => {

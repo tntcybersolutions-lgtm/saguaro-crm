@@ -15,7 +15,7 @@ import {
 import { useUnsavedGuard, useComposerDirty } from '@/lib/useUnsavedGuard';
 import UnsavedGuardModal from '@/components/UnsavedGuardModal';
 import { openPdf } from '@/components/PdfViewer';
-import ESignatureFlow from '@/components/ESignatureFlow';
+import ProposalSignPanel from '@/components/proposals/ProposalSignPanel';
 
 interface Proposal {
   id: string;
@@ -48,7 +48,7 @@ const statusLabel = (s: string | null | undefined) =>
 /** One status → one badge: draft neutral, out with the client amber, accepted green, declined red, superseded grey. */
 function statusTone(s: string | null | undefined): BadgeTone {
   const k = statusKey(s);
-  if (k === 'accepted') return 'ongoing';
+  if (k === 'accepted' || k === 'signed') return 'ongoing';
   if (k === 'declined' || k === 'rejected') return 'overdue';
   if (k === 'superseded') return 'closed';
   if (k === 'sent' || k === 'under_review' || k === 'viewed') return 'lead';
@@ -285,7 +285,7 @@ export default function ProposalPage() {
       { label: 'View PDF', icon: <FilePdf size={14} />, hidden: !p.pdf_url, onClick: () => openPdf({ url: p.pdf_url! }) },
       { label: uploadingId === p.id ? 'Uploading…' : 'Upload PDF', icon: <UploadSimple size={14} />, disabled: uploadingId === p.id, onClick: () => pickUpload(p.id) },
       { label: 'Mark Accepted', icon: <ThumbsUp size={14} />, hidden: outcomeSet, onClick: () => handleMarkOutcome(p, true) },
-      { label: 'Mark Declined', icon: <ThumbsDown size={14} />, tone: 'danger', hidden: outcomeSet, onClick: () => handleMarkOutcome(p, false) },
+      { label: 'Mark Declined', icon: <ThumbsDown size={14} />, tone: 'danger', hidden: outcomeSet || s === 'signed', onClick: () => handleMarkOutcome(p, false) },
     ];
   };
 
@@ -321,19 +321,17 @@ export default function ProposalPage() {
                 : `${fmt(signing.amount)} — they read the terms and sign online. Signing makes it the contract.`}
               actions={<Button size="sm" variant="ghost" icon={<X size={14} />} onClick={() => setSigningId(null)}>Close</Button>}
             >
-              <ESignatureFlow
+              <ProposalSignPanel
                 key={signing.id}
-                projectId={projectId}
-                docType="proposal"
-                docTitle={`${ctx?.project?.name || projectName || 'Proposal'} — Proposal ${signing.version}`}
-                pdfUrl={signing.pdf_url || ''}
-                sourceId={signing.id}
-                initialSigners={[{
+                proposalId={signing.id}
+                defaultSigner={{
                   name: signing.client_name || ctx?.project?.ownerName || '',
                   email: signing.client_email || ctx?.project?.ownerEmail || '',
-                  role: 'Owner',
-                }]}
-                onComplete={() => { fetchProposals(); revalidateCtx(); }}
+                  title: 'Owner',
+                }}
+                winLabel="make it the contract and mark the job won"
+                canSend={(Number(signing.amount) || 0) > 0}
+                onChanged={() => { fetchProposals(); revalidateCtx(); }}
               />
             </Card>
           </div>

@@ -604,6 +604,46 @@ export async function sendSignatureRequest(opts: {
   `));
 }
 
+/**
+ * A proposal sent for e-signature (lib/proposal-esign). Built separately from
+ * the send so the exact message can be rendered and checked without mailing
+ * anyone. Every value that came from a person is escaped.
+ */
+export function proposalSignatureEmail(opts: {
+  signerName: string;
+  companyName: string;
+  proposalTitle: string;
+  amount: number;
+  signUrl: string;
+  expiresAt: string;
+  message?: string | null;
+}): { subject: string; html: string } {
+  const esc = (t: string) => String(t).replace(/[&<>"']/g, (c) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c] as string));
+  const company = esc(opts.companyName);
+  const title = esc(opts.proposalTitle);
+  const until = new Date(opts.expiresAt).toLocaleDateString('en-US', { month: 'long', day: 'numeric', year: 'numeric', timeZone: 'UTC' });
+  const note = opts.message && opts.message.trim()
+    ? p(`<em>&ldquo;${esc(opts.message.trim()).replace(/\n/g, '<br>')}&rdquo;</em>`)
+    : '';
+  return {
+    subject: `${opts.companyName} sent you a proposal to sign: ${opts.proposalTitle}`.replace(/[\r\n]+/g, ' '),
+    html: layout(`
+    ${h('Your proposal is ready to review and sign')}
+    ${p(`Hello <strong>${esc(opts.signerName)}</strong>, ${company} has sent you <strong>${title}</strong>.`)}
+    ${table(row('Proposal', title) + row('Total', fmt(opts.amount)) + row('From', company) + row('Link valid until', until))}
+    ${note}
+    ${p('Read the whole proposal first. You can accept and sign it on your phone or computer, or decline it and tell them why. Nothing is committed until you sign.')}
+    ${btn('Review and sign', opts.signUrl)}
+    ${p('<small style="color:#9ca3af;">This link is unique to you. Do not forward it. If you were not expecting it, you can ignore this message.</small>')}
+  `),
+  };
+}
+
+export async function sendProposalSignatureRequest(opts: Parameters<typeof proposalSignatureEmail>[0] & { to: string; replyTo?: string | null }): Promise<SendResult> {
+  const { subject, html } = proposalSignatureEmail(opts);
+  return send(opts.to, subject, html, { fromName: `${opts.companyName} via Saguaro`, replyTo: opts.replyTo });
+}
+
 /** The PM-approved progress update to a homeowner (lib/owner-update). Text is
  *  the PM's, so it is escaped; blank lines become paragraphs, "- " lines bullets. */
 export async function sendOwnerUpdate(opts: {
