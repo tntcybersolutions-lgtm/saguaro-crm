@@ -25,7 +25,7 @@ import SaguaroDatePicker from '@/components/SaguaroDatePicker';
 import { humanError } from '@/lib/errors';
 import { confirmDialog } from '@/lib/ui/async-dialog';
 import { sendOrSave, listSaved, isOffline, drainOutbox } from '@/lib/offline/outbox';
-import { getSupabaseBrowser, ensureBrowserSession } from '@/lib/supabase-browser';
+import { getSupabaseBrowser, ensureBrowserSession, getAuthHeaders } from '@/lib/supabase-browser';
 import { computeTimesheet, weekKey, fmtHours, liveElapsed, type TimeEntry } from '@/lib/timeclock';
 import { CSI_DIVISIONS } from '@/lib/construction-intelligence';
 import { LEAVE_LABEL, LEAVE_TYPES, checkLeave, leaveHoursOf, leaveInsertRow, type LeaveField } from '@/lib/leave-entry';
@@ -285,11 +285,16 @@ export default function TimeClockPage() {
       // The API resolves the caller to an employees row server-side; prefer its answer so this page
       // reads the SAME employee the clock writes against (and so we never create a rival row).
       const st = await syncStatus();
-      const empCols = 'id, regular_rate, overtime_rate, full_name, first_name';
+      /* Pay columns are not readable from the browser
+         (20261016f_employees_private_columns.sql): the record comes from
+         Supabase without them, and this person's OWN rate comes from
+         /api/team/employees/[id] below, which hands a rate only to its owner
+         or to HR. */
+      const empCols = 'id, full_name, first_name';
       let e: any = null;
       if (st?.employee?.id) {
         const { data } = await sb.from('employees').select(empCols).eq('id', st.employee.id).maybeSingle();
-        e = data ?? { id: st.employee.id, full_name: st.employee.name ?? null, first_name: null, regular_rate: null, overtime_rate: null };
+        e = data ?? { id: st.employee.id, full_name: st.employee.name ?? null, first_name: null };
       }
       if (!e) {
         const byEmail = await sb.from('employees').select(empCols).eq('email', user.email).maybeSingle();
@@ -305,7 +310,23 @@ export default function TimeClockPage() {
           e = ins.data;
         }
       }
-      if (e) { setEmp(e); loadEntries(e.id); }
+      if (e) {
+        setEmp(e); loadEntries(e.id);
+        // My own rate, for costing my hours. If it cannot be read the entries
+        // are stamped with no rate, exactly as for a person with none on file.
+        try {
+          const res = await fetch(`/api/team/employees/${encodeURIComponent(e.id)}`, { headers: await getAuthHeaders(), credentials: 'same-origin', cache: 'no-store' });
+          if (res.ok) {
+            const j = await res.json();
+            const rec = j?.employee;
+            if (rec && j?.canSeePay) setEmp((cur: any) => (cur && cur.id === rec.id ? { ...cur, regular_rate: rec.regular_rate ?? null, overtime_rate: rec.overtime_rate ?? null } : cur));
+          } else {
+            console.error('[time] own rate not loaded', res.status);
+          }
+        } catch (err) {
+          console.error('[time] own rate not loaded', err);
+        }
+      }
     })();
   }, [sb, loadEntries, syncStatus]);
 

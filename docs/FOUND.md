@@ -343,3 +343,18 @@ MyWorkView.tsx, /api/my-work (+ jobs, agenda, roles, ?view=mine).
   `/api/related-items`, and the migration copied its rows. Drop the table once the PR is live.
 - No detail screen exists for invoices, safety incidents or commitments' own `commitments` table; their
   Related Items links open the list page (`lib/related-items.ts` `href`).
+## 16 Oct 2026 — role-aware RLS (fix/role-rls) — found, NOT fixed
+
+- `public.app_user_role()` maps every profiles.role it does not recognize (e.g. 'Salesperson', 'Project Manager')
+  to `'admin'`, so the older `rbac_*` restrictive policies (bills, budgets, invoices, CO, pay apps, role_definitions,
+  api_keys…) treated a Salesperson as an admin. The new `role_gate_*` policies close that on the 51 tables they
+  cover; anything still relying on `app_user_role()` alone (daily_logs, rfis, photos, punch_list_items, drawing_sheets,
+  integrations, tenant_settings, custom_field_definitions, approval_workflows…) still has the hole.
+- `resource_assignments.hourly_rate / cost_rate` — person-level rates readable tenant-wide over REST; not gated.
+- `proposals`, `proposal_lines`, `bids`, `bid_submissions`, `bid_packages` — money columns with tenant-only policies
+  (Sales/Projects data; every current role that can reach them already holds the matching category).
+- `user_role_assignments` SELECT is tenant-wide: every member can list who holds which role (no write path exists).
+- `rbac.permission_level_for` and lib/permissions.ts both ignore `user_role_assignments.project_id` unless a
+  project is asked about — and a user whose ONLY grants are project-scoped falls to memberDefault (View on
+  everything) everywhere else. App Store Review (member, PM on one project) therefore reads every job's money.
+  That is the TS rule, mirrored exactly; it should probably be None, not View, for a scoped-only user.
