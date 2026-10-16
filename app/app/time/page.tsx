@@ -92,6 +92,8 @@ async function postClock(path: string, body: Record<string, unknown>, label: str
 }
 
 const SAVED_SHIFT = 'saved:';
+/** The last active-job list this device loaded — the picker still works with no signal. */
+const JOBS_KEY = 'saguaro.time.jobs';
 /** The clock state the phone is holding: the last punch kept on it, if any. */
 async function savedClockState(): Promise<{ in: boolean; at: string; projectId: string | null; csi: string | null } | null> {
   const punches = await listSaved(null, 'time');
@@ -174,6 +176,11 @@ export default function TimeClockPage() {
   const [tenantId, setTenantId] = useState<string>('');
   const [entries, setEntries] = useState<any[]>([]);
   const [projects, setProjects] = useState<any[]>([]);
+  /** Whether the job list is still coming, failed, or loaded (possibly empty). */
+  const [projectsState, setProjectsState] = useState<'loading' | 'ready' | 'error'>('loading');
+  /** id → name for EVERY job, archived included — labels past shifts in the register. */
+  const [jobNames, setJobNames] = useState<Record<string, string>>({});
+  const jobName = useCallback((id: string | null | undefined) => (id ? jobNames[id] || projects.find((p) => p.id === id)?.name || '' : ''), [jobNames, projects]);
   const [projectId, setProjectId] = useState('');
   const [busy, setBusy] = useState(false);
   const [now, setNow] = useState(Date.now());
@@ -231,12 +238,43 @@ export default function TimeClockPage() {
          so a GC with several jobs could clock a full shift onto the wrong one
          without ever touching the picker — and labor cost lands in that job's
          budget. With more than one job, the choice has to be deliberate. */
-      sb.from('projects').select('id, name').order('name').then(({ data }) => {
-        setProjects(data ?? []);
+      /* The job list comes from /api/projects — the same tenant-scoped list the
+         daily log picker uses, with archived and deleted jobs left out. It read
+         the projects table straight through the browser client, which returns
+         every job RLS allows, archived ones included: 25 jobs in the picker
+         where 3 were live, and a crew could clock a shift onto a closed job. */
+      const applyJobs = (data: { id: string; name: string }[]) => {
+        setProjects(data);
+        setProjectsState('ready');
         // ?project= (the Photo sheet's Clock shortcut) names the job deliberately.
         const asked = new URLSearchParams(window.location.search).get('project');
-        if (asked && data?.some((p) => p.id === asked)) setProjectId(asked);
-        else if (data?.length === 1) setProjectId(data[0].id);
+        if (asked && data.some((p) => p.id === asked)) setProjectId(asked);
+        else if (data.length === 1) setProjectId(data[0].id);
+      };
+      fetch('/api/projects?limit=500&fields=id,name', { credentials: 'same-origin', cache: 'no-store' })
+        .then((r) => (r.ok ? r.json() : Promise.reject(new Error(`projects ${r.status}`))))
+        .then((d) => {
+          const data: { id: string; name: string }[] = (Array.isArray(d) ? d : d?.projects ?? [])
+            .slice()
+            .sort((a: { name?: string }, b: { name?: string }) => String(a.name || '').localeCompare(String(b.name || '')));
+          try { window.localStorage.setItem(JOBS_KEY, JSON.stringify(data)); } catch (err) { console.debug('[time] job list not kept on this device', err); }
+          applyJobs(data);
+        })
+        .catch((err) => {
+          console.error(err);
+          // No signal on site is normal: fall back to the last job list this phone saw.
+          let kept: { id: string; name: string }[] | null = null;
+          try { kept = JSON.parse(window.localStorage.getItem(JOBS_KEY) || 'null'); } catch (readErr) { console.debug('[time] no kept job list', readErr); }
+          if (Array.isArray(kept) && kept.length) applyJobs(kept);
+          else setProjectsState('error');
+        });
+      // Names for the register only: a past shift on a job that has since been
+      // archived still reads its job's name, even though the picker hides it.
+      sb.from('projects').select('id, name').then(({ data, error }) => {
+        if (error) { console.error(error); return; }
+        const names: Record<string, string> = {};
+        for (const p of (data ?? []) as { id: string; name: string | null }[]) names[p.id] = p.name || '';
+        setJobNames(names);
       });
       if (!user?.email) return;
       // Resolve the signed-in user's tenant so every write is tenant-scoped (RLS/NOT NULL) — without
@@ -348,7 +386,21 @@ export default function TimeClockPage() {
   // dupe guard, the hours math, and the clock_punches audit row — this screen only reports it.
   const clockIn = async () => {
     if (busy || inflight.current) return;
-    if (!projectId && projects.length > 0) { say('Pick a project before clocking in.', 'err'); return; }
+    /* A shift always names its job. With no project sent, the server falls back
+       to whichever job was touched last — so a job list that failed to load (or
+       was still loading) put a full shift's labor on a job nobody picked. */
+    // Offline with no job list ever seen on this phone: keep the punch (as before)
+    // rather than lose the shift; the server files it when the signal is back.
+    if (!projectId && !(isOffline() && projects.length === 0)) {
+      say(
+        projectsState === 'loading' ? 'Your jobs are still loading — pick one, then clock in.'
+        : projectsState === 'error' ? "Couldn't load your jobs. Reload the page, then pick the job you're on."
+        : projects.length === 0 ? 'No active jobs yet — create a project first, then clock in to it.'
+        : 'Pick a project before clocking in.',
+        'err',
+      );
+      return;
+    }
     inflight.current = true; setBusy(true); setMsg('');
     try {
       const g = await geo();
@@ -531,10 +583,10 @@ export default function TimeClockPage() {
   const entryHours = (e: any) => (e.entry_type && e.entry_type !== 'regular') ? (leaveHoursOf(e) ?? 0) : (Number(e.total_hours ?? e.hours_worked ?? 0) || 0);
   const columns: Column<any>[] = [
     { key: 'work_date', header: 'Date', accessor: (e) => `${e.work_date || ''}|${e.clock_in || ''}`, width: 130, render: (e) => <span className="tcDate">{fmtDate(e.work_date)}</span> },
-    { key: 'kind', header: 'Project / Type', accessor: (e) => (e.entry_type && e.entry_type !== 'regular') ? e.entry_type : (projects.find((p) => p.id === e.project_id)?.name || ''), render: (e) => {
+    { key: 'kind', header: 'Project / Type', accessor: (e) => (e.entry_type && e.entry_type !== 'regular') ? e.entry_type : jobName(e.project_id), render: (e) => {
       const leaveType = e.entry_type && e.entry_type !== 'regular';
       if (leaveType) return <span style={{ display: 'inline-flex', alignItems: 'center', gap: 6, color: 'var(--text-primary)' }}><Sun size={14} /> {LEAVE_LABEL[e.entry_type] || String(e.entry_type).toUpperCase()}</span>;
-      const name = e.project_id ? (projects.find((p) => p.id === e.project_id)?.name || 'Project') : '';
+      const name = e.project_id ? (jobName(e.project_id) || 'Project') : '';
       return name ? <span style={{ color: 'var(--text-primary)' }}>{name}</span> : <span className="tcMuted">No project</span>;
     } },
     { key: 'span', header: 'In – Out', accessor: (e) => e.clock_in || '', render: (e) => {
@@ -581,13 +633,21 @@ export default function TimeClockPage() {
                   <div className="tcClock" data-live={clockedIn ? 'true' : 'false'} aria-live="polite">{clockedIn ? elapsed : 'Clocked Out'}</div>
                   <div className="tcSince">{clockedIn ? `Since ${fmtTime(openShift.clock_in)} · ${openShift.timezone || TZ}` : (emp ? 'Ready to clock in' : 'Resolving your employee record…')}</div>
                   <div className="tcFacts">
-                    <span><HardHat size={13} />{clockedIn ? (projects.find((p) => p.id === openShift.project_id)?.name || 'Project') : (projName || 'Pick a project below')}</span>
+                    <span><HardHat size={13} />{clockedIn ? (jobName(openShift.project_id) || 'Project') : (projName || 'Pick a project below')}</span>
                     <span><Timer size={13} />{clockedIn ? (openShift.csi_division ? `Div ${openShift.csi_division} — ${openShift.cost_code_description || CSI_DIVISIONS[openShift.csi_division]?.name || 'cost coded'}` : 'No cost code on this shift') : (csiDiv ? `Div ${csiDiv} — ${CSI_DIVISIONS[csiDiv]?.name}` : 'No cost code — pick one below')}</span>
                     <span><MapPin size={13} />GPS stamps in &amp; out</span>
                   </div>
                   {!clockedIn && (
                     <div className="tcPickers">
-                      <Field label="Project" hint={projects.length > 1 ? 'Labor cost lands in this job’s budget.' : undefined}>
+                      <Field
+                        label="Project"
+                        hint={
+                          projectsState === 'loading' ? 'Loading your jobs…'
+                          : projectsState === 'error' ? "Couldn't load your jobs. Reload the page to try again."
+                          : projects.length === 0 ? 'No active jobs yet — create a project first.'
+                          : projects.length > 1 ? 'Labor cost lands in this job’s budget.' : undefined
+                        }
+                      >
                         <Select
                           value={projectId}
                           onChange={(e) => setProjectId(e.target.value)}

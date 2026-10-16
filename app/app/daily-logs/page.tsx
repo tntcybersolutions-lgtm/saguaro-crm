@@ -74,6 +74,11 @@ const fmtDate = (d?: string | null) => d ? new Date(d.slice(0, 10) + 'T12:00:00'
 
 /** Today as YYYY-MM-DD on the user's wall clock — never the UTC day. */
 const PICK_PROJECT = 'Pick the project this log is for.';
+/* Work Performed is marked required on the form and is the whole point of a
+   daily log; nothing enforced it, so an empty log saved and the day read as
+   covered. Field-level messages are routed to their field, not the footer. */
+const NEED_WORK = 'Say what got done today.';
+const FIELD_ERRORS = new Set([PICK_PROJECT, NEED_WORK]);
 /* Shortcuts for the Weather field. It offered a single "w" — the id of the
    datalist it replaced, carried over as if it were the list. */
 const WEATHER_SUGGESTIONS = ['Clear', 'Sunny', 'Partly Cloudy', 'Overcast', 'Light Rain', 'Rain', 'Thunderstorms', 'Snow', 'Windy', 'Fog', 'Hot', 'Cold'];
@@ -136,6 +141,8 @@ export default function DailyLogsPage() {
   const [error, setError] = useState('');
   /** "Saved on this phone…" after a log written with no signal. */
   const [notice, setNotice] = useState('');
+  /** Set when the server answers 409: today's log for this job already exists — offer it. */
+  const [existingLogId, setExistingLogId] = useState<string | null>(null);
   const [showCreate, setShowCreate] = useState(false);
   const [creating, setCreating] = useState(false);
   const [autoCrew, setAutoCrew] = useState(false);
@@ -304,7 +311,7 @@ export default function DailyLogsPage() {
 
   /** Close paths (backdrop / × / Cancel / Esc) run through the guard. */
   function closeCreate() {
-    guard.requestClose(() => { setShowCreate(false); setError((e) => (e === PICK_PROJECT ? '' : e)); });
+    guard.requestClose(() => { setShowCreate(false); setExistingLogId(null); setError((e) => (FIELD_ERRORS.has(e) ? '' : e)); });
   }
 
   /** POST the form — shared by the form submit and the guard's "Save & leave". */
@@ -318,6 +325,12 @@ export default function DailyLogsPage() {
       window.setTimeout(() => document.getElementById('dl-project')?.focus(), 0);
       return false;
     }
+    if (!form.workPerformed.trim()) {
+      setError(NEED_WORK);
+      window.setTimeout(() => document.getElementById('dl-work')?.focus(), 0);
+      return false;
+    }
+    setExistingLogId(null);
     setCreating(true);
     try {
       const body = {
@@ -352,7 +365,19 @@ export default function DailyLogsPage() {
           wind_conditions: body.windConditions, phase_of_work: body.phaseOfWork,
         },
       });
-      if (!sent.saved && !sent.response.ok) throw new Error('Failed to create daily log');
+      if (!sent.saved && !sent.response.ok) {
+        /* The route words every refusal for a GC (apiError, or the 409 below) and
+           this threw it away for a generic "Failed to create daily log". The
+           commonest refusal of all — today's log for this job already exists,
+           written by someone else or saved twice on bad signal — then read as a
+           broken save. Show the server's own words, and for the 409 open the
+           existing log instead of leaving them to hunt for it. */
+        let j: { error?: string; existingLogId?: string | null } = {};
+        try { j = await sent.response.json(); } catch (parseErr) { console.error('[daily-logs] non-JSON error body', parseErr); }
+        if (sent.response.status === 409) setExistingLogId(j.existingLogId ?? null);
+        setError(j.error || "The daily log didn't save. Try again.");
+        return false;
+      }
       setNotice(sent.saved ? "Saved on this phone — it sends when you're back online." : '');
       // Remember what was saved for next time, and receipt what was accepted.
       setLastUsed('daily-log', { projectId: form.projectId, superintendent: form.superintendent });
@@ -596,8 +621,16 @@ export default function DailyLogsPage() {
         onSubmit={handleCreate}
         submitLabel="Create Log"
         busy={creating}
-        error={error && error !== PICK_PROJECT ? error : null}
+        error={error && !FIELD_ERRORS.has(error) && !existingLogId ? error : null}
       >
+        {existingLogId ? (
+          <div className="dlInlineErr" role="alert" style={{ marginBottom: 16 }}>
+            <Warning size={15} /> {error || 'A daily log already exists for this day on this project.'}
+            <Button size="sm" icon={<ArrowSquareOut size={14} />} onClick={() => guard.requestLeave(`/app/daily-logs/${existingLogId}`)}>
+              Open That Log
+            </Button>
+          </div>
+        ) : null}
         {form.projectId && ctx ? (() => {
           const lastLog = ctx.recent?.lastDailyLogDate as string | null;
           const gap = unloggedWorkdays(lastLog, localToday(), ctx.project);
@@ -660,6 +693,7 @@ export default function DailyLogsPage() {
                 setForm(f => ({ ...f, projectId: pid, crewCount: prev?.crew_count ? String(prev.crew_count) : f.crewCount }));
                 setAutoCrew(!!(prev?.crew_count));
                 if (error) setError('');
+                setExistingLogId(null);
               }}
               placeholder="Select project…"
               options={projects.map(p => ({ value: p.id, label: p.name }))}
@@ -668,7 +702,7 @@ export default function DailyLogsPage() {
             />
           </Field>
           <Field label="Date" hint="Defaulted to today — backfill any missed day.">
-            <div className="dlDateInput"><SaguaroDatePicker value={form.logDate} onChange={(v) => setForm({ ...form, logDate: v })} style={DATE_INPUT_STYLE} /></div>
+            <div className="dlDateInput"><SaguaroDatePicker value={form.logDate} onChange={(v) => { setForm({ ...form, logDate: v }); if (existingLogId) { setExistingLogId(null); setError(''); } }} style={DATE_INPUT_STYLE} /></div>
           </Field>
           <Field label="Superintendent" hint={prevForForm?.superintendent ? `Last log: ${prevForForm.superintendent}.` : undefined}>
             <Input value={form.superintendent} onChange={(e) => setForm({ ...form, superintendent: e.target.value })} placeholder="Who ran the site" />
@@ -697,8 +731,16 @@ export default function DailyLogsPage() {
           <Field label="Equipment On Site" span>
             <Textarea value={form.equipment} onChange={(e) => setForm({ ...form, equipment: e.target.value })} rows={2} placeholder="Equipment on site…" />
           </Field>
-          <Field label="Work Performed" required span>
-            <Textarea value={form.workPerformed} onChange={(e) => setForm({ ...form, workPerformed: e.target.value })} rows={3} placeholder="Describe work completed today…" />
+          <Field label="Work Performed" required span error={error === NEED_WORK ? NEED_WORK : null}>
+            <Textarea
+              id="dl-work"
+              value={form.workPerformed}
+              onChange={(e) => { setForm({ ...form, workPerformed: e.target.value }); if (error === NEED_WORK) setError(''); }}
+              rows={3}
+              placeholder="Describe work completed today…"
+              aria-required="true"
+              aria-invalid={error === NEED_WORK || undefined}
+            />
           </Field>
           <Field label="Delays" span>
             <Textarea value={form.delays} onChange={(e) => setForm({ ...form, delays: e.target.value })} rows={2} placeholder="Any delays or issues…" />
