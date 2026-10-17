@@ -6,6 +6,7 @@
  * Production only: a worker in `next dev` would serve yesterday's chunks.
  */
 import { clearLastKnown, rememberJobs } from '@/lib/offline/last-known';
+import { wipeDrafts } from '@/lib/autoDraft';
 
 const WARMED_AT = 'saguaro-warmed-at';
 /** Must match V in public/push-sw.js. A new worker drops its old caches, so a
@@ -44,11 +45,12 @@ export async function startAppWorker(): Promise<void> {
   }
 }
 
-/** On sign-out: the next person on this phone must never see this one's saved screens. */
+/** On sign-out: the next person on this phone must never see this one's saved screens — or drafts. */
 export function clearOfflineCopies(): void {
   try {
     navigator.serviceWorker?.controller?.postMessage('saguaro:clear-cache');
     localStorage.removeItem(WARMED_AT);
   } catch { /* nothing cached */ }
+  try { wipeDrafts(localStorage); } catch { /* storage off — nothing was kept */ }
   void clearLastKnown();
 }

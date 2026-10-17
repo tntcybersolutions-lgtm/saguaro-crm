@@ -114,7 +114,8 @@ export function ListSheet({ open, onClose, title = 'Filter and sort', children }
   }, [open, onClose]);
   if (!mounted) return null;
   return createPortal(
-    <div className="k-lsheet-root" data-open={open ? 'true' : undefined} hidden={!open}>
+    // Search, sort and filter tools: never unsaved work, so closing the sheet never asks.
+    <div className="k-lsheet-root" data-open={open ? 'true' : undefined} hidden={!open} data-no-guard>
       <div className="k-lsheet-back" onClick={onClose} aria-hidden />
       <div className="k-lsheet" role="dialog" aria-modal="true" aria-label={title}>
         <div className="k-lsheet-head">

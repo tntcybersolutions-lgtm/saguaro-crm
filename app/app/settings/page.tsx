@@ -18,6 +18,7 @@ import { PageShell, Card, StatRow, Badge, Button, Field, Input, FormGrid, type S
 import TimeZoneCard from '@/components/settings/TimeZoneCard';
 import { paletteHex } from '@/lib/design-tokens';
 import { useInApp } from '@/lib/use-in-app';
+import { clearOfflineCopies } from '@/lib/offline/worker';
 
 interface SubInfo {
   plan_name: string;
@@ -579,6 +580,8 @@ export default function SettingsPage() {
               variant="danger"
               icon={<SignOut size={15} weight="bold" />}
               onClick={async () => {
+                // This person's offline copies and unsaved drafts leave the device with them.
+                clearOfflineCopies();
                 await fetch('/api/auth/logout', { method: 'POST' }).catch(() => {});
                 try {
                   for (const k of Object.keys(localStorage)) {
