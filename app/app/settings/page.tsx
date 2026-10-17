@@ -472,7 +472,7 @@ export default function SettingsPage() {
                               />
                               <div className="stLockupRow" style={{ gap: 8 }}>
                                 {branding.company_name && <span className="stLockupSub">{branding.company_name}</span>}
-                                <Badge tone={isTrialing ? 'under_contract' : 'gold'}>{isTrialing ? 'Trial' : (sub?.plan_name || 'Plan')}</Badge>
+                                <Badge tone={isTrialing ? 'under_contract' : 'plain'}>{isTrialing ? 'Trial' : (sub?.plan_name || 'Plan')}</Badge>
                               </div>
                             </>
                           ) : branding.company_name ? (
@@ -488,7 +488,7 @@ export default function SettingsPage() {
                               </span>
                               <span style={{ display: 'flex', flexDirection: 'column', gap: 4, minWidth: 0 }}>
                                 <span className="stLockupName">{branding.company_name}</span>
-                                <span style={{ display: 'flex' }}><Badge tone={isTrialing ? 'under_contract' : 'gold'}>{isTrialing ? 'Trial' : (sub?.plan_name || 'Plan')}</Badge></span>
+                                <span style={{ display: 'flex' }}><Badge tone={isTrialing ? 'under_contract' : 'plain'}>{isTrialing ? 'Trial' : (sub?.plan_name || 'Plan')}</Badge></span>
                               </span>
                             </div>
                           ) : (

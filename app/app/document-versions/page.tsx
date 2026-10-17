@@ -946,7 +946,7 @@ export default function DocumentVersionsPage() {
                 <div key={a.userId} className="dvGrant">
                   <div style={{ display: 'flex', alignItems: 'center', gap: 8, minWidth: 0 }}>
                     <span style={{ fontSize: 'var(--fs-sm)', color: 'var(--text-primary)', fontWeight: 500 }}>{a.name}</span>
-                    <Badge tone={a.role === 'admin' ? 'gold' : a.role === 'editor' ? 'ongoing' : 'neutral'}>{a.role.charAt(0).toUpperCase() + a.role.slice(1)}</Badge>
+                    <Badge tone={a.role === 'admin' ? 'plain' : a.role === 'editor' ? 'ongoing' : 'neutral'}>{a.role.charAt(0).toUpperCase() + a.role.slice(1)}</Badge>
                   </div>
                   <Button size="sm" variant="danger" icon={<Trash size={12} weight="bold" />} onClick={() => removeAccess(a.userId)}>Remove</Button>
                 </div>

@@ -4,7 +4,7 @@
  * A write kept on the phone with no signal can reach the server more than once:
  * the first send got there, the answer never came back, so the phone sends it
  * again. Every send of that write carries the same id (header CLIENT_ID_HEADER),
- * and the routes that create rows — daily logs, clock in/out, photos — store it
+ * and the routes that create rows — daily logs, clock in/out, photos, videos — store it
  * in a `client_id` column with a unique (tenant_id, client_id) index. A second
  * send finds the row the first one made and returns it instead of writing
  * another. Shared by the browser (outbox, uploads) and the routes.
