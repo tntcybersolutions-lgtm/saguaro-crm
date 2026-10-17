@@ -2,7 +2,8 @@ import { NextRequest, NextResponse } from 'next/server';
 import { createServerClient, getUser } from '@/lib/supabase-server';
 import { requirePermission } from '@/lib/permissions';
 import { apiError } from '@/lib/api-error';
-import { hiddenJobIds, dropHiddenJobRows } from '@/lib/live-jobs';
+import { dropHiddenJobRows } from '@/lib/live-jobs';
+import { jobsOffFor } from '@/lib/visible-jobs';
 import { receivableOnly, payableOnly } from '@/lib/invoice-direction';
 
 export async function GET(req: NextRequest) {
@@ -38,7 +39,7 @@ export async function GET(req: NextRequest) {
     // explicit archive view), keeps them.
     let rows = data || [];
     if (!projectId && searchParams.get('include_archived') !== '1') {
-      rows = dropHiddenJobRows(rows, await hiddenJobIds(db, user.tenantId));
+      rows = dropHiddenJobRows(rows, await jobsOffFor(db, user));
     }
 
     return NextResponse.json({ invoices: rows });

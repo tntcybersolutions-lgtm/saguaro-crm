@@ -3,6 +3,7 @@ import { createServerClient } from '@/lib/supabase-server';
 import { apiError } from '@/lib/api-error';
 import { requirePermission } from '@/lib/permissions';
 import { liveJobIds } from '@/lib/live-jobs';
+import { jobsOffFor } from '@/lib/visible-jobs';
 
 export async function GET(req: NextRequest) {
   // Role check, not just sign-in: Projects: View, the rule this tool's pages,
@@ -27,8 +28,9 @@ export async function GET(req: NextRequest) {
     // The company list shows logs on live jobs only — not archived, deleted
     // or vanished ones (they read "Unknown project"). lib/live-jobs.
     if (!projectId) {
-      const live = await liveJobIds(db, user.tenantId);
-      logs = logs.filter((l) => !!l.project_id && live.has(l.project_id));
+      // …and never a job closed to this person (lib/visible-jobs).
+      const [live, off] = await Promise.all([liveJobIds(db, user.tenantId), jobsOffFor(db, user)]);
+      logs = logs.filter((l) => !!l.project_id && live.has(l.project_id) && !off.has(l.project_id));
     }
     return NextResponse.json({ logs, source: 'live' });
   } catch (e) {

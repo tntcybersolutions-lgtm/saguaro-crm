@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { createServerClient, getUser } from '@/lib/supabase-server';
-import { getEffectivePermissions, hasPermission } from '@/lib/permissions';
+import { getEffectivePermissions, hasPermission, requirePermission } from '@/lib/permissions';
 import { apiError } from '@/lib/api-error';
 import { liveJobs } from '@/lib/live-jobs';
 import { addDays, requestDay } from '@/lib/time-zone';
@@ -23,7 +23,9 @@ import { addDays, requestDay } from '@/lib/time-zone';
    that is not true. A real 0 still renders, because that is an answer. */
 export async function GET(req: NextRequest) {
   try {
-    const user = await getUser(req);
+    const gate = await requirePermission(req, 'Projects', 'View', { projectId: null });
+  if (!gate.ok) return gate.res;
+  const user = gate.user;
     if (!user) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
 
     const db = createServerClient();

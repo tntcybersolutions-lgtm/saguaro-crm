@@ -35,7 +35,7 @@ export async function PATCH(req: NextRequest, { params }: { params: Promise<{ id
       const perms = await getEffectivePermissions(db, user.id, user.tenantId);
       if (!hasPermission(perms, 'Projects', 'Edit')) {
         return NextResponse.json(
-          { error: "Your role doesn't allow this (Projects: change). Ask your company admin for access.", reason: 'forbidden' },
+          { error: "You don't have permission to change Projects. Ask your company admin for access.", reason: 'forbidden' },
           { status: 403 },
         );
       }

@@ -1,4 +1,5 @@
 import { NextRequest } from 'next/server';
+import { requirePermission } from '@/lib/permissions';
 import { createServerClient, getUser } from '@/lib/supabase-server';
 import { ok, badRequest, notFound, serverError, unauthorized } from '@/lib/api-response';
 import { must } from '@/lib/db-write';
@@ -92,7 +93,9 @@ async function recomputeTotals(supabase: Supa, tenantId: string, takeoffId: stri
 // ── POST — add a line ([id] = takeoff id) ─────────────────────────────────────
 export async function POST(req: NextRequest, { params }: { params: Promise<{ id: string }> }) {
   try {
-    const user = await getUser(req).catch(() => null);
+    const gate = await requirePermission(req, 'Projects', 'Edit');
+  if (!gate.ok) return gate.res;
+  const user = gate.user;
     if (!user) return unauthorized();
     const supabase = createServerClient();
     const { id: takeoffId } = await params;
@@ -196,7 +199,9 @@ export async function POST(req: NextRequest, { params }: { params: Promise<{ id:
 // ── PATCH — edit a line ([id] = material id) ──────────────────────────────────
 export async function PATCH(req: NextRequest, { params }: { params: Promise<{ id: string }> }) {
   try {
-    const user = await getUser(req).catch(() => null);
+    const gate = await requirePermission(req, 'Projects', 'Edit');
+  if (!gate.ok) return gate.res;
+  const user = gate.user;
     if (!user) return unauthorized();
     const supabase = createServerClient();
     const { id } = await params;
@@ -260,7 +265,9 @@ export async function PATCH(req: NextRequest, { params }: { params: Promise<{ id
 // ── DELETE — remove a line ([id] = material id) ───────────────────────────────
 export async function DELETE(req: NextRequest, { params }: { params: Promise<{ id: string }> }) {
   try {
-    const user = await getUser(req).catch(() => null);
+    const gate = await requirePermission(req, 'Projects', 'Edit');
+  if (!gate.ok) return gate.res;
+  const user = gate.user;
     if (!user) return unauthorized();
     const supabase = createServerClient();
     const { id } = await params;

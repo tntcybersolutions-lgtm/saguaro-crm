@@ -31,7 +31,9 @@ const PRIVATE_SELECT = EMPLOYEE_PRIVATE_COLUMNS.join(', ');
  * Response: { employee, canSeePay, canEdit }
  */
 export async function GET(req: NextRequest, { params }: { params: Promise<{ id: string }> }) {
-  const user = await getUser(req);
+  const gate = await requirePermission(req, 'Projects', 'View', { projectId: null, companyWide: true });
+  if (!gate.ok) return gate.res;
+  const user = gate.user;
   if (!user) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
   const { id } = await params;
   if (!id) return apiFail('Missing employee id', 400);

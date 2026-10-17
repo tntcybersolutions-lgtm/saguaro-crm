@@ -148,10 +148,20 @@ export async function middleware(request: NextRequest) {
   // /api/auth/* is excluded: those routes rotate the token themselves, and a
   // second rotation of the same old token right after ours is exactly the
   // "already used" rejection that clears the cookies and signs the user out.
-  if (pathname.startsWith('/api/') && !pathname.startsWith('/api/auth/')) {
-    if (isValid(accessToken) || !refreshToken) return NextResponse.next();
+  // Every API request tells the server's database client its own method
+  // (lib/supabase-server REQUEST_METHOD_HEADER): money is hidden on reads made
+  // while answering a read, never during a write that recomputes a total.
+  // Always overwritten here, so a caller cannot choose it.
+  if (pathname.startsWith('/api/')) {
+    request.headers.set('x-saguaro-method', request.method.toUpperCase());
+  }
+  const passApi = () => NextResponse.next({ request: { headers: request.headers } });
+
+  if (pathname.startsWith('/api/auth/')) return passApi();
+  if (pathname.startsWith('/api/')) {
+    if (isValid(accessToken) || !refreshToken) return passApi();
     const session = await refreshTokens(refreshToken);
-    if (!session) return NextResponse.next();
+    if (!session) return passApi();
     // The forwarded request carries the fresh pair too, so a route that reads
     // the cookies directly (not just the Authorization header) sees them.
     request.cookies.set('sb-access-token', session.access_token);

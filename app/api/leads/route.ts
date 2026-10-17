@@ -6,7 +6,9 @@ import { normaliseStage, stageStamps } from '@/lib/lead-stages';
 import type { Database } from '@/lib/database.types';
 
 export async function GET(req: NextRequest) {
-  const user = await getUser(req);
+  const gate = await requirePermission(req, 'Sales', 'View', { projectId: null });
+  if (!gate.ok) return gate.res;
+  const user = gate.user;
   if (!user) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
   try {
     const supabase = createServerClient();

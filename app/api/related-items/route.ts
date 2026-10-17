@@ -13,6 +13,7 @@
  * forgets to check.
  */
 import { NextRequest, NextResponse } from 'next/server';
+import { requirePermission } from '@/lib/permissions';
 import { createServerClient, getUser } from '@/lib/supabase-server';
 import { apiError } from '@/lib/api-error';
 import { RELATED_TYPES, isRelatedType, orderPair, type RecordRef, type RelatedType } from '@/lib/related-items';
@@ -56,7 +57,9 @@ export async function GET(req: NextRequest) {
 }
 
 export async function POST(req: NextRequest) {
-  const user = await getUser(req);
+  const gate = await requirePermission(req, 'Projects', 'Edit');
+  if (!gate.ok) return gate.res;
+  const user = gate.user;
   if (!user) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
   const body = (await req.json().catch(() => null)) as { from?: unknown; to?: unknown } | null;
   const from = readRef(body?.from);
@@ -109,7 +112,9 @@ export async function POST(req: NextRequest) {
 }
 
 export async function DELETE(req: NextRequest) {
-  const user = await getUser(req);
+  const gate = await requirePermission(req, 'Projects', 'Edit');
+  if (!gate.ok) return gate.res;
+  const user = gate.user;
   if (!user) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
   const linkId = (req.nextUrl.searchParams.get('linkId') || '').toLowerCase();
   if (!UUID_RE.test(linkId)) return NextResponse.json({ error: 'linkId is required' }, { status: 400 });

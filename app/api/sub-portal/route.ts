@@ -1,4 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server';
+import { requirePermission } from '@/lib/permissions';
 import { createServerClient, getUser } from '@/lib/supabase-server';
 import { LOCAL_DAY_HEADER, daysUntilDay, plausibleToday } from '@/lib/calendar-day';
 import { requestDay } from '@/lib/time-zone';
@@ -80,7 +81,9 @@ function complianceStatus(
 }
 
 export async function GET(req: NextRequest) {
-  const user = await getUser(req);
+  const gate = await requirePermission(req, 'Projects', 'Edit');
+  if (!gate.ok) return gate.res;
+  const user = gate.user;
   if (!user) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
 
   const db = createServerClient();
@@ -161,13 +164,17 @@ export async function GET(req: NextRequest) {
   const projMap = new Map<string, string>();
   // Pickers list live jobs only; archived names still label old rows.
   const liveJobNames = new Set<string>();
+  const jobIdByName = new Map<string, string>();
   try {
     const { data, error } = await db.from('projects').select('id, name, is_archived, archived_at, is_deleted, deleted_at').eq('tenant_id', tenantId);
     if (error) throw error;
     for (const p of data || []) {
       const row = p as Record<string, unknown>;
       projMap.set(String(row.id), (row.name as string) || '');
-      if (isLiveJob(row as Parameters<typeof isLiveJob>[0]) && row.name) liveJobNames.add(row.name as string);
+      if (isLiveJob(row as Parameters<typeof isLiveJob>[0]) && row.name) {
+        liveJobNames.add(row.name as string);
+        jobIdByName.set(row.name as string, String(row.id));
+      }
     }
   } catch (e) {
     // Names only label rows ('--' below) — but the job pickers need them too.
@@ -270,5 +277,8 @@ export async function GET(req: NextRequest) {
   const projects = Array.from(liveJobNames)
     .sort((a, b) => a.localeCompare(b));
 
-  return NextResponse.json({ data: roster, activity, documents, compliance, announcements, projects, unavailable });
+  // The same jobs with their ids, so an invite names the job it is for.
+  const projectRefs = projects.map((name) => ({ id: jobIdByName.get(name) || '', name })).filter((p) => p.id);
+
+  return NextResponse.json({ data: roster, activity, documents, compliance, announcements, projects, projectRefs, unavailable });
 }

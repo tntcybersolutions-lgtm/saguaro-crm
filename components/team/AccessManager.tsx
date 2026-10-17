@@ -87,14 +87,16 @@ const ROLE_PRESETS: { name: string; desc: string; color: string; perms: Permissi
   { name: 'Foreman', desc: 'Daily field reporting and crew management.', color: ROLE_SWATCH.amber,
     perms: Object.fromEntries(CATEGORIES.map(c => {
       // Projects: Edit files daily logs and punch items; Documents: Edit uploads site photos.
-      if (['Projects','Documents','Safety','Schedule'].includes(c)) return [c, 'Edit' as PermLevel];
-      if (['RFIs','Submittals','Reports'].includes(c)) return [c, 'View' as PermLevel];
+      // RFIs: Edit — field users raise RFIs (Procore; 20261018r).
+      if (['Projects','Documents','Safety','Schedule','RFIs'].includes(c)) return [c, 'Edit' as PermLevel];
+      if (['Submittals','Reports'].includes(c)) return [c, 'View' as PermLevel];
       return [c, 'None' as PermLevel];
     })) },
   { name: 'Subcontractor', desc: 'Limited access for subcontractor partners.', color: ROLE_SWATCH.lightSlate,
     perms: Object.fromEntries(CATEGORIES.map(c => {
       if (['Submittals','RFIs'].includes(c)) return [c, 'Edit' as PermLevel];
-      if (['Projects','Documents','Schedule','Safety','Pay Apps'].includes(c)) return [c, 'View' as PermLevel];
+      // Only the jobs they are on (role scope), and none of the GC's owner billing (20261018r).
+      if (['Projects','Documents','Schedule','Safety'].includes(c)) return [c, 'View' as PermLevel];
       return [c, 'None' as PermLevel];
     })) },
   { name: 'Read-Only', desc: 'View-only access. Cannot modify any data.', color: ROLE_SWATCH.slate, // stored with the role — a hex, never a CSS variable

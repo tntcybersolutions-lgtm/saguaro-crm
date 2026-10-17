@@ -1,4 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server';
+import { requirePermission } from '@/lib/permissions';
 import { createServerClient, getUser } from '@/lib/supabase-server';
 import { apiError } from '@/lib/api-error';
 
@@ -32,7 +33,9 @@ function visibilityFromStatus(status: string | null): string[] {
 }
 
 export async function GET(req: NextRequest) {
-  const user = await getUser(req);
+  const gate = await requirePermission(req, 'Projects', 'Edit');
+  if (!gate.ok) return gate.res;
+  const user = gate.user;
   if (!user) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
   try {
     const db = createServerClient();
@@ -56,7 +59,9 @@ export async function GET(req: NextRequest) {
 }
 
 export async function PATCH(req: NextRequest) {
-  const user = await getUser(req);
+  const gate = await requirePermission(req, 'Projects', 'Full');
+  if (!gate.ok) return gate.res;
+  const user = gate.user;
   if (!user) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
   try {
     const body = await req.json().catch(() => ({}));

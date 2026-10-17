@@ -41,6 +41,7 @@ import { recordCompanyTimeZoneOnce } from '@/lib/ui/company-time-zone';
 import TableLabels from '@/components/ui/TableLabels';
 import MobileSelectSheet from '@/components/MobileSelectSheet';
 import NavAccelerator from '@/components/NavAccelerator';
+import RouteGate from '@/components/RouteGate';
 
 interface ChatMsg { role: 'user' | 'assistant'; content: string; }
 
@@ -565,7 +566,7 @@ export default function AppLayout({ children }: { children: React.ReactNode }) {
       >
         <ErrorBoundary>
           <SubscriptionWall>
-            <PageTransition>{children}</PageTransition>
+            <PageTransition><RouteGate>{children}</RouteGate></PageTransition>
           {/* The one place the Saguaro name appears once a tenant has branded
               the platform — and switchable off from Settings → Branding. */}
           <PoweredBy />

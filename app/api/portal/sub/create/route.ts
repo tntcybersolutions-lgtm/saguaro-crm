@@ -1,4 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server';
+import { requirePermission } from '@/lib/permissions';
 import { createServerClient, getUser } from '@/lib/supabase-server';
 import { sendSubPortalInvite } from '@/lib/email';
 import { randomUUID } from 'crypto';
@@ -67,7 +68,9 @@ async function rosterSubForEmail(db: Db, tenantId: string, projectId: string, in
  */
 export async function POST(req: NextRequest) {
   try {
-    const user = await getUser(req);
+    const gate = await requirePermission(req, 'Projects', 'Full');
+  if (!gate.ok) return gate.res;
+  const user = gate.user;
     if (!user) {
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
     }

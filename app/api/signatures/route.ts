@@ -1,4 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server';
+import { requirePermission } from '@/lib/permissions';
 import { createServerClient, getUser } from '@/lib/supabase-server';
 import { must } from '@/lib/db-write';
 import { apiError } from '@/lib/api-error';
@@ -132,7 +133,9 @@ export async function POST(req: NextRequest) {
  * a session and every query is scoped to that session's tenant.
  */
 export async function PATCH(req: NextRequest) {
-  const user = await getUser(req);
+  const gate = await requirePermission(req, 'Documents', 'Edit');
+  if (!gate.ok) return gate.res;
+  const user = gate.user;
   if (!user) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
   try {
     const supabase = createServerClient();

@@ -1,4 +1,5 @@
 import { NextRequest } from 'next/server';
+import { requirePermission } from '@/lib/permissions';
 import { createServerClient, getUser } from '@/lib/supabase-server';
 import { ok, badRequest, unauthorized, serverError } from '@/lib/api-response';
 import type { Database } from '@/lib/database.types';
@@ -53,7 +54,9 @@ export async function GET(req: NextRequest) {
  */
 export async function POST(req: NextRequest) {
   try {
-    const user = await getUser(req);
+    const gate = await requirePermission(req, 'Projects', 'Edit');
+  if (!gate.ok) return gate.res;
+  const user = gate.user;
     if (!user) return unauthorized();
 
     const body = await req.json();

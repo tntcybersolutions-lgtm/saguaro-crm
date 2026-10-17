@@ -1,4 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server';
+import { requireAnyPermission } from '@/lib/permissions';
 import { createServerClient, getUser } from '@/lib/supabase-server';
 import { apiError } from '@/lib/api-error';
 
@@ -9,7 +10,9 @@ const EMPTY_STATS = {
 
 export async function GET(req: NextRequest) {
   try {
-    const user = await getUser(req);
+    const gate = await requireAnyPermission(req, ['Sales', 'Budget'], 'View', { projectId: null });
+  if (!gate.ok) return gate.res;
+  const user = gate.user;
     if (!user) {
       return NextResponse.json({ bids: [], stats: EMPTY_STATS, source: 'unauth' }, { status: 401 });
     }

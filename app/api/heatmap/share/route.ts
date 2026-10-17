@@ -1,4 +1,5 @@
 import { NextRequest } from 'next/server';
+import { requirePermission } from '@/lib/permissions';
 import { createServerClient, getUser } from '@/lib/supabase-server';
 import { heatmapShareToken, newShareNonce, SHARE_TTL_MS } from '@/lib/heatmap/share';
 
@@ -46,7 +47,9 @@ export async function GET(req: NextRequest) {
 
 /** DELETE /api/heatmap/share?id=  → revoke every share link for a design (owner-only). */
 export async function DELETE(req: NextRequest) {
-  const user = await getUser(req).catch(() => null);
+  const gate = await requirePermission(req, 'Projects', 'Edit');
+  if (!gate.ok) return gate.res;
+  const user = gate.user;
   if (!user) return Response.json({ error: 'Unauthorized' }, { status: 401 });
   const id = new URL(req.url).searchParams.get('id');
   if (!id) return Response.json({ error: 'Missing id' }, { status: 400 });

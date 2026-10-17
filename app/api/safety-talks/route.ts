@@ -99,7 +99,9 @@ export async function GET(req: NextRequest) {
 
 // POST /api/safety-talks  -> save an AI toolbox talk with attendance + signatures
 export async function POST(req: NextRequest) {
-  const user = await getUser(req);
+  const gate = await requirePermission(req, 'Safety', 'Edit');
+  if (!gate.ok) return gate.res;
+  const user = gate.user;
   if (!user) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
   try {
     const body = await req.json().catch(() => ({} as Record<string, any>));

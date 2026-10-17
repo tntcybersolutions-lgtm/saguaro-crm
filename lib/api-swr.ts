@@ -98,6 +98,31 @@ function load(key: string): Promise<Entry | null> {
   return p;
 }
 
+/**
+ * A failed /api answer that is not JSON — a proxy's "upstream request failed"
+ * page, a platform 502/504 — becomes a JSON body with a sentence a person can
+ * read. Screens call res.json() on failures; without this they showed
+ * "Unexpected token 'u', "upstream r"... is not valid JSON" (live QA D15).
+ */
+function jsonFailure(input: RequestInfo | URL, res: Response): Response {
+  if (res.ok || res.status === 304) return res;
+  const type = res.headers.get('content-type') || '';
+  if (type.includes('json')) return res;
+  try {
+    const raw = typeof input === 'string' ? input : input instanceof URL ? input.href : input.url;
+    const url = new URL(raw, window.location.href);
+    if (url.origin !== window.location.origin || !url.pathname.startsWith('/api/')) return res;
+  } catch { return res; }
+  const error = res.status >= 500
+    ? "The server didn't answer just now. Nothing was lost — try again in a moment."
+    : res.status === 403 ? "You don't have permission to do this. Ask your company admin for access."
+      : res.status === 401 ? 'Your session expired. Sign in again to continue.'
+        : 'That request did not go through. Try again.';
+  return new Response(JSON.stringify({ error, status: res.status }), {
+    status: res.status, statusText: res.statusText, headers: { 'content-type': 'application/json' },
+  });
+}
+
 export function installApiSwr(): void {
   if (installed || typeof window === 'undefined') return;
   installed = true;
@@ -106,13 +131,13 @@ export function installApiSwr(): void {
   const wrapped = async function swrFetch(input: RequestInfo | URL, init?: RequestInit): Promise<Response> {
     if (isMutation(input, init)) {
       try {
-        return await realFetch(input, init);
+        return jsonFailure(input, await realFetch(input, init));
       } finally {
         cache.clear(); // something changed — the next read goes to the server
       }
     }
     const key = cacheable(input, init);
-    if (!key) return realFetch(input, init);
+    if (!key) return jsonFailure(input, await realFetch(input, init));
     rememberRouteUrl(key);
 
     const hit = cache.get(key);
@@ -127,7 +152,7 @@ export function installApiSwr(): void {
       const entry = await pending;
       if (entry) return toResponse(entry);
     }
-    const res = await realFetch(input, init);
+    const res = jsonFailure(input, await realFetch(input, init));
     const type = res.headers.get('content-type') || '';
     if (res.status === 200 && type.includes('application/json')) {
       res.clone().text().then((body) => {

@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from 'next/server';
 import { createServerClient } from '@/lib/supabase-server';
 import { apiError } from '@/lib/api-error';
 import { requirePermission } from '@/lib/permissions';
+import { jobsOffFor, dropRowsOnJobs } from '@/lib/visible-jobs';
 
 export async function GET(req: NextRequest) {
   const { searchParams } = new URL(req.url);
@@ -36,7 +37,9 @@ export async function GET(req: NextRequest) {
     const { data, error } = await query;
     if (error) throw error;
 
-    const rfis = (data || []).map((r: any) => ({
+    // Company-wide: never an RFI on a job closed to this person or off the books.
+    const rows = projectId ? (data || []) : dropRowsOnJobs((data || []) as Array<{ project_id: string | null }>, await jobsOffFor(db, user));
+    const rfis = rows.map((r: any) => ({
       ...r,
       is_overdue: r.status !== 'answered' && r.status !== 'closed' && !!r.due_date && r.due_date < today,
     }));

@@ -12,222 +12,78 @@
  * Server only — imports the service-role client. Never import from a client component.
  */
 import { NextRequest, NextResponse } from 'next/server';
-import { CATEGORIES, INHERITS_WHEN_ABSENT, LEVEL_RANK, type PermCategory, type PermLevel } from './permission-categories';
+import { CATEGORIES, INHERITS_WHEN_ABSENT, type PermCategory, type PermLevel } from './permission-categories';
 import type { SupabaseClient } from '@supabase/supabase-js';
-import { createServerClient, getUser } from './supabase-server';
+import * as supabaseServer from './supabase-server';
+import { getUser } from './supabase-server';
 import { projectIdForRequest } from './permission-scope';
 import type { Database } from './database.types';
+import { apiError } from './api-error';
+import {
+  resolvePermissions, hasPermission, hasAnyPermission, isAdminBaseRole, isJobScoped, roleScopeOf, refusalText,
+  PROPOSAL_MONEY, MONEY_VIEW, RATE_VIEW,
+  type PermissionMap, type AssignmentRow,
+} from './permission-resolve';
 
-/* ── vocabulary ── the category list lives in lib/permission-categories,
-   which both this module and the client-side matrix in
-   components/team/AccessManager read. ── */
+/* ── vocabulary ── the category list lives in lib/permission-categories, the
+   resolver in lib/permission-resolve (a leaf, so the database layer's job and
+   money scoping can use the same rule without an import cycle). ── */
 export { CATEGORIES, INHERITS_WHEN_ABSENT };
-export type { PermCategory, PermLevel };
-
-export type PermissionMap = Record<PermCategory, PermLevel>;
-
-/** Roles that get an unconditional Full-on-everything bypass. */
-const ADMIN_ROLES = new Set(['admin', 'owner']);
+export type { PermCategory, PermLevel, PermissionMap, AssignmentRow };
+export { resolvePermissions, hasPermission, hasAnyPermission, PROPOSAL_MONEY, MONEY_VIEW, RATE_VIEW };
 
 type ServerDb = SupabaseClient<Database>;
 
-/* ── helpers ── */
-
-function fill(level: PermLevel): PermissionMap {
-  return CATEGORIES.reduce((acc, c) => {
-    acc[c] = level;
-    return acc;
-  }, {} as PermissionMap);
-}
-
-/** Full on every category — the admin/owner bypass. */
-function adminAll(): PermissionMap {
-  return fill('Full');
-}
-
 /**
- * Default for a NON-admin user who has ZERO role assignments.
- *
- * DECISION: View on every operational category, None on Admin. This lets a
- * bare member read the app but denies every write/approve (Edit/Full) and all
- * access-control (Admin) actions until a role is explicitly granted. It is the
- * safe, least-privilege default: nothing that mutates money or membership is
- * reachable without a deliberate role assignment.
+ * The client the guard reads permissions with. Not the route's client: that
+ * one is scoped to the jobs the person may see (lib/viewer-scope), and the
+ * guard must still find a closed job and its records so it can answer 403
+ * "you don't have permission" rather than 404. Test doubles that mock
+ * lib/supabase-server with createServerClient alone fall back to it.
  */
-function memberDefault(): PermissionMap {
-  const m = fill('View');
-  m['Admin'] = 'None';
-  return m;
+function guardDb(): ServerDb {
+  const mod = supabaseServer as unknown as { createUnscopedServerClient?: () => ServerDb; createServerClient: () => ServerDb };
+  return (mod.createUnscopedServerClient ?? mod.createServerClient)();
 }
 
-/** Coerce an arbitrary jsonb value into a known PermLevel (unknown → None). */
-function normalizeLevel(v: unknown): PermLevel {
-  return v === 'Full' || v === 'Edit' || v === 'View' || v === 'None' ? v : 'None';
+/** The caller's client, unless it is the scoped server client — then its unscoped twin. */
+function unscoped(db: ServerDb): ServerDb {
+  const mod = supabaseServer as unknown as { createUnscopedServerClient?: () => ServerDb; createServerClient: () => ServerDb };
+  if (!mod.createUnscopedServerClient) return db;
+  try {
+    return db === mod.createServerClient() ? mod.createUnscopedServerClient() : db;
+  } catch (e) {
+    void e;
+    return db;
+  }
 }
 
-/** Take the higher of two levels. */
-function maxLevel(a: PermLevel, b: PermLevel): PermLevel {
-  return LEVEL_RANK[a] >= LEVEL_RANK[b] ? a : b;
-}
+/** A role_definitions row as the guard needs it (select('*'): `scope` arrives with 20261018r). */
+type RoleRow = { id: string; permissions: unknown; scope?: unknown; name?: unknown; is_builtin?: unknown };
 
-/** A user_role_assignments row as the resolver reads it. */
-export type AssignmentRow = {
-  role_id: string | null;
-  project_id: string | null;
-  /** Per-category levels for this job. Honored on project rows only. */
-  permissions?: unknown;
-};
-
-/** One stored role's map. A category the role never mentioned inherits from the
- *  one it used to be gated on (INHERITS_WHEN_ABSENT) rather than defaulting to
- *  None. `in` rather than a truthiness check: an explicit "Sales": "None" is a
- *  decision and must not be overridden. */
-function roleLevels(stored: unknown): PermissionMap {
-  const perms = (stored ?? {}) as Record<string, unknown>;
-  const out = fill('None');
-  for (const c of CATEGORIES) {
-    const inheritFrom = INHERITS_WHEN_ABSENT[c];
-    const raw = (inheritFrom && !(c in perms)) ? perms[inheritFrom] : perms[c];
-    out[c] = normalizeLevel(raw);
+/** Job ids this person is on through the job's team, for the job-scoped rule. */
+async function memberJobIds(db: ServerDb, userId: string, tenantId: string, projectId?: string | null): Promise<Set<string>> {
+  const out = new Set<string>();
+  for (const table of ['project_team', 'project_users'] as const) {
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    let q = (db as any).from(table).select('project_id').eq('tenant_id', tenantId).eq('user_id', userId);
+    if (projectId) q = q.eq('project_id', projectId);
+    const { data, error } = await q;
+    if (error) { console.error('[permissions] team membership', table, error.message); continue; }
+    for (const r of (data || []) as Array<{ project_id: string | null }>) if (r.project_id) out.add(r.project_id);
   }
   return out;
 }
 
-/** The per-category levels on a project row, when it carries any. */
-function overridesOf(v: unknown): Record<string, unknown> | null {
-  return v && typeof v === 'object' && !Array.isArray(v) ? (v as Record<string, unknown>) : null;
-}
-
-/**
- * The resolution order, as a pure function (getEffectivePermissions feeds it;
- * rbac.permission_level_for in 20261017h is its line-for-line port, and
- * tools/rls-permission-parity proves the two agree):
- *
- *  1. profiles.role 'admin' | 'owner'  ⇒  Full on every category, every job.
- *  2. COMPANY role — the user's global grants (project_id IS NULL), highest
- *     level wins per category. No global grant ⇒ memberDefault().
- *  3. No job asked about, or the person has no row for that job ⇒ company role.
- *  4. JOB role (Procore behavior) — the rows for that job REPLACE the company
- *     role there, up or down. Each row is its role (or, with no role, the
- *     company role) with the row's per-category levels laid on top; more than
- *     one row for the job ⇒ highest wins. "No access" is a row with no role and
- *     every category None.
- *  5. Admin (roles, payroll, billing, company settings) is company-wide: a job
- *     role never changes it.
- *  6. A company admin (company role Admin: Full) stays an admin everywhere: on
- *     a job the job role can add to the company role, never take from it.
- *
- * `assignments` and `roles` must already be this tenant's rows.
- */
-export function resolvePermissions(input: {
-  baseRole: string | null | undefined;
-  assignments: readonly AssignmentRow[];
-  roles: ReadonlyMap<string, unknown>;
-  projectId?: string | null;
-}): PermissionMap {
-  if (ADMIN_ROLES.has((input.baseRole || '').toLowerCase())) return adminAll();
-
-  const levelsFor = (roleId: string): PermissionMap =>
-    input.roles.has(roleId) ? roleLevels(input.roles.get(roleId)) : fill('None');
-
-  // 2) Company role.
-  const globalIds = Array.from(new Set(
-    input.assignments.filter((a) => a.project_id == null).map((a) => a.role_id).filter((r): r is string => !!r),
-  ));
-  let company: PermissionMap;
-  if (globalIds.length === 0) {
-    company = memberDefault();
-  } else {
-    company = fill('None');
-    for (const id of globalIds) {
-      const m = levelsFor(id);
-      for (const c of CATEGORIES) company[c] = maxLevel(company[c], m[c]);
-    }
-  }
-
-  // 3) No job, or not on this job specifically.
-  const pid = input.projectId;
-  if (pid == null) return company;
-  const jobRows = input.assignments.filter((a) => a.project_id === pid);
-  if (jobRows.length === 0) return company;
-
-  // 4) Job role replaces the company role on this job.
-  const job = fill('None');
-  for (const row of jobRows) {
-    const m: PermissionMap = row.role_id ? levelsFor(row.role_id) : { ...company };
-    const ov = overridesOf(row.permissions);
-    if (ov) for (const c of CATEGORIES) if (c in ov) m[c] = normalizeLevel(ov[c]);
-    for (const c of CATEGORIES) job[c] = maxLevel(job[c], m[c]);
-  }
-
-  // 5) Admin stays company-wide.
-  job['Admin'] = company['Admin'];
-
-  // 6) A company admin is never reduced on a job.
-  if (company['Admin'] === 'Full') {
-    for (const c of CATEGORIES) job[c] = maxLevel(job[c], company[c]);
-  }
-  return job;
-}
-
-/**
- * Resolve a user's effective permission map for a tenant, optionally within a
- * project — see resolvePermissions for the order.
- */
-export async function getEffectivePermissions(
-  db: ServerDb,
-  userId: string,
-  tenantId: string,
-  projectId?: string | null,
-): Promise<PermissionMap> {
-  const { data: profile } = await db
-    .from('profiles')
-    .select('role')
-    .eq('id', userId)
-    .maybeSingle();
-
-  const baseRole = (profile?.role || '').toLowerCase();
-  if (ADMIN_ROLES.has(baseRole)) return adminAll();
-
-  /* select('*'): the per-job `permissions` column arrives with 20261017h. Naming
-     it before that migration is applied would fail the whole read and drop
-     every user to the member default. */
-  const { data: assignments } = await db
-    .from('user_role_assignments')
-    .select('*')
-    .eq('user_id', userId)
-    .eq('tenant_id', tenantId);
-
-  const rows = (assignments ?? []) as AssignmentRow[];
-  const applicable = rows.filter(
-    (a) => a.project_id == null || (projectId != null && a.project_id === projectId),
-  );
-  const roleIds = Array.from(new Set(applicable.map((a) => a.role_id).filter((r): r is string => !!r)));
-
-  const roles = new Map<string, unknown>();
-  if (roleIds.length > 0) {
-    const { data: roleDefs } = await db
-      .from('role_definitions')
-      .select('id, permissions')
-      .eq('tenant_id', tenantId)
-      .in('id', roleIds);
-    for (const rd of roleDefs ?? []) roles.set(rd.id, rd.permissions);
-  }
-
-  return resolvePermissions({ baseRole, assignments: applicable, roles, projectId });
-}
-
-/**
- * The jobs this person has been shut out of: a job role on which Projects is
- * None ("No access", or a role that grants nothing there). Project lists drop
- * them, so a job you cannot open does not sit in your picker. Admins and
- * owners: none.
- */
-export async function jobsClosedTo(db: ServerDb, userId: string, tenantId: string): Promise<Set<string>> {
-  const closed = new Set<string>();
+/** Everything the resolver reads for one person: base role, their rows, their roles. */
+async function loadGrants(db: ServerDb, userId: string, tenantId: string) {
   const { data: profile } = await db.from('profiles').select('role').eq('id', userId).maybeSingle();
-  if (ADMIN_ROLES.has((profile?.role || '').toLowerCase())) return closed;
+  const baseRole = (profile?.role || '').toLowerCase();
+  if (isAdminBaseRole(baseRole)) return { baseRole, rows: [] as AssignmentRow[], roles: new Map<string, unknown>(), scoped: new Set<string>() };
 
+  /* select('*'): the per-job `permissions` column arrives with 20261017h and
+     role scope with 20261018r. Naming either before its migration is applied
+     would fail the whole read and drop every user to the member default. */
   const { data: assignments, error } = await db
     .from('user_role_assignments')
     .select('*')
@@ -235,63 +91,131 @@ export async function jobsClosedTo(db: ServerDb, userId: string, tenantId: strin
     .eq('tenant_id', tenantId);
   if (error) throw error;
   const rows = (assignments ?? []) as AssignmentRow[];
-  const jobIds = Array.from(new Set(rows.map((a) => a.project_id).filter((p): p is string => !!p)));
-  if (jobIds.length === 0) return closed;
 
   const roleIds = Array.from(new Set(rows.map((a) => a.role_id).filter((r): r is string => !!r)));
   const roles = new Map<string, unknown>();
+  const scoped = new Set<string>();
   if (roleIds.length > 0) {
     const { data: roleDefs, error: rErr } = await db
-      .from('role_definitions').select('id, permissions').eq('tenant_id', tenantId).in('id', roleIds);
+      .from('role_definitions')
+      .select('*')
+      .eq('tenant_id', tenantId)
+      .in('id', roleIds);
     if (rErr) throw rErr;
-    for (const rd of roleDefs ?? []) roles.set(rd.id, rd.permissions);
+    for (const rd of (roleDefs ?? []) as RoleRow[]) {
+      roles.set(rd.id, rd.permissions);
+      if (roleScopeOf(rd) === 'assigned') scoped.add(rd.id);
+    }
+  }
+  return { baseRole, rows, roles, scoped };
+}
+
+/**
+ * Resolve a user's effective permission map for a tenant, optionally within a
+ * project — see resolvePermissions (lib/permission-resolve) for the order.
+ */
+export async function getEffectivePermissions(
+  db: ServerDb,
+  userId: string,
+  tenantId: string,
+  projectId?: string | null,
+): Promise<PermissionMap> {
+  return (await getEffectiveAccess(db, userId, tenantId, projectId)).perms;
+}
+
+/** getEffectivePermissions plus whether the company role is job-scoped (Subcontractor). */
+export async function getEffectiveAccess(
+  db: ServerDb,
+  userId: string,
+  tenantId: string,
+  projectId?: string | null,
+): Promise<{ perms: PermissionMap; jobScoped: boolean }> {
+  db = unscoped(db);
+  const { baseRole, rows, roles, scoped } = await loadGrants(db, userId, tenantId);
+  if (isAdminBaseRole(baseRole)) return { perms: resolvePermissions({ baseRole, assignments: [], roles }), jobScoped: false };
+  const jobScoped = isJobScoped(baseRole, rows, scoped);
+  const applicable = rows.filter(
+    (a) => a.project_id == null || (projectId != null && a.project_id === projectId),
+  );
+  /* Job-scoped (Subcontractor): on a job with no job row, being on the job's
+     team is what lets the company role apply there. */
+  const needsTeam = !!projectId && scoped.size > 0 && !applicable.some((a) => a.project_id === projectId);
+  const members = needsTeam ? await memberJobIds(db, userId, tenantId, projectId) : undefined;
+  return { perms: resolvePermissions({ baseRole, assignments: applicable, roles, projectId, scopedRoleIds: scoped, memberJobIds: members }), jobScoped };
+}
+
+/**
+ * The jobs this person is shut out of:
+ *  - a job role on which Projects is None ("No access", or a role that grants
+ *    nothing there), and
+ *  - for a job-scoped company role (Subcontractor), every job they are not on.
+ * Lists, search, rollups and feeds drop them (lib/live-jobs jobsOffFor; the
+ * server database client applies the same set to every read, lib/viewer-scope).
+ * Admins and owners: none.
+ */
+export async function jobsClosedTo(db: ServerDb, userId: string, tenantId: string): Promise<Set<string>> {
+  db = unscoped(db); // must see every job, so never the caller's scoped client
+  const closed = new Set<string>();
+  const { baseRole, rows, roles, scoped } = await loadGrants(db, userId, tenantId);
+  if (isAdminBaseRole(baseRole)) return closed;
+
+  const jobScoped = isJobScoped(baseRole, rows, scoped);
+
+  let jobIds: string[];
+  let members: Set<string> | undefined;
+  if (jobScoped) {
+    const { data, error } = await db.from('projects').select('id').eq('tenant_id', tenantId).limit(5000);
+    if (error) throw error;
+    jobIds = ((data || []) as Array<{ id: string }>).map((p) => p.id);
+    members = await memberJobIds(db, userId, tenantId);
+  } else {
+    jobIds = Array.from(new Set(rows.map((a) => a.project_id).filter((p): p is string => !!p)));
   }
   for (const pid of jobIds) {
-    const m = resolvePermissions({ baseRole: profile?.role, assignments: rows, roles, projectId: pid });
+    const m = resolvePermissions({ baseRole, assignments: rows, roles, projectId: pid, scopedRoleIds: scoped, memberJobIds: members });
     if (m['Projects'] === 'None') closed.add(pid);
   }
   return closed;
 }
-
-/** True if `perms` grants at least `minLevel` on `category`. */
-export function hasPermission(
-  perms: PermissionMap,
-  category: PermCategory,
-  minLevel: PermLevel,
-): boolean {
-  const have = perms[category] ?? 'None';
-  return LEVEL_RANK[have] >= LEVEL_RANK[minLevel];
-}
-
-/** True if `perms` grants at least `minLevel` on ANY of `categories`. */
-export function hasAnyPermission(
-  perms: PermissionMap,
-  categories: readonly PermCategory[],
-  minLevel: PermLevel,
-): boolean {
-  return categories.some((c) => hasPermission(perms, c, minLevel));
-}
-
-/**
- * Proposal and bid dollars, and e-sign signer details (names, emails, IPs):
- * visible to a role with Sales OR Budget, and nobody else (owner decision,
- * 16 Oct 2026). The database applies the same rule in role_gate_*_proposals,
- * _proposal_lines, _proposal_signatures, _proposal_signature_events, _bids and
- * _bid_submissions (20261017c).
- */
-export const PROPOSAL_MONEY: readonly PermCategory[] = ['Sales', 'Budget'];
-
-/**
- * Pay rates on resource planning (resource_assignments.hourly_rate /
- * cost_rate): Budget or Admin view. Labor cost is job cost.
- */
-export const RATE_VIEW: readonly PermCategory[] = ['Budget', 'Admin'];
 
 export type AuthedUser = { id: string; tenantId: string; email: string };
 
 export type PermissionGuard =
   | { ok: true; user: AuthedUser; perms: PermissionMap; db: ServerDb }
   | { ok: false; res: NextResponse };
+
+/** The 403 every guard returns: says what was refused and who can fix it. */
+export function forbidden(categories: readonly PermCategory[], minLevel: PermLevel): NextResponse {
+  return NextResponse.json(
+    {
+      error: refusalText(categories, minLevel),
+      reason: 'forbidden',
+      detail: `Requires ${categories.join(' or ')} ≥ ${minLevel}`,
+    },
+    { status: 403 },
+  );
+}
+
+/**
+ * opts.projectId — the job (see requirePermission); null = company-wide.
+ * opts.db — handed back as g.db.
+ * opts.companyWide — a company directory or company-level list (subcontractor
+ *   directory, people, reports …) that is not about any one job. A job-scoped
+ *   role (Subcontractor) sees only its own jobs, so it is refused these.
+ */
+export type GuardOpts = { projectId?: string | null; db?: ServerDb; companyWide?: boolean };
+
+const WRITE_METHODS = new Set(['POST', 'PUT', 'PATCH', 'DELETE']);
+
+/**
+ * Writes that must still reach an archived job: the job record itself (restore,
+ * rename, delete) and its archive switch. Everything else on an archived job is
+ * read-only (Procore: an inactive project takes no new items).
+ */
+function writesToArchivedJobAllowed(pathname: string): boolean {
+  return /^\/api\/projects\/[0-9a-f-]{36}\/?$/i.test(pathname)
+    || /\/(archive|unarchive|restore|reactivate)\/?$/i.test(pathname);
+}
 
 /**
  * Route ergonomic gate. Resolves the caller, loads their effective permissions,
@@ -303,13 +227,13 @@ export type PermissionGuard =
  *
  * opts.projectId names the job (its job role applies there); left out, the
  * guard finds it in the request (lib/permission-scope); null means
- * company-wide. opts.db reuses an existing service client.
+ * company-wide. opts.db is handed back as g.db for the route's own queries.
  */
 export async function requirePermission(
   req: NextRequest,
   category: PermCategory,
   minLevel: PermLevel,
-  opts?: { projectId?: string | null; db?: ServerDb },
+  opts?: GuardOpts,
 ): Promise<PermissionGuard> {
   return requireAnyPermission(req, [category], minLevel, opts);
 }
@@ -322,51 +246,39 @@ export async function requireAnyPermission(
   req: NextRequest,
   categories: readonly PermCategory[],
   minLevel: PermLevel,
-  opts?: { projectId?: string | null; db?: ServerDb },
+  opts?: GuardOpts,
 ): Promise<PermissionGuard> {
-  const category = categories.join(' or ');
   const user = await getUser(req);
   if (!user) {
     return { ok: false, res: NextResponse.json({ error: 'Unauthorized' }, { status: 401 }) };
   }
 
-  const db = opts?.db ?? createServerClient();
+  const routeDb = opts?.db ?? supabaseServer.createServerClient();
+  const db = guardDb();
 
   /* ⚠️ PERMISSION IS NOT ISOLATION.
    *
    * `projectId` arrives from the request — a query string or a URL segment —
-   * and getEffectivePermissions() below uses it only to decide WHICH role
-   * grants apply. It never asked whose project it was. A GLOBAL grant
-   * (project_id IS NULL) always applies, and a user with no assignments at all
-   * falls to memberDefault(), which is View on every operational category.
+   * and getEffectivePermissions() uses it only to decide WHICH role grants
+   * apply. Any signed-in user could pass ANOTHER TENANT'S project id, clear
+   * the gate, and have the route read that job (/api/photos did, 24 Sep 2026).
+   * So the tenant check lives HERE rather than in each route that passes a
+   * projectId. 404, not 403: a project in another tenant is indistinguishable
+   * from one that does not exist.
    *
-   * So any signed-in user could pass ANOTHER TENANT'S project id, clear this
-   * gate, and have the route read that job. /api/photos did exactly that and
-   * handed back signed URLs to another company's site photos. Measured on
-   * production 24 Sep 2026: one role assignment exists across the whole
-   * platform, so effectively every user was on memberDefault().
-   *
-   * The guard answers "may this person do this?". It could not answer "is this
-   * row theirs?" — only a tenant filter does that, and it belongs HERE rather
-   * than in each of the 25 routes that pass a projectId, because one of them
-   * will always be forgotten.
-   *
-   * 404, not 403: a project in another tenant should be indistinguishable from
-   * one that does not exist, or the response confirms which ids are real.
+   * Which job: a route that names one (or names null: company-wide on
+   * purpose) is taken at its word; otherwise the request itself says
+   * (lib/permission-scope).
    */
-  /* Which job. A route that names one (or names null: company-wide on
-     purpose) is taken at its word; otherwise the request itself says — the
-     /api/projects/<id> URL, the record in the URL, ?projectId=, or the body
-     (lib/permission-scope). That is how every project-scoped route gets the
-     job role without each one remembering to pass it. */
   const projectId = opts?.projectId !== undefined
     ? opts.projectId
     : await projectIdForRequest(req, db, user.tenantId);
 
+  let archived = false;
   if (projectId) {
     const { data: owned, error } = await db
       .from('projects')
-      .select('id')
+      .select('*')
       .eq('id', projectId)
       .eq('tenant_id', user.tenantId)
       .maybeSingle();
@@ -377,25 +289,40 @@ export async function requireAnyPermission(
         res: NextResponse.json({ error: 'Project not found' }, { status: 404 }),
       };
     }
+    const flags = owned as { is_archived?: boolean | null; archived_at?: string | null; is_deleted?: boolean | null; deleted_at?: string | null };
+    archived = flags.is_archived === true || !!flags.archived_at || flags.is_deleted === true || !!flags.deleted_at;
   }
 
-  const perms = await getEffectivePermissions(db, user.id, user.tenantId, projectId);
-
-  if (!hasAnyPermission(perms, categories, minLevel)) {
-    return {
-      ok: false,
-      res: NextResponse.json(
-        /* Shown to the person as-is by most screens, so it says what happened
-           and who can fix it, not "Forbidden". */
-        {
-          error: `Your role doesn't allow this (${category}: ${minLevel === 'View' ? 'view' : 'change'}). Ask your company admin for access.`,
-          reason: 'forbidden',
-          detail: `Requires ${category} ≥ ${minLevel}`,
-        },
-        { status: 403 },
-      ),
-    };
+  let perms: PermissionMap;
+  let jobScoped = false;
+  try {
+    ({ perms, jobScoped } = await getEffectiveAccess(db, user.id, user.tenantId, projectId));
+  } catch (e) {
+    // Could not read the person's roles: refuse rather than guess (a guess was View on everything).
+    return { ok: false, res: apiError('permissions', e, "Couldn't check your access just now. Try again in a moment.", 503) };
   }
 
-  return { ok: true, user, perms, db };
+  if (!hasAnyPermission(perms, categories, minLevel) || (opts?.companyWide && jobScoped)) {
+    return { ok: false, res: forbidden(categories, minLevel) };
+  }
+
+  /* An archived job is read-only: a direct URL must not add a daily log to a
+     job that is off the books. Adds and edits are refused; the job's own
+     record (restore) is not. */
+  const method = (req.method || 'GET').toUpperCase();
+  if (archived && WRITE_METHODS.has(method) && method !== 'DELETE') {
+    let pathname = '';
+    try { pathname = new URL(req.url).pathname; } catch (e) { void e; }
+    if (!writesToArchivedJobAllowed(pathname)) {
+      return {
+        ok: false,
+        res: NextResponse.json(
+          { error: 'This job is archived, so nothing new can be added to it. Restore the job first.', reason: 'archived' },
+          { status: 409 },
+        ),
+      };
+    }
+  }
+
+  return { ok: true, user, perms, db: routeDb };
 }

@@ -1,4 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server';
+import { requirePermission } from '@/lib/permissions';
 import { createServerClient, getUser } from '@/lib/supabase-server';
 import { addDays, requestDay } from '@/lib/time-zone';
 import { apiError } from '@/lib/api-error';
@@ -9,7 +10,9 @@ export const dynamic = 'force-dynamic';
 // Tenant-wide home-screen alert counts. Each count is independently guarded so
 // one failing query degrades to 0 instead of 500ing the whole snapshot.
 export async function GET(_req: NextRequest) {
-  const user = await getUser(_req);
+  const gate = await requirePermission(_req, 'Projects', 'View', { projectId: null });
+  if (!gate.ok) return gate.res;
+  const user = gate.user;
   if (!user) return NextResponse.json({ alerts: {} }, { status: 401 });
 
   const db = createServerClient();

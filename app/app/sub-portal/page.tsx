@@ -241,6 +241,7 @@ export default function SubPortalPage() {
   // Real tenant project names (from /api/sub-portal). Replaces a hard-coded
   // fake project list that used to seed the filters and invite pickers.
   const [projects, setProjects] = useState<string[]>([]);
+  const [projectIds, setProjectIds] = useState<Record<string, string>>({});
 
   /* filters */
   const [filterTrade, setFilterTrade] = useState('');
@@ -302,6 +303,7 @@ export default function SubPortalPage() {
         setCompliance(Array.isArray(data?.compliance) ? data.compliance : []);
         setAnnouncements(Array.isArray(data?.announcements) ? data.announcements : []);
         setProjects(Array.isArray(data?.projects) ? data.projects : []);
+        setProjectIds(Object.fromEntries((Array.isArray(data?.projectRefs) ? data.projectRefs : []).map((p: { id: string; name: string }) => [p.name, p.id])));
         setUnavailable(Array.isArray(data?.unavailable) ? data.unavailable.map(String) : []);
       } catch {
         setUsers([]);
@@ -398,12 +400,33 @@ export default function SubPortalPage() {
   const handleInvite = useCallback(async () => {
     if (!invCompany || !invContact || !invEmail || !invTrade) return;
     setInvSending(true);
+    /* The invite is saved by the server or not at all: a refusal (no rights
+       to invite subs, a missing email) is shown, and the roster never gains a
+       sub the server did not keep. The job is sent by id — the route reads
+       project_id; it never read the names this used to send. */
+    let saved: { id?: string } | null = null;
     try {
-      await fetch('/api/sub-portal/invite', { method: 'POST', headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ company: invCompany, contactName: invContact, email: invEmail, trade: invTrade, projectAccess: invProjects }) });
-    } catch { /* fallback */ }
+      const res = await fetch('/api/sub-portal/invite', { method: 'POST', headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          company: invCompany, contactName: invContact, email: invEmail, trade: invTrade,
+          permissions: ['contract', 'schedule'],
+          project_id: invProjects.length ? projectIds[invProjects[0]] || undefined : undefined,
+        }) });
+      if (!res.ok) {
+        const body = await res.json().catch(() => ({}));
+        setInvSending(false);
+        await alertDialog({ message: humanError(body, res.status === 403 ? "You don't have permission to invite subcontractors." : "Couldn't send the invitation. Nothing was saved — try again.") });
+        return;
+      }
+      saved = ((await res.json().catch(() => ({}))) as { data?: { id?: string } }).data ?? null;
+    } catch (e) {
+      console.error('sub-portal invite failed', e);
+      setInvSending(false);
+      await alertDialog({ message: "Couldn't reach the server. Nothing was saved — try again when you have signal." });
+      return;
+    }
     const newUser: SubUser = {
-      id: uid(), company: invCompany, contactName: invContact, email: invEmail, phone: '',
+      id: saved?.id || uid(), company: invCompany, contactName: invContact, email: invEmail, phone: '',
       trade: invTrade, status: 'pending', projectAccess: invProjects,
       permissions: ['contract', 'schedule'], invitedDate: new Date().toISOString(),
       lastLogin: null, avatarColor: AVATAR_COLORS[users.length % AVATAR_COLORS.length],
@@ -413,7 +436,7 @@ export default function SubPortalPage() {
     if (projects.length === 1) { setInvProjects([projects[0]]); setInvProjAuto(true); } else { setInvProjects([]); setInvProjAuto(false); }
     setInvSending(false);
     setInviteModal(false);
-  }, [invCompany, invContact, invEmail, invTrade, invProjects, users.length, projects]);
+  }, [invCompany, invContact, invEmail, invTrade, invProjects, users.length, projects, projectIds]);
 
   const handleBulkInvite = useCallback(async () => {
     if (!bulkText.trim()) return;
@@ -430,9 +453,20 @@ export default function SubPortalPage() {
       };
     });
     try {
-      await fetch('/api/sub-portal/bulk-invite', { method: 'POST', headers: { 'Content-Type': 'application/json' },
+      const res = await fetch('/api/sub-portal/bulk-invite', { method: 'POST', headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ invites: newUsers }) });
-    } catch { /* fallback */ }
+      if (!res.ok) {
+        const body = await res.json().catch(() => ({}));
+        setBulkSending(false);
+        await alertDialog({ message: humanError(body, res.status === 403 ? "You don't have permission to invite subcontractors." : "Couldn't send the invitations. Nothing was saved — try again.") });
+        return;
+      }
+    } catch (e) {
+      console.error('sub-portal bulk invite failed', e);
+      setBulkSending(false);
+      await alertDialog({ message: "Couldn't reach the server. Nothing was saved — try again when you have signal." });
+      return;
+    }
     setUsers(prev => [...prev, ...newUsers]);
     setBulkText('');
     setBulkSending(false);

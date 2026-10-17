@@ -31,6 +31,8 @@ export async function PUT(req: NextRequest, { params }: { params: Promise<{ id: 
     if (body.permissions !== undefined) updates.permissions = body.permissions ?? {};
     if (body.color !== undefined) updates.color = body.color ?? null;
     if (body.is_default !== undefined) updates.is_default = !!body.is_default;
+    // 'assigned' = only the jobs the person is on (20261018r).
+    if (body.scope === 'assigned' || body.scope === 'company') updates.scope = body.scope;
     const { data, error } = await db
       .from('role_definitions')
       .update(updates)

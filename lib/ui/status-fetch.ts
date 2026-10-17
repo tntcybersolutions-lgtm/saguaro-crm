@@ -98,7 +98,7 @@ function withTimeZone(input: RequestInfo | URL, init: RequestInit | undefined, o
 /** Plain words for a refusal when the server didn't give any. */
 export function reasonForStatus(status: number): string {
   if (status === 401) return "You're signed out. Sign in again, then try once more.";
-  if (status === 403) return "Your role doesn't allow this. Ask an admin.";
+  if (status === 403) return "You don't have permission to do this. Ask your company admin for access.";
   if (status === 404) return "It isn't there any more — it may have been deleted.";
   if (status === 409) return 'Someone else changed this at the same time. Reload and try again.';
   if (status === 413) return 'That file is too big.';

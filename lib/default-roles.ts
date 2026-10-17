@@ -15,6 +15,8 @@ export interface DefaultRole {
   description: string;
   color: string;
   permissions: Record<string, 'None' | 'View' | 'Edit' | 'Full'>;
+  /** 'assigned' = sees only the jobs they are on (role_definitions.scope, 20261018r). */
+  scope?: 'company' | 'assigned';
 }
 
 export const DEFAULT_ROLE_DEFINITIONS: DefaultRole[] = [
@@ -38,8 +40,9 @@ export const DEFAULT_ROLE_DEFINITIONS: DefaultRole[] = [
     color: '#FBBF24',
     description: 'Crew lead — daily logs, punch, site photos, schedule and safety.',
     // Projects: Edit files daily logs and punch items; Documents: Edit uploads
-    // site photos (/api/photos/*, role_gate_ins_photos).
-    permissions: { Projects: 'Edit', Budget: 'None', Schedule: 'Edit', Safety: 'Edit', Documents: 'Edit', RFIs: 'View', Submittals: 'View', 'Change Orders': 'None', 'Pay Apps': 'None', Reports: 'View', Sales: 'None', Admin: 'None' },
+    // site photos (/api/photos/*, role_gate_ins_photos). RFIs: Edit — field
+    // users raise RFIs, as in Procore (20261018r).
+    permissions: { Projects: 'Edit', Budget: 'None', Schedule: 'Edit', Safety: 'Edit', Documents: 'Edit', RFIs: 'Edit', Submittals: 'View', 'Change Orders': 'None', 'Pay Apps': 'None', Reports: 'View', Sales: 'None', Admin: 'None' },
   },
   {
     name: 'Salesperson',
@@ -56,8 +59,11 @@ export const DEFAULT_ROLE_DEFINITIONS: DefaultRole[] = [
   {
     name: 'Subcontractor',
     color: '#CBD5E1',
-    description: 'Limited sub access — their own RFIs/submittals, view schedule and pay apps.',
-    permissions: { Projects: 'View', Budget: 'None', Schedule: 'View', Safety: 'View', Documents: 'View', RFIs: 'Edit', Submittals: 'Edit', 'Change Orders': 'None', 'Pay Apps': 'View', Reports: 'None', Sales: 'None', Admin: 'None' },
+    description: 'Only the jobs they are on — their RFIs and submittals, the schedule and drawings. No company money.',
+    // Procore's subcontractor model: only the jobs they are on (scope), none of
+    // the GC's owner billing (Pay Apps: None — a sub bills through the Sub Portal).
+    scope: 'assigned',
+    permissions: { Projects: 'View', Budget: 'None', Schedule: 'View', Safety: 'View', Documents: 'View', RFIs: 'Edit', Submittals: 'Edit', 'Change Orders': 'None', 'Pay Apps': 'None', Reports: 'None', Sales: 'None', Admin: 'None' },
   },
 ];
 
@@ -70,5 +76,6 @@ export function defaultRoleRows(tenantId: string) {
     permissions: r.permissions,
     color: r.color,
     is_builtin: true,
+    scope: r.scope ?? 'company',
   }));
 }
