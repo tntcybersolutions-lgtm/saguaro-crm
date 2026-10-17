@@ -4,6 +4,8 @@ import { loadAutomationRules, logSageActivity } from '@/lib/sage-brain';
 import { must } from '@/lib/db-write';
 import { apiError } from '@/lib/api-error';
 import { rfiLabel } from '@/lib/rfi';
+import { liveJobs } from '@/lib/live-jobs';
+import { receivableOnly } from '@/lib/invoice-direction';
 
 /**
  * POST /api/sage/rules/run — R18 execution: "Sage auto-acts under a rule, logged."
@@ -127,11 +129,13 @@ export async function POST(req: NextRequest) {
 
     /* ── project names scope every drafted line to the real job ── */
     const projRows = await safeRows(
-      (db as any).from('projects').select('id, name').eq('tenant_id', t).limit(200)
+      liveJobs((db as any).from('projects').select('id, name').eq('tenant_id', t)).limit(2000)
     );
     const nameOf = new Map<string, string>();
     for (const p of projRows) nameOf.set(String(p.id), String(p.name ?? 'Untitled'));
     const pname = (pid: unknown): string | null => (pid ? nameOf.get(String(pid)) ?? null : null);
+    // Paper on an archived or deleted job fires no rule — the job is off the books.
+    const onLive = (r: { project_id?: unknown }): boolean => !r.project_id || nameOf.has(String(r.project_id));
 
     const triggersNeeded = new Set(rules.map((r) => r.trigger_type));
 
@@ -150,7 +154,7 @@ export async function POST(req: NextRequest) {
           .order('due_date', { ascending: true })
       );
       const hits: TriggerHit[] = [];
-      for (const r of rows) {
+      for (const r of rows.filter(onLive)) {
         const due = parseDateOnly(r.due_date);
         if (!due) continue;
         const daysOver = todayIdx - dayIndex(due);
@@ -177,15 +181,16 @@ export async function POST(req: NextRequest) {
 
     if (triggersNeeded.has('invoice_overdue')) {
       const rows = await safeRows(
-        (db as any)
+        // Owner billing only: a payment reminder never goes to a sub the company owes.
+        receivableOnly((db as any)
           .from('invoices')
           .select('id, project_id, vendor_name, invoice_number, amount, tax, total, paid_amount, due_date, status')
-          .eq('tenant_id', t)
+          .eq('tenant_id', t))
           .not('due_date', 'is', null)
           .lt('due_date', todayKey)
       );
       const hits: TriggerHit[] = [];
-      for (const inv of rows) {
+      for (const inv of rows.filter(onLive)) {
         const st = String(inv.status ?? 'draft').toLowerCase();
         if (INV_NOT_OWED.has(st)) continue; // overdue excludes drafts + paid — same contract as the invoicing page
         const due = parseDateOnly(inv.due_date);
@@ -226,7 +231,7 @@ export async function POST(req: NextRequest) {
           .order('expiry_date', { ascending: true })
       );
       const hits: TriggerHit[] = [];
-      for (const c of rows) {
+      for (const c of rows.filter(onLive)) {
         const exp = parseDateOnly(c.expiry_date);
         if (!exp) continue;
         const delta = dayIndex(exp) - todayIdx; // negative = already lapsed

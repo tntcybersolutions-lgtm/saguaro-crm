@@ -4,17 +4,22 @@
  *
  * One solid row with a hairline under it:
  *
- *   phone    [‹ Parent]  Page title ……………………  (✦)  (CD)
- *   desktop  [‹ Parent]  Job picker | Page title …  Search  Help  (✦ Sage)  🔔  (CD)
+ *   phone    [‹]  Page title …………………………………  (✦)  (CD)
+ *   desktop  ⌂ Home / [Job ▾] / Parent / Page title …  Search  Photos  Help  (✦ Sage)  🔔  (CD)
  *
- * Back (Chad, 2026-10-11: "a back button easy for users to go back to prior
- * screen") is a lit pill that names where it goes: this screen's parent
- * (job tool → the job, the job → Jobs, a sub-page → its section). It reuses
- * the browser's history only when the screen before was that parent
- * (lib/navHistory). A tab's own page and a section under Home have no Back.
- * It goes through the unsaved-changes gate like every other way out. The title takes
- * the rest of the row. Sage and the account are 32px round buttons with a
- * 44px hit area.
+ * Desktop is a trail, Procore's way (Chad, 17 Oct 2026: "give users a way to
+ * exit out of the project they are working in to get back to home page
+ * easy"): Home is always the first crumb, one click from anywhere, inside a
+ * job or not; the job picker is the second; then the screen's parent (when it
+ * is not the job itself) and the screen. The old "‹ Back" pill sat beside the
+ * picker and, inside a job, named the same job the picker named — two
+ * controls, one meaning, and "Back" read as browser back. The parent crumb
+ * replaces it on desktop; it still steps through history when the screen
+ * before WAS that parent (lib/navHistory), so a list keeps its scroll.
+ *
+ * Phone keeps the 44px arrow (up one level, named in its aria-label); Home is
+ * the first tab in the tab bar, always on screen. Both go through the
+ * unsaved-changes gate like every other way out.
  */
 import React, { useState, useEffect } from 'react';
 import { HelpModeButton } from '@/components/HelpMode';
@@ -27,6 +32,7 @@ import {
   MagnifyingGlass,
   Bell,
   CaretLeft,
+  House,
   SignOut,
   UserCircle,
   GearSix,
@@ -47,6 +53,7 @@ export default function AppTopBar({
   onLogout,
   userInitials,
   companyName,
+  userId,
 }: {
   sidebarCollapsed: boolean;
   onToggleSidebar: () => void;
@@ -56,6 +63,8 @@ export default function AppTopBar({
   userInitials: string;
   /** The company on the signed-in profile — Home's title, as in the approved mock. */
   companyName?: string | null;
+  /** The signed-in user — the job picker keeps each person's recent jobs apart. */
+  userId?: string | null;
 }) {
   const pathname = usePathname();
   const router = useGuardedRouter();
@@ -107,15 +116,14 @@ export default function AppTopBar({
   const backTo = back
     ? { label: back.label, go: () => (prevPath && samePage(prevPath, back.href) ? router.back() : router.push(back.href)) }
     : null;
-  /* The pill never shrinks, so it is never cut to "‹ F": a long name shows as
-     its short form ("Maple Ridge — Phase 2" → "Maple Ridge") or as "Back".
-     The full name stays in the tooltip and the accessible name. On a phone it
-     is the arrow alone (globals.css). */
-  const backShort = (() => {
-    if (!backTo) return '';
-    const s = backTo.label.split(/\s+[—–-]\s+/)[0].trim();
-    return s.length > 0 && s.length <= 22 ? s : 'Back';
-  })();
+  /* The desktop trail: Home / [Job ▾] / Parent / Title. The parent crumb is
+     left out when it IS a crumb already — the job (the picker names it) or
+     Jobs (the picker's own list). */
+  const atHome = segments.length === 1 && segments[0] === 'app';
+  const parentCrumb = backTo && back && back.href !== '/app/projects' && !(projId && back.href === `/app/projects/${projId}/overview`)
+    ? backTo
+    : null;
+  const hasTail = !!parentCrumb || (!atHome && !!title);
 
   // Close the account menu on navigation and on Escape.
   useEffect(() => { setShowUserMenu(false); }, [pathname]);
@@ -159,6 +167,8 @@ export default function AppTopBar({
         <List size={20} />
       </button>
 
+      {/* Phone: up one level, the arrow alone (its name is the aria-label).
+          Desktop uses the trail below instead. */}
       {backTo && (
         <button
           type="button"
@@ -168,19 +178,47 @@ export default function AppTopBar({
           title={`Back to ${backTo.label}`}
         >
           <CaretLeft size={18} weight="bold" aria-hidden />
-          <span className="sag-tb-back-label">{backShort}</span>
         </button>
       )}
 
-      {/* The job you are in — same place on every desktop screen, and switching
-          keeps you on the screen you are looking at. */}
-      <div className="sag-topbar-desktop" style={{ display: 'contents' }}>
-        <HeaderProjectPicker />
-        <span aria-hidden style={{ width: 1, height: 18, background: 'var(--sg-border)', margin: '0 4px', flexShrink: 0 }} />
-      </div>
+      {/* Desktop trail. Home is always the first crumb — out of any job in one
+          click; the job picker is the second, and switching keeps you on the
+          screen you are looking at. */}
+      <nav className="sag-topbar-desktop sag-crumbs" aria-label="Breadcrumb" style={{ display: 'flex' }}>
+        <Link
+          href="/app"
+          className="sag-crumb-home"
+          aria-current={atHome ? 'page' : undefined}
+          title={companyName ? `Home — ${companyName}` : 'Home'}
+        >
+          <House size={16} weight={atHome ? 'fill' : 'bold'} aria-hidden />
+          <span>Home</span>
+        </Link>
+        <span className="sag-crumb-sep" aria-hidden>/</span>
+        <HeaderProjectPicker userId={userId} />
+        {hasTail && (projId
+          ? <span className="sag-crumb-sep" aria-hidden>/</span>
+          : <span className="sag-crumb-div" aria-hidden />)}
+        {parentCrumb && (
+          <>
+            <button
+              type="button"
+              className="sag-crumb-prev"
+              onClick={parentCrumb.go}
+              title={`Back to ${parentCrumb.label}`}
+            >
+              {parentCrumb.label}
+            </button>
+            {title && <span className="sag-crumb-sep" aria-hidden>/</span>}
+          </>
+        )}
+      </nav>
 
-      {/* The page you are on. Takes the rest of the row. */}
-      <span className="sag-tb-title sag-crumb-last">{title}</span>
+      {/* The page you are on. Takes the rest of the row. On desktop Home's
+          title is the Home crumb itself, so it is not said twice. */}
+      <span className="sag-tb-title sag-crumb-last" aria-current={atHome ? undefined : 'page'}>
+        {atHome ? <span className="sag-tb-phone-only">{title}</span> : title}
+      </span>
 
       {/* Search (⌘K) */}
       <button

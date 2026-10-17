@@ -28,6 +28,7 @@ import { addDays } from '@/lib/time-zone';
 import { toDay } from '@/lib/calendar-day';
 import { isClosedStatus } from '@/lib/project-lifecycle';
 import { isUndecided, normaliseStage } from '@/lib/lead-stages';
+import { isLiveJob } from '@/lib/live-jobs';
 
 type Db = { from: (t: string) => any };
 type Row = Record<string, any>;
@@ -113,12 +114,12 @@ export async function collectMyWork(a: CollectArgs): Promise<Collected> {
 
   // The frame: jobs and this person's assignments. A failure here fails the read.
   const [projects, assignments] = await Promise.all([
-    rows(db.from('projects').select('id, name, color, status, start_date, is_archived').eq('tenant_id', t).is('deleted_at', null).limit(2000)),
+    rows(db.from('projects').select('id, name, color, status, start_date, is_archived, archived_at, is_deleted, deleted_at').eq('tenant_id', t).is('deleted_at', null).limit(2000)),
     rows(db.from('work_assignments').select('project_id, role').eq('tenant_id', t).eq('assignee_user_id', uid).eq('status', 'active').limit(200)),
   ]);
 
   const live = new Map<string, Row>();
-  for (const p of projects) if (!isClosedStatus(p.status) && p.is_archived !== true) live.set(p.id, p);
+  for (const p of projects) if (!isClosedStatus(p.status) && isLiveJob(p)) live.set(p.id, p);
   const names = new Map<string, string>(projects.map((p) => [p.id, shortJob(p.name) || 'Job']));
   const isLive = (pid: unknown) => !pid || live.has(String(pid));
 

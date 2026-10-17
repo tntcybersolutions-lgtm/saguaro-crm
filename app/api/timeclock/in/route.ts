@@ -75,7 +75,7 @@ export async function POST(req: NextRequest) {
         {
           ok: false,
           error: body.projectId
-            ? 'That project was not found for your company'
+            ? 'That job is not open for time. Pick an active job.'
             : 'No project to clock in to — create a project first',
         },
         { status: 400 },

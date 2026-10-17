@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from 'next/server';
 import { createServerClient, getUser } from '@/lib/supabase-server';
 import { requirePermission } from '@/lib/permissions';
 import { apiError } from '@/lib/api-error';
+import { receivableOnly, payableOnly } from '@/lib/invoice-direction';
 
 export async function GET(req: NextRequest, { params }: { params: { projectId: string } }) {
   const g = await requirePermission(req, 'Budget', 'View', { projectId: params.projectId });
@@ -15,6 +16,10 @@ export async function GET(req: NextRequest, { params }: { params: { projectId: s
     const status = url.searchParams.get('status');
     let q = supabase.from('invoices').select('*').eq('project_id', params.projectId).eq('tenant_id', user.tenantId);
     if (status) q = q.eq('status', status);
+    // A job's Invoices is owner billing: receivable rows only (lib/invoice-direction).
+    const direction = url.searchParams.get('direction');
+    if (direction === 'payable') q = payableOnly(q);
+    else if (direction !== 'all') q = receivableOnly(q);
     const { data, error } = await q.order('created_at', { ascending: false });
     if (error) throw error;
     return NextResponse.json({ invoices: data ?? [] });

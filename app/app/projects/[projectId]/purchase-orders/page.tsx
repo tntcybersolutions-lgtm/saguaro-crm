@@ -199,9 +199,10 @@ export default function PurchaseOrdersPage() {
   const poTotal = poSubtotal + poTax + poShipping;
 
   const budget = ctx?.budget;
-  const bOriginal = Number(budget?.original) || 0;
+  // Revised budget (original + approved changes) — the Budget screen's roll-up (lib/budget-rollup).
+  const bRevised = Number(budget?.revised) || 0;
   const bCommitted = Number(budget?.committed) || 0;
-  const bUncommitted = bOriginal - bCommitted;
+  const bUncommitted = budget?.uncommitted != null ? Number(budget.uncommitted) || 0 : bRevised - bCommitted;
   const vendors: string[] = (ctx?.vendors || []).filter(Boolean);
   const budgetLines: any[] = budget?.lines || [];
   const costCodeOptions: any[] = (ctx?.costCodes || []).filter((c: any) => c.costCode);
@@ -212,7 +213,7 @@ export default function PurchaseOrdersPage() {
     ? (budgetLines.find((l: any) => String(l.costCode) === String(form.cost_code))
       || budgetLines.find((l: any) => String(l.division) === String(form.cost_code).slice(0, 2)))
     : null;
-  const lineBudget = Number(selLine?.original) || 0;
+  const lineBudget = Number(selLine?.revised ?? selLine?.original) || 0;
   const lineCommitted = Number(selLine?.committed) || 0;
   const lineRemaining = lineBudget - lineCommitted - poTotal;
 
@@ -391,7 +392,7 @@ export default function PurchaseOrdersPage() {
     { label: 'Draft', value: loading ? '—' : String(draftCount), icon: <NotePencil size={15} />, onClick: () => toggle('draft'), active: statusFilter === 'draft' },
     { label: 'Sent', value: loading ? '—' : String(sentCount), tone: sentCount > 0 ? 'warn' : 'default', icon: <PaperPlaneTilt size={15} />, onClick: () => toggle('sent'), active: statusFilter === 'sent' },
     { label: 'Received', value: loading ? '—' : String(receivedCount), tone: receivedCount > 0 ? 'good' : 'default', icon: <Truck size={15} />, onClick: () => toggle('received'), active: statusFilter === 'received' },
-    ...(ctx ? [{ label: 'Uncommitted', value: fmt(bUncommitted), sub: 'Original less committed', tone: bUncommitted < 0 ? 'bad' as const : 'good' as const, icon: <Wallet size={15} />, href: `${base}/budget` }] : []),
+    ...(ctx ? [{ label: 'Uncommitted', value: fmt(bUncommitted), sub: `${fmt(bRevised)} revised budget less committed`, tone: bUncommitted < 0 ? 'bad' as const : 'good' as const, icon: <Wallet size={15} />, href: `${base}/budget` }] : []),
   ];
 
   const columns: Column<PurchaseOrder>[] = [

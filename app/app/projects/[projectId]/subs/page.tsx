@@ -369,11 +369,9 @@ export default function SubsPage() {
   // Until the job's list has loaded (or when it failed) the numbers are unknown, not zero.
   const base = `/app/projects/${projectId}`;
   const stats: StatItem[] = [
-    { label: 'Subs on Job', value: known ? String(subs.length) : '—', sub: 'On this job', icon: <Users size={15} />, onClick: () => setPaperOnly(false), active: !paperOnly },
-    { label: 'Sub Contracts', value: known ? fmt(totalContract) : '—', sub: known ? `${fmt(totalPaid)} paid so far` : 'Not loaded', icon: <Receipt size={15} />, href: `${base}/contracts` },
-    { label: 'Compliance', value: known ? String(complianceIssues) : '—', tone: !known ? 'default' : complianceIssues > 0 ? 'bad' : 'good', sub: !known ? 'Not loaded' : complianceIssues > 0 ? 'W-9 or COI missing' : subs.length ? 'Everyone is current' : 'Nobody on it yet', icon: <ShieldWarning size={15} />, onClick: () => setPaperOnly(true), active: paperOnly },
-    { label: 'Directory', value: dirError ? '—' : String(directory.length), sub: 'Companies on file', icon: <AddressBook size={15} />, href: '/app/subs' },
-    ...(ctx ? [{ label: 'Awarded', value: String(awardedPkgs.length), sub: `${fmt(awardedPkgs.reduce((s, b) => s + (Number(b.awardedAmount) || 0), 0))} awarded`, icon: <Gavel size={15} />, href: `${base}/bid-packages` } as StatItem] : []),
+    { label: 'Subs on job', value: String(subs.length), sub: awardedPkgs.length ? `${awardedPkgs.length} through bid packages` : undefined, icon: <Users size={15} />, onClick: () => setPaperOnly(false), active: !paperOnly },
+    ...(totalContract > 0 ? [{ label: 'Sub contracts', value: fmt(totalContract), sub: `${fmt(totalPaid)} paid`, icon: <Receipt size={15} />, href: `${base}/contracts` } as StatItem] : []),
+    { label: 'Paperwork', value: complianceIssues > 0 ? `${complianceIssues} missing` : 'Current', tone: complianceIssues > 0 ? 'bad' : 'good', sub: complianceIssues > 0 ? 'W-9 or COI' : undefined, icon: <ShieldWarning size={15} />, onClick: () => setPaperOnly(true), active: paperOnly },
   ];
 
   /** The row's verbs — the same calls the record modal makes. */
@@ -387,13 +385,13 @@ export default function SubsPage() {
     { key: 'name', header: 'Company', primary: true, phone: 'show', accessor: (sub) => sub.company_name || '', render: (sub) => (
       <span className="k-name"><span className="k-avatar" aria-hidden>{(sub.company_name||'?').split(/\s+/).slice(0,2).map((w: string)=>w[0]?.toUpperCase()||'').join('')}</span><span className="k-name-text"><span>{sub.company_name}</span><span>{sub.contact_email}</span></span></span>
     ) },
-    { key: 'trade', header: 'Trade', phone: 'show', accessor: (sub) => sub.trade || '', render: (sub) => <span style={{color: 'var(--text-primary)',fontWeight:600}}>{sub.trade||'—'}</span> },
-    { key: 'contact_name', header: 'Contact', phone: 'hide', accessor: (sub) => sub.contact_name || '', render: (sub) => <span className="k-cell-stack"><span>{sub.contact_name||'—'}</span>{sub.contact_phone && <span>{sub.contact_phone}</span>}</span> },
+    { key: 'trade', header: 'Trade', phone: 'show', accessor: (sub) => sub.trade || '', render: (sub) => <span style={{color: 'var(--text-primary)',fontWeight:600}}>{sub.trade||''}</span> },
+    { key: 'contact_name', header: 'Contact', phone: 'hide', accessor: (sub) => sub.contact_name || '', render: (sub) => <span className="k-cell-stack"><span>{sub.contact_name||''}</span>{sub.contact_phone && <span>{sub.contact_phone}</span>}</span> },
     { key: 'license_number', header: 'License', phone: 'hide', accessor: (sub) => sub.license_number || '', render: (sub) => sub.license_number ? <span style={{fontFamily:'monospace',fontSize:12}}>{sub.license_number}</span> : <Badge tone="overdue">Not on File</Badge> },
     { key: 'paper', header: 'W-9 / COI', sortable: false, groupable: false, phone: 'show', accessor: (sub) => `${w9Ok(sub) ? 'W-9 on file' : 'W-9 missing'} · ${coiState(sub).label}`, render: (sub) => { const coi = coiState(sub); return (
       <span style={{display:'inline-flex',gap:4,flexWrap:'wrap'}}>
         <Badge tone={w9Ok(sub) ? 'ongoing' : 'overdue'}>{w9Ok(sub) ? 'W-9 on file' : 'W-9 missing'}</Badge>
-        <Badge tone={coi.kind === 'valid' ? 'ongoing' : coi.kind === 'expiring' ? 'under_contract' : 'overdue'}>{`COI · ${coi.label}`}</Badge>
+        <Badge tone={coi.kind === 'valid' ? 'ongoing' : coi.kind === 'expiring' ? 'lead' : 'overdue'}>{`COI · ${coi.label}`}</Badge>
       </span>); } },
     { key: 'contract', header: 'Contract', align: 'right', phone: 'show', total: 'sum', format: fmt, accessor: (sub) => sub.contract_amount || null, render: (sub) => <span style={{color:'var(--text-primary)',fontWeight:600}}>{fmt(sub.contract_amount)}</span> },
     { key: 'paid', header: 'Paid', align: 'right', phone: 'show', total: 'sum', format: fmt, accessor: (sub) => sub.paid_amount || 0, render: (sub) => <span style={{color:'var(--success)',fontWeight:600}}>{fmt(sub.paid_amount)}</span> },
@@ -458,11 +456,10 @@ export default function SubsPage() {
           { label: 'Subcontractors' },
         ]}
         title="Subcontractors"
-        subtitle="Who is on this job, their contract, payments and paperwork."
         actions={
           <>
             <Menu
-              triggerLabel="Go to"
+              triggerLabel="More"
               triggerIcon={<ArrowSquareOut size={15} />}
               label="Related pages"
               actions={[
@@ -476,7 +473,7 @@ export default function SubsPage() {
           </>
         }
       >
-        <StatRow items={stats} />
+        {known && subs.length > 0 && <StatRow items={stats} />}
 
         {loadError && subs.length > 0 && (
           <Callout tone="danger" icon={<WarningCircle size={17} />} title="Couldn’t refresh the list" text={loadError} actions={<Button size="sm" onClick={() => load()}>Try Again</Button>} />

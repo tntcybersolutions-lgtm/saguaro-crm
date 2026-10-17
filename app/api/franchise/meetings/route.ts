@@ -4,6 +4,7 @@ import { requirePermission } from '@/lib/permissions';
 import { hasFeature } from '@/lib/entitlements-server';
 
 import { apiError } from '@/lib/api-error';
+import { liveJobs } from '@/lib/live-jobs';
 /**
  * Cross-site OAC (Owner / Architect / Contractor) meetings + action items.
  * FAIL-CLOSED: only tenants entitled to `command_center`, scoped to their tenant.
@@ -19,13 +20,17 @@ export async function GET(req: NextRequest) {
       return NextResponse.json({ meetings: [], actions: [], gated: true }, { status: 403 });
 
     const db = createServerClient();
-    const [{ data: meetings }, { data: actions }, { data: projs }] = await Promise.all([
+    const [{ data: meetingRows }, { data: actionRows }, { data: projs }] = await Promise.all([
       db.from('meetings').select('*').eq('tenant_id', user.tenantId).order('meeting_date', { ascending: false }),
       db.from('action_items').select('*').eq('tenant_id', user.tenantId).order('due_date', { ascending: true, nullsFirst: false }),
-      db.from('projects').select('id,name,city,state').eq('tenant_id', user.tenantId),
+      liveJobs(db.from('projects').select('id,name,city,state').eq('tenant_id', user.tenantId)),
     ]);
 
     const pmap: Record<string, any> = Object.fromEntries((projs || []).map((p: any) => [p.id, p]));
+    // Meetings and action items on an archived or deleted job leave with the job.
+    const onLiveJob = (r: any) => !r.project_id || !!pmap[r.project_id];
+    const meetings = (meetingRows || []).filter(onLiveJob);
+    const actions = (actionRows || []).filter(onLiveJob);
     const mtitle: Record<string, string> = Object.fromEntries((meetings || []).map((m: any) => [m.id, m.title]));
 
     const actionsByMeeting: Record<string, { total: number; open: number }> = {};

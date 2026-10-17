@@ -23,7 +23,7 @@ import {
 
 const GREEN = 'var(--success)', RED = 'var(--danger)', DIM = 'var(--text-secondary)';
 
-const fmt = (n: number) => '$' + (n || 0).toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+const fmt = (n: number) => `${(n || 0) < 0 ? '−' : ''}$${Math.abs(Math.round(n || 0)).toLocaleString('en-US')}`;
 const fmtK = (n: number) => {
   const abs = Math.abs(n);
   if (abs >= 1_000_000) return (n < 0 ? '-' : '') + '$' + (abs / 1_000_000).toFixed(1) + 'M';
@@ -101,7 +101,8 @@ function CashFlowContent() {
   const ctxBilled = Number(m?.billedToDate) || 0;
   const ctxPaid = Number(m?.paidToDate) || 0;
   const ctxOutstanding = Math.max(0, ctxBilled - ctxPaid);
-  const budgetOriginal = Number(budget?.original) || 0;
+  // Revised budget (original + approved changes), the Budget screen's measure.
+  const budgetRevised = Number(budget?.revised ?? budget?.original) || 0;
   const budgetCommitted = Number(budget?.committed) || 0;
   const budgetActual = Number(budget?.actual) || 0;
 
@@ -157,8 +158,8 @@ function CashFlowContent() {
 
   if (loading && !data) {
     return (
-      <PageShell crumbs={crumbs} title="Cash flow" subtitle="Six-month forecast of receivables, payables and retainage." actions={refresh}>
-        <StatRow items={['Net cash flow (6 mo)', 'Receivables (30 days)', 'Payables (30 days)', 'Retainage due'].map((label) => ({ label, value: '—' }))} />
+      <PageShell crumbs={crumbs} title="Cash flow" actions={refresh}>
+        <StatRow items={['Net cash flow (6 mo)', 'Receivables (30 days)', 'Payables (30 days)', 'Retainage due'].map((label) => ({ label, value: <span className="k-skel" style={{ width: 90, height: 22 }} /> }))} />
         <ModuleSkeleton hero={false} kpis={0} rows={6} />
       </PageShell>
     );
@@ -166,7 +167,7 @@ function CashFlowContent() {
 
   if (error || !data) {
     return (
-      <PageShell crumbs={crumbs} title="Cash flow" subtitle="Six-month forecast of receivables, payables and retainage." actions={refresh}>
+      <PageShell crumbs={crumbs} title="Cash flow" actions={refresh}>
         {ctx && (
           <StatRow items={[
             { label: 'Revised contract', value: fmt0(ctxRevised), sub: (Number(m?.approvedCoCount) || 0) + ' approved COs', href: `${base}/contracts`, icon: <Buildings size={15} /> },
@@ -210,29 +211,35 @@ function CashFlowContent() {
   ];
 
   const rows: PeriodRow[] = periods.map((p, idx) => ({ ...p, idx }));
+  const quiet = !loading && periods.every((p) => !p.receivables && !p.payables && !p.net && !(p.retainage_release > 0));
   const columns: Column<PeriodRow>[] = [
     { key: 'month', header: 'Period', primary: true, sortable: false, render: p => <span style={{ color: p.running_balance < 0 ? RED : undefined }}>{p.month}</span> },
     { key: 'receivables', header: 'Receivables', align: 'right', sortable: false, format: fmt, total: () => money(summary.total_receivables, GREEN), render: p => money(p.receivables, GREEN) },
     { key: 'payables', header: 'Payables', align: 'right', sortable: false, format: fmt, total: () => money(summary.total_payables, RED), render: p => money(p.payables, RED) },
     { key: 'net', header: 'Net', align: 'right', sortable: false, phone: 'show', format: fmt, total: () => money(summary.net_cash_flow, summary.net_cash_flow >= 0 ? GREEN : RED), render: p => <strong style={{ color: p.net >= 0 ? GREEN : RED }}>{fmt(p.net)}</strong> },
-    { key: 'running_balance', header: 'Running balance', align: 'right', sortable: false, phone: 'show', total: () => '—', render: p => <strong style={{ color: p.running_balance < 0 ? RED : undefined }}>{fmt(p.running_balance)}</strong> },
+    { key: 'running_balance', header: 'Running balance', align: 'right', sortable: false, phone: 'show', total: () => '', render: p => <strong style={{ color: p.running_balance < 0 ? RED : undefined }}>{fmt(p.running_balance)}</strong> },
   ];
   const open = expandedRow != null ? periods[expandedRow] : null;
-  const variance = budgetOriginal - budgetActual;
+  const variance = budgetRevised - budgetActual;
 
   return (
     <PageShell
       crumbs={crumbs}
       title="Cash flow"
-      subtitle={<>{project.name} · Contract {fmt(adjContract)}{ctxCoTotal !== 0 ? <> · {Number(m?.approvedCoCount) || 0} approved COs</> : null}</>}
+      subtitle={<>Contract {fmt(adjContract)}{ctxCoTotal !== 0 ? <> · {Number(m?.approvedCoCount) || 0} approved COs</> : null}</>}
       actions={refresh}
     >
-      <StatRow items={kpis} />
+      {!quiet && <StatRow items={kpis} />}
 
       {summary.danger_zone && (
         <Callout tone="danger" icon={<WarningCircle size={18} weight="fill" />} title="Cash goes negative" text="The running balance drops below zero in a projected month. Review payment schedules." />
       )}
 
+      {/* Nothing moving in the six months (a closed job, or nothing billed or
+          committed yet): one line, not a chart and a table of zeros. */}
+      {quiet ? (
+        <EmptyState icon={<CalendarBlank size={20} />} title={project.closed ? 'Nothing left to collect or pay' : 'Nothing projected in the next six months'} />
+      ) : (<>
       {/* Cash flow chart */}
       <Card title="6-month projection" icon={<ChartBar size={18} />}>
         <div style={{ display: 'flex', gap: 20, marginBottom: 16, fontSize: 12, color: DIM, flexWrap: 'wrap' }}>
@@ -284,8 +291,9 @@ function CashFlowContent() {
         rowStyle={p => (p.running_balance < 0 ? { background: 'color-mix(in srgb, var(--danger) 8%, transparent)' } : undefined)}
         isSelected={p => p.idx === expandedRow}
         onRowClick={p => setExpandedRow(expandedRow === p.idx ? null : p.idx)}
-        empty={<EmptyState icon={<CalendarBlank size={22} />} title="No projected periods" text="Months fill in as pay apps and commitment payments land." primary={{ label: 'New Pay App', href: `${base}/pay-apps/new` }} perm={['Pay Apps', 'Edit']} />}
+        empty={<EmptyState icon={<CalendarBlank size={22} />} title="No projected periods" />}
       />
+      </>)}
 
       {open && (
         <Card
@@ -321,7 +329,7 @@ function CashFlowContent() {
         <Card title="Budget & collections" icon={<Wallet size={18} />} subtitle={`${Number(budget?.lineCount) || 0} budget lines — committed vs actual, plus what the owner still owes`}>
           <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(min(100%, 260px), 1fr))', gap: '0 40px' }}>
             <DetailList items={[
-              ['Budget (original)', fmt0(budgetOriginal)],
+              ['Revised budget', fmt0(budgetRevised)],
               ['Committed', fmt0(budgetCommitted)],
               ['Actual cost to date', <span key="a" style={{ color: budgetCommitted > 0 && budgetActual > budgetCommitted ? RED : undefined }}>{fmt0(budgetActual)}</span>],
               ['Budget variance', <strong key="v" style={{ color: variance >= 0 ? GREEN : RED }}>{(variance >= 0 ? '+' : '-') + fmt0(Math.abs(variance))}</strong>],

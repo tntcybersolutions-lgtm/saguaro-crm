@@ -8,6 +8,7 @@ import { createServerClient } from '@/lib/supabase-server';
 import type { Database, Json } from '@/lib/database.types';
 import Anthropic from '@anthropic-ai/sdk';
 import { must } from '@/lib/db-write';
+import { liveJobs } from '@/lib/live-jobs';
 
 // ─────────────────────────────────────────────────────────────────────────────
 // EXPORTED TYPES
@@ -327,11 +328,11 @@ export async function loadFullIntelligence(
       .eq('user_id', userId)
       .eq('status', 'pending')
       .order('created_at', { ascending: false }),
-    supabase
+    liveJobs(supabase
       .from('projects')
       .select('id, name, status, contract_amount')
       .eq('tenant_id', tenantId)
-      .in('status', ['active', 'in_progress', 'bidding'])
+      .in('status', ['active', 'in_progress', 'bidding']))
       .limit(20),
   ]);
 

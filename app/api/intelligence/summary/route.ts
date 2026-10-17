@@ -2,6 +2,8 @@ import { NextRequest, NextResponse } from 'next/server';
 import { requirePermission } from '@/lib/permissions';
 import { apiError } from '@/lib/api-error';
 import { formatRfiNumber } from '@/lib/rfi';
+import { liveJobs } from '@/lib/live-jobs';
+import { receivableOnly } from '@/lib/invoice-direction';
 
 /**
  * GET /api/intelligence/summary?projectIds=a,b,c
@@ -171,14 +173,12 @@ export async function GET(req: NextRequest) {
       .filter(Boolean)
       .slice(0, CAP);
 
-    let projQuery = db
+    let projQuery = liveJobs(db
       .from('projects')
       .select(
         'id, name, status, contract_amount, contract_value, contract_sum, start_date, end_date, last_activity_at, last_log_at, last_rfi_at, last_pay_app_at, last_photo_at, created_at',
       )
-      .eq('tenant_id', user.tenantId)
-      .or('is_deleted.is.null,is_deleted.eq.false')
-      .or('is_archived.is.null,is_archived.eq.false');
+      .eq('tenant_id', user.tenantId));
     if (idsParam.length > 0) {
       projQuery = projQuery.in('id', idsParam);
     }
@@ -237,11 +237,11 @@ export async function GET(req: NextRequest) {
         ),
         safeRows(
           'invoices',
-          db
+          receivableOnly(db
             .from('invoices')
             .select('project_id, amount, total, tax, status')
             .eq('tenant_id', t)
-            .in('project_id', ids),
+            .in('project_id', ids)),
           degraded,
         ),
         safeRows(

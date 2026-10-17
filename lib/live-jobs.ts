@@ -44,3 +44,42 @@ export async function liveJobIds(
   if (error) throw error;
   return new Set(((data || []) as Array<{ id: string }>).map((p) => p.id));
 }
+
+/** The inverse rule: is this job off the books (archived or deleted)? */
+export function isHiddenJob(p: Parameters<typeof isLiveJob>[0]): boolean {
+  return !!p && !isLiveJob(p);
+}
+
+/** Ids of the tenant's archived or deleted jobs — for a list that must drop
+ *  rows on dead jobs but keep rows on no job at all. Throws on a failed read,
+ *  so a caller never mistakes "could not check" for "nothing hidden". */
+export async function hiddenJobIds(
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  db: { from: (table: string) => any },
+  tenantId: string,
+): Promise<Set<string>> {
+  const { data, error } = await db
+    .from('projects')
+    .select('id, is_archived, archived_at, is_deleted, deleted_at')
+    .eq('tenant_id', tenantId)
+    .or('is_archived.eq.true,is_deleted.eq.true,archived_at.not.is.null,deleted_at.not.is.null')
+    .limit(5000);
+  if (error) throw error;
+  type Flags = { id: string; is_archived: boolean | null; archived_at: string | null; is_deleted: boolean | null; deleted_at: string | null };
+  return new Set(((data || []) as Flags[]).filter(isHiddenJob).map((p) => p.id));
+}
+
+/** Keep rows on live jobs (and rows on no job); drop rows on archived or
+ *  deleted jobs. `hidden` from hiddenJobIds. */
+export function dropHiddenJobRows<R extends { project_id?: string | null }>(rows: R[], hidden: Set<string>): R[] {
+  if (!hidden.size) return rows;
+  return rows.filter((r) => !r.project_id || !hidden.has(r.project_id));
+}
+
+/** Narrow a query on any job-owned table (rfis, punch, invoices …) to rows on
+ *  live jobs or on no job, in the database — for counts (`head: true`) where
+ *  rows never come back to filter. `hidden` from hiddenJobIds. */
+export function notOnHiddenJobs<Q extends { or(filters: string): Q }>(q: Q, hidden: Set<string>): Q {
+  if (!hidden.size) return q;
+  return q.or(`project_id.is.null,project_id.not.in.(${[...hidden].join(',')})`);
+}

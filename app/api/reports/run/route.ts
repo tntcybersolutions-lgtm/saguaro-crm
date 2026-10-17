@@ -27,7 +27,8 @@ export async function POST(req: NextRequest) {
     return NextResponse.json(result);
   } catch (e: unknown) {
     if (e instanceof ReportRunError) {
-      return apiError('reports/run', e);
+      // Our own words (lib/reports/run never puts the database's text in one).
+      return apiError('reports/run', e, e.message, e.status);
     }
     // A raw Error's text is the database's words, not ours — log it, show the line we wrote.
     console.error('[reports/run]', e);

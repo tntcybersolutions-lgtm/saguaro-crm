@@ -2,6 +2,12 @@ import { NextRequest, NextResponse } from 'next/server';
 import { createServerClient } from '@/lib/supabase-server';
 import { apiError } from '@/lib/api-error';
 import { POST as ownerDecisionPost } from '@/app/api/owner-portal/approve/[token]/route';
+import { isLiveJob } from '@/lib/live-jobs';
+
+const JOB_COLS = 'name, is_archived, archived_at, is_deleted, deleted_at';
+type JobFlags = { name: string | null; is_archived: boolean | null; archived_at: string | null; is_deleted: boolean | null; deleted_at: string | null };
+/** An owner link on an archived or deleted job no longer opens a decision. */
+const jobGone = () => NextResponse.json({ error: 'This job is closed. Contact your contractor for a current link.' }, { status: 410 });
 
 export async function GET(
   req: NextRequest,
@@ -20,12 +26,13 @@ export async function GET(
          page never read either. */
       const { data, error } = await db
         .from('pay_applications')
-        .select('app_number, current_payment_due, status, approved_at, projects(name)')
+        .select(`app_number, current_payment_due, status, approved_at, projects(${JOB_COLS})`)
         .eq('owner_approval_token', token)
         .maybeSingle();
       if (error) throw error;
       if (!data) return NextResponse.json({ error: 'Not found' }, { status: 404 });
-      const pa = data as unknown as { app_number: number | null; current_payment_due: number | null; status: string | null; approved_at: string | null; projects: { name: string | null } | null };
+      const pa = data as unknown as { app_number: number | null; current_payment_due: number | null; status: string | null; approved_at: string | null; projects: JobFlags | null };
+      if (pa.projects && !isLiveJob(pa.projects)) return jobGone();
       return NextResponse.json({
         approval: {
           amount: Number(pa.current_payment_due) || 0,
@@ -80,6 +87,14 @@ export async function POST(
       const body = (await req.json().catch(() => null)) as { decision?: unknown; notes?: unknown } | null;
       const decision = body?.decision === 'approved' ? 'approved' : body?.decision === 'rejected' ? 'rejected' : null;
       if (!decision) return NextResponse.json({ error: 'Choose approve or reject.' }, { status: 400 });
+      const { data: pa, error: paErr } = await createServerClient()
+        .from('pay_applications')
+        .select(`id, projects(${JOB_COLS})`)
+        .eq('owner_approval_token', token)
+        .maybeSingle();
+      if (paErr) throw paErr;
+      const job = (pa as unknown as { projects: JobFlags | null } | null)?.projects;
+      if (job && !isLiveJob(job)) return jobGone();
       const forward = new NextRequest(req.url, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },

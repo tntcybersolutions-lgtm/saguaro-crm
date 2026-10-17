@@ -16,6 +16,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { createServerClient, getUser } from '@/lib/supabase-server';
 import { apiError } from '@/lib/api-error';
+import { receivableOnly } from '@/lib/invoice-direction';
 
 export async function GET(req: NextRequest) {
   const user = await getUser(req);
@@ -46,7 +47,7 @@ export async function GET(req: NextRequest) {
       db.from('generated_documents').select('id', head).eq('tenant_id', t),
       db.from('daily_logs').select('id', head).eq('tenant_id', t),
       db.from('schedule_tasks').select('id', head).eq('tenant_id', t),
-      db.from('invoices').select('id', head).eq('tenant_id', t),
+      receivableOnly(db.from('invoices').select('id', head).eq('tenant_id', t)),
       db.from('pay_applications').select('id', head).eq('tenant_id', t),
       db.from('portal_client_sessions').select('id', head).eq('tenant_id', t),
       db.from('autopilot_alerts').select('id', head).eq('tenant_id', t),

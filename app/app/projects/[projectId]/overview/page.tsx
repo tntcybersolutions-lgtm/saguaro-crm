@@ -249,7 +249,7 @@ export default function JobPage() {
   const pctComplete = Number(data?.project?.percent_complete) || 0;
   const third = end
     ? { value: fmtDay(end, today), label: closed ? 'Finished' : 'Finish' }
-    : pctComplete > 0 ? { value: `${Math.round(pctComplete)}%`, label: 'Complete' } : { value: '—', label: 'Finish' };
+    : pctComplete > 0 ? { value: `${Math.round(pctComplete)}%`, label: 'Complete' } : { value: 'Not set', label: 'Finish' };
 
   /* ── Needs attention: ranked; every row opens what resolves it ── */
   type Attn = { id: string; dot: DotColor; rank: number; title: string; meta: string; href: string; sort?: string | null };
@@ -465,7 +465,7 @@ export default function JobPage() {
           <Disclosure id="jx-details" icon={<Info size={18} weight="bold" />} title="Details" meta={[pr.project_number || null, ownerName(pr) || null].filter(Boolean).join(' · ') || 'Number, owner, dates, contract and billing'} open={!!open.details} onToggle={() => flip('details')}>
             {!data ? <p className="fl-empty">{aggError ? <>Couldn&apos;t load the details. <button type="button" className="jx-inline" onClick={() => { void reloadAgg(); }}>Retry</button></> : 'Loading…'}</p> : (
               <dl className="jx-dl">
-                {[...details, ...money].map(([k, v]) => <div key={k}><dt>{k}</dt><dd>{v}</dd></div>)}
+                {[...details, ...money].filter(([, v]) => v && v !== '—').map(([k, v]) => <div key={k}><dt>{k}</dt><dd>{v}</dd></div>)}
               </dl>
             )}
           </Disclosure>

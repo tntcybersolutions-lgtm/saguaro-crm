@@ -5,6 +5,7 @@ import { jobHealth } from '@/lib/job-health';
 import { jobStage, billedPct } from '@/lib/job-page';
 import { isDoneStatus } from '@/lib/project-lifecycle';
 import { jobsClosedTo } from '@/lib/permissions';
+import { liveJobs } from '@/lib/live-jobs';
 
 export async function GET(req: NextRequest) {
   try {
@@ -13,14 +14,11 @@ export async function GET(req: NextRequest) {
       return NextResponse.json({ projects: [], source: 'unauth' }, { status: 401 });
     }
     const db = createServerClient();
-    const { data, error } = await db
+    // Live jobs only (lib/live-jobs): archived and deleted jobs are left off.
+    const { data, error } = await liveJobs(db
       .from('projects')
       .select('*')
-      .eq('tenant_id', user.tenantId)
-      // Exclude soft-deleted / archived projects. Legacy rows have NULL flags,
-      // so keep NULL (treated as not-archived) and drop only explicit `true`.
-      .or('is_archived.is.null,is_archived.eq.false')
-      .or('is_deleted.is.null,is_deleted.eq.false')
+      .eq('tenant_id', user.tenantId))
       .order('created_at', { ascending: false });
     if (error) throw error;
     // A job this person has "No access" on is not in their list (job roles).

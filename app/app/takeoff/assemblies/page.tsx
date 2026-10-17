@@ -6,7 +6,6 @@ import {
   PremiumSurface,
   ModuleHero,
   SectionCard,
-  StatCard,
   PremiumEmpty,
   goldButtonStyle,
   ghostButtonStyle,
@@ -23,6 +22,7 @@ import {
   SquaresFour,
   MagnifyingGlass,
 } from '@phosphor-icons/react';
+import { StatRow } from '@/components/ui/kit';
 import { CSI_DIVISIONS as CANONICAL_CSI_DIVISIONS } from '@/lib/construction-intelligence';
 
 const GOLD = 'var(--brand-primary)';
@@ -298,11 +298,8 @@ function AssemblyLibraryContent() {
         <PremiumSurface>
           {/* Header */}
           <ModuleHero
-            eyebrow="Assembly Library"
-            eyebrowIcon={<Cube size={13} weight="fill" color="var(--text-secondary)" />}
             title="Assembly"
             accent="Library"
-            subtitle="Create reusable material + labor bundles for takeoff estimates."
             actions={
               <button onClick={openCreate} style={goldButtonStyle} className="pmBtn">
                 <Plus size={15} weight="bold" /> New Assembly
@@ -310,25 +307,14 @@ function AssemblyLibraryContent() {
             }
           />
 
-          {/* KPI Row */}
-          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(180px, 1fr))', gap: 12, marginBottom: 24 }}>
-            <StatCard
-              icon={<Stack size={19} weight="duotone" color="var(--text-secondary)" />}
-              label="Assemblies" value={String(libStats.count)} sub="In library" accent={GOLD} delay={0.02}
-             href="/app/takeoff/assemblies"/>
-            <StatCard
-              icon={<CurrencyDollar size={19} weight="duotone" color="var(--text-secondary)" />}
-              label="Library Value" value={currency(libStats.totalValue)} sub="Total assembly cost" delay={0.06}
-             href="/app/takeoff/assemblies"/>
-            <StatCard
-              icon={<SquaresFour size={19} weight="duotone" color="var(--text-secondary)" />}
-              label="CSI Divisions" value={String(libStats.divisions)} sub="Covered" delay={0.10}
-             href="/app/takeoff/assemblies"/>
-            <StatCard
-              icon={<FunnelSimple size={19} weight="duotone" color="var(--text-secondary)" />}
-              label="Showing" value={String(filtered.length)} sub={`Of ${libStats.count} assemblies`} delay={0.14}
-             href="/app/takeoff/assemblies"/>
-          </div>
+          {/* Summary — flat figures, shown once there is a library to sum. */}
+          {!loading && libStats.count > 0 && (
+            <StatRow items={[
+              { label: 'Assemblies', value: libStats.count, icon: <Stack size={15} />, sub: filtered.length !== libStats.count ? `${filtered.length} showing` : undefined },
+              { label: 'Library value', value: currency(libStats.totalValue), icon: <CurrencyDollar size={15} /> },
+              { label: 'CSI divisions', value: libStats.divisions, icon: <SquaresFour size={15} /> },
+            ]} />
+          )}
 
           {/* Catalog */}
           <SectionCard
@@ -340,8 +326,8 @@ function AssemblyLibraryContent() {
               </span>
             }
           >
-            {/* Search & Filters */}
-            <div style={{ display: 'flex', gap: 12, marginBottom: 20, flexWrap: 'wrap' }}>
+            {/* Search & Filters — only once there is something to search */}
+            {assemblies.length > 0 && <div style={{ display: 'flex', gap: 12, marginBottom: 20, flexWrap: 'wrap' }}>
               <input
                 type="text"
                 placeholder="Search assemblies…"
@@ -397,7 +383,7 @@ function AssemblyLibraryContent() {
                   <option key={c} value={c}>{c.charAt(0).toUpperCase() + c.slice(1)}</option>
                 ))}
               </select>
-            </div>
+            </div>}
 
             {/* Grid */}
             {loading ? (
@@ -407,7 +393,6 @@ function AssemblyLibraryContent() {
                 <PremiumEmpty
                   icon={<Stack size={30} weight="duotone" color="var(--text-secondary)" />}
                   title="No assemblies yet"
-                  description="Create your first assembly to build reusable material + labor bundles for takeoff estimates."
                   action={
                     <button onClick={openCreate} style={secondaryButtonStyle} className="pmBtn">
                       <Plus size={15} weight="bold" /> New Assembly
@@ -418,7 +403,6 @@ function AssemblyLibraryContent() {
                 <PremiumEmpty
                   icon={<MagnifyingGlass size={30} weight="duotone" color="var(--text-secondary)" />}
                   title="No assemblies match your filters"
-                  description="Try adjusting your search terms, division, or category to see more results."
                   action={
                     <button
                       onClick={() => { setSearch(''); setFilterDivision(''); setFilterCategory(''); }}

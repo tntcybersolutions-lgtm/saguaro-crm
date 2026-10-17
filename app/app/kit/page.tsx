@@ -5,9 +5,14 @@
  * components/ui/kit.tsx with sample rows so the look can be approved in one
  * place before pages migrate onto it (docs/DESIGN-SYSTEM-FIX-PLAN.md Phase 0).
  * Sample data only — nothing here reads or writes the database.
+ *
+ * Platform admins only (lib/platform-admin, the Platform Integrations rule):
+ * the sample bids are made up, so a customer never sees this page. Anyone
+ * else who opens the URL is sent to their home screen.
  */
 
-import React from 'react';
+import React, { useEffect, useState } from 'react';
+import { useRouter } from 'next/navigation';
 import { Plus, DownloadSimple, Trophy, XCircle, Copy, Trash, Eye, Archive, PaperPlaneTilt, PencilSimple } from '@phosphor-icons/react';
 import {
   PageShell, Card, StatRow, Badge, Button, Tabs, Toolbar, DataTable, EmptyState,
@@ -46,6 +51,22 @@ const STATUS_TONE: Record<SampleBid['status'], BadgeTone> = {
 const money = (n: number) => n.toLocaleString('en-US', { style: 'currency', currency: 'USD', maximumFractionDigits: 0 });
 
 export default function KitPage() {
+  const router = useRouter();
+  const [allowed, setAllowed] = useState<boolean | null>(null);
+  useEffect(() => {
+    let live = true;
+    fetch('/api/platform/me')
+      .then((r) => (r.ok ? r.json() : { isPlatformAdmin: false }))
+      .then((j: { isPlatformAdmin?: boolean }) => { if (live) setAllowed(j.isPlatformAdmin === true); })
+      .catch((e) => { console.error('[kit] platform check failed', e); if (live) setAllowed(false); });
+    return () => { live = false; };
+  }, []);
+  useEffect(() => { if (allowed === false) router.replace('/app'); }, [allowed, router]);
+  if (!allowed) return null;
+  return <KitShowcase />;
+}
+
+function KitShowcase() {
   const [tab, setTab] = React.useState('all');
   const [q, setQ] = React.useState('');
   const [trade, setTrade] = React.useState('');

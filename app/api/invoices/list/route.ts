@@ -2,7 +2,8 @@ import { NextRequest, NextResponse } from 'next/server';
 import { createServerClient, getUser } from '@/lib/supabase-server';
 import { requirePermission } from '@/lib/permissions';
 import { apiError } from '@/lib/api-error';
-import { hiddenProjectIds } from '@/lib/hidden-projects';
+import { hiddenJobIds, dropHiddenJobRows } from '@/lib/live-jobs';
+import { receivableOnly, payableOnly } from '@/lib/invoice-direction';
 
 export async function GET(req: NextRequest) {
   const g = await requirePermission(req, 'Budget', 'View');
@@ -21,6 +22,13 @@ export async function GET(req: NextRequest) {
       .order('created_at', { ascending: false });
 
     if (projectId) query = query.eq('project_id', projectId);
+    /* Invoicing is owner billing (Bill To, Collected): receivable rows only.
+       Vendor / sub bills filed in this table before Bills existed carry
+       direction 'payable' and belong to the job's costs, not to what the
+       owner owes. ?direction=payable or =all asks for them explicitly. */
+    const direction = searchParams.get('direction');
+    if (direction === 'payable') query = payableOnly(query);
+    else if (direction !== 'all') query = receivableOnly(query);
 
     const { data, error } = await query;
     if (error) throw error;
@@ -30,8 +38,7 @@ export async function GET(req: NextRequest) {
     // explicit archive view), keeps them.
     let rows = data || [];
     if (!projectId && searchParams.get('include_archived') !== '1') {
-      const hidden = await hiddenProjectIds(db, user.tenantId);
-      if (hidden.size) rows = rows.filter((r: { project_id?: string | null }) => !r.project_id || !hidden.has(r.project_id));
+      rows = dropHiddenJobRows(rows, await hiddenJobIds(db, user.tenantId));
     }
 
     return NextResponse.json({ invoices: rows });
