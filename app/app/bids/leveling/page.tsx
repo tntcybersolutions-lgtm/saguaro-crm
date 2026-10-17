@@ -444,7 +444,7 @@ function BidLevelingBoard() {
   const title = pkgName ? `${pkgName} — Bid Leveling` : 'Bid Leveling';
   const subtitle = (
     <span style={{ display: 'inline-flex', alignItems: 'center', gap: 6, flexWrap: 'wrap' }}>
-      <EyeSlash size={14} /> Internal to your team — subcontractors never see this tabulation or your adjustments.
+      <EyeSlash size={14} /> Internal · subs never see this
     </span>
   );
 
@@ -521,13 +521,19 @@ function BidLevelingBoard() {
         crumbs={crumbs}
         actions={
           <>
-            <Button onClick={analysePackage} disabled={pkgBusy} icon={<Sparkle size={15} weight="bold" />}>
-              {pkgBusy ? 'Working…' : 'Ask Sage to Find the Gaps'}
-            </Button>
-            <Button onClick={() => savePackage(false)} disabled={pkgBusy}>Save to Package</Button>
-            <Button variant="primary" onClick={() => savePackage(true)} disabled={pkgBusy || pkgComplete}>
-              {pkgComplete ? 'Leveling Complete' : 'Save & Mark Complete'}
-            </Button>
+            {/* With no bidders there is nothing to level, save or complete: the
+                one action is Add bidder (in the grid below). */}
+            {bidders.length > 0 && (
+              <>
+                <Button onClick={analysePackage} disabled={pkgBusy} icon={<Sparkle size={15} weight="bold" />}>
+                  {pkgBusy ? 'Working…' : 'Ask Sage to find the gaps'}
+                </Button>
+                <Button onClick={() => savePackage(false)} disabled={pkgBusy}>Save</Button>
+                <Button variant="primary" onClick={() => savePackage(true)} disabled={pkgBusy || pkgComplete}>
+                  {pkgComplete ? 'Leveling complete' : 'Save & mark complete'}
+                </Button>
+              </>
+            )}
             {bidders.length > 0 && (
               <Menu label="More leveling actions" actions={[
                 { label: 'Export Bid Tab', icon: <FilePdf size={15} />, onClick: exportPdf },
@@ -657,11 +663,8 @@ function BidLevelingBoard() {
           {bidders.length === 0 ? (
             <EmptyState
               icon={<Scales size={22} />}
-              title={scopeLines.length === 0 ? 'No Bids or Scope Yet' : 'No Bids to Level Yet'}
-              text={scopeLines.length === 0
-                ? 'This package has no submitted bids and no scope lines. Load a CSI scope template above, then add bidders or paste a proposal below.'
-                : 'Add a bidder by hand or paste a proposal for Sage to read. Bids submitted through the package appear here automatically.'}
-              action={<Button onClick={() => { addBidder(); setTab('bidders'); }} icon={<Plus size={15} />}>Add Bidder</Button>}
+              title={scopeLines.length === 0 ? 'No bids or scope yet' : 'No bids to level yet'}
+              action={<Button variant="primary" onClick={() => { addBidder(); setTab('bidders'); }} icon={<Plus size={15} />}>Add bidder</Button>}
             />
           ) : (
             <>
@@ -919,11 +922,11 @@ function BidLevelingBoard() {
           {tab === 'bidders' && (
             <Card
               title="Bidders"
-              subtitle={bidders.length > 0 ? `${bidders.length} in the tabulation. Submitted amounts are read-only; adjustments are internal.` : 'Add bidders by hand or paste a proposal for Sage to read.'}
+              subtitle={bidders.length > 0 ? `${bidders.length} in the tabulation` : undefined}
               actions={<Button onClick={addBidder} icon={<Plus size={15} />}>Add Bidder</Button>}
             >
               {bidders.length === 0 ? (
-                <EmptyState title="No Bidders Yet" text="Submitted bids load here." primary={{ label: 'Add Bidder', onClick: addBidder }} perm={['Projects', 'Edit']} />
+                <EmptyState title="No bidders yet" />
               ) : (
                 <div className="lv-stack" style={{ gap: 'var(--sp-2)' }}>
                   {bidders.map((b) => {
