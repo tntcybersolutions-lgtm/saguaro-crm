@@ -12,6 +12,7 @@ import React, { useState, useEffect, useCallback } from 'react';
 import { useParams } from 'next/navigation';
 import { Cactus, Check, CheckCircle, FilePdf, Warning, X, ArrowCounterClockwise } from '@phosphor-icons/react';
 import { retainageHeld, retainageRate, type RetainageLedger } from '@/lib/retainage';
+import CoReview, { type CoReviewData } from './CoReview';
 
 // Postgres numerics arrive as strings; a string's toLocaleString() does not group digits.
 const fmt = (n: unknown) => '$' + (Number(n) || 0).toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
@@ -84,7 +85,7 @@ export default function OwnerApprovalPortal() {
       const r = await fetch('/api/owner-portal/approve/' + encodeURIComponent(token));
       if (r.status === 404) { setLoadError('not_found'); return; }
       const d = await r.json();
-      if (!r.ok || !d.payApp) { setLoadError('failed'); return; }
+      if (!r.ok || (!d.payApp && !d.changeOrder)) { setLoadError('failed'); return; }
       setData(d);
       setReview(d.review ?? null);
     } catch (e) {
@@ -122,11 +123,14 @@ export default function OwnerApprovalPortal() {
     }
   }
 
-  if (loading) return <div className="opCenter" style={{ color: 'var(--text-secondary)' }}><style dangerouslySetInnerHTML={{ __html: CSS }} />Loading the pay application…</div>;
+  // A change order request sent to the owner has its own review (./CoReview).
+  if (!loading && data?.changeOrder) return <CoReview token={token} data={data as CoReviewData} />;
+
+  if (loading) return <div className="opCenter" style={{ color: 'var(--text-secondary)' }}><style dangerouslySetInnerHTML={{ __html: CSS }} />Loading…</div>;
 
   if (loadError === 'not_found') return (
     <Centered icon={<Warning size={48} weight="fill" color="var(--danger)" />} title="This link isn't valid"
-      body="We couldn't find a pay application for this link. It may have been replaced by a newer one — ask your contractor to send the approval link again." />
+      body="We couldn't find a pay application or change order for this link. It may have been replaced by a newer one — ask your contractor to send the approval link again." />
   );
   if (loadError || !data?.payApp) return (
     <Centered icon={<Warning size={48} weight="fill" color="var(--warning)" />} title="Couldn't load the pay application"

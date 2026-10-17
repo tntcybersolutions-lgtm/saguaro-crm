@@ -10,7 +10,7 @@ import { apiError } from '@/lib/api-error';
 import { signStoredUrl, signFields } from '@/lib/storage-signing';
 import { pinEntityFor } from '@/lib/drawing-revisions';
 import { requirePermission } from '@/lib/permissions';
-import { writeChangeOrder, isCoDecision } from '@/lib/change-order-status';
+import { writeChangeOrder, coDecisionLevel, coWriteFailure } from '@/lib/change-order-status';
 import { transitionPoStatus } from '@/lib/purchase-order-status';
 import { SUBMITTAL_REVIEW_STATUSES } from '@/lib/submittal-workflow';
 import { runInBackground } from '@/lib/background';
@@ -59,7 +59,8 @@ export async function GET(req: NextRequest, { params }: { params: Promise<{ tool
     }));
     // Never hand back the e-sign token or signer IP — the signing link is sent from the contracts screen.
     const item = { ...l.item };
-    for (const k of ['signing_token', 'sub_sign_ip', 'html_content']) delete item[k];
+    // …nor the owner's change order approval link token (it is the owner's signature).
+    for (const k of ['signing_token', 'sub_sign_ip', 'html_content', 'owner_approval_token']) delete item[k];
     return NextResponse.json({ item, project, files, drawings });
   } catch (e) {
     return apiError(`items/${type}`, e);
@@ -105,12 +106,13 @@ export async function PATCH(req: NextRequest, { params }: { params: Promise<{ to
        Both go through the one shared step (lib/change-order-status) — this
        PATCH used to flip the status and leave the contract where it was. */
     if (l.tool.type === 'change_orders') {
-      if (isCoDecision(l.item, patch.status)) {
+      // A fresh approval is checked against the company's tiers in writeChangeOrder; reversals take Full.
+    if (coDecisionLevel(l.item, patch.status) === 'Full') {
         const full = await requirePermission(req, 'Change Orders', 'Full', { projectId: (l.item.project_id as string) || null, db: l.db });
         if (!full.ok) return full.res;
       }
       const w = await writeChangeOrder(l.db, l.user.tenantId, id, patch, { actorId: l.user.id, before: l.item });
-      if (!w.ok) return NextResponse.json({ error: w.error }, { status: w.status });
+      if (!w.ok) { const f = coWriteFailure(w); return NextResponse.json(w.status === 202 ? { ...f.body, item: w.after ?? l.item } : f.body, { status: f.status }); }
       return NextResponse.json({ item: w.after });
     }
 

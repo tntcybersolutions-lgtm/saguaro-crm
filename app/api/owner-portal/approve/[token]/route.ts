@@ -3,6 +3,7 @@ import { createServerClient } from '@/lib/supabase-server';
 import { apiError } from '@/lib/api-error';
 import { retainageLedger } from '@/lib/retainage';
 import { transitionPayAppStatus } from '@/lib/pay-app-status';
+import { isCoToken, ownerView, ownerDecision } from '@/lib/change-order-stages';
 
 /* The owner's review link. The token IS the credential, the same way the
    signing portal works: owner_approval_token is unguessable and identifies
@@ -49,6 +50,13 @@ export async function GET(
   const { token } = await params;
   try {
     const db = createServerClient();
+    /* A change order request sent to the owner (lib/change-order-stages):
+       its token carries a prefix, and the tenant comes from that row. */
+    if (isCoToken(token)) {
+      const view = await ownerView(db, token);
+      if (!view) return NextResponse.json({ error: 'This approval link is not valid. Ask your contractor to send it again.' }, { status: 404 });
+      return NextResponse.json(view);
+    }
     const pa = await loadByToken(db, token);
     if (!pa) return NextResponse.json({ error: 'This approval link is not valid. Ask your contractor to send it again.' }, { status: 404 });
 
@@ -95,12 +103,20 @@ export async function POST(
 ) {
   const { token } = await params;
   try {
-    const body = (await req.json().catch(() => null)) as { action?: unknown; note?: unknown } | null;
+    const body = (await req.json().catch(() => null)) as { action?: unknown; note?: unknown; name?: unknown } | null;
     const action = body?.action === 'approved' ? 'approved' : body?.action === 'rejected' ? 'rejected' : null;
     if (!action) return NextResponse.json({ error: 'Choose approve or return for revision.' }, { status: 400 });
     const note = typeof body?.note === 'string' && body.note.trim() ? body.note.trim().slice(0, 4000) : null;
 
     const db = createServerClient();
+    if (isCoToken(token)) {
+      /* The owner's signature on a change order request: it books the change
+         through the one shared step once the company's approvers are done. */
+      const name = typeof (body as { name?: unknown } | null)?.name === 'string' ? String((body as { name?: string }).name).trim().slice(0, 200) : null;
+      const r = await ownerDecision(db, token, action, { note, name });
+      if (!r.ok) return NextResponse.json({ error: r.error, review: r.review }, { status: r.status });
+      return NextResponse.json({ success: true, review: r.review });
+    }
     const pa = await loadByToken(db, token);
     if (!pa) return NextResponse.json({ error: 'This approval link is not valid. Ask your contractor to send it again.' }, { status: 404 });
 
