@@ -3,7 +3,8 @@
  * Item page — one full page for any RFI, submittal or punch item.
  *
  * Header (number, title, status) → workflow strip (who has it, who made it,
- * when it's due) → tabs: General (every field, edit in place) · Comments
+ * when it's due; empty cells left out, Status always shown) → tabs: General
+ * (the filled-in fields; Edit shows every field) · Comments
  * (thread with files) · Related (Related Items: links to any record on the
  * job, pins on drawings) · Files · History
  * (every change, who and when). The tool's shape comes from
@@ -39,6 +40,11 @@ function display(f: ItemField, v: unknown): string {
     case 'select': return statusLabel(String(v));
     default: return String(v);
   }
+}
+
+/** Nothing filled in: null, missing or blank text. A 0, a "No" and a date are values. */
+function isEmpty(v: unknown): boolean {
+  return v === null || v === undefined || (typeof v === 'string' && v.trim() === '');
 }
 
 function inputValue(f: ItemField, v: unknown): string {
@@ -155,8 +161,11 @@ export default function ItemPage() {
     return <PageShell title={tool.noun} crumbs={[{ label: tool.plural, href: listHref }]}><div className="ip-loading" aria-busy="true">Loading…</div></PageShell>;
   }
 
-  const strip = tool.fields.filter((f) => f.strip);
-  const body = tool.fields.filter((f) => !f.strip);
+  /* Read mode shows only what is filled in (Edit shows every field). The
+     status cell always stays: it is where the record stands. */
+  const strip = tool.fields.filter((f) => f.strip && (f.key === tool.statusKey || !isEmpty(item[f.key])));
+  const body = tool.fields.filter((f) => !f.strip && !isEmpty(item[f.key]));
+  const emptyCount = tool.fields.filter((f) => !f.strip && isEmpty(item[f.key]) && tool.edit.includes(f.key)).length;
   const late = overdue(tool, item);
   const num = item[tool.numberKey];
   const title = String(item[tool.titleKey] || '').trim() || tool.noun;
@@ -235,14 +244,24 @@ export default function ItemPage() {
               ))}
             </div>
           ) : (
-            <dl className="ip-facts">
-              {body.map((f) => (
-                <div key={f.key} className="ip-fact" data-long={f.kind === 'long' ? 'true' : undefined}>
-                  <dt>{f.label}</dt>
-                  <dd>{display(f, item[f.key])}</dd>
-                </div>
-              ))}
-            </dl>
+            <>
+              {body.length > 0 && (
+                <dl className="ip-facts">
+                  {body.map((f) => (
+                    <div key={f.key} className="ip-fact" data-long={f.kind === 'long' ? 'true' : undefined}>
+                      <dt>{f.label}</dt>
+                      <dd>{display(f, item[f.key])}</dd>
+                    </div>
+                  ))}
+                </dl>
+              )}
+              {emptyCount > 0 && (
+                <p className="ip-empty">
+                  {body.length === 0 ? 'No details filled in yet.' : `${emptyCount} more field${emptyCount === 1 ? '' : 's'} not filled in.`}{' '}
+                  <button type="button" className="ip-link" onClick={startEdit}>Fill them in</button>
+                </p>
+              )}
+            </>
           )}
         </section>
       )}
@@ -411,6 +430,11 @@ const CSS = `
 .ip-fact[data-long="true"]{grid-column:1/-1}
 .ip-fact dt{font-size:13px;color:var(--text-tertiary);font-weight:600}
 .ip-fact dd{margin:0;font-size:15px;color:var(--text-primary);white-space:pre-wrap;overflow-wrap:anywhere}
+.ip-empty{margin:12px 0 0;font-size:14px;color:var(--text-tertiary)}
+.ip-link{position:relative;background:none;border:0;padding:0;font:inherit;font-weight:650;color:var(--link);cursor:pointer}
+.ip-link::after{content:'';position:absolute;inset:-12px -8px}
+.ip-link:hover{color:var(--link-hover)}
+.ip-link:focus-visible{outline:2px solid var(--focus-ring);outline-offset:2px;border-radius:4px}
 .ip-form{display:grid;grid-template-columns:repeat(auto-fit,minmax(240px,1fr));gap:12px 24px}
 .ip-form .k-span-all{grid-column:1/-1}
 .ip-thread{list-style:none;margin:0 0 16px;padding:0}
