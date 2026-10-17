@@ -558,7 +558,17 @@ export type Column<T> = {
   groupable?: boolean;
   /** Offered in "Filter" (pick from the column's values). Defaults to the same rule as groupable. */
   filterable?: boolean;
+  /** 'truncate': the cell gives up width before the table overflows and ends
+   *  in "…"; 'full': the cell always shows everything. Default: text columns
+   *  (left-aligned, no fixed width, not a status/stage badge) truncate; money,
+   *  numbers and badges show in full. */
+  fit?: 'truncate' | 'full';
 };
+
+/* Badge-like columns keep their full width so a pill is never clipped. */
+const BADGE_KEY = /status|stage|state|priority|health|risk|badge/i;
+const truncates = <T,>(c: Column<T>): boolean =>
+  c.fit ? c.fit === 'truncate' : (!c.align || c.align === 'left') && c.width == null && !BADGE_KEY.test(c.key);
 
 /**
  * Bulk edit for a list. Every action runs row by row through `apply`, which
@@ -1186,7 +1196,15 @@ export function DataTable<T>({
           else phone = c.phone ?? (ci < 4 ? 'show' : 'hide');
           return (
             <td key={c.key} className={c.primary ? 'k-td-primary' : undefined} style={{ textAlign: c.align, ...widthStyle(c.key) }} data-label={typeof c.header === 'string' ? c.header : undefined} data-phone={phone}>
-              {c.render ? c.render(row) : v == null || v === '' ? '—' : String(v)}
+              {(() => {
+                const content = c.render ? c.render(row) : v == null || v === '' ? '—' : String(v);
+                if (!truncates(c)) return content;
+                // A text cell gives up width before the table overflows its card:
+                // .k-cell adds nothing to the column's minimum width, so long
+                // text ends in "…" (full text on hover) and the row fits.
+                const tip = !c.render && v != null && String(v).length > 16 ? String(v) : undefined;
+                return <div className="k-cell"><div className="k-cell-in" title={tip}>{content}</div></div>;
+              })()}
             </td>
           );
         })}
@@ -1336,6 +1354,9 @@ export function DataTable<T>({
         </div>
       )}
       <SortBar columns={sortCols} sort={sort} onChange={setSort} />
+      {/* Only the table scrolls sideways (when it truly cannot fit) — the list
+          tools above it and the page around it stay put. */}
+      <div className="k-table-scroll">
       <table className="k-table">
         <thead>
           <tr>
@@ -1407,6 +1428,7 @@ export function DataTable<T>({
         </tbody>
         {hasTotals && !loading && sorted.length > 0 && <tfoot>{totalsRow(sorted, 'Total', 'k-total-row')}</tfoot>}
       </table>
+      </div>
     </div>
   );
 }

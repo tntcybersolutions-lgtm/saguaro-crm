@@ -21,22 +21,22 @@ import { installStatusFetch } from '@/lib/ui/status-fetch';
 
 const CSS = `
 .stc { position: fixed; z-index: 10100; left: 50%; transform: translateX(-50%); bottom: 20px;
-  width: min(440px, calc(100vw - 32px)); box-sizing: border-box; padding: 12px 6px 6px 16px; border-radius: 16px;
-  background: var(--bg-solid-2); color: var(--text-primary); border: 1px solid var(--border-strong);
-  box-shadow: 0 18px 40px -14px rgba(0,0,0,.8); font-size: 15px; line-height: 1.3; }
+  width: min(420px, calc(100vw - 32px)); box-sizing: border-box; padding: 8px 4px 4px 14px; border-radius: 10px;
+  background: var(--bg-solid-2); color: var(--text-primary); border: 1px solid var(--border-default);
+  box-shadow: 0 8px 22px -10px rgba(0,0,0,.7); font-size: 14px; line-height: 1.35; }
 .stc[data-place="top"] { bottom: auto; top: calc(env(safe-area-inset-top, 0px) + 10px); }
 .stc-head { display: flex; align-items: center; justify-content: space-between; gap: 8px; }
 .stc-title { font-size: 12px; font-weight: 800; letter-spacing: .12em; color: var(--text-secondary); }
 .stc[data-tone="bad"] .stc-title { color: var(--c-red); }
 .stc[data-tone="nosig"] .stc-title { color: var(--c-orange); }
 .stc[data-tone="done"] .stc-title { color: var(--c-green); }
-.stc-x { flex: 0 0 auto; width: 44px; height: 44px; margin: -12px -2px -6px 0; display: grid; place-items: center;
-  border: 0; background: transparent; color: var(--text-secondary); border-radius: 12px; cursor: pointer; }
+.stc-x { flex: 0 0 auto; width: 36px; height: 36px; margin: -8px 0 -4px 0; display: grid; place-items: center;
+  border: 0; background: transparent; color: var(--text-tertiary); border-radius: 8px; cursor: pointer; }
 .stc-x:hover { color: var(--text-primary); background: var(--bg-surface-2); }
 .stc ol { list-style: none; margin: 4px 0 0; padding: 0 10px 0 0; max-height: min(46vh, 340px); overflow-y: auto; }
-.stc li { display: flex; gap: 10px; align-items: flex-start; padding: 8px 0; }
+.stc li { display: flex; gap: 8px; align-items: flex-start; padding: 6px 0; }
 .stc li + li { border-top: 1px solid var(--border-subtle); }
-.stc-ic { flex: 0 0 22px; width: 22px; height: 22px; border-radius: 50%; display: grid; place-items: center; margin-top: 1px;
+.stc-ic { flex: 0 0 18px; width: 18px; height: 18px; border-radius: 50%; display: grid; place-items: center; margin-top: 1px;
   font-size: 12px; font-weight: 800; box-sizing: border-box; }
 .stc-ic[data-s="done"], .stc-ic[data-s="offline"] { background: var(--c-green); color: var(--on-brand); }
 .stc-ic[data-s="failed"] { background: var(--c-red); color: var(--on-brand); }
@@ -49,26 +49,30 @@ const CSS = `
 @keyframes stc-spin { to { transform: rotate(360deg); } }
 @keyframes stc-in { from { opacity: 0; } to { opacity: 1; } }
 .stc-body { min-width: 0; flex: 1; }
-.stc-label { font-weight: 700; overflow-wrap: anywhere; }
+.stc-label { font-weight: 500; overflow-wrap: anywhere; }
 .stc li[data-s="waiting"] .stc-label { color: var(--text-secondary); }
 .stc li[data-s="failed"] .stc-label { color: var(--c-red); }
 .stc-detail { margin-top: 2px; font-size: 13px; font-weight: 600; color: var(--text-secondary); overflow-wrap: anywhere; }
 .stc-bar { margin-top: 6px; height: 4px; border-radius: 4px; background: var(--border-subtle); overflow: hidden; }
 .stc-bar > span { display: block; height: 100%; background: var(--info-fg); border-radius: 4px; transition: width .25s ease; }
 .stc-more { font-size: 13px; color: var(--text-tertiary); padding: 4px 0 2px; }
+/* Done / working (every screen size): the steps carry the meaning, so the
+   heading word steps aside (still read out to a screen reader) and the close
+   button sits in the corner — one slim line per step, not a titled card. A
+   failure or "no signal" keeps its heading. */
+.stc:not([data-tone="bad"]):not([data-tone="nosig"]) { padding: 0 0 0 12px; }
+.stc:not([data-tone="bad"]):not([data-tone="nosig"]) .stc-head { position: absolute; top: 0; right: 0; }
+.stc:not([data-tone="bad"]):not([data-tone="nosig"]) .stc-title { position: absolute; width: 1px; height: 1px; overflow: hidden; clip: rect(0 0 0 0); white-space: nowrap; }
+.stc:not([data-tone="bad"]):not([data-tone="nosig"]) .stc-x { margin: 0; }
+.stc:not([data-tone="bad"]):not([data-tone="nosig"]) ol { margin-top: 0; padding-right: 40px; }
+.stc:not([data-tone="bad"]):not([data-tone="nosig"]) li { padding: 9px 0; }
 @media (max-width: 767px) {
   .stc { left: 12px; right: 12px; width: auto; transform: none; bottom: calc(var(--sag-tabbar-h, 0px) + 8px);
-    padding: 2px 2px 2px 12px; border-radius: 12px; font-size: 14px; }
-  /* Done / working: the steps carry the meaning, so the heading word steps
-     aside and the close button sits in the corner — one compact line per
-     step instead of a heading row plus a 44px button row. A failure or "no
-     signal" keeps its heading. */
-  .stc:not([data-tone="bad"]):not([data-tone="nosig"]) .stc-head { position: absolute; top: 0; right: 0; }
-  .stc:not([data-tone="bad"]):not([data-tone="nosig"]) .stc-title { position: absolute; width: 1px; height: 1px; overflow: hidden; clip: rect(0 0 0 0); white-space: nowrap; }
-  .stc:not([data-tone="bad"]):not([data-tone="nosig"]) ol { margin-top: 0; padding-right: 44px; }
-  .stc-x { margin: 0; }
+    padding: 2px 2px 2px 12px; border-radius: 10px; font-size: 14px; }
+  .stc-x { width: 44px; height: 44px; margin: 0; }
+  .stc:not([data-tone="bad"]):not([data-tone="nosig"]) ol { padding-right: 44px; }
   .stc ol { max-height: 32vh; }
-  .stc li { padding: 11px 0; }
+  .stc li, .stc:not([data-tone="bad"]):not([data-tone="nosig"]) li { padding: 11px 0; }
 }
 `;
 
