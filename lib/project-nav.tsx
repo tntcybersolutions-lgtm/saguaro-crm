@@ -23,6 +23,7 @@ import {
   Folder, Bank, BookOpen, Users, Globe, Laptop, ArrowsSplit, Plug, Shield,
   WifiHigh, Broadcast, Gear, Robot, ChartBar, Brain, CaretLeft, CaretRight, ArrowLeft, X, Cube, UsersThree,
 } from '@phosphor-icons/react';
+import { itemTool } from '@/lib/items/registry';
 
 export interface ProjectNavItem {
   label: string;
@@ -203,14 +204,26 @@ export const PROJECT_PHASES: ProjectPhase[] = [
   { key: 'precon',    label: 'Preconstruction', tagline: 'Price & win the work',  icon: Calculator,  href: '/takeoff',     match: ['/takeoff', '/estimate', '/bid-packages', '/proposal'] },
   { key: 'execution', label: 'Execution',       tagline: 'Set up & buy out',      icon: Clipboard,   href: '/schedule',    match: ['/schedule', '/selections', '/contracts', '/subs', '/purchase-orders'] },
   { key: 'field',     label: 'Field',           tagline: 'Build & track daily',   icon: HardHat,     href: '/daily-logs',  match: ['/daily-logs', '/tm-tickets', '/photos', '/inspections', '/safety', '/punch-list', '/todos', '/timesheets', '/crews'] },
-  { key: 'financial', label: 'Financials',      tagline: 'Cost, bill & get paid', icon: Money,       href: '/budget',      match: ['/budget', '/change-orders', '/pay-apps', '/invoices', '/bills', '/lien-waivers', '/insurance', '/payroll', '/w9'] },
+  { key: 'financial', label: 'Financials',      tagline: 'Cost, bill & get paid', icon: Money,       href: '/budget',      match: ['/budget', '/commitments', '/change-orders', '/pay-apps', '/invoices', '/bills', '/lien-waivers', '/insurance', '/payroll', '/w9'] },
   { key: 'docs',      label: 'Docs & Comms',    tagline: 'Drawings, RFIs, files', icon: Folder,      href: '/files',       match: ['/files', '/drawings', '/models', '/permits', '/specs', '/rfis', '/submittals', '/messages', '/meetings', '/directory', '/team', '/compliance'] },
   { key: 'closeout',  label: 'Closeout',        tagline: 'Finish & hand over',    icon: CheckCircle, href: '/closeout',    match: ['/closeout'] },
 ];
 
-/** The phase a project-relative path belongs to (longest match wins). */
+/**
+ * The phase a project-relative path belongs to (longest match wins).
+ *
+ * A record page is /items/<type>/<id> — one route for every item type — so its
+ * phase is the phase of that type's list (lib/items/registry `listPath`): a
+ * change order lights Financials, an RFI Docs & Comms, a punch item Field.
+ * Without this every record lit Overview.
+ */
 export function phaseForPath(relPath: string): string {
-  const p = relPath || '';
+  let p = relPath || '';
+  const rec = p.match(/^\/items\/([^/?#]+)/);
+  if (rec) {
+    const tool = itemTool(rec[1]);
+    if (tool) p = `/${tool.listPath}`;
+  }
   let best = 'overview';
   let bestLen = -1;
   for (const ph of PROJECT_PHASES) {

@@ -48,7 +48,7 @@ const CSS = `
 .fl-brief .fl-brief-act:focus-visible{outline:2px solid var(--focus-ring);outline-offset:2px}
 @media (pointer:coarse){.fl-brief .fl-brief-act{min-height:44px}}
 @media (max-width:640px){.fl-brief-body{align-items:stretch}.fl-brief .fl-brief-act{width:100%}}
-.fl-strip{display:grid;grid-auto-flow:column;grid-auto-columns:1fr;margin:0;background:none;border:0;border-top:1px solid var(--fl-line);border-bottom:1px solid var(--fl-line);box-shadow:none;border-radius:0;overflow:hidden}
+.fl-strip{display:grid;grid-auto-flow:column;grid-auto-columns:1fr;margin:0;background:none;border:0;box-shadow:none;border-radius:0;overflow:hidden}
 .fl-strip>div{padding:10px 8px 10px 16px;border-right:1px solid var(--fl-line);min-width:0}
 .fl-strip>div:first-child{padding-left:0}
 .fl-strip>div:last-child{border-right:0}
@@ -109,7 +109,8 @@ button.fl-row{width:100%;border:0;font:inherit;text-align:left;cursor:pointer}
 a.fl-tool:hover{background:var(--bg-row-hover)}
 a.fl-tool:active{background:var(--fl-line)}
 a.fl-tool:focus-visible{outline:2px solid var(--focus-ring);outline-offset:-2px}
-.fl-tool .fl-ti{width:36px;height:36px;border-radius:10px;display:grid;place-items:center;flex:none;color:var(--acc);background:color-mix(in srgb,var(--acc) 14%,var(--bg-surface-2));border:1px solid color-mix(in srgb,var(--acc) 38%,var(--bg-surface-2))}
+.fl-tool .fl-ti{width:28px;height:36px;display:grid;place-items:center;flex:none;color:var(--fl-text-2);background:none;border:0;border-radius:0}
+a.fl-tool:hover .fl-ti{color:var(--fl-text)}
 .fl-tool .fl-tm{flex:1;min-width:0;display:flex;align-items:center;justify-content:space-between;gap:12px}
 .fl-tool .fl-tn{min-width:0;font-size:15px;font-weight:600;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
 .fl-tool .fl-tc{font-size:13px;color:var(--fl-text-2);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
@@ -121,7 +122,7 @@ a.fl-tool:focus-visible{outline:2px solid var(--focus-ring);outline-offset:-2px}
 .fl-list[data-grid]{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:0 24px;background:none;border:0;border-radius:0;overflow:visible}
 .fl-list[data-grid]>li,.fl-list[data-grid]>li:last-child{border:0;border-bottom:1px solid var(--fl-line);border-radius:0;background:none;overflow:hidden}
 .fl-list[data-grid] .fl-tool{gap:10px;padding:8px 10px 8px 12px;min-height:60px}
-.fl-list[data-grid] .fl-ti{width:32px;height:32px;border-radius:9px}
+.fl-list[data-grid] .fl-ti{width:24px;height:32px}
 .fl-list[data-grid] .fl-tm{flex-direction:column;align-items:flex-start;justify-content:center;gap:2px}
 .fl-list[data-grid] .fl-tn{font-size:14px;white-space:normal;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;line-height:1.25;overflow-wrap:anywhere}
 .fl-list[data-grid] .fl-tc{max-width:100%;font-size:13px;white-space:normal;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;line-height:1.3}
@@ -337,12 +338,13 @@ export function Tabs<K extends string>({ value, options, onChange, label }: { va
   );
 }
 
-/** One of a job's tools: icon · name · count or state · chevron. `accent` is
- *  the tool's module hue (lib/ui/app-accent); without it the tile takes the
- *  page's accent. */
-export function ToolRow({ icon, label, value, warn, href, accent }: { icon: React.ReactNode; label: string; value?: React.ReactNode; warn?: boolean; href: string; accent?: string }) {
+/** One of a job's tools: icon · name · count or state · chevron. Every tool's
+ *  glyph is the same calm slate (like the sidebar), so the list reads as one
+ *  menu rather than a rainbow. `accent` is accepted for older callers and
+ *  ignored. */
+export function ToolRow({ icon, label, value, warn, href }: { icon: React.ReactNode; label: string; value?: React.ReactNode; warn?: boolean; href: string; accent?: string }) {
   return (
-    <Link className="fl-tool" href={href} style={accent ? ({ ['--acc' as string]: accent } as React.CSSProperties) : undefined}>
+    <Link className="fl-tool" href={href}>
       <span className="fl-ti" aria-hidden="true">{icon}</span>
       <span className="fl-tm">
         <span className="fl-tn">{label}</span>
