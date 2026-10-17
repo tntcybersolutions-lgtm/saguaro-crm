@@ -4,7 +4,7 @@ import { requirePermission } from '@/lib/permissions';
 import { must } from '@/lib/db-write';
 import { apiError, apiFail } from '@/lib/api-error';
 import { applyChangeOrderMoney } from '@/lib/change-order-cascade';
-import { writeChangeOrder, isCoDecision } from '@/lib/change-order-status';
+import { writeChangeOrder, coDecisionLevel, coWriteFailure } from '@/lib/change-order-status';
 
 const ALLOWED_CO_COLUMNS = [
   'project_id', 'title', 'description', 'amount', 'status', 'reason', 'submitted_by', 'co_number',
@@ -18,8 +18,9 @@ const ALLOWED_CO_COLUMNS = [
   'profit_amount', 'related_rfi_id', 'related_submittal_id', 'related_bid_package_id', 'billable_to',
   'contract_reference', 'drawing_revision', 'specification_revision', 'owner_approval_required',
   'architect_approval_required', 'ai_generated', 'ai_draft_narrative', 'ai_pricing_source',
-  'html_content', 'owner_approval_token', 'owner_approval_notes', 'sent_to_owner_at',
-  'owner_actioned_at', 'owner_email', 'qbo_synced_at', 'updated_at',
+  // The owner's link (token, sent / actioned stamps) is written by /send-to-owner and the owner's
+  // own decision only (lib/change-order-stages) — a PATCH must not forge either.
+  'html_content', 'owner_approval_notes', 'owner_email', 'qbo_synced_at', 'updated_at',
 ];
 
 function filterCoBody(body: Record<string, any>): Record<string, any> {
@@ -43,7 +44,9 @@ export async function GET(_req: NextRequest, { params }: { params: Promise<{ id:
     if (error) throw error;
     // Someone else's (or a deleted) change order is "not found"; a real failure is logged, not hidden as a 404.
     if (!data) return apiFail('Change order not found', 404);
-    return NextResponse.json({ data });
+    // The owner's approval-link token is minted and sent by /send-to-owner only.
+    const { owner_approval_token: _t, ...row } = data as Record<string, unknown>;
+    return NextResponse.json({ data: row });
   } catch (e) {
     return apiError('change-orders/id GET', e, "Couldn't load this change order. Please try again.");
   }
@@ -65,12 +68,13 @@ async function saveChangeOrder(req: NextRequest, id: string, scope: string) {
       .eq('id', id).eq('tenant_id', g.user.tenantId).maybeSingle();
     if (bErr) throw bErr;
     if (!before) return apiFail('Change order not found', 404);
-    if (isCoDecision(before, updates.status)) {
+    // A fresh approval is checked against the company's tiers in writeChangeOrder; reversals take Full.
+    if (coDecisionLevel(before, updates.status) === 'Full') {
       const full = await requirePermission(req, 'Change Orders', 'Full', { db });
       if (!full.ok) return full.res;
     }
     const w = await writeChangeOrder(db, g.user.tenantId, id, updates, { actorId: g.user.id, before: before as Record<string, unknown> });
-    if (!w.ok) return apiFail(w.error, w.status);
+    if (!w.ok) { const f = coWriteFailure(w); return w.status === 202 ? NextResponse.json(f.body, { status: 202 }) : apiFail(w.error, w.status); }
     return NextResponse.json({ changeOrder: w.after });
   } catch (e) {
     return apiError(scope, e);
