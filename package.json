@@ -5,7 +5,7 @@
   "private": true,
   "scripts": {
     "dev": "next dev -p 3000",
-    "build": "next build",
+    "build": "node tools/build-memory.mjs next build",
     "start": "next start -p 3000",
     "lint": "next lint",
     "cap:sync": "cap sync",
@@ -36,7 +36,7 @@
     "engine:sync": "node scripts/sync-heatmap-engine.mjs --sync",
     "engine:test": "npx -y tsx lib/heatmap/sanity.test.ts",
     "test:pipeline": "npx -y tsx lib/sales-pipeline.harness.ts",
-    "prebuild": "node tools/copy-web-ifc-wasm.mjs && node tools/build-model-engine.mjs && npm run check:style-escapes && npm run check:design-system",
+    "prebuild": "node tools/drop-stale-build-cache.mjs && node tools/copy-web-ifc-wasm.mjs && node tools/build-model-engine.mjs && npm run check:style-escapes && npm run check:design-system",
     "check:style-escapes": "node tools/check-style-escapes.mjs --selftest && node tools/check-style-escapes.mjs",
     "check:design-system": "node tools/check-design-system.mjs",
     "e2e:sweep": "node tools/e2e-app-sweep.mjs",
