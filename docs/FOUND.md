@@ -458,6 +458,14 @@ the ungated proposal_signatures / _events (20261017c, applied). Found on the way
   (`app/app/daily-logs/page.tsx:470`, `app/app/projects/[projectId]/daily-logs/page.tsx:584`,
   `components/media/OnThisPhone.tsx:78`, `app/app/projects/[projectId]/punch-list/page.tsx:497`).
 - Videos kept on the phone (`/api/files/record`) carry no client id yet — a lost answer can still file a video twice.
+- (email replies, 2026-10-17) RFI emails print `RFI #RFI-007` — `rfis.rfi_number` is already "RFI-007" and
+  `lib/email.ts` sendRFISubmitted / sendRFIAnswered prefix another "RFI #". Their buttons link to `/app`, not the RFI.
+- `rfi_responses` rows (written by `/api/rfis/[id]/respond` and now by emailed replies) are shown on no screen; the
+  item page shows `entity_comments` only, so emailed RFI replies are mirrored there.
+- Item page "Mark as official answer" (`app/api/items/[tool]/[id]/comments` POST, `is_official`) never updates
+  `rfis.answer` / status — the RFI stays open after an official answer posted there.
+- `onRFICreated` emails only the job's architect; an RFI's `assigned_to_email` (set by `/api/rfis/[id]/reassign`) is
+  never emailed.
 
 ## 17 Oct 2026 — permissions per job (feat/project-permissions) — found, NOT fixed
 
@@ -485,3 +493,19 @@ the ungated proposal_signatures / _events (20261017c, applied). Found on the way
   above STATUS_COLORS says under contract is blue. Needs a ruling on the color.
 - `--title-section` is `var(--c-yellow-hi)` (`app/globals.css:217`): every Card / section heading is yellow text,
   against DESIGN_SYSTEM §4 ("yellow never labels"). Needs a ruling.
+
+## 2026-10-16 — found while driving drawings / schedule / reports / models / sub billing (not fixed)
+
+- RFI numbers count every RFI in the tenant, not the job: `app/api/rfis/create/route.ts:34-39` and
+  `app/api/projects/[projectId]/rfis/route.ts:70-75` (`count … eq('tenant_id')` + 1). The first RFI on a new job
+  came out as RFI-007; a delete then makes the next number repeat one already used. Needs a ruling (per job, like
+  Procore) and a sequence, not count+1.
+- Sub portal invoice lines are typed free-hand (`components/portal/SubInvoiceForm.tsx`): "Scheduled" is whatever the
+  sub types, not their subcontract's schedule of values, and nothing stops billing past the contract. The GC inbox
+  now shows how far past it goes; the portal form itself still allows it.
+- Report builder `SectionCard`s and the yellow-tinted selected column tiles (`app/app/reports/builder/page.tsx`
+  ~600, `--brand-primary-12` background) — boxed panels and yellow as a tint, against DESIGN_SYSTEM §4 and the
+  no-cards rule.
+- `app/api/reports/[id]/export/route.ts:189` returns `apiError('reports/id/export', e)` for a ReportRunError, so the
+  engine's own plain message ("Unknown or unsupported entity") reaches the person as the generic line.
+- Change orders on the ZZ audit job both carry CO # "1" (seen in the builder: "Audit CO 903279" and "Audit CO 424170").

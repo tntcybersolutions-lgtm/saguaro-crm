@@ -26,8 +26,11 @@ import {
   REPORT_ENTITIES,
   ENTITY_MAP,
   FILTER_OPS,
+  PROJECT_COLUMN,
+  PROJECT_FILTER_OPS,
   type ColType,
 } from '@/lib/report-entities';
+import { humanValue } from '@/lib/list-view';
 
 // ── Surface tokens (white-label safe — gold rides the brand CSS vars) ──
 const GOLD = 'var(--brand-primary)';
@@ -160,7 +163,8 @@ function fmtCell(value: unknown, type: ColType): string {
     case 'bool':
       return value === true || value === 'true' ? 'Yes' : 'No';
     default:
-      return String(value);
+      // Stored codes read as words: owner_request → Owner request, approved → Approved.
+      return humanValue(String(value));
   }
 }
 
@@ -240,6 +244,17 @@ export default function ReportBuilderPage() {
   const [reportName, setReportName] = useState('');
   const [loadedId, setLoadedId] = useState<string | null>(null);
   const [saving, setSaving] = useState(false);
+
+  // Jobs for the Project filter (it picks a job; it never asks anyone to type an id).
+  const [jobs, setJobs] = useState<{ id: string; name: string }[]>([]);
+  useEffect(() => {
+    fetch('/api/projects/list')
+      .then((r) => (r.ok ? r.json() : { projects: [] }))
+      .then((d) => setJobs(((d.projects || []) as { id: string; name?: string | null }[])
+        .map((p) => ({ id: String(p.id), name: p.name || 'Untitled job' }))
+        .sort((a, b) => a.name.localeCompare(b.name))))
+      .catch((e) => console.error('[reports/builder] jobs', e));
+  }, []);
 
   // Reset column/sort selection whenever the entity changes.
   const applyEntityDefaults = useCallback((key: string) => {
@@ -354,8 +369,9 @@ export default function ReportBuilderPage() {
     limit,
   }), [selectedCols, filters, groupBy, sortField, sortDir, limit]);
 
-  const run = useCallback(async () => {
-    if (selectedCols.length === 0) { setError('Pick at least one column.'); return; }
+  const run = useCallback(async (saved?: { entity: string; config: ReportConfig }) => {
+    const cfg = saved?.config ?? currentConfig();
+    if (cfg.columns.length === 0) { setError('Pick at least one column.'); return; }
     setRunning(true);
     setError('');
     try {
@@ -363,12 +379,12 @@ export default function ReportBuilderPage() {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
-          entity: entityKey,
-          columns: selectedCols,
-          filters: filters.filter((f) => f.field && f.op),
-          groupBy: groupBy || null,
-          sort: { field: sortField, dir: sortDir },
-          limit,
+          entity: saved?.entity ?? entityKey,
+          columns: cfg.columns,
+          filters: (cfg.filters || []).filter((f) => f.field && f.op),
+          groupBy: cfg.groupBy || null,
+          sort: cfg.sort,
+          limit: cfg.limit,
         }),
       });
       const j = await r.json();
@@ -380,7 +396,7 @@ export default function ReportBuilderPage() {
     } finally {
       setRunning(false);
     }
-  }, [entityKey, selectedCols, filters, groupBy, sortField, sortDir, limit]);
+  }, [entityKey, currentConfig]);
 
   // ── Grouped rows for display ──
   const grouped = useMemo(() => {
@@ -416,7 +432,11 @@ export default function ReportBuilderPage() {
           title,
           // 'bool' has no export peer — ship it as text.
           columns: result.columns.map((c) => ({ key: c.key, label: c.label, type: c.type === 'bool' ? 'text' : c.type })),
-          rows: result.rows,
+          // The file reads like the table: stored codes as words (owner_request → Owner request).
+          rows: result.rows.map((row) => Object.fromEntries(Object.entries(row).map(([k, v]) => {
+            const t = result.columns.find((c) => c.key === k)?.type;
+            return [k, typeof v === 'string' && (t === 'text' || t === 'badge') ? humanValue(v) : v];
+          }))),
         }),
       });
       if (!r.ok) throw new Error('Export failed');
@@ -466,16 +486,29 @@ export default function ReportBuilderPage() {
     setLimit(typeof cfg.limit === 'number' ? cfg.limit : 100);
     setReportName(rep.name);
     setLoadedId(rep.id);
-    setResult(null);
     setError('');
+    // Opening a saved report shows its results — no second click on Run.
+    void run({
+      entity: rep.entity,
+      config: {
+        columns: validCols.length ? validCols : e.columns.slice(0, 6).map((c) => c.key),
+        filters: Array.isArray(cfg.filters) ? cfg.filters : [],
+        groupBy: cfg.groupBy || null,
+        sort: { field: cfg.sort?.field && e.columns.some((c) => c.key === cfg.sort.field) ? cfg.sort.field : e.defaultSort, dir: cfg.sort?.dir === 'asc' ? 'asc' : 'desc' },
+        limit: typeof cfg.limit === 'number' ? cfg.limit : 100,
+      },
+    });
   };
 
   const deleteReport = async (id: string) => {
     try {
-      await fetch(`/api/reports/saved/${id}`, { method: 'DELETE' });
+      const r = await fetch(`/api/reports/saved/${id}`, { method: 'DELETE' });
+      if (!r.ok) throw new Error((await r.json().catch(() => ({}))).error || 'Delete failed');
       if (loadedId === id) { setLoadedId(null); setReportName(''); }
       await loadSaved();
-    } catch { /* ignore */ }
+    } catch (e: unknown) {
+      setError(humanError(e, "Couldn't delete that report. Please try again."));
+    }
   };
 
   return (
@@ -622,13 +655,19 @@ export default function ReportBuilderPage() {
                 const noVal = NO_VALUE_OPS.has(f.op);
                 return (
                   <div key={i} style={{ display: 'flex', gap: 6, alignItems: 'center', flexWrap: 'wrap' }}>
-                    <Sel value={f.field} onChange={(v) => updateFilter(i, { field: v })} style={{ flex: '1 1 120px', minWidth: 110 }}>
+                    <Sel value={f.field} onChange={(v) => updateFilter(i, v === PROJECT_COLUMN ? { field: v, op: 'eq', value: '' } : { field: v })} style={{ flex: '1 1 120px', minWidth: 110 }}>
                       {entity.columns.map((c) => <option key={c.key} value={c.key}>{c.label}</option>)}
                     </Sel>
                     <Sel value={f.op} onChange={(v) => updateFilter(i, { op: v })} style={{ flex: '0 1 140px' }}>
-                      {FILTER_OPS.map((o) => <option key={o.op} value={o.op}>{o.label}</option>)}
+                      {FILTER_OPS.filter((o) => f.field !== PROJECT_COLUMN || PROJECT_FILTER_OPS.has(o.op)).map((o) => <option key={o.op} value={o.op}>{f.field === PROJECT_COLUMN && o.op === 'eq' ? '= is' : f.field === PROJECT_COLUMN && o.op === 'neq' ? '≠ is not' : o.label}</option>)}
                     </Sel>
-                    {!noVal && (
+                    {!noVal && f.field === PROJECT_COLUMN && (
+                      <Sel value={f.value} onChange={(v) => updateFilter(i, { value: v })} style={{ flex: '1 1 160px', minWidth: 140 }}>
+                        <option value="">Pick a job</option>
+                        {jobs.map((j) => <option key={j.id} value={j.id}>{j.name}</option>)}
+                      </Sel>
+                    )}
+                    {!noVal && f.field !== PROJECT_COLUMN && (
                       <input
                         value={f.value}
                         onChange={(e) => updateFilter(i, { value: e.target.value })}
@@ -649,7 +688,7 @@ export default function ReportBuilderPage() {
           </SectionCard>
 
           {/* Run */}
-          <button onClick={run} disabled={running} className="pmBtn" style={{ ...goldButtonStyle, width: '100%', cursor: running ? 'not-allowed' : 'pointer', opacity: running ? 0.6 : 1 }}>
+          <button onClick={() => void run()} disabled={running} className="pmBtn" style={{ ...goldButtonStyle, width: '100%', cursor: running ? 'not-allowed' : 'pointer', opacity: running ? 0.6 : 1 }}>
             <Play size={15} weight="fill" /> {running ? 'Running…' : 'Run Report'}
           </button>
 
@@ -782,11 +821,13 @@ export default function ReportBuilderPage() {
                             {result.columns.map((c) => (
                               <td key={c.key} style={{
                                 padding: '9px 14px', color: WHITE, verticalAlign: 'middle',
+                                // Words wrap (titles, job names) so the money columns stay on screen.
+                                ...(c.type === 'text' ? { whiteSpace: 'normal', minWidth: 120, height: 'auto', lineHeight: 1.35 } : {}),
                                 textAlign: c.type === 'currency' || c.type === 'number' || c.type === 'percent' ? 'right' : 'left',
                                 fontVariantNumeric: c.type === 'currency' || c.type === 'number' ? 'tabular-nums' : undefined,
                               }}>
                                 {c.type === 'badge' && row[c.key]
-                                  ? <Pill tone={badgeToneFor(String(row[c.key]))}>{String(row[c.key])}</Pill>
+                                  ? <Pill tone={badgeToneFor(String(row[c.key]))}>{humanValue(String(row[c.key]))}</Pill>
                                   : fmtCell(row[c.key], c.type)}
                               </td>
                             ))}

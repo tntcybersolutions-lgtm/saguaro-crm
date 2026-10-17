@@ -25934,6 +25934,7 @@ export type Database = {
       schedule_tasks: {
         Row: {
           area: string | null
+          assigned_to: string | null
           area_index: number | null
           baseline_start: string | null
           baseline_end: string | null
@@ -25948,6 +25949,7 @@ export type Database = {
           lf: number | null
           ls: number | null
           name: string
+          notes: string | null
           parent_task_id: string | null
           pct_complete: number | null
           phase: string | null
@@ -25963,6 +25965,7 @@ export type Database = {
         }
         Insert: {
           area?: string | null
+          assigned_to?: string | null
           area_index?: number | null
           baseline_start?: string | null
           baseline_end?: string | null
@@ -25977,6 +25980,7 @@ export type Database = {
           lf?: number | null
           ls?: number | null
           name: string
+          notes?: string | null
           parent_task_id?: string | null
           pct_complete?: number | null
           phase?: string | null
@@ -25992,6 +25996,7 @@ export type Database = {
         }
         Update: {
           area?: string | null
+          assigned_to?: string | null
           area_index?: number | null
           baseline_start?: string | null
           baseline_end?: string | null
@@ -26006,6 +26011,7 @@ export type Database = {
           lf?: number | null
           ls?: number | null
           name?: string
+          notes?: string | null
           parent_task_id?: string | null
           pct_complete?: number | null
           phase?: string | null
