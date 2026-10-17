@@ -51,6 +51,17 @@ interface Bill {
 
 const EMPTY_FORM = { invoice_num: '', vendor: '', description: '', amount: 0, tax: 0, due_date: '', category: '03 - Concrete', cost_code: '' };
 
+/* Bills arrive with whatever casing wrote them ('paid' from imports, 'unpaid'
+   from older rows, null from a blank form). Read them as the three states this
+   screen works in, or a paid bill reads Overdue and an unpaid one drops out of
+   Awaiting payment. */
+function billStatus(raw: unknown): string {
+  const s = String(raw ?? '').trim().toLowerCase();
+  if (s === 'paid') return 'Paid';
+  if (s === 'approved') return 'Approved';
+  return 'Pending';
+}
+
 function isOverdue(dueDate: string, status: string): boolean {
   if (status === 'Paid') return false;
   return new Date(dueDate) < new Date();
@@ -129,7 +140,7 @@ export default function BillsPage() {
       const res = await fetch(`/api/projects/${projectId}/bills`);
       const json = await res.json().catch(() => ({}));
       if (!res.ok) throw new Error(json.error || "Couldn't load bills.");
-      setBills(json.bills || []);
+      setBills(((json.bills || []) as Bill[]).map((b) => ({ ...b, status: billStatus(b.status) })));
     } catch (e) {
       setBills([]);
       setLoadError(e instanceof Error ? e.message : "Couldn't load bills.");
