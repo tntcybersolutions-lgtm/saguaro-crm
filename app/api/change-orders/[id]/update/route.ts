@@ -1,7 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { requirePermission } from '@/lib/permissions';
 import { apiError } from '@/lib/api-error';
-import { writeChangeOrder, isCoDecision } from '@/lib/change-order-status';
+import { writeChangeOrder, coDecisionLevel, coWriteFailure } from '@/lib/change-order-status';
 
 export const dynamic = 'force-dynamic';
 
@@ -56,7 +56,8 @@ export async function PATCH(req: NextRequest, { params }: { params: Promise<{ id
     if (bErr) throw bErr;
     if (!before) return NextResponse.json({ error: 'Change order not found' }, { status: 404 });
     // Deciding a CO (approve / reject / un-approve) takes the same permission as POST /approve and /reject.
-    if (isCoDecision(before, patch.status)) {
+    // A fresh approval is checked against the company's tiers in writeChangeOrder; reversals take Full.
+    if (coDecisionLevel(before, patch.status) === 'Full') {
       const full = await requirePermission(req, 'Change Orders', 'Full', { db });
       if (!full.ok) return full.res;
     }
@@ -64,7 +65,7 @@ export async function PATCH(req: NextRequest, { params }: { params: Promise<{ id
        difference; a status written here is still an approval or a reversal.
        Both go through the one shared step (lib/change-order-status). */
     const w = await writeChangeOrder(db, user.tenantId, id, patch, { actorId: user.id, before: before as Record<string, unknown> });
-    if (!w.ok) return NextResponse.json({ error: w.error }, { status: w.status });
+    if (!w.ok) { const f = coWriteFailure(w); return NextResponse.json(f.body, { status: f.status }); }
     const data = w.after;
     return NextResponse.json({ changeOrder: data, success: true });
   } catch (e) {

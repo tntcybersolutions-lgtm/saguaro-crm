@@ -77,11 +77,12 @@ function poBadge(status: string): { label: string; tone: BadgeTone } {
   return { label: def?.label || (k.charAt(0).toUpperCase() + k.slice(1)), tone: (def && TONE[def.tone]) || 'neutral' };
 }
 
-const fmt = (n: number) => '$' + ((Number(n) || 0).toLocaleString('en-US', { minimumFractionDigits: 0, maximumFractionDigits: 0 }));
+/* Currency style puts the sign first: -$127,650, never $-127,650. */
+const fmt = (n: number) => (Number(n) || 0).toLocaleString('en-US', { style: 'currency', currency: 'USD', minimumFractionDigits: 0, maximumFractionDigits: 0 });
 
 /** Date-only values parse at local noon so they never shift a day under UTC. */
 function fmtDate(iso: string | null | undefined): string {
-  if (!iso) return '—';
+  if (!iso) return '';
   const d = iso.length <= 10 ? new Date(iso + 'T12:00:00') : new Date(iso);
   if (isNaN(d.getTime())) return iso;
   return d.toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' });
@@ -387,16 +388,16 @@ export default function PurchaseOrdersPage() {
   const toggle = (f: StatusFilter) => setStatusFilter(p => (p === f ? 'all' : f));
   const stats: StatItem[] = [
     { label: 'Total PO value', value: loading ? '—' : fmt(totalValue), sub: loading ? undefined : `${pos.length} purchase order${pos.length === 1 ? '' : 's'}`, icon: <Package size={15} />, onClick: () => setStatusFilter('all'), active: statusFilter === 'all' },
-    { label: 'Draft', value: loading ? '—' : String(draftCount), sub: 'Not sent yet', icon: <NotePencil size={15} />, onClick: () => toggle('draft'), active: statusFilter === 'draft' },
-    { label: 'Sent', value: loading ? '—' : String(sentCount), sub: 'With the vendor', tone: sentCount > 0 ? 'warn' : 'default', icon: <PaperPlaneTilt size={15} />, onClick: () => toggle('sent'), active: statusFilter === 'sent' },
-    { label: 'Received', value: loading ? '—' : String(receivedCount), sub: 'Delivered', tone: receivedCount > 0 ? 'good' : 'default', icon: <Truck size={15} />, onClick: () => toggle('received'), active: statusFilter === 'received' },
+    { label: 'Draft', value: loading ? '—' : String(draftCount), icon: <NotePencil size={15} />, onClick: () => toggle('draft'), active: statusFilter === 'draft' },
+    { label: 'Sent', value: loading ? '—' : String(sentCount), tone: sentCount > 0 ? 'warn' : 'default', icon: <PaperPlaneTilt size={15} />, onClick: () => toggle('sent'), active: statusFilter === 'sent' },
+    { label: 'Received', value: loading ? '—' : String(receivedCount), tone: receivedCount > 0 ? 'good' : 'default', icon: <Truck size={15} />, onClick: () => toggle('received'), active: statusFilter === 'received' },
     ...(ctx ? [{ label: 'Uncommitted', value: fmt(bUncommitted), sub: 'Original less committed', tone: bUncommitted < 0 ? 'bad' as const : 'good' as const, icon: <Wallet size={15} />, href: `${base}/budget` }] : []),
   ];
 
   const columns: Column<PurchaseOrder>[] = [
-    { key: 'po_num', header: 'PO #', width: 110, groupable: false, render: p => p.po_num || '—' },
+    { key: 'po_num', header: 'PO #', width: 110, groupable: false, render: p => p.po_num || '' },
     { key: 'vendor', header: 'Vendor', primary: true, phone: 'show' },
-    { key: 'description', header: 'Description', render: p => <span title={p.description} style={{ display: 'inline-block', maxWidth: 280, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap', verticalAlign: 'bottom', color: 'var(--text-secondary)' }}>{p.description || '—'}</span> },
+    { key: 'description', header: 'Description', render: p => <span title={p.description} style={{ color: 'var(--text-secondary)' }}>{p.description}</span> },
     { key: 'amount', header: 'Amount', align: 'right', total: 'sum', format: fmt, phone: 'show', accessor: p => Number(p.amount) || 0, render: p => <strong>{fmt(p.amount)}</strong> },
     { key: 'status', header: 'Status', phone: 'show', render: p => { const st = poBadge(p.status); return <Badge tone={st.tone} dot>{st.label}</Badge>; } },
     { key: 'issued_date', header: 'Date', render: p => fmtDate(p.issued_date) },
@@ -479,8 +480,7 @@ export default function PurchaseOrdersPage() {
               <EmptyState
                 icon={<Package size={22} />}
                 title="No purchase orders yet"
-                text="Create your first purchase order to track vendor and supplier commitments for this project."
-                action={<Button variant="primary" icon={<Plus size={15} weight="bold" />} onClick={openForm}>New purchase order</Button>}
+                action={<Button icon={<Plus size={15} weight="bold" />} onClick={openForm}>New purchase order</Button>}
               />
             ) : (
               <EmptyState title="Nothing matches" text="Change the search or the status filter." action={<Button onClick={() => { setSearch(''); setStatusFilter('all'); }}>Clear filters</Button>} />

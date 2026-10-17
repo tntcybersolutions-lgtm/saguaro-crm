@@ -2,6 +2,8 @@ import { NextRequest, NextResponse } from 'next/server';
 import { createServerClient, getUser } from '@/lib/supabase-server';
 import { apiError } from '@/lib/api-error';
 import { requirePermission } from '@/lib/permissions';
+import { describeJobRow } from '@/lib/job-access';
+import { isUuid } from '@/lib/permission-scope';
 
 /**
  * GET /api/roles/assignments
@@ -74,6 +76,10 @@ export async function GET(req: NextRequest) {
         roleName: roleMap.get(r.role_id!) ?? null,
         projectId: r.project_id ?? null,
         projectName: r.project_id ? projectMap.get(r.project_id) ?? null : null,
+        /* A job row can carry per-category levels instead of (or on top of) a
+           role — "No access" is one. jobLabel is what to show for it. */
+        levels: r.permissions ?? null,
+        jobLabel: r.project_id ? describeJobRow(r, roleMap).label : null,
         assignedAt: r.created_at,
         assignedBy: r.assigned_by ? userMap.get(r.assigned_by)?.name ?? 'System' : 'System',
       };
@@ -110,6 +116,47 @@ export async function POST(req: NextRequest) {
     if (!userId || !roleId) {
       return NextResponse.json({ error: 'userId and roleId are required' }, { status: 400 });
     }
+    if (!isUuid(userId) || !isUuid(roleId) || (projectId && !isUuid(projectId))) {
+      return NextResponse.json({ error: 'userId, roleId and projectId must be ids' }, { status: 400 });
+    }
+
+    /* The person, the role and the job must all be this company's. Nothing
+       checked that, so a grant could name another company's role or job. */
+    const [{ data: who }, { data: role }, proj] = await Promise.all([
+      db.from('profiles').select('id').eq('id', userId).eq('tenant_id', user.tenantId).maybeSingle(),
+      db.from('role_definitions').select('id').eq('id', roleId).eq('tenant_id', user.tenantId).maybeSingle(),
+      projectId
+        ? db.from('projects').select('id').eq('id', projectId).eq('tenant_id', user.tenantId).maybeSingle()
+        : Promise.resolve({ data: { id: null } }),
+    ]);
+    if (!who) return NextResponse.json({ error: 'That person is not in your company' }, { status: 404 });
+    if (!role) return NextResponse.json({ error: 'That role is not in your company' }, { status: 404 });
+    if (!proj.data) return NextResponse.json({ error: 'Project not found' }, { status: 404 });
+
+    /* One job role per person per job (ura_one_job_row): granting a role on a
+       job where they already have one replaces it. */
+    if (projectId) {
+      const { data: current, error: curErr } = await db
+        .from('user_role_assignments')
+        .select('id')
+        .eq('tenant_id', user.tenantId)
+        .eq('user_id', userId)
+        .eq('project_id', projectId)
+        .limit(1)
+        .maybeSingle();
+      if (curErr) throw curErr;
+      if (current) {
+        const { data: upd, error: updErr } = await db
+          .from('user_role_assignments')
+          .update({ role_id: roleId, permissions: null, assigned_by: user.id })
+          .eq('id', current.id)
+          .eq('tenant_id', user.tenantId)
+          .select()
+          .single();
+        if (updErr) throw updErr;
+        return NextResponse.json({ assignment: upd, replaced: true }, { status: 200 });
+      }
+    }
 
     const { data, error } = await db
       .from('user_role_assignments')
@@ -118,6 +165,7 @@ export async function POST(req: NextRequest) {
         user_id: userId,
         role_id: roleId,
         project_id: projectId || null,
+        assigned_by: user.id,
       })
       .select()
       .single();

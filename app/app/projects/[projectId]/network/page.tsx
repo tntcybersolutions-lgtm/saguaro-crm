@@ -16,6 +16,7 @@ import {
   DetailList, ItemList, ItemRow, Callout, Toast, useToast,
   type Column, type BadgeTone, type StatItem,
 } from '@/components/ui/kit';
+import { Facts } from '@/lib/ui/filled-facts';
 import {
   Globe, ArrowsLeftRight, Shield, WifiHigh, Printer, VideoCamera, HardDrives, Laptop, Phone, Plug,
   CellSignalFull, BatteryFull, Package, Robot, Devices, Shuffle, ChartBar, Plus, CheckCircle, Warning,
@@ -189,10 +190,10 @@ export default function NetworkDashboard() {
 
   if (showSetup) {
     return (
-      <PageShell crumbs={crumbs} title="Network" subtitle="Design, document and certify this building's network.">
-        <Card title="Set up the network module" subtitle={ctx?.project?.name ? `Low-voltage / IT network for ${ctx.project.name}` : undefined} icon={<Globe size={18} />}>
+      <PageShell crumbs={crumbs} title="Network" subtitle={ctx?.project?.name || undefined}>
+        <Card title="Set up the network module">
           <FormGrid cols={3}>
-            <Field label="Site type" hint="Sets the wizard's VLAN plan, device density and WiFi targets.">
+            <Field label="Site type">
               <Select value={setupForm.site_type} onChange={e => setSetupForm({ ...setupForm, site_type: e.target.value })} options={SITE_TYPES} />
             </Field>
             <Field label="Square footage">
@@ -234,7 +235,7 @@ export default function NetworkDashboard() {
     { key: 'hostname', header: 'Hostname', primary: true, phone: 'show', render: (d) => <span style={{ display: 'inline-flex', alignItems: 'center', gap: 8 }}><TypeIcon type={d.device_type} />{d.hostname}</span> },
     { key: 'device_type', header: 'Type', accessor: (d) => cap(d.device_type), render: (d) => cap(d.device_type) },
     { key: 'ip_address', header: 'IP address', phone: 'show', render: (d) => d.ip_address ? <span style={{ fontFamily: 'var(--font-mono, monospace)' }}>{d.ip_address}</span> : '—' },
-    { key: 'location', header: 'Location', render: (d) => d.location || '—' },
+    { key: 'location', header: 'Location', render: (d) => d.location || null },
     { key: 'status', header: 'Status', phone: 'show', render: (d) => <Badge tone={deviceTone(d.status)} dot>{cap(d.status || 'planned')}</Badge> },
   ];
 
@@ -242,7 +243,7 @@ export default function NetworkDashboard() {
     <PageShell
       crumbs={crumbs}
       title="Network"
-      subtitle={networkProject ? `${cap(siteType)} · ${sqFt} SF · ${floors} floor${floors > 1 ? 's' : ''}` : 'Low-voltage and IT network for this job.'}
+      subtitle={networkProject ? `${cap(siteType)} · ${sqFt} SF · ${floors} floor${floors > 1 ? 's' : ''}` : (ctx?.project?.name || undefined)}
       actions={
         <>
           <Menu
@@ -300,7 +301,7 @@ export default function NetworkDashboard() {
                 </ItemList>
               </Card>
               <Card title="Site profile" icon={<Globe size={16} />}>
-                <DetailList items={[
+                <Facts items={[
                   ['Site type', cap(siteType)],
                   ['Square footage', `${sqFt} SF`],
                   ['Floors', String(floors)],

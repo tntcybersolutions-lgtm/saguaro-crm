@@ -19,7 +19,7 @@ import {
 import { WifiHigh, Broadcast, UsersThree, MapTrifold, Plus, ArrowUpRight, WarningCircle } from '@phosphor-icons/react';
 import { useUnsavedGuard, useComposerDirty } from '@/lib/useUnsavedGuard';
 import UnsavedGuardModal from '@/components/UnsavedGuardModal';
-import NetworkTabs, { networkCrumbs } from '../_components/NetworkTabs';
+import NetworkTabs, { networkCrumbs, NetworkNotSetUp } from '../_components/NetworkTabs';
 
 interface WifiNetwork {
   id: string;
@@ -229,10 +229,10 @@ export default function WifiManagerPage() {
   const ssidColumns: Column<WifiNetwork>[] = [
     { key: 'ssid', header: 'SSID', primary: true, phone: 'show', render: (n) => <>{n.ssid}{n.hidden && <span style={{ color: 'var(--text-secondary)', fontWeight: 400, marginLeft: 8 }}>(Hidden)</span>}</> },
     { key: 'security_type', header: 'Security', phone: 'show', accessor: (n) => securityLabel(n.security_type), render: (n) => <Badge tone={SECURITY_TONE[n.security_type] || 'neutral'}>{securityLabel(n.security_type)}</Badge> },
-    { key: 'vlan_name', header: 'VLAN', render: (n) => n.vlan_name || '—' },
+    { key: 'vlan_name', header: 'VLAN', render: (n) => n.vlan_name || null },
     { key: 'band', header: 'Band', accessor: (n) => bandLabel(n.band), render: (n) => bandLabel(n.band) },
-    { key: 'client_isolation', header: 'Isolation', accessor: (n) => (n.client_isolation ? 'Isolated' : ''), render: (n) => (n.client_isolation ? 'Isolated' : '—') },
-    { key: 'bandwidth_limit_mbps', header: 'Limit', align: 'right', render: (n) => (n.bandwidth_limit_mbps > 0 ? `${n.bandwidth_limit_mbps} Mbps` : '—') },
+    { key: 'client_isolation', header: 'Isolation', accessor: (n) => (n.client_isolation ? 'Isolated' : ''), render: (n) => (n.client_isolation ? 'Isolated' : null) },
+    { key: 'bandwidth_limit_mbps', header: 'Limit', align: 'right', render: (n) => (n.bandwidth_limit_mbps > 0 ? `${n.bandwidth_limit_mbps} Mbps` : null) },
     { key: 'client_count', header: 'Clients', align: 'right', total: 'sum', phone: 'show', accessor: (n) => n.client_count ?? 0 },
   ];
 
@@ -244,11 +244,20 @@ export default function WifiManagerPage() {
     { key: 'status', header: 'Status', phone: 'show', accessor: (a) => cap(a.status), render: (a) => <Badge tone={apTone(a.status)} dot>{cap(a.status)}</Badge> },
   ];
 
+  if (!loading && !loadError && !networkProjectId) {
+    return (
+      <PageShell crumbs={networkCrumbs(projectId, ctx?.project?.name, 'WiFi')} title="WiFi" subtitle={ctx?.project?.name || undefined}>
+        <NetworkTabs projectId={projectId} value="wifi" />
+        <NetworkNotSetUp projectId={projectId} />
+      </PageShell>
+    );
+  }
+
   return (
     <PageShell
       crumbs={networkCrumbs(projectId, ctx?.project?.name, 'WiFi')}
       title="WiFi"
-      subtitle="SSIDs, access points and the hand-off to Signal Studio."
+      subtitle={ctx?.project?.name || undefined}
       actions={
         <>
           <Button icon={<ArrowUpRight size={15} />} href={studioHref}>Open Signal Studio</Button>
@@ -274,7 +283,7 @@ export default function WifiManagerPage() {
               loading={loading}
               rowKey={(n) => n.id}
               defaultSort={{ key: 'ssid', dir: 'asc' }}
-              empty={<EmptyState icon={<WifiHigh size={22} />} title="No SSIDs configured yet" text="Add the first wireless network to plan coverage and access."
+              empty={<EmptyState icon={<WifiHigh size={22} />} title="No SSIDs configured yet"
                 action={<Button icon={<Plus size={15} weight="bold" />} onClick={openSsid}>Add SSID</Button>} />}
             />
           </Card>

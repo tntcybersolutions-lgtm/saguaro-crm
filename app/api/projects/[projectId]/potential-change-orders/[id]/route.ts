@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from 'next/server';
 import { createServerClient, getUser } from '@/lib/supabase-server';
 import { requirePermission } from '@/lib/permissions';
 import { apiError } from '@/lib/api-error';
+import { writeChangeOrder, coDecisionLevel, coWriteFailure } from '@/lib/change-order-status';
 
 export const dynamic = 'force-dynamic';
 
@@ -106,16 +107,18 @@ async function applyUpdate(req: NextRequest, projectId: string, id: string) {
 
     patch.line_items = { ...meta, pco };
 
-    const { data, error } = await db
-      .from('change_orders')
-      .update(patch)
-      .eq('id', id)
-      .eq('tenant_id', user.tenantId)
-      .eq('project_id', projectId)
-      .select()
-      .single();
-    if (error) throw error;
-    return NextResponse.json({ potential_change_order: rowToPco(data as Row), success: true });
+    /* A status written here is a change order status like any other: it went
+       straight to the row, so a PCO set to "approved" read approved while the
+       contract never moved (and the commitments trigger did). It goes through
+       the one shared step, tiers and money included. */
+    const level = coDecisionLevel(current as Row, patch.status);
+    if (level === 'Full') {
+      const full = await requirePermission(req, 'Change Orders', 'Full', { projectId, db });
+      if (!full.ok) return full.res;
+    }
+    const w = await writeChangeOrder(db, user.tenantId, id, patch, { actorId: user.id, before: current as Row });
+    if (!w.ok) { const f = coWriteFailure(w); return NextResponse.json(f.body, { status: f.status }); }
+    return NextResponse.json({ potential_change_order: rowToPco(w.after), success: true });
   } catch (e) {
     return apiError('projects/[projectId]/potential-change-orders/[id] GET', e);
   }

@@ -19,7 +19,7 @@ import {
 import { CheckCircle, Square, XCircle, Plus, PlugsConnected, ListChecks, Gauge, Percent, WarningCircle } from '@phosphor-icons/react';
 import { useUnsavedGuard, useComposerDirty } from '@/lib/useUnsavedGuard';
 import UnsavedGuardModal from '@/components/UnsavedGuardModal';
-import NetworkTabs, { networkCrumbs } from '../_components/NetworkTabs';
+import NetworkTabs, { networkCrumbs, NetworkNotSetUp } from '../_components/NetworkTabs';
 
 interface CableRun {
   id: string;
@@ -181,8 +181,8 @@ export default function CableSchedulePage() {
     { key: 'cable_type', header: 'Type', accessor: (c) => cableLabel(c.cable_type), render: (c) => <Badge>{cableLabel(c.cable_type)}</Badge> },
     { key: 'from', header: 'From', accessor: (c) => `${c.from_location || ''}${c.from_port ? ` (${c.from_port})` : ''}`, render: (c) => (c.from_location || c.from_port) ? `${c.from_location || ''}${c.from_port ? ` (${c.from_port})` : ''}` : '—', groupable: false },
     { key: 'to', header: 'To', accessor: (c) => `${c.to_location || ''}${c.to_port ? ` (${c.to_port})` : ''}`, render: (c) => (c.to_location || c.to_port) ? `${c.to_location || ''}${c.to_port ? ` (${c.to_port})` : ''}` : '—', groupable: false },
-    { key: 'length_ft', header: 'Length', align: 'right', total: 'sum', format: fmtFt, accessor: (c) => Number(c.length_ft) || 0, render: (c) => (c.length_ft ? fmtFt(c.length_ft) : '—') },
-    { key: 'pathway', header: 'Pathway', render: (c) => c.pathway || '—' },
+    { key: 'length_ft', header: 'Length', align: 'right', total: 'sum', format: fmtFt, accessor: (c) => Number(c.length_ft) || 0, render: (c) => (c.length_ft ? fmtFt(c.length_ft) : null) },
+    { key: 'pathway', header: 'Pathway', render: (c) => c.pathway || null },
     { key: 'floor', header: 'Floor', hidden: true, align: 'right' },
     { key: 'tested', header: 'Tested', align: 'center', accessor: (c) => (c.tested ? 'Yes' : 'No'), render: (c) => (
       <span style={{ display: 'inline-flex', verticalAlign: 'middle', color: c.tested ? 'var(--success)' : 'var(--text-secondary)' }} aria-label={c.tested ? 'Tested' : 'Not tested'}>
@@ -197,11 +197,20 @@ export default function CableSchedulePage() {
   const set = <K extends keyof typeof form>(k: K, v: (typeof form)[K]) => setForm({ ...form, [k]: v });
   const openForm = () => { setFormError(''); setShowForm(true); };
 
+  if (!loading && !loadError && !networkProjectId) {
+    return (
+      <PageShell crumbs={networkCrumbs(projectId, ctx?.project?.name, 'Cables')} title="Cable schedule" subtitle={ctx?.project?.name || undefined}>
+        <NetworkTabs projectId={projectId} value="cables" />
+        <NetworkNotSetUp projectId={projectId} />
+      </PageShell>
+    );
+  }
+
   return (
     <PageShell
       crumbs={networkCrumbs(projectId, ctx?.project?.name, 'Cables')}
       title="Cable schedule"
-      subtitle="Every cable run, its terminations, pathway and test result."
+      subtitle={ctx?.project?.name || undefined}
       actions={<Button variant="primary" icon={<Plus size={15} weight="bold" />} onClick={openForm}>Add cable run</Button>}
     >
       <NetworkTabs projectId={projectId} value="cables" />
@@ -244,10 +253,10 @@ export default function CableSchedulePage() {
           ]}
           empty={
             cables.length === 0 ? (
-              <EmptyState icon={<PlugsConnected size={22} />} title="No cable runs yet" text="Add the first run to start this job's cable schedule."
+              <EmptyState icon={<PlugsConnected size={22} />} title="No cable runs yet"
                 action={<Button variant="primary" icon={<Plus size={15} weight="bold" />} onClick={openForm}>Add cable run</Button>} />
             ) : (
-              <EmptyState title="No cable runs match your filters" text="Clear or change the filters to see more runs."
+              <EmptyState title="No cable runs match your filters"
                 action={<Button onClick={() => { setSearch(''); setFilterType(''); setFilterTested(''); setFilterFloor(''); }}>Clear filters</Button>} />
             )
           }

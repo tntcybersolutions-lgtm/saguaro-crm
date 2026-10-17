@@ -35,6 +35,7 @@ import {
   FormModal, Field, Input, Select, Textarea, FormGrid, DetailList, Toast, useToast, Callout,
   type Column, type Action, type BadgeTone, type StatItem,
 } from '@/components/ui/kit';
+import { Facts } from '@/lib/ui/filled-facts';
 import { useUnsavedGuard, useComposerDirty } from '@/lib/useUnsavedGuard';
 import UnsavedGuardModal from '@/components/UnsavedGuardModal';
 import Suggest from '@/components/ui/Suggest';
@@ -99,7 +100,7 @@ function resultBadge(result: string): { label: string; tone: BadgeTone } {
   const k = canonResult(result);
   if (k === 'passed') return { label: 'Passed', tone: 'ongoing' };
   if (k === 'failed') return { label: 'Failed', tone: 'overdue' };
-  if (k === 'conditional pass') return { label: 'Conditional Pass', tone: 'under_contract' };
+  if (k === 'conditional pass') return { label: 'Conditional Pass', tone: 'lead' };
   if (k === 'pending' || !k) return { label: 'Pending', tone: 'neutral' };
   return { label: result, tone: 'neutral' };
 }
@@ -420,11 +421,11 @@ export default function InspectionsPage() {
   const isSel = (i: Inspection) => i.id === selectedId;
   const typeCol: Column<Inspection> = { key: 'type', header: 'Type', primary: true, phone: 'show', accessor: i => i.type || '', render: i => <span className="inType" data-sel={isSel(i) ? 'true' : undefined}>{i.type || '—'}</span> };
   const dateCol: Column<Inspection> = { key: 'date', header: 'Date', phone: 'show', accessor: i => i.date || '', render: i => <span className="inMuted">{fmtDate(i.date)}</span> };
-  const inspectorCol: Column<Inspection> = { key: 'inspector', phone: 'hide', header: 'Inspector', accessor: i => i.inspector || '', render: i => i.inspector || <span className="inMuted">—</span> };
-  const agencyCol: Column<Inspection> = { key: 'agency', phone: 'hide', header: 'Agency', accessor: i => i.agency || '', render: i => i.agency || <span className="inMuted">—</span> };
+  const inspectorCol: Column<Inspection> = { key: 'inspector', phone: 'hide', header: 'Inspector', accessor: i => i.inspector || '', render: i => i.inspector || null };
+  const agencyCol: Column<Inspection> = { key: 'agency', phone: 'hide', header: 'Agency', accessor: i => i.agency || '', render: i => i.agency || null };
   const resultCol: Column<Inspection> = { key: 'result', phone: 'show', header: 'Result', accessor: i => RESULT_RANK[canonResult(i.result)] ?? 9, render: i => { const b = resultBadge(i.result); return <span className="inBadges"><Badge tone={b.tone}>{b.label}</Badge>{needsReinspect(i) && <Badge tone="overdue"><ArrowsClockwise size={11} /> Re-Inspect</Badge>}</span>; } };
-  const defCol: Column<Inspection> = { key: 'deficiency_count', phone: 'hide', header: 'Deficiencies', accessor: i => Number(i.deficiency_count) || 0, align: 'right', render: i => (Number(i.deficiency_count) || 0) > 0 ? <span style={{ color: 'var(--status-under-contract)', fontWeight: 700 }}>{i.deficiency_count}</span> : <span className="inMuted">—</span> };
-  const notesCol: Column<Inspection> = { key: 'notes', phone: 'hide', header: 'Notes', accessor: i => i.notes || '', render: i => i.notes ? <span className="inClamp" title={i.notes}>{i.notes}</span> : <span className="inMuted">—</span> };
+  const defCol: Column<Inspection> = { key: 'deficiency_count', phone: 'hide', header: 'Deficiencies', accessor: i => Number(i.deficiency_count) || 0, align: 'right', render: i => (Number(i.deficiency_count) || 0) > 0 ? <span style={{ color: 'var(--warning)', fontWeight: 700 }}>{i.deficiency_count}</span> : null };
+  const notesCol: Column<Inspection> = { key: 'notes', phone: 'hide', header: 'Notes', accessor: i => i.notes || '', render: i => i.notes ? <span className="inClamp" title={i.notes}>{i.notes}</span> : null };
   const statusCol: Column<Inspection> = { key: 'status', phone: 'show', header: 'Status', accessor: i => statusBadge(i.status).label, render: i => { const b = statusBadge(i.status); return <Badge tone={b.tone}>{b.label}</Badge>; } };
   const columns: Column<Inspection>[] = detailOpen ? [typeCol, dateCol, resultCol, statusCol] : [typeCol, dateCol, inspectorCol, agencyCol, resultCol, defCol, notesCol, statusCol];
   const isResulted = (i: Inspection) => ['passed', 'failed', 'conditional pass'].includes(canonResult(i.result));
@@ -451,12 +452,10 @@ export default function InspectionsPage() {
               <Badge tone={sb.tone}>{sb.label}</Badge>
               {needsReinspect(selected) && <Badge tone="overdue">Re-Inspect</Badge>}
             </div>
-            <div className="inNext">
-              {needsReinspect(selected) ? `Failed — stays flagged until a later ${selected.type} inspection passes.` : canonResult(selected.result) === 'passed' ? 'Passed — part of the permanent project record.' : /sched/i.test(selected.status) ? 'Booked — waiting on the inspector. Record the result once it is held.' : 'Result recorded on the inspection checklist.'}
-            </div>
+            {needsReinspect(selected) && <div className="inNext">Book a {selected.type || 're-'} inspection to clear it.</div>}
           </div>
           <div className="inSection">
-            <DetailList items={[
+            <Facts items={[
               ['Inspector', selected.inspector || ''],
               ['Agency', selected.agency || ''],
               ['Date', fmtDate(selected.date)],
@@ -496,12 +495,10 @@ export default function InspectionsPage() {
         <EmptyState
           icon={<ClipboardText size={22} />}
           title="No inspections on record"
-          text={pctComplete > 0
-            ? `${ctx?.project?.name || 'This project'} is ${pctComplete}% complete. ${suggestedType} is next.`
-            : `${suggestedType} is next.`}
+          text={pctComplete >= 100 ? undefined : `${suggestedType} is next.`}
           action={<Button icon={<Plus size={15} weight="bold" />} onClick={() => openCreate()}>Schedule {suggestedType}</Button>}
         />
-        {ctx && (
+        {ctx && pctComplete < 100 && (
           <div className="inEmptyRail">
             <div className="inSectionTitle" style={{ marginBottom: 10 }}>The Typical Sequence</div>
             <div className="inSeq">
@@ -527,7 +524,7 @@ export default function InspectionsPage() {
         bulkEdit={itemBulkEdit('inspections', { allowed: rights.edit, canDelete: rights.full, deleteUrl: r => `/api/inspections/${r.id}`, onDone: () => { void fetchInspections(); } })}
         exportName="inspections"
         isSelected={isSel}
-        empty={<EmptyState icon={<ClipboardText size={22} />} title="No inspections match these filters" text="Clear the search, result, or type filter to see more." action={<Button onClick={clearFilters}>Clear Filters</Button>} />}
+        empty={<EmptyState icon={<ClipboardText size={22} />} title="No inspections match these filters" action={<Button onClick={clearFilters}>Clear Filters</Button>} />}
       />
     );
   }
@@ -542,10 +539,10 @@ export default function InspectionsPage() {
           { label: 'Inspections' },
         ]}
         title="Inspections"
-        subtitle="Inspections, results and re-inspections."
+        subtitle={ctx?.project?.name || undefined}
         actions={<Button variant="primary" icon={<Plus size={15} weight="bold" />} onClick={() => openCreate()}>Schedule Inspection</Button>}
       >
-        {!loadError && <StatRow items={stats} />}
+        {!loadError && (loading || inspections.length > 0) && <StatRow items={stats} />}
 
         {!loading && !loadError && inspections.length > 0 && (
           <Toolbar
@@ -561,7 +558,6 @@ export default function InspectionsPage() {
                 {filtersActive && <Button variant="ghost" size="sm" onClick={clearFilters}>Clear</Button>}
               </>
             }
-            actions={<span className="inMuted" style={{ fontSize: 'var(--fs-sm)' }}>{filteredInspections.length} of {inspections.length}</span>}
           />
         )}
 

@@ -11,6 +11,7 @@
  *   one invite           PATCH / POST (resend) / DELETE /api/team/invite/[inviteId]
  *   work assignments     GET   /api/work-assignments?projectId=, POST (assign / { end })
  *   sub portal link      POST  /api/sub-portal/invite
+ *   job access           GET/PUT /api/projects/[id]/access   (role on this job)
  */
 import React, { useState, useEffect } from 'react';
 import useSWR from 'swr';
@@ -26,6 +27,7 @@ import {
   type Column, type BadgeTone, type StatItem,
 } from '@/components/ui/kit';
 import ProjectOwnershipCard from '@/components/projects/ProjectOwnershipCard';
+import JobAccessSection from '@/components/projects/JobAccessSection';
 import { confirmDialog } from '@/lib/ui/async-dialog';
 
 const EMAIL_RE = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
@@ -634,6 +636,8 @@ export default function TeamPage(){
             <Card title="Internal Team" icon={<UsersThree size={17} />} flush>{teamBody}</Card>
           </div>
         )}
+
+        {showTeam && <JobAccessSection projectId={projectId} onToast={(msg, ok) => showToast(msg, ok ? 'success' : 'error')} />}
 
         {showTeam && (
           <Card title="Work Assignments" subtitle="Shown on each member's My Work hub" icon={<Briefcase size={17} />}>

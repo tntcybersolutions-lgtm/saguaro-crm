@@ -75,7 +75,7 @@ import {
   DownloadSimple, FolderSimplePlus, PencilLine, Scribble, Funnel,
 } from '@phosphor-icons/react';
 import {
-  PageShell, Card, StatRow, Badge, Button, Toolbar, Tabs, EmptyState, RowActions,
+  PageShell, StatRow, Badge, Button, Toolbar, Tabs, EmptyState, RowActions,
   FormModal, Field, Input, Textarea, Select, FormGrid, DetailList, Toast, useToast, DateInput,
   type BadgeTone, type StatItem,
 } from '@/components/ui/kit';
@@ -121,6 +121,9 @@ const EMPTY_FORM={
   taken_at:'',url:'',taken_by:'',tags:'',
 };
 
+/** Facts with a value only — an empty field is left out, never shown as "—". */
+const facts=(rows:[string,React.ReactNode][])=>rows.filter(([,v])=>v!=null&&v!==''&&v!=='—');
+
 function fmtDate(iso:string|null|undefined){
   if(!iso) return '—';
   const d = new Date(iso);
@@ -143,28 +146,30 @@ const CSS = `
   .phDetail { grid-template-columns: minmax(0, 1fr) clamp(${layout.detailRailMin}px, 34%, ${layout.detailRailMax}px); }
   .phRail { order: 0; position: sticky; top: 16px; }
 }
-.phGallery { display: flex; flex-direction: column; gap: 20px; padding: 16px; }
+.phGallery { display: flex; flex-direction: column; gap: 28px; padding: 4px 0 8px; }
 .phGroupHead { display: flex; align-items: center; gap: 10px; margin-bottom: 10px; font-size: var(--fs-sm); font-weight: 700; color: var(--text-primary); }
 .phGroupHead small { color: var(--text-tertiary); font-weight: 600; font-size: var(--fs-sm); }
 .phGroupHead::after { content: ''; flex: 1; height: 1px; background: var(--border-subtle); }
-/* Dense, big tiles like Procore. --ph-min is the tile's smallest width, and
-   --ph-floor caps it so a phone still gets 3 / 2 / 1 columns (S / M / L).
-   Medium: ~2 across on a phone, 4 on an iPad, 6 on a desktop, ~170–220px each. */
-.phWs { --ph-min: 250px; --ph-floor: calc(50% - 6px); --ph-gap: 12px; }
-.phWs[data-tile="s"] { --ph-min: 170px; --ph-floor: calc(33.333% - 8px); --ph-gap: 8px; }
-.phWs[data-tile="l"] { --ph-min: 380px; --ph-floor: 100%; --ph-gap: 14px; }
-.phGrid { display: grid; grid-template-columns: repeat(auto-fill, minmax(min(var(--ph-min), var(--ph-floor)), 1fr)); gap: var(--ph-gap); }
-.phSplit[data-open="true"] .phGrid { --ph-min: 180px; }
-.phTile { position: relative; display: flex; flex-direction: column; gap: 6px; min-width: 0; cursor: pointer; text-align: left; padding: 0; color: inherit; font: inherit; background: none; border: 0; }
+/* Justified rows, like a phone's photo library: every tile is as wide as its
+   picture at the row height (--ar = the photo's own width / height), so each
+   photo shows WHOLE — never cropped, never boxed, no side fill. A row's tiles
+   grow together to the edge; the last row keeps its natural size. */
+.phWs { --ph-h: 200px; --ph-gap: 10px; }
+.phWs[data-tile="s"] { --ph-h: 130px; --ph-gap: 6px; }
+.phWs[data-tile="l"] { --ph-h: 320px; --ph-gap: 14px; }
+.phGrid { display: flex; flex-wrap: wrap; gap: var(--ph-gap); }
+.phGrid::after { content: ''; flex: 999999 1 0; }
+.phSplit[data-open="true"] .phGrid { --ph-h: 150px; }
+.phTile { --ar: 1.3333; position: relative; display: flex; flex-direction: column; gap: 6px; min-width: 0; flex: var(--ar) 1 calc(var(--ar) * var(--ph-h)); max-width: min(100%, calc(var(--ar) * var(--ph-h) * 1.7)); cursor: pointer; text-align: left; padding: 0; color: inherit; font: inherit; background: none; border: 0; }
 .phTile:focus-visible { outline: none; }
 .phTile:focus-visible .phThumb { outline: 2px solid var(--focus-ring); outline-offset: 2px; }
-.phThumb { position: relative; width: 100%; aspect-ratio: 4 / 3; background: var(--bg-solid); border: 1px solid var(--border-subtle); border-radius: var(--radius-sm); overflow: hidden; transition: border-color .15s, box-shadow .15s; }
-.phTile:hover .phThumb { border-color: var(--border-strong); }
-.phTile[data-sel="true"] .phThumb { border-color: var(--brand-primary); box-shadow: 0 0 0 1px var(--brand-primary); }
-/* The whole picture, never cropped: contained on the dark ground. */
-.phThumb img { width: 100%; height: 100%; object-fit: contain; display: block; transition: transform .2s; }
-.phTile:hover .phThumb img { transform: scale(1.02); }
-.phThumb[data-missing="true"] { display: flex; align-items: center; justify-content: center; gap: 6px; color: var(--text-tertiary); font-size: var(--fs-sm); }
+.phThumb { position: relative; width: 100%; aspect-ratio: var(--ar); border-radius: 6px; overflow: hidden; transition: opacity .15s; }
+.phTile:hover .phThumb { opacity: .9; }
+.phTile[data-sel="true"] .phThumb { outline: 2px solid var(--brand-primary); outline-offset: 2px; }
+/* The whole picture: the cell already has the photo's own shape. */
+.phThumb img { width: 100%; height: 100%; object-fit: contain; display: block; }
+.phThumb[data-missing="true"] { display: flex; align-items: center; justify-content: center; gap: 6px; color: var(--text-tertiary); font-size: var(--fs-sm); border: 1px dashed var(--border-default); }
+.phThumb[data-skel="true"] { background: var(--bg-surface); }
 .phCap { display: flex; flex-direction: column; gap: 2px; min-width: 0; padding: 0 2px; }
 .phCapTitle { font-size: var(--fs-sm); font-weight: 600; color: var(--text-secondary); overflow: hidden; text-overflow: ellipsis; white-space: nowrap; transition: color .15s; }
 .phTile:hover .phCapTitle, .phTile[data-sel="true"] .phCapTitle { color: var(--text-primary); }
@@ -175,10 +180,21 @@ const CSS = `
 .phTileTools { position: absolute; top: 6px; right: 6px; display: flex; gap: 4px; opacity: 0; transition: opacity .15s; }
 .phTile:hover .phTileTools, .phTile:focus-within .phTileTools, .phTile[data-sel="true"] .phTileTools { opacity: 1; }
 .phTileTools .k-btn { background: color-mix(in srgb, var(--bg-base) 85%, transparent); }
-.phViewer { position: relative; display: flex; align-items: center; justify-content: center; width: 100%; max-height: min(70vh, 720px); min-height: 220px; background: var(--bg-solid); border-radius: var(--radius-sm); border: 1px solid var(--border-subtle); overflow: hidden; }
+/* Touch screens: a tap opens the viewer (Details, crop, mark up live there) —
+   no tool buttons parked on top of the picture. */
+@media (hover: none) { .phTileTools { display: none; } }
+.phViewer { position: relative; display: flex; align-items: center; justify-content: center; width: 100%; max-height: min(70vh, 720px); min-height: 220px; }
+.phViewer img { border-radius: 6px; }
+.phPane { display: flex; flex-direction: column; gap: 12px; min-width: 0; }
+.phPaneHead { display: flex; align-items: flex-start; gap: 8px; min-width: 0; }
+.phPaneHead > div { flex: 1; min-width: 0; }
+.phPaneHead h2 { margin: 0; font-size: var(--fs-section, 16px); font-weight: 700; color: var(--title-section); overflow-wrap: anywhere; }
+.phPaneHead p { margin: 2px 0 0; font-size: var(--fs-sm); color: var(--text-tertiary); }
+.phRail { padding-top: 4px; }
+@container phdetail (min-width: 720px) { .phRail { border-left: 1px solid var(--border-default); padding-left: 16px; } }
 .phViewer img { max-width: 100%; max-height: min(70vh, 720px); width: auto; height: auto; display: block; object-fit: contain; cursor: zoom-in; }
 .phViewer[data-missing="true"] { color: var(--text-tertiary); font-size: var(--fs-sm); }
-.phViewer video { width: 100%; max-height: min(70vh, 720px); display: block; background: var(--bg-solid); }
+.phViewer video { width: 100%; max-height: min(70vh, 720px); display: block; background: var(--bg-base); }
 .phNav { position: absolute; top: 50%; transform: translateY(-50%); }
 .phNav[data-side="left"] { left: 8px; }
 .phNav[data-side="right"] { right: 8px; }
@@ -223,15 +239,12 @@ const CSS = `
 .phMonthHead small { font-size: var(--fs-sm); color: var(--text-tertiary); font-weight: 600; }
 .phCheck { position: absolute; top: 6px; left: 6px; width: 32px; height: 32px; display: inline-flex; align-items: center; justify-content: center; border-radius: 8px; border: 1px solid var(--border-strong); background: color-mix(in srgb, var(--bg-base) 80%, transparent); color: var(--text-primary); cursor: pointer; opacity: 0; transition: opacity .15s; padding: 0; }
 .phTile:hover .phCheck, .phTile:focus-within .phCheck, .phTile[data-picking="true"] .phCheck { opacity: 1; }
-.phTile[data-picked="true"] .phThumb { border-color: var(--brand-primary); box-shadow: 0 0 0 2px var(--brand-primary); }
+.phTile[data-picked="true"] .phThumb { outline: 3px solid var(--brand-primary); outline-offset: 2px; opacity: .85; }
 .phTile[data-picked="true"] .phCheck { color: var(--brand-primary); border-color: var(--brand-primary); }
 .phTile[data-picking="true"] .phTileTools { display: none; }
 .phThumb img { -webkit-touch-callout: none; user-select: none; -webkit-user-select: none; }
 .phBulk { position: sticky; bottom: 0; z-index: 5; display: flex; align-items: center; gap: 8px; flex-wrap: wrap; padding: 10px 12px calc(10px + env(safe-area-inset-bottom)); background: var(--bg-surface); border-top: 1px solid var(--border-default); }
 .phBulk strong { font-size: var(--fs-md); margin-right: auto; }
-.phAlbumGrid { display: grid; grid-template-columns: repeat(auto-fill, minmax(180px, 1fr)); gap: 14px; padding: 16px; }
-.phAlbumHead { display: flex; align-items: center; gap: 8px; flex-wrap: wrap; padding: 16px 16px 0; }
-.phAlbumHead h3 { margin: 0 auto 0 0; font-size: var(--fs-md); font-weight: 800; }
 .phGeo { display: flex; flex-direction: column; gap: 10px; }
 .phGeoHead { display: flex; align-items: center; gap: 10px; flex-wrap: wrap; font-size: var(--fs-sm); color: var(--text-secondary); }
 .phGeoHead strong { color: var(--text-primary); font-size: var(--fs-md); }
@@ -242,21 +255,21 @@ const CSS = `
 .phSeg button:hover { color: var(--text-primary); background: var(--bg-surface-2); }
 .phSeg button[aria-checked="true"] { color: var(--text-primary); background: var(--bg-surface-2); box-shadow: inset 0 -2px 0 var(--text-primary); }
 .phSeg button:focus-visible { outline: 2px solid var(--focus-ring); outline-offset: -2px; }
-.phMapWrap { display: flex; flex-direction: column; gap: 16px; padding: 16px; }
+.phMapWrap { display: flex; flex-direction: column; gap: 16px; }
 .phMapWait { display: flex; align-items: center; justify-content: center; height: clamp(320px, 56vh, 640px); border-radius: var(--radius-sm); border: 1px solid var(--border-subtle); background: var(--bg-solid); color: var(--text-tertiary); font-size: var(--fs-sm); }
 .phNoGeo { display: flex; align-items: center; gap: 8px; font-size: var(--fs-sm); color: var(--text-secondary); }
 .phNoGeo strong { color: var(--text-primary); }
 .phPanel h2 { margin: 0; font-size: 17px; font-weight: 800; overflow-wrap: anywhere; }
 @media (max-width: 640px) {
-  .phAlbumGrid { grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 10px; padding: 12px; }
   .phCheck { width: 36px; height: 36px; }
   .phMore label { max-width: none; }
   .phSeg button { min-height: 44px; min-width: 44px; }
-  .phMapWrap { padding: 12px; }
   .phWs .k-btn, .phWs .k-stat, .phWs select.k-select, .phWs .k-input { min-height: 44px; }
-  .phGallery { padding: 12px; }
-  .phWs { --ph-gap: 8px; }
-  .phTileTools { opacity: 1; }
+  /* A phone: Small = 3 across, Medium = 2, Large = 1 (4:3 pictures). */
+  .phWs { --ph-h: 128px; --ph-gap: 6px; }
+  .phWs[data-tile="s"] { --ph-h: 84px; --ph-gap: 4px; }
+  .phWs[data-tile="l"] { --ph-h: 250px; --ph-gap: 10px; }
+  .phWs[data-tile="s"] .phCap { display: none; }
   .phCapMore { display: none; }
 }
 `;
@@ -743,20 +756,18 @@ export default function PhotosPage(){
   },[mode, selected, editingPhoto, stepTo, lightboxOpen, uploadOpen, markup]);
 
   // ── Stat tiles: each opens the gallery filtered to that slice ──
+  // ── Summary: three figures, each filters the gallery. Location lives on the
+  //    Map tab's count; the newest photo leads the Timeline. ──
   const stats: StatItem[] = loading
     ? [
         { label:'Photos & Video', value:'—', sub:'Loading…', icon:<Images size={15}/> },
         { label:'This Month', value:'—', sub:'Loading…', icon:<CalendarBlank size={15}/> },
         { label:'Issues', value:'—', sub:'Loading…', icon:<WarningCircle size={15}/> },
-        { label:'With Location', value:'—', sub:'Loading…', icon:<MapPin size={15}/> },
-        { label:'Last Added', value:'—', sub:'Loading…', icon:<Camera size={15}/> },
       ]
     : [
-        { label:'Photos & Video', value:photos.length, icon: videoCount>0 ? <VideoCamera size={15}/> : <Images size={15}/>, sub: filtersActive ? `${filtered.length} showing — click for all` : videoCount>0 ? `${videoCount} video${videoCount===1?'':'s'} · ${albums.length} album${albums.length===1?'':'s'}` : albums.length>0 ? `${albums.length} album${albums.length===1?'':'s'} in use` : 'No albums yet', onClick: filtersActive ? clearFilters : undefined },
-        { label:'This Month', value:thisMonth, icon:<CalendarBlank size={15}/>, tone: thisMonth>0 ? 'good' : 'default', sub: periodFilter==='month' ? 'Filtered — click to clear' : 'Since the 1st', onClick: () => setPeriodFilter(p => (p==='month' ? 'all' : 'month')), active: periodFilter==='month' },
-        { label:'Issues', value:issueCount, icon:<WarningCircle size={15}/>, tone: issueCount>0 ? 'bad' : 'default', sub: issuesOnly ? 'Filtered — click to clear' : issueCount>0 ? 'Issues album, tag or flag' : 'Clean so far', onClick: () => setIssuesOnly(v=>!v), active: issuesOnly },
-        { label:'With Location', value:geoCount, icon:<MapPin size={15}/>, sub: hasLoc ? 'Filtered — click to clear' : geoCount>0 ? `${photos.length-geoCount} without GPS` : 'No GPS stamps yet', onClick: geoCount>0||hasLoc ? () => setHasLoc(v=>!v) : undefined, active: hasLoc },
-        { label:'Last Added', value: lastPhoto ? fmtDate(lastPhoto.taken_at) : '—', icon:<Camera size={15}/>, sub: lastPhoto ? `${isVideo(lastPhoto)?'Video':'Photo'} · ${lastPhoto.title || 'Most recent capture'}` : 'Nothing documented yet', onClick: lastPhoto ? () => openPhoto(lastPhoto) : undefined },
+        { label:'Photos & Video', value:photos.length, icon: videoCount>0 ? <VideoCamera size={15}/> : <Images size={15}/>, sub: filtersActive ? `${filtered.length} showing — tap for all` : lastPhoto ? `Last ${fmtDate(lastPhoto.taken_at)}` : 'Nothing yet', onClick: filtersActive ? clearFilters : undefined },
+        { label:'This Month', value:thisMonth, icon:<CalendarBlank size={15}/>, tone: thisMonth>0 ? 'good' : 'default', sub: periodFilter==='month' ? 'Filtered — tap to clear' : 'Since the 1st', onClick: () => setPeriodFilter(p => (p==='month' ? 'all' : 'month')), active: periodFilter==='month' },
+        { label:'Issues', value:issueCount, icon:<WarningCircle size={15}/>, tone: issueCount>0 ? 'bad' : 'default', sub: issuesOnly ? 'Filtered — tap to clear' : issueCount>0 ? 'Tap to show' : 'Clean so far', onClick: () => setIssuesOnly(v=>!v), active: issuesOnly },
       ];
 
   /* ── Select mode ── */
@@ -976,8 +987,8 @@ export default function PhotosPage(){
       <div className="phGallery" aria-busy="true">
         <div className="phGrid">
           {Array.from({length:12}).map((_,i)=>(
-            <div key={i} className="phTile" aria-hidden style={{cursor:'default'}}>
-              <div className="phThumb" />
+            <div key={i} className="phTile" aria-hidden style={{cursor:'default',['--ar' as string]:[1.33,0.75,1.5,1.33][i%4]}}>
+              <div className="phThumb" data-skel="true" />
               <div className="phCap"><div style={{height:12,width:'70%',borderRadius:4,background:'var(--border-subtle)'}}/></div>
             </div>
           ))}
@@ -998,7 +1009,6 @@ export default function PhotosPage(){
       <EmptyState
         icon={<Camera size={22}/>}
         title={waitingItems.length ? 'Nothing uploaded to this job yet' : 'No photos or video yet'}
-        text="Add a whole day's worth at once, any size."
         action={<Button icon={<Plus size={15} weight="bold"/>} onClick={openUpload}>Add Photos &amp; Video</Button>}
       />
     );
@@ -1006,10 +1016,12 @@ export default function PhotosPage(){
     galleryBody = albumTiles.length===0 ? (
       <EmptyState icon={<FolderOpen size={22}/>} title="No albums match these filters" action={<Button onClick={clearFilters}>Clear Filters</Button>}/>
     ) : (
-      <div className="phAlbumGrid">
-        {albumTiles.map(a=>(
-          <AlbumTile key={a.name} name={a.name} count={a.count} latest={a.latest} cover={a.cover} onOpen={()=>{ setOpenAlbum(a.name); setPicked(new Set()); }} onStale={resign}/>
-        ))}
+      <div className="phGallery">
+        <div className="phGrid">
+          {albumTiles.map(a=>(
+            <AlbumTile key={a.name} name={a.name} count={a.count} latest={a.latest} cover={a.cover} onOpen={()=>{ setOpenAlbum(a.name); setPicked(new Set()); }} onStale={resign}/>
+          ))}
+        </div>
       </div>
     );
   } else if (filtered.length===0) {
@@ -1093,7 +1105,7 @@ export default function PhotosPage(){
           {ro && <Badge tone="closed">Read-Only</Badge>}
         </div>
         {(p.description||p.caption) && <div className="phProse">{p.description||p.caption}</div>}
-        <DetailList items={[
+        <DetailList items={facts([
           ['Taken', fmtDate(p.taken_at)],
           ['Uploaded By', p.taken_by || ''],
           ['Location', p.location || ''],
@@ -1101,7 +1113,7 @@ export default function PhotosPage(){
           ...(isVideo(p) && p.duration_seconds ? [['Length', fmtDuration(p.duration_seconds)] as [string,string]] : []),
           ...linked,
           ['Source', isVideo(p) ? 'Video library' : ro ? 'Files & Media' : 'Site Photos'],
-        ]}/>
+        ])}/>
         {tags.length>0 && (
           <div className="phBadges">{tags.map(t=><Badge key={t} tone={t.toLowerCase().includes('issue')?'overdue':'neutral'}>{t}</Badge>)}</div>
         )}
@@ -1117,11 +1129,14 @@ export default function PhotosPage(){
   const detailWorkspace = detailOpen && (
     <div ref={detailRef} className="phDetailCq" style={{ scrollMarginTop: 84 }}>
       <div className="phDetail">
-        <Card
-          title={selected.title||'Untitled'}
-          subtitle={[fmtDate(selected.taken_at)!=='—'?fmtDate(selected.taken_at):null, selected.location].filter(Boolean).join(' · ') || undefined}
-          actions={<Button variant="ghost" size="sm" icon={<X size={16}/>} aria-label="Close viewer" title="Close viewer (Esc)" onClick={closePanel}/>}
-        >
+        <section className="phPane" aria-label={selected.title||'Photo'}>
+          <div className="phPaneHead">
+            <div>
+              <h2>{selected.title||'Untitled'}</h2>
+              {(()=>{ const sub=[fmtDate(selected.taken_at)!=='—'?fmtDate(selected.taken_at):null, selected.location].filter(Boolean).join(' · '); return sub ? <p>{sub}</p> : null; })()}
+            </div>
+            <Button variant="ghost" size="sm" icon={<X size={16}/>} aria-label="Close viewer" title="Close viewer (Esc)" onClick={closePanel}/>
+          </div>
           <div className="phViewer" data-missing={selected.url?undefined:'true'}>
             {!selected.url ? 'No image on this record.' : isVideo(selected) ? (
               /* Stored once, rewatchable any time: the signed URL is re-issued on
@@ -1142,18 +1157,18 @@ export default function PhotosPage(){
             )}
           </div>
           {ordered.length>1 && selIndex>=0 && (
-            <div className="phMuted" style={{fontSize:'var(--fs-sm)',marginTop:8}} title="← → to step, Esc to close">{selIndex+1} of {ordered.length}</div>
+            <div className="phMuted" style={{fontSize:'var(--fs-sm)'}} title="← → to step, Esc to close">{selIndex+1} of {ordered.length}</div>
           )}
 
           {selected.description && (
-            <div className="phSection" style={{marginTop:16}}>
+            <div className="phSection">
               <div className="phSectionTitle">Description</div>
               <div className="phProse">{selected.description}</div>
             </div>
           )}
 
           {Array.isArray(selected.tags)&&selected.tags.length>0&&(
-            <div className="phSection" style={{marginTop: selected.description ? undefined : 16}}>
+            <div className="phSection">
               <div className="phSectionTitle">Tags</div>
               <div className="phBadges">
                 {selected.tags.map((tag:string)=>(
@@ -1162,10 +1177,10 @@ export default function PhotosPage(){
               </div>
             </div>
           )}
-        </Card>
+        </section>
 
         <aside className="phRail" aria-label="Photo details and actions">
-          <Card title="Details">
+          <div className="phPane">
             <div className="phSection">
               <div className="phBadges">
                 <Badge tone={albumBadge(selected.album).tone} dot>{albumBadge(selected.album).label}</Badge>
@@ -1178,7 +1193,7 @@ export default function PhotosPage(){
               )}
             </div>
             <div className="phSection">
-              <DetailList items={[
+              <DetailList items={facts([
                 ['Date Taken', fmtDate(selected.taken_at)],
                 ['Location', selected.location || ''],
                 ...((f => f ? [['GPS Location', <a key="gps" className="k-link" href={fixMapUrl(f)} target="_blank" rel="noopener noreferrer">{fixLabel(f)}</a>] as [string, React.ReactNode]] : [])(readFix(selected.location_lat, selected.location_lng))),
@@ -1186,7 +1201,7 @@ export default function PhotosPage(){
                 ['Album', selected.album || 'General'],
                 ...(isVideo(selected) && selected.duration_seconds ? [['Length', fmtDuration(selected.duration_seconds)] as [string,string]] : []),
                 ['Source', isVideo(selected) ? 'Video library' : selectedFromFiles ? 'Files & Media' : 'Site Photos'],
-              ]}/>
+              ])}/>
             </div>
             <div className="phSection">
               <div className="phActions">
@@ -1224,7 +1239,7 @@ export default function PhotosPage(){
                 </div>
               </div>
             </div>
-          </Card>
+          </div>
           {!selectedFromFiles && isSavedId(selected.id) && (
             <div className="phRelated">
               <RelatedItems key={String(selected.id)} type="photo" id={String(selected.id)} projectId={projectId}/>
@@ -1279,7 +1294,7 @@ export default function PhotosPage(){
         onFiles={addFiles}
         onRetry={queue.retry}
         onRemove={queue.remove}
-        hint="Photos at any size · videos up to 500 MB. They upload straight to storage, so big files are fine."
+        hint="Photos any size · videos up to 500 MB"
         extra={queue.items.length===0 && (
           <Button variant="ghost" size="sm" className="phLinkAlt" icon={<LinkSimple size={15}/>} onClick={()=>{ setUploadOpen(false); openCreate(); }}>
             Add a photo by URL
@@ -1358,7 +1373,7 @@ export default function PhotosPage(){
         title="Site Photos & Video"
         /* Always name the job on screen — never a bare "Photos" that leaves a GC
            guessing which project they are filing into. */
-        subtitle={ctx?.project?.name ? `${ctx.project.name} — progress photos and documentation.` : (loading ? 'Loading project…' : 'Progress photos and documentation for this project.')}
+        subtitle={ctx?.project?.name || (loading ? 'Loading project…' : undefined)}
         actions={
           <>
             {queue.busy && !uploadOpen && (
@@ -1422,7 +1437,6 @@ export default function PhotosPage(){
                   <Button size="sm" className="phToggle" aria-pressed={showMore||moreActive>0} icon={<Funnel size={15}/>} onClick={()=>setShowMore(v=>!v)}>
                     {moreActive>0?`Filters · ${moreActive}`:'Filters'}
                   </Button>
-                  <Button size="sm" className="phToggle" aria-pressed={issuesOnly} icon={<WarningCircle size={15}/>} onClick={()=>setIssuesOnly(v=>!v)}>Issues</Button>
                   {filtersActive && <Button variant="ghost" size="sm" onClick={clearFilters}>Clear</Button>}
                 </>
               }
@@ -1474,7 +1488,7 @@ export default function PhotosPage(){
         <div className="phCq">
           <div className="phSplit" data-open={detailOpen&&!picking?'true':'false'}>
             <div className="phList">
-              <Card flush>{galleryBody}</Card>
+              {galleryBody}
               {picking && (
                 <div className="phBulk" role="toolbar" aria-label="Selected items">
                   <strong>{picked.size} selected{targetAlbum?` for ${targetAlbum}`:''}</strong>
@@ -1539,7 +1553,7 @@ export default function PhotosPage(){
         <Field
           label={mode==='create'?'Photo':'Replace Photo'}
           required={mode==='create'}
-          hint={mode==='create' ? 'Uploads straight into this project. No link to paste.' : 'Leave empty to keep the current image and just edit the details.'}
+          hint={mode==='create' ? undefined : 'Leave empty to keep the current image.'}
         >
           <div>
             <input ref={fileRef} type="file" accept="image/*" onChange={onPickFile} style={{display:'none'}} aria-hidden tabIndex={-1}/>
@@ -1603,6 +1617,30 @@ export default function PhotosPage(){
   );
 }
 
+/** Each picture's own shape (width / height), remembered for the session so a
+ *  re-render or a re-signed link never makes the grid jump. Very wide or tall
+ *  shots are held to 0.5–2.4 so a row stays readable; the image is still drawn
+ *  whole (contain) inside that shape. */
+const RATIO=new Map<string,number>();
+const clampRatio=(r:number)=>Math.min(2.4,Math.max(0.5,r));
+function knownRatio(key:string, item:any):number{
+  const hit=RATIO.get(key);
+  if(hit) return hit;
+  const w=Number(item?.width), h=Number(item?.height);
+  return w>0&&h>0 ? clampRatio(w/h) : isVideo(item) ? 16/9 : 4/3;
+}
+function useRatio(key:string, item:any){
+  const [ar,setAr]=useState(()=>knownRatio(key,item));
+  const onLoad=(e:React.SyntheticEvent<HTMLImageElement>)=>{
+    const {naturalWidth:w,naturalHeight:h}=e.currentTarget;
+    if(!w||!h) return;
+    const r=clampRatio(w/h);
+    RATIO.set(key,r);
+    if(Math.abs(r-ar)>0.01) setAr(r);
+  };
+  return {ar, onLoad, style:{['--ar' as string]:ar.toFixed(4)} as React.CSSProperties};
+}
+
 function PhotoCard({photo,selected,picking=false,picked=false,onPick,onClick,onInfo,onEdit,onStale}:{
   photo:any;selected:boolean;picking?:boolean;picked?:boolean;onPick?:()=>void;onClick:()=>void;onInfo?:()=>void;onEdit?:(id:string,url:string)=>void;onStale?:()=>void;
 }){
@@ -1634,6 +1672,7 @@ function PhotoCard({photo,selected,picking=false,picked=false,onPick,onClick,onI
     if(!retried.current&&onStale){ retried.current=true; onStale(); return; }
     setMissing(true);
   };
+  const shape=useRatio(String(photo.id),photo);
   const badge=albumBadge(photo.album);
   const when=photo.taken_at&&!isNaN(new Date(photo.taken_at).getTime())
     ? new Date(photo.taken_at).toLocaleDateString('en-US',{month:'short',day:'numeric'}) : '';
@@ -1646,6 +1685,7 @@ function PhotoCard({photo,selected,picking=false,picked=false,onPick,onClick,onI
       onKeyDown={e=>{ if(e.target!==e.currentTarget) return; if(e.key==='Enter'||e.key===' '){ e.preventDefault(); onClick(); } }}
       aria-label={picking?`${picked?'Deselect':'Select'} ${photo.title||'photo'}`:`Open ${photo.title||'photo'}`}
       aria-pressed={picking?picked:selected}
+      style={shape.style}
       title={[photo.title||'Untitled', when, more].filter(Boolean).join(' · ')}>
       <div className="phThumb" data-missing={missing?'true':undefined}>
         {!missing ? (
@@ -1654,7 +1694,7 @@ function PhotoCard({photo,selected,picking=false,picked=false,onPick,onClick,onI
           isVideo(photo) && !photo.thumbnail_url
             ? <span style={{display:'flex',alignItems:'center',justifyContent:'center',width:'100%',height:'100%',color:'var(--text-tertiary)'}}><Play size={28} weight="fill"/></span>
             // eslint-disable-next-line @next/next/no-img-element
-            : <img src={src} alt={photo.title||'Photo'} loading="lazy" decoding="async" onError={onImgError}/>
+            : <img src={src} alt={photo.title||'Photo'} loading="lazy" decoding="async" onLoad={shape.onLoad} onError={onImgError}/>
         ) : (
           <span><Images size={18}/> No image</span>
         )}
@@ -1700,13 +1740,14 @@ function AlbumTile({name,count,latest,cover,onOpen,onStale}:{
   const [missing,setMissing]=useState(!src);
   const retried=useRef(false);
   useEffect(()=>{ retried.current=false; setMissing(!src); },[src]);
+  const shape=useRatio(cover?String(cover.id):`album:${name}`,cover);
   const badge=albumBadge(name);
   return(
-    <button type="button" className="phTile" onClick={onOpen} aria-label={`Open album ${name}, ${count} item${count===1?'':'s'}`}>
+    <button type="button" className="phTile" style={shape.style} onClick={onOpen} aria-label={`Open album ${name}, ${count} item${count===1?'':'s'}`}>
       <div className="phThumb" data-missing={missing?'true':undefined}>
         {!missing && src
           // eslint-disable-next-line @next/next/no-img-element
-          ? <img src={src} alt="" loading="lazy" decoding="async" onError={()=>{ if(!retried.current&&onStale){ retried.current=true; onStale(); return; } setMissing(true); }}/>
+          ? <img src={src} alt="" loading="lazy" decoding="async" onLoad={shape.onLoad} onError={()=>{ if(!retried.current&&onStale){ retried.current=true; onStale(); return; } setMissing(true); }}/>
           : <span>{name===VIDEO_ALBUM?<VideoCamera size={18}/>:<FolderOpen size={18}/>} {count} item{count===1?'':'s'}</span>}
       </div>
       <div className="phCap">
