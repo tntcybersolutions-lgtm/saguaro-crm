@@ -31,8 +31,18 @@ check('QC: ‹ Command Center', qc.title === 'QC' && qc.back?.label === 'Command
 // Jobs.
 const job = t(`/app/projects/${J}`);
 check('job overview: ‹ Jobs, no title (the page names the job)', job.title === '' && job.back?.label === 'Jobs' && job.back?.href === '/app/projects', JSON.stringify(job));
+const ov = t(`/app/projects/${J}/overview`);
+check('job page (/overview): ‹ Jobs, never ‹ the same job', ov.title === 'Overview' && ov.back?.label === 'Jobs' && ov.back?.href === '/app/projects', JSON.stringify(ov));
 const rfis = t(`/app/projects/${J}/rfis`);
-check('job tool: ‹ <job name>', rfis.title === 'RFIs' && rfis.back?.label === names[J] && rfis.back?.href === `/app/projects/${J}`, JSON.stringify(rfis));
+check('job tool: ‹ <job name> → the job page', rfis.title === 'RFIs' && rfis.back?.label === names[J] && rfis.back?.href === `/app/projects/${J}/overview`, JSON.stringify(rfis));
+const vl = t(`/app/projects/${J}/network/vlans`);
+check('nested job tool: ‹ its section', vl.title === 'VLANs' && vl.back?.label === 'Network' && vl.back?.href === `/app/projects/${J}/network`, JSON.stringify(vl));
+const item = t(`/app/projects/${J}/items/rfis/${R}`);
+check('item record: ‹ its tool list (no /items page)', item.back?.label === 'RFIs' && item.back?.href === `/app/projects/${J}/rfis`, JSON.stringify(item));
+const sub = t(`/app/projects/${J}/contracts/new/subcontract`);
+check('form under /new: ‹ the list (no /new page)', sub.back?.label === 'Contracts' && sub.back?.href === `/app/projects/${J}/contracts`, JSON.stringify(sub));
+check('Documents: a section, no stale back', t('/app/documents').back === null);
+check('Settings page: ‹ Settings', t('/app/settings/branding').back?.label === 'Settings');
 const unknownJob = resolveTopBar(`/app/projects/${J}/rfis`);
 check('unknown job name falls back to "Job", never an id', unknownJob.back?.label === 'Job');
 const jacket = t(`/app/projects/${J}/bid-packages/${R}/jacket`);

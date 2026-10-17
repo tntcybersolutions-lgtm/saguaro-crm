@@ -11,6 +11,10 @@
  *    "‹ Compliance". Inside a job the job itself is the parent of its tools
  *    ("‹ Copper Ridge…"), and Jobs is the parent of the job ("‹ Jobs").
  *  - A record id in the path is never shown as a title or a label.
+ *  - Back always names this screen's real parent, never whatever screen
+ *    happened to come before it (16 Oct 2026: "‹ Vlans" on a job's overview,
+ *    "‹ Dashboard Setup" on Documents). AppTopBar only uses the browser's
+ *    history when the screen before IS that parent.
  *
  * Pure: no React, no fetching — the caller passes the job names it knows.
  */
@@ -81,6 +85,13 @@ export const TOPBAR_LABELS: Record<string, string> = {
   'pre-site': 'Pre-Site',
   'owner-updates': 'Owner Updates',
   new: 'New',
+  overview: 'Overview',
+  vlans: 'VLANs',
+  wifi: 'Wi-Fi',
+  'tm-tickets': 'T&M Tickets',
+  todos: 'To-Dos',
+  'punch-list': 'Punch List',
+  'cash-flow': 'Cash Flow',
 };
 
 /** The paths the phone tab bar opens. Their pages never show a back link. */
@@ -122,8 +133,25 @@ export function resolveTopBar(
   // Tab pages and the sections under Home: no back link.
   if (segs.length === 2) return { title, back: null };
 
-  const parentSegs = segs.slice(0, -1);
-  const parentHref = '/' + parentSegs.join('/');
+  const inJob = projIdx === 1 && UUID_RE.test(segs[2] || '');
+  // The job's own page (/app/projects/<id>/overview) is the job, so its parent
+  // is Jobs — never "‹ <the same job>".
+  if (inJob && segs.length === 4 && segs[3] === 'overview') {
+    return { title, back: { label: 'Jobs', href: '/app/projects' } };
+  }
+  // An item record (/app/projects/<id>/items/<tool>/<rid>) belongs to its
+  // tool's list; there is no /items/<tool> page to land on.
+  if (inJob && segs[3] === 'items' && segs.length >= 6) {
+    const tool = segs[4];
+    return { title, back: { label: slugLabel(tool), href: `/app/projects/${segs[2]}/${tool}` } };
+  }
+
+  let parentSegs = segs.slice(0, -1);
+  // "/contracts/new/subcontract": there is no /contracts/new page — the form
+  // was opened from the list, so the list is the parent.
+  if (parentSegs.length > 3 && parentSegs[parentSegs.length - 1] === 'new') parentSegs = parentSegs.slice(0, -1);
+  // A job tool's parent is the job's page itself (one redirect fewer).
+  const parentHref = '/' + parentSegs.join('/') + (inJob && parentSegs.length === 3 ? '/overview' : '');
   let parentLabel = labelAt(parentSegs.length - 1);
   if (!parentLabel) {
     // The parent is a record page (…/bid-packages/<id>): name it after its list.

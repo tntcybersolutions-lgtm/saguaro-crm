@@ -27,7 +27,7 @@ const CSS = `
 .jdbRow, .jdbCols { display: grid; grid-template-columns: minmax(220px, 1.5fr) minmax(170px, 1.2fr) repeat(4, minmax(92px, .7fr)) 24px; align-items: center; gap: 16px; padding: 12px 4px; }
 .jdbRow { border: 0; border-top: 1px solid var(--border-default); background: transparent; color: inherit; font: inherit; text-align: left; cursor: pointer; width: 100%; }
 .jdbRow:first-of-type { border-top: 0; }
-.jdbCols { padding-top: 8px; padding-bottom: 8px; border-bottom: 1px solid var(--border-default); font-size: 11px; font-weight: 700; letter-spacing: .05em; text-transform: uppercase; color: var(--text-tertiary); }
+.jdbCols { padding-top: 8px; padding-bottom: 8px; border-bottom: 1px solid var(--border-default); font-size: 12px; font-weight: 700; letter-spacing: .05em; text-transform: uppercase; color: var(--text-tertiary); }
 .jdbRow:hover { background: var(--bg-row-hover); }
 .jdbRow:focus-visible { outline: 2px solid var(--focus-ring); outline-offset: -2px; }
 .jdbRow[data-sel="true"] { box-shadow: inset 3px 0 0 var(--brand-primary); padding-left: 12px; cursor: default; }
