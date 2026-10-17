@@ -53,11 +53,11 @@ const SCAN_RULES = [
   { title: 'Scope-Creep Velocity', desc: 'CO / RFI spikes over the last 14 days.',        match: (a: AutopilotAlert) => /velocity/i.test(a.title) },
 ];
 
-/** Severity → badge: critical red, high orange (completed kind), medium amber, low grey. */
+/** Severity → badge: critical red, high amber, medium slate, low grey (never green: green means good). */
 function sevBadge(s: AlertSeverity): { label: string; tone: BadgeTone } {
   if (s === 'critical') return { label: 'Critical', tone: 'overdue' };
-  if (s === 'high') return { label: 'High', tone: 'completed' };
-  if (s === 'medium') return { label: 'Medium', tone: 'under_contract' };
+  if (s === 'high') return { label: 'High', tone: 'lead' };
+  if (s === 'medium') return { label: 'Medium', tone: 'neutral' };
   return { label: 'Low', tone: 'closed' };
 }
 const SEV_RANK: Record<string, number> = { critical: 0, high: 1, medium: 2, low: 3 };
@@ -281,7 +281,7 @@ export default function AutopilotPage() {
       <PageShell
         crumbs={[{ label: 'Home', href: '/app' }, { label: 'Intelligence', href: '/app/intelligence' }, { label: 'Autopilot' }]}
         title="Autopilot"
-        subtitle="Automated monitoring — seven deterministic checks across every project, every 6 hours and on demand."
+        subtitle="Seven checks on every job, every 6 hours."
         actions={scanButton}
       >
         {!loadError && <StatRow items={stats} />}
@@ -335,7 +335,7 @@ export default function AutopilotPage() {
                 )}
                 <div className="apRule" />
                 <InsightRow label="Critical" value={String(criticalCount)} accent={criticalCount > 0 ? 'var(--status-overdue)' : undefined} />
-                <InsightRow label="High" value={String(highCount)} accent={highCount > 0 ? 'var(--status-completed)' : undefined} />
+                <InsightRow label="High" value={String(highCount)} accent={highCount > 0 ? 'var(--warning)' : undefined} />
                 <InsightRow label="Medium / Low" value={String(liveAlerts.filter(a => a.severity === 'medium' || a.severity === 'low').length)} />
               </Card>
             </aside>

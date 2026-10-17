@@ -2,7 +2,7 @@
 import React, { useState, useEffect, useCallback } from 'react';
 import Link from 'next/link';
 import { CurrencyDollar, CheckCircle, ArrowsClockwise, Warning, Question, NotePencil, Trophy, Handshake, Buildings, FileText, WarningOctagon, Clock, Bell, X, ArrowRight } from '@phosphor-icons/react';
-import { PremiumSurface, ModuleHero, SectionCard, PremiumEmpty, StatStrip, goldOutlineButtonStyle, ghostButtonStyle } from '@/components/ui/premium';
+import { PremiumSurface, ModuleHero, PremiumEmpty, StatStrip, goldOutlineButtonStyle, ghostButtonStyle } from '@/components/ui/premium';
 import PushAlertsCard from '@/components/notifications/PushAlertsCard';
 
 const GOLD = 'var(--brand-primary)';
@@ -57,7 +57,19 @@ const MONEY = 'Money';
 const MONEY_GROUPS = ['Pay App', 'Change Order'];
 
 /* Filter buttons are 44px tap targets on a phone. */
-const NT_CSS = `@media (max-width: 767px) { .ntFilter { min-height: 44px; } }`;
+const NT_CSS = `
+.ntFilter{min-height:40px;padding:0 14px;border-radius:var(--radius-md);border:1px solid var(--border-default);background:transparent;color:var(--text-secondary);font:inherit;font-size:13px;font-weight:600;cursor:pointer;white-space:nowrap}
+.ntFilter:hover{color:var(--text-primary);border-color:var(--border-strong)}
+.ntFilter[aria-pressed=true]{background:var(--brand-primary);border-color:var(--brand-primary);color:var(--on-brand)}
+.ntSep{width:1px;align-self:stretch;background:var(--border-default);margin:0 4px}
+.ntList{border-top:1px solid var(--border-default)}
+.ntRow{display:flex;gap:12px;align-items:flex-start;padding:12px 0;border-bottom:1px solid var(--border-default)}
+.ntRow[data-unread=true]{cursor:pointer}
+.ntAct{display:inline-flex;align-items:center;gap:4px;min-height:40px;font-size:13px;font-weight:600;color:var(--link);text-decoration:none}
+.ntX{display:grid;place-items:center;width:40px;height:40px;margin:-10px -8px -10px 0;background:none;border:0;border-radius:8px;cursor:pointer}
+.ntX:hover{background:var(--bg-row-hover)}
+@media (max-width: 767px) { .ntFilter, .ntAct { min-height: 44px; } .ntX { width: 44px; height: 44px; } }
+`;
 
 function timeAgo(dateStr: string): string {
   const diff = Date.now() - new Date(dateStr).getTime();
@@ -78,9 +90,11 @@ export default function NotificationsPage() {
   const [typeFilter, setTypeFilter] = useState('All');
   const [markingAll, setMarkingAll] = useState(false);
   const [dismissingId, setDismissingId] = useState<string | null>(null);
+  const [loadError, setLoadError] = useState(false);
 
   const load = useCallback(async () => {
     setLoading(true);
+    setLoadError(false);
     try {
       const r = await fetch('/api/notifications?limit=100');
       if (!r.ok) throw new Error('fetch failed');
@@ -89,6 +103,7 @@ export default function NotificationsPage() {
       setNotifications(items);
     } catch {
       setNotifications([]);
+      setLoadError(true);
     } finally {
       setLoading(false);
     }
@@ -190,53 +205,52 @@ export default function NotificationsPage() {
       {/* Activity intelligence strip — what the feed holds right now */}
       {!loading && notifications.length > 0 && (
         <StatStrip items={[
-          { label: 'Unread', value: String(unreadCount), accent: unreadCount > 0 ? 'var(--info)' : undefined, onClick: unreadCount > 0 || readFilter === 'unread' ? () => setReadFilter(f => (f === 'unread' ? 'all' : 'unread')) : undefined, active: readFilter === 'unread', sub: readFilter === 'unread' ? 'Showing unread — tap to clear' : unreadCount > 0 ? 'Waiting on you' : 'All caught up' },
-          { label: 'In the Feed', value: String(notifications.length), onClick: filtersActive ? showAll : undefined, sub: filtersActive ? 'Filtered — tap to show all' : 'Most recent 100 events' },
+          { label: 'Unread', value: String(unreadCount), onClick: unreadCount > 0 || readFilter === 'unread' ? () => setReadFilter(f => (f === 'unread' ? 'all' : 'unread')) : undefined, active: readFilter === 'unread', sub: readFilter === 'unread' ? 'Showing unread — tap to clear' : unreadCount > 0 ? 'Waiting on you' : 'All caught up' },
           { label: 'Money Events', value: String(moneyCount), onClick: moneyCount > 0 || typeFilter === MONEY ? () => toggleType(MONEY) : undefined, active: typeFilter === MONEY, sub: typeFilter === MONEY ? 'Showing money — tap to clear' : 'Pay apps + change orders' },
           { label: 'Alerts', value: String(alertCount), accent: alertCount > 0 ? RED : undefined, onClick: alertCount > 0 || typeFilter === 'Alert' ? () => toggleType('Alert') : undefined, active: typeFilter === 'Alert', sub: typeFilter === 'Alert' ? 'Showing alerts — tap to clear' : alertCount > 0 ? 'Budget / overdue flags' : 'Nothing flagged' },
-          { label: 'Latest', value: notifications[0] ? timeAgo(notifications[0].created_at) : '—', sub: notifications[0] ? getConfig(notifications[0].type).label : undefined },
+          { label: 'Latest', value: notifications[0] ? timeAgo(notifications[0].created_at) : '', sub: notifications[0] ? getConfig(notifications[0].type).label : undefined },
         ]} />
       )}
 
-      {/* Read filter tabs */}
-      <div style={{ display: 'flex', gap: 8, marginBottom: 12 }}>
+      {/* Filters — one row: read state, then type */}
+      <div style={{ display: 'flex', gap: 6, marginBottom: 14, flexWrap: 'wrap', alignItems: 'center' }}>
         {(['all', 'unread'] as const).map(f => (
-          <button key={f} type="button" className="ntFilter" aria-pressed={readFilter === f} onClick={() => setReadFilter(f)}
-            style={{ padding: '6px 16px', borderRadius: 'var(--radius-sm)', border: `1px solid ${readFilter === f ? 'var(--brand-primary-25)' : 'var(--border-default)'}`, background: readFilter === f ? 'var(--brand-primary-12)' : 'linear-gradient(180deg, rgba(255,255,255,0.05), rgba(255,255,255,0.02))', color: readFilter === f ? GOLD : DIM, fontSize: 13, fontWeight: 600, cursor: 'pointer', textTransform: 'capitalize' }}>
+          <button key={f} type="button" className="ntFilter" aria-pressed={readFilter === f} onClick={() => setReadFilter(f)}>
             {f === 'all' ? `All (${notifications.length})` : `Unread (${unreadCount})`}
           </button>
         ))}
-      </div>
-
-      {/* Type filter chips */}
-      <div style={{ display: 'flex', gap: 6, marginBottom: 20, flexWrap: 'wrap' }}>
-        {TYPE_GROUPS.filter(g => g === 'All' || typeCounts[g] > 0).map(g => (
-          <button key={g} type="button" className="ntFilter" aria-pressed={typeFilter === g} onClick={() => setTypeFilter(g)}
-            style={{ padding: '4px 12px', borderRadius: 'var(--radius-sm)', border: `1px solid ${typeFilter === g ? 'var(--brand-primary-25)' : 'var(--border-default)'}`, background: typeFilter === g ? 'var(--brand-primary-12)' : 'linear-gradient(180deg, rgba(255,255,255,0.05), rgba(255,255,255,0.02))', color: typeFilter === g ? GOLD : DIM, fontSize: 12, fontWeight: 600, cursor: 'pointer' }}>
-            {g}{typeCounts[g] > 0 && g !== 'All' ? ` (${typeCounts[g]})` : ''}
+        {TYPE_GROUPS.some(g => g !== 'All' && typeCounts[g] > 0) && <span className="ntSep" aria-hidden />}
+        {TYPE_GROUPS.filter(g => g !== 'All' && typeCounts[g] > 0).map(g => (
+          <button key={g} type="button" className="ntFilter" aria-pressed={typeFilter === g} onClick={() => toggleType(g)}>
+            {g} ({typeCounts[g]})
           </button>
         ))}
         {typeFilter === MONEY && (
           <button type="button" className="ntFilter" aria-pressed onClick={() => setTypeFilter('All')} aria-label="Clear the money events filter"
-            style={{ padding: '4px 12px', borderRadius: 'var(--radius-pill)', border: '1px solid var(--border-default)', background: 'var(--bg-surface-2)', color: 'var(--text-primary)', fontSize: 12, fontWeight: 600, cursor: 'pointer', display: 'inline-flex', alignItems: 'center', gap: 6 }}>
-            Money Events ({moneyCount}) <X size={12} weight="bold" color="var(--text-secondary)" />
+            style={{ display: 'inline-flex', alignItems: 'center', gap: 6 }}>
+            Money ({moneyCount}) <X size={12} weight="bold" />
           </button>
         )}
       </div>
 
       {/* Notification list */}
-      <SectionCard flush>
-        {loading ? (
+      <div className="ntList">
+        {loadError ? (
+          <div role="alert" style={{ display: 'flex', alignItems: 'center', gap: 10, flexWrap: 'wrap', padding: '14px 0', fontSize: 14, color: TEXT }}>
+            <Warning size={18} weight="fill" color={RED} /> Couldn’t load your notifications.
+            <button type="button" onClick={load} className="ntAct" style={{ background: 'none', border: 0, cursor: 'pointer', padding: 0 }}>Try again</button>
+          </div>
+        ) : loading ? (
           <div style={{ padding: 40, textAlign: 'center', color: DIM, fontSize: 13 }}>Loading notifications…</div>
         ) : displayed.length === 0 ? (
           <PremiumEmpty
             icon={<Bell size={30} weight="duotone" color="var(--text-secondary)" />}
             title={readFilter === 'unread' ? 'No unread notifications' : typeFilter === MONEY ? 'No money events' : typeFilter !== 'All' ? `No ${typeFilter} notifications` : 'No notifications yet'}
             description={readFilter === 'unread' && notifications.length > 0
-              ? 'Everything in the feed has been read. New activity lands here the moment it happens.'
+              ? 'Everything in the feed has been read.'
               : typeFilter !== 'All' && notifications.length > 0
-                ? `Nothing filed under ${typeFilter === MONEY ? 'pay apps or change orders' : typeFilter} yet — switch back to All to see the full feed.`
-                : 'This feed fills itself as the job moves: pay apps submitted and approved, RFIs asked and answered, bids received, change orders signed, insurance expiring, and budget or overdue alerts — each with a one-click jump to the record.'}
+                ? `Nothing under ${typeFilter === MONEY ? 'pay apps or change orders' : typeFilter} yet.`
+                : 'Pay apps, RFIs, bids, change orders and alerts land here as they happen.'}
             action={(readFilter === 'unread' || typeFilter !== 'All') && notifications.length > 0 ? (
               <button type="button" onClick={showAll} style={ghostButtonStyle} className="pmBtn">Show All Notifications</button>
             ) : undefined}
@@ -248,22 +262,13 @@ export default function NotificationsPage() {
             return (
               <div
                 key={n.id}
+                className="ntRow"
+                data-unread={!n.read}
                 onClick={() => !n.read && markRead(n.id)}
-                style={{
-                  padding: '14px 20px',
-                  borderBottom: i < displayed.length - 1 ? `1px solid ${BORDER}` : 'none',
-                  cursor: n.read ? 'default' : 'pointer',
-                  background: n.read ? 'transparent' : 'var(--bg-row-hover)',
-                  transition: 'background .15s',
-                  display: 'flex',
-                  gap: 14,
-                  alignItems: 'flex-start',
-                }}
               >
-                {/* Icon */}
-                <div style={{ width: 36, height: 36, borderRadius: 8, background: `color-mix(in srgb, ${cfg.color} 9%, transparent)`, border: `1px solid color-mix(in srgb, ${cfg.color} 19%, transparent)`, display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 18, flexShrink: 0 }}>
-                  <cfg.icon size={18} weight="fill" color={cfg.color} />
-                </div>
+                <span style={{ display: 'flex', paddingTop: 1, flexShrink: 0 }} aria-hidden>
+                  <cfg.icon size={20} weight="fill" color={cfg.color} />
+                </span>
 
                 {/* Content */}
                 <div style={{ flex: 1, minWidth: 0 }}>
@@ -272,58 +277,58 @@ export default function NotificationsPage() {
                     <div style={{ display: 'flex', alignItems: 'center', gap: 8, flexShrink: 0 }}>
                       <div style={{ fontSize: 12, color: DIM, whiteSpace: 'nowrap' }}>{timeAgo(n.created_at)}</div>
                       <button
+                        type="button"
+                        className="ntX"
                         onClick={e => { e.stopPropagation(); dismiss(n.id); }}
                         disabled={dismissingId === n.id}
                         title="Dismiss"
-                        style={{ background: 'none', border: 'none', color: 'var(--text-tertiary)', cursor: 'pointer', fontSize: 16, lineHeight: 1, padding: '2px 4px', borderRadius: 4 }}
+                        aria-label={`Dismiss: ${n.title}`}
                       ><X size={16} weight="bold" color="var(--text-tertiary)" /></button>
                     </div>
                   </div>
 
-                  <div style={{ display: 'flex', alignItems: 'center', gap: 6, marginBottom: body ? 4 : 0 }}>
-                    <span style={{ fontSize: 12, fontWeight: 700, padding: '1px 6px', borderRadius: 3, background: `color-mix(in srgb, ${cfg.color} 9%, transparent)`, color: cfg.color, letterSpacing: .3 }}>{cfg.label}</span>
+                  <div style={{ fontSize: 13, color: DIM, lineHeight: 1.5 }}>
+                    <span style={{ fontWeight: 700, color: TEXT }}>{cfg.label}</span>{body ? ` · ${body}` : ''}
                   </div>
 
-                  {body && <div style={{ fontSize: 13, color: DIM, lineHeight: 1.5, marginBottom: 6 }}>{body}</div>}
-
                   {/* Action buttons */}
-                  <div style={{ display: 'flex', gap: 8, flexWrap: 'wrap' }}>
+                  <div style={{ display: 'flex', gap: 18, flexWrap: 'wrap' }}>
                     {(n.link || n.action_url) && (
                       <Link
                         href={n.link || n.action_url || '#'}
                         onClick={e => { e.stopPropagation(); markRead(n.id); }}
-                        style={{ fontSize: 12, color: 'var(--link)', textDecoration: 'none', fontWeight: 600, padding: '3px 10px', background: 'var(--bg-surface-2)', border: '1px solid var(--border-default)', borderRadius: 5 }}
+                        className="ntAct"
                       >
-                        View <ArrowRight size={12} weight="bold" color="var(--text-secondary)" style={{ verticalAlign: 'middle' }} />
+                        View <ArrowRight size={12} weight="bold" />
                       </Link>
                     )}
                     {n.project_id && n.type === 'pay_app_approved' && (
                       <Link href={`/app/projects/${n.project_id}/lien-waivers`} onClick={e => { e.stopPropagation(); markRead(n.id); }}
-                        style={{ fontSize: 12, color: 'var(--link)', textDecoration: 'none', fontWeight: 600, padding: '3px 10px', background: 'var(--bg-surface-2)', border: '1px solid var(--border-default)', borderRadius: 5 }}>
-                        Lien Waivers <ArrowRight size={12} weight="bold" color="var(--text-secondary)" style={{ verticalAlign: 'middle' }} />
+                        className="ntAct">
+                        Lien Waivers <ArrowRight size={12} weight="bold" />
                       </Link>
                     )}
                     {n.project_id && (n.type === 'rfi_submitted') && (
                       <Link href={`/app/projects/${n.project_id}/rfis`} onClick={e => { e.stopPropagation(); markRead(n.id); }}
-                        style={{ fontSize: 12, color: 'var(--warning)', textDecoration: 'none', fontWeight: 600, padding: '3px 10px', background: 'rgba(251,191,36,.1)', border: '1px solid rgba(251,191,36,.25)', borderRadius: 5 }}>
-                        Answer RFI <ArrowRight size={12} weight="bold" color="var(--warning)" style={{ verticalAlign: 'middle' }} />
+                        className="ntAct">
+                        Answer RFI <ArrowRight size={12} weight="bold" />
                       </Link>
                     )}
                     {n.project_id && n.type === 'bid_submitted' && (
                       <Link href={`/app/projects/${n.project_id}/bid-packages`} onClick={e => { e.stopPropagation(); markRead(n.id); }}
-                        style={{ fontSize: 12, color: 'var(--link)', textDecoration: 'none', fontWeight: 600, padding: '3px 10px', background: 'var(--bg-surface-2)', border: '1px solid var(--border-default)', borderRadius: 5 }}>
-                        Review Bid <ArrowRight size={12} weight="bold" color="var(--text-secondary)" style={{ verticalAlign: 'middle' }} />
+                        className="ntAct">
+                        Review Bid <ArrowRight size={12} weight="bold" />
                       </Link>
                     )}
                   </div>
                 </div>
 
-                {!n.read && <div aria-label="Unread" style={{ width: 8, height: 8, borderRadius: '50%', background: 'var(--info)', flexShrink: 0, marginTop: 6 }} />}
+                {!n.read && <div aria-label="Unread" style={{ width: 8, height: 8, borderRadius: '50%', background: 'var(--text-primary)', flexShrink: 0, marginTop: 6 }} />}
               </div>
             );
           })
         )}
-      </SectionCard>
+      </div>
     </PremiumSurface>
   );
 }
