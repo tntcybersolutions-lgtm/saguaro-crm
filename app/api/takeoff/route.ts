@@ -2,6 +2,7 @@ import { NextRequest } from 'next/server';
 import { createServerClient, getUser } from '@/lib/supabase-server';
 import { signFields } from '@/lib/storage-signing';
 import { ok, serverError, unauthorized } from '@/lib/api-response';
+import { withTakeoffState } from '@/lib/takeoff-status';
 
 export const dynamic = 'force-dynamic';
 
@@ -34,8 +35,11 @@ export async function GET(req: NextRequest) {
 /* Blueprints are a private bucket. The row still stores the object's public-form
    URL — signStoredUrl parses the path back out of it — so nothing had to be
    migrated in the database; the link is minted per request and expires. */
+    /* status is read from what is in the takeoff (lib/takeoff-status): one
+       marked complete with nothing measured reads 'empty', never Complete.
+       stored_status and item_count ride along. */
     const rows = await signFields(
-      (data || []) as Record<string, unknown>[],
+      await withTakeoffState(supabase, user.tenantId, (data || []) as Record<string, unknown>[]),
       ['file_url', 'thumbnail_url'],
       3600,
       { strict: false },

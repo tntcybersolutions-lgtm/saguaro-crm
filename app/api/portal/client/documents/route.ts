@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from 'next/server';
 import { createServerClient } from '@/lib/supabase-server';
 import { getPortalSession, PORTAL_PERMS } from '@/lib/portal-auth';
 import { apiError } from '@/lib/api-error';
+import { peopleFor, personName } from '@/lib/person-names';
 
 /** GET — list documents visible to client, grouped by category */
 export async function GET(req: NextRequest) {
@@ -45,6 +46,8 @@ export async function GET(req: NextRequest) {
       if (b < 1024 * 1024) return `${(b / 1024).toFixed(1)} KB`;
       return `${(b / (1024 * 1024)).toFixed(1)} MB`;
     };
+    // Who uploaded it, by name — the column keeps the uploader's user id, which means nothing to an owner (lib/person-names).
+    const people = await peopleFor(db, session.tenant_id, (rawDocuments || []) as Record<string, unknown>[], ['uploaded_by']);
     const documents = (rawDocuments || []).map((d: any) => ({
       id: d.id,
       title: d.title,
@@ -52,7 +55,7 @@ export async function GET(req: NextRequest) {
       doc_type: d.doc_type || null,
       version: d.doc_type ? String(d.doc_type) : '1',
       date: d.created_at,
-      uploaded_by: d.uploaded_by || '',
+      uploaded_by: personName(d.uploaded_by, people) || '',
       url: d.file_url || '',
       size: fmtSize(d.file_size),
     }));

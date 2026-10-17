@@ -83,6 +83,8 @@ import { useUnsavedGuard, useComposerDirty } from '@/lib/useUnsavedGuard';
 import UnsavedGuardModal from '@/components/UnsavedGuardModal';
 import { layout } from '@/lib/design-tokens';
 import { photoFix, readFix, fixLabel, fixMapUrl } from '@/lib/photo-gps';
+import { usePeople } from '@/lib/hooks/usePeople';
+import { personName } from '@/lib/person-names';
 
 /* Leaflet needs `window`: the map is drawn in the browser only. */
 const PhotoMap = dynamic(() => import('@/components/media/PhotoMap'), {
@@ -283,6 +285,8 @@ const DATE_INPUT_STYLE: React.CSSProperties = {
 export default function PhotosPage(){
   const {projectId}=useParams() as {projectId:string};
   const [photos,setPhotos]=useState<any[]>([]);
+  // Who took each photo, by name — the column keeps the uploader's email or id (lib/person-names).
+  const people=usePeople(photos.map((p:any)=>p?.taken_by));
   const [loading,setLoading]=useState(true);
   const [loadError,setLoadError]=useState('');
   const [selected,setSelected]=useState<any>(null);
@@ -728,7 +732,7 @@ export default function PhotosPage(){
         poster:p.thumbnail_url||null,
         // The grid already loaded this: the viewer opens on it instantly.
         thumb:isVideo(p)?null:(p.thumbnail_url||null),
-        subtitle:[p.taken_at?new Date(p.taken_at).toLocaleDateString('en-US',{month:'short',day:'numeric',year:'numeric'}):'', p.album||'', p.taken_by||''].filter(Boolean).join(' · ')||null,
+        subtitle:[p.taken_at?new Date(p.taken_at).toLocaleDateString('en-US',{month:'short',day:'numeric',year:'numeric'}):'', p.album||'', personName(p.taken_by, people)||''].filter(Boolean).join(' · ')||null,
       }))
     : [];
   // Read the visible order through a ref: it's rebuilt every render, and as a
@@ -1107,7 +1111,7 @@ export default function PhotosPage(){
         {(p.description||p.caption) && <div className="phProse">{p.description||p.caption}</div>}
         <DetailList items={facts([
           ['Taken', fmtDate(p.taken_at)],
-          ['Uploaded By', p.taken_by || ''],
+          ['Uploaded By', personName(p.taken_by, people) || ''],
           ['Location', p.location || ''],
           ...(fix ? [['GPS', <a key="gps" className="k-link" href={fixMapUrl(fix)} target="_blank" rel="noopener noreferrer">{fixLabel(fix)}</a>] as [string, React.ReactNode]] : []),
           ...(isVideo(p) && p.duration_seconds ? [['Length', fmtDuration(p.duration_seconds)] as [string,string]] : []),
@@ -1197,7 +1201,7 @@ export default function PhotosPage(){
                 ['Date Taken', fmtDate(selected.taken_at)],
                 ['Location', selected.location || ''],
                 ...((f => f ? [['GPS Location', <a key="gps" className="k-link" href={fixMapUrl(f)} target="_blank" rel="noopener noreferrer">{fixLabel(f)}</a>] as [string, React.ReactNode]] : [])(readFix(selected.location_lat, selected.location_lng))),
-                ['Taken By', selected.taken_by || ''],
+                ['Taken By', personName(selected.taken_by, people) || ''],
                 ['Album', selected.album || 'General'],
                 ...(isVideo(selected) && selected.duration_seconds ? [['Length', fmtDuration(selected.duration_seconds)] as [string,string]] : []),
                 ['Source', isVideo(selected) ? 'Video library' : selectedFromFiles ? 'Files & Media' : 'Site Photos'],
@@ -1673,10 +1677,11 @@ function PhotoCard({photo,selected,picking=false,picked=false,onPick,onClick,onI
     setMissing(true);
   };
   const shape=useRatio(String(photo.id),photo);
+  const people=usePeople([photo.taken_by]);
   const badge=albumBadge(photo.album);
   const when=photo.taken_at&&!isNaN(new Date(photo.taken_at).getTime())
     ? new Date(photo.taken_at).toLocaleDateString('en-US',{month:'short',day:'numeric'}) : '';
-  const more=[photo.location, photo.taken_by].filter(Boolean).join(' · ');
+  const more=[photo.location, personName(photo.taken_by, people)].filter(Boolean).join(' · ');
   return(
     <div className="phTile" data-sel={selected?'true':undefined} data-picking={picking?'true':undefined} data-picked={picked?'true':undefined} role="button" tabIndex={0}
       onClick={click}

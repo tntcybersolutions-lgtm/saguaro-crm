@@ -48,6 +48,8 @@ import { localDay } from '@/lib/calendar-day';
 import { baselineSummary, finishVariance, varianceLabel } from '@/lib/schedule-baseline';
 import { computeCpm, lookahead, type CpmOutput } from '@/lib/schedule-cpm';
 import { SCHEDULE_STATUSES, SCHEDULE_STATUS_LABELS, normalizeScheduleStatus, reconcileScheduleProgress, isScheduleDone } from '@/lib/schedule-status';
+import { usePeople } from '@/lib/hooks/usePeople';
+import { personName } from '@/lib/person-names';
 
 /* One status vocabulary for every schedule screen and route (lib/schedule-status).
    Rows are normalized on load, so a legacy `complete` reads as Completed. */
@@ -367,6 +369,8 @@ export default function SchedulePage() {
   const { projectId } = useParams() as { projectId: string };
   const jobHex = useProjectColor(projectId);
   const [tasks, setTasks] = useState<any[]>([]);
+  // Assignees by name — the column can hold a user id (lib/person-names).
+  const people = usePeople(tasks.map((t: any) => t?.assigned_to));
   const [loading, setLoading] = useState(true);
   const [loadError, setLoadError] = useState('');
   const [selected, setSelected] = useState<any>(null);
@@ -708,7 +712,7 @@ export default function SchedulePage() {
         return c ? <span className="schFloat" data-crit={c.critical ? 'true' : undefined} title={c.critical ? 'On the critical path' : undefined}>{c.float}</span> : '—';
       },
     },
-    { key: 'assigned_to', header: 'Assigned', render: t => t.assigned_to || '—' },
+    { key: 'assigned_to', header: 'Assigned', render: t => personName(t.assigned_to, people) || '—' },
     { key: 'trade', header: 'Trade', hidden: true, render: t => t.trade || '—' },
   ];
 
@@ -800,7 +804,7 @@ export default function SchedulePage() {
                   onKeyDown={e => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); viewTask(t); } }}>
                   <div className="schLaName">
                     <b data-crit={c?.critical ? 'true' : undefined} title={t.name}>{t.name}</b>
-                    <span>{[t.trade || t.phase, t.assigned_to, c ? (c.critical ? 'Critical' : `${c.float}d float`) : null].filter(Boolean).join(' · ') || '—'}</span>
+                    <span>{[t.trade || t.phase, personName(t.assigned_to, people), c ? (c.critical ? 'Critical' : `${c.float}d float`) : null].filter(Boolean).join(' · ') || '—'}</span>
                   </div>
                   <div className="schLaDates">{underway ? `Underway · ends ${fmtShort(t.end_date)}` : `${fmtShort(t.start_date)} – ${fmtShort(t.end_date)}`}</div>
                   <div><Badge tone={STATUS_TONE[t.status] || 'neutral'} dot>{STATUS_LABELS[t.status] || t.status}</Badge></div>
@@ -869,7 +873,7 @@ export default function SchedulePage() {
             ['Total Float', vCpm ? <span className="schFloat" data-crit={vCpm.critical ? 'true' : undefined}>{vCpm.critical ? `${vCpm.float} days · critical path` : `${vCpm.float} day${vCpm.float === 1 ? '' : 's'}`}</span> : null],
             ['Late Finish', vCpm && !vCpm.critical ? fmtDate(vCpm.lf) : null],
             ['Trade', viewing.trade],
-            ['Assigned To', viewing.assigned_to],
+            ['Assigned To', personName(viewing.assigned_to, people)],
             ['Predecessor', tasks.find((t: any) => t.id === viewing.predecessor_id)?.name || viewing.predecessor],
           ] as [string, React.ReactNode][]).filter(([, v]) => !!v)} />
         </div>

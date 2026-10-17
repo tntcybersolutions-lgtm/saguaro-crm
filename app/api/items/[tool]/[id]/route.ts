@@ -14,6 +14,7 @@ import { writeChangeOrder, coDecisionLevel, coWriteFailure } from '@/lib/change-
 import { transitionPoStatus } from '@/lib/purchase-order-status';
 import { SUBMITTAL_REVIEW_STATUSES } from '@/lib/submittal-workflow';
 import { runInBackground } from '@/lib/background';
+import { peopleFor } from '@/lib/person-names';
 
 export const dynamic = 'force-dynamic';
 
@@ -61,7 +62,9 @@ export async function GET(req: NextRequest, { params }: { params: Promise<{ tool
     const item = { ...l.item };
     // …nor the owner's change order approval link token (it is the owner's signature).
     for (const k of ['signing_token', 'sub_sign_ip', 'html_content', 'owner_approval_token']) delete item[k];
-    return NextResponse.json({ item, project, files, drawings });
+    // Who "Created by", "Approved by", "Assigned to"… are, by name — the page never prints an id (lib/person-names).
+    const people = await peopleFor(l.db, l.user.tenantId, [item]);
+    return NextResponse.json({ item, project, files, drawings, people });
   } catch (e) {
     return apiError(`items/${type}`, e);
   }

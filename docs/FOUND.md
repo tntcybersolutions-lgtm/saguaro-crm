@@ -493,3 +493,15 @@ the ungated proposal_signatures / _events (20261017c, applied). Found on the way
   above STATUS_COLORS says under contract is blue. Needs a ruling on the color.
 - `--title-section` is `var(--c-yellow-hi)` (`app/globals.css:217`): every Card / section heading is yellow text,
   against DESIGN_SYSTEM §4 ("yellow never labels"). Needs a ruling.
+- Found on fix/gaps-subs-names-minutes (not fixed there):
+  - `app/app/projects/[projectId]/compliance/page.tsx` License column shows "Pending" for every sub — no
+    license data source is read (the scorecard API does not return `subcontractors.license_number` /
+    `license_expiry`), so the badge is a made-up status. Missing licenses stat is always 0 for the same reason.
+  - `lib/sub-invoice-posting.ts` (approve → subcontract billed / budget actual) is on
+    `origin/fix/verify-procore-features`, not on main. The billing cap (`lib/sub-billing-cap.ts`) counts
+    approved / paid portal invoices as `max(recorded billed, approved+paid gross)` so it is right before and
+    after that branch lands; when it lands, `pickSubCommitment` and `subContracts` should become one picker.
+  - `app/api/projects/[projectId]/route.ts` maps a contract's `name` from `party_name` (the contact person,
+    "Hector Alvarado") before `party_company`, so any screen listing contracts as "subs" names a person.
+  - `/api/compliance` reads all of the tenant's `w9_requests` to match by email or company name (no sub id on
+    that table); fine at today's volume, worth a `sub_id` column if requests grow.

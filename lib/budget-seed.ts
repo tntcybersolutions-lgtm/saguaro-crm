@@ -15,6 +15,7 @@
  * Service-role client bypasses RLS → every query is explicitly tenant-scoped.
  */
 import { CSI_DIVISIONS } from '@/lib/construction-intelligence';
+import { takeoffItemCounts } from '@/lib/takeoff-status';
 
 /** One priced takeoff line, from either table. `cost` is dollars (numerics arrive as strings). */
 export type CostLine = {
@@ -64,9 +65,11 @@ export async function seedBudgetFromTakeoff(db: any, tenantId: string, projectId
     .is('deleted_at', null)
     .or('superseded.is.null,superseded.eq.false')
     .order('created_at', { ascending: false })
-    .limit(1);
+    .limit(10);
   if (tErr) throw tErr;
-  const takeoffId = takeoffs?.[0]?.id;
+  // The newest complete takeoff with something measured in it (lib/takeoff-status).
+  const counts = await takeoffItemCounts(db, tenantId, (takeoffs || []).map((t: { id: string }) => t.id));
+  const takeoffId = (takeoffs || []).find((t: { id: string }) => (counts[t.id] ?? 0) > 0)?.id;
   if (!takeoffId) return 0;
 
   const { data: mats, error: mErr } = await db

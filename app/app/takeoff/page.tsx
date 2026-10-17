@@ -49,7 +49,8 @@ interface TakeoffMaterial {
 interface Takeoff {
   id: string; name: string; project_id: string;
   project_name?: string;
-  status: 'pending' | 'uploaded' | 'analyzing' | 'complete' | 'failed';
+  /** Read from what is in it (lib/takeoff-status): 'empty' = marked complete with nothing measured. */
+  status: 'pending' | 'uploaded' | 'analyzing' | 'complete' | 'failed' | 'empty';
   total_cost: number; material_cost: number; labor_cost: number;
   /* The number you BID, as distinct from total_cost, which is the cost
      subtotal. /api/takeoff/analyze-full writes both: total_cost from the cost
@@ -93,6 +94,7 @@ function statusBadge(s: string): { label: string; tone: BadgeTone } {
   if (s === 'complete') return { label: 'Complete', tone: 'ongoing' };
   if (s === 'analyzing') return { label: 'Analyzing', tone: 'lead' };
   if (s === 'failed') return { label: 'Failed', tone: 'overdue' };
+  if (s === 'empty') return { label: 'Nothing measured', tone: 'neutral' };
   return { label: 'Not analyzed', tone: 'under_contract' }; // uploaded / pending
 }
 
@@ -108,6 +110,7 @@ function nextStep(t: Takeoff): { kind: NextStep; label: string } {
 /** The honest sentence for a takeoff with no results yet. */
 function notAnalyzedText(t: Takeoff): string {
   if (t.status === 'analyzing') return 'The analysis is still running. Refresh in a minute to see the results.';
+  if (t.status === 'empty') return (t.storage_path || t.file_url) ? 'Nothing was measured in this takeoff, so there is no estimate. Continue measures the stored drawing.' : 'Nothing was measured in this takeoff and no drawing is stored. Re-upload the drawing to measure it.';
   if (t.status === 'failed') return (t.storage_path || t.file_url) ? 'The last analysis did not finish. Retry runs it again on the stored drawing.' : 'The last analysis did not finish and no drawing is stored. Re-upload the drawing to analyze it.';
   return (t.storage_path || t.file_url) ? 'The drawing is uploaded but has not been analyzed yet, so there is no estimate. Continue runs the analysis.' : 'No drawing finished uploading for this takeoff, so there is nothing to analyze. Re-upload the drawing.';
 }

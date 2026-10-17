@@ -29,6 +29,8 @@ import {
 } from '@phosphor-icons/react';
 import SaguaroDatePicker from '../../../../../components/SaguaroDatePicker';
 import { useUnsavedGuard, useComposerDirty } from '@/lib/useUnsavedGuard';
+import { usePeople } from '@/lib/hooks/usePeople';
+import { personName } from '@/lib/person-names';
 import UnsavedGuardModal from '@/components/UnsavedGuardModal';
 import Suggest from '@/components/ui/Suggest';
 
@@ -187,6 +189,8 @@ export default function SafetyPage() {
 
   // Corrective Actions state
   const [actions, setActions] = useState<CorrectiveAction[]>([]);
+  // Assignees by name — the column can hold a user id (lib/person-names).
+  const people = usePeople(actions.flatMap(a => [a.assigned_to, a.verified_by]));
   const [actionsLoading, setActionsLoading] = useState(true);
   const [showCAForm, setShowCAForm] = useState(false);
   const [caForm, setCaForm] = useState(EMPTY_CA_FORM);
@@ -591,7 +595,7 @@ export default function SafetyPage() {
   });
   const actionColumns: Column<CorrectiveAction>[] = [
     { key: 'description', header: 'Description', primary: true, phone: 'show', render: a => <span className="sfClamp" title={a.description}>{a.description || '—'}</span> },
-    { key: 'assigned_to', header: 'Assigned To', render: a => a.assigned_to || <span className="sfMuted">Unassigned</span> },
+    { key: 'assigned_to', header: 'Assigned To', render: a => personName(a.assigned_to, people) || <span className="sfMuted">Unassigned</span> },
     {
       key: 'due_date', header: 'Due Date', phone: 'show', accessor: a => a.due_date || '',
       render: a => isOverdue(a)

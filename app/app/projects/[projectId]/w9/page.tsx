@@ -3,8 +3,9 @@
  * W-9 Requests — collect W-9s from every vendor and sub on the job. The bid-award
  * gate refuses to award to a sub with no W-9 on file, so this unblocks buyout.
  *
- * Reads  GET  /api/projects/:id                          (contract subs)
- *        GET  /api/documents/w9-request?projectId=       (request trail)
+ * Reads  GET  /api/compliance?projectId=                (the job's subs, W-9 state by the one
+ *                                                         compliance rule — lib/sub-compliance)
+ *        GET  /api/documents/w9-request?projectId=       (request trail: dates, other vendors)
  * Sends  POST /api/documents/w9-request  { projectId, subId?, vendorName, vendorEmail }
  */
 import React, { useState, useEffect, useCallback } from 'react';
@@ -70,18 +71,20 @@ export default function W9Page() {
   const fetchSubs = useCallback(async () => {
     setLoading(true);
     try {
-      // The project "subs" come from the contracts table (vendor_name only, no
-      // w9_status columns). The real W-9 state lives in w9_requests — merge it
-      // in so a sent request actually reflects as Pending/Received and survives
-      // reload (the old code read a nonexistent contracts.w9_status and always
-      // showed "not_requested").
-      const [projRes, w9Res] = await Promise.all([
-        fetch(`/api/projects/${projectId}`),
+      /* The job's subs and whether each has a W-9 come from the compliance
+         read, which answers by ONE rule (lib/sub-compliance): the directory's
+         "W-9 on file", a request that came back, or a W-9 the sub uploaded in
+         their portal. This screen used to read only w9_requests, so a sub the
+         Compliance screen showed as compliant read "W-9 missing" here. The
+         request trail still supplies the dates and vendors who aren't subs. */
+      const [cmpRes, w9Res] = await Promise.all([
+        fetch(`/api/compliance?projectId=${projectId}`),
         fetch(`/api/documents/w9-request?projectId=${projectId}`),
       ]);
-      const data = await projRes.json().catch(() => ({}));
+      const cmp = await cmpRes.json().catch(() => ({}));
       const w9Data = await w9Res.json().catch(() => ({}));
-      const subList = data.subs || data.subcontractors || [];
+      if (!cmpRes.ok) throw new Error(cmp.error || "Couldn't load the job's subs.");
+      const roster: any[] = Array.isArray(cmp.subs) ? cmp.subs : [];
       const w9reqs: any[] = w9Data.w9Requests || [];
 
       const norm = (v: any) => String(v || '').toLowerCase().trim();
@@ -97,15 +100,16 @@ export default function W9Page() {
         (r.status === 'submitted' || r.status === 'received') ? 'received' : 'pending';
       const dateOnly = (v: any) => (v ? String(v).split('T')[0] : null);
 
-      const rows: W9Sub[] = subList.map((s: any) => {
-        const name = s.vendor_name || s.name || s.company_name || '';
-        const email = s.vendor_email || s.email || s.contact_email || '';
+      const rows: W9Sub[] = roster.map((s: any) => {
+        const name = s.name || '';
+        const email = s.email || '';
         const match = (email && byEmail.get(norm(email))) || (name && byName.get(norm(name))) || null;
+        const onFile = s.w9?.on_file === true;
         return {
-          id: s.id || s.sub_id || `s-${Math.random()}`,
+          id: s.id,
           name,
           email,
-          w9_status: match ? statusOf(match) : 'not_requested',
+          w9_status: onFile ? 'received' : s.w9?.status === 'pending' ? 'pending' : 'not_requested',
           requested_date: match ? dateOnly(match.created_at) : null,
           received_date: match ? dateOnly(match.submitted_at) : null,
         };
@@ -128,12 +132,13 @@ export default function W9Page() {
         });
       }
       setSubs(rows);
-    } catch {
+    } catch (e) {
       setSubs([]);
+      show(e instanceof Error ? e.message : "Couldn't load W-9s.", 'bad');
     } finally {
       setLoading(false);
     }
-  }, [projectId]);
+  }, [projectId, show]);
 
   useEffect(() => { fetchSubs(); }, [fetchSubs]);
 

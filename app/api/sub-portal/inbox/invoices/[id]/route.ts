@@ -5,6 +5,7 @@ import { requirePermission } from '@/lib/permissions';
 import { must } from '@/lib/db-write';
 import { INVOICE_STATUS_LABEL, invoiceTransition, isSubInvoiceAction } from '@/lib/sub-invoice-status';
 import { gcSenderName } from '@/lib/sub-inbox';
+import { approvalCapMessage, checkBillingCap, invoiceGross, loadBillingRoom } from '@/lib/sub-billing-cap';
 
 const UUID = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
 
@@ -41,6 +42,25 @@ export async function PATCH(req: NextRequest, { params }: { params: Promise<{ id
 
     const step = invoiceTransition(row.status, body.action);
     if (!step.ok) return NextResponse.json({ error: step.message, invoice: row }, { status: 409 });
+
+    /* Approving bills the sub's contract, so it can't run past it: this
+       invoice's gross has to fit in what is left once every other invoice is
+       counted (lib/sub-billing-cap — the same check the portal makes when the
+       sub sends it, repeated here because the contract may have filled since). */
+    if (body.action === 'approve' && row.sub_id && row.project_id) {
+      const { data: sub, error: sErr } = await db.from('subcontractors').select('company_name')
+        .eq('tenant_id', user.tenantId).eq('id', row.sub_id).maybeSingle();
+      if (sErr) throw sErr;
+      const subName = String((sub as { company_name?: string | null } | null)?.company_name || '');
+      const room = await loadBillingRoom(db, user.tenantId, row.project_id, row.sub_id, { subName, excludeInvoiceId: id });
+      const cap = checkBillingCap(room, invoiceGross(row));
+      if (!cap.ok) {
+        return NextResponse.json({
+          error: approvalCapMessage(subName, cap), overBilling: true,
+          remaining: cap.room.remaining, contract: cap.room.contract, billed: cap.room.billed, over: cap.over, invoice: row,
+        }, { status: 409 });
+      }
+    }
 
     // Only if nobody moved it since it was read — two people clicking at once can't double-apply.
     const now = new Date().toISOString();
