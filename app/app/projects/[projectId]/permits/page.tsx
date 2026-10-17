@@ -30,6 +30,7 @@ import {
   FormModal, Field, Input, Select, FormGrid, DetailList, Toast, useToast,
   type Column, type BadgeTone, type StatItem, type Action,
 } from '@/components/ui/kit';
+import { Facts } from '@/lib/ui/filled-facts';
 import { useUnsavedGuard, useComposerDirty } from '@/lib/useUnsavedGuard';
 import UnsavedGuardModal from '@/components/UnsavedGuardModal';
 import Suggest from '@/components/ui/Suggest';
@@ -59,7 +60,7 @@ function statusBadge(s: string): { label: string; tone: BadgeTone } {
   if (s === 'inspections') return { label: 'Inspections', tone: 'lead' };
   if (s === 'closed') return { label: 'Closed', tone: 'closed' };
   if (s === 'expired') return { label: 'Expired', tone: 'overdue' };
-  return { label: 'Applied', tone: 'under_contract' };
+  return { label: 'Applied', tone: 'lead' };
 }
 const STATUS_RANK: Record<string, number> = { applied: 0, issued: 1, inspections: 2, closed: 3, expired: 4 };
 type StatusFilter = 'all' | 'applied' | 'issued' | 'inspections' | 'closed' | 'expired' | 'expiring';
@@ -96,7 +97,7 @@ const CSS = `
 .peMoney { font-variant-numeric: tabular-nums; white-space: nowrap; color: var(--text-primary); font-weight: 600; }
 .peMuted { color: var(--text-tertiary); }
 .peLate { color: var(--status-overdue); font-weight: 700; }
-.peSoon { color: var(--status-under-contract); font-weight: 700; }
+.peSoon { color: var(--warning); font-weight: 700; }
 .peBadges { display: inline-flex; align-items: center; gap: 6px; flex-wrap: wrap; }
 .peSection { display: flex; flex-direction: column; gap: 8px; }
 .peSection + .peSection { margin-top: 20px; padding-top: 20px; border-top: 1px solid var(--border-subtle); }
@@ -320,8 +321,8 @@ export default function PermitsPage() {
   const isSel = (p: Permit) => p.id === selectedId;
   const numCol: Column<Permit> = { key: 'permit_number', header: 'Permit #', primary: true, groupable: false, accessor: p => p.permit_number || '', width: 150, render: p => <span className="peNum" data-sel={isSel(p) ? 'true' : undefined}>{p.permit_number || '—'}</span> };
   const typeCol: Column<Permit> = { key: 'permit_type', header: 'Type', accessor: p => p.permit_type || '', render: p => <span style={{ color: 'var(--text-primary)' }}>{p.permit_type}</span> };
-  const agencyCol: Column<Permit> = { key: 'issuing_authority', phone: 'hide', header: 'Agency', accessor: p => (p.issuing_authority || '').toLowerCase(), render: p => p.issuing_authority || <span className="peMuted">—</span> };
-  const statusCol: Column<Permit> = { key: 'status', phone: 'show', header: 'Status', accessor: p => STATUS_RANK[effStatus(p)] ?? 9, render: p => { const b = statusBadge(effStatus(p)); return <span className="peBadges"><Badge tone={b.tone}>{b.label}</Badge>{isExpiringSoon(p) && <Badge tone="under_contract">Expiring</Badge>}</span>; } };
+  const agencyCol: Column<Permit> = { key: 'issuing_authority', phone: 'hide', header: 'Agency', accessor: p => (p.issuing_authority || '').toLowerCase(), render: p => p.issuing_authority || null };
+  const statusCol: Column<Permit> = { key: 'status', phone: 'show', header: 'Status', accessor: p => STATUS_RANK[effStatus(p)] ?? 9, render: p => { const b = statusBadge(effStatus(p)); return <span className="peBadges"><Badge tone={b.tone}>{b.label}</Badge>{isExpiringSoon(p) && <Badge tone="lead">Expiring</Badge>}</span>; } };
   const feeCol: Column<Permit> = { key: 'fee', phone: 'show', header: 'Fee', accessor: p => Number(p.fee) || 0, align: 'right', total: 'sum', format: fmtUsd, render: p => <span className="peMoney">{fmtUsd(Number(p.fee) || 0)}</span> };
   const issuedCol: Column<Permit> = { key: 'issued_date', phone: 'hide', header: 'Issued', accessor: p => p.issued_date || '', render: p => <span className="peMuted">{fmtDate(p.issued_date)}</span> };
   const expiryCol: Column<Permit> = { key: 'expiry_date', phone: 'show', header: 'Expiry', accessor: p => p.expiry_date || '', render: p => {
@@ -343,7 +344,7 @@ export default function PermitsPage() {
           <div className="peSection">
             <div className="peBadges">
               <Badge tone={b.tone} dot>{b.label}</Badge>
-              {isExpiringSoon(selected) && <Badge tone="under_contract">Expiring in {d}d</Badge>}
+              {isExpiringSoon(selected) && <Badge tone="lead">Expiring in {d}d</Badge>}
             </div>
             <div className="peNext">
               {st === 'applied' && 'Waiting on the AHJ.'}
@@ -354,7 +355,7 @@ export default function PermitsPage() {
             </div>
           </div>
           <div className="peSection">
-            <DetailList items={[
+            <Facts items={[
               ['Permit Type', selected.permit_type],
               ['Agency', selected.issuing_authority || ''],
               ['Fee', fmtUsd(Number(selected.fee) || 0)],
@@ -405,7 +406,7 @@ export default function PermitsPage() {
         defaultSort={{ key: 'expiry_date', dir: 'asc' }}
         onRowClick={p => setSelectedId(p.id)}
         rowActions={permitActions}
-        empty={<EmptyState icon={<Clipboard size={22} />} title="No permits match these filters" text="Clear the search, status, or type filter to see more." action={<Button onClick={clearFilters}>Clear Filters</Button>} />}
+        empty={<EmptyState icon={<Clipboard size={22} />} title="No permits match these filters" action={<Button onClick={clearFilters}>Clear Filters</Button>} />}
       />
     );
   }
@@ -420,10 +421,10 @@ export default function PermitsPage() {
           { label: 'Permits' },
         ]}
         title="Permits & Approvals"
-        subtitle={`${openCount} open${city ? ` · ${city} jurisdiction` : ''}`}
+        subtitle={[ctx?.project?.name, city ? `${city} jurisdiction` : ''].filter(Boolean).join(' · ') || undefined}
         actions={<Button variant="primary" icon={<Plus size={15} weight="bold" />} onClick={openCreate}>Add Permit</Button>}
       >
-        {!loadError && <StatRow items={stats} />}
+        {!loadError && (loading || permits.length > 0) && <StatRow items={stats} />}
 
         {expiringSoon.length > 0 && (
           <Callout
@@ -449,7 +450,6 @@ export default function PermitsPage() {
                 {filtersActive && <Button variant="ghost" size="sm" onClick={clearFilters}>Clear</Button>}
               </>
             }
-            actions={<span className="peMuted" style={{ fontSize: 'var(--fs-sm)' }}>{filteredPermits.length} of {permits.length}</span>}
           />
         )}
 
