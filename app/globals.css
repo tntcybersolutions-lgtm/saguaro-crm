@@ -1573,19 +1573,34 @@ li[data-done="true"] .pj-next-step strong { color: var(--text-tertiary); text-de
    with a 44px hit area.
    ═══════════════════════════════════════════════════════════════════════════ */
 .sag-topbar { background: var(--bg-base); border-bottom: 1px solid var(--border-subtle); }
-/* Back — a slate pill naming where it goes. 36px tall, 44px to the touch. */
+/* Back — phone only: up one level, a 44px arrow named in its aria-label.
+   Desktop has the trail instead (below), where the parent is a named crumb. */
 .sag-tb-back { position: relative; display: inline-flex; align-items: center; gap: 4px; flex: 0 0 auto; height: 36px; padding: 0 12px 0 8px; margin-right: 4px; background: var(--bg-surface-2); border: 1px solid var(--border-default); border-radius: 10px; box-shadow: none; color: var(--sg-text); font-size: 14.5px; font-weight: 700; letter-spacing: normal; cursor: pointer; -webkit-tap-highlight-color: transparent; }
 .sag-tb-back::after { content: ''; position: absolute; inset: -4px 0; }
 .sag-tb-back:hover { background: var(--bg-hover); border-color: var(--border-strong); }
 .sag-tb-back:active { transform: none; opacity: .75; }
 .sag-tb-back:focus-visible { outline: 2px solid var(--focus-ring); outline-offset: 2px; }
 .sag-tb-back > svg { flex: none; color: var(--text-secondary); }
+@media (min-width: 768px) { .sag-tb-back { display: none; } .sag-tb-phone-only { display: none; } }
+/* The desktop trail, Procore's way: ⌂ Home / [Job ▾] / Parent / Title.
+   Home is always the first crumb, so leaving a job is one click from any
+   screen. Crumbs are quiet text that light on hover, never pills. */
+.sag-crumbs { align-items: center; gap: 2px; flex: 0 1 auto; min-width: 0; }
+.sag-crumb-home { display: inline-flex; align-items: center; gap: 6px; flex: 0 0 auto; height: 36px; padding: 0 10px 0 8px; border-radius: 8px; color: var(--text-secondary); font-size: 14px; font-weight: 650; text-decoration: none; white-space: nowrap; transition: background-color .15s ease, color .15s ease; }
+.sag-crumb-home:hover { background: var(--bg-hover); color: var(--text-primary); }
+.sag-crumb-home[aria-current="page"] { color: var(--text-primary); }
+.sag-crumb-sep { flex: 0 0 auto; padding: 0 2px; color: var(--text-tertiary); font-size: 16px; font-weight: 400; user-select: none; }
+.sag-crumb-div { flex: 0 0 auto; width: 1px; height: 18px; margin: 0 8px 0 6px; background: var(--border-default); }
+.sag-crumb-prev { flex: 0 1 auto; min-width: 0; max-width: 220px; height: 36px; padding: 0 8px; border: 0; border-radius: 8px; background: none; color: var(--text-secondary); font: inherit; font-size: 14px; font-weight: 600; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; cursor: pointer; transition: background-color .15s ease, color .15s ease; }
+.sag-crumb-prev:hover { background: var(--bg-hover); color: var(--text-primary); }
+.sag-crumb-home:focus-visible, .sag-crumb-prev:focus-visible { outline: 2px solid var(--focus-ring); outline-offset: 2px; }
+.sag-crumbs .jp-wrap { max-width: 280px; }
+@media (min-width: 768px) { .sag-tb-title { min-width: 72px; } }
 /* Photos — the desktop's one click to the camera / upload sheet (components/media/QuickMedia). */
 .sag-tb-photo { display: inline-flex; align-items: center; gap: 7px; height: 36px; padding: 0 12px; flex-shrink: 0; border-radius: 10px; border: 1px solid var(--border-default); background: var(--bg-surface-2); color: var(--text-primary); font-size: 14px; font-weight: 700; cursor: pointer; transition: background-color .15s ease, border-color .15s ease; }
 .sag-tb-photo svg { color: var(--text-secondary); }
 .sag-tb-photo:hover { background: var(--bg-hover); border-color: var(--border-strong); }
 .sag-tb-photo:focus-visible { outline: 2px solid var(--focus-ring); outline-offset: 2px; }
-.sag-tb-back-label { white-space: nowrap; }
 .sag-tb-title { flex: 1 1 auto; min-width: 0; margin: 0; font-size: 16px; font-weight: 650; letter-spacing: -0.01em; color: var(--sg-text); overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
 .sag-tb-icon { flex: none; width: 44px; height: 44px; display: inline-grid; place-items: center; padding: 0; background: none; border: 0; border-radius: 22px; color: var(--sg-text-2); cursor: pointer; -webkit-tap-highlight-color: transparent; }
 .sag-tb-icon:active { transform: none; }
@@ -1654,7 +1669,6 @@ li[data-done="true"] .pj-next-step strong { color: var(--text-tertiary); text-de
   .sag-tb-back { width: 44px; height: 44px; padding: 0; gap: 0; justify-content: center; margin-left: -6px; margin-right: 2px; }
   .sag-tb-back::after { inset: 0; }
   .sag-tb-back > svg { width: 20px; height: 20px; color: var(--text-primary); }
-  .sag-tb-back-label { display: none; }
   .sag-tb-title { font-size: 17px !important; }
   .sag-tb-sage-label { display: none; }
   .sag-crumb-prev { display: none !important; }
