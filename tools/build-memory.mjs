@@ -24,6 +24,7 @@ import { readFileSync, readdirSync } from 'node:fs';
 import { createRequire } from 'node:module';
 import os from 'node:os';
 import v8 from 'node:v8';
+import { fileURLToPath } from 'node:url';
 
 const args = process.argv.slice(2);
 if (args.length === 0) {
@@ -161,7 +162,13 @@ if (command === 'next') {
   command = process.execPath;
 }
 
-const child = spawn(command, commandArgs, { stdio: 'inherit', env: process.env });
+// Every Node process of the build preloads the heap probe, which prints its
+// own V8 heap beside its resident size (see tools/build-memory-probe.cjs).
+const probe = fileURLToPath(new URL('./build-memory-probe.cjs', import.meta.url));
+const probeFlag = /\s/.test(probe) ? `--require "${probe}"` : `--require ${probe}`;
+const env = { ...process.env, NODE_OPTIONS: [process.env.NODE_OPTIONS, probeFlag].filter(Boolean).join(' ') };
+
+const child = spawn(command, commandArgs, { stdio: 'inherit', env });
 
 let peak = { used: 0, at: '0s', line: '' };
 let lastPrint = 0;
