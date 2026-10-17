@@ -1,6 +1,7 @@
 import { NextResponse, type NextRequest } from 'next/server';
 import { createServerClient, getUser } from '@/lib/supabase-server';
 import { apiError } from '@/lib/api-error';
+import { liveJobs } from '@/lib/live-jobs';
 import { isSubPortalExpired } from '@/lib/sub-portal-expiry';
 
 export const dynamic = 'force-dynamic';
@@ -34,14 +35,15 @@ export async function GET(req: NextRequest) {
 
     await Promise.all([
       subIds.length > 0
-        ? db.from('subcontractors').select('id, company_name, contact_name').in('id', subIds)
+        ? db.from('subcontractors').select('id, company_name, contact_name').eq('tenant_id', user.tenantId).in('id', subIds)
             .then(({ data }) => {
               subMap = Object.fromEntries((data || []).map(s => [s.id, { company_name: s.company_name, contact_name: s.contact_name }])) as Record<string, { company_name: string; contact_name: string }>;
             })
         : Promise.resolve(),
       projectIds.length > 0
-        ? db.from('projects').select('id, name').in('id', projectIds)
-            .then(({ data }) => {
+        ? liveJobs(db.from('projects').select('id, name').eq('tenant_id', user.tenantId).in('id', projectIds))
+            .then(({ data, error: pErr }) => {
+              if (pErr) throw pErr;
               projectMap = Object.fromEntries((data || []).map(p => [p.id, p.name]));
             })
         : Promise.resolve(),
@@ -50,7 +52,8 @@ export async function GET(req: NextRequest) {
     /* A sub invited by an email that is not on the roster has no sub_id —
        the company and contact typed on the invite live on the session row.
        Reading only the roster showed every such invite as "—". */
-    const enriched = (sessions || []).map(s => {
+    // Portals onto archived or deleted jobs drop out (lib/live-jobs).
+    const enriched = (sessions || []).filter(s => !s.project_id || s.project_id in projectMap).map(s => {
       const row = s as typeof s & { sub_company?: string | null; sub_contact_name?: string | null; sub_email?: string | null };
       return {
         ...s,

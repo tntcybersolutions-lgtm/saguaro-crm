@@ -386,7 +386,7 @@ function ServiceInner() {
     router.replace(`/app/service${next.toString() ? '?' + next.toString() : ''}`, { scroll: false });
   };
   const techName = (id: string | null) => (id && data?.techs.find(u => u.id === id)) ? (data!.techs.find(u => u.id === id)!.full_name || data!.techs.find(u => u.id === id)!.email) : null;
-  const jobName = (id: string | null) => (id && data?.projects.find(p => p.id === id)?.name) || '—';
+  const jobName = (id: string | null) => (id && data?.projects.find(p => p.id === id)?.name) || 'No job';
   const rows = useMemo(() => {
     const all = data?.tickets || [];
     const today = todayYmd();
@@ -426,7 +426,7 @@ function ServiceInner() {
         <div className={`sv-layout ${sel || creating ? 'with-side' : ''}`}>
           <section className="sv-card sv-pad" aria-label="Service calls">
             {rows.length === 0 ? (
-              <p className="sv-dim">{filter === 'open' ? 'No open service calls. Create one when a customer calls in.' : filter === 'archived' ? 'No archived calls.' : 'Nothing in this filter.'}</p>
+              <p className="sv-dim">{filter === 'open' ? 'No open service calls.' : filter === 'archived' ? 'No archived calls.' : 'Nothing in this filter.'}</p>
             ) : (
               <ul className="sv-list">
                 {rows.map(t => {
@@ -476,11 +476,12 @@ const CSS = `
 .sv h3 { font-size: 14px; font-weight: 750; color: var(--text-secondary); margin: 20px 0 10px; }
 .sv-back { display: inline-flex; align-items: center; gap: 6px; color: var(--text-tertiary); font-size: 13px; text-decoration: none; margin-bottom: 10px; }
 .sv-top { display: flex; flex-wrap: wrap; justify-content: space-between; align-items: center; gap: 12px; margin-bottom: 12px; }
-.sv-seg { display: inline-flex; flex-wrap: wrap; gap: 2px; padding: 3px; border-radius: 10px; background: var(--bg-surface-2); border: 1px solid var(--glass-border); margin-bottom: 16px; }
-.sv-seg button { min-height: 36px; padding: 0 12px; border: 0; border-radius: 7px; background: transparent; color: var(--text-secondary); font-size: 13px; font-weight: 650; cursor: pointer; }
+.sv-seg { display: inline-flex; flex-wrap: wrap; gap: 2px; margin-bottom: 16px; }
+.sv-seg button { min-height: 40px; padding: 0 12px; border: 0; border-radius: 7px; background: transparent; color: var(--text-secondary); font-size: 13px; font-weight: 650; cursor: pointer; }
 .sv-seg button.on { background: var(--brand-primary); color: var(--on-brand); }
-.sv-card { background: var(--bg-surface); border: 1px solid var(--glass-border); border-radius: 14px; box-shadow: var(--glass-highlight); }
-.sv-pad { padding: 18px 20px; }
+/* Flat: sections sit on the page under a hairline, never in a filled card. */
+.sv-card { border-top: 1px solid var(--border-default); }
+.sv-pad { padding: 14px 0; }
 .sv-layout { display: grid; grid-template-columns: minmax(0, 1fr); gap: 20px; align-items: start; }
 .sv-layout.with-side { grid-template-columns: minmax(0, 1.1fr) minmax(0, 1fr); }
 .sv-list { list-style: none; margin: 0; padding: 0; }

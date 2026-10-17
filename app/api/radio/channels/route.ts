@@ -3,6 +3,7 @@ import { requirePermission } from '@/lib/permissions';
 import { createNotification } from '@/lib/notifications';
 import { must } from '@/lib/db-write';
 import { apiError } from '@/lib/api-error';
+import { liveJobs } from '@/lib/live-jobs';
 
 /**
  * Saguaro Radio — talkgroups.
@@ -83,10 +84,11 @@ export async function GET(req: NextRequest) {
     const projIds = [...new Set(list.map((c) => c.project_id).filter(Boolean))];
     const projNames = new Map<string, string>();
     if (projIds.length) {
-      const { data: projs } = await db.from('projects').select('id, name').in('id', projIds).eq('tenant_id', t);
+      const { data: projs } = await liveJobs(db.from('projects').select('id, name').in('id', projIds).eq('tenant_id', t));
       for (const p of (projs || []) as any[]) projNames.set(p.id, p.name);
     }
-    // A job's channels go when the job goes: radio_channels.project_id has no FK,
+    // A job's channels go when the job goes (deleted or archived — lib/live-jobs):
+    // radio_channels.project_id has no FK,
     // so a deleted job left "All Hands" rows whose actions (File to daily log)
     // could only fail. Org-wide channels (no project) always stay.
     list = list.filter((c) => !c.project_id || projNames.has(c.project_id));

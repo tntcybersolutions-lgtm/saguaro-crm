@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from 'next/server';
 import { createServerClient, getUser } from '@/lib/supabase-server';
 import { addDays, requestDay, startOfDayIn } from '@/lib/time-zone';
 import { apiError } from '@/lib/api-error';
+import { liveJobs } from '@/lib/live-jobs';
 
 /**
  * GET /api/widgets/summary
@@ -17,11 +18,11 @@ export async function GET(req: NextRequest) {
     const projectId = req.nextUrl.searchParams.get('projectId');
 
     // Get active project count
-    const { count: projectCount } = await db
+    const { count: projectCount } = await liveJobs(db
       .from('projects')
       .select('*', { count: 'exact', head: true })
       .eq('tenant_id', user.tenantId)
-      .eq('status', 'active');
+      .eq('status', 'active'));
 
     // Get today's stats
     // The company's day (device, else company zone); "logged today" runs from its local midnight.

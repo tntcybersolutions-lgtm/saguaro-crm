@@ -32,3 +32,15 @@ export function isLiveJob(p: {
   if (!p) return false;
   return p.is_archived !== true && !p.archived_at && p.is_deleted !== true && !p.deleted_at;
 }
+
+/** Every live job id for a tenant — for filtering rows of another table
+ *  (logs, alerts, approvals) down to the jobs still on the books. */
+export async function liveJobIds(
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  db: { from: (table: string) => any },
+  tenantId: string,
+): Promise<Set<string>> {
+  const { data, error } = await liveJobs(db.from('projects').select('id').eq('tenant_id', tenantId)).limit(5000);
+  if (error) throw error;
+  return new Set(((data || []) as Array<{ id: string }>).map((p) => p.id));
+}
