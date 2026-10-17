@@ -517,7 +517,6 @@ export default function InvoicingPage() {
                 {filtersActive && <Button variant="ghost" size="sm" onClick={clearFilters}>Clear</Button>}
               </>
             }
-            actions={<span className="ivMuted" style={{ fontSize: 'var(--fs-sm)' }}>{visible.length} of {invoices.length}</span>}
           />
         )}
 
