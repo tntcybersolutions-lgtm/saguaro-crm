@@ -22,10 +22,10 @@ const CSS = `
 [data-tone="red"] > .jdbDot, .jdbLegend i[data-tone="red"] { background: var(--c-red); box-shadow: 0 0 0 3px rgba(248,113,113,0.18); }
 [data-tone="yellow"] > .jdbDot, .jdbLegend i[data-tone="yellow"] { background: var(--warning); box-shadow: 0 0 0 3px color-mix(in srgb, var(--warning) 16%, transparent); }
 [data-tone="green"] > .jdbDot, .jdbLegend i[data-tone="green"] { background: var(--c-green); box-shadow: 0 0 0 3px rgba(74,222,128,0.16); }
-.jdbList { display: flex; flex-direction: column; border-radius: 16px; border: 1px solid var(--border-subtle); background: linear-gradient(180deg, var(--c-raised), var(--c-card)); overflow: hidden; }
-.jdbRow { display: grid; grid-template-columns: minmax(220px, 1.5fr) minmax(170px, 1.2fr) repeat(4, minmax(92px, .7fr)) 24px; align-items: center; gap: 16px; padding: 14px 16px; border: 0; border-top: 1px solid var(--border-subtle); background: transparent; color: inherit; font: inherit; text-align: left; cursor: pointer; width: 100%; }
+.jdbList { display: flex; flex-direction: column; border-radius: 0; border: 0; border-top: 1px solid var(--border-subtle); border-bottom: 1px solid var(--border-subtle); background: none; overflow: hidden; }
+.jdbRow { display: grid; grid-template-columns: minmax(220px, 1.5fr) minmax(170px, 1.2fr) repeat(4, minmax(92px, .7fr)) 24px; align-items: center; gap: 16px; padding: 14px 8px; border: 0; border-top: 1px solid var(--border-subtle); background: transparent; color: inherit; font: inherit; text-align: left; cursor: pointer; width: 100%; }
 .jdbRow:first-child { border-top: 0; }
-.jdbRow:hover { background: rgba(255,255,255,0.03); }
+.jdbRow:hover { background: var(--bg-row-hover); }
 .jdbRow:focus-visible { outline: 2px solid var(--focus-ring); outline-offset: -2px; }
 .jdbRow[data-sel="true"] { background: rgba(232,255,42,0.05); box-shadow: inset 3px 0 0 var(--brand-primary); cursor: default; }
 .jdbJob { display: flex; align-items: center; gap: 12px; min-width: 0; }
@@ -42,14 +42,14 @@ const CSS = `
 .jdbM small { display: block; margin-top: 2px; font-size: 12px; color: var(--text-tertiary); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
 .jdbM small[data-bad="true"] { color: var(--c-red); font-weight: 800; }
 .jdbBar { height: 6px; border-radius: 6px; background: rgba(255,255,255,0.08); overflow: hidden; margin-top: 6px; }
-.jdbBar > i { display: block; height: 100%; border-radius: 6px; background: var(--info); }
+.jdbBar > i { display: block; height: 100%; border-radius: 6px; background: var(--chart-1); }
 .jdbGo { color: var(--text-tertiary); }
 .jdbClear { display: inline-flex; align-items: center; gap: 6px; min-height: 36px; padding: 0 12px; border-radius: 999px; border: 1px solid var(--border-default); background: rgba(255,255,255,0.04); color: var(--text-primary); font: inherit; font-size: 13px; font-weight: 700; cursor: pointer; }
 .jdbClear:focus-visible { outline: 2px solid var(--focus-ring); outline-offset: 2px; }
 .jdbEmpty { padding: 18px 16px; font-size: 14px; color: var(--text-tertiary); }
 @media (max-width: 1100px) { .jdbRow { grid-template-columns: minmax(200px, 1.4fr) minmax(150px, 1fr) repeat(2, minmax(88px, .7fr)) 20px; } .jdbHideMd { display: none; } }
 @media (max-width: 767px) {
-  .jdbRow { grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 12px 14px; padding: 14px; }
+  .jdbRow { grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 12px 14px; padding: 14px 0; }
   .jdbJob { grid-column: 1 / -1; }
   .jdbBill { grid-column: 1 / -1; }
   .jdbHideMd { display: block; }

@@ -3,7 +3,7 @@
 /**
  * MetricTrendCard — a big-number KPI tile with a period-over-period delta % and
  * an embedded MiniSpark, built on the exact StatCard chrome from premium.tsx
- * (milled-plate surface, left accent bar, uppercase micro-label, tabular-nums).
+ * (flat on the page, uppercase micro-label, tabular-nums).
  *
  * Optionally clickable: pass `href` to render an <a> (routing-agnostic, like
  * StatCard), or `onClick` for a handler. When interactive it borrows the
@@ -17,6 +17,7 @@ import {
   CHART,
   CARD_SURFACE,
   cardShadow,
+  CHART_FRAME,
   microLabel,
   accentColors,
   computeDelta,
@@ -80,9 +81,8 @@ export function MetricTrendCard({
         position: 'relative',
         overflow: 'hidden',
         background: CARD_SURFACE,
-        border: `1px solid ${CHART.border}`,
-        borderRadius: 16,
-        padding: '14px 16px',
+        ...CHART_FRAME,
+        padding: '14px 0',
         boxShadow: cardShadow,
         cursor: interactive ? 'pointer' : 'default',
         animation: `pmRise .5s ease ${delay.toFixed(2)}s both`,
@@ -90,19 +90,6 @@ export function MetricTrendCard({
         ...style,
       }}
     >
-      <div
-        aria-hidden
-        style={{
-          position: 'absolute',
-          left: 0,
-          top: 0,
-          bottom: 0,
-          width: 3,
-          background: `linear-gradient(180deg, ${main}, transparent)`,
-          opacity: 0.85,
-        }}
-      />
-
       <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 10, marginBottom: 12 }}>
         <span style={{ display: 'inline-flex', alignItems: 'center', gap: 9, minWidth: 0 }}>
           {icon && (
