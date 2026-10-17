@@ -151,6 +151,30 @@ export function hasPermission(
   return LEVEL_RANK[have] >= LEVEL_RANK[minLevel];
 }
 
+/** True if `perms` grants at least `minLevel` on ANY of `categories`. */
+export function hasAnyPermission(
+  perms: PermissionMap,
+  categories: readonly PermCategory[],
+  minLevel: PermLevel,
+): boolean {
+  return categories.some((c) => hasPermission(perms, c, minLevel));
+}
+
+/**
+ * Proposal and bid dollars, and e-sign signer details (names, emails, IPs):
+ * visible to a role with Sales OR Budget, and nobody else (owner decision,
+ * 16 Oct 2026). The database applies the same rule in role_gate_*_proposals,
+ * _proposal_lines, _proposal_signatures, _proposal_signature_events, _bids and
+ * _bid_submissions (20261017c).
+ */
+export const PROPOSAL_MONEY: readonly PermCategory[] = ['Sales', 'Budget'];
+
+/**
+ * Pay rates on resource planning (resource_assignments.hourly_rate /
+ * cost_rate): Budget or Admin view. Labor cost is job cost.
+ */
+export const RATE_VIEW: readonly PermCategory[] = ['Budget', 'Admin'];
+
 export type AuthedUser = { id: string; tenantId: string; email: string };
 
 export type PermissionGuard =
@@ -174,6 +198,20 @@ export async function requirePermission(
   minLevel: PermLevel,
   opts?: { projectId?: string | null; db?: ServerDb },
 ): Promise<PermissionGuard> {
+  return requireAnyPermission(req, [category], minLevel, opts);
+}
+
+/**
+ * requirePermission for a rule that more than one category satisfies — e.g.
+ * PROPOSAL_MONEY (Sales OR Budget). Same tenant check, same 401/403/404.
+ */
+export async function requireAnyPermission(
+  req: NextRequest,
+  categories: readonly PermCategory[],
+  minLevel: PermLevel,
+  opts?: { projectId?: string | null; db?: ServerDb },
+): Promise<PermissionGuard> {
+  const category = categories.join(' or ');
   const user = await getUser(req);
   if (!user) {
     return { ok: false, res: NextResponse.json({ error: 'Unauthorized' }, { status: 401 }) };
@@ -221,7 +259,7 @@ export async function requirePermission(
 
   const perms = await getEffectivePermissions(db, user.id, user.tenantId, opts?.projectId);
 
-  if (!hasPermission(perms, category, minLevel)) {
+  if (!hasAnyPermission(perms, categories, minLevel)) {
     return {
       ok: false,
       res: NextResponse.json(

@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { createServerClient, getUser } from '@/lib/supabase-server';
-import { requirePermission } from '@/lib/permissions';
+import { createServerClient } from '@/lib/supabase-server';
+import { requireAnyPermission, PROPOSAL_MONEY } from '@/lib/permissions';
 import { apiError } from '@/lib/api-error';
 
 export const dynamic = 'force-dynamic';
@@ -12,11 +12,11 @@ export const dynamic = 'force-dynamic';
 // showing "PDF uploaded.". We still return { success, url, proposal } so the
 // contract is complete and the row can refresh on next fetch.
 export async function POST(req: NextRequest, { params }: { params: Promise<{ id: string }> }) {
-  const g = await requirePermission(req, 'Documents', 'Edit');
+  // Proposal dollars: Sales or Budget (PROPOSAL_MONEY; role_gate_*_proposals agrees).
+  const g = await requireAnyPermission(req, PROPOSAL_MONEY, 'Edit');
   if (!g.ok) return g.res;
   const { id } = await params;
-  const user = await getUser(req);
-  if (!user) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
+  const user = g.user;
 
   try {
     const formData = await req.formData();

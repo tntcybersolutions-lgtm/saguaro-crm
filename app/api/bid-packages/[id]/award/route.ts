@@ -1,7 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { createServerClient } from '@/lib/supabase-server';
 import { onBidAwarded } from '@/lib/triggers';
-import { requirePermission } from '@/lib/permissions';
+import { requirePermission, requireAnyPermission, PROPOSAL_MONEY } from '@/lib/permissions';
 import { must } from '@/lib/db-write';
 import { apiError } from '@/lib/api-error';
 import { logActivity, money } from '@/lib/activity';
@@ -32,6 +32,9 @@ import { orValue } from '@/lib/pg-filter';
 export async function POST(req: NextRequest, { params }: { params: Promise<{ id: string }> }) {
   const g = await requirePermission(req, 'Projects', 'Full');
   if (!g.ok) return g.res;
+  // Awarding picks a bid by its amount. Bid and proposal dollars: Sales or Budget (PROPOSAL_MONEY, lib/permissions).
+  const bidMoney = await requireAnyPermission(req, PROPOSAL_MONEY, 'Edit', { db: g.db });
+  if (!bidMoney.ok) return bidMoney.res;
   const user = g.user;
   const { id } = await params;
   try {

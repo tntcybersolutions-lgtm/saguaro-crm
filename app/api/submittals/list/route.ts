@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { createServerClient, getUser } from '@/lib/supabase-server';
+import { createServerClient } from '@/lib/supabase-server';
 import { apiError } from '@/lib/api-error';
+import { requirePermission } from '@/lib/permissions';
 
 /**
  * GET /api/submittals/list?projectId= → { submittals }
@@ -11,8 +12,11 @@ import { apiError } from '@/lib/api-error';
  * screen falls back to the row's own phase date.
  */
 export async function GET(req: NextRequest) {
-  const user = await getUser(req);
-  if (!user) return NextResponse.json({ error: 'Unauthorized', submittals: [] }, { status: 401 });
+  // Role check, not just sign-in: Submittals: View, the rule this tool's pages,
+  // its writes and (where the table is gated) the database apply.
+  const g = await requirePermission(req, 'Submittals', 'View');
+  if (!g.ok) return g.res;
+  const user = g.user;
   const { searchParams } = new URL(req.url);
   const projectId = searchParams.get('projectId');
   try {

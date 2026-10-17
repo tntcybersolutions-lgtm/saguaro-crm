@@ -1,13 +1,17 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { createServerClient, getUser } from '@/lib/supabase-server';
-import { requirePermission } from '@/lib/permissions';
+import { createServerClient } from '@/lib/supabase-server';
+import { requirePermission, hasAnyPermission, PROPOSAL_MONEY } from '@/lib/permissions';
 import { apiError, apiFail } from '@/lib/api-error';
 import { packageUpdate } from '@/lib/bid-package-update';
 
 export async function GET(req: NextRequest, { params }: { params: Promise<{ id: string }> }) {
   const { id } = await params;
-  const user = await getUser(req);
-  if (!user) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
+  // The package is a Projects tool; the bids received on it are money —
+  // Bid and proposal dollars: Sales or Budget (PROPOSAL_MONEY, lib/permissions).
+  const g = await requirePermission(req, 'Projects', 'View');
+  if (!g.ok) return g.res;
+  const user = g.user;
+  const showBids = hasAnyPermission(g.perms, PROPOSAL_MONEY, 'View');
   try {
     const db = createServerClient();
     const [pkgRes, itemsRes, invitesRes, subsRes] = await Promise.all([
@@ -17,7 +21,9 @@ export async function GET(req: NextRequest, { params }: { params: Promise<{ id: 
       db.from('bid_package_items').select('*').eq('bid_package_id', id).eq('tenant_id', user.tenantId)
         .order('sort_order').order('created_at').order('id'),
       db.from('bid_package_invites').select('*').eq('bid_package_id', id).eq('tenant_id', user.tenantId).order('created_at', { ascending: false }),
-      db.from('bid_submissions').select('*').eq('bid_package_id', id).eq('tenant_id', user.tenantId).order('base_amount'),
+      showBids
+        ? db.from('bid_submissions').select('*').eq('bid_package_id', id).eq('tenant_id', user.tenantId).order('base_amount')
+        : Promise.resolve({ data: [], error: null }),
     ]);
     for (const r of [pkgRes, itemsRes, invitesRes, subsRes]) if (r.error) throw r.error;
     if (!pkgRes.data) return NextResponse.json({ error: 'Not found' }, { status: 404 });
@@ -51,6 +57,7 @@ export async function GET(req: NextRequest, { params }: { params: Promise<{ id: 
       items: itemsRes.data || [],
       invites: invites.map((iv) => ({ ...iv, last_email: lastEmail[iv.id] ?? null })),
       submissions: subsRes.data || [],
+      bidsVisible: showBids,
     });
   } catch (e) {
     return apiError('bid-packages/get', e, "Couldn't load this bid package. Please try again.");

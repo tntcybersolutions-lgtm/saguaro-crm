@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { createServerClient } from '@/lib/supabase-server';
-import { requirePermission } from '@/lib/permissions';
+import { requirePermission, requireAnyPermission, PROPOSAL_MONEY } from '@/lib/permissions';
 import { must, tryWrite } from '@/lib/db-write';
 import { apiError } from '@/lib/api-error';
 import { bidAmount } from '@/lib/bid-amount';
@@ -44,6 +44,9 @@ const adjustedOf = (b: Bid) => baseOf(b) + gapOf(b);
 export async function GET(req: NextRequest, { params }: { params: Promise<{ id: string }> }) {
   const gate = await requirePermission(req, 'Projects', 'View');
   if (!gate.ok) return gate.res;
+  // Leveling is the subs' bid amounts side by side. Bid and proposal dollars: Sales or Budget (PROPOSAL_MONEY, lib/permissions).
+  const money = await requireAnyPermission(req, PROPOSAL_MONEY, 'View', { db: gate.db });
+  if (!money.ok) return money.res;
   const user = gate.user;
   const { id } = await params;
 
@@ -187,6 +190,9 @@ export async function GET(req: NextRequest, { params }: { params: Promise<{ id: 
 export async function POST(req: NextRequest, { params }: { params: Promise<{ id: string }> }) {
   const gate = await requirePermission(req, 'Projects', 'Edit');
   if (!gate.ok) return gate.res;
+  // Leveling writes adjust bid amounts. Bid and proposal dollars: Sales or Budget (PROPOSAL_MONEY, lib/permissions).
+  const money = await requireAnyPermission(req, PROPOSAL_MONEY, 'Edit', { db: gate.db });
+  if (!money.ok) return money.res;
   const user = gate.user;
   const { id } = await params;
 

@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { createServerClient, getUser } from '@/lib/supabase-server';
+import { createServerClient } from '@/lib/supabase-server';
 import { requirePermission } from '@/lib/permissions';
 import type { Database } from '@/lib/database.types';
 import { apiError } from '@/lib/api-error';
@@ -17,8 +17,11 @@ export async function GET(req: NextRequest, { params }: { params: Promise<{ proj
   const { projectId } = await params;
 
   try {
-    const user = await getUser(req);
-    if (!user) return NextResponse.json({ rfis: [] }, { status: 401 });
+    // Role check, not just sign-in: RFIs: View, the rule this tool's pages,
+    // its writes and (where the table is gated) the database apply.
+    const g = await requirePermission(req, 'RFIs', 'View', { projectId: projectId });
+    if (!g.ok) return g.res;
+    const user = g.user;
 
     const db = createServerClient();
     // Overdue on the company's day (device, else company zone) — not the server's UTC day.

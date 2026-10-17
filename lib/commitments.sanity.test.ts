@@ -142,14 +142,23 @@ describe('subcontract and PO record pages', () => {
     expect(sc).toMatchObject({ status: 'executed', revised: 42500, vendor: 'Mesa Ridge Electric' });
   });
 
-  test('approving a PO stamps who and when; receiving stamps delivery', async () => {
-    await patchItem(ireq(`/api/items/purchase_orders/${PO1}`, 'PATCH', { status: 'approved' }), ip('purchase_orders', PO1));
+  test('approving a PO stamps who and when; receiving stamps delivery; moves follow the PO map', async () => {
+    const patch = (status: string) => patchItem(ireq(`/api/items/purchase_orders/${PO1}`, 'PATCH', { status }), ip('purchase_orders', PO1));
+    // PO1 is already sent: approval comes before sending (lib/purchase-order-status), so this is refused.
+    expect((await patch('approved')).status).toBe(409);
     let po = fake.T('purchase_orders').find((x) => x.id === PO1)!;
+    expect(po.status).toBe('sent');
+    po.status = 'draft';
+    expect((await patch('approved')).status).toBe(200);
+    po = fake.T('purchase_orders').find((x) => x.id === PO1)!;
     expect(po.approved_by).toBe(ADMIN.id);
     expect(po.approved_at).toBeTruthy();
-    await patchItem(ireq(`/api/items/purchase_orders/${PO1}`, 'PATCH', { status: 'received' }), ip('purchase_orders', PO1));
+    expect((await patch('sent')).status).toBe(200);
+    expect((await patch('received')).status).toBe(200);
     po = fake.T('purchase_orders').find((x) => x.id === PO1)!;
     expect(po.delivered_at).toBeTruthy();
+    // Received can only close or void — never go back to draft.
+    expect((await patch('draft')).status).toBe(409);
   });
 
   test('a foreman without Budget access cannot open or change a subcontract', async () => {

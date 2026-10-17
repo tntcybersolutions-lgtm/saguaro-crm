@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { requirePermission } from '@/lib/permissions';
+import { requirePermission, hasAnyPermission, PROPOSAL_MONEY } from '@/lib/permissions';
 import { applyMarkupStack } from '@/lib/takeoff/engine';
 import { requestDay } from '@/lib/time-zone';
 import { apiError } from '@/lib/api-error';
@@ -26,6 +26,7 @@ export async function GET(req: NextRequest) {
   if (!g.ok) return g.res;
   const user = g.user;
   const db = g.db;
+  const showProposalMoney = hasAnyPermission(g.perms, PROPOSAL_MONEY, 'View');
   const projectId = req.nextUrl.searchParams.get('projectId');
   if (!projectId) return NextResponse.json({ error: 'projectId required' }, { status: 400 });
 
@@ -217,10 +218,11 @@ export async function GET(req: NextRequest) {
       };
     })(),
     /* Proposal versions at a glance — what the proposal screen seeds from. */
+    /* Proposal dollars only for Sales or Budget (PROPOSAL_MONEY); everyone else gets the versions without the amounts. */
     proposal: {
       count: proposals.length,
-      accepted: acceptedProposal ? { id: acceptedProposal.id, version: acceptedProposal.proposal_number, amount: propAmount(acceptedProposal) } : null,
-      latest: latestProposal ? { id: latestProposal.id, version: latestProposal.proposal_number, status: latestProposal.status, amount: propAmount(latestProposal) } : null,
+      accepted: acceptedProposal ? { id: acceptedProposal.id, version: acceptedProposal.proposal_number, amount: showProposalMoney ? propAmount(acceptedProposal) : null } : null,
+      latest: latestProposal ? { id: latestProposal.id, version: latestProposal.proposal_number, status: latestProposal.status, amount: showProposalMoney ? propAmount(latestProposal) : null } : null,
     },
     budget: {
       original: budget.reduce((s, b) => s + N(b.original_budget), 0),

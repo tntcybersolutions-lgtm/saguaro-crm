@@ -390,9 +390,11 @@ export const MODULES: Record<string, ModuleDef> = {
       draft:        { label: 'Draft',        tone: 'draft',   stage: 0, action: 'Send it to the vendor' },
       sent:         { label: 'Sent',         tone: 'waiting', stage: 1, action: 'With the vendor' },
       acknowledged: { label: 'Acknowledged', tone: 'waiting', stage: 1, action: 'Vendor has it — waiting on delivery' },
+      partially_received: { label: 'Partly received', tone: 'waiting', stage: 2, action: 'Some of it arrived — waiting on the rest' },
       received:     { label: 'Received',     tone: 'good',    stage: 2, action: 'Delivered — check it against the order' },
       closed:       { label: 'Closed',       tone: 'done',    stage: 3 },
       cancelled:    { label: 'Cancelled',    tone: 'bad' },
+      void:         { label: 'Void',         tone: 'bad' },
     },
   },
 

@@ -1,7 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { requirePermission } from '@/lib/permissions';
 import { apiError } from '@/lib/api-error';
-import { applyChangeOrderMoney } from '@/lib/change-order-cascade';
+import { writeChangeOrder, isCoDecision } from '@/lib/change-order-status';
 
 export const dynamic = 'force-dynamic';
 
@@ -20,8 +20,8 @@ export async function PATCH(req: NextRequest, { params }: { params: Promise<{ id
 
   const { id } = await params;
 
-  let body: Record<string, unknown> = {};
-  try { body = await req.json(); } catch { /* empty body */ }
+  // An empty or non-JSON body is "no fields", answered with the 400 below.
+  const body = ((await req.json().catch(() => null)) ?? {}) as Record<string, unknown>;
 
   try {
     const db = g.db;
@@ -51,31 +51,21 @@ export async function PATCH(req: NextRequest, { params }: { params: Promise<{ id
       return NextResponse.json({ error: 'No updatable fields provided' }, { status: 400 });
     }
 
-    if (typeof patch.status === 'string') {
-      patch.status = String(patch.status).toLowerCase();
-      // Deciding a CO takes the same permission as POST /approve and /reject.
-      if (patch.status === 'approved' || patch.status === 'rejected') {
-        const full = await requirePermission(req, 'Change Orders', 'Full');
-        if (!full.ok) return full.res;
-      }
-    }
     const { data: before, error: bErr } = await db.from('change_orders').select('*')
       .eq('id', id).eq('tenant_id', user.tenantId).maybeSingle();
     if (bErr) throw bErr;
     if (!before) return NextResponse.json({ error: 'Change order not found' }, { status: 404 });
-
-    const { data, error } = await db
-      .from('change_orders')
-      .update(patch)
-      .eq('id', id)
-      .eq('tenant_id', user.tenantId)
-      .select()
-      .single();
-    if (error) throw error;
+    // Deciding a CO (approve / reject / un-approve) takes the same permission as POST /approve and /reject.
+    if (isCoDecision(before, patch.status)) {
+      const full = await requirePermission(req, 'Change Orders', 'Full', { db });
+      if (!full.ok) return full.res;
+    }
     /* Edit Amount on an APPROVED change order changes the contract by the
        difference; a status written here is still an approval or a reversal.
-       Both used to leave the contract and the budget on the old figure. */
-    await applyChangeOrderMoney(db, user.tenantId, before as never, data as never);
+       Both go through the one shared step (lib/change-order-status). */
+    const w = await writeChangeOrder(db, user.tenantId, id, patch, { actorId: user.id, before: before as Record<string, unknown> });
+    if (!w.ok) return NextResponse.json({ error: w.error }, { status: w.status });
+    const data = w.after;
     return NextResponse.json({ changeOrder: data, success: true });
   } catch (e) {
     return apiError('change-orders/[id]/update PATCH', e);

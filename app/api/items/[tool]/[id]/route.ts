@@ -9,6 +9,9 @@ import { pickEditable } from '@/lib/items/registry';
 import { apiError } from '@/lib/api-error';
 import { signStoredUrl, signFields } from '@/lib/storage-signing';
 import { pinEntityFor } from '@/lib/drawing-revisions';
+import { requirePermission } from '@/lib/permissions';
+import { writeChangeOrder, isCoDecision } from '@/lib/change-order-status';
+import { transitionPoStatus } from '@/lib/purchase-order-status';
 
 export const dynamic = 'force-dynamic';
 
@@ -82,7 +85,6 @@ export async function PATCH(req: NextRequest, { params }: { params: Promise<{ to
     if (l.tool.type === 'punch_list' && status === 'verified' && !l.item.verified_at) patch.verified_at = new Date().toISOString();
     if (l.tool.hasUpdatedAt !== false) patch.updated_at = new Date().toISOString();
     if (l.tool.type === 'inspections' && (status === 'completed') && !l.item.inspected_at) patch.inspected_at = new Date().toISOString();
-    if (l.tool.type === 'change_orders' && status === 'approved' && !l.item.approved_at) patch.approved_at = new Date().toISOString();
     if (l.tool.type === 'contracts') {
       // The contracts screen reads amount, the signing flow contract_amount, and
       // older rows vendor_name — keep each pair the same so every screen agrees.
@@ -94,11 +96,29 @@ export async function PATCH(req: NextRequest, { params }: { params: Promise<{ to
         if (!l.item.executed_date && !('executed_date' in patch)) patch.executed_date = now.slice(0, 10);
       }
     }
-    if (l.tool.type === 'purchase_orders' && status === 'approved' && !l.item.approved_at) {
-      patch.approved_at = new Date().toISOString();
-      patch.approved_by = l.user.id;
+
+    /* A change order's status is money: approving one on its record page has
+       to move the contract and the budget exactly as its Approve button does,
+       and deciding it takes Change Orders: Full like /approve and /reject.
+       Both go through the one shared step (lib/change-order-status) — this
+       PATCH used to flip the status and leave the contract where it was. */
+    if (l.tool.type === 'change_orders') {
+      if (isCoDecision(l.item, patch.status)) {
+        const full = await requirePermission(req, 'Change Orders', 'Full', { projectId: (l.item.project_id as string) || null, db: l.db });
+        if (!full.ok) return full.res;
+      }
+      const w = await writeChangeOrder(l.db, l.user.tenantId, id, patch, { actorId: l.user.id, before: l.item });
+      if (!w.ok) return NextResponse.json({ error: w.error }, { status: w.status });
+      return NextResponse.json({ item: w.after });
     }
-    if (l.tool.type === 'purchase_orders' && status === 'received' && !l.item.delivered_at) patch.delivered_at = new Date().toISOString();
+
+    // A PO's status moves only along lib/purchase-order-status (stamps included).
+    if (l.tool.type === 'purchase_orders' && patch.status !== undefined) {
+      const { status: to, ...rest } = patch;
+      const r = await transitionPoStatus(l.db, l.user.tenantId, id, to, { actorId: l.user.id, extra: rest, before: l.item });
+      if (!r.ok) return NextResponse.json({ error: r.error }, { status: r.status });
+      return NextResponse.json({ item: r.after });
+    }
 
     const { data, error } = await l.db
       .from(l.tool.table as never)

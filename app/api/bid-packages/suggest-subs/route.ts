@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { createServerClient, getUser } from '@/lib/supabase-server';
+import { requirePermission, hasAnyPermission, PROPOSAL_MONEY } from '@/lib/permissions';
+import { createServerClient } from '@/lib/supabase-server';
 import { apiError } from '@/lib/api-error';
 import { recordLearning } from '@/lib/learning';
 
@@ -8,8 +9,12 @@ export async function GET(req: NextRequest) {
   const trade = searchParams.get('trade') || '';
   const projectId = searchParams.get('projectId') || '';
 
-  const user = await getUser(req);
-  if (!user) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
+  // Sub suggestions are a Projects tool; dollars awarded to each sub are money —
+  // Bid and proposal dollars: Sales or Budget (PROPOSAL_MONEY, lib/permissions).
+  const g = await requirePermission(req, 'Projects', 'View');
+  if (!g.ok) return g.res;
+  const user = g.user;
+  const showDollars = hasAnyPermission(g.perms, PROPOSAL_MONEY, 'View');
 
   try {
     const tenantId = user.tenantId;
@@ -109,7 +114,7 @@ export async function GET(req: NextRequest) {
 
       const reasons: string[] = [];
       if (u.projects > 0) reasons.push(`${u.projects} project${u.projects === 1 ? '' : 's'} together`);
-      if (u.dollars > 0) reasons.push(`$${Math.round(u.dollars).toLocaleString()} awarded`);
+      if (u.dollars > 0 && showDollars) reasons.push(`$${Math.round(u.dollars).toLocaleString()} awarded`);
       if (u.projects === 0 && perf?.invite_count > 0) reasons.push(`Invited ${perf.invite_count}x before`);
       if (u.projects === 0 && winRate > 0) reasons.push(`${winRate}% win rate`);
       if (complianceScore >= 55) reasons.push('Good compliance standing');
@@ -122,7 +127,7 @@ export async function GET(req: NextRequest) {
         trade: s.trade,
         winRate,
         projectsTogether: u.projects,
-        dollarsAwarded: Math.round(u.dollars),
+        dollarsAwarded: showDollars ? Math.round(u.dollars) : null,
         lastWorked: u.last ? u.last.slice(0, 10) : '',
         lastProject: perf?.last_project || '',
         lastProjectDate: perf?.last_project_date || '',

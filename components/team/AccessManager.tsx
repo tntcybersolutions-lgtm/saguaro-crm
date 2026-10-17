@@ -77,14 +77,16 @@ const ROLE_PRESETS: { name: string; desc: string; color: string; perms: Permissi
     perms: Object.fromEntries(CATEGORIES.map(c => [c, c === 'Admin' ? 'View' as PermLevel : 'Full' as PermLevel])) },
   { name: 'Superintendent', desc: 'Field operations — schedule, safety, daily reporting.', color: ROLE_SWATCH.green,
     perms: Object.fromEntries(CATEGORIES.map(c => {
-      if (['Schedule','Safety','Documents','RFIs','Submittals'].includes(c)) return [c, 'Edit' as PermLevel];
-      if (['Projects','Budget','Change Orders','Pay Apps','Reports'].includes(c)) return [c, 'View' as PermLevel];
+      // Projects: Edit files daily logs and punch items (lib/default-roles, same template).
+      if (['Projects','Schedule','Safety','Documents','RFIs','Submittals'].includes(c)) return [c, 'Edit' as PermLevel];
+      if (['Budget','Change Orders','Pay Apps','Reports'].includes(c)) return [c, 'View' as PermLevel];
       return [c, 'None' as PermLevel];
     })) },
   { name: 'Foreman', desc: 'Daily field reporting and crew management.', color: ROLE_SWATCH.amber,
     perms: Object.fromEntries(CATEGORIES.map(c => {
-      if (['Safety','Schedule'].includes(c)) return [c, 'Edit' as PermLevel];
-      if (['Projects','Documents','RFIs','Submittals','Reports'].includes(c)) return [c, 'View' as PermLevel];
+      // Projects: Edit files daily logs and punch items; Documents: Edit uploads site photos.
+      if (['Projects','Documents','Safety','Schedule'].includes(c)) return [c, 'Edit' as PermLevel];
+      if (['RFIs','Submittals','Reports'].includes(c)) return [c, 'View' as PermLevel];
       return [c, 'None' as PermLevel];
     })) },
   { name: 'Subcontractor', desc: 'Limited access for subcontractor partners.', color: ROLE_SWATCH.lightSlate,

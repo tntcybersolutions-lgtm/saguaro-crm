@@ -19,8 +19,11 @@ function tzForState(state: unknown, fallback: string): string {
  */
 export async function GET(req: NextRequest) {
   try {
-    const user = await getUser(req);
-    if (!user) return NextResponse.json({ logs: [], todayByProject: {} }, { status: 401 });
+    // Role check, not just sign-in: Projects: View, the rule this tool's pages,
+    // its writes and (where the table is gated) the database apply.
+    const g = await requirePermission(req, 'Projects', 'View');
+    if (!g.ok) return g.res;
+    const user = g.user;
     if (!(await hasFeature(user.tenantId, 'command_center')))
       return NextResponse.json({ logs: [], todayByProject: {}, gated: true }, { status: 403 });
 

@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { createServerClient, getUser } from '@/lib/supabase-server';
+import { getEffectivePermissions, hasPermission } from '@/lib/permissions';
 
 export async function GET(req: NextRequest) {
   try {
@@ -10,6 +11,12 @@ export async function GET(req: NextRequest) {
     const params = req.nextUrl.searchParams;
     const page = params.get('page');
     const projectId = params.get('project_id');
+
+    /* Who else is online is Projects: View, as presence_sessions_sel3 in the
+       database (own row, or Projects: View). This list never includes you, so
+       without it the answer is nobody. */
+    const perms = await getEffectivePermissions(db, user.id, user.tenantId, projectId);
+    if (!hasPermission(perms, 'Projects', 'View')) return NextResponse.json({ users: [] });
 
     // Active = last_seen_at within the last 60 seconds
     const cutoff = new Date(Date.now() - 60_000).toISOString();

@@ -15,10 +15,15 @@ export const dynamic = 'force-dynamic';
 
 export async function GET(req: NextRequest, { params }: { params: Promise<{ id: string }> }) {
   try {
+    const { id: workerId } = await params;
+    // Someone else's whereabouts: Schedule: View, as crew_locations_sel in the
+    // database (own row, or Schedule: View). Your own status needs only sign-in.
     const user = await getUser(req);
     if (!user) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
-
-    const { id: workerId } = await params;
+    if (workerId !== user.id) {
+      const g = await requirePermission(req, 'Schedule', 'View');
+      if (!g.ok) return g.res;
+    }
     const db = createServerClient();
     const { data } = await db
       .from('crew_locations')
@@ -34,7 +39,8 @@ export async function GET(req: NextRequest, { params }: { params: Promise<{ id: 
       project_id: data?.project_id || null,
       updated_at: data?.updated_at || null,
     });
-  } catch {
+  } catch (e) {
+    console.error('[resource-planning/workers/status GET]', e);
     return NextResponse.json({ status: 'off-site' });
   }
 }

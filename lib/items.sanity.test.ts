@@ -238,6 +238,27 @@ describe('item page — change orders and inspections', () => {
     expect(row.approved_at).toBeTruthy();
     expect(row.updated_at).toBeTruthy();
   });
+  test('approving on the record page moves the contract and budget by exactly the CO, once; rejecting takes it back', async () => {
+    currentUser = ADMIN;
+    const job = fake.T('projects').find((r) => r.id === JOB)!;
+    Object.assign(job, { contract_amount: 1000000, original_contract_amount: 1000000, revised_contract_value: 1000000 });
+    fake.T('budget_lines').push({ id: 'bl-1', tenant_id: A, project_id: JOB, cost_code: '03-300', original_budget: 400000, approved_changes: 0 });
+    const approve = () => patchItem(req(`/api/items/change_orders/${CO}`, 'PATCH', { status: 'approved' }), p('change_orders', CO));
+    expect((await approve()).status).toBe(200);
+    expect(job.contract_amount).toBe(1018250);
+    expect(job.revised_contract_value).toBe(1018250);
+    const unalloc = () => fake.T('budget_lines').find((l) => l.cost_code === 'CO-UNALLOCATED');
+    expect(unalloc()?.approved_changes).toBe(18250);
+    // Approving again changes nothing.
+    expect((await approve()).status).toBe(200);
+    expect(job.contract_amount).toBe(1018250);
+    expect(unalloc()?.approved_changes).toBe(18250);
+    // Reject takes it back off.
+    expect((await patchItem(req(`/api/items/change_orders/${CO}`, 'PATCH', { status: 'rejected' }), p('change_orders', CO))).status).toBe(200);
+    expect(job.contract_amount).toBe(1000000);
+    expect(unalloc()?.approved_changes).toBe(0);
+    expect(fake.T('change_orders')[0].rejected_at).toBeTruthy();
+  });
   test('completing an inspection stamps inspected_at and never writes updated_at (no such column)', async () => {
     currentUser = ADMIN;
     const r = await patchItem(req(`/api/items/inspections/${INSP}`, 'PATCH', { status: 'completed', result: 'pass' }), p('inspections', INSP));

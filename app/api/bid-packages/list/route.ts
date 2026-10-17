@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { createServerClient, getUser } from '@/lib/supabase-server';
+import { requirePermission, hasAnyPermission, PROPOSAL_MONEY } from '@/lib/permissions';
+import { createServerClient } from '@/lib/supabase-server';
 import { apiError } from '@/lib/api-error';
 import { bidAmount } from '@/lib/bid-amount';
 import { inviteState } from '@/lib/bid-invite-state';
@@ -8,8 +9,12 @@ export async function GET(req: NextRequest) {
   const { searchParams } = new URL(req.url);
   const projectId = searchParams.get('projectId');
   try {
-    const user = await getUser(req);
-    if (!user) return NextResponse.json({ bidPackages: [] }, { status: 401 });
+    // Packages are a Projects tool; the low bid, who holds it and the spread are
+    // money — Bid and proposal dollars: Sales or Budget (PROPOSAL_MONEY, lib/permissions).
+    const g = await requirePermission(req, 'Projects', 'View', { projectId });
+    if (!g.ok) return g.res;
+    const user = g.user;
+    const showBids = hasAnyPermission(g.perms, PROPOSAL_MONEY, 'View');
 
     const db = createServerClient();
     let query = db
@@ -53,9 +58,9 @@ export async function GET(req: NextRequest) {
         pkg.leveling = {
           invited: Number(invitedBy[pkg.id]) || 0,
           responded: subs.length,
-          low: low ? low.amt : null,
-          lowWho: low ? low.who : null,
-          spread: low && high && amts.length >= 2 && low.amt > 0 ? ((high.amt - low.amt) / low.amt) * 100 : null,
+          low: showBids && low ? low.amt : null,
+          lowWho: showBids && low ? low.who : null,
+          spread: showBids && low && high && amts.length >= 2 && low.amt > 0 ? ((high.amt - low.amt) / low.amt) * 100 : null,
         };
       }
     }

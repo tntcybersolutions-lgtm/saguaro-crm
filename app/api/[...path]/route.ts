@@ -15,6 +15,8 @@ import { createClient } from '@supabase/supabase-js';
 import { buildBidHistoryContext } from '@/lib/construction-intelligence';
 
 import { apiError } from '@/lib/api-error';
+import { requirePermission } from '@/lib/permissions';
+import { writeChangeOrder } from '@/lib/change-order-status';
 // ─── CORS helpers ─────────────────────────────────────────────────────────────
 
 const APP_URL = process.env.NEXT_PUBLIC_APP_URL ?? 'https://saguarocontrol.net';
@@ -590,12 +592,13 @@ export async function POST(
   if (seg0 === 'change-orders' && seg1 && seg2 === 'approve') {
     // Auth + tenant scope — service-role bypasses RLS, so an id-only update would
     // let any caller approve another tenant's change order (cross-tenant IDOR).
-    const user = await getUserFromRequest(req);
-    if (!user) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
+    // Deciding a CO is Change Orders: Full, and it goes through the one shared
+    // step (lib/change-order-status) so the contract and budget move with it.
+    const g = await requirePermission(req, 'Change Orders', 'Full');
+    if (!g.ok) return g.res;
     try {
-      const { data, error } = await supabaseAdmin.from('change_orders').update({ status: 'approved', approved_at: new Date().toISOString() }).eq('id', seg1).eq('tenant_id', user.tenantId).select('id').maybeSingle();
-      if (error) throw error;
-      if (!data) return NextResponse.json({ error: 'Change order not found' }, { status: 404 });
+      const w = await writeChangeOrder(g.db, g.user.tenantId, seg1, { status: 'approved' }, { actorId: g.user.id, select: 'id' });
+      if (!w.ok) return NextResponse.json({ error: w.error }, { status: w.status });
     } catch (err) {
       return apiError('[...path] POST', err, 'Failed to approve change order');
     }

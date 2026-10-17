@@ -4,6 +4,7 @@ import { requirePermission } from '@/lib/permissions';
 import { must } from '@/lib/db-write';
 import { apiError, apiFail } from '@/lib/api-error';
 import { applyChangeOrderMoney } from '@/lib/change-order-cascade';
+import { writeChangeOrder, isCoDecision } from '@/lib/change-order-status';
 
 const ALLOWED_CO_COLUMNS = [
   'project_id', 'title', 'description', 'amount', 'status', 'reason', 'submitted_by', 'co_number',
@@ -48,34 +49,29 @@ export async function GET(_req: NextRequest, { params }: { params: Promise<{ id:
   }
 }
 
-/** PUT and PATCH write the same allow-listed columns. A write that changes
- *  the status, or the amount of an approved CO, moves the contract and the
- *  budget (lib/change-order-cascade) — this editor used to set
- *  status: 'approved' with no cascade at all. Deciding a CO (approved /
- *  rejected) takes the same Full permission as /approve and /reject. */
-async function writeChangeOrder(req: NextRequest, id: string, scope: string) {
+/** PUT and PATCH write the same allow-listed columns through the one shared
+ *  step (lib/change-order-status): a write that changes the status, or the
+ *  amount of an approved CO, moves the contract and the budget. Deciding a CO
+ *  (approve / reject / un-approve) takes the same Full permission as /approve
+ *  and /reject. */
+async function saveChangeOrder(req: NextRequest, id: string, scope: string) {
   const g = await requirePermission(req, 'Change Orders', 'Edit');
   if (!g.ok) return g.res;
   try {
     const body = await req.json();
     const db = g.db;
     const updates = filterCoBody(body);
-    if (typeof updates.status === 'string') {
-      updates.status = String(updates.status).toLowerCase();
-      if (updates.status === 'approved' || updates.status === 'rejected') {
-        const full = await requirePermission(req, 'Change Orders', 'Full');
-        if (!full.ok) return full.res;
-      }
-    }
     const { data: before, error: bErr } = await db.from('change_orders').select('*')
       .eq('id', id).eq('tenant_id', g.user.tenantId).maybeSingle();
     if (bErr) throw bErr;
     if (!before) return apiFail('Change order not found', 404);
-    // Tenant-scope the write — g.db is the service-role client (RLS bypassed).
-    const { data, error } = await db.from('change_orders').update(updates).eq('id', id).eq('tenant_id', g.user.tenantId).select().single();
-    if (error) throw error;
-    await applyChangeOrderMoney(db, g.user.tenantId, before as never, data as never);
-    return NextResponse.json({ changeOrder: data });
+    if (isCoDecision(before, updates.status)) {
+      const full = await requirePermission(req, 'Change Orders', 'Full', { db });
+      if (!full.ok) return full.res;
+    }
+    const w = await writeChangeOrder(db, g.user.tenantId, id, updates, { actorId: g.user.id, before: before as Record<string, unknown> });
+    if (!w.ok) return apiFail(w.error, w.status);
+    return NextResponse.json({ changeOrder: w.after });
   } catch (e) {
     return apiError(scope, e);
   }
@@ -83,12 +79,12 @@ async function writeChangeOrder(req: NextRequest, id: string, scope: string) {
 
 export async function PUT(req: NextRequest, { params }: { params: Promise<{ id: string }> }) {
   const { id } = await params;
-  return writeChangeOrder(req, id, 'change-orders/[id] PUT');
+  return saveChangeOrder(req, id, 'change-orders/[id] PUT');
 }
 
 export async function PATCH(req: NextRequest, { params }: { params: Promise<{ id: string }> }) {
   const { id } = await params;
-  return writeChangeOrder(req, id, 'change-orders/[id] PATCH');
+  return saveChangeOrder(req, id, 'change-orders/[id] PATCH');
 }
 
 export async function DELETE(_req: NextRequest, { params }: { params: Promise<{ id: string }> }) {

@@ -1,7 +1,8 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { createServerClient, getUser } from '@/lib/supabase-server';
+import { createServerClient } from '@/lib/supabase-server';
 import type { Database } from '@/lib/database.types';
 import { apiError } from '@/lib/api-error';
+import { requirePermission } from '@/lib/permissions';
 
 /**
  * GET /api/materials/selections?customer_id=xxx&project_id=yyy&category=flooring
@@ -9,8 +10,11 @@ import { apiError } from '@/lib/api-error';
  */
 export async function GET(req: NextRequest) {
   try {
-    const user = await getUser(req);
-    if (!user) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
+    // Role check, not just sign-in: Projects: View, the rule this tool's pages,
+    // its writes and (where the table is gated) the database apply.
+    const g = await requirePermission(req, 'Projects', 'View');
+    if (!g.ok) return g.res;
+    const user = g.user;
 
     const { searchParams } = new URL(req.url);
     const customerId = searchParams.get('customer_id');
@@ -51,8 +55,11 @@ export async function GET(req: NextRequest) {
  */
 export async function POST(req: NextRequest) {
   try {
-    const user = await getUser(req);
-    if (!user) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
+    // Role check, not just sign-in: Projects: Edit, the rule this tool's pages,
+    // its writes and (where the table is gated) the database apply.
+    const g = await requirePermission(req, 'Projects', 'Edit');
+    if (!g.ok) return g.res;
+    const user = g.user;
 
     const body = await req.json();
     const db = createServerClient();
@@ -94,8 +101,11 @@ export async function POST(req: NextRequest) {
  */
 export async function PATCH(req: NextRequest) {
   try {
-    const user = await getUser(req);
-    if (!user) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
+    // Role check, not just sign-in: Projects: Edit, the rule this tool's pages,
+    // its writes and (where the table is gated) the database apply.
+    const g = await requirePermission(req, 'Projects', 'Edit');
+    if (!g.ok) return g.res;
+    const user = g.user;
 
     const body = await req.json();
     const { id } = body;
@@ -135,8 +145,11 @@ export async function PATCH(req: NextRequest) {
  */
 export async function DELETE(req: NextRequest) {
   try {
-    const user = await getUser(req);
-    if (!user) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
+    // Role check, not just sign-in: Projects: Full, the rule this tool's pages,
+    // its writes and (where the table is gated) the database apply.
+    const g = await requirePermission(req, 'Projects', 'Full');
+    if (!g.ok) return g.res;
+    const user = g.user;
 
     const body = await req.json();
     const { id } = body;
