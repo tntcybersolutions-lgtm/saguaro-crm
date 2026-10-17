@@ -11,6 +11,7 @@
 import { useHydrated } from '@/lib/use-hydrated';
 import React, { useEffect, useState } from 'react';
 import Link from 'next/link';
+import { clearOfflineCopies } from '@/lib/offline/worker';
 import {
   EnvelopeSimple, Buildings, UserCircle, Briefcase, CheckCircle, WarningCircle,
   ClockCountdown, SealCheck, SignIn, UserPlus, ArrowRight, ShieldCheck,
@@ -162,6 +163,7 @@ export default function AcceptInvitePage() {
     `/login?next=${encodeURIComponent(returnPath)}${email ? `&email=${encodeURIComponent(email)}` : ''}`;
 
   async function switchAccount(email: string) {
+    clearOfflineCopies(); // the last account's drafts and offline copies stay with it
     try { await fetch('/api/auth/logout', { method: 'POST' }); } catch { /* ignore */ }
     window.location.href = loginHref(email);
   }

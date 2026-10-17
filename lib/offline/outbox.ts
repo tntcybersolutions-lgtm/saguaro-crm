@@ -13,7 +13,7 @@
  */
 import { uploadPhoto, uploadVideo } from '@/lib/media-upload';
 import { getAuthHeaders } from '@/lib/supabase-browser';
-import { step } from '@/lib/ui/status';
+import { step, SAVED_OFFLINE } from '@/lib/ui/status';
 import { describeRequest } from '@/lib/ui/status-labels';
 import { STATUS_HEADER, reasonFromResponse } from '@/lib/ui/status-fetch';
 import { SAVED_AT_HEADER } from '@/lib/offline/saved-at';
@@ -260,7 +260,7 @@ export async function sendOrSave(r: {
     h.fail(words.failed, 'No signal, and this phone could not keep a copy. Try again when you have signal.', true);
     throw e;
   }
-  h.offline(`${r.label} — saved on this phone`, "It sends by itself when you're back online.");
+  h.offline(SAVED_OFFLINE, r.label);
   await refreshPending();
   return { saved: true, id };
 }
