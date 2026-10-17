@@ -18,6 +18,7 @@ import { putSigned } from '@/lib/media-upload';
 import { LOCAL_DAY_HEADER, isPastDay, localDay } from '@/lib/calendar-day';
 import { TIME_ZONE_HEADER, deviceTimeZone } from '@/lib/time-zone';
 import { sendOrSave, listSaved, savedRowId, startOfflineWatch } from '@/lib/offline/outbox';
+import type { BillingRoom } from '@/lib/sub-billing-cap';
 
 /* ── Design Tokens ── */
 const GOLD='var(--brand-primary)',DARK='var(--bg-base)',RAISED='var(--bg-surface)',BORDER='rgba(255,255,255,0.12)',DIM='var(--text-secondary)',TEXT='#FFFFFF';
@@ -144,6 +145,8 @@ export default function SubPortal(){
   const [sub,setSub]=useState<any>(null);
   const [complianceDocs,setComplianceDocs]=useState<any[]>([]);
   const [payApps,setPayApps]=useState<any[]>([]);
+  /* What is left to bill on the sub's subcontract (lib/sub-billing-cap), or null when there is no subcontract to measure. */
+  const [billing,setBilling]=useState<BillingRoom|null>(null);
   const [dailyLogs,setDailyLogs]=useState<any[]>([]);
   const [rfis,setRfis]=useState<any[]>([]);
   const [tasks,setTasks]=useState<any[]>([]);
@@ -262,6 +265,7 @@ export default function SubPortal(){
         results.forEach((r,i)=>{if(r.status==='rejected')console.error('[sub portal] did not load',PANELS[i][0],(r as PromiseRejectedResult).reason);});
         setComplianceDocs(val(0).compliance_docs||[]);
         setPayApps(val(1).pay_apps||[]);
+        setBilling(val(1).billing??null);
         setDailyLogs(val(2).daily_logs||[]);
         setRfis(val(3).rfis||[]);
         setTasks(val(4).tasks||[]);
@@ -970,8 +974,8 @@ export default function SubPortal(){
     return(
       <div style={{display:'grid',gridTemplateColumns:'minmax(0,1fr)',gap:20}}>
         {!onRoster&&rosterNote('Invoices')}
-        {onRoster&&<SubInvoiceForm token={String(token)} lastLines={payApps.length?(payApps[0] as any).line_items:null}
-          onFiled={()=>{fetch(`/api/portal/sub/pay-apps?token=${token}`,{headers}).then(r=>r.json()).then(d=>setPayApps(d.pay_apps||[])).catch(e=>console.error('[sub-portal] reload invoices',e));showToast('Invoice sent — your GC has it now.');refreshActivity();}}
+        {onRoster&&<SubInvoiceForm token={String(token)} billing={billing} lastLines={payApps.length?(payApps[0] as any).line_items:null}
+          onFiled={()=>{fetch(`/api/portal/sub/pay-apps?token=${token}`,{headers}).then(r=>r.json()).then(d=>{setPayApps(d.pay_apps||[]);setBilling(d.billing??null);}).catch(e=>console.error('[sub-portal] reload invoices',e));showToast('Invoice sent — your GC has it now.');refreshActivity();}}
           onFixCompliance={()=>setTab('compliance')}/>}
         {otherWaivers.length>0&&(
           <div style={card()}>

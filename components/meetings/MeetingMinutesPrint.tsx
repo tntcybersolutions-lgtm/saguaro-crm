@@ -21,18 +21,10 @@ const PRINT_CSS = `
 .mm-tbl { width: 100%; border-collapse: collapse; }
 .mm-tbl th { text-align: left; padding: 8px 10px; font-size: 12px; font-weight: 800; color: var(--text-secondary); border-bottom: 1px solid var(--border-default); }
 .mm-tbl td { padding: 10px; font-size: 14px; color: var(--text-primary); border-bottom: 1px solid var(--border-default); vertical-align: top; }
-.mm-tbl td.mm-num { font-weight: 800; font-variant-numeric: tabular-nums; width: 56px; }
+.mm-tbl td.mm-num { font-weight: 800; font-variant-numeric: tabular-nums; }
 .mm-tbl td[data-late="true"] { color: var(--danger); }
 .mm-sub { color: var(--text-secondary); white-space: pre-wrap; margin-top: 4px; }
-/* A phone: each item is a stacked row — no sideways scroll. */
-@media screen and (max-width: 640px) {
-  .mm-tbl thead { display: none; }
-  .mm-tbl, .mm-tbl tbody, .mm-tbl tr, .mm-tbl td { display: block; width: auto; }
-  .mm-tbl tr { padding: 12px 0; border-bottom: 1px solid var(--border-default); }
-  .mm-tbl td { border: 0; padding: 2px 0; }
-  .mm-tbl td:empty { display: none; }
-  .mm-tbl td[data-l]::before { content: attr(data-l) ': '; color: var(--text-tertiary); font-weight: 600; }
-}
+/* A phone: k-stack (app/globals.css) stacks each row — no sideways scroll. */
 @media print {
   @page { margin: 14mm; }
   html, body { background: #fff !important; }
@@ -110,16 +102,16 @@ export default function MeetingMinutesPrint({ projectId, meetingId, projectName 
 
         <h3 style={h2}>Attendees{attendees.length ? ` (${attendees.filter((a) => a.attended).length} of ${attendees.length} present)` : ''}</h3>
         {attendees.length ? (
-          <table className="k-table-skin mm-tbl">
+          <table className="k-table-skin k-stack mm-tbl">
             <thead><tr><th>Name</th><th>Present</th><th>Company</th><th>Role</th><th>Email</th></tr></thead>
             <tbody>
               {attendees.map((a) => (
                 <tr key={a.id}>
                   <td style={{ fontWeight: 700 }}>{a.name}</td>
-                  <td data-l="Present">{a.attended ? 'Yes' : 'No'}</td>
-                  <td data-l="Company">{a.company || ''}</td>
-                  <td data-l="Role">{a.role || ''}</td>
-                  <td data-l="Email">{a.email || ''}</td>
+                  <td data-label="Present">{a.attended ? 'Yes' : 'No'}</td>
+                  <td data-label="Company">{a.company || ''}</td>
+                  <td data-label="Role">{a.role || ''}</td>
+                  <td data-label="Email" style={{ overflowWrap: 'anywhere' }}>{a.email || ''}</td>
                 </tr>
               ))}
             </tbody>
@@ -128,7 +120,7 @@ export default function MeetingMinutesPrint({ projectId, meetingId, projectName 
 
         <h3 style={h2}>Items{items.length ? ` (${open.length} open of ${items.length})` : ''}</h3>
         {items.length ? (
-          <table className="k-table-skin mm-tbl">
+          <table className="k-table-skin k-stack mm-tbl">
             <thead><tr><th style={{ width: 56 }}>#</th><th>Item / discussion</th><th>Ball in court</th><th>Due</th><th>Status</th></tr></thead>
             <tbody>
               {items.map((i) => {
@@ -136,14 +128,14 @@ export default function MeetingMinutesPrint({ projectId, meetingId, projectName 
                 const late = today ? isItemOverdue(i, today) : false;
                 return (
                   <tr key={i.id}>
-                    <td className="mm-num">{i.number || ''}</td>
+                    <td className="mm-num" data-label="Item">{i.number || ''}</td>
                     <td>
                       <div style={{ fontWeight: 700 }}>{i.topic}{i.carried_from_item_id ? ` (carried${from ? ` from #${from}` : ''})` : ''}</div>
                       {i.discussion && <div className="mm-sub">{i.discussion}</div>}
                     </td>
-                    <td data-l="Ball in court">{i.assignee_name || ''}</td>
-                    <td data-l="Due" data-late={late ? 'true' : undefined}>{i.due_date ? `${fmtShort(i.due_date)}${late ? ' (overdue)' : ''}` : ''}</td>
-                    <td data-l="Status">{i.status === 'closed' ? 'Closed' : 'Open'}</td>
+                    <td data-label="Ball in court">{i.assignee_name || ''}</td>
+                    <td data-label="Due" data-late={late ? 'true' : undefined}>{i.due_date ? `${fmtShort(i.due_date)}${late ? ' (overdue)' : ''}` : ''}</td>
+                    <td data-label="Status">{i.status === 'closed' ? 'Closed' : 'Open'}</td>
                   </tr>
                 );
               })}

@@ -85,7 +85,7 @@ export default function CompliancePage() {
   const params = useParams();
   const projectId = params.projectId as string;
   const [subs, setSubs] = useState<ComplianceSub[]>([]);
-  const [loading, setLoading] = useState(true);
+  const [projLoading, setLoading] = useState(true);
   const { toast, show } = useToast(4000);
   const [isPublicProject, setIsPublicProject] = useState(false);
   const [prequaling, setPrequaling] = useState<string | null>(null);
@@ -100,18 +100,23 @@ export default function CompliancePage() {
   const { ctx } = useProjectContext(projectId);
   const [scored, setScored] = useState<any[]>([]);
   const [scoredSummary, setScoredSummary] = useState<any>(null);
+  const [scoredLoaded, setScoredLoaded] = useState(false);
   useEffect(() => {
     (async () => {
       try {
         const r = await fetch(`/api/compliance?projectId=${projectId}`);
-        const d = await r.json();
+        const d = await r.json().catch(() => ({}));
+        if (!r.ok) throw new Error(d.error || "Couldn't load compliance.");
         if (Array.isArray(d.subs)) { setScored(d.subs); setScoredSummary(d.summary || null); }
       } catch (e) {
-        // Live scores are an enrichment — the contracts-derived matrix still renders.
-        console.error('[compliance] live scores unavailable', e);
+        // The matrix is this read — say it failed rather than show an empty roster.
+        console.error('[compliance] scores unavailable', e);
+        show(e instanceof Error ? e.message : "Couldn't load compliance.", 'bad');
+      } finally {
+        setScoredLoaded(true);
       }
     })();
-  }, [projectId]);
+  }, [projectId, show]);
 
   const fetchData = useCallback(async () => {
     setLoading(true);
@@ -120,19 +125,12 @@ export default function CompliancePage() {
       const data = await res.json();
       const project = data.project || data;
       setIsPublicProject(project.is_public || project.prevailing_wage || false);
-      const subList = data.subs || data.subcontractors || [];
-      setSubs(subList.map((s: any) => ({
-        id: s.id || s.sub_id,
-        name: s.name || s.company_name,
-        trade: s.trade || s.specialty || '',
-        contract_amount: s.contract_amount || 0,
-        coi_status: s.coi_status || 'pending',
-        coi_expiry: s.coi_expiry || s.coi_expiration || null,
-        license_status: s.license_status || 'pending',
-        license_number: s.license_number || '',
-        w9_status: s.w9_status || 'pending',
-        is_prevailing_wage: s.is_prevailing_wage || false,
-      })));
+      /* The matrix's rows are the job's roster as /api/compliance scores it —
+         not the contracts list. Contract rows named the contact person
+         ("Hector Alvarado") beside the company, so every sub showed twice, the
+         second time with a made-up "Pending" W-9 and COI. Compliance has ONE
+         rule (lib/sub-compliance), read the same on the W-9 screen. */
+      setSubs([]);
     } catch {
       setSubs([]);
     } finally {
@@ -142,6 +140,8 @@ export default function CompliancePage() {
 
   useEffect(() => { fetchData(); }, [fetchData]);
 
+  // The rows come from the compliance read, so the page is loading until it lands.
+  const loading = projLoading || !scoredLoaded;
   const norm = (v: any) => String(v || '').toLowerCase().trim();
   const scoredByName = new Map<string, any>(scored.map((s: any) => [norm(s.name), s]));
   const ctxSubs = (ctx?.subs || []) as any[];
@@ -173,12 +173,13 @@ export default function CompliancePage() {
   // Live-first status readers: real table data when the compliance API has it,
   // the contracts-derived fields otherwise.
   const coiStateOf = (s: MatrixRow) => s.live
-    ? ((Number(s.live.insurance?.active_certs) || 0) > 0 ? ((Number(s.live.insurance?.expiring_certs) || 0) > 0 ? 'expiring' : 'active') : 'missing')
+    ? (s.live.insurance?.status === 'missing' ? 'missing' : s.live.insurance?.status === 'expiring' ? 'expiring' : s.live.insurance?.status === 'current' ? 'active'
+      : (Number(s.live.insurance?.active_certs) || 0) > 0 ? ((Number(s.live.insurance?.expiring_certs) || 0) > 0 ? 'expiring' : 'active') : 'missing')
     : s.coi_status;
   const w9StateOf = (s: MatrixRow) => {
     if (!s.live) return s.w9_status;
     const w = String(s.live.w9?.status || '');
-    return (w === 'submitted' || w === 'approved' || w === 'received') ? 'on_file' : w === 'pending' ? 'pending' : 'not_requested';
+    return (s.live.w9?.on_file || w === 'submitted' || w === 'approved' || w === 'received') ? 'on_file' : w === 'pending' ? 'pending' : 'not_requested';
   };
   const coiGap = (s: MatrixRow) => { const c = coiStateOf(s); return c === 'expired' || c === 'expiring' || c === 'missing'; };
 

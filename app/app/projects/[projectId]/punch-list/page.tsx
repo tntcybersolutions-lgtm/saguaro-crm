@@ -50,6 +50,8 @@ import RadioEvidence, {
 } from '@/components/RadioEvidence';
 import { layout } from '@/lib/design-tokens';
 import { useOpenOnNew, useOpenRecord } from '@/lib/ui/open-on-new';
+import { usePeople } from '@/lib/hooks/usePeople';
+import { personName } from '@/lib/person-names';
 
 // Priorities are STORED lowercase ('low'|'medium'|'high'|'critical') and
 // DISPLAYED capitalized. Legacy rows may carry capitalized values — every
@@ -166,6 +168,8 @@ const DATE_INPUT_STYLE: React.CSSProperties = {
 export default function PunchListPage(){
   const {projectId}=useParams() as {projectId:string};
   const [items,setItems]=useState<any[]>([]);
+  // Assignees by name — the column can hold a user id (lib/person-names).
+  const people=usePeople(items.map((i:any)=>i?.assigned_to));
   const [loading,setLoading]=useState(true);
   const [loadError,setLoadError]=useState('');
   const [selected,setSelected]=useState<any>(null);
@@ -499,7 +503,7 @@ export default function PunchListPage(){
   } };
   const tradeCol: Column<any> = { key:'trade', header:'Trade', phone:'hide', accessor:i=>(i.trade||'').toLowerCase(), render:i=>i.trade?<span>{i.trade}</span>:null };
   const locationCol: Column<any> = { key:'location', header:'Location', phone:'hide', accessor:i=>(i.location||'').toLowerCase(), render:i=>i.location?<span style={{display:'inline-flex',alignItems:'center',gap:4}}><MapPin size={12}/>{i.location}</span>:null };
-  const assignedCol: Column<any> = { key:'assigned_to', header:'Assigned To', accessor:i=>(i.assigned_to||'').toLowerCase(), render:i=>i.assigned_to?<span style={{color:'var(--text-primary)'}}>{i.assigned_to}</span>:i.status==='completed'?null:<span className="plMuted">Unassigned</span> };
+  const assignedCol: Column<any> = { key:'assigned_to', header:'Assigned To', accessor:i=>(i.assigned_to||'').toLowerCase(), render:i=>personName(i.assigned_to, people)?<span style={{color:'var(--text-primary)'}}>{personName(i.assigned_to, people)}</span>:i.status==='completed'?null:<span className="plMuted">Unassigned</span> };
   const dueCol: Column<any> = { key:'due_date', header:'Due', phone:'show', width:120, accessor:i=>i.due_date||'', render:i=>i.due_date?<span className={isLate(i)?'plLate':undefined} style={{whiteSpace:'nowrap'}}>{fmtDate(i.due_date)}</span>:null };
   const columns: Column<any>[] = (selected && mode!=='create')
     ? [titleCol, priorityCol, statusCol, dueCol]
@@ -572,7 +576,7 @@ export default function PunchListPage(){
               <DetailList items={([
                 ['Trade', selected.trade || ''],
                 ['Location', selected.location || ''],
-                ['Assigned To', selected.assigned_to || (selected.status==='completed' ? '' : 'Unassigned')],
+                ['Assigned To', personName(selected.assigned_to, people) || (selected.status==='completed' ? '' : 'Unassigned')],
                 ['Due Date', selected.due_date ? <span key="due" className={isLate(selected)?'plLate':undefined}>{fmtDate(selected.due_date)}</span> : ''],
                 ['Created', fmtDate(selected.created_at)],
                 ['Completed', selected.completed_at ? fmtDate(selected.completed_at) : ''],

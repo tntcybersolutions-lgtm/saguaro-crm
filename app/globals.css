@@ -1764,6 +1764,14 @@ li[data-done="true"] .pj-next-step strong { color: var(--text-tertiary); text-de
   .k-table-skin { min-width: 640px; }
   .k-table-skin th:first-child, .k-table-skin td:first-child { position: sticky; left: 0; z-index: 2; background: var(--bg-surface); box-shadow: 4px 0 8px -6px rgba(2,6,23,0.8); }
   .k-table-skin th:first-child { z-index: 3; }
+  /* A read-only table that wants the skin's header look on a desktop but is
+     not an edit grid (minutes, a record's line list) adds k-stack: it stacks
+     like any k-stack table instead of holding 640px and running off the side
+     of a 390px screen. Its unlabeled cells are the row's content (a title
+     with a discussion under it), so they take the full width; empty ones go. */
+  .k-table-skin.k-stack { min-width: 0; }
+  .k-stack td:not([data-label]) { display: block; }
+  .k-stack td:empty { display: none; }
   .k-table td:empty { display: none; }
   .k-table tr[style] { border-bottom: 0 !important; }
   .k-table td:first-child { display: block; padding-bottom: 6px !important; font-size: var(--fs-md); color: var(--text-primary); box-shadow: none !important; }

@@ -6,7 +6,7 @@ import { must } from '@/lib/db-write';
 import { apiError } from '@/lib/api-error';
 import { logActivity, money } from '@/lib/activity';
 import { bidAmount } from '@/lib/bid-amount';
-import { coiStatus, type CoiCertRow } from '@/lib/coi-coverage';
+import { loadSubCompliance } from '@/lib/sub-compliance';
 import { dayIn, requestTimeZone } from '@/lib/time-zone';
 import { orValue } from '@/lib/pg-filter';
 
@@ -194,23 +194,18 @@ async function complianceIssues(db: ReturnType<typeof createServerClient>, tenan
   }
   if (!subId) return [];
 
+  /* The one compliance rule (lib/sub-compliance) — W-9 on file and insurance
+     not expired — the same answer the Compliance and W-9 screens and the sub
+     portal's invoice gate give, so the award never disagrees with them. The
+     insurance half is lib/coi-coverage: a COI request with no dates is a
+     request, not insurance, and a sub with no certificate is not insured. */
+  const rule = (await loadSubCompliance(db, tenantId, [subId], today)).get(subId);
   const issues: string[] = [];
-  if (subRec && subRec.w9_on_file !== true) issues.push('W-9 not on file');
-
-  const { data: certs, error: certErr } = await db
-    .from('insurance_certificates')
-    .select('policy_type, expiry_date, gl_expiry, wc_expiry, auto_expiry, umbrella_expiry, status')
-    .eq('tenant_id', tenantId)
-    .eq('sub_id', subId);
-  if (certErr) throw certErr;
-  /* One reading of "insured today", shared with the compliance scorecard
-     (lib/coi-coverage). This check used to run only when the sub had at least
-     one certificate row — a sub with none sailed through — and it counted a
-     row with no expiry date as good, which is exactly what a COI REQUEST is
-     (compliance-autofile writes them pending and undated). Asking for a COI,
-     or never asking, both cleared the gate. */
-  const coi = coiStatus((certs || []) as CoiCertRow[], today, subRec?.insurance_expiry ?? null);
-  if (!coi.hasGL) {
+  if (!rule || rule.missing.includes('w9')) issues.push('W-9 not on file');
+  if (!rule || rule.missing.includes('insurance')) {
+    const { data: certs, error: certErr } = await db.from('insurance_certificates').select('expiry_date, gl_expiry')
+      .eq('tenant_id', tenantId).eq('sub_id', subId);
+    if (certErr) throw certErr;
     const hadAny = (certs || []).some((c: { expiry_date?: string | null; gl_expiry?: string | null }) => c.expiry_date || c.gl_expiry) || !!subRec?.insurance_expiry;
     issues.push(hadAny ? 'Insurance certificate expired' : 'No insurance certificate on file');
   }

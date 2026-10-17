@@ -46,6 +46,8 @@ import { MODULES } from '@/lib/status-system';
 import { layout } from '@/lib/design-tokens';
 import { useOpenOnNew, useOpenRecord } from '@/lib/ui/open-on-new';
 import { formatRfiNumber, rfiLabel, nextRfiNumber as nextRfiNumberFor } from '@/lib/rfi';
+import { usePeople } from '@/lib/hooks/usePeople';
+import { personName } from '@/lib/person-names';
 
 interface RFI {
   id: string;
@@ -210,6 +212,8 @@ const DATE_INPUT_STYLE: React.CSSProperties = {
 export default function RFIsPage() {
   const { projectId } = useParams() as { projectId: string };
   const [rfis, setRfis] = useState<RFI[]>([]);
+  // Who submitted / answered, as names — some rows keep the user's id (lib/person-names).
+  const people = usePeople(rfis.flatMap(r => [r.submitted_by, r.answered_by]));
   const [loading, setLoading] = useState(true);
   const [loadError, setLoadError] = useState('');
   const [showForm, setShowForm] = useState(false);
@@ -767,7 +771,7 @@ export default function RFIsPage() {
 
           {selected.answer && (
             <div className="rfiSection">
-              <div className="rfiSectionTitle">Answer{selected.answered_by ? ` — ${selected.answered_by}` : ''}{detail?.answer_source === 'email' ? ' · via email' : ''}</div>
+              <div className="rfiSectionTitle">Answer{personName(selected.answered_by, people) ? ` — ${personName(selected.answered_by, people)}` : ''}{detail?.answer_source === 'email' ? ' · via email' : ''}</div>
               <div className="rfiProse">{selected.answer}</div>
             </div>
           )}
@@ -814,7 +818,7 @@ export default function RFIsPage() {
                 ['Schedule Impact', detailValue(scheduleImpact ?? '—')],
                 ['Spec Section', selected.spec_section || ''],
                 ['Drawing', detailValue(detail?.drawing_reference ? String(detail.drawing_reference) : '—')],
-                ['Submitted By', selected.submitted_by || ''],
+                ['Submitted By', personName(selected.submitted_by, people) || ''],
                 ['Created', fmtDate(selected.created_at)],
               ].filter(([, v]) => v != null && v !== '' && v !== '—') as [string, React.ReactNode][]} />
               {detailError && (
