@@ -30,6 +30,7 @@ import {
   type HoursSplit,
 } from './index';
 import { companyTimeZone, isTimeZone } from '../time-zone';
+import { liveJobs } from '@/lib/live-jobs';
 
 export type TimeclockDb = SupabaseClient<Database>;
 
@@ -356,8 +357,9 @@ function isValidTimezone(tz: string): boolean {
 /**
  * time_entries.project_id is NOT NULL, so a clock-in must land on a project.
  * Uses the requested project when it belongs to the tenant; otherwise falls
- * back to the tenant's most recently touched project. Returns null when the
- * tenant has no projects at all — the caller turns that into an honest 400
+ * back to the tenant's most recently touched project. Archived and deleted
+ * jobs take no time (lib/live-jobs). Returns null when the
+ * tenant has no live projects at all — the caller turns that into an honest 400
  * rather than inventing a placeholder project.
  */
 export async function resolveProjectId(
@@ -367,20 +369,20 @@ export async function resolveProjectId(
 ): Promise<string | null> {
   const asked = typeof requested === 'string' ? requested.trim() : '';
   if (asked) {
-    const { data } = await db
+    const { data } = await liveJobs(db
       .from('projects')
       .select('id')
       .eq('tenant_id', tenantId)
-      .eq('id', asked)
+      .eq('id', asked))
       .limit(1);
     const hit = ((data as { id: string }[] | null) || [])[0];
     if (hit) return hit.id;
     return null; // named a project that isn't theirs — say so, don't silently swap
   }
-  const { data } = await db
+  const { data } = await liveJobs(db
     .from('projects')
     .select('id')
-    .eq('tenant_id', tenantId)
+    .eq('tenant_id', tenantId))
     .order('updated_at', { ascending: false, nullsFirst: false })
     .limit(1);
   return ((data as { id: string }[] | null) || [])[0]?.id ?? null;

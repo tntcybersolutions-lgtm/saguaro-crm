@@ -1,8 +1,8 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { createServerClient, getUser } from '@/lib/supabase-server';
 import { apiError } from '@/lib/api-error';
-import { onlyLiveProjects } from '@/lib/live-projects';
 import { jobsClosedTo } from '@/lib/permissions';
+import { liveJobs } from '@/lib/live-jobs';
 
 export const dynamic = 'force-dynamic';
 
@@ -66,8 +66,8 @@ export async function GET(req: NextRequest) {
       .order('created_at', { ascending: false })
       .limit(limit);
 
-    // Archived and deleted jobs stay out of every list (lib/live-projects).
-    query = onlyLiveProjects(query);
+    // Live jobs only — archived and deleted rows are off every list (lib/live-jobs).
+    query = liveJobs(query);
 
     if (status) query = query.eq('status', status);
     if (search) {

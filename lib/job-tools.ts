@@ -18,6 +18,7 @@
  */
 import { bidAmount } from './bid-amount';
 import { inviteState } from './bid-invite-state';
+import { receivableOnly } from './invoice-direction';
 
 /** The bid packages on a job, rolled up for the tool row and the brief. */
 export interface BidPackagesSummary {
@@ -281,7 +282,7 @@ export async function countJobTools(
     settle('proposals', () => n(head('proposals'))),
     settle('contracts', () => n(head('contracts'))),
     settle('purchaseOrders', () => n(head('purchase_orders'))),
-    settle('invoices', () => n(head('invoices'))),
+    settle('invoices', () => n(receivableOnly(head('invoices')))), // Client Invoices: owner billing only
     settle('bills', () => n(head('bills'))),
     settle('todos', () => n(head('project_todos').not('status', 'in', TODO_DONE))),
     settle('tmTickets', () => n(head('tm_tickets'))),

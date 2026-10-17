@@ -4,7 +4,8 @@ import { requirePermission } from '@/lib/permissions';
 import { apiError } from '@/lib/api-error';
 import { costControl, type CostLine } from '@/lib/finance';
 import { isClosedStatus } from '@/lib/project-lifecycle';
-import { onlyLiveProjects } from '@/lib/live-projects';
+import { liveJobs } from '@/lib/live-jobs';
+import { payableOnly } from '@/lib/invoice-direction';
 
 /**
  * GET /api/sales/profit — booked profit across the tenant's active jobs.
@@ -36,14 +37,15 @@ export async function GET(req: NextRequest) {
     const t = user.tenantId;
 
     const [projRes, budgetRes, poRes, invRes] = await Promise.all([
-      onlyLiveProjects(db.from('projects').select('id, name, status, contract_value').eq('tenant_id', t)),
+      liveJobs(db.from('projects').select('id, name, status, contract_value').eq('tenant_id', t)),
       db.from('budget_lines').select('project_id, cost_code, original_budget, approved_changes').eq('tenant_id', t),
       db.from('purchase_orders').select('project_id, cost_code, total, subtotal, status').eq('tenant_id', t),
-      db.from('invoices').select('project_id, cost_code, amount, total, status').eq('tenant_id', t),
+      // A cost is what the company pays (Cost Control's rule), never what it bills the owner.
+      payableOnly(db.from('invoices').select('project_id, cost_code, amount, total, status').eq('tenant_id', t)),
     ]);
     if (projRes.error) throw projRes.error;
 
-    // Only active (not closed/cancelled/complete) jobs are "booked" work.
+    // Only live (not archived/deleted) active (not closed/cancelled/complete) jobs are "booked" work.
     const projects = (projRes.data ?? []).filter((p) => !isClosedStatus(p.status));
     const keep = new Set(projects.map((p) => String(p.id)));
 

@@ -644,7 +644,7 @@ export default function BidPackagesPage() {
   const ctxPkgById: Record<string, any> = {};
   for (const cbp of (ctx?.bidPackages || [])) ctxPkgById[cbp.id] = cbp;
   const awardedTotal = (ctx?.bidPackages || []).reduce((s: number, cbp: any) => s + (Number(cbp.awardedAmount) || 0), 0);
-  const budgetOriginal = Number(ctx?.budget?.original) || 0;
+  const budgetRevised = Number(ctx?.budget?.revised ?? ctx?.budget?.original) || 0;
   const budgetCommitted = Number(ctx?.budget?.committed) || 0;
   const rosterCount = (ctx?.subs || []).length;
   const spreadTone = (s: number): BadgeTone => s <= 10 ? 'ongoing' : s <= 25 ? 'under_contract' : 'overdue';
@@ -804,8 +804,8 @@ export default function BidPackagesPage() {
               <aside className="bpRail" aria-label="Procurement snapshot">
                 <Card title="Procurement Snapshot">
                   <DetailList items={[
-                    ['Project budget', <a key="b" className="k-link" href={`/app/projects/${projectId}/budget`}>{fmt(budgetOriginal)}</a>],
-                    ['Committed to date', budgetOriginal > 0 ? `${fmt(budgetCommitted)} · ${Math.round((budgetCommitted / budgetOriginal) * 100)}%` : fmt(budgetCommitted)],
+                    ['Project budget', <a key="b" className="k-link" href={`/app/projects/${projectId}/budget`}>{fmt(budgetRevised)}</a>],
+                    ['Committed to date', budgetRevised > 0 ? `${fmt(budgetCommitted)} · ${Math.round((budgetCommitted / budgetRevised) * 100)}%` : fmt(budgetCommitted)],
                     ['Awarded via bids', fmt(awardedTotal)],
                     ['Bids received', String(totalSubmissions)],
                     ['Subs on roster', <a key="r" className="k-link" href={`/app/projects/${projectId}/subs`}>{rosterCount}</a>],

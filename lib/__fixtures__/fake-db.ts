@@ -31,10 +31,18 @@ export function makeFakeDb() {
       cur += ch;
     }
     if (cur) parts.push(cur);
+    const test1 = (col: string, op: string, val: string): ((r: Row) => boolean) => {
+      if (op === 'not') { const [op2, ...rest2] = val.split('.'); const t = test1(col, op2, rest2.join('.')); return (r) => !t(r); }
+      if (op === 'eq') return (r) => String(r[col]) === val;
+      if (op === 'ilike') return (r) => likeToRe(val).test(String(r[col] ?? ''));
+      // is.null / is.true / is.false — a missing column reads as null, as in PostgREST rows.
+      if (op === 'is') return (r) => (val === 'null' ? (r[col] ?? null) === null : r[col] === (val === 'true'));
+      if (op === 'in') { const set = new Set(val.replace(/^\(|\)$/g, '').split(',')); return (r) => r[col] != null && set.has(String(r[col])); }
+      return () => false;
+    };
     const one = (cond: string) => {
       const [col, op, ...rest] = cond.split('.');
-      const val = rest.join('.');
-      return (r: Row) => op === 'eq' ? String(r[col]) === val : op === 'ilike' ? likeToRe(val).test(String(r[col] ?? '')) : false;
+      return test1(col, op, rest.join('.'));
     };
     const tests = parts.map((p) => {
       const m = p.match(/^and\((.*)\)$/);

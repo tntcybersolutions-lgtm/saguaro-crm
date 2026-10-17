@@ -160,6 +160,11 @@ const CSS = `
 .tcKey { display: flex; gap: 6px 16px; flex-wrap: wrap; padding-top: 10px; font-size: 12px; color: var(--text-secondary); }
 .tcKey span { display: inline-flex; align-items: center; gap: 6px; }
 .tcKey i { width: 10px; height: 10px; border-radius: 2px; flex: none; }
+.tcWeekEmpty { display: flex; flex-direction: column; gap: 10px; padding-top: 12px; }
+.tcWeekEmptyLine { font-size: var(--fs-md); font-weight: 600; color: var(--text-secondary); padding-bottom: 10px; border-bottom: 1px solid var(--border-default); }
+.tcDays { display: grid; grid-template-columns: repeat(7, minmax(0, 1fr)); gap: 4px; max-width: 560px; }
+.tcHeadActs { display: contents; }
+.tcCtlActs { display: none; }
 .tcMuted { color: var(--text-tertiary); }
 .tcNum { font-variant-numeric: tabular-nums; }
 .tcList .k-table th:first-child, .tcList .k-table td:first-child { position: sticky; left: 0; z-index: 1; background: var(--bg-solid); }
@@ -169,6 +174,8 @@ const CSS = `
 .tcSegRow { display: flex; gap: 8px; flex-wrap: wrap; }
 .tcDateInput { width: 100%; }
 @media (max-width: 640px) {
+  .tcHeadActs { display: none; }
+  .tcCtlActs { display: grid; grid-template-columns: minmax(0, 1fr) minmax(0, 1fr); gap: 10px; padding-top: 4px; }
   .tcWs .k-btn, .tcWs .k-stat, .tcWs select.k-select, .tcWs .k-input { min-height: 44px; }
   .tcWs .tcDateInput input { min-height: 44px !important; } /* beats the picker's inline 40px — a thumb target */
   .tcWs .k-table td { height: 48px; }
@@ -639,14 +646,17 @@ export default function TimeClockPage() {
     });
   })();
   const barMax = Math.max(10, ...weekDays.map((d) => d.total));
+  /** No hours yet this week: one short line, not seven dashes over an empty plot. */
+  const weekEmpty = weekDays.every((d) => d.total <= 0);
   const fmtH = (h: number) => `${(Math.round(h * 10) / 10).toFixed(1)}h`;
 
   const stats: StatItem[] = [
     { label: 'This Week', value: `${(week?.workedHours ?? 0).toFixed(2)} h` },
-    { label: 'Overtime', value: `${(week?.overtimeHours ?? 0).toFixed(2)} h`, tone: (week?.overtimeHours ?? 0) > 0 ? 'warn' : 'default' },
+    // Numbers are never yellow: overtime and pending read in plain type; the bar shows OT.
+    { label: 'Overtime', value: `${(week?.overtimeHours ?? 0).toFixed(2)} h` },
     { label: 'Today', value: `${todayHours.toFixed(2)} h`, tone: clockedIn ? 'good' : 'default' },
     ...(regRate > 0 ? [{ label: 'Est. Gross', value: fmtMoney(estGross), tone: 'good' as const }] : []),
-    { label: 'Pending', value: String(pendingCount), tone: pendingCount > 0 ? 'warn' as const : 'default' as const },
+    { label: 'Pending', value: String(pendingCount) },
     ...(leaveHours > 0 ? [{ label: 'Leave', value: `${leaveHours.toFixed(2)} h` }] : []),
   ];
 
@@ -692,10 +702,11 @@ export default function TimeClockPage() {
         crumbs={[{ label: 'Home', href: '/app' }, { label: 'Time Clock' }]}
         title="Time Clock"
         actions={
-          <>
+          /* Phone: the clock comes first — these move under Clock In (.tcCtlActs). */
+          <span className="tcHeadActs">
             <Button icon={<Plus size={15} weight="bold" />} onClick={openAddTime} disabled={!emp}>Add Time</Button>
             <Button icon={<Sun size={15} weight="fill" />} onClick={openLeave} disabled={!emp}>PTO / Sick</Button>
-          </>
+          </span>
         }
       >
         <div className="tcCq">
@@ -746,6 +757,10 @@ export default function TimeClockPage() {
                 {busy ? (clockedIn ? 'Clocking out…' : 'Clocking in…') : clockedIn ? 'Clock Out' : 'Clock In'}
               </Button>
               {msg && <div className="tcMsg" data-tone={msgTone} role="status">{msg}</div>}
+              <div className="tcCtlActs">
+                <Button icon={<Plus size={15} weight="bold" />} onClick={openAddTime} disabled={!emp}>Add Time</Button>
+                <Button icon={<Sun size={15} weight="fill" />} onClick={openLeave} disabled={!emp}>PTO / Sick</Button>
+              </div>
             </div>
           </section>
 
@@ -756,7 +771,23 @@ export default function TimeClockPage() {
             actions={<Button size="sm" icon={<PaperPlaneRight size={14} />} onClick={submitWeek} disabled={!week || !emp}>Submit Week</Button>}
           >
             <StatRow items={stats} />
-            {mounted && (
+            {mounted && weekEmpty && (
+              <div className="tcWeekEmpty">
+                <div className="tcWeekEmptyLine">No hours this week</div>
+                <div className="tcDays" aria-hidden>
+                  {weekDays.map((d) => {
+                    const dt = new Date(d.date + 'T12:00:00');
+                    return (
+                      <div key={d.date} className="tcDayLbl" data-today={d.date === todayStr ? 'true' : undefined}>
+                        <b>{dt.toLocaleDateString('en-US', { weekday: 'short' })}</b>
+                        <span>{dt.getDate()}</span>
+                      </div>
+                    );
+                  })}
+                </div>
+              </div>
+            )}
+            {mounted && !weekEmpty && (
               <>
                 <div className="tcBars" role="img" aria-label={`Hours by day: ${weekDays.map((d) => `${fmtDate(d.date)} ${fmtH(d.total)}`).join(', ')}`}>
                   {weekDays.map((d) => {

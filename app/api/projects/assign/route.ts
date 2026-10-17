@@ -7,6 +7,7 @@ import { logActivity } from '@/lib/activity';
 import { assignProjectToUser } from '@/lib/project-assignment';
 import type { Database } from '@/lib/database.types';
 import { runInBackground } from '@/lib/background';
+import { liveJobs } from '@/lib/live-jobs';
 
 export const dynamic = 'force-dynamic';
 
@@ -82,13 +83,11 @@ export async function POST(req: NextRequest) {
     /* ── Idempotent create: reuse the customer's existing project ───────── */
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
     const anyDb = db as any;
-    const { data: existing, error: findErr } = await anyDb
+    const { data: existing, error: findErr } = await liveJobs(anyDb
       .from('projects')
       .select('id, name, customer_id, status, assigned_to')
       .eq('tenant_id', tenantId)
-      .eq('customer_id', customerId)
-      .or('is_deleted.is.null,is_deleted.eq.false')
-      .or('is_archived.is.null,is_archived.eq.false')
+      .eq('customer_id', customerId))
       .order('created_at', { ascending: false })
       .limit(1)
       .maybeSingle();
