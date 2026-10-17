@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { requirePermission } from '@/lib/permissions';
 import { apiError } from '@/lib/api-error';
+import { formatRfiNumber } from '@/lib/rfi';
 import { liveJobs } from '@/lib/live-jobs';
 import { receivableOnly } from '@/lib/invoice-direction';
 
@@ -381,7 +382,7 @@ export async function GET(req: NextRequest) {
             const days = Math.max(0, Math.floor(ageMs / 86400000));
             if (oldestRfiDays === null || days > oldestRfiDays) {
               oldestRfiDays = days;
-              oldestRfiLabel = r.rfi_number ? `RFI ${r.rfi_number}` : `RFI "${String(r.subject ?? '').slice(0, 60)}"`;
+              oldestRfiLabel = r.rfi_number ? formatRfiNumber(r.rfi_number) : `RFI "${String(r.subject ?? '').slice(0, 60)}"`;
             }
           }
         }

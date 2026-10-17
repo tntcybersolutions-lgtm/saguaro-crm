@@ -6,6 +6,7 @@ import type { Database } from '@/lib/database.types';
 import { onRFICreated } from '@/lib/triggers';
 import { runInBackground } from '@/lib/background';
 import { apiError } from '@/lib/api-error';
+import { insertRfi } from '@/lib/rfi-server';
 
 export async function POST(req: NextRequest) {
   const g = await requirePermission(req, 'RFIs', 'Edit');
@@ -31,12 +32,10 @@ export async function POST(req: NextRequest) {
     const notOurs = await assertProjectInTenant(db, user.tenantId, (body.projectId || body.project_id) as string);
     if (notOurs) return notOurs;
 
-    const { count: rawCount } = await db
-      .from('rfis')
-      .select('*', { count: 'exact', head: true })
-      .eq('tenant_id', user.tenantId);
-
-    const rfi_number = `RFI-${String((rawCount || 0) + 1).padStart(3, '0')}`;
+    /* The number is the job's next one (RFI-001 on every new job), stamped by
+       the database trigger set_rfi_number under a per-job lock — see
+       supabase/migrations/20261017j_rfi_number_per_job.sql. This used to count
+       the whole company's RFIs, so a new job's first RFI was RFI-006. */
 
     // Accept both camelCase and snake_case from the client; default optionals to null.
     const priority      = (body.priority as string) || 'medium';
@@ -47,7 +46,6 @@ export async function POST(req: NextRequest) {
     const row = {
       tenant_id:        user.tenantId,
       project_id:       body.projectId   || body.project_id  || null,
-      rfi_number,
       subject:          body.subject     || '',
       question:         body.question    || body.description  || '',
       priority,
@@ -72,11 +70,7 @@ export async function POST(req: NextRequest) {
       submitted_by:     user.email       || 'Field User',
     };
 
-    const { data, error } = await db
-      .from('rfis')
-      .insert(row as Database['public']['Tables']['rfis']['Insert'])
-      .select()
-      .single();
+    const { data, error } = await insertRfi(db, row as Database['public']['Tables']['rfis']['Insert']);
 
     if (error) throw error;
 

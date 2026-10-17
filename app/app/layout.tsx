@@ -183,7 +183,7 @@ export default function AppLayout({ children }: { children: React.ReactNode }) {
 
       const refreshRes = await refreshP;
       if (refreshRes && refreshRes.status === 401) {
-        window.location.href = '/login?next=' + encodeURIComponent(window.location.pathname);
+        window.location.href = '/login?next=' + encodeURIComponent(window.location.pathname + window.location.search);
         return;
       }
 

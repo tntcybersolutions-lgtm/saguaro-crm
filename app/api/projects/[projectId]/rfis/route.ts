@@ -4,6 +4,8 @@ import { requirePermission } from '@/lib/permissions';
 import type { Database } from '@/lib/database.types';
 import { apiError } from '@/lib/api-error';
 import { requestDay } from '@/lib/time-zone';
+import { insertRfi } from '@/lib/rfi-server';
+import { assertProjectInTenant } from '@/lib/assert-project';
 
 export const dynamic = 'force-dynamic';
 
@@ -68,17 +70,13 @@ export async function POST(req: NextRequest, { params }: { params: Promise<{ pro
   try {
     const db = createServerClient();
 
-    const { count: rawCount } = await db
-      .from('rfis')
-      .select('*', { count: 'exact', head: true })
-      .eq('tenant_id', user.tenantId);
-
-    const rfi_number = `RFI-${String((rawCount || 0) + 1).padStart(3, '0')}`;
+    // The project must be the caller's; the job's next number comes from the database (set_rfi_number).
+    const notOurs = await assertProjectInTenant(db, user.tenantId, projectId);
+    if (notOurs) return notOurs;
 
     const row = {
       tenant_id:    user.tenantId,
       project_id:   projectId,
-      rfi_number,
       subject:      body.subject     || '',
       question:     body.question    || body.description  || '',
       spec_section: body.specSection || body.spec_section || '',
@@ -87,11 +85,7 @@ export async function POST(req: NextRequest, { params }: { params: Promise<{ pro
       submitted_by: user.email       || 'Field User',
     };
 
-    const { data, error } = await db
-      .from('rfis')
-      .insert(row as Database['public']['Tables']['rfis']['Insert'])
-      .select()
-      .single();
+    const { data, error } = await insertRfi(db, row as Database['public']['Tables']['rfis']['Insert']);
 
     if (error) throw error;
     return NextResponse.json({ success: true, rfi: data });

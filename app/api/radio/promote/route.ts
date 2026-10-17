@@ -20,6 +20,7 @@ import {
 import { must, tryWrite } from '@/lib/db-write';
 import { requestDay } from '@/lib/time-zone';
 import { runInBackground } from '@/lib/background';
+import { insertRfi } from '@/lib/rfi-server';
 
 /**
  * Saguaro Radio — ONE-TAP PROMOTE.
@@ -123,10 +124,6 @@ async function existingLink(
  */
 
 /** rfis: tenant-wide count + 1, zero-padded — identical to app/api/rfis/create. */
-async function nextRfiNumber(db: Db, tenantId: string): Promise<string> {
-  const { count } = await db.from('rfis').select('*', { count: 'exact', head: true }).eq('tenant_id', tenantId);
-  return `RFI-${String((count || 0) + 1).padStart(3, '0')}`;
-}
 
 /** punch_list: per-project max(item_number) + 1 — identical to app/api/punch-list/create. */
 async function nextPunchNumber(db: Db, tenantId: string, projectId: string): Promise<number> {
@@ -219,15 +216,14 @@ export async function POST(req: NextRequest) {
   try {
     if (recordType === 'rfi') {
       const shaped = buildRecordFields('rfi', prov, fields);
-      const rfi_number = await nextRfiNumber(db, tenantId);
-      const { data, error } = await db.from('rfis').insert({
+      // The job's next number comes from the database trigger (set_rfi_number, per job).
+      const { data, error } = await insertRfi(db, {
         tenant_id: tenantId,
         project_id: projectId,
-        rfi_number,
         submitted_by: user.email || 'Field User',
         created_by: user.id,
         ...shaped,
-      }).select('id, rfi_number').single();
+      }, 'id, rfi_number');
       if (error) return fail(`Could not create the RFI: ${error.message}`, 500);
       recordId = (data as any).id;
       created = true;

@@ -15,6 +15,9 @@
 import { createHash } from 'node:crypto';
 import { createServerClient } from '@/lib/supabase-server';
 import { createNotification } from '@/lib/notifications';
+import { rfiLabel } from '@/lib/rfi';
+import { clearOfficialFlags } from '@/lib/rfi-server';
+import { recordHref } from '@/lib/record-links';
 import { onRFIAnswered } from '@/lib/triggers';
 import { runInBackground } from '@/lib/background';
 import { writeWithOptionalColumns } from '@/lib/optional-column';
@@ -300,6 +303,8 @@ export async function handleInboundEmail(event: Row): Promise<InboundOutcome> {
 
     // Every reply is on the item's thread (the Comments tab), marked "via email".
     const official = (plan.type === 'rfis' && plan.official) || (plan.type === 'submittals' && !!plan.verdict);
+    // One official answer per RFI: an emailed answer takes the mark from any earlier one.
+    if (plan.type === 'rfis' && plan.official) await clearOfficialFlags(db, tenantId, decoded.itemId);
     const { result: { data: comment, error: cErr } } = await writeWithOptionalColumns(
       {
         tenant_id: tenantId,
@@ -332,8 +337,10 @@ export async function handleInboundEmail(event: Row): Promise<InboundOutcome> {
           is_official: plan.official,
           responded_at: now,
           source: 'email',
+          // The thread comment above is this same reply — the RFI page shows it once (lib/rfi mergeRfiThread).
+          comment_id: result.comment_id ?? null,
         },
-        ['source'],
+        ['source', 'comment_id'],
         (row) => db.from('rfi_responses').insert(row as never).select('id').single(),
       );
       if (rErr) throw rErr;
@@ -377,13 +384,13 @@ export async function handleInboundEmail(event: Row): Promise<InboundOutcome> {
 
     // Tell the item's owner (or the company's admins when it has none) in the app.
     const num = itemNumber(decoded.type, item!);
-    const label = `${NOUN[decoded.type]}${num ? ` ${decoded.type === 'change_orders' ? '#' : ''}${num}` : ''}`;
+    const label = decoded.type === 'rfis' ? rfiLabel(num) : `${NOUN[decoded.type]}${num ? ` ${decoded.type === 'change_orders' ? '#' : ''}${num}` : ''}`;
     const what = plan.type === 'rfis' && plan.official ? 'answered' : plan.type === 'submittals' && plan.verdict ? `returned (${VERDICT_LABEL[plan.verdict]})` : 'replied to';
     await createNotification(
       tenantId, itemOwner(decoded.type, item!), 'email_reply',
       `${name} ${what} ${label} by email`,
       (reply || `${stored.files.length} file${stored.files.length === 1 ? '' : 's'} attached`).slice(0, 160),
-      `${APP_URL}/app/projects/${projectId}/items/${decoded.type}/${decoded.itemId}`,
+      recordHref(decoded.type, projectId, decoded.itemId, { base: APP_URL }) || `${APP_URL}/app`,
       projectId || undefined,
     );
 

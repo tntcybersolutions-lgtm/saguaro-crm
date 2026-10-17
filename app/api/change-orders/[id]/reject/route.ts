@@ -1,3 +1,4 @@
+import { recordHref } from '@/lib/record-links';
 import { NextRequest, NextResponse } from 'next/server';
 import { requirePermission } from '@/lib/permissions';
 import { createNotification } from '@/lib/notifications';
@@ -36,7 +37,7 @@ export async function PUT(req: NextRequest, { params }: { params: Promise<{ id: 
         'change_order_approved',
         `Change Order #${c.co_number} rejected`,
         body.reason ? `Reason: ${body.reason}` : `CO #${c.co_number} was rejected on ${String(project.name ?? '')}`,
-        `${process.env.NEXT_PUBLIC_APP_URL || 'https://saguarocontrol.net'}/app/projects/${String(project.id ?? '')}/change-orders`,
+        recordHref('change_orders', project.id, id, { base: process.env.NEXT_PUBLIC_APP_URL || 'https://saguarocontrol.net' }),
         String(project.id ?? '')
       );
     }

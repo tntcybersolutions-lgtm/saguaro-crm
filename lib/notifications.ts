@@ -49,8 +49,10 @@ async function emailRecipients(tenantId: string, userId: string | null): Promise
 
 /* Live radio traffic (every push-to-talk clip and shared photo) is a chat
    stream: it goes to the phone by push, not to the inbox. A panic alarm sends
-   its own email (with the map link) from /api/radio/panic, so not twice. */
-const NO_EMAIL_TYPES = new Set(['radio_voice', 'radio_media', 'radio_panic']);
+   its own email (with the map link) from /api/radio/panic, so not twice.
+   An RFI assignment sends its own email too (lib/triggers onRFIAssigned: the
+   RFI's link and the reply-by-email Reply-To), so the copy is skipped. */
+const NO_EMAIL_TYPES = new Set(['radio_voice', 'radio_media', 'radio_panic', 'rfi_assigned']);
 
 async function emailNotification(tenantId: string, userId: string | null, type: string, title: string, body: string, url: string): Promise<void> {
   if (NO_EMAIL_TYPES.has(type)) return;
@@ -80,7 +82,7 @@ export interface Notification {
 export type NotificationType =
   | 'pay_app_submitted' | 'pay_app_approved' | 'pay_app_certified'
   | 'bid_package_created' | 'bid_submitted' | 'bid_awarded'
-  | 'rfi_submitted' | 'rfi_answered'
+  | 'rfi_submitted' | 'rfi_answered' | 'rfi_assigned'
   | 'change_order_approved'
   | 'insurance_expiring' | 'insurance_expired'
   | 'lien_waiver_requested' | 'lien_waiver_signed'

@@ -4,6 +4,9 @@ import { requirePermission } from '@/lib/permissions';
 import { must } from '@/lib/db-write';
 import { apiError, apiFail } from '@/lib/api-error';
 import { embed } from '@/lib/db-embeds';
+import { prepareReassignment, actorName } from '@/lib/rfi-server';
+import { onRFIAssigned } from '@/lib/triggers';
+import { runInBackground } from '@/lib/background';
 
 const ALLOWED_RFI_COLUMNS = [
   'project_id', 'subject', 'question', 'answer', 'spec_section', 'due_date', 'status',
@@ -49,7 +52,14 @@ export async function GET(req: NextRequest, { params }: { params: Promise<{ id: 
   }
 }
 
-export async function PUT(req: NextRequest, { params }: { params: Promise<{ id: string }> }) {
+/**
+ * PUT and PATCH write the same allowed columns. A write that hands the RFI to
+ * someone new (assignee / ball in court) fills in their email from the job's
+ * people and emails them the RFI — with its link and the reply-by-email
+ * Reply-To — plus an in-app notification when they use Saguaro. The answer
+ * says whether anyone was emailed, so the screen can say so.
+ */
+async function writeRfi(req: NextRequest, params: Promise<{ id: string }>, scope: string) {
   const g = await requirePermission(req, 'RFIs', 'Edit');
   if (!g.ok) return g.res;
   const user = g.user;
@@ -57,30 +67,26 @@ export async function PUT(req: NextRequest, { params }: { params: Promise<{ id: 
   try {
     const body = await req.json();
     const db = createServerClient();
-    const { data, error } = await db.from('rfis').update(filterRfiBody(body)).eq('id', id).eq('tenant_id', user.tenantId).select().maybeSingle();
+    const { data: before, error: readErr } = await db.from('rfis').select('*').eq('id', id).eq('tenant_id', user.tenantId).maybeSingle();
+    if (readErr) throw readErr;
+    if (!before) return apiFail('RFI not found', 404);
+    const { patch, notify } = await prepareReassignment(db, user.tenantId, before as Record<string, unknown>, filterRfiBody(body), user.email || null);
+    const { data, error } = await db.from('rfis').update(patch).eq('id', id).eq('tenant_id', user.tenantId).select().maybeSingle();
     if (error) throw error;
     if (!data) return apiFail('RFI not found', 404);
-    return NextResponse.json({ rfi: data });
+    if (notify?.email) runInBackground(onRFIAssigned(id, notify, { email: user.email || null, name: await actorName(db, user) }), 'onRFIAssigned');
+    return NextResponse.json({ rfi: data, assigned: notify ? { name: notify.name, emailed: notify.email } : null });
   } catch (e) {
-    return apiError('rfis/id PUT', e, "Couldn't save this RFI. Please try again.");
+    return apiError(scope, e, "Couldn't save this RFI. Please try again.");
   }
 }
 
+export async function PUT(req: NextRequest, { params }: { params: Promise<{ id: string }> }) {
+  return writeRfi(req, params, 'rfis/id PUT');
+}
+
 export async function PATCH(req: NextRequest, { params }: { params: Promise<{ id: string }> }) {
-  const g = await requirePermission(req, 'RFIs', 'Edit');
-  if (!g.ok) return g.res;
-  const user = g.user;
-  const { id } = await params;
-  try {
-    const body = await req.json();
-    const db = createServerClient();
-    const { data, error } = await db.from('rfis').update(filterRfiBody(body)).eq('id', id).eq('tenant_id', user.tenantId).select().maybeSingle();
-    if (error) throw error;
-    if (!data) return apiFail('RFI not found', 404);
-    return NextResponse.json({ rfi: data });
-  } catch (e) {
-    return apiError('rfis/id PATCH', e, "Couldn't save this RFI. Please try again.");
-  }
+  return writeRfi(req, params, 'rfis/id PATCH');
 }
 
 export async function DELETE(_req: NextRequest, { params }: { params: Promise<{ id: string }> }) {

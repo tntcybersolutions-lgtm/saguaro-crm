@@ -4,6 +4,7 @@ import { apiError } from '@/lib/api-error';
 import { notOnRoster, subRecordScope } from '@/lib/sub-portal-scope';
 import { rfiQuestionWithRefs } from '@/lib/sub-portal-view';
 import { createNotification } from '@/lib/notifications';
+import { rfiLabel } from '@/lib/rfi';
 
 async function authenticateSubPortal(req: NextRequest) {
   const token =
@@ -143,7 +144,7 @@ export async function POST(req: NextRequest) {
     );
 
     return NextResponse.json(
-      { rfi, message: `RFI ${rfiNumber} created successfully` },
+      { rfi, message: `${rfiLabel(rfiNumber)} created successfully` },
       { status: 201 }
     );
   } catch (err) {

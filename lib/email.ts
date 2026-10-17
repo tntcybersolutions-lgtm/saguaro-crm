@@ -7,6 +7,7 @@ import { Resend } from 'resend';
 import { currentComm, htmlToText, logComm } from '@/lib/comm-log';
 import { buildReplyAddress, type ReplyItemType } from '@/lib/inbound-reply/token';
 import { REPLY_MARKER } from '@/lib/inbound-reply/quote-strip';
+import { rfiLabel } from '@/lib/rfi';
 
 // Fallbacks use the VERIFIED Resend domain (saguarocontrol.net). Prod sets EMAIL_FROM
 // explicitly; these defaults just keep sends valid if the env var is ever missing.
@@ -190,22 +191,22 @@ export async function sendPayAppSubmitted(to: string, ownerName: string, project
   `));
 }
 
-export async function sendPayAppApproved(to: string, gcName: string, projectName: string, appNumber: number, amount: number) {
+export async function sendPayAppApproved(to: string, gcName: string, projectName: string, appNumber: number, amount: number, link?: string) {
   return send(to, `Pay App #${appNumber} Approved — ${projectName}`, layout(`
     ${h(`Pay Application #${appNumber} Approved`)}
     ${p(`Your Pay Application has been approved by the owner.`)}
     ${table(row('Contractor', gcName) + row('Project', projectName) + row('App Number', `#${appNumber}`) + row('Certified Amount', fmt(amount)))}
     ${p('Conditional lien waivers have been automatically generated for your subcontractors.')}
-    ${btn('View Pay Application', `${APP_URL}/app`)}
+    ${btn('View Pay Application', link || `${APP_URL}/app`)}
   `));
 }
 
-export async function sendPayAppCertified(to: string, gcName: string, projectName: string, amount: number, certDate: string) {
+export async function sendPayAppCertified(to: string, gcName: string, projectName: string, amount: number, certDate: string, link?: string) {
   return send(to, `Payment Certified — ${projectName}`, layout(`
     ${h('Payment Certified')}
     ${p(`Dear ${gcName}, your payment has been certified by the architect.`)}
     ${table(row('Project', projectName) + row('Certified Amount', fmt(amount)) + row('Certification Date', certDate))}
-    ${btn('View Details', `${APP_URL}/app`)}
+    ${btn('View Details', link || `${APP_URL}/app`)}
   `));
 }
 
@@ -220,22 +221,22 @@ export async function sendLienWaiverRequest(to: string, subName: string, project
   `));
 }
 
-export async function sendLienWaiverSigned(to: string, gcName: string, subName: string, projectName: string) {
+export async function sendLienWaiverSigned(to: string, gcName: string, subName: string, projectName: string, link?: string) {
   return send(to, `Lien Waiver Signed — ${subName} on ${projectName}`, layout(`
     ${h('Lien Waiver Signed')}
     ${p(`<strong>${subName}</strong> has signed and returned their lien waiver for <strong>${projectName}</strong>.`)}
     ${table(row('GC', gcName) + row('Subcontractor', subName) + row('Project', projectName))}
-    ${btn('View Lien Waivers', `${APP_URL}/app`)}
+    ${btn('View Lien Waivers', link || `${APP_URL}/app`)}
   `));
 }
 
-export async function sendBidPackageCreated(to: string, gcName: string, projectName: string, tradeName: string, dueDate: string) {
+export async function sendBidPackageCreated(to: string, gcName: string, projectName: string, tradeName: string, dueDate: string, link?: string) {
   return send(to, `Bid Package Created — ${tradeName} — ${projectName}`, layout(`
     ${h('New Bid Package Created')}
     ${p(`A new bid package for <strong>${tradeName}</strong> has been created on <strong>${projectName}</strong>.`)}
     ${table(row('GC', gcName) + row('Project', projectName) + row('Trade', tradeName) + row('Due Date', dueDate))}
     ${p('The bid jacket PDF has been auto-generated and sub invitations are being sent.')}
-    ${btn('View Bid Package', `${APP_URL}/app`)}
+    ${btn('View Bid Package', link || `${APP_URL}/app`)}
   `));
 }
 
@@ -253,12 +254,12 @@ export async function sendSubInvitedToBid(to: string, subName: string, projectNa
   `));
 }
 
-export async function sendBidSubmitted(to: string, gcName: string, subName: string, projectName: string, bidAmount: number) {
+export async function sendBidSubmitted(to: string, gcName: string, subName: string, projectName: string, bidAmount: number, link?: string) {
   return send(to, `New Bid Received — ${subName} — ${projectName}`, layout(`
     ${h('New Bid Submitted')}
     ${p(`<strong>${subName}</strong> has submitted a bid on <strong>${projectName}</strong>.`)}
     ${table(row('GC', gcName) + row('Subcontractor', subName) + row('Project', projectName) + row('Bid Amount', fmt(bidAmount)))}
-    ${btn('View Bid', `${APP_URL}/app`)}
+    ${btn('View Bid', link || `${APP_URL}/app`)}
   `));
 }
 
@@ -307,31 +308,75 @@ function replyBits(to: string, ref: ReplyRef | null | undefined, what: string): 
   };
 }
 
-export async function sendRFISubmitted(to: string, projectName: string, rfiNumber: number | string, subject: string, submittedBy: string, reply?: ReplyRef | null) {
-  const r = replyBits(to, reply, 'answer it');
-  return send(to, `RFI #${rfiNumber} Submitted — ${projectName}`, layout(`
-    ${r.top}
-    ${h(`RFI #${rfiNumber} Submitted`)}
-    ${p(`A new Request for Information has been submitted and requires your response.`)}
-    ${table(row('Project', projectName) + row('RFI Number', `#${rfiNumber}`) + row('Subject', subject) + row('Submitted By', submittedBy))}
-    ${r.hint}
-    ${btn('View & Answer RFI', `${APP_URL}/app`)}
-  `), { replyTo: r.replyTo });
+/** What an RFI email says about the RFI. `link` is the RFI's own page (lib/rfi rfiHref). */
+export type RfiEmail = {
+  projectName: string;
+  rfiNumber: unknown;
+  subject: string;
+  link: string;
+  question?: string | null;
+  dueDate?: string | null;
+};
+
+function rfiRows(r: RfiEmail, extra = ''): string {
+  const due = r.dueDate ? new Date(`${String(r.dueDate).slice(0, 10)}T12:00:00`).toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' }) : '';
+  return table(
+    row('Project', escHtml(r.projectName)) +
+    row('RFI', escHtml(rfiLabel(r.rfiNumber))) +
+    row('Subject', escHtml(r.subject || 'Untitled')) +
+    (due ? row('Response due', escHtml(due)) : '') +
+    extra,
+  );
 }
 
-export async function sendRFIAnswered(to: string, submitterName: string, projectName: string, rfiNumber: number | string, answer: string, reply?: ReplyRef | null) {
-  const r = replyBits(to, reply, 'follow up');
-  return send(to, `RFI #${rfiNumber} Answered — ${projectName}`, layout(`
-    ${r.top}
-    ${h(`RFI #${rfiNumber} Answered`)}
-    ${p(`Dear ${submitterName}, your RFI on <strong>${projectName}</strong> has been answered.`)}
-    ${table(row('Project', projectName) + row('RFI Number', `#${rfiNumber}`) + row('Answer', answer.slice(0, 200)))}
-    ${r.hint}
-    ${btn('View Full RFI Response', `${APP_URL}/app`)}
-  `), { replyTo: r.replyTo });
+/** The RFI's page, never the dashboard: a missing link falls back to the RFIs list, then the app. */
+function rfiButton(label: string, link: string) {
+  return btn(label, link || `${APP_URL}/app`);
 }
 
-export async function sendChangeOrderApproved(to: string, projectName: string, coNumber: number, amount: number, reply?: ReplyRef | null) {
+export async function sendRFISubmitted(to: string, r: RfiEmail & { submittedBy: string }, reply?: ReplyRef | null) {
+  const bits = replyBits(to, reply, 'answer it');
+  const n = rfiLabel(r.rfiNumber);
+  return send(to, `${n} Submitted — ${r.projectName}`, layout(`
+    ${bits.top}
+    ${h(`${escHtml(n)} Submitted`)}
+    ${p('A new Request for Information has been submitted and requires your response.')}
+    ${rfiRows(r, row('Submitted by', escHtml(r.submittedBy)))}
+    ${r.question ? p(escHtml(String(r.question).slice(0, 600))) : ''}
+    ${bits.hint}
+    ${rfiButton('View & Answer RFI', r.link)}
+  `), { replyTo: bits.replyTo });
+}
+
+/** Sent to the person an RFI was just assigned to (ball in their court). */
+export async function sendRFIAssigned(to: string, r: RfiEmail & { assigneeName: string; assignedBy: string }, reply?: ReplyRef | null) {
+  const bits = replyBits(to, reply, 'answer it');
+  const n = rfiLabel(r.rfiNumber);
+  return send(to, `${n} assigned to you — ${r.projectName}`, layout(`
+    ${bits.top}
+    ${h(`${escHtml(n)} is in your court`)}
+    ${p(`${escHtml(r.assignedBy)} assigned this RFI to ${escHtml(r.assigneeName)}.`)}
+    ${rfiRows(r)}
+    ${r.question ? p(escHtml(String(r.question).slice(0, 600))) : ''}
+    ${bits.hint}
+    ${rfiButton('View & Answer RFI', r.link)}
+  `), { replyTo: bits.replyTo, fromName: `${r.assignedBy} via Saguaro` });
+}
+
+export async function sendRFIAnswered(to: string, r: RfiEmail & { submitterName: string; answer: string }, reply?: ReplyRef | null) {
+  const bits = replyBits(to, reply, 'follow up');
+  const n = rfiLabel(r.rfiNumber);
+  return send(to, `${n} Answered — ${r.projectName}`, layout(`
+    ${bits.top}
+    ${h(`${escHtml(n)} Answered`)}
+    ${p(`Dear ${escHtml(r.submitterName)}, your RFI on <strong>${escHtml(r.projectName)}</strong> has been answered.`)}
+    ${rfiRows(r, row('Answer', escHtml(r.answer.slice(0, 200))))}
+    ${bits.hint}
+    ${rfiButton('View Full RFI Response', r.link)}
+  `), { replyTo: bits.replyTo });
+}
+
+export async function sendChangeOrderApproved(to: string, projectName: string, coNumber: number, amount: number, reply?: ReplyRef | null, link?: string) {
   const r = replyBits(to, reply, 'comment on it');
   return send(to, `Change Order #${coNumber} Approved — ${projectName}`, layout(`
     ${r.top}
@@ -339,7 +384,7 @@ export async function sendChangeOrderApproved(to: string, projectName: string, c
     ${p(`Change Order #${coNumber} has been approved. The contract sum has been updated accordingly.`)}
     ${table(row('Project', projectName) + row('CO Number', `#${coNumber}`) + row('Amount', fmt(amount)))}
     ${r.hint}
-    ${btn('View Change Order', `${APP_URL}/app`)}
+    ${btn('View Change Order', link || `${APP_URL}/app`)}
   `), { replyTo: r.replyTo });
 }
 
@@ -382,7 +427,7 @@ export async function sendSubmittalForReview(opts: {
   `), { replyTo: r.replyTo });
 }
 
-export async function sendInsuranceExpiring(to: string, subName: string, projectName: string, policyType: string, expiryDate: string, daysLeft: number) {
+export async function sendInsuranceExpiring(to: string, subName: string, projectName: string, policyType: string, expiryDate: string, daysLeft: number, link?: string) {
   const urgent = daysLeft <= 7;
   return send(to, `${urgent ? 'URGENT: ' : ''}Insurance Expiring in ${daysLeft} Days — ${subName}`, layout(`
     ${h(`${urgent ? '⚠ URGENT: ' : ''}Insurance Certificate Expiring`)}
@@ -391,7 +436,7 @@ export async function sendInsuranceExpiring(to: string, subName: string, project
     </p>
     ${table(row('Subcontractor', subName) + row('Project', projectName) + row('Policy Type', policyType) + row('Expiry Date', expiryDate) + row('Days Remaining', String(daysLeft)))}
     ${p('Please upload a renewed certificate immediately to avoid work stoppages.')}
-    ${btn('Upload Renewed COI', `${APP_URL}/app`)}
+    ${btn('Upload Renewed COI', link || `${APP_URL}/app`)}
   `));
 }
 

@@ -10,6 +10,7 @@
  */
 import type { PermCategory } from '@/lib/permission-categories';
 import { PO_STATUSES } from '@/lib/purchase-order-status';
+import { formatRfiNumber } from '@/lib/rfi';
 export { valueLabel } from '@/lib/value-label';
 
 export type FieldKind = 'text' | 'long' | 'date' | 'datetime' | 'money' | 'number' | 'bool' | 'select';
@@ -309,6 +310,7 @@ export function itemNumber(tool: ItemTool, n: unknown): string {
   if (/^\d{4}-\d{2}-\d{2}$/.test(s)) {
     return `${tool.numberPrefix}${new Date(`${s}T12:00:00`).toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' })}`;
   }
+  if (tool.type === 'rfis') return formatRfiNumber(s);
   return /^[A-Za-z]/.test(s) ? s : `${tool.numberPrefix}${s}`;
 }
 

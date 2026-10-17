@@ -3,6 +3,7 @@ import { getUser, createServerClient } from '@/lib/supabase-server';
 import { loadAutomationRules, logSageActivity } from '@/lib/sage-brain';
 import { must } from '@/lib/db-write';
 import { apiError } from '@/lib/api-error';
+import { rfiLabel } from '@/lib/rfi';
 import { liveJobs } from '@/lib/live-jobs';
 import { receivableOnly } from '@/lib/invoice-direction';
 
@@ -159,7 +160,7 @@ export async function POST(req: NextRequest) {
         const daysOver = todayIdx - dayIndex(due);
         if (daysOver <= 0) continue;
         const proj = pname(r.project_id);
-        const label = r.rfi_number ? `RFI ${r.rfi_number}` : 'An open RFI';
+        const label = rfiLabel(r.rfi_number, 'An open RFI');
         const subjectLine = String(r.subject ?? 'no subject on file');
         hits.push({
           about: `${label} ("${subjectLine}")${proj ? ` on ${proj}` : ''} is ${plural(daysOver, 'day')} past its response due date.`,
