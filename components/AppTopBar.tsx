@@ -110,6 +110,15 @@ export default function AppTopBar({
     : back
       ? { label: back.label, go: () => router.push(back.href) }
       : null;
+  /* The pill never shrinks, so it is never cut to "‹ F": a long name shows as
+     its short form ("Maple Ridge — Phase 2" → "Maple Ridge") or as "Back".
+     The full name stays in the tooltip and the accessible name. On a phone it
+     is the arrow alone (globals.css). */
+  const backShort = (() => {
+    if (!backTo) return '';
+    const s = backTo.label.split(/\s+[—–-]\s+/)[0].trim();
+    return s.length > 0 && s.length <= 22 ? s : 'Back';
+  })();
 
   // Close the account menu on navigation and on Escape.
   useEffect(() => { setShowUserMenu(false); }, [pathname]);
@@ -162,7 +171,7 @@ export default function AppTopBar({
           title={`Back to ${backTo.label}`}
         >
           <CaretLeft size={18} weight="bold" aria-hidden />
-          <span className="sag-tb-back-label">{backTo.label}</span>
+          <span className="sag-tb-back-label">{backShort}</span>
         </button>
       )}
 

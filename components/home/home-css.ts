@@ -35,7 +35,7 @@ export const HOME_CSS = `
 .fh-in .hf{margin:14px 0 8px}
 .fh-in .fl-tabs button{flex:1 1 auto;min-width:0;padding:0 6px;overflow:hidden;text-overflow:ellipsis}
 
-/* Header: one controls row (view · job · +), then the greeting — the shared
+/* Header: one controls row (view · job · + · Arrange), then the greeting — the shared
    page title (.k-title: --title-page, --fs-title). */
 .fh-head{margin-bottom:var(--head-gap)}
 .fh-top{display:flex;align-items:center;justify-content:space-between;gap:8px;flex-wrap:wrap;min-height:44px}
@@ -43,15 +43,36 @@ export const HOME_CSS = `
 .fh-date{font-size:15px;font-weight:800;color: var(--text-secondary);letter-spacing:.005em;white-space:nowrap}
 .fh-ctrls{display:flex;align-items:center;gap:6px;margin-left:auto;min-width:0}
 .fh .fh-hello{margin:2px 0 0}
-.fh-chip{position:relative;display:inline-flex;align-items:center;gap:5px;height:30px;max-width:150px;padding:0 10px;border:1px solid var(--sg-border);border-radius:15px;background:transparent;color:var(--sg-text);font:inherit;font-size:13px;font-weight:600;cursor:pointer;white-space:nowrap;-webkit-tap-highlight-color:transparent}
-.fh-chip::after{content:'';position:absolute;inset:-9px -3px}
+.fh-chip{position:relative;display:inline-flex;align-items:center;gap:6px;height:36px;max-width:170px;padding:0 12px;border:1px solid var(--sg-border);border-radius:10px;background:transparent;color:var(--sg-text);font:inherit;font-size:13px;font-weight:600;cursor:pointer;white-space:nowrap;-webkit-tap-highlight-color:transparent}
+.fh-chip::after{content:'';position:absolute;inset:-4px -3px}
 .fh-chip>span{overflow:hidden;text-overflow:ellipsis;min-width:0}
 .fh-chip i{font-style:normal;color:var(--sg-text-3);font-size: 12px;flex:none}
 .fh-chip[aria-expanded=true]{border-color:var(--sg-border-strong)}
 .fh-chip:focus-visible,.fh-plus:focus-visible,.fh-menu button:focus-visible,.fh-menu a:focus-visible{outline:2px solid var(--focus-ring);outline-offset:2px}
-.fh-chip select{position:absolute;z-index:1;inset:-9px -3px;width:calc(100% + 6px);height:calc(100% + 18px);opacity:0;cursor:pointer;font-size:16px;appearance:none;-webkit-appearance:none;border:0}
-.fh-plus{position:relative;flex:none;width:30px;height:30px;border-radius:15px;display:grid;place-items:center;border:1px solid var(--sg-border);background:transparent;color: var(--text-secondary);cursor:pointer;padding:0}
-.fh-plus::after{content:'';position:absolute;inset:-9px}
+.fh-chip select{position:absolute;z-index:1;inset:-4px -3px;width:calc(100% + 6px);height:calc(100% + 8px);opacity:0;cursor:pointer;font-size:16px;appearance:none;-webkit-appearance:none;border:0}
+.fh-plus{position:relative;flex:none;width:36px;height:36px;border-radius:10px;display:grid;place-items:center;border:1px solid var(--sg-border);background:transparent;color: var(--text-secondary);cursor:pointer;padding:0}
+.fh-plus::after{content:'';position:absolute;inset:-4px}
+/* Arrange (components/layout/ArrangePanels) sits in the same row: same height,
+   radius, border and type as the chips, so the four controls read as one set. */
+.fh-ctrls>.fh-pop,.fh-ctrls>.fh-chip,.fh-ctrls>.ap-btn{flex:none}
+.fh-ctrls .ap-btn{height:36px;min-height:36px;padding:0 12px;border-radius:10px;border-color:var(--sg-border);background:transparent;font-size:13px;font-weight:600;line-height:1;white-space:nowrap}
+.fh-ctrls .ap-btn::after{content:'';position:absolute;inset:-4px -3px}
+@media (max-width:767px){
+  /* Phone: the date on its own line, then the four controls in one aligned
+     row across the width — 44px tall each, nothing wraps. The job chip takes
+     the room that is left (a long job name ends in an ellipsis). */
+  .fh-top{flex-direction:column;align-items:stretch;gap:8px}
+  .fh-date{font-size:14px}
+  .fh-ctrls{margin-left:0;width:100%;gap:8px;justify-content:flex-start}
+  .fh-chip,.fh-ctrls .ap-btn{height:44px;min-height:44px;font-size:14px}
+  .fh-plus{width:44px;height:44px}
+  .fh-chip::after,.fh-plus::after,.fh-ctrls .ap-btn::after{inset:0}
+  .fh-chip select{inset:0;width:100%;height:100%}
+  .fh-ctrls>label.fh-chip{flex:1 1 auto;min-width:0;max-width:none}
+  /* Arrange as its sliders icon in a 44px square (the word stays its
+     accessible name), so "All jobs" reads in full beside it. */
+  .fh-ctrls .ap-btn{width:44px;padding:0;justify-content:center;gap:0;font-size:0}
+}
 .fh-pop{position:relative}
 .fh-menu{position:absolute;top:calc(100% + 8px);z-index:60;min-width:220px;max-width:calc(100vw - 32px);padding:4px 0;background:var(--sg-surface-solid);border:1px solid var(--sg-border-strong);border-radius:10px;box-shadow:var(--shadow-lg)}
 .fh-menu[data-side=right]{right:0}
