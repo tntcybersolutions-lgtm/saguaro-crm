@@ -605,7 +605,7 @@ export default function DealPage() {
         </Card>
 
         <Card icon={<Note size={17} weight="bold" />} title="Activity" subtitle="Calls, emails, meetings and notes on this deal.">
-          <form
+          <form method="post"
             className="k-toolbar"
             style={{ marginBottom: 14 }}
             onSubmit={(e) => { e.preventDefault(); void addActivity(); }}

@@ -4,6 +4,7 @@
  * confirmed / demo accounts land straight on /app, everyone else sees the
  * check-your-email state.
  */
+import { useHydrated } from '@/lib/use-hydrated';
 import React, { useState } from 'react';
 import { SUB_TRADES, SUB_TRADES_BY_DIVISION } from '@/lib/construction-intelligence';
 import { TRIAL_DAYS } from '@/lib/plans';
@@ -74,6 +75,7 @@ const CSS = `
 
 export default function SignupPage(){
   const [form, setForm] = useState({name:'',email:'',password:'',company:'',phone:'',role:'General Contractor',state:'AZ',size:'1-10'});
+  const hydrated = useHydrated();
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
   const [success, setSuccess] = useState(false);
@@ -173,7 +175,7 @@ export default function SignupPage(){
           <Card>
             {error && <div className="suMsg" role="alert"><Warning size={15} weight="fill" /><span>{error}</span></div>}
 
-            <form onSubmit={handleSubmit}>
+            <form method="post" onSubmit={handleSubmit}>
               <FormGrid cols={2}>
                 <Field label="Your Full Name" required span>
                   <Input placeholder="John Smith" value={form.name} onChange={e=>update('name',e.target.value)} required autoComplete="name" />
@@ -215,7 +217,7 @@ export default function SignupPage(){
                 </Field>
               </FormGrid>
 
-              <Button type="submit" variant="primary" className="suSubmit" disabled={loading}>{loading ? 'Creating your account…' : 'Start Free Trial →'}</Button>
+              <Button type="submit" variant="primary" className="suSubmit" disabled={loading || !hydrated}>{loading ? 'Creating your account…' : 'Start Free Trial →'}</Button>
             </form>
 
             <div className="suNext">

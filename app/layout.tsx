@@ -5,6 +5,7 @@ import { Permanent_Marker } from 'next/font/google';
 import './globals.css';
 import 'react-datepicker/dist/react-datepicker.css';
 import { ToastProvider } from '../components/Toast';
+import { CHUNK_RELOAD_INLINE } from '../lib/chunk-reload';
 import MarketingChatWrapper from '../components/MarketingChatWrapper';
 
 // The UI uses the native system font (San Francisco / Segoe UI / Roboto) via a
@@ -218,6 +219,7 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
         )}
       </head>
       <body style={{ margin: 0, padding: 0, background: 'var(--bg-base)', color: '#FFFFFF' }}>
+        <script dangerouslySetInnerHTML={{ __html: CHUNK_RELOAD_INLINE }} />
         <script
           type="application/ld+json"
           dangerouslySetInnerHTML={{

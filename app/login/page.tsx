@@ -3,6 +3,7 @@
  * Login — Pass 4 on the kit. Same flow as before: hash-token confirmation,
  * POST /api/auth/session, then land a sales-only rep on /app/sales.
  */
+import { useHydrated } from '@/lib/use-hydrated';
 import React, { useState } from 'react';
 import Link from 'next/link';
 import { CheckCircle, WarningCircle, Eye, EyeSlash, Lock } from '@phosphor-icons/react';
@@ -49,6 +50,7 @@ const CSS = `
 
 export default function LoginPage(){
   const [form, setForm] = useState({email:'',password:''});
+  const hydrated = useHydrated();
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
   const [info, setInfo] = useState('');
@@ -166,7 +168,7 @@ export default function LoginPage(){
             {info && <div className="lgMsg" data-tone="good" role="status"><CheckCircle size={15} weight="fill" /><span>{info}</span></div>}
             {error && <div className="lgMsg" data-tone="bad" role="alert"><WarningCircle size={15} weight="fill" /><span>{error}</span></div>}
 
-            <form onSubmit={handleLogin} className="lgForm">
+            <form method="post" onSubmit={handleLogin} className="lgForm">
               <Field label="Email Address" required>
                 <Input
                   id="login-email"
@@ -203,7 +205,7 @@ export default function LoginPage(){
                 <span>Remember me on this device</span>
               </label>
 
-              <Button type="submit" variant="primary" className="lgSubmit" disabled={loading}>{loading ? 'Signing in…' : 'Sign In →'}</Button>
+              <Button type="submit" variant="primary" className="lgSubmit" disabled={loading || !hydrated}>{loading ? 'Signing in…' : 'Sign In →'}</Button>
             </form>
 
             <div className="lgFoot">Don't have an account? <Link href="/signup">Start Free Trial</Link></div>

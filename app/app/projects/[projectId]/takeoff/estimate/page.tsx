@@ -582,7 +582,7 @@ function EstimatePage() {
               actions={<Button size="sm" icon={<Plus size={13} weight="bold" />} onClick={() => setAddingSheet(true)}>Add Sheet</Button>}
             >
               {addingSheet && (
-                <form className="tePanel" onSubmit={e => { e.preventDefault(); void addSheet(); }}>
+                <form method="post" className="tePanel" onSubmit={e => { e.preventDefault(); void addSheet(); }}>
                   <Field label="Sheet name">
                     <Input placeholder="e.g. A-101 Floor Plan" value={newSheetName} onChange={e => setNewSheetName(e.target.value)} autoFocus />
                   </Field>
@@ -755,7 +755,7 @@ function EstimatePage() {
                 icon={<SlidersHorizontal size={17} />}
                 actions={<Button variant="ghost" size="sm" icon={<X size={16} />} aria-label="Close item details" onClick={() => setRightOpen(false)} />}
               >
-                <form className="teForm" onSubmit={e => { e.preventDefault(); void saveDetail(); }}>
+                <form method="post" className="teForm" onSubmit={e => { e.preventDefault(); void saveDetail(); }}>
                   <FormGrid cols={1}>
                     {[
                       { label: 'Description', field: 'description', type: 'text' },

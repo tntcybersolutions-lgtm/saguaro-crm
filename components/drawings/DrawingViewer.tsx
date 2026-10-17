@@ -2049,7 +2049,7 @@ export default function DrawingViewer({ projectId, drawing, me, online, initialP
 
       {/* pin form */}
       {pendingPin && (
-        <form onSubmit={submitPin} style={panelStyle}>
+        <form method="post" onSubmit={submitPin} style={panelStyle}>
           <p style={{ margin: '0 0 12px', fontSize: 14, fontWeight: 700, color: TEXT }}>Drop a Pin</p>
           <div style={{ marginBottom: 10 }}>
             <label style={{ display: 'block', fontSize: 12, color: DIM, marginBottom: 4 }}>Title *</label>

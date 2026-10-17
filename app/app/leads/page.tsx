@@ -870,7 +870,7 @@ export default function LeadsPage() {
             {/* Email the lead — logged as an activity only once the provider accepts it. */}
             {detailLead.contact_email && (
               <Card title={`Email ${detailLead.contact_email}`}>
-                <form style={{ display: 'flex', flexDirection: 'column', gap: 8 }} onSubmit={(e) => { e.preventDefault(); void handleSendEmail(); }}>
+                <form method="post" style={{ display: 'flex', flexDirection: 'column', gap: 8 }} onSubmit={(e) => { e.preventDefault(); void handleSendEmail(); }}>
                   <Input placeholder="Subject" aria-label="Email subject" value={emailForm.subject} onChange={e => setEmailForm({ ...emailForm, subject: e.target.value })} />
                   <Textarea placeholder="Write your message…" aria-label="Email message" value={emailForm.message} onChange={e => setEmailForm({ ...emailForm, message: e.target.value })} rows={4} />
                   <div>
@@ -883,7 +883,7 @@ export default function LeadsPage() {
             )}
 
             <Card title="Activity">
-              <form className="k-toolbar" style={{ marginBottom: 10 }} onSubmit={(e) => { e.preventDefault(); void handleCreateActivity(); }}>
+              <form method="post" className="k-toolbar" style={{ marginBottom: 10 }} onSubmit={(e) => { e.preventDefault(); void handleCreateActivity(); }}>
                 <Select aria-label="Activity type" options={ACTIVITY_TYPES.map(t => ({ value: t, label: ACTIVITY_LABELS[t] }))} value={actForm.activity_type} onChange={e => setActForm({ ...actForm, activity_type: e.target.value })} style={{ width: 140 }} />
                 <DateInput
                   aria-label="Scheduled date"
