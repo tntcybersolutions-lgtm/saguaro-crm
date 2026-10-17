@@ -15,6 +15,7 @@ import {
   normaliseTicketStatus, type TicketStatus,
 } from '@/lib/service-tickets';
 import { confirmDialog } from '@/lib/ui/async-dialog';
+import { isLiveJob } from '@/lib/live-jobs';
 
 interface Ticket {
   id: string; ticket_number: string; project_id: string | null; title: string; description: string | null;
@@ -22,7 +23,7 @@ interface Ticket {
   scheduled_window_start: string | null; scheduled_window_end: string | null; assigned_tech_id: string | null;
   dispatch_notes: string | null; resolution: string | null; closed_at: string | null; created_at: string; updated_at: string;
 }
-interface Payload { tickets: Ticket[]; techs: Array<{ id: string; full_name: string | null; email: string | null }>; projects: Array<{ id: string; name: string; address: string | null; city: string | null; status: string | null }> }
+interface Payload { tickets: Ticket[]; techs: Array<{ id: string; full_name: string | null; email: string | null }>; projects: Array<{ id: string; name: string; address: string | null; city: string | null; status: string | null; is_archived?: boolean | null; archived_at?: string | null; is_deleted?: boolean | null; deleted_at?: string | null }> }
 
 const fetcher = async (u: string): Promise<Payload> => {
   const r = await fetch(u);
@@ -79,7 +80,7 @@ type CallForm = { title: string; project_id: string; priority: string; category:
 /* The call's own fields — one set of inputs for New and Edit, so an edit
    shows exactly what was entered at creation. */
 function CallFields({ f, setF, data, autoFocus }: { f: CallForm; setF: (f: CallForm) => void; data: Payload; autoFocus?: boolean }) {
-  const activeJobs = data.projects.filter(p => !['completed', 'closed', 'cancelled', 'archived', 'lost'].includes(String(p.status || '').toLowerCase()));
+  const activeJobs = data.projects.filter(p => isLiveJob(p) && !['completed', 'closed', 'cancelled', 'archived', 'lost'].includes(String(p.status || '').toLowerCase()));
   // Keep the saved job selectable even when it is no longer an active one.
   const saved = f.project_id && !activeJobs.some(p => p.id === f.project_id) ? data.projects.find(p => p.id === f.project_id) : undefined;
   const jobs = saved ? [...activeJobs, saved] : activeJobs;
