@@ -4,9 +4,7 @@ import { requirePermission } from '@/lib/permissions';
 import { metaFor, pickAmount, itemLabel, moduleLabel, type EntityMeta } from '@/lib/approvals';
 import { must } from '@/lib/db-write';
 import { apiError } from '@/lib/api-error';
-import { applyChangeOrderMoney } from '@/lib/change-order-cascade';
-import { onChangeOrderApproved } from '@/lib/triggers';
-import { runInBackground } from '@/lib/background';
+import { writeChangeOrder } from '@/lib/change-order-status';
 import { transitionPayAppStatus } from '@/lib/pay-app-status';
 
 export const dynamic = 'force-dynamic';
@@ -127,6 +125,15 @@ export async function POST(req: NextRequest) {
       });
       if (!r.ok) return NextResponse.json({ error: r.error, ...r.extra }, { status: r.status });
       entityUpdated = true;
+    } else if (isFinal && meta.table === 'change_orders') {
+      /* A change order decided here is the same decision as its own Approve /
+         Reject: the same Change Orders: Full permission and the one shared
+         step (lib/change-order-status) that moves the contract and budget. */
+      const full = await requirePermission(req, 'Change Orders', 'Full', { db });
+      if (!full.ok) return full.res;
+      const w = await writeChangeOrder(db, user.tenantId, body.entityId, { status: decision }, { actorId: user.id });
+      if (!w.ok) return NextResponse.json({ error: w.error }, { status: w.status });
+      entityUpdated = true;
     } else if (isFinal) {
       const patch: Record<string, unknown> = { status: decision };
       const nowIso = new Date().toISOString();
@@ -135,35 +142,15 @@ export async function POST(req: NextRequest) {
       } else if (decision === 'rejected' && meta.hasRejectedAt) {
         patch.rejected_at = nowIso;
       }
-      /* A decision here is the same decision as the module's own Approve /
-         Reject, so it carries the same consequences. It used to flip the
-         status and stop: an approved change order never reached the contract
-         or the budget, and an approved pay application filed no lien waivers. */
-      let coBefore: Record<string, unknown> | null = null;
-      if (meta.table === 'change_orders') {
-        const { data: full, error: fErr } = await db.from('change_orders').select('*')
-          .eq('id', body.entityId).eq('tenant_id', user.tenantId).maybeSingle();
-        if (fErr) throw fErr;
-        coBefore = (full as Record<string, unknown> | null) ?? null;
-      }
-      const { data: updatedRow, error: upErr } = await db
+      const { error: upErr } = await db
         .from(meta.table)
         .update(patch)
         .eq('id', body.entityId)
         .eq('tenant_id', user.tenantId)
-        .select('*')
+        .select('id')
         .maybeSingle();
-      if (upErr) {
-        return NextResponse.json({ error: 'Failed to update item status' }, { status: 500 });
-      }
+      if (upErr) return apiError('approvals/decision update', upErr, 'Failed to update item status');
       entityUpdated = true;
-      const wasApproved = String(row.status || '').toLowerCase() === 'approved';
-      if (meta.table === 'change_orders' && coBefore && updatedRow) {
-        await applyChangeOrderMoney(db, user.tenantId, coBefore as never, updatedRow as never);
-        if (decision === 'approved' && !wasApproved) {
-          runInBackground(onChangeOrderApproved(body.entityId, { money: false }), 'onChangeOrderApproved');
-        }
-      }
     }
 
     // ---- Audit row (best-effort) ----

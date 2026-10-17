@@ -1,9 +1,8 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { requirePermission } from '@/lib/permissions';
-import { onChangeOrderApproved } from '@/lib/triggers';
-import { runInBackground } from '@/lib/background';
 import { apiError } from '@/lib/api-error';
 import { applyChangeOrderMoney } from '@/lib/change-order-cascade';
+import { writeChangeOrder } from '@/lib/change-order-status';
 
 export async function POST(req: NextRequest, { params }: { params: Promise<{ id: string }> }) {
   const { id } = await params;
@@ -22,19 +21,10 @@ export async function POST(req: NextRequest, { params }: { params: Promise<{ id:
       await applyChangeOrderMoney(db, g.user.tenantId, before as never, before as never);
       return NextResponse.json({ success: true, changeOrder: before, alreadyApproved: true });
     }
-    // Tenant-scope the write: g.db is the service-role client (RLS bypassed), so
-    // matching by id alone would let one tenant approve another tenant's CO.
-    const { data: after, error } = await db.from('change_orders').update({
-      status: 'approved',
-      approved_by: g.user.id,
-      approved_at: new Date().toISOString(),
-    }).eq('id', id).eq('tenant_id', g.user.tenantId).select('*').single();
-    if (error) throw error;
-    /* The money moves BEFORE the answer, not in the background: the screen
-       reloads the contract right after this returns, and a failure here is a
-       failure the GC has to hear about (lib/change-order-cascade). */
-    await applyChangeOrderMoney(db, g.user.tenantId, before as never, after as never);
-    runInBackground(onChangeOrderApproved(id, { money: false }), 'onChangeOrderApproved');
+    // The one shared step (lib/change-order-status): stamps, contract, budget, owner notice.
+    const w = await writeChangeOrder(db, g.user.tenantId, id, { status: 'approved' }, { actorId: g.user.id, before: before as Record<string, unknown> });
+    if (!w.ok) return NextResponse.json({ error: w.error }, { status: w.status });
+    const after = w.after;
     return NextResponse.json({ success: true, changeOrder: after });
   } catch (e) {
     return apiError('change-orders/[id]/approve POST', e);

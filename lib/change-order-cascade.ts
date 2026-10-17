@@ -29,7 +29,7 @@
  * approved changes always add up to the approved change orders.
  */
 import { coAmount } from './change-order-amount';
-import { approvedChangeTotal, originalContract } from './job-contract';
+import { approvedChangeTotal, isApprovedCoStatus, originalContract } from './job-contract';
 
 /** The budget line that holds approved change orders not yet put on a cost code. */
 export const UNALLOCATED_CO_CODE = 'CO-UNALLOCATED';
@@ -53,7 +53,7 @@ const r2 = (n: number) => Math.round(n * 100) / 100;
 
 /** The dollars a CO row contributes to the approved total (0 unless approved and live). */
 export function approvedValue(co: CoRow | null | undefined): number {
-  if (!co || co.deleted_at || String(co.status || '').toLowerCase() !== 'approved') return 0;
+  if (!co || co.deleted_at || !isApprovedCoStatus(co.status)) return 0;
   return coAmount(co);
 }
 

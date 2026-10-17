@@ -88,7 +88,12 @@ const sha = (s: string | Uint8Array) => createHash('sha256').update(s).digest('h
   check('the link is in the email', mail.html.includes(`/portals/proposal/${token}`));
 
   /* ── The signed PDF ── */
-  const { PNG } = await import('pngjs');
+  /* pngjs ships no type declarations, so tsc infers its types from the JS
+     source — where `data` starts as null and `sync` is attached at runtime.
+     Name the three things this test uses instead of trusting the inference. */
+  type Png = { data: Buffer };
+  type PngModule = { PNG: { new (o: { width: number; height: number }): Png; sync: { write(p: Png): Buffer } } };
+  const { PNG } = (await import('pngjs')) as unknown as PngModule;
   const png = new PNG({ width: 300, height: 100 });
   for (let y = 0; y < 100; y++) for (let x = 0; x < 300; x++) {
     const i = (y * 300 + x) * 4; const on = Math.abs(y - (50 + 25 * Math.sin(x / 20))) < 2;

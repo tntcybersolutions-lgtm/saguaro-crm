@@ -95,14 +95,28 @@ export function originalContract(
   return ap ? N(ap.amount) || N(ap.total_amount) : 0;
 }
 
+/**
+ * Statuses that mean "on the contract". The command-center CO flow
+ * (app/api/franchise/change-orders) moves an approved CO on to two posting
+ * steps — schedule_updated, budget_updated — that are still approved money;
+ * reading only 'approved' would take the CO back off the contract the moment
+ * it was posted.
+ */
+export const CO_APPROVED_STATUSES = ['approved', 'schedule_updated', 'budget_updated'] as const;
+
+/** True when a change order's status puts its amount on the contract. */
+export function isApprovedCoStatus(status: string | null | undefined): boolean {
+  return (CO_APPROVED_STATUSES as readonly string[]).includes(String(status || '').toLowerCase());
+}
+
 /** Sum of APPROVED change orders on a job, both money columns (lib/change-order-amount). */
 export function approvedChangeTotal(changeOrders: Array<CoMoney & { status?: string | null }> | null | undefined): number {
-  return coTotal((changeOrders || []).filter((c) => c.status === 'approved'));
+  return coTotal((changeOrders || []).filter((c) => isApprovedCoStatus(c.status)));
 }
 
 export function contractMoney({ project, prime, acceptedProposal, changeOrders }: ContractInputs): ContractMoney {
   const cos = changeOrders || [];
-  const approved = cos.filter((c) => c.status === 'approved');
+  const approved = cos.filter((c) => isApprovedCoStatus(c.status));
   const pending = cos.filter((c) => OPEN_CO_STATUSES.includes(String(c.status || '')));
   const approvedChanges = coTotal(approved);
   const original = originalContract(project, approvedChanges, { prime, acceptedProposal });
