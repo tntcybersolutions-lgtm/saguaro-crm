@@ -14,11 +14,9 @@ import { ClockCounterClockwise, ArrowRight, FileText } from '@phosphor-icons/rea
  * real documents — but say so instead of showing a diff that would be wrong.
  */
 
-const GOLD = 'var(--brand-primary)';
 const TEXT = 'var(--text-primary)';
 const DIM = 'var(--text-tertiary)';
-const BORDER = 'var(--surface-raised)';
-const CARD = 'var(--bg-surface)';
+const BORDER = 'var(--border-default)';
 const GREEN = 'var(--success)';
 const RED = 'var(--danger)';
 
@@ -99,12 +97,12 @@ export default function ContractVersions({ projectId, kind, refreshKey = 0 }: Co
         const isOpen = open === v.id;
         const count = v.changes.length;
         return (
-          <div key={v.id} style={{ background: CARD, border: `1px solid ${BORDER}`, borderRadius: 10, overflow: 'hidden' }}>
+          <div key={v.id} style={{ borderBottom: `1px solid ${BORDER}` }}>
             <button
               onClick={() => setOpen(isOpen ? '' : v.id)}
               style={{
                 display: 'flex', alignItems: 'center', gap: 12, width: '100%',
-                minHeight: 48, padding: '0 14px', background: 'transparent',
+                minHeight: 48, padding: '0 2px', background: 'transparent',
                 border: 'none', cursor: 'pointer', textAlign: 'left',
               }}
             >
@@ -123,7 +121,7 @@ export default function ContractVersions({ projectId, kind, refreshKey = 0 }: Co
             </button>
 
             {isOpen && (
-              <div style={{ borderTop: `1px solid ${BORDER}`, padding: '12px 14px', display: 'flex', flexDirection: 'column', gap: 10 }}>
+              <div style={{ padding: '4px 2px 14px', display: 'flex', flexDirection: 'column', gap: 10 }}>
                 {count > 0 ? (
                   <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
                     {v.changes.map((c) => (

@@ -266,9 +266,9 @@ export default function PayAppsPage() {
     : [
         { label:'Revised Contract', value:fmt(revised), sub:`${fmt(original)} original ${coTotal>=0?'+':'-'} ${fmt(Math.abs(coTotal))} approved COs`, icon:<Scales size={15}/>, href:`/app/projects/${projectId}/contracts` },
         { label:'Billed to Date', value:fmt(ctxBilled), sub: revised > 0 ? `${Math.round((ctxBilled / revised) * 1000) / 10}% of revised · ${payApps.length} application${payApps.length===1?'':'s'}` : `No contract value set · ${payApps.length} application${payApps.length===1?'':'s'}`, icon:<Receipt size={15}/> },
-        { label:'Retainage Held', value:fmt(retainageHeld), sub:`Held to date · ${retainageRate(ctxMoney?.retainagePct)}% per contract`, icon:<Vault size={15}/> },
+        { label:'Retainage Held', value:fmt(retainageHeld), sub: latestApp ? `Held to date · App #${appNo(latestApp)} at ${retainageRate(ctxMoney?.retainagePct)}%` : 'Held to date', icon:<Vault size={15}/> },
         { label:'Paid to Date', value:fmt(ctxPaid), tone: outstandingCertified>0 ? 'warn' : ctxPaid>0 ? 'good' : 'default', sub: outstandingCertified>0 ? `${fmt(outstandingCertified)} certified, unpaid` : 'All certified money collected', icon:<Wallet size={15}/>, onClick: pendingApproval>0 ? () => setStatusFilter(s => (s==='submitted' ? 'all' : 'submitted')) : undefined, active: pendingApproval>0 ? statusFilter==='submitted' : undefined },
-        { label:'Lien Waivers', value: waiverTotals.total>0 ? `${waiverTotals.signed} of ${waiverTotals.total}` : '—', tone: waiverTotals.total>0 ? (waiverTotals.signed===waiverTotals.total ? 'good' : 'warn') : 'default', sub: waiverTotals.total>0 ? 'Signed — payment is waiver-gated' : 'Generate at owner approval', icon:<Lock size={15}/>, href:`/app/projects/${projectId}/lien-waivers` },
+        { label:'Lien Waivers', value: waiverTotals.total>0 ? `${waiverTotals.signed} of ${waiverTotals.total}` : '—', tone: waiverTotals.total>0 ? (waiverTotals.signed===waiverTotals.total ? 'good' : 'warn') : 'default', sub: waiverTotals.total>0 ? 'Signed' : undefined, icon:<Lock size={15}/>, href:`/app/projects/${projectId}/lien-waivers` },
       ];
 
   // ── Register columns ──
@@ -292,10 +292,14 @@ export default function PayAppsPage() {
         );
       },
     },
-    { key:'period', header:'Period', phone:'show', accessor:pa=>pa.period_to ? String(pa.period_to).slice(0,10) : pa.period_from ? String(pa.period_from).slice(0,10) : '', render:pa=><span className="paMuted">{fmtDay(pa.period_from)} – {fmtDay(pa.period_to, true)}</span> },
-    { key:'status', header:'Status', phone:'show', accessor:pa=>statusBadge(pa.status).label, render:pa=>{ const b=statusBadge(pa.status); return <Badge tone={b.tone} dot>{b.label}</Badge>; } },
+    { key:'period', header:'Period', phone:'show', accessor:pa=>pa.period_to ? String(pa.period_to).slice(0,10) : pa.period_from ? String(pa.period_from).slice(0,10) : '', fit:'full', render:pa=><span className="paMuted" style={{ whiteSpace:'nowrap' }}>{fmtDay(pa.period_from)} – {fmtDay(pa.period_to, true)}</span> },
+    { key:'status', header:'Status', phone:'show', accessor:pa=>statusBadge(pa.status).label, render:pa=>{
+      const b=statusBadge(pa.status); const w=waiversByApp[pa.id];
+      return <><Badge tone={b.tone} dot>{b.label}</Badge>{w && w.total>0 && <div className="paWaivers" data-ok={w.signed===w.total ? 'true' : undefined}>{w.signed} of {w.total} waivers</div>}</>;
+    } },
     {
-      key:'lifecycle', header:'Lifecycle', phone:'hide', sortable:false, groupable:false,
+      /* The stage rail repeats the status badge, so it starts hidden (Columns turns it on). */
+      key:'lifecycle', header:'Lifecycle', phone:'hide', hidden:true, sortable:false, groupable:false,
       accessor:pa=>{ const w=waiversByApp[pa.id]; return w && w.total>0 ? `${w.signed} of ${w.total} waivers signed` : ''; },
       render:pa=>{
         const w = waiversByApp[pa.id];
@@ -347,9 +351,7 @@ export default function PayAppsPage() {
       <EmptyState
         icon={<Clipboard size={22}/>}
         title={revised>0?`${fmt(revised)} under contract — nothing billed yet`:'No pay applications yet'}
-        text={revised>0
-          ? `Application #1 sets the schedule of values against the ${fmt(revised)} contract${coTotal>0?` (${fmt(original)} base + ${fmt(coTotal)} approved COs)`:''}. Every app after it rolls forward.`
-          : 'Application #1 sets the schedule of values. Every app after it rolls forward.'}
+        text={revised>0 && coTotal>0 ? `${fmt(original)} base + ${fmt(coTotal)} approved COs` : undefined}
         action={<Button icon={<Plus size={15} weight="bold"/>} href={`/app/projects/${projectId}/pay-apps/new`}>Create Application #1</Button>}
       />
     );
@@ -387,7 +389,6 @@ export default function PayAppsPage() {
           <EmptyState
             icon={<Clipboard size={22}/>}
             title="No applications match these filters"
-            text="Clear the search or status filter to see more."
             action={<Button onClick={clearFilters}>Clear Filters</Button>}
           />
         }
@@ -405,7 +406,7 @@ export default function PayAppsPage() {
           { label:'Pay Applications' },
         ]}
         title="Pay Applications"
-        subtitle="AIA G702/G703 billing — retainage comes off the top."
+        subtitle="AIA G702 / G703 billing"
         actions={
           <Button variant="primary" data-tour="new-pay-app" icon={<Plus size={15} weight="bold"/>} href={`/app/projects/${projectId}/pay-apps/new`}>
             New Pay Application

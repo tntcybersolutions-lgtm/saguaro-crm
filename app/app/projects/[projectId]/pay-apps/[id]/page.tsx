@@ -170,20 +170,21 @@ const CSS = `
 .pdSplit > * { min-width: 0; }
 .pdMain { display: flex; flex-direction: column; gap: 16px; min-width: 0; }
 .pdRelated { padding: 4px 4px 0; }
-.pdRail { order: -1; display: flex; flex-direction: column; gap: 16px; }
-@container pdws (min-width: 960px) {
+.pdRail { display: flex; flex-direction: column; gap: 16px; }
+/* The G703 is the record: it keeps the full width until there is room for the
+   rail beside it without cutting the line descriptions short. */
+@container pdws (min-width: 1180px) {
   .pdSplit { grid-template-columns: minmax(0, 1fr) clamp(${layout.detailRailMin}px, 28%, ${layout.detailRailMax}px); }
-  .pdRail { order: 0; }
 }
-.pdBar { display: flex; align-items: center; gap: 12px; padding: 10px 16px; border-bottom: 1px solid var(--border-subtle); font-size: var(--fs-sm); color: var(--text-tertiary); }
-.pdBarTrack { flex: 1; height: 6px; border-radius: 3px; background: rgba(255,255,255,0.08); overflow: hidden; min-width: 80px; }
+.pdBar { display: flex; align-items: center; flex-wrap: wrap; gap: 8px 12px; padding: 10px 0; border-bottom: 1px solid var(--border-subtle); font-size: var(--fs-sm); color: var(--text-tertiary); }
+.pdBarTrack { flex: 1; height: 6px; border-radius: 3px; background: var(--bg-surface-2); overflow: hidden; min-width: 80px; }
 .pdBarFill { height: 100%; border-radius: 3px; background: var(--status-ongoing); transition: width .4s; }
 .pdBar b { color: var(--text-primary); font-variant-numeric: tabular-nums; }
 .pdSov .k-table td .k-input { min-height: 32px; padding: 4px 8px; font-size: 13px; }
 .pdSov .k-table td .k-input[data-num] { text-align: right; width: 110px; }
 .pdSov [data-desc] .k-input { min-width: 200px; }
 .pdPct { display: inline-flex; align-items: center; gap: 6px; min-width: 90px; }
-.pdPctTrack { flex: 1; height: 5px; border-radius: 999px; background: rgba(255,255,255,0.08); overflow: hidden; min-width: 40px; }
+.pdPctTrack { flex: 1; height: 5px; border-radius: 999px; background: var(--bg-surface-2); overflow: hidden; min-width: 40px; }
 .pdPctFill { height: 100%; border-radius: 999px; background: var(--status-under-contract); }
 .pdPctFill[data-done="true"] { background: var(--status-ongoing); }
 .pdPct > b { color: var(--text-primary); font-size: var(--fs-xs); min-width: 36px; text-align: right; }
@@ -199,8 +200,7 @@ const CSS = `
 .pdSection + .pdSection { margin-top: 20px; padding-top: 20px; border-top: 1px solid var(--border-subtle); }
 .pdBadges { display: inline-flex; align-items: center; gap: 6px; flex-wrap: wrap; }
 .pdNext { font-size: var(--fs-sm); color: var(--text-tertiary); line-height: 1.5; }
-.pdActions { display: flex; flex-direction: column; gap: 8px; }
-.pdActions .k-btn { width: 100%; justify-content: flex-start; }
+.pdActions { display: flex; flex-wrap: wrap; gap: 4px 8px; }
 .pdRule { height: 1px; background: var(--border-subtle); margin: 8px 0; }
 .pdMuted { color: var(--text-tertiary); }
 .pdSkel { height: 14px; border-radius: 4px; background: var(--border-subtle); }
@@ -447,7 +447,7 @@ export default function PayAppDetailPage() {
   if (loading) return (
     <div className="pdWs">
       <style dangerouslySetInnerHTML={{ __html: CSS }} />
-      <PageShell crumbs={[...crumbsBase, { label: 'Loading…' }]} title="Pay Application" subtitle="Loading the G702 / G703…">
+      <PageShell crumbs={[...crumbsBase, { label: 'Loading…' }]} title="Pay Application">
         <Card flush>
           <div style={{ padding: 16, display: 'flex', flexDirection: 'column', gap: 14 }} aria-busy="true">
             {[0,1,2,3,4,5].map(i => (
@@ -535,7 +535,7 @@ export default function PayAppDetailPage() {
       key: 'description', header: 'Description', primary: true, phone: 'show', accessor: (r) => r.l.description || '',
       render: (r) => canEdit
         ? <span data-desc="true"><Input value={r.l.description} onChange={e => updateLine(r.i, 'description', e.target.value)} placeholder="Description" aria-label={`Line ${r.l.line_number} description`} /></span>
-        : (r.l.description || <span className="pdMuted">—</span>),
+        : (r.l.description || ''),
     },
     {
       key: 'scheduled_value', header: 'Scheduled Value', align: 'right', total: 'sum', format: fmt, phone: 'show',
@@ -679,31 +679,31 @@ export default function PayAppDetailPage() {
               <Card title="Details">
                 <div className="pdSection">
                   <div className="pdNext">
-                    {payApp.status === 'draft' && 'Draft — edit the schedule of values, then submit the G702/G703 packet to the owner.'}
-                    {payApp.status === 'rejected' && `Returned for revision${(payApp as any).rejection_reason ? `: “${(payApp as any).rejection_reason}”` : ''}. Fix the schedule of values, then resubmit.`}
-                    {payApp.status === 'submitted' && 'With the owner. Approval generates conditional lien waivers for the subs.'}
-                    {payApp.status === 'approved' && 'Approved by the owner. Certify once the architect signs off.'}
-                    {payApp.status === 'certified' && `Certified. Mark Paid releases ${fmt(sovPayment)}${wBlocking > 0 ? ` — currently held by ${wBlocking} unsigned waiver${wBlocking===1?'':'s'}` : ''}.`}
-                    {payApp.status === 'paid' && `${fmt(sovPayment)} collected — paid-to-date and the prime contract updated automatically.`}
+                    {payApp.status === 'draft' && 'Draft'}
+                    {payApp.status === 'rejected' && `Returned${(payApp as any).rejection_reason ? `: “${(payApp as any).rejection_reason}”` : ''}`}
+                    {payApp.status === 'submitted' && 'With the owner'}
+                    {payApp.status === 'approved' && 'Approved by the owner'}
+                    {payApp.status === 'certified' && `${fmt(sovPayment)} certified${wBlocking > 0 ? ` · held by ${wBlocking} unsigned waiver${wBlocking===1?'':'s'}` : ''}`}
+                    {payApp.status === 'paid' && `${fmt(sovPayment)} collected`}
                   </div>
                 </div>
                 <div className="pdSection">
-                  <DetailList items={[
+                  {/* Only facts that exist: an empty field is left off, never a dash. */}
+                  <DetailList items={([
                     ['Owner', payApp.owner_name || ''],
                     ['Architect', payApp.architect_name || ''],
                     ['Retainage', `${retPct}%`],
-                    ['Submitted', fmtDate(submittedOn)],
-                    ['Approved', fmtDate(approvedOn)],
-                    ['Certified', fmtDate(certifiedOn)],
-                    ['Paid', payApp.status === 'paid' ? 'Yes' : '—'],
-                  ]} />
+                    ['Submitted', submittedOn ? fmtDate(submittedOn) : ''],
+                    ['Approved', approvedOn ? fmtDate(approvedOn) : ''],
+                    ['Certified', certifiedOn ? fmtDate(certifiedOn) : ''],
+                  ] as [string, string][]).filter(([, v]) => v !== '')} />
                 </div>
                 <div className="pdSection">
                   <div className="pdActions">
-                    <Button icon={<ArrowLeft size={16} />} onClick={() => router.push(`/app/projects/${projectId}/pay-apps`)}>All Pay Apps</Button>
-                    <Button icon={<Files size={16} />} href={`/app/projects/${projectId}/change-orders`}>Change Orders</Button>
-                    <Button icon={<Lock size={16} />} href={`/app/projects/${projectId}/lien-waivers`}>Lien Waivers</Button>
-                    <Button icon={<CurrencyDollar size={16} />} href={`/app/projects/${projectId}/budget`}>Project Budget</Button>
+                    <Button variant="ghost" size="sm" icon={<ArrowLeft size={15} />} onClick={() => router.push(`/app/projects/${projectId}/pay-apps`)}>All Pay Apps</Button>
+                    <Button variant="ghost" size="sm" icon={<Files size={15} />} href={`/app/projects/${projectId}/change-orders`}>Change Orders</Button>
+                    <Button variant="ghost" size="sm" icon={<Lock size={15} />} href={`/app/projects/${projectId}/lien-waivers`}>Lien Waivers</Button>
+                    <Button variant="ghost" size="sm" icon={<CurrencyDollar size={15} />} href={`/app/projects/${projectId}/budget`}>Budget</Button>
                   </div>
                 </div>
               </Card>
@@ -737,14 +737,12 @@ export default function PayAppDetailPage() {
                 {ledger?.priorAppNumber != null && <LadderRow label={`Held on App #${ledger.priorAppNumber}`} value={fmt(heldBefore)} />}
                 <LadderRow label="Held This App" value={fmt(sovRetainage)} />
                 <LadderRow label="Released This App" value={fmt(releasedThisApp)} />
-                <LadderRow label="Released to Date" value={ledger ? fmt(releasedToDate) : '—'} strong />
-                <div className="pdNext" style={{ marginTop: 8 }}>
-                  {!ledger ? 'Loading the retainage history for this job.'
-                    : releasedThisApp > 0 ? `${fmt(releasedThisApp)} released on this application — it is part of the ${fmt(sovPayment)} payment due.`
-                    : releasedToDate > 0 ? `${fmt(releasedToDate)} released on earlier applications. Nothing released on this one.`
-                    : retPct > 0 ? `Held at ${retPct}% — released when an application bills a lower rate.`
-                    : 'Billed at 0% — no retainage held.'}
-                </div>
+                {ledger && <LadderRow label="Released to Date" value={fmt(releasedToDate)} strong />}
+                {releasedThisApp > 0 && (
+                  <div className="pdNext" style={{ marginTop: 8 }}>
+                    {`${fmt(releasedThisApp)} of the ${fmt(sovPayment)} due is released retainage.`}
+                  </div>
+                )}
               </Card>
             </aside>
           </div>
