@@ -1,7 +1,8 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { createServerClient, getUser } from '@/lib/supabase-server';
+import { createServerClient } from '@/lib/supabase-server';
 import { requirePermission } from '@/lib/permissions';
 import { apiError } from '@/lib/api-error';
+import { transitionPoStatus } from '@/lib/purchase-order-status';
 
 export async function PATCH(req: NextRequest, { params }: { params: { id: string } }) {
   const g = await requirePermission(req, 'Budget', 'Edit');
@@ -33,6 +34,14 @@ export async function PATCH(req: NextRequest, { params }: { params: { id: string
       );
     }
     updates.updated_at = new Date().toISOString();
+
+    // A status in the edit moves along the one transition map (lib/purchase-order-status).
+    if (updates.status !== undefined) {
+      const { status, ...rest } = updates;
+      const r = await transitionPoStatus(db, user.tenantId, params.id, status, { actorId: user.id, extra: rest });
+      if (!r.ok) return NextResponse.json({ error: r.error }, { status: r.status });
+      return NextResponse.json({ success: true, purchase_order: r.after });
+    }
 
     const { data, error } = await db.from('purchase_orders').update(updates).eq('id', params.id).eq('tenant_id', user.tenantId).select().maybeSingle();
     if (error) throw error;

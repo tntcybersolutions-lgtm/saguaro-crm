@@ -1,15 +1,19 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { createServerClient, getUser } from '@/lib/supabase-server';
+import { createServerClient } from '@/lib/supabase-server';
 import { signFields } from '@/lib/storage-signing';
 import { apiError } from '@/lib/api-error';
+import { requirePermission } from '@/lib/permissions';
 
 export const dynamic = 'force-dynamic';
 
 // Lists drawings for a project. Reads the canonical `drawings` table (uuid ids)
 // that upload writes to and that markup/pins key off via drawing_id.
 export async function GET(req: NextRequest) {
-  const user = await getUser(req);
-  if (!user) return NextResponse.json({ drawings: [] }, { status: 401 });
+  // Role check, not just sign-in: Documents: View, the rule this tool's pages,
+  // its writes and (where the table is gated) the database apply.
+  const g = await requirePermission(req, 'Documents', 'View');
+  if (!g.ok) return g.res;
+  const user = g.user;
 
   const { searchParams } = new URL(req.url);
   const projectId = searchParams.get('projectId') || searchParams.get('project_id');

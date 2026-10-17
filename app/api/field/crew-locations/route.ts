@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { createServerClient, getUser } from '@/lib/supabase-server';
-import { requirePermission } from '@/lib/permissions';
+import { requirePermission, getEffectivePermissions, hasPermission } from '@/lib/permissions';
 import { apiError } from '@/lib/api-error';
 
 export async function GET(req: NextRequest) {
@@ -18,12 +18,17 @@ export async function GET(req: NextRequest) {
     }
 
     const db = createServerClient();
-    const { data, error } = await db
+    /* Everyone's GPS is Schedule: View, the same rule as crew_locations_sel in
+       the database (own row, or Schedule: View). Without it you see only your
+       own pin — this route used to hand every member the whole crew's. */
+    const perms = await getEffectivePermissions(db, user.id, user.tenantId, projectId);
+    let q = db
       .from('crew_locations')
       .select('*')
       .eq('project_id', projectId)
-      .eq('tenant_id', user.tenantId)
-      .order('updated_at', { ascending: false });
+      .eq('tenant_id', user.tenantId);
+    if (!hasPermission(perms, 'Schedule', 'View')) q = q.eq('user_id', user.id);
+    const { data, error } = await q.order('updated_at', { ascending: false });
 
     if (error) {
       return apiError('field/crew-locations', error, 'Failed to fetch crew locations');

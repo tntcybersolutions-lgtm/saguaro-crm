@@ -1,7 +1,8 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { createServerClient, getUser } from '@/lib/supabase-server';
+import { createServerClient } from '@/lib/supabase-server';
 import { signFields, storageObjectKey } from '@/lib/storage-signing';
 import { apiError } from '@/lib/api-error';
+import { requirePermission } from '@/lib/permissions';
 
 /** Album the Files-library images are grouped under in the gallery. */
 const FILES_ALBUM = 'From Files';
@@ -41,8 +42,11 @@ function titleFromFileName(name: string): string {
  * Backfill: scripts/backfill-photo-thumbs.ts
  */
 export async function GET(req: NextRequest) {
-  const user = await getUser(req);
-  if (!user) return NextResponse.json({ error: 'Unauthorized', photos: [] }, { status: 401 });
+  // Role check, not just sign-in: Documents: View, the rule this tool's pages,
+  // its writes and (where the table is gated) the database apply.
+  const g = await requirePermission(req, 'Documents', 'View');
+  if (!g.ok) return g.res;
+  const user = g.user;
 
   const { searchParams } = new URL(req.url);
   // Accept the snake_case spelling too — several callers send it, and honoring

@@ -9,6 +9,7 @@
  * through the generic route.
  */
 import type { PermCategory } from '@/lib/permission-categories';
+import { PO_STATUSES } from '@/lib/purchase-order-status';
 
 export type FieldKind = 'text' | 'long' | 'date' | 'datetime' | 'money' | 'number' | 'bool' | 'select';
 
@@ -257,9 +258,10 @@ export const ITEM_TOOLS: Record<string, ItemTool> = {
   purchase_orders: {
     type: 'purchase_orders', table: 'purchase_orders', noun: 'Purchase order', plural: 'Purchase orders', perm: 'Budget', listPath: 'commitments',
     numberKey: 'po_number', titleKey: 'vendor_name', numberPrefix: 'PO #', statusKey: 'status',
-    statuses: ['draft', 'sent', 'approved', 'received', 'closed', 'void'], hasDeletedAt: false,
+    // The moves between them are lib/purchase-order-status (PO_TRANSITIONS).
+    statuses: [...PO_STATUSES], hasDeletedAt: false,
     fields: [
-      { key: 'status', label: 'Status', kind: 'select', options: ['draft', 'sent', 'approved', 'received', 'closed', 'void'], strip: true },
+      { key: 'status', label: 'Status', kind: 'select', options: [...PO_STATUSES], strip: true },
       { key: 'total', label: 'Total', kind: 'money', strip: true },
       { key: 'cost_code', label: 'Cost code', kind: 'text', strip: true },
       { key: 'delivery_date', label: 'Delivery', kind: 'date', strip: true },

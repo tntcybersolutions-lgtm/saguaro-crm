@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { createServerClient, getUser } from '@/lib/supabase-server';
+import { createServerClient } from '@/lib/supabase-server';
 import { requirePermission } from '@/lib/permissions';
 import { must } from '@/lib/db-write';
 import { apiError, apiFail } from '@/lib/api-error';
@@ -29,8 +29,11 @@ function filterRfiBody(body: Record<string, any>): Record<string, any> {
 }
 
 export async function GET(req: NextRequest, { params }: { params: Promise<{ id: string }> }) {
-  const user = await getUser(req);
-  if (!user) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
+  // Role check, not just sign-in: RFIs: View, the rule this tool's pages,
+  // its writes and (where the table is gated) the database apply.
+  const g = await requirePermission(req, 'RFIs', 'View');
+  if (!g.ok) return g.res;
+  const user = g.user;
   const { id } = await params;
   try {
     const db = createServerClient();

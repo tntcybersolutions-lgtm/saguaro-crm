@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { createServerClient, getUser } from '@/lib/supabase-server';
+import { createServerClient } from '@/lib/supabase-server';
 import { requirePermission } from '@/lib/permissions';
 import { apiError } from '@/lib/api-error';
 
@@ -17,8 +17,11 @@ const REAL_COLUMNS = new Set([
 // GET /api/inspections/[id] -> one inspection (tenant-scoped)
 export async function GET(req: NextRequest, { params }: { params: Promise<{ id: string }> }) {
   const { id } = await params;
-  const user = await getUser(req);
-  if (!user) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
+  // Role check, not just sign-in: Safety: View, the rule this tool's pages,
+  // its writes and (where the table is gated) the database apply.
+  const g = await requirePermission(req, 'Safety', 'View');
+  if (!g.ok) return g.res;
+  const user = g.user;
   try {
     const db = createServerClient();
     const { data, error } = await db

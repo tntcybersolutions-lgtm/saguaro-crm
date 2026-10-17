@@ -1,83 +1,56 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { createServerClient, getUser } from '@/lib/supabase-server';
-import { toDb } from '../route';
-import { apiError } from '@/lib/api-error';
+import { requirePermission } from '@/lib/permissions';
+import { toPage, toDb, canSeeRates, canSetRates, type AssignmentRow } from '@/lib/resource-assignments';
+import { apiError, apiFail } from '@/lib/api-error';
 
 export const dynamic = 'force-dynamic';
 
-type DbRow = {
-  id: string;
-  project_id: string | null;
-  resource_type: string | null;
-  resource_name: string | null;
-  role: string | null;
-  start_date: string | null;
-  end_date: string | null;
-  hours_per_day: number | null;
-  cost_rate: number | null;
-  status: string | null;
-  notes: string | null;
-};
-
-function toPage(r: DbRow) {
-  return {
-    id: r.id,
-    person_name: r.resource_name || '',
-    person_id: r.id,
-    role: r.role || 'Laborer',
-    trade: r.resource_type || 'General',
-    certifications: [] as string[],
-    start_date: r.start_date || '',
-    end_date: r.end_date || '',
-    hours_per_day: Number(r.hours_per_day ?? 8),
-    days_per_week: 5,
-    hourly_rate: Number(r.cost_rate ?? 0),
-    status: (r.status as string) || 'assigned',
-    notes: r.notes || '',
-    project_id: r.project_id || '',
-  };
-}
-
+/**
+ * One staffing assignment. Projects: View to read, Edit to change, Full to
+ * delete (the same levels as role_gate_*_resource_assignments). What the person
+ * costs per hour is returned only to Budget or Admin view, and only a role that
+ * may edit Budget or Admin can change it (lib/resource-assignments).
+ */
 export async function GET(req: NextRequest, { params }: { params: Promise<{ id: string }> }) {
+  const g = await requirePermission(req, 'Projects', 'View');
+  if (!g.ok) return g.res;
   try {
-    const user = await getUser(req);
-    if (!user) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
     const { id } = await params;
-    const db = createServerClient();
-    const { data, error } = await db
+    const { data, error } = await g.db
       .from('resource_assignments')
       .select('*')
       .eq('id', id)
-      .eq('tenant_id', user.tenantId)
-      .single();
+      .eq('tenant_id', g.user.tenantId)
+      .maybeSingle();
     if (error) throw error;
-    return NextResponse.json({ data: toPage(data as DbRow) });
-  } catch {
-    return NextResponse.json({ error: 'Not found' }, { status: 404 });
+    if (!data) return apiFail('Assignment not found', 404);
+    return NextResponse.json({ data: toPage(data as AssignmentRow, canSeeRates(g.perms)), ratesVisible: canSeeRates(g.perms) });
+  } catch (e) {
+    return apiError('projects/all/resource-planning/id GET', e, "Couldn't load this assignment.");
   }
 }
 
 async function update(req: NextRequest, id: string) {
-  const user = await getUser(req);
-  if (!user) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
+  const g = await requirePermission(req, 'Projects', 'Edit');
+  if (!g.ok) return g.res;
   try {
     const body = await req.json().catch(() => ({}));
-    const row = toDb(body, user.tenantId);
+    const row = toDb(body, g.user.tenantId, canSetRates(g.perms));
     // Never overwrite tenant scoping via body; updated_at maintained by trigger/default.
     delete (row as Record<string, unknown>).tenant_id;
 
-    const db = createServerClient();
-    const { data, error } = await db
+    const { data, error } = await g.db
       .from('resource_assignments')
       .update(row)
       .eq('id', id)
-      .eq('tenant_id', user.tenantId)
+      .eq('tenant_id', g.user.tenantId)
       .select()
-      .single();
+      .maybeSingle();
     if (error) throw error;
-    return NextResponse.json({ data: toPage(data as DbRow) });
+    if (!data) return apiFail('Assignment not found', 404);
+    return NextResponse.json({ data: toPage(data as AssignmentRow, canSeeRates(g.perms)) });
   } catch (e) {
-    return apiError('projects/all/resource-planning/id', e, 'Internal server error');
+    return apiError('projects/all/resource-planning/id', e, "Couldn't save the assignment. Please try again.");
   }
 }
 
@@ -92,19 +65,18 @@ export async function PUT(req: NextRequest, { params }: { params: Promise<{ id: 
 }
 
 export async function DELETE(req: NextRequest, { params }: { params: Promise<{ id: string }> }) {
-  const user = await getUser(req);
-  if (!user) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
+  const g = await requirePermission(req, 'Projects', 'Full');
+  if (!g.ok) return g.res;
   try {
     const { id } = await params;
-    const db = createServerClient();
-    const { error } = await db
+    const { error } = await g.db
       .from('resource_assignments')
       .delete()
       .eq('id', id)
-      .eq('tenant_id', user.tenantId);
+      .eq('tenant_id', g.user.tenantId);
     if (error) throw error;
     return NextResponse.json({ success: true });
   } catch (e) {
-    return apiError('projects/all/resource-planning/id', e, 'Internal server error');
+    return apiError('projects/all/resource-planning/id DELETE', e, "Couldn't delete the assignment. Please try again.");
   }
 }

@@ -11,6 +11,7 @@ import { signStoredUrl, signFields } from '@/lib/storage-signing';
 import { pinEntityFor } from '@/lib/drawing-revisions';
 import { requirePermission } from '@/lib/permissions';
 import { writeChangeOrder, isCoDecision } from '@/lib/change-order-status';
+import { transitionPoStatus } from '@/lib/purchase-order-status';
 
 export const dynamic = 'force-dynamic';
 
@@ -95,11 +96,6 @@ export async function PATCH(req: NextRequest, { params }: { params: Promise<{ to
         if (!l.item.executed_date && !('executed_date' in patch)) patch.executed_date = now.slice(0, 10);
       }
     }
-    if (l.tool.type === 'purchase_orders' && status === 'approved' && !l.item.approved_at) {
-      patch.approved_at = new Date().toISOString();
-      patch.approved_by = l.user.id;
-    }
-    if (l.tool.type === 'purchase_orders' && status === 'received' && !l.item.delivered_at) patch.delivered_at = new Date().toISOString();
 
     /* A change order's status is money: approving one on its record page has
        to move the contract and the budget exactly as its Approve button does,
@@ -114,6 +110,14 @@ export async function PATCH(req: NextRequest, { params }: { params: Promise<{ to
       const w = await writeChangeOrder(l.db, l.user.tenantId, id, patch, { actorId: l.user.id, before: l.item });
       if (!w.ok) return NextResponse.json({ error: w.error }, { status: w.status });
       return NextResponse.json({ item: w.after });
+    }
+
+    // A PO's status moves only along lib/purchase-order-status (stamps included).
+    if (l.tool.type === 'purchase_orders' && patch.status !== undefined) {
+      const { status: to, ...rest } = patch;
+      const r = await transitionPoStatus(l.db, l.user.tenantId, id, to, { actorId: l.user.id, extra: rest, before: l.item });
+      if (!r.ok) return NextResponse.json({ error: r.error }, { status: r.status });
+      return NextResponse.json({ item: r.after });
     }
 
     const { data, error } = await l.db

@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { createServerClient, getUser } from '@/lib/supabase-server';
+import { createServerClient } from '@/lib/supabase-server';
 import { requirePermission } from '@/lib/permissions';
 import { apiError } from '@/lib/api-error';
 
@@ -7,8 +7,11 @@ export const dynamic = 'force-dynamic';
 
 /** GET a status breakdown (counts per status) for the project's selections. */
 export async function GET(req: NextRequest, { params }: { params: { projectId: string } }) {
-  const user = await getUser(req);
-  if (!user) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
+  // Role check, not just sign-in: Projects: View, the rule this tool's pages,
+  // its writes and (where the table is gated) the database apply.
+  const g = await requirePermission(req, 'Projects', 'View', { projectId: params.projectId });
+  if (!g.ok) return g.res;
+  const user = g.user;
   try {
     const supabase = createServerClient();
     const { data, error } = await supabase

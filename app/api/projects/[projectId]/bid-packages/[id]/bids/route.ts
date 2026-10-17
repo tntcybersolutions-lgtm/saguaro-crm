@@ -1,10 +1,14 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { createServerClient, getUser } from '@/lib/supabase-server';
+import { createServerClient } from '@/lib/supabase-server';
 import { apiError } from '@/lib/api-error';
+import { requireAnyPermission, PROPOSAL_MONEY } from '@/lib/permissions';
 
 export async function GET(req: NextRequest, { params }: { params: { projectId: string; id: string } }) {
-  const user = await getUser(req);
-  if (!user) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
+  // Role check, not just sign-in: Sales or Budget: View, the rule this tool's pages,
+  // its writes and (where the table is gated) the database apply.
+  const g = await requireAnyPermission(req, PROPOSAL_MONEY, 'View', { projectId: params.projectId });
+  if (!g.ok) return g.res;
+  const user = g.user;
   try {
     const supabase = createServerClient();
     // Read the table the vendor bid portal actually writes (bid_submissions), not the orphan

@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { createServerClient, getUser } from '@/lib/supabase-server';
+import { createServerClient } from '@/lib/supabase-server';
 import { requirePermission } from '@/lib/permissions';
 import type { Database } from '@/lib/database.types';
 import { apiError } from '@/lib/api-error';
@@ -8,8 +8,11 @@ export const dynamic = 'force-dynamic';
 
 // GET /api/safety/talks?projectId=  -> { talks: [...] }  (toolbox talks)
 export async function GET(req: NextRequest) {
-  const user = await getUser(req);
-  if (!user) return NextResponse.json({ talks: [] }, { status: 401 });
+  // Role check, not just sign-in: Safety: View, the rule this tool's pages,
+  // its writes and (where the table is gated) the database apply.
+  const g = await requirePermission(req, 'Safety', 'View');
+  if (!g.ok) return g.res;
+  const user = g.user;
   const { searchParams } = new URL(req.url);
   const projectId = searchParams.get('projectId') || searchParams.get('project_id');
   try {

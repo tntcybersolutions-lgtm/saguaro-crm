@@ -28,7 +28,8 @@ interface Assignment {
   end_date: string;
   hours_per_day: number;
   days_per_week: number;
-  hourly_rate: number;
+  /** null when this role may not see pay rates (Budget or Admin view — the server decides). */
+  hourly_rate: number | null;
   status: 'assigned' | 'tentative' | 'confirmed' | 'released' | 'unavailable';
   notes: string;
   project_id: string;
@@ -96,6 +97,9 @@ export default function ResourcePlanningPage() {
   const [saving, setSaving] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [tab, setTab] = useState<Tab>('grid');
+  /* Pay rates and labor cost show only when the server says this role may see
+     them (Budget or Admin view); otherwise the rate never leaves the server. */
+  const [ratesVisible, setRatesVisible] = useState(false);
   const [showForm, setShowForm] = useState(false);
   const [showDeleteConfirm, setShowDeleteConfirm] = useState<string | null>(null);
   const [editId, setEditId] = useState<string | null>(null);
@@ -136,6 +140,7 @@ export default function ResourcePlanningPage() {
       if (!ra.ok) { console.error('load assignments failed', ra.status); throw new Error('request failed'); }
       const da = await ra.json();
       setAssignments(Array.isArray(da) ? da : da.data ?? []);
+      setRatesVisible(da?.ratesVisible === true);
     } catch (err: unknown) {
       console.error(err);
       setError(humanError(err, 'Failed to load resource planning. Please try again.'));
@@ -275,7 +280,7 @@ export default function ResourcePlanningPage() {
           active.add(a.person_name);
           const overlapDays = daysBetween(a.start_date > ms ? a.start_date : ms, a.end_date < me ? a.end_date : me);
           const wks = overlapDays / 7;
-          cost += wks * a.days_per_week * a.hours_per_day * a.hourly_rate;
+          cost += wks * a.days_per_week * a.hours_per_day * (a.hourly_rate ?? 0);
           weeklyHrs += a.hours_per_day * a.days_per_week;
         }
       });
@@ -292,7 +297,7 @@ export default function ResourcePlanningPage() {
       const wks = weeksBetween(a.start_date, a.end_date);
       const hrs = wks * a.days_per_week * a.hours_per_day;
       map[a.project_id].hours += hrs;
-      map[a.project_id].labor += hrs * a.hourly_rate;
+      map[a.project_id].labor += hrs * (a.hourly_rate ?? 0);
       map[a.project_id].people.add(a.person_name);
     });
     return Object.entries(map).map(([pid, v]) => ({ project: projMap[pid] || pid, pid, ...v, headcount: v.people.size })).sort((a, b) => b.labor - a.labor);
@@ -435,8 +440,8 @@ export default function ResourcePlanningPage() {
 
   /* ---- Export ---- */
   const exportCSV = () => {
-    const header = 'Person,Role,Trade,Project,Start,End,Hrs/Day,Days/Wk,Rate,Status,Certifications,Notes\n';
-    const rows = filtered.map(a => [a.person_name, a.role, a.trade, projMap[a.project_id] || a.project_id, a.start_date, a.end_date, a.hours_per_day, a.days_per_week, a.hourly_rate, a.status, (a.certifications || []).join(';'), `"${(a.notes || '').replace(/"/g, '""')}"`].join(',')).join('\n');
+    const header = `Person,Role,Trade,Project,Start,End,Hrs/Day,Days/Wk,${ratesVisible ? 'Rate,' : ''}Status,Certifications,Notes\n`;
+    const rows = filtered.map(a => [a.person_name, a.role, a.trade, projMap[a.project_id] || a.project_id, a.start_date, a.end_date, a.hours_per_day, a.days_per_week, ...(ratesVisible ? [a.hourly_rate ?? 0] : []), a.status, (a.certifications || []).join(';'), `"${(a.notes || '').replace(/"/g, '""')}"`].join(',')).join('\n');
     const blob = new Blob([header + rows], { type: 'text/csv' });
     const url = URL.createObjectURL(blob);
     const link = document.createElement('a');
@@ -553,7 +558,7 @@ export default function ResourcePlanningPage() {
 
     {/* Tabs */}
     <div style={{ display: 'flex', gap: 4, borderBottom: `1px solid ${BORDER}`, overflowX: 'auto', marginBottom: 20 }}>
-      {([['grid', 'Assignment Grid'], ['timeline', 'Timeline / Gantt'], ['people', 'People'], ['staffing', 'Project Staffing'], ['utilization', 'Utilization'], ['availability', 'Availability'], ['forecast', 'Headcount Forecast'], ['costs', 'Labor Costs']] as [Tab, string][]).map(([k, l]) =>
+      {([['grid', 'Assignment Grid'], ['timeline', 'Timeline / Gantt'], ['people', 'People'], ['staffing', 'Project Staffing'], ['utilization', 'Utilization'], ['availability', 'Availability'], ['forecast', 'Headcount Forecast'], ['costs', 'Labor Costs']] as [Tab, string][]).filter(([k]) => ratesVisible || k !== 'costs').map(([k, l]) =>
         <button key={k} onClick={() => setTab(k)} style={{ padding: '10px 18px', border: 'none', borderBottom: tab === k ? `2px solid ${GOLD}` : '2px solid transparent', background: 'transparent', color: tab === k ? GOLD : DIM, fontSize: 13, fontWeight: tab === k ? 700 : 500, cursor: 'pointer', whiteSpace: 'nowrap' }}>{l}</button>
       )}
     </div>
@@ -610,10 +615,10 @@ export default function ResourcePlanningPage() {
             <label style={{ display: 'block', fontSize: 12, fontWeight: 700, color: DIM, marginBottom: 5 }}>Days/Week</label>
             <input type="number" value={form.days_per_week ?? 5} onChange={e => setForm({ ...form, days_per_week: +e.target.value })} style={inp()} min={1} max={7} />
           </div>
-          <div>
+          {ratesVisible && <div>
             <label style={{ display: 'block', fontSize: 12, fontWeight: 700, color: DIM, marginBottom: 5 }}>Hourly Rate ($)</label>
             <input type="number" value={form.hourly_rate ?? 0} onChange={e => setForm({ ...form, hourly_rate: +e.target.value })} style={inp()} min={0} step={0.5} />
-          </div>
+          </div>}
         </div>
         <div style={{ marginBottom: 14 }}>
           <label style={{ display: 'block', fontSize: 12, fontWeight: 700, color: DIM, marginBottom: 5 }}>Certifications</label>
@@ -786,12 +791,12 @@ export default function ResourcePlanningPage() {
             </div>}
             {/* Assignment rows */}
             <table className="k-table" style={{ width: '100%', borderCollapse: 'collapse' }}>
-              <thead><tr>{['Project', 'Dates', 'Hrs/Day', 'Rate', 'Status', 'Actions'].map(h => <th key={h} style={{ padding: '5px 8px', textAlign: 'left', fontSize: 12, fontWeight: 700, color: DIM, borderBottom: `1px solid color-mix(in srgb, ${BORDER} 19%, transparent)` }}>{h}</th>)}</tr></thead>
+              <thead><tr>{['Project', 'Dates', 'Hrs/Day', ...(ratesVisible ? ['Rate'] : []), 'Status', 'Actions'].map(h => <th key={h} style={{ padding: '5px 8px', textAlign: 'left', fontSize: 12, fontWeight: 700, color: DIM, borderBottom: `1px solid color-mix(in srgb, ${BORDER} 19%, transparent)` }}>{h}</th>)}</tr></thead>
               <tbody>{asns.map(a => <tr key={a.id || a.project_id + a.start_date}>
                 <td style={{ padding: '6px 8px', color: TEXT, fontWeight: 600 }}>{projMap[a.project_id] || a.project_id}</td>
                 <td style={{ padding: '6px 8px', color: DIM }}>{fmtDate(a.start_date)} – {fmtDate(a.end_date)}</td>
                 <td style={{ padding: '6px 8px', color: DIM }}>{a.hours_per_day}h x {a.days_per_week}d</td>
-                <td style={{ padding: '6px 8px', color: 'var(--text-primary)', fontWeight: 600 }}>{fmtMoney(a.hourly_rate)}/hr</td>
+                {ratesVisible && <td style={{ padding: '6px 8px', color: 'var(--text-primary)', fontWeight: 600 }}>{fmtMoney(a.hourly_rate ?? 0)}/hr</td>}
                 <td style={{ padding: '6px 8px' }}><StatusPill module="resource_assignments" status={a.status} size="sm" /></td>
                 <td style={{ padding: '6px 8px' }}>
                   <div style={{ display: 'flex', gap: 6 }}>
@@ -819,7 +824,7 @@ export default function ResourcePlanningPage() {
           </div>}>
             {projAsns.length === 0 ? <div style={{ padding: 16, textAlign: 'center', color: DIM, fontSize: 13 }}>No assignments for this project.</div>
               : <table className="k-table" style={{ width: '100%', borderCollapse: 'collapse' }}>
-                <thead><tr>{['Person', 'Role', 'Trade', 'Dates', 'Hours', 'Rate', 'Status', 'Reassign', 'Actions'].map(h => <th key={h} style={{ padding: '5px 8px', textAlign: 'left', fontSize: 12, fontWeight: 700, color: DIM, borderBottom: `1px solid color-mix(in srgb, ${BORDER} 19%, transparent)` }}>{h}</th>)}</tr></thead>
+                <thead><tr>{['Person', 'Role', 'Trade', 'Dates', 'Hours', ...(ratesVisible ? ['Rate'] : []), 'Status', 'Reassign', 'Actions'].map(h => <th key={h} style={{ padding: '5px 8px', textAlign: 'left', fontSize: 12, fontWeight: 700, color: DIM, borderBottom: `1px solid color-mix(in srgb, ${BORDER} 19%, transparent)` }}>{h}</th>)}</tr></thead>
                 <tbody>{projAsns.map(a => <tr key={a.id || a.person_name + a.start_date} style={{ borderBottom: `1px solid color-mix(in srgb, ${BORDER} 8%, transparent)`, background: conflictPersons.has(a.person_name) ? `color-mix(in srgb, ${RED} 2%, transparent)` : 'transparent' }}>
                   <td style={{ padding: '6px 8px', color: conflictPersons.has(a.person_name) ? RED : TEXT, fontWeight: 600 }}>
                     {a.person_name}
@@ -829,7 +834,7 @@ export default function ResourcePlanningPage() {
                   <td style={{ padding: '6px 8px', color: DIM }}>{a.trade}</td>
                   <td style={{ padding: '6px 8px', color: DIM }}>{fmtDate(a.start_date)} – {fmtDate(a.end_date)}</td>
                   <td style={{ padding: '6px 8px', color: DIM }}>{a.hours_per_day}h/{a.days_per_week}d</td>
-                  <td style={{ padding: '6px 8px', color: 'var(--text-primary)', fontWeight: 600 }}>{fmtMoney(a.hourly_rate)}</td>
+                  {ratesVisible && <td style={{ padding: '6px 8px', color: 'var(--text-primary)', fontWeight: 600 }}>{fmtMoney(a.hourly_rate ?? 0)}</td>}
                   <td style={{ padding: '6px 8px' }}><StatusPill module="resource_assignments" status={a.status} size="sm" /></td>
                   <td style={{ padding: '6px 8px' }}>
                     <button onClick={() => setReassignTarget({ assignment: a, show: true })} style={{ ...btn(), padding: '3px 8px', fontSize: 12 }}>Move</button>
@@ -946,7 +951,7 @@ export default function ResourcePlanningPage() {
               </div>;
             })}
           </Card>
-          <Card title="Monthly Labor Cost Projection" icon={<CurrencyDollar size={17} weight="duotone" color="var(--text-secondary)" />}>
+          {ratesVisible && <Card title="Monthly Labor Cost Projection" icon={<CurrencyDollar size={17} weight="duotone" color="var(--text-secondary)" />}>
             {forecast.map(f => {
               const maxC = Math.max(1, ...forecast.map(x => x.cost));
               const pct = f.cost / maxC * 100;
@@ -960,12 +965,12 @@ export default function ResourcePlanningPage() {
                 </div>
               </div>;
             })}
-          </Card>
+          </Card>}
         </div>
         {/* Forecast table */}
         <Card title="Forecast Detail" icon={<ClipboardText size={17} weight="duotone" color="var(--text-secondary)" />}>
           <table className="k-table" style={{ width: '100%', borderCollapse: 'collapse' }}>
-            <thead><tr>{['Month', 'Headcount', 'FTEs', 'Labor Cost', 'Avg Cost/Person', 'Trend'].map(h => <th key={h} style={{ padding: '8px 12px', textAlign: 'left', fontSize: 12, fontWeight: 700, color: DIM, borderBottom: `1px solid ${BORDER}` }}>{h}</th>)}</tr></thead>
+            <thead><tr>{['Month', 'Headcount', 'FTEs', ...(ratesVisible ? ['Labor Cost', 'Avg Cost/Person'] : []), 'Trend'].map(h => <th key={h} style={{ padding: '8px 12px', textAlign: 'left', fontSize: 12, fontWeight: 700, color: DIM, borderBottom: `1px solid ${BORDER}` }}>{h}</th>)}</tr></thead>
             <tbody>{forecast.map((f, fi) => {
               const prevCount = fi > 0 ? forecast[fi - 1].count : f.count;
               const trend = f.count > prevCount ? 'up' : f.count < prevCount ? 'down' : 'flat';
@@ -973,8 +978,8 @@ export default function ResourcePlanningPage() {
                 <td style={{ padding: '10px 12px', color: TEXT, fontWeight: 600 }}>{f.label}</td>
                 <td style={{ padding: '10px 12px', color: 'var(--text-primary)', fontWeight: 700 }}>{f.count}</td>
                 <td style={{ padding: '10px 12px', color: PURPLE, fontWeight: 700 }}>{f.fte}</td>
-                <td style={{ padding: '10px 12px', color: 'var(--text-primary)', fontWeight: 700 }}>{fmtMoney(f.cost)}</td>
-                <td style={{ padding: '10px 12px', color: DIM }}>{f.count > 0 ? fmtMoney(f.cost / f.count) : '-'}</td>
+                {ratesVisible && <td style={{ padding: '10px 12px', color: 'var(--text-primary)', fontWeight: 700 }}>{fmtMoney(f.cost)}</td>}
+                {ratesVisible && <td style={{ padding: '10px 12px', color: DIM }}>{f.count > 0 ? fmtMoney(f.cost / f.count) : '-'}</td>}
                 <td style={{ padding: '10px 12px', color: trend === 'up' ? GREEN : trend === 'down' ? RED : DIM, fontWeight: 700 }}>
                   {trend === 'up' ? '+' : trend === 'down' ? '-' : '='} {trend}
                 </td>
@@ -985,7 +990,7 @@ export default function ResourcePlanningPage() {
       </div>}
 
       {/* ========== LABOR COSTS ========== */}
-      {!loading && tab === 'costs' && <div>
+      {!loading && ratesVisible && tab === 'costs' && <div>
         <Card title="Labor Cost by Project" icon={<CurrencyDollar size={17} weight="duotone" color="var(--text-secondary)" />}>
           {projectCosts.length === 0 && <div style={{ padding: 32, textAlign: 'center', color: DIM }}>No cost data available.</div>}
           <table className="k-table" style={{ width: '100%', borderCollapse: 'collapse' }}>
@@ -1031,7 +1036,7 @@ export default function ResourcePlanningPage() {
                 const wks = weeksBetween(a.start_date, a.end_date);
                 const hrs = wks * a.days_per_week * a.hours_per_day;
                 tradeMap[a.trade].hours += hrs;
-                tradeMap[a.trade].cost += hrs * a.hourly_rate;
+                tradeMap[a.trade].cost += hrs * (a.hourly_rate ?? 0);
                 tradeMap[a.trade].count++;
               });
               const trades = Object.entries(tradeMap).sort((a, b) => b[1].cost - a[1].cost);

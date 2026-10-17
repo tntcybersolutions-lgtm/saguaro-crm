@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { createServerClient, getUser } from '@/lib/supabase-server';
+import { createServerClient } from '@/lib/supabase-server';
 import { apiError } from '@/lib/api-error';
+import { requirePermission } from '@/lib/permissions';
 
 /**
  * GET /api/rfis?projectId=&status=open&limit=3
@@ -14,8 +15,11 @@ export async function GET(req: NextRequest) {
   const today     = new Date().toISOString().split('T')[0];
 
   try {
-    const user = await getUser(req);
-    if (!user) return NextResponse.json({ rfis: [] }, { status: 401 });
+    // Role check, not just sign-in: RFIs: View, the rule this tool's pages,
+    // its writes and (where the table is gated) the database apply.
+    const g = await requirePermission(req, 'RFIs', 'View', { projectId: projectId });
+    if (!g.ok) return g.res;
+    const user = g.user;
 
     const db = createServerClient();
     // eslint-disable-next-line @typescript-eslint/no-explicit-any

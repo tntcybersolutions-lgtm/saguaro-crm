@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from 'next/server';
 import { createServerClient, getUser } from '@/lib/supabase-server';
 import { requirePermission } from '@/lib/permissions';
 import { apiError } from '@/lib/api-error';
+import { transitionPoStatus } from '@/lib/purchase-order-status';
 
 export async function GET(req: NextRequest, { params }: { params: Promise<{ id: string }> }) {
   const { id } = await params;
@@ -43,6 +44,14 @@ export async function PATCH(req: NextRequest, { params }: { params: Promise<{ id
     const fields: Record<string, any> = {};
     for (const k of allowed) {
       if (body[k] !== undefined) fields[k] = body[k];
+    }
+
+    // A status in the edit moves along the one transition map (lib/purchase-order-status).
+    if (fields.status !== undefined) {
+      const { status, ...rest } = fields;
+      const r = await transitionPoStatus(db, user.tenantId, id, status, { actorId: user.id, extra: rest });
+      if (!r.ok) return NextResponse.json({ error: r.error }, { status: r.status });
+      return NextResponse.json({ purchaseOrder: r.after });
     }
 
     const { data, error } = await db

@@ -1,11 +1,15 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { createServerClient, getUser } from '@/lib/supabase-server';
+import { createServerClient } from '@/lib/supabase-server';
 import { apiError } from '@/lib/api-error';
+import { requirePermission } from '@/lib/permissions';
 
 export async function PUT(req: NextRequest, { params }: { params: Promise<{ id: string }> }) {
   const { id } = await params;
-  const user = await getUser(req);
-  if (!user) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
+  // Role check, not just sign-in: Projects: Edit, the rule this tool's pages,
+  // its writes and (where the table is gated) the database apply.
+  const g = await requirePermission(req, 'Projects', 'Edit');
+  if (!g.ok) return g.res;
+  const user = g.user;
   try {
     const body = await req.json();
     const db = createServerClient();
@@ -47,8 +51,11 @@ export async function PUT(req: NextRequest, { params }: { params: Promise<{ id: 
 
 export async function DELETE(req: NextRequest, { params }: { params: Promise<{ id: string }> }) {
   const { id } = await params;
-  const user = await getUser(req);
-  if (!user) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
+  // Role check, not just sign-in: Projects: Full, the rule this tool's pages,
+  // its writes and (where the table is gated) the database apply.
+  const g = await requirePermission(req, 'Projects', 'Full');
+  if (!g.ok) return g.res;
+  const user = g.user;
   try {
     const db = createServerClient();
     const { error } = await db.from('selections').delete().eq('id', id).eq('tenant_id', user.tenantId);

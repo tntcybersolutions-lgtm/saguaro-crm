@@ -5,6 +5,7 @@ import { metaFor, pickAmount, itemLabel, moduleLabel, type EntityMeta } from '@/
 import { must } from '@/lib/db-write';
 import { apiError } from '@/lib/api-error';
 import { writeChangeOrder } from '@/lib/change-order-status';
+import { transitionPoStatus } from '@/lib/purchase-order-status';
 import { transitionPayAppStatus } from '@/lib/pay-app-status';
 
 export const dynamic = 'force-dynamic';
@@ -133,6 +134,14 @@ export async function POST(req: NextRequest) {
       if (!full.ok) return full.res;
       const w = await writeChangeOrder(db, user.tenantId, body.entityId, { status: decision }, { actorId: user.id });
       if (!w.ok) return NextResponse.json({ error: w.error }, { status: w.status });
+      entityUpdated = true;
+    } else if (isFinal && meta.table === 'purchase_orders') {
+      /* A PO approved here is the same move as on its own page; a rejected one
+         goes back to draft for the buyer to fix (lib/purchase-order-status). */
+      const full = await requirePermission(req, 'Budget', 'Full', { db });
+      if (!full.ok) return full.res;
+      const r = await transitionPoStatus(db, user.tenantId, body.entityId, decision === 'approved' ? 'approved' : 'draft', { actorId: user.id });
+      if (!r.ok) return NextResponse.json({ error: r.error }, { status: r.status });
       entityUpdated = true;
     } else if (isFinal) {
       const patch: Record<string, unknown> = { status: decision };

@@ -27,14 +27,19 @@ export const DEFAULT_ROLE_DEFINITIONS: DefaultRole[] = [
   {
     name: 'Superintendent',
     color: '#4ADE80',
-    description: 'Runs the field — schedule, safety, daily logs, submittals.',
-    permissions: { Projects: 'View', Budget: 'View', Schedule: 'Edit', Safety: 'Edit', Documents: 'Edit', RFIs: 'Edit', Submittals: 'Edit', 'Change Orders': 'View', 'Pay Apps': 'View', Reports: 'View', Sales: 'None', Admin: 'None' },
+    description: 'Runs the field — daily logs, punch, photos, schedule, safety, submittals.',
+    // Projects: Edit is what writes a daily log, a punch item or a field to-do
+    // (/api/daily-logs/create, /api/punch-list/create; role_gate_ins_daily_logs).
+    // At View, the role named for daily reporting could not file one.
+    permissions: { Projects: 'Edit', Budget: 'View', Schedule: 'Edit', Safety: 'Edit', Documents: 'Edit', RFIs: 'Edit', Submittals: 'Edit', 'Change Orders': 'View', 'Pay Apps': 'View', Reports: 'View', Sales: 'None', Admin: 'None' },
   },
   {
     name: 'Foreman',
     color: '#FBBF24',
-    description: 'Crew lead — field entry for schedule, safety and submittals.',
-    permissions: { Projects: 'View', Budget: 'None', Schedule: 'Edit', Safety: 'Edit', Documents: 'View', RFIs: 'View', Submittals: 'View', 'Change Orders': 'None', 'Pay Apps': 'None', Reports: 'View', Sales: 'None', Admin: 'None' },
+    description: 'Crew lead — daily logs, punch, site photos, schedule and safety.',
+    // Projects: Edit files daily logs and punch items; Documents: Edit uploads
+    // site photos (/api/photos/*, role_gate_ins_photos).
+    permissions: { Projects: 'Edit', Budget: 'None', Schedule: 'Edit', Safety: 'Edit', Documents: 'Edit', RFIs: 'View', Submittals: 'View', 'Change Orders': 'None', 'Pay Apps': 'None', Reports: 'View', Sales: 'None', Admin: 'None' },
   },
   {
     name: 'Salesperson',
