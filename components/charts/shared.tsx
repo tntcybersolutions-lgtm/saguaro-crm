@@ -22,7 +22,7 @@ export const CHART = {
   // The accent names are kept for the prop API; yellow is for actions, never
   // data (DESIGN_SYSTEM.md §1). Series come from the approved palette only.
   gold: 'var(--chart-1)',
-  goldStrong: 'color-mix(in srgb, #E8FF2A 72%, #F8FAFC)',
+  goldStrong: '#F8FAFC',
   blue: 'var(--chart-2)',
   blueStrong: '#F8FAFC',
   green: 'var(--success, #4ADE80)',
@@ -55,23 +55,23 @@ export function accentColors(accent: ChartAccent): AccentPair {
 /** Categorical palette for ratio breakdowns (stage mix, project type, …).
  *  Eight distinct hues, never the action yellow, so series never collide. */
 export const CATEGORICAL: readonly string[] = [
-  'var(--chart-1)',                               // link blue
-  'var(--chart-2)',                               // light blue
-  'color-mix(in srgb, #E8FF2A 55%, #101722)',     // deep blue
-  '#CBD5E1',                                      // secondary text
+  'var(--chart-1)',                               // light slate
+  'var(--mod-sales)',                             // violet
   'var(--chart-3)',                               // green
   'var(--chart-4)',                               // amber
+  'var(--mod-money)',                             // pink
+  'var(--mod-people)',                            // orange
   '#94A3B8',                                      // muted
-  '#334155',                                      // border slate
+  'var(--chart-2)',                               // mid slate
 ];
 
-// ─── Card chrome (byte-matched to premium.tsx StatCard / SectionCard) ─────────
-export const CARD_SURFACE =
-  'linear-gradient(160deg, rgba(255,255,255,0.045), rgba(255,255,255,0.012))';
-
-/** Milled-plate card — drop + top light + inset perimeter ring, as StatCard. */
-export const cardShadow =
-  '0 14px 34px -24px var(--brand-primary-25), inset 0 1px 0 rgba(255,255,255,0.06), inset 0 0 0 1px rgba(255,255,255,0.03)';
+// ─── Chart frame — flat on the page (16 Oct 2026: no boxed cards) ─────────────
+// No fill, no shadow; a hairline above the chart separates it from what is
+// above. The names stay so every chart keeps compiling.
+export const CARD_SURFACE = 'none';
+export const cardShadow = 'none';
+/** The chart's frame: flat, a hairline on top, no radius. */
+export const CHART_FRAME: React.CSSProperties = { border: 0, borderTop: '1px solid var(--border-subtle)', borderRadius: 0 };
 
 /** Uppercase micro-label used across the premium surface. */
 export const microLabel: React.CSSProperties = {

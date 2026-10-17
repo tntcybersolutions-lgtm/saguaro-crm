@@ -478,3 +478,10 @@ the ungated proposal_signatures / _events (20261017c, applied). Found on the way
   instead of a 409.
 - A PATCH that moves a record to another job (`project_id` in the body) is checked
   against the job the record is on now, not the one it is moving to.
+- FIXED (fix/offline-leftovers): "Waiting for Signal" badges now use the amber `pending` Badge tone; videos carry
+  the phone's client id (`project_files.client_id`, migration 20261017f) and are filed once.
+- `lib/status-colors.ts` `under_contract` is #E8FF2A (neon yellow-green) — every `Badge tone="under_contract"`
+  (e.g. `app/app/settings/page.tsx:475` "Trial") paints a yellow label, against DESIGN_SYSTEM §4. The comment
+  above STATUS_COLORS says under contract is blue. Needs a ruling on the color.
+- `--title-section` is `var(--c-yellow-hi)` (`app/globals.css:217`): every Card / section heading is yellow text,
+  against DESIGN_SYSTEM §4 ("yellow never labels"). Needs a ruling.

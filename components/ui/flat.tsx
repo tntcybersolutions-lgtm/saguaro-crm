@@ -73,7 +73,7 @@ a.fl-row:active,button.fl-row:active{background:var(--fl-line)}
 a.fl-row:focus-visible,button.fl-row:focus-visible{outline:2px solid var(--focus-ring);outline-offset:-2px}
 button.fl-row{width:100%;border:0;font:inherit;text-align:left;cursor:pointer}
 .fl-dot{width:8px;height:8px;border-radius:4px;flex:none}
-.fl-dot[data-c=red]{background:var(--danger)} .fl-dot[data-c=amber]{background:var(--warning)} .fl-dot[data-c=green]{background:var(--success)} .fl-dot[data-c=blue]{background:var(--fl-neutral)} .fl-dot[data-c=gold]{background:var(--brand-primary)} .fl-dot[data-c=grey]{background:var(--fl-text-3)}
+.fl-dot[data-c=red]{background:var(--danger)} .fl-dot[data-c=amber]{background:var(--warning)} .fl-dot[data-c=green]{background:var(--success)} .fl-dot[data-c=blue]{background:var(--fl-neutral)} .fl-dot[data-c=gold]{background:var(--warning)} .fl-dot[data-c=grey]{background:var(--fl-text-3)}
 .fl-row>.k-tile{width:36px;height:36px}
 .fl-m{flex:1;min-width:0}
 .fl-t{font-size:15px;font-weight:600;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
@@ -235,7 +235,7 @@ export type RowProps = {
   tone?: FlatTone;
 };
 
-const DOT_TONE: Record<DotColor, FlatTone> = { red: 'danger', amber: 'warning', green: 'success', blue: 'info', gold: 'info', grey: 'neutral' };
+const DOT_TONE: Record<DotColor, FlatTone> = { red: 'danger', amber: 'warning', green: 'success', blue: 'info', gold: 'warning', grey: 'neutral' };
 const DOT_ICON: Record<DotColor, React.ElementType> = { red: WarningCircle, amber: Clock, green: CheckCircle, blue: Info, gold: Star, grey: Circle };
 
 /** A row's icon tile (the concept's list rows). */

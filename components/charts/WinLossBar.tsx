@@ -14,6 +14,7 @@ import {
   CHART,
   CARD_SURFACE,
   cardShadow,
+  CHART_FRAME,
   microLabel,
   ChartEmpty,
 } from './shared';
@@ -98,9 +99,8 @@ export function WinLossBar({
         position: 'relative',
         overflow: 'hidden',
         background: CARD_SURFACE,
-        border: `1px solid ${CHART.border}`,
-        borderRadius: 16,
-        padding: '14px 16px',
+        ...CHART_FRAME,
+        padding: '14px 0',
         boxShadow: cardShadow,
         ...style,
       }}

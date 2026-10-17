@@ -31,7 +31,6 @@ import AppSidebar from '../../components/AppSidebar';
 import AppTopBar from '../../components/AppTopBar';
 import AutoUnsavedGuard from '@/components/AutoUnsavedGuard';
 import QuickMedia, { openQuickMedia } from '@/components/media/QuickMedia';
-import NextStepBar from '../../components/NextStepBar';
 import HeaderProjectPicker from '../../components/HeaderProjectPicker';
 import { HelpModeButton } from '../../components/HelpMode';
 import { X, ArrowRight, House, Briefcase, FolderSimple, Clock, DotsThreeOutline, MagnifyingGlass, Bell, Star, Camera } from '@phosphor-icons/react';
@@ -410,11 +409,9 @@ export default function AppLayout({ children }: { children: React.ReactNode }) {
             screen. It sits inside the fixed header and publishes its height so
             the page moves down instead of being covered by it. */}
         <HeaderMessages />
-        {/* "You are here. Do this next." One strip, same place, every screen,
-            on both halves of the product. It does not hide itself once the
-            steps are done — a guide that disappears the moment you are
-            competent is one you cannot hand to a new hire. */}
-        <NextStepBar />
+        {/* The "You are here / every stage of …" strip that sat here is gone
+            (Chad's rule: a screen shows, it does not explain). The next
+            action lives on each screen as its one yellow button. */}
       </div>
 
       {/* ── AI Expert Chat Panel ─────────────────────────────────────── */}
@@ -552,7 +549,7 @@ export default function AppLayout({ children }: { children: React.ReactNode }) {
           /* The page's module accent: every shared icon tile inside reads var(--acc). */
           ['--acc' as string]: accentForPath(pathname),
           marginLeft: sidebarWidth,
-          paddingTop: `calc(${sidebarTokens.headerHeight}px + env(safe-area-inset-top, 0px) + var(--sag-header-msg-h, 0px) + var(--sag-nextstep-h, 0px))`,
+          paddingTop: `calc(${sidebarTokens.headerHeight}px + env(safe-area-inset-top, 0px) + var(--sag-header-msg-h, 0px))`,
           minHeight: '100vh',
           transition: 'margin-left .2s ease',
         }}
