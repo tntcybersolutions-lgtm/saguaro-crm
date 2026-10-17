@@ -197,8 +197,10 @@ export async function middleware(request: NextRequest) {
   }
 
   // No valid session — redirect to login
+  // The whole address, query included, so a link to one record (an RFI's
+  // ?tab=responses, a list's ?open=) opens that record after sign-in.
   const loginUrl = new URL('/login', request.url);
-  loginUrl.searchParams.set('next', pathname);
+  loginUrl.searchParams.set('next', pathname + (request.nextUrl.search || ''));
   return NextResponse.redirect(loginUrl);
 }
 

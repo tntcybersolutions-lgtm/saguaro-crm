@@ -60,6 +60,7 @@ import { ArrangeButton, usePanelLayout, type PanelDef } from '@/components/layou
 import JobMonthlyChart from '@/components/jobs/JobMonthlyChart';
 import JobBanner from '@/components/jobs/JobBanner';
 import { daysLeft } from '@/lib/job-banner';
+import { rfiLabel } from '@/lib/rfi';
 
 /* The job page's panels, in their standard order. Top: the banner (photo, facts, weather, team), health, money, brief; then the tools column and the side column. */
 const JOB_PANELS: PanelDef[] = [
@@ -257,7 +258,7 @@ export default function JobPage() {
     const rfis = (data.rfis || []) as any[];
     const openRfis = rfis.filter((r) => OPEN_STATUSES.includes(String(r.status || 'open')));
     const overdueRfi = (r: any) => !!ymd(r.due_date) && (ymd(r.due_date) as string) < today;
-    const rfiTitle = (r: any) => `RFI${r.rfi_number != null ? ' #' + r.rfi_number : ''}: ${r.subject || r.question || 'Untitled'}`;
+    const rfiTitle = (r: any) => `${rfiLabel(r.rfi_number)}: ${r.subject || r.question || 'Untitled'}`;
     const owner = (r: any) => String(r.ball_in_court || r.assigned_to_name || '').trim() || 'No one assigned';
     for (const a of (data.alerts || []) as any[]) {
       const sev = String(a.severity || '').toLowerCase();

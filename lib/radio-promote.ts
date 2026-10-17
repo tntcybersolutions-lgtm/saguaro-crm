@@ -27,6 +27,7 @@
  */
 
 import { dayIn, isTimeZone } from './time-zone';
+import { rfiLabel } from '@/lib/rfi';
 
 export const PROMOTE_RECORD_TYPES = ['rfi', 'punch', 'field_issue', 'daily_log'] as const;
 export type PromoteRecordType = (typeof PROMOTE_RECORD_TYPES)[number];
@@ -370,7 +371,7 @@ export function recordLabel(
   parts: { rfiNumber?: string | null; itemNumber?: number | null; issueNumber?: string | null; logDate?: string | null },
 ): string {
   switch (recordType) {
-    case 'rfi':          return parts.rfiNumber ? `RFI ${parts.rfiNumber}` : 'RFI';
+    case 'rfi':          return rfiLabel(parts.rfiNumber);
     case 'punch':        return parts.itemNumber ? `Punch #${parts.itemNumber}` : 'Punch item';
     case 'field_issue':  return parts.issueNumber ? `Issue #${parts.issueNumber}` : 'Field issue';
     case 'daily_log':    return parts.logDate ? `Daily Log — ${parts.logDate}` : 'Daily Log';

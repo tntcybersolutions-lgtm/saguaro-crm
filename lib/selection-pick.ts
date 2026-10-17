@@ -16,6 +16,7 @@
  *
  * Service-role client bypasses RLS → every query is explicitly tenant-scoped.
  */
+import { recordHref } from '@/lib/record-links';
 import { nextCoNumber } from '@/lib/change-order-number';
 import { onChangeOrderApproved } from '@/lib/triggers';
 import { createNotification } from '@/lib/notifications';
@@ -134,7 +135,7 @@ export async function pickSelection(db: any, args: {
     changeOrder
       ? `${fmtMoney(price)} — ${fmtMoney(overage)} over the allowance. Change order #${changeOrder.co_number} for ${fmtMoney(overage)} was added, approved by the client.`
       : `${fmtMoney(price)}${Number(sel.allowance) > 0 ? ` — ${fmtMoney(-overage)} under the allowance` : ''}.`,
-    changeOrder ? `/app/projects/${projectId}/change-orders` : `/app/projects/${projectId}/selections`,
+    changeOrder ? recordHref('change_orders', projectId, changeOrder.id) : `/app/projects/${projectId}/selections`,
     projectId,
   );
 

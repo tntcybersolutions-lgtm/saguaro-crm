@@ -5,6 +5,7 @@ import { onRFIAnswered } from '@/lib/triggers';
 import { runInBackground } from '@/lib/background';
 import { apiError } from '@/lib/api-error';
 import { writeWithOptionalColumns } from '@/lib/optional-column';
+import { recordOfficialResponse } from '@/lib/rfi-server';
 
 export async function POST(
   req: NextRequest,
@@ -32,13 +33,16 @@ export async function POST(
       .select('submitted_by')
       .eq('id', id)
       .eq('tenant_id', user.tenantId)
-      .single();
+      .maybeSingle();
+    if (!existing) return NextResponse.json({ error: 'RFI not found' }, { status: 404 });
+    const answer = String(body.answer || '').trim();
+    if (!answer) return NextResponse.json({ error: 'answer is required' }, { status: 400 });
     const ballBack = (existing?.submitted_by || '') as string;
 
     // answer_source: null — an answer typed here replaces one that came by email (lib/inbound-reply).
     const { result: { error } } = await writeWithOptionalColumns(
       {
-        answer: (body.answer || '') as string,
+        answer,
         // Client (RFIs page) posts `answeredBy`; also accept snake_case. Falls
         // back to the caller's email only when neither is supplied.
         answered_by: (body.answered_by || body.answeredBy || user.email || '') as string,
@@ -53,6 +57,13 @@ export async function POST(
     );
 
     if (error) throw error;
+
+    // On the RFI's thread too, as its one official answer, with who and when.
+    await recordOfficialResponse(db, user.tenantId, id, {
+      text: answer,
+      name: String(body.answered_by || body.answeredBy || user.email || ''),
+      email: user.email || null,
+    });
 
     runInBackground(onRFIAnswered(id), 'onRFIAnswered');
 

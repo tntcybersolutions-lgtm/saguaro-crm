@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from 'next/server';
 import { getUser, createServerClient } from '@/lib/supabase-server';
 import { must } from '@/lib/db-write';
 import { apiError } from '@/lib/api-error';
+import { rfiLabel } from '@/lib/rfi';
 
 type TriggerType =
   | 'budget_threshold'
@@ -54,7 +55,7 @@ function buildInsightMessage(
     case 'pay_app_not_submitted':
       return `Pay application for ${triggerData?.month ?? 'this month'} has not been submitted.`;
     case 'rfi_overdue':
-      return `RFI #${triggerData?.rfiNumber ?? ''} is ${triggerData?.days ?? ''} days overdue.`;
+      return `${rfiLabel(triggerData?.rfiNumber)} is ${triggerData?.days ?? ''} days overdue.`;
     default:
       return 'A new trigger event has been recorded.';
   }

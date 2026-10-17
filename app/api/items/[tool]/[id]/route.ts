@@ -14,6 +14,7 @@ import { writeChangeOrder, coDecisionLevel, coWriteFailure } from '@/lib/change-
 import { transitionPoStatus } from '@/lib/purchase-order-status';
 import { SUBMITTAL_REVIEW_STATUSES } from '@/lib/submittal-workflow';
 import { runInBackground } from '@/lib/background';
+import { prepareReassignment, actorName } from '@/lib/rfi-server';
 
 export const dynamic = 'force-dynamic';
 
@@ -124,6 +125,13 @@ export async function PATCH(req: NextRequest, { params }: { params: Promise<{ to
       return NextResponse.json({ item: r.after });
     }
 
+    // An RFI handed to someone new: their email filled in, and they are told (lib/rfi-server).
+    let assigned: Awaited<ReturnType<typeof prepareReassignment>>['notify'] = null;
+    if (l.tool.type === 'rfis') {
+      const prep = await prepareReassignment(l.db, l.user.tenantId, l.item, patch, l.user.email || null);
+      Object.assign(patch, prep.patch);
+      assigned = prep.notify;
+    }
     const { data, error } = await l.db
       .from(l.tool.table as never)
       .update(patch as never)
@@ -136,7 +144,12 @@ export async function PATCH(req: NextRequest, { params }: { params: Promise<{ to
     if (l.tool.type === 'submittals' && typeof status === 'string' && SUBMITTAL_REVIEW_STATUSES.has(status)) {
       runInBackground(async () => (await import('@/lib/triggers')).onSubmittalSentForReview(id, String(l.item.status ?? '')), 'onSubmittalSentForReview');
     }
-    return NextResponse.json({ item: data });
+    if (assigned?.email) {
+      const who = assigned;
+      const name = await actorName(l.db, l.user);
+      runInBackground(async () => (await import('@/lib/triggers')).onRFIAssigned(id, who, { email: l.user.email || null, name }), 'onRFIAssigned');
+    }
+    return NextResponse.json({ item: data, ...(assigned ? { assigned: { name: assigned.name, emailed: assigned.email } } : {}) });
   } catch (e) {
     return apiError(`items/${type}`, e, "Couldn't save your changes. Please try again.");
   }
