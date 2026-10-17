@@ -1,15 +1,17 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { createServerClient, getUser } from '@/lib/supabase-server';
+import { createServerClient } from '@/lib/supabase-server';
 import { signUrl } from '@/lib/storage-signing';
 import type { Database } from '@/lib/database.types';
 import { apiError } from '@/lib/api-error';
+import { requirePermission } from '@/lib/permissions';
 
 export async function POST(req: NextRequest) {
   try {
-    const user = await getUser(req);
-    if (!user) {
-      return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
-    }
+    // Role check, not just sign-in: Projects: Edit, the rule this tool's pages,
+    // its writes and (where the table is gated) the database apply.
+    const g = await requirePermission(req, 'Projects', 'Edit');
+    if (!g.ok) return g.res;
+    const user = g.user;
 
     const db = createServerClient();
     const formData = await req.formData();

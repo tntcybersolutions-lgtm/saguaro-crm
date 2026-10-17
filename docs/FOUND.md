@@ -418,3 +418,35 @@ are gated too (20261016g + h, APPLIED LIVE). Found on the way, NOT fixed:
   `presence_sessions_*3` call `auth.uid()` unwrapped (auth_rls_initplan) — wrap in `(SELECT auth.uid())`.
 - `proposal_signatures` / `proposal_signature_events` (20261016p, merged while this branch was open) are readable
   tenant-wide with no role gate — signer names, emails and IPs; gate them with Documents like `proposals`.
+
+## 16-17 Oct 2026 — permission + change-order follow-ups (fix/perm-and-co-followups)
+
+Closed from the three entries above: the record page / approvals inbox / catch-all / command-center CO paths
+(all through lib/change-order-status now), `selections/[id]` PUT/DELETE, the PO status route (lib/purchase-order-status),
+resource-planning rates (Budget or Admin view only), the unguarded list routes (rfis, bids, voice memos, presence,
+crew GPS and ~35 more), the Foreman/Superintendent templates (20261017b, applied), proposals following Documents and
+the ungated proposal_signatures / _events (20261017c, applied). Found on the way, NOT fixed:
+
+- 20261016i is STILL not applied: the SQL runner cancelled `apply_migration` twice. Pending: the DO block that drops
+  the 90 `rbac_(ins|upd|del)_*` policies, and `DROP FUNCTION IF EXISTS public.app_user_role();`.
+- 20261017d (built-in Subcontractor template: Sales: None) is committed, NOT applied — held for a yes. The 3 oldest
+  tenants' Subcontractor rows have no Sales key, inherit Sales: View from Projects, and so still read proposal and bid
+  dollars and signer details. Proven in the rolled-back proof: with it a Subcontractor sees 0 of each.
+- `app/api/project-context/route.ts` (Projects: View) returns budget lines, original / revised contract, pay-app
+  billed-to-date and each sub's contract amount. Only the proposal amounts are gated now; the rest is Budget money.
+- `app/api/projects/[projectId]/route.ts` GET (now Projects: View) returns contract sum to date and budget health.
+- Count-only aggregates with no category check (no record content): `dashboard/metrics`, `widgets/summary`,
+  `projects/list`, `company-tools`, `franchise/op-kpis`; `projects/map` hands back photo thumbnails per job.
+- `bid_history` (`/api/bids/[id]`, `/api/bids/score`) stays on Projects; its amounts are not under the Sales-or-Budget
+  rule the `bids` table now has.
+- `approvals/decision` needs Documents: Full for every module before the module's own check; COs now also need
+  Change Orders: Full and POs Budget: Full, invoices still only Documents: Full.
+- Readers that count a CO as approved only when `status === 'approved'` (cash flow, reports, the CO page tiles…)
+  do not see the command-center posting statuses `schedule_updated` / `budget_updated`; lib/job-contract,
+  lib/change-order-cascade and the commitment trigger do (CO_APPROVED_STATUSES). No live CO uses them today.
+- Desert Vista Medical Plaza: three contract figures disagree (original_contract_value 8,200,000, contract_value
+  8,450,000, revised_contract_value 8,478,400, contract_amount 0) and approved CO #1 ($28,400) is on no budget line.
+  The next CO touch rewrites revised to 8,228,400 (lib/job-contract picks original_contract_value). Needs a ruling
+  on which figure is the original.
+- `projects/[projectId]/resource-planning/[id]` PATCH allows `trade` and `certifications`, which are not columns —
+  a body with either fails.
