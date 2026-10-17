@@ -4,9 +4,11 @@ import { computePayApp, toCents, toDollars } from '@/lib/calc';
 import { must } from '@/lib/db-write';
 import { apiError } from '@/lib/api-error';
 import { notOnRoster, subRecordScope } from '@/lib/sub-portal-scope';
-import { LOCAL_DAY_HEADER, isPastDay, plausibleToday } from '@/lib/calendar-day';
+import { LOCAL_DAY_HEADER, plausibleToday } from '@/lib/calendar-day';
 import { requestDay } from '@/lib/time-zone';
 import { createNotification } from '@/lib/notifications';
+import { checkBillingCap, loadBillingRoom } from '@/lib/sub-billing-cap';
+import { loadSubCompliance } from '@/lib/sub-compliance';
 
 async function authenticateSubPortal(req: NextRequest) {
   const token =
@@ -43,7 +45,7 @@ export async function GET(req: NextRequest) {
 
     const db = createServerClient();
 
-    const { data: payApps, error } = await db
+    const [{ data: payApps, error }, billing] = await Promise.all([db
       .from('portal_sub_pay_apps')
       .select(
         `*,
@@ -52,11 +54,13 @@ export async function GET(req: NextRequest) {
       .eq('sub_id', scope.subId)
       .eq('project_id', scope.projectId)
       .eq('tenant_id', scope.tenantId)
-      .order('period_to', { ascending: false });
+      .order('period_to', { ascending: false }),
+      // What is left to bill on the sub's subcontract (lib/sub-billing-cap) — the form shows it and checks against it.
+      loadBillingRoom(db, scope.tenantId, scope.projectId, scope.subId)]);
 
     if (error) throw error;
 
-    return NextResponse.json({ pay_apps: payApps || [] });
+    return NextResponse.json({ pay_apps: payApps || [], billing });
   } catch (err) {
     return apiError('portal/sub/pay-apps', err, "Couldn't load your invoices.");
   }
@@ -87,24 +91,16 @@ export async function POST(req: NextRequest) {
     const db = createServerClient();
 
     // ── COMPLIANCE GATE — the reason GCs force subs onto portals: an invoice
-    //    cannot be submitted while required compliance docs are missing or
-    //    expired. Required: current insurance (COI) + W9 on file.
-    //    expiry_date is a calendar day, good through its end — compared as a
-    //    day against the sub's own day (lib/calendar-day), not as midnight UTC,
-    //    which held invoices on the COI's last valid day in every US zone. A
-    //    failed read is an error, not "documents missing". ──
+    //    cannot be submitted while the sub is not compliant. "Compliant" is one
+    //    rule (lib/sub-compliance): a W-9 on file and insurance not expired —
+    //    the same rule the W-9 and Compliance screens show the GC, so a sub the
+    //    GC sees as covered is never held here, and the reverse. Days are the
+    //    sub's own calendar day (lib/calendar-day). A failed read is an error,
+    //    not "documents missing". ──
     {
-      const { data: cdocs, error: cdocsErr } = await db
-        .from('portal_sub_compliance_docs')
-        .select('doc_type, expiry_date, status')
-        .eq('tenant_id', scope.tenantId)
-        .eq('sub_id', scope.subId);
-      if (cdocsErr) throw cdocsErr;
       const today = plausibleToday(req.headers.get(LOCAL_DAY_HEADER), (await requestDay(req.headers, db, scope.tenantId, 'portal/sub/pay-apps')).zone);
-      const ok = (type: string) => (cdocs || []).some((d: { doc_type: string; expiry_date: string | null; status: string | null }) =>
-        d.doc_type === type && d.status !== 'rejected' && d.status !== 'expired' &&
-        (!d.expiry_date || !isPastDay(d.expiry_date, today)));
-      const missing = ['insurance', 'w9'].filter((t) => !ok(t));
+      const rule = (await loadSubCompliance(db, scope.tenantId, [scope.subId], today)).get(scope.subId);
+      const missing = rule ? rule.missing : ['insurance', 'w9'];
       if (missing.length) {
         return NextResponse.json({
           error: 'Compliance hold — invoices are released once required documents are current.',
@@ -176,6 +172,23 @@ export async function POST(req: NextRequest) {
     // `net_amount` (earned-less-retainage minus prior certificates) — all dollars.
     const amountDollars =
       total_requested != null ? total_requested : toDollars(grossThisPeriodCents);
+    /* ── BILLING CAP — never past the contract. The gross billed this period
+       (work + stored materials, retainage included) has to fit in what is left
+       on the sub's subcontract: revised value less everything already billed,
+       waiting invoices included (lib/sub-billing-cap). The larger of the lines'
+       gross and a sent total is checked, so a low "total" can't slip past. ── */
+    {
+      const room = await loadBillingRoom(db, scope.tenantId, scope.projectId, scope.subId);
+      const gross = Math.max(Number(amountDollars) || 0, toDollars(grossThisPeriodCents));
+      const cap = checkBillingCap(room, gross);
+      if (!cap.ok) {
+        return NextResponse.json({
+          error: cap.message, overBilling: true, field: 'this_period',
+          remaining: cap.room.remaining, contract: cap.room.contract, billed: cap.room.billed, over: cap.over,
+        }, { status: 409 });
+      }
+    }
+
     const retainageAmount = toDollars(calc.retainageTotal);
     const netAmount = toDollars(calc.currentPaymentDue);
 

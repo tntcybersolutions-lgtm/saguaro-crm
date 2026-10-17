@@ -9,6 +9,8 @@ import {
 } from '@/components/franchise/kit';
 import { PremiumSurface, ModuleHero, StatStrip, SectionCard, PremiumEmpty } from '@/components/ui/premium';
 import { Flag, Ladder } from '@phosphor-icons/react';
+import { usePeople } from '@/lib/hooks/usePeople';
+import { personName } from '@/lib/person-names';
 
 const SEV_LABEL: Record<Severity, string> = { red: 'Critical', yellow: 'Watch', green: 'Resolved' };
 const RESOLVED_RE = /resolved|closed/i;
@@ -33,6 +35,8 @@ export default function EscalationsPage() {
   const { escalations: raw, loading } = useEscalations();
   const [filter, setFilter] = useState<'all' | Severity>('all');
   const [q, setQ] = useState('');
+  // Assignees by name — the column can hold a user id (lib/person-names).
+  const people = usePeople(((raw as any[]) || []).map((it) => it?.assigned_to));
 
   const rows = useMemo(() => {
     const list = ((raw as any[]) || []).map((it) => ({ it, h: computeEscalation(it) }));
@@ -159,7 +163,7 @@ export default function EscalationsPage() {
                   <Metric label="Type" value={it.item_type || '—'} />
                   <Metric label="Days Overdue" value={it.days_overdue != null ? `${num(it.days_overdue)}d` : '—'} color={dovColor} />
                   <Metric label="Original Due" value={fmtDate(it.original_due)} />
-                  <Metric label="Assigned To" value={it.assigned_to || '—'} />
+                  {personName(it.assigned_to, people) && <Metric label="Assigned To" value={personName(it.assigned_to, people)!} />}
                   <Metric label="Status" value={it.status || '—'} />
                 </div>
 

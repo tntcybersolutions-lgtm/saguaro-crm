@@ -6,7 +6,9 @@
  * record_item_history trigger writes on every create / edit / delete. Each edit
  * shows who, when, and every changed field as old → new.
  */
-import React, { useEffect, useState } from 'react';
+import React, { useEffect, useMemo, useState } from 'react';
+import { usePeople } from '@/lib/hooks/usePeople';
+import { isPersonKey, personName, type People } from '@/lib/person-names';
 
 type Entry = {
   id: string;
@@ -26,8 +28,10 @@ export function fieldLabel(key: string): string {
   return s.charAt(0).toUpperCase() + s.slice(1);
 }
 
-function show(v: unknown): string {
+function show(v: unknown, key?: string, people?: People): string {
   if (v === null || v === undefined || v === '') return '—';
+  // A person field ("Assigned to", "Approved by") reads as the person's name, never an id.
+  if (key && isPersonKey(key) && typeof v === 'string') return personName(v, people) ?? 'someone';
   if (typeof v === 'boolean') return v ? 'Yes' : 'No';
   if (typeof v === 'number') return v.toLocaleString('en-US');
   if (typeof v === 'string') {
@@ -66,6 +70,11 @@ export default function ItemHistory({ entityType, entityId }: { entityType: stri
     return () => { alive = false; };
   }, [entityType, entityId]);
 
+  // Ids in person fields, resolved to names once for the whole history.
+  const personValues = useMemo(() => (rows || []).flatMap((e) => Object.keys(e.changes || {}).filter(isPersonKey)
+    .flatMap((k) => [e.changes?.[k], e.previous_values?.[k]])), [rows]);
+  const people = usePeople(personValues);
+
   if (rows === null) return <div className="ih-msg">Loading history…</div>;
   if (error) return <div className="ih-msg ih-err">{error}</div>;
   if (!rows.length) return <div className="ih-msg">No changes recorded yet. Every edit from now on shows here: who, when, and what changed.</div>;
@@ -90,9 +99,9 @@ export default function ItemHistory({ entityType, entityId }: { entityType: stri
                     {fields.map((k) => (
                       <tr key={k}>
                         <th scope="row">{fieldLabel(k)}</th>
-                        <td className="ih-old">{show(e.previous_values?.[k])}</td>
+                        <td className="ih-old">{show(e.previous_values?.[k], k, people)}</td>
                         <td className="ih-arrow" aria-hidden>→</td>
-                        <td className="ih-new">{show(e.changes?.[k])}</td>
+                        <td className="ih-new">{show(e.changes?.[k], k, people)}</td>
                       </tr>
                     ))}
                   </tbody>

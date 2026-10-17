@@ -10,6 +10,7 @@ import { computeTakeoff, type Condition, type ComputeOpts, type RateOverrides, t
 import { grossSF, lengthLF, calibrationSanity } from '@/lib/takeoff/measure';
 import { learnTenantRates } from '@/lib/takeoff-learn';
 import { hasFeature } from '@/lib/entitlements-server';
+import { canSaveComplete } from '@/lib/takeoff-status';
 
 export const runtime = 'nodejs';
 
@@ -97,6 +98,10 @@ export async function POST(req: NextRequest) {
   // server-side calibration integrity check (never trusts the client scale blindly) —
   // each condition verifies against ITS sheet's scale (ppf / sheetScales), not one global
   const cal = verifyCalibration(conditions, pxPerFt, imgW, imgH, sheetScales);
+
+  // Saved as complete only with something measured in it (lib/takeoff-status).
+  const canSave = canSaveComplete(r.lines.length);
+  if (!canSave.ok) return Response.json({ error: canSave.message }, { status: 400 });
 
   const { data: takeoff, error: tErr } = await supabase.from('takeoffs').insert({
     project_id: projectId, tenant_id: user.tenantId, name: name || 'Measured takeoff',

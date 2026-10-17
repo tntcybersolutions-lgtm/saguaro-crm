@@ -7,6 +7,7 @@ import { loadBudgetRollup, budgetTotals } from '@/lib/budget-rollup';
 import { contractMoney } from '@/lib/job-contract';
 import { retainageRate } from '@/lib/retainage';
 import { isScheduleDone } from '@/lib/schedule-status';
+import { isTakeoffComplete } from '@/lib/takeoff-status';
 import { receivableOnly } from '@/lib/invoice-direction';
 
 /**
@@ -40,7 +41,7 @@ export async function GET(req: NextRequest) {
 
   const [
     projectQ, contractsQ, cosQ, payAppsQ, budgetQ, subsQ, packagesQ,
-    invoicesQ, billsQ, posQ, rfisQ, submittalsQ, tasksQ, logQ, takeoffsQ, contactsQ, punchQ, proposalsQ, modelsQ, meetingsQ,
+    invoicesQ, billsQ, posQ, rfisQ, submittalsQ, tasksQ, logQ, takeoffsQ, contactsQ, punchQ, proposalsQ, modelsQ, meetingsQ, takeoffCountsQ,
   ] = await Promise.all([
     safe(db.from('projects').select('id, name, color, status, closeout_date, address, project_number, owner_name, owner_email, architect_name, start_date, end_date, percent_complete, contract_amount, original_contract_amount, original_contract_value, original_contract, revised_contract_value, contract_value, retainage_pct, phase, setup_step, setup_complete').eq('id', projectId).eq('tenant_id', t).single()),
     safe(db.from('contracts').select('id, contract_type, title, party_name, vendor_name, amount, contract_amount, original_amount, approved_changes, invoiced_amount, paid_amount, status, retainage_pct, trade').eq('project_id', projectId).eq('tenant_id', t)),
@@ -87,6 +88,9 @@ export async function GET(req: NextRequest) {
       .or('file_name.ilike.%.ifc,file_name.ilike.%.glb,file_name.ilike.%.gltf')),
     /* Meetings on the job — shows the Meetings tool in the rail once one exists. */
     safe(db.from('meetings').select('id', { count: 'exact', head: true }).eq('project_id', projectId).eq('tenant_id', t)),
+    /* Measured items per takeoff — a takeoff marked complete with nothing in it
+       is not done (lib/takeoff-status, view takeoff_item_counts). */
+    safe(db.from('takeoff_item_counts' as any).select('takeoff_id, items').eq('project_id', projectId).eq('tenant_id', t)),
   ]);
 
   const p = (projectQ as any)?.data ?? null;
@@ -198,7 +202,8 @@ export async function GET(req: NextRequest) {
        and the bid packages needs to know, and nothing else was reporting it. */
     takeoff: (() => {
       const rows = ((takeoffsQ as any)?.data ?? []) as Array<{ id: string; status: string; total_cost: unknown; contingency_pct: unknown; page_count: unknown }>;
-      const done = rows.find((r) => r.status === 'complete') ?? null;
+      const counts = new Map(((((takeoffCountsQ as any)?.data ?? []) as Array<{ takeoff_id: string; items: unknown }>)).map((c) => [c.takeoff_id, N(c.items)]));
+      const done = rows.find((r) => isTakeoffComplete(r.status, counts.get(r.id) ?? 0)) ?? null;
       const pricedTotal = N(done?.total_cost);
       /* The BID PRICE the takeoff screen headlines, computed the same way that
          screen does (app/app/projects/[projectId]/takeoff/page.tsx computedCosts):
