@@ -13,6 +13,7 @@
  */
 
 import React, { useState, useEffect, useMemo, useCallback } from 'react';
+import { apiErrorFrom } from '@/lib/api-refusal';
 import { humanError } from '@/lib/errors';
 import {
   PremiumSurface, ModuleHero, SectionCard, StatStrip, IconChip, Pill,
@@ -439,7 +440,7 @@ export default function ReportBuilderPage() {
           }))),
         }),
       });
-      if (!r.ok) throw new Error('Export failed');
+      if (!r.ok) throw await apiErrorFrom(r, 'Export failed');
       const blob = await r.blob();
       const base = `${title.replace(/[^\w.-]+/g, '_')}_${new Date().toISOString().slice(0, 10)}`;
       downloadBlob(blob, `${base}.${format === 'xlsx' ? 'xlsx' : format}`);

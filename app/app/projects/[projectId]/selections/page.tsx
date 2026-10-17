@@ -12,6 +12,7 @@
  * Options          components/selections/SelectionOptions (client choices)
  */
 import { useProjectContext } from '@/lib/hooks/useProjectContext';
+import { apiErrorFrom } from '@/lib/api-refusal';
 import { confirmDialog } from '@/lib/ui/async-dialog';
 import React, { useState, useEffect, useCallback, useRef } from 'react';
 import { humanError } from '@/lib/errors';
@@ -123,7 +124,7 @@ export default function SelectionsPage(){
       setLoadError('');
       const h=await getAuthHeaders();
       const r=await fetch(`/api/selections/list?projectId=${projectId}`,{headers:h});
-      if (!r.ok) throw new Error('Failed to load data');
+      if (!r.ok) throw await apiErrorFrom(r, 'Failed to load data');
       const d=await r.json();
       // The DB uses item_name / selected_amount; this page reads item / cost.
       // Alias them so a saved selection's name + cost render on reload (the rest
@@ -207,7 +208,7 @@ export default function SelectionsPage(){
         method:'PUT',headers:{...h,'Content-Type':'application/json'},
         body:JSON.stringify({owner_approved:true,status:'selected'}),
       });
-      if (!ar.ok) throw new Error('Approval failed');
+      if (!ar.ok) throw await apiErrorFrom(ar, 'Approval failed');
       showToast('Owner approval recorded');await load();
     }catch(e:any){console.error(e);showToast(humanError(e,'Something went wrong. Please try again.'),'error');}
   }
@@ -218,7 +219,7 @@ export default function SelectionsPage(){
     try{
       const h=await getAuthHeaders();
       const dr=await fetch(`/api/selections/${item.id}`,{method:'DELETE',headers:h});
-      if (!dr.ok) throw new Error('Delete failed');
+      if (!dr.ok) throw await apiErrorFrom(dr, 'Delete failed');
       showToast('Selection deleted');closePanel();await load();
     }catch{showToast('Delete failed','error');}
     finally{setDeleting(false);}

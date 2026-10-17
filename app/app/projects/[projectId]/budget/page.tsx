@@ -11,8 +11,10 @@
  * Money is summed in integer cents (lib/calc) so totals never drift.
  */
 import React, { useCallback, useState, useEffect, useMemo } from 'react';
+import { IfAllowed } from '@/lib/hooks/usePermissions';
 import { useParams } from 'next/navigation';
 import { useProjectContext } from '@/lib/hooks/useProjectContext';
+import { apiErrorFrom, errorText, isRefusal } from '@/lib/api-refusal';
 import { humanError } from '@/lib/errors';
 import {
   WarningCircle, ClipboardText, Handshake, Hourglass, ChartLineUp, Plus, DownloadSimple,
@@ -68,6 +70,7 @@ export default function BudgetPage() {
   const [contract, setContract] = useState(0);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
+  const [refused, setRefused] = useState(false);
   const [showAddForm, setShowAddForm] = useState(false);
   const [addForm, setAddForm] = useState<AddLineForm>({ cost_code: '', description: '', original_budget: '' });
   const [adding, setAdding] = useState(false);
@@ -103,13 +106,14 @@ export default function BudgetPage() {
     setError('');
     try {
       const r = await fetch(`/api/projects/${projectId}/budget`);
-      if (!r.ok) { console.error('budget load failed', r.status); throw new Error('Request failed'); }
+      if (!r.ok) { console.error('budget load failed', r.status); throw await apiErrorFrom(r, "Couldn't load the budget. Please try again."); }
       const d = await r.json();
       setLines(Array.isArray(d.lines) ? d.lines : []);
       setContract(Number(d.contract) || 0);
     } catch (e) {
       console.error(e);
-      setError(humanError(e, 'Failed to load the budget. Please try again.'));
+      setRefused(isRefusal(e));
+      setError(errorText(e, "Couldn't load the budget. Please try again."));
     } finally {
       setLoading(false);
     }
@@ -244,7 +248,7 @@ export default function BudgetPage() {
     setLines(prev => prev.filter(l => l.id !== id));
     try {
       const r = await fetch(`/api/projects/${projectId}/budget`, { method: 'PATCH', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ id, _delete: true }) });
-      if (!r.ok) throw new Error('delete failed');
+      if (!r.ok) throw await apiErrorFrom(r, 'delete failed');
       show('Budget line deleted.');
     } catch (e) { console.error(e); show('Could not delete the budget line. Please try again.', 'bad'); void load(true); }
   }
@@ -395,8 +399,8 @@ export default function BudgetPage() {
       subtitle="Committed, actual and forecast by CSI cost code."
       actions={
         <>
-          <Button icon={<DownloadSimple size={15} />} onClick={exportReport} disabled={exporting || loading || lines.length === 0}>{exporting ? 'Exporting…' : 'Export job cost'}</Button>
-          <Button variant="primary" icon={<Plus size={15} weight="bold" />} onClick={openAdd} disabled={loading || !!error}>Add line</Button>
+          <IfAllowed perm={['Budget', 'View']}><Button icon={<DownloadSimple size={15} />} onClick={exportReport} disabled={exporting || loading || lines.length === 0}>{exporting ? 'Exporting…' : 'Export job cost'}</Button></IfAllowed>
+          <IfAllowed perm={['Budget', 'Edit']}><Button variant="primary" icon={<Plus size={15} weight="bold" />} onClick={openAdd} disabled={loading || !!error}>Add line</Button></IfAllowed>
         </>
       }
     >
@@ -404,14 +408,14 @@ export default function BudgetPage() {
       {!error && <StatRow items={stats} />}
 
       {error ? (
-        <EmptyState icon={<WarningCircle size={22} />} title="Couldn't load the budget" text={error} action={<Button onClick={() => void load()}>Try again</Button>} />
+        <EmptyState icon={<WarningCircle size={22} />} title={refused ? "You don't have access to the budget" : "Couldn't load the budget"} text={error} action={refused ? undefined : <Button onClick={() => void load()}>Try again</Button>} />
       ) : !loading && lines.length === 0 ? (
         <>
           <EmptyState
             icon={<ClipboardText size={22} />}
             title="No budget lines yet"
             text="Add the first cost code to start job costing on this project."
-            action={<Button variant="primary" icon={<Plus size={15} weight="bold" />} onClick={openAdd}>Add line</Button>}
+            action={<IfAllowed perm={['Budget', 'Edit']}><Button variant="primary" icon={<Plus size={15} weight="bold" />} onClick={openAdd}>Add line</Button></IfAllowed>}
           />
           {seedablePackages.length > 0 ? (
             <Card

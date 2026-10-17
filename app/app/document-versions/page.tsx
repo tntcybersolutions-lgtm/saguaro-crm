@@ -23,6 +23,7 @@
  */
 
 import React, { useState, useEffect, useCallback, useMemo, useRef } from 'react';
+import { retryText } from '@/lib/api-refusal';
 import { openPdf } from '@/components/PdfViewer';
 import { useProjects } from '@/lib/hooks/useProjects';
 import { humanError } from '@/lib/errors';
@@ -675,7 +676,7 @@ export default function DocumentVersionsPage() {
   // ─── Register body ───
   let body: React.ReactNode;
   if (!loading && error) {
-    body = <EmptyState icon={<WarningCircle size={22} />} title="Couldn't load documents" text={`${error} Nothing has been lost — try again.`} action={<Button icon={<ArrowsClockwise size={15} />} onClick={load}>Retry</Button>} />;
+    body = <EmptyState icon={<WarningCircle size={22} />} title="Couldn't load documents" text={retryText(error)} action={<Button icon={<ArrowsClockwise size={15} />} onClick={load}>Retry</Button>} />;
   } else if (!loading && documents.length === 0 && statusFilter !== 'Archived') {
     body = (
       <EmptyState

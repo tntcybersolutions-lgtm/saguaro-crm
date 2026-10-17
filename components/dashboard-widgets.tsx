@@ -12,6 +12,7 @@
  * empty state, never a fabricated number.
  */
 import React from 'react';
+import { apiErrorFrom } from '@/lib/api-refusal';
 import useSWR from 'swr';
 import {
   ChartBar, CurrencyDollar, CalendarBlank, HardHat, Clipboard, Files,
@@ -83,7 +84,7 @@ export interface WidgetMetrics {
 
 const fetcher = async (url: string) => {
   const r = await fetch(url);
-  if (!r.ok) throw new Error(`Request failed (${r.status})`);
+  if (!r.ok) throw await apiErrorFrom(r, `Request failed (${r.status})`);
   return r.json();
 };
 

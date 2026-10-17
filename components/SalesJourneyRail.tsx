@@ -23,6 +23,7 @@
  * still ahead.
  */
 import React, { useState, useEffect } from 'react';
+import { apiErrorFrom } from '@/lib/api-refusal';
 import useSWR from 'swr';
 import Link from 'next/link';
 import { Handshake, CaretDown, CaretUp, Check, ArrowRight } from '@phosphor-icons/react';
@@ -43,7 +44,7 @@ const LS_KEY = 'sag_sales_journey_collapsed_v1';
 
 const fetcher = async (url: string) => {
   const r = await fetch(url);
-  if (!r.ok) throw new Error(`Request failed (${r.status})`);
+  if (!r.ok) throw await apiErrorFrom(r, `Request failed (${r.status})`);
   return r.json();
 };
 

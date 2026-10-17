@@ -5,7 +5,8 @@
  * app/app/leads/[id]; this board's detail modal is the quick look.
  */
 import { jsonRequest } from '@/lib/list-view';
-import { useEditRights } from '@/lib/hooks/usePermissions';
+import { apiErrorFrom } from '@/lib/api-refusal';
+import { useEditRights, IfAllowed } from '@/lib/hooks/usePermissions';
 import React, { useState, useEffect, useMemo, useCallback } from 'react';
 import { useRouter } from 'next/navigation';
 import { Plus, DownloadSimple, ArrowRight, PencilSimple, Trash, Eye, EnvelopeSimple, Globe } from '@phosphor-icons/react';
@@ -159,7 +160,7 @@ export default function LeadsPage() {
     try {
       setLoading(true);
       const r = await fetch('/api/leads');
-      if (!r.ok) throw new Error('Failed to load leads');
+      if (!r.ok) throw await apiErrorFrom(r, 'Failed to load leads');
       const d = await r.json();
       // DB rows come back with email/phone columns — surface them under the
       // names the page renders so contact info never shows blank.
@@ -190,7 +191,7 @@ export default function LeadsPage() {
     setActLoading(true);
     try {
       const r = await fetch(`/api/leads/${leadId}/activities`);
-      if (!r.ok) throw new Error('Failed to load activities');
+      if (!r.ok) throw await apiErrorFrom(r, 'Failed to load activities');
       const d = await r.json();
       setActivities(d.activities ?? []);
       setActError('');
@@ -357,7 +358,7 @@ export default function LeadsPage() {
     setDeleting(true);
     try {
       const r = await fetch(`/api/leads/${id}`, { method: 'DELETE' });
-      if (!r.ok) throw new Error('Delete failed');
+      if (!r.ok) throw await apiErrorFrom(r, 'Delete failed');
       setLeads(prev => prev.filter(l => l.id !== id));
       if (detailLead?.id === id) setDetailLead(null);
       setConfirmDelete(null);
@@ -558,7 +559,7 @@ export default function LeadsPage() {
               { label: 'Export CSV', icon: <DownloadSimple size={14} />, onClick: exportCSV, disabled: filtered.length === 0 },
             ]}
           />
-          <Button variant="primary" icon={<Plus size={15} weight="bold" />} onClick={() => openEditor(emptyLead())}>New lead</Button>
+          <IfAllowed perm={['Sales', 'Edit']}><Button variant="primary" icon={<Plus size={15} weight="bold" />} onClick={() => openEditor(emptyLead())}>New lead</Button></IfAllowed>
         </>
       }
     >

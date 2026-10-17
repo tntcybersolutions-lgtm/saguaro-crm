@@ -9,6 +9,7 @@
  * page unmounts, which frees the GPU buffers and the WebGL context.
  */
 import React, { useCallback, useEffect, useRef, useState } from 'react';
+import { apiErrorFrom } from '@/lib/api-refusal';
 import {
   CornersOut, Scissors, Ruler, EyeSlash, Eye, Camera, Crosshair, Stack, WarningCircle, X, ArrowCounterClockwise,
 } from '@phosphor-icons/react';
@@ -51,7 +52,7 @@ type Phase =
 
 async function download(url: string, onPct: (p: number | null) => void, signal: AbortSignal): Promise<ArrayBuffer> {
   const res = await fetch(url, { signal });
-  if (!res.ok) throw new Error(`Failed to load (status ${res.status})`);
+  if (!res.ok) throw await apiErrorFrom(res, `Failed to load (status ${res.status})`);
   const total = Number(res.headers.get('content-length')) || 0;
   if (total > MAX_MODEL_BYTES) {
     throw new Error(`This model is too large to open here (${formatBytes(total)}). The limit is ${formatBytes(MAX_MODEL_BYTES)}.`);

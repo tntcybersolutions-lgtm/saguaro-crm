@@ -1,6 +1,7 @@
 'use client';
 import { jsonRequest } from '@/lib/list-view';
-import { useEditRights } from '@/lib/hooks/usePermissions';
+import { apiErrorFrom } from '@/lib/api-refusal';
+import { useEditRights, IfAllowed } from '@/lib/hooks/usePermissions';
 import { useProjectContext, refreshProjectContext } from '@/lib/hooks/useProjectContext';
 import React, { useState, useEffect, useCallback, useMemo } from 'react';
 import { humanError } from '@/lib/errors';
@@ -164,7 +165,7 @@ export default function SubsPage() {
         return (d.subs || []) as JobSub[];
       }),
       fetch('/api/subs/list').then(async (r) => {
-        if (!r.ok) throw new Error('directory');
+        if (!r.ok) throw await apiErrorFrom(r, 'directory');
         const d = await r.json();
         return ((d.subs || d.data || []) as any[]).map(normalizeDir);
       }),
@@ -421,7 +422,7 @@ export default function SubsPage() {
     // A failed read is not an empty job.
     body = <EmptyState icon={<WarningCircle size={22} />} title="Couldn’t load this job’s subcontractors" text={loadError} action={<Button onClick={() => load()}>Try Again</Button>} />;
   } else if (!loading && !loadError && subs.length === 0) {
-    body = <EmptyState icon={<Handshake size={22} />} title="No subcontractors on this job yet" text="Add the first company to start the roster." action={<Button icon={<Plus size={15} weight="bold" />} onClick={openForm}>Add Subcontractor</Button>} />;
+    body = <EmptyState icon={<Handshake size={22} />} title="No subcontractors on this job yet" text="Add the first company to start the roster." action={<IfAllowed perm={['Projects', 'Edit']}><Button icon={<Plus size={15} weight="bold" />} onClick={openForm}>Add Subcontractor</Button></IfAllowed>} />;
   } else {
     body = (
       <DataTable<JobSub>
@@ -469,7 +470,7 @@ export default function SubsPage() {
                 { label: 'Bid Packages', icon: <Gavel size={15} />, href: `${base}/bid-packages` },
               ]}
             />
-            <Button variant="primary" icon={<Plus size={15} weight="bold" />} onClick={openForm}>Add Subcontractor</Button>
+            <IfAllowed perm={['Projects', 'Edit']}><Button variant="primary" icon={<Plus size={15} weight="bold" />} onClick={openForm}>Add Subcontractor</Button></IfAllowed>
           </>
         }
       >

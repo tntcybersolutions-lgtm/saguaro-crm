@@ -30,6 +30,7 @@
  * shape is unchanged: resolved work_* names per line).
  */
 import React, { useState, useEffect, useCallback } from 'react';
+import { retryText } from '@/lib/api-refusal';
 import { useProjectContext } from '@/lib/hooks/useProjectContext';
 import { humanError } from '@/lib/errors';
 import { useParams, useRouter } from 'next/navigation';
@@ -469,7 +470,7 @@ export default function PayAppDetailPage() {
           <EmptyState
             icon={loadError ? <WarningCircle size={22} /> : <Clipboard size={22} />}
             title={loadError ? "Couldn't load the pay application" : 'Pay application not found'}
-            text={loadError ? `${loadError} Nothing has been lost — try again.` : "We couldn't find this pay application. It may have been removed, or the link is out of date."}
+            text={loadError ? retryText(loadError) : "We couldn't find this pay application. It may have been removed, or the link is out of date."}
             action={<div style={{ display: 'flex', gap: 8, flexWrap: 'wrap', justifyContent: 'center' }}>{loadError && <Button onClick={load}>Retry</Button>}<Button icon={<ArrowLeft size={15} />} href={`/app/projects/${projectId}/pay-apps`}>Back to Pay Applications</Button></div>}
           />
         </Card>

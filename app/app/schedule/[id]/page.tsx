@@ -11,6 +11,7 @@
  * Uses @phosphor-icons/react (no emoji), consistent with the rest of the app.
  */
 import React, { useState, useEffect, useCallback } from 'react';
+import { apiErrorFrom } from '@/lib/api-refusal';
 import { humanError } from '@/lib/errors';
 import { isScheduleDone, normalizeScheduleStatus } from '@/lib/schedule-status';
 import { useParams, useRouter } from 'next/navigation';
@@ -88,7 +89,7 @@ export default function ScheduleTaskDetailPage() {
     setNotFound(false);
     try {
       const res = await fetch('/api/schedule/list');
-      if (!res.ok) throw new Error('Failed to load schedule');
+      if (!res.ok) throw await apiErrorFrom(res, 'Failed to load schedule');
       const data = await res.json();
       const list: ScheduleTask[] = Array.isArray(data)
         ? data

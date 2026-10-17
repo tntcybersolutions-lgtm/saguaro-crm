@@ -10,6 +10,7 @@
  * every read re-signs it.
  */
 import React, { useCallback, useEffect, useRef, useState } from 'react';
+import { apiErrorFrom } from '@/lib/api-refusal';
 import { Plus, Trash, Star, ImageSquare, Storefront } from '@phosphor-icons/react';
 import { getAuthHeaders } from '@/lib/supabase-browser';
 import { uploadPhoto } from '@/lib/media-upload';
@@ -92,7 +93,7 @@ export default function SelectionOptions({ selectionId, projectId, allowance, pe
     if (!(await confirmDialog({ title: 'Remove this option?', message: `"${o.name}" will no longer be offered to the client.`, danger: true }))) return;
     try {
       const r = await fetch(`/api/selections/${selectionId}/options/${o.id}`, { method: 'DELETE', headers: await getAuthHeaders() });
-      if (!r.ok) throw new Error('remove failed');
+      if (!r.ok) throw await apiErrorFrom(r, 'remove failed');
       setOptions((prev) => prev.filter((x) => x.id !== o.id));
     } catch {
       onToast('Could not remove the option.', 'error');

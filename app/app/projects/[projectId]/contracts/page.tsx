@@ -8,7 +8,7 @@
  * Upload  POST /api/contracts/:id/upload    (the signed copy; FormData { file })
  */
 import { itemBulkEdit } from '@/lib/items/bulk';
-import { useEditRights } from '@/lib/hooks/usePermissions';
+import { useEditRights, IfAllowed } from '@/lib/hooks/usePermissions';
 import React, { useState, useEffect, useCallback, useRef } from 'react';
 import { useParams } from 'next/navigation';
 import { humanError } from '@/lib/errors';
@@ -376,7 +376,7 @@ export default function ContractsPage() {
       actions={
         <>
           {/* "Record existing" logs a contract papered elsewhere — a different job from papering one here. */}
-          <Button variant="ghost" icon={<NotePencil size={15} />} onClick={openRecord}>Record existing</Button>
+          <IfAllowed perm={['Budget', 'Edit']}><Button variant="ghost" icon={<NotePencil size={15} />} onClick={openRecord}>Record existing</Button></IfAllowed>
           <Menu
             triggerLabel="Other templates"
             triggerIcon={<Files size={15} />}
@@ -397,7 +397,7 @@ export default function ContractsPage() {
             text={unpapered.slice(0, 3).map((b: any) => `${b.name} — ${b.awardedTo} (${fmt(Number(b.awardedAmount) || 0)})`).join(' · ') + (unpapered.length > 3 ? ` · +${unpapered.length - 3} more` : '')}
             actions={
               <>
-                <Button size="sm" variant="ghost" onClick={openRecord}>Record existing</Button>
+                <IfAllowed perm={['Budget', 'Edit']}><Button size="sm" variant="ghost" onClick={openRecord}>Record existing</Button></IfAllowed>
                 <Button size="sm" href={`${base}/contracts/new/subcontract`}>Paper a subcontract</Button>
               </>
             }

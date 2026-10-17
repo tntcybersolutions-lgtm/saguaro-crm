@@ -28,6 +28,7 @@
  * which are vendors a GC contracts with.
  */
 import React, { useState, useEffect, useMemo, useCallback } from 'react';
+import { apiErrorFrom } from '@/lib/api-refusal';
 import { DataTable, type Column } from '@/components/ui/kit';
 import { StatusPill } from '@/components/ui/Status';
 import Link from 'next/link';
@@ -109,7 +110,7 @@ export default function SubsAndVendorsPage() {
     setError(null);
     try {
       const r = await fetch('/api/subcontractors');
-      if (!r.ok) throw new Error('Could not load your directory.');
+      if (!r.ok) throw await apiErrorFrom(r, 'Could not load your directory.');
       const d = await r.json();
       setSubs(Array.isArray(d.subs) ? d.subs : []);
     } catch (e) {

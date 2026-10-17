@@ -18,6 +18,7 @@
  *   delete  DELETE /api/submittals/[id]
  */
 import { itemBulkEdit } from '@/lib/items/bulk';
+import { retryText, apiErrorFrom } from '@/lib/api-refusal';
 import { useEditRights } from '@/lib/hooks/usePermissions';
 import { useProjectContext } from '@/lib/hooks/useProjectContext';
 import { confirmDialog } from '@/lib/ui/async-dialog';
@@ -178,7 +179,7 @@ export default function SubmittalsPage(){
       setLoadError('');
       const h=await getAuthHeaders();
       const r=await fetch(`/api/submittals/list?projectId=${projectId}`,{headers:h});
-      if (!r.ok) throw new Error('Failed to load data');
+      if (!r.ok) throw await apiErrorFrom(r, 'Failed to load data');
       const d=await r.json();
       setSubmittals(d.submittals||[]);
     }catch{setSubmittals([]);setLoadError('Failed to load. Please try again.');}
@@ -268,7 +269,7 @@ export default function SubmittalsPage(){
     try{
       const h=await getAuthHeaders();
       const dr=await fetch(`/api/submittals/${sub.id}`,{method:'DELETE',headers:h});
-      if (!dr.ok) throw new Error('Delete failed');
+      if (!dr.ok) throw await apiErrorFrom(dr, 'Delete failed');
       showToast('Submittal deleted.');closePanel();await load();
     }catch{showToast('Delete failed.','bad');}
     finally{setDeleting(false);}
@@ -463,7 +464,7 @@ export default function SubmittalsPage(){
   // ── Log body ──
   let listBody: React.ReactNode;
   if (!loading && loadError) {
-    listBody = <EmptyState icon={<WarningCircle size={22}/>} title="Couldn't load submittals" text={`${loadError} Nothing has been lost — try again.`} action={<Button icon={<ArrowClockwise size={15}/>} onClick={load}>Retry</Button>}/>;
+    listBody = <EmptyState icon={<WarningCircle size={22}/>} title="Couldn't load submittals" text={retryText(loadError)} action={<Button icon={<ArrowClockwise size={15}/>} onClick={load}>Retry</Button>}/>;
   } else if (!loading && submittals.length===0) {
     listBody = (
       <EmptyState

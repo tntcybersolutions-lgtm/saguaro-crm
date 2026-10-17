@@ -19,6 +19,7 @@
  * cells render what the engine returned or an em-dash.
  */
 import React, { useState, useEffect, useRef, useCallback } from 'react';
+import { apiErrorFrom } from '@/lib/api-refusal';
 import { CurrencyDollar, ChartBar, Clipboard, ArrowsClockwise, Lock, ShieldCheck, CalendarBlank, CheckCircle, HardHat, Warning, Package, Clock, ArrowRight, X, Sparkle } from '@phosphor-icons/react';
 import {
   PageShell, Card, Badge, Button, Input, Select, DataTable, EmptyState, Toast, useToast,
@@ -387,7 +388,7 @@ export default function ReportsPage() {
           ...(format === 'pdf' ? { logoUrl: branding.logo_url || undefined } : {}),
         }),
       });
-      if (!res.ok) throw new Error('Export failed');
+      if (!res.ok) throw await apiErrorFrom(res, 'Export failed');
       const blob = await res.blob();
       downloadBlob(blob, `${reportResult.title.replace(/\s+/g, '-')}-${today()}.${format}`);
       show(`${format.toUpperCase()} downloaded.`);

@@ -9,6 +9,7 @@
  * never shows dead $0 space on a job that has real contract money.
  */
 import React, { useState, useEffect, Suspense } from 'react';
+import { apiErrorFrom } from '@/lib/api-refusal';
 import { useProjectContext } from '@/lib/hooks/useProjectContext';
 import { useParams } from 'next/navigation';
 import { ModuleSkeleton } from '@/components/ui/PageSkeleton';
@@ -111,7 +112,7 @@ function CashFlowContent() {
     setError('');
     try {
       const r = await fetch(`/api/projects/${projectId}/cash-flow`);
-      if (!r.ok) throw new Error('Failed to load');
+      if (!r.ok) throw await apiErrorFrom(r, 'Failed to load');
       const d = await r.json();
       // DB numerics can round-trip as strings — coerce every money field once
       // on ingest so chart math and totals never string-concat dollars.

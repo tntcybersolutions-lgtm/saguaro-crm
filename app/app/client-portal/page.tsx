@@ -1,5 +1,6 @@
 'use client';
 import { StatusPill } from '@/components/ui/Status';
+import { apiErrorFrom } from '@/lib/api-refusal';
 import React, { useState, useEffect, useMemo, useCallback, useRef } from 'react';
 import { useProjects } from '@/lib/hooks/useProjects';
 import { humanError } from '@/lib/errors';
@@ -177,7 +178,7 @@ export default function ClientPortalPage() {
   const fetchPortalUsers = useCallback(async () => {
     try {
       const r = await fetch('/api/client-portal/users');
-      if (!r.ok) throw new Error('Failed to load portal users');
+      if (!r.ok) throw await apiErrorFrom(r, 'Failed to load portal users');
       const d = await r.json();
       const raw = Array.isArray(d) ? d : (d.users ?? d.data ?? []);
       setUsers((Array.isArray(raw) ? raw : []).map(normalizeUser));
@@ -187,7 +188,7 @@ export default function ClientPortalPage() {
   const fetchMessages = useCallback(async () => {
     try {
       const r = await fetch('/api/client-portal/messages');
-      if (!r.ok) throw new Error('Failed to load messages');
+      if (!r.ok) throw await apiErrorFrom(r, 'Failed to load messages');
       const d = await r.json();
       const raw = Array.isArray(d) ? d : (d.messages ?? d.data ?? []);
       setMessages(Array.isArray(raw) ? raw : []);
@@ -197,7 +198,7 @@ export default function ClientPortalPage() {
   const fetchActivity = useCallback(async () => {
     try {
       const r = await fetch('/api/client-portal/activity');
-      if (!r.ok) throw new Error('Failed to load activity');
+      if (!r.ok) throw await apiErrorFrom(r, 'Failed to load activity');
       const d = await r.json();
       const raw = Array.isArray(d) ? d : (d.entries ?? d.data ?? []);
       setActLog(Array.isArray(raw) ? raw : []);
@@ -336,7 +337,7 @@ export default function ClientPortalPage() {
         method: 'POST', headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ users: entries }),
       });
-      if (!r.ok) throw new Error('Bulk invite failed');
+      if (!r.ok) throw await apiErrorFrom(r, 'Bulk invite failed');
       const d = await r.json();
       const created: PortalUser[] = (d.users ?? entries).map((u: any) => ({
         id: u.id || uid(), name: u.name, email: u.email, company: u.company || '',

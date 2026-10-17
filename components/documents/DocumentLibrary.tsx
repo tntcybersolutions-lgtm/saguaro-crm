@@ -10,6 +10,7 @@
  * Go to Record. Nothing here writes data.
  */
 import React, { useCallback, useEffect, useMemo, useState } from 'react';
+import { apiErrorFrom } from '@/lib/api-refusal';
 import Link from 'next/link';
 import { Eye, DownloadSimple, ArrowSquareOut, MagnifyingGlass, CaretDown, CaretRight, WarningCircle, Rows, FolderSimple } from '@phosphor-icons/react';
 import { openPdf } from '@/components/PdfViewer';
@@ -96,7 +97,7 @@ export default function DocumentLibrary({ externalQuery = '', jobId = null }: { 
   const downloadOne = async (doc: LibDoc) => {
     const url = await signedUrl(doc);
     const r = await fetch(url);
-    if (!r.ok) throw new Error('The file could not be downloaded.');
+    if (!r.ok) throw await apiErrorFrom(r, 'The file could not be downloaded.');
     const blob = await r.blob();
     const a = document.createElement('a');
     a.href = URL.createObjectURL(blob);

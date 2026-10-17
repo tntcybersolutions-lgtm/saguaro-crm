@@ -15,6 +15,7 @@
  * anchor and the ?new=1 deep link are unchanged.
  */
 import React, { useState, useEffect, useCallback, useMemo } from 'react';
+import { retryText, apiErrorFrom } from '@/lib/api-refusal';
 import { useProjectContext } from '@/lib/hooks/useProjectContext';
 import { useUnsavedGuard } from '@/lib/useUnsavedGuard';
 import UnsavedGuardModal from '@/components/UnsavedGuardModal';
@@ -197,7 +198,7 @@ export default function DailyLogsPage() {
   const fetchLogs = useCallback(async () => {
     try {
       const res = await fetch('/api/daily-logs/list');
-      if (!res.ok) throw new Error('Failed to load daily logs');
+      if (!res.ok) throw await apiErrorFrom(res, 'Failed to load daily logs');
       const data = await res.json();
       const server: DailyLog[] = Array.isArray(data) ? data : data.logs ?? data.daily_logs ?? [];
       setLogs([...(await savedLogs()), ...server]);
@@ -497,7 +498,7 @@ export default function DailyLogsPage() {
       <EmptyState
         icon={<Warning size={22} />}
         title="Couldn't load daily logs"
-        text={`${error} Nothing has been lost — try again.`}
+        text={retryText(error)}
         action={<Button icon={<ArrowClockwise size={15} />} onClick={() => { setError(''); setLoading(true); fetchLogs(); }}>Retry</Button>}
       />
     );

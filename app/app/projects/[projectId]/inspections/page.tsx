@@ -22,6 +22,7 @@
  * Record Result form (the Home queue's "Record Result" lands here).
  */
 import { itemBulkEdit } from '@/lib/items/bulk';
+import { retryText, apiErrorFrom } from '@/lib/api-refusal';
 import { useEditRights } from '@/lib/hooks/usePermissions';
 import React, { useState, useEffect, useCallback, useRef } from 'react';
 import { useOpenOnNew } from '@/lib/ui/open-on-new';
@@ -203,7 +204,7 @@ export default function InspectionsPage() {
     setLoadError('');
     try {
       const res = await fetch(`/api/projects/${projectId}/inspections`);
-      if (!res.ok) throw new Error('Failed to load');
+      if (!res.ok) throw await apiErrorFrom(res, 'Failed to load');
       const json = await res.json();
       setInspections((json.inspections ?? []).map(normalizeInspection));
     } catch {
@@ -488,7 +489,7 @@ export default function InspectionsPage() {
   // ── Log body ──
   let listBody: React.ReactNode;
   if (!loading && loadError) {
-    listBody = <EmptyState icon={<Warning size={22} />} title="Couldn't load inspections" text={`${loadError} Nothing has been lost — try again.`} action={<Button onClick={fetchInspections}>Retry</Button>} />;
+    listBody = <EmptyState icon={<Warning size={22} />} title="Couldn't load inspections" text={retryText(loadError)} action={<Button onClick={fetchInspections}>Retry</Button>} />;
   } else if (!loading && inspections.length === 0) {
     listBody = (
       <div className="inEmptyGrid" data-ctx={ctx ? 'true' : 'false'}>

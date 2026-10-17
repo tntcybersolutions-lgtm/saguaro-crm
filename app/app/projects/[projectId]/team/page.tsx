@@ -14,6 +14,8 @@
  *   job access           GET/PUT /api/projects/[id]/access   (role on this job)
  */
 import React, { useState, useEffect } from 'react';
+import { apiErrorFrom } from '@/lib/api-refusal';
+import { IfAllowed } from '@/lib/hooks/usePermissions';
 import useSWR from 'swr';
 import { useProjectContext } from '@/lib/hooks/useProjectContext';
 import { useParams } from 'next/navigation';
@@ -276,7 +278,7 @@ export default function TeamPage(){
     { value: 'viewer',          label: 'Viewer' },
   ];
   const assignRoleLabel = (v: string) => ASSIGN_ROLES.find(r => r.value === v)?.label || String(v || '').replace(/_/g, ' ');
-  const waFetcher = (u: string) => fetch(u).then(r => { if (!r.ok) throw new Error(`Request failed (${r.status})`); return r.json(); });
+  const waFetcher = (u: string) => fetch(u).then(async r => { if (!r.ok) throw await apiErrorFrom(r, `Request failed (${r.status})`); return r.json(); });
   const { data: waData, mutate: mutateWa } = useSWR(projectId ? `/api/work-assignments?projectId=${projectId}` : null, waFetcher, { refreshInterval: 60_000 });
   const assignments: any[] = (Array.isArray(waData?.assignments) ? waData.assignments : []).filter((a: any) => (a?.status || 'active') === 'active');
   const assignmentsFor = (userId: string | null) => (userId ? assignments.filter(a => a?.assignee_user_id === userId) : []);
@@ -551,7 +553,7 @@ export default function TeamPage(){
             action={
               <span style={{ display: 'inline-flex', gap: 6, flexWrap: 'wrap', justifyContent: 'flex-end' }}>
                 {l.name && l.email && !memberEmails.has(l.email.toLowerCase()) && (
-                  <Button size="sm" icon={<UserPlus size={13} />} onClick={()=>inviteFromDirectory(l)}>Invite to Project</Button>
+                  <IfAllowed perm={['Admin', 'Full']}><Button size="sm" icon={<UserPlus size={13} />} onClick={()=>inviteFromDirectory(l)}>Invite to Project</Button></IfAllowed>
                 )}
                 {l.name
                   ? <Button size="sm" variant="ghost" icon={<PencilSimple size={13} />} onClick={()=>startEdit(l)}>Edit</Button>
@@ -573,7 +575,7 @@ export default function TeamPage(){
         icon={<UsersThree size={22} />}
         title="No team members yet"
         text={leadersAssigned > 0 ? `Invite the ${leadersAssigned} leadership role${leadersAssigned === 1 ? '' : 's'} from the directory.` : 'Invite your PM, superintendent and office staff.'}
-        action={<Button icon={<UserPlus size={15} weight="bold" />} onClick={openInvite}>Invite Member</Button>}
+        action={<IfAllowed perm={['Admin', 'Full']}><Button icon={<UserPlus size={15} weight="bold" />} onClick={openInvite}>Invite Member</Button></IfAllowed>}
       />
     );
   } else {
@@ -607,7 +609,7 @@ export default function TeamPage(){
       ]}
       title="Project Team"
       subtitle="Members, access, assignments and sub portal access."
-      actions={<Button variant="primary" icon={<UserPlus size={15} weight="bold" />} onClick={openInvite}>Invite Member</Button>}
+      actions={<IfAllowed perm={['Admin', 'Full']}><Button variant="primary" icon={<UserPlus size={15} weight="bold" />} onClick={openInvite}>Invite Member</Button></IfAllowed>}
     >
       <StatRow items={stats} />
 
@@ -673,7 +675,7 @@ export default function TeamPage(){
                 </div>
               </div>
             ) : (
-              <EmptyState title="Nobody to assign yet" text="Members can be assigned work once they accept their invite." primary={{ label: 'Invite Member', icon: <UserPlus size={15} weight="bold" />, onClick: openInvite }} />
+              <EmptyState title="Nobody to assign yet" text="Members can be assigned work once they accept their invite." primary={{ label: 'Invite Member', icon: <UserPlus size={15} weight="bold" />, onClick: openInvite }} perm={['Admin', 'Full']} />
             )}
           </Card>
         )}

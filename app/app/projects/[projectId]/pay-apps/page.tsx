@@ -29,6 +29,7 @@
  * (drag the grip beside the app number while no filter is on).
  */
 import { useEditRights } from '@/lib/hooks/usePermissions';
+import { retryText, apiErrorFrom } from '@/lib/api-refusal';
 import { jsonRequest } from '@/lib/list-view';
 import React, { useState, useEffect, useCallback } from 'react';
 import { useProjectContext } from '@/lib/hooks/useProjectContext';
@@ -212,7 +213,7 @@ export default function PayAppsPage() {
     setPayApps(prev => prev.filter(p => p.id !== id));
     try {
       const r = await fetch(`/api/pay-apps/${id}`, { method: 'DELETE' });
-      if (!r.ok) throw new Error('delete failed');
+      if (!r.ok) throw await apiErrorFrom(r, 'delete failed');
       setToast({ msg: 'Pay app deleted.', type: 'success' });
     } catch {
       setToast({ msg: 'Could not delete the pay app. Please try again.', type: 'error' });
@@ -342,7 +343,7 @@ export default function PayAppsPage() {
       <EmptyState
         icon={<WarningCircle size={22}/>}
         title="Couldn't load pay applications"
-        text={`${error} Nothing has been lost — try again.`}
+        text={retryText(error)}
         action={<Button icon={<ArrowClockwise size={15}/>} onClick={load}>Retry</Button>}
       />
     );
@@ -352,7 +353,7 @@ export default function PayAppsPage() {
         icon={<Clipboard size={22}/>}
         title={revised>0?`${fmt(revised)} under contract — nothing billed yet`:'No pay applications yet'}
         text={revised>0 && coTotal>0 ? `${fmt(original)} base + ${fmt(coTotal)} approved COs` : undefined}
-        action={<Button icon={<Plus size={15} weight="bold"/>} href={`/app/projects/${projectId}/pay-apps/new`}>Create Application #1</Button>}
+        action={payRights.edit ? <Button icon={<Plus size={15} weight="bold"/>} href={`/app/projects/${projectId}/pay-apps/new`}>Create Application #1</Button> : undefined}
       />
     );
   } else {
@@ -407,11 +408,11 @@ export default function PayAppsPage() {
         ]}
         title="Pay Applications"
         subtitle="AIA G702 / G703 billing"
-        actions={
+        actions={payRights.edit ? (
           <Button variant="primary" data-tour="new-pay-app" icon={<Plus size={15} weight="bold"/>} href={`/app/projects/${projectId}/pay-apps/new`}>
             New Pay Application
           </Button>
-        }
+        ) : undefined}
       >
         {!error && <StatRow items={stats}/>}
 

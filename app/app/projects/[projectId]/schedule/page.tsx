@@ -19,6 +19,7 @@
  *   baseline POST   /api/projects/[id]/schedule/baseline
  */
 import { jsonRequest } from '@/lib/list-view';
+import { apiErrorFrom } from '@/lib/api-refusal';
 import { useEditRights } from '@/lib/hooks/usePermissions';
 import React, { useState, useEffect, useLayoutEffect, useCallback, useRef, useMemo } from 'react';
 import { useOpenOnNew } from '@/lib/ui/open-on-new';
@@ -611,7 +612,7 @@ export default function SchedulePage() {
     try {
       const h = await getAuthHeaders();
       const dr = await fetch(`/api/schedule/${task.id}`, { method: 'DELETE', headers: h });
-      if (!dr.ok) throw new Error('Delete failed');
+      if (!dr.ok) throw await apiErrorFrom(dr, 'Delete failed');
       revalidate();
     } catch (e) { console.error(e); setTasks(prevTasks); showToast('Delete failed.', 'error'); }
     finally { setDeleting(false); }
@@ -631,7 +632,7 @@ export default function SchedulePage() {
         headers: { ...h, 'Content-Type': 'application/json' },
         body: JSON.stringify({ pct_complete: pct, status: newStatus }),
       });
-      if (!pr.ok) throw new Error('Update failed');
+      if (!pr.ok) throw await apiErrorFrom(pr, 'Update failed');
       revalidate();
     } catch (e: any) {
       setTasks(prev => prev.map((t: any) => t.id === task.id ? { ...t, pct_complete: prevPct, status: prevStatus } : t));

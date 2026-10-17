@@ -7,6 +7,7 @@
  * Messages) and go by email to everyone with portal access.
  */
 import React, { useCallback, useEffect, useState } from 'react';
+import { apiErrorFrom } from '@/lib/api-refusal';
 import { FormModal, Field, Input, Textarea, Button, Select } from '@/components/ui/kit';
 import { PaperPlaneTilt, Sparkle, Trash } from '@phosphor-icons/react';
 import { localDay } from '@/lib/calendar-day';
@@ -106,7 +107,7 @@ export default function OwnerUpdateModal({ projectId, open, onClose, onToast }: 
     setBusy('discard');
     try {
       const r = await fetch(`/api/projects/${projectId}/owner-updates/${draft.id}`, { method: 'DELETE' });
-      if (!r.ok) throw new Error('discard');
+      if (!r.ok) throw await apiErrorFrom(r, 'discard');
       setDraft(null);
       setTitle('');
       setBody('');

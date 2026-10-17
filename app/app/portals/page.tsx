@@ -16,6 +16,8 @@
  *   resend  POST /api/portal/resend-invite { sessionId, type }
  */
 import React, { useEffect, useState, useCallback } from 'react';
+import { retryText, apiErrorFrom } from '@/lib/api-refusal';
+import { IfAllowed } from '@/lib/hooks/usePermissions';
 import { confirmDialog } from '@/lib/ui/async-dialog';
 import { useProjects } from '@/lib/hooks/useProjects';
 import { CheckCircle, Plus, House, HardHat, Copy, ArrowSquareOut, PaperPlaneTilt, Prohibit, Envelope, WarningCircle } from '@phosphor-icons/react';
@@ -177,7 +179,7 @@ export default function PortalsPage() {
     setRevoking(sessionId);
     try {
       const res = await fetch('/api/portal/revoke', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ sessionId, type }) });
-      if (!res.ok) throw new Error('revoke failed');
+      if (!res.ok) throw await apiErrorFrom(res, 'revoke failed');
       show('Portal access revoked.');
       await loadData();
     } catch { show('Could not revoke access. Please try again.', 'bad'); }
@@ -333,7 +335,7 @@ export default function PortalsPage() {
   // ── Table body ──
   let body: React.ReactNode;
   if (!loading && loadError) {
-    body = <EmptyState icon={<WarningCircle size={22} />} title="Couldn't load portal sessions" text={`${loadError} Nothing has been lost — try again.`} action={<Button onClick={loadData}>Retry</Button>} />;
+    body = <EmptyState icon={<WarningCircle size={22} />} title="Couldn't load portal sessions" text={retryText(loadError)} action={<Button onClick={loadData}>Retry</Button>} />;
   } else if (tab === 'client') {
     body = !loading && clientSessions.length === 0
       ? <EmptyState icon={<House size={22} />} title="No client portal access yet" text="Give an owner a secure, no-password window into their project — progress, schedule, photos, and invoices — through one link you can revoke at any time. The invitation email sends itself." action={<Button icon={<Plus size={15} weight="bold" />} onClick={() => openInvite('client')}>Invite First Client</Button>} />
@@ -355,7 +357,7 @@ export default function PortalsPage() {
         subtitle="No-password links for owners and subs, one job each."
         actions={
           <>
-            <Button icon={<Plus size={15} weight="bold" />} onClick={() => openInvite('sub')}>Invite Subcontractor</Button>
+            <IfAllowed perm={['Projects', 'Full']}><Button icon={<Plus size={15} weight="bold" />} onClick={() => openInvite('sub')}>Invite Subcontractor</Button></IfAllowed>
             <Button variant="primary" data-tour="invite-client" icon={<Plus size={15} weight="bold" />} onClick={() => openInvite('client')}>Invite Client</Button>
           </>
         }

@@ -8,6 +8,7 @@
  * Done    PATCH /api/todos/:id/complete
  */
 import { jsonRequest } from '@/lib/list-view';
+import { apiErrorFrom } from '@/lib/api-refusal';
 import { useEditRights } from '@/lib/hooks/usePermissions';
 import React, { useState, useEffect, useCallback } from 'react';
 import { useOpenOnNew } from '@/lib/ui/open-on-new';
@@ -177,7 +178,7 @@ export default function TodosPage() {
           status: 'open',
         }),
       });
-      if (!res.ok) throw new Error('save failed');
+      if (!res.ok) throw await apiErrorFrom(res, 'save failed');
       const json = await res.json();
       if (!json.todo) throw new Error('save failed');
       const t = json.todo as TodoItem & { status?: string };
@@ -201,7 +202,7 @@ export default function TodosPage() {
     setTodos(prev => prev.map(t => t.id === id ? { ...t, complete: true } : t));
     try {
       const res = await fetch(`/api/todos/${id}/complete`, { method: 'PATCH' });
-      if (!res.ok) throw new Error('update failed');
+      if (!res.ok) throw await apiErrorFrom(res, 'update failed');
     } catch {
       show('Could not update the task. Please try again.', 'bad');
       fetchTodos();

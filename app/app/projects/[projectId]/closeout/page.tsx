@@ -11,6 +11,7 @@
  * Docs    POST /api/documents/g704 | g706 | closeout  { projectId } → openPdf
  */
 import React, { useState, useEffect } from 'react';
+import { apiErrorFrom } from '@/lib/api-refusal';
 import { useProjectContext } from '@/lib/hooks/useProjectContext';
 import { useParams } from 'next/navigation';
 import {
@@ -280,7 +281,7 @@ export default function CloseoutPage() {
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ items: newItems.map(i => ({ id: i.id, status: i.status })) }),
       });
-      if (!res.ok) throw new Error('save failed');
+      if (!res.ok) throw await apiErrorFrom(res, 'save failed');
     } catch {
       // Revert the optimistic toggle so the UI reflects what actually persisted.
       setItems(prevItems);

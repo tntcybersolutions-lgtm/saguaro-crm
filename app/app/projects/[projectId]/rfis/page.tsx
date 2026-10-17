@@ -17,6 +17,7 @@
  *   bulk     PATCH  /api/items/rfis/[id]  (status / ball in court / due, one per row — lib/items/bulk)
  */
 import { useEditRights } from '@/lib/hooks/usePermissions';
+import { retryText, apiErrorFrom } from '@/lib/api-refusal';
 import { itemBulkEdit } from '@/lib/items/bulk';
 import React, { useState, useEffect, useCallback, useRef } from 'react';
 import { confirmDialog } from '@/lib/ui/async-dialog';
@@ -416,13 +417,15 @@ export default function RFIsPage() {
     guard.requestClose(() => { setShowForm(false); setFormError(''); });
   }
 
+  /** The form opens only for someone whose role on this job can save it (RFIs: Edit). */
   function openCreate() {
+    if (!rights.edit) return;
     setFormError('');
     setShowForm(true);
   }
 
   // Photo-sheet shortcut (?new=1) lands in the new-RFI form.
-  useOpenOnNew(openCreate, !loading);
+  useOpenOnNew(openCreate, !loading && rights.resolved);
   // Search hit (?open=<id>) lands on that RFI's detail.
   useOpenRecord((id) => { const r = rfis.find(x => x.id === id); if (r) selectRfi(r); }, !loading);
 
@@ -595,7 +598,7 @@ export default function RFIsPage() {
     if (selectedId === rfi.id) setSelectedId(null);
     try {
       const res = await fetch(`/api/rfis/${rfi.id}`, { method: 'DELETE' });
-      if (!res.ok) throw new Error('delete failed');
+      if (!res.ok) throw await apiErrorFrom(res, 'delete failed');
       show(`${rfiRef(rfi.rfi_number)} deleted.`);
     } catch {
       show('Could not delete the RFI. Please try again.', 'bad');
@@ -864,7 +867,7 @@ export default function RFIsPage() {
       <EmptyState
         icon={<WarningCircle size={22} />}
         title="Couldn't load RFIs"
-        text={`${loadError} Nothing has been lost — try again.`}
+        text={retryText(loadError)}
         action={<Button icon={<ArrowClockwise size={15} />} onClick={load}>Retry</Button>}
       />
     );
@@ -874,7 +877,7 @@ export default function RFIsPage() {
         icon={<Question size={22} />}
         title="No RFIs yet"
         text="Create a Request for Information when you need clarification on plans, specs, or project details."
-        action={<Button icon={<Plus size={15} weight="bold" />} onClick={openCreate}>Create First RFI</Button>}
+        action={rights.edit ? <Button icon={<Plus size={15} weight="bold" />} onClick={openCreate}>Create First RFI</Button> : undefined}
       />
     );
   } else {
@@ -917,11 +920,11 @@ export default function RFIsPage() {
         ]}
         title="RFIs"
         subtitle={ctx?.project?.name || undefined}
-        actions={
+        actions={rights.edit ? (
           <Button variant="primary" data-tour="create-rfi" icon={<Plus size={15} weight="bold" />} onClick={openCreate}>
             New RFI
           </Button>
-        }
+        ) : undefined}
       >
         {!loadError && <StatRow items={stats} />}
 

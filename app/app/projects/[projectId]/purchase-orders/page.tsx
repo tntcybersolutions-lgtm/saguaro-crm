@@ -8,7 +8,8 @@
  *         POST  /api/documents/purchase-order     (→ { pdfUrl })
  */
 import { jsonRequest } from '@/lib/list-view';
-import { useEditRights } from '@/lib/hooks/usePermissions';
+import { apiErrorFrom } from '@/lib/api-refusal';
+import { useEditRights, IfAllowed } from '@/lib/hooks/usePermissions';
 import React, { useState, useEffect, useCallback } from 'react';
 import { useParams } from 'next/navigation';
 import { openPdf } from '@/components/PdfViewer';
@@ -370,7 +371,7 @@ export default function PurchaseOrdersPage() {
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ status }),
       });
-      if (!res.ok) throw new Error('status update failed');
+      if (!res.ok) throw await apiErrorFrom(res, 'status update failed');
       show(`PO status updated to ${status}.`);
     } catch {
       show('Could not update the PO status. Please try again.', 'bad');
@@ -423,7 +424,7 @@ export default function PurchaseOrdersPage() {
       ]}
       title="Purchase orders"
       subtitle="Vendor and supplier purchase orders."
-      actions={<Button variant="primary" icon={<Plus size={15} weight="bold" />} onClick={openForm}>New PO</Button>}
+      actions={<IfAllowed perm={['Budget', 'Edit']}><Button variant="primary" icon={<Plus size={15} weight="bold" />} onClick={openForm}>New PO</Button></IfAllowed>}
     >
       <style dangerouslySetInnerHTML={{ __html: CSS }} />
       {!loadError && <StatRow items={stats} />}

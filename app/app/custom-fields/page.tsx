@@ -1,5 +1,6 @@
 'use client';
 import React, { useState, useEffect, useMemo, useCallback } from 'react';
+import { apiErrorFrom } from '@/lib/api-refusal';
 import SaguaroDatePicker from '@/components/SaguaroDatePicker';
 import { humanError } from '@/lib/errors';
 import { CaretUp, CaretDown, Clipboard, CheckCircle, Asterisk, Stack, MagnifyingGlass, Plus } from '@phosphor-icons/react';
@@ -761,7 +762,7 @@ export default function CustomFieldsPage() {
     setLoadingSummary(true);
     try {
       const r = await fetch('/api/custom-fields?summary=true');
-      if (!r.ok) throw new Error('Failed to load summaries');
+      if (!r.ok) throw await apiErrorFrom(r, 'Failed to load summaries');
       const data = await r.json();
       setModuleSummaries(data.summaries || data || []);
     } catch {
@@ -840,7 +841,7 @@ export default function CustomFieldsPage() {
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify(editingId ? { ...payload, id: editingId } : payload),
       });
-      if (!r.ok) throw new Error('Save failed');
+      if (!r.ok) throw await apiErrorFrom(r, 'Save failed');
       flash(editingId ? 'Field updated.' : 'Field created.');
       resetForm();
       await loadFields();
@@ -859,7 +860,7 @@ export default function CustomFieldsPage() {
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ id: f.id, _delete: true }),
       });
-      if (!r.ok) throw new Error('Delete failed');
+      if (!r.ok) throw await apiErrorFrom(r, 'Delete failed');
       flash('Field deleted.');
       setDeleteTarget(null);
       await loadFields();

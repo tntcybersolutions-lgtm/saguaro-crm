@@ -9,6 +9,7 @@
  *        POST /api/autopilot/dismiss  { alertId, projectId }
  */
 import React, { useState, useEffect, useCallback, useMemo } from 'react';
+import { apiErrorFrom } from '@/lib/api-refusal';
 import { useProjectContext } from '@/lib/hooks/useProjectContext';
 import { useParams } from 'next/navigation';
 import {
@@ -125,7 +126,7 @@ export default function AutopilotPage() {
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ alertId, projectId }),
       });
-      if (!res.ok) throw new Error('dismiss failed');
+      if (!res.ok) throw await apiErrorFrom(res, 'dismiss failed');
     } catch (e) {
       console.error('[autopilot] dismiss', e);
       show('Could not dismiss the alert. Please try again.', 'bad');

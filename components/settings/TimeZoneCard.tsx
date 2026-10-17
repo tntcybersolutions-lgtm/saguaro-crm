@@ -9,6 +9,7 @@
  * (Admin ≥ Full — the server checks; non-admins see it read-only).
  */
 import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react';
+import { apiErrorFrom } from '@/lib/api-refusal';
 import { CheckCircle, Crosshair, Globe, WarningCircle } from '@phosphor-icons/react';
 import { Button, Card, Field, Input } from '@/components/ui/kit';
 import { deviceTimeZone } from '@/lib/time-zone';
@@ -67,7 +68,7 @@ export default function TimeZoneCard() {
     setPhase('loading');
     try {
       const res = await fetch('/api/settings/time-zone', { cache: 'no-store' });
-      if (!res.ok) throw new Error(`HTTP ${res.status}`);
+      if (!res.ok) throw await apiErrorFrom(res, `HTTP ${res.status}`);
       const j = (await res.json()) as Loaded;
       setLoaded({ timeZone: j.timeZone ?? null, canEdit: !!j.canEdit });
       setPicked(j.timeZone ?? null);

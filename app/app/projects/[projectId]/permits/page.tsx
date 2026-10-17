@@ -17,6 +17,7 @@
  *   create  POST /api/permits/create
  */
 import { jsonRequest } from '@/lib/list-view';
+import { retryText, apiErrorFrom } from '@/lib/api-refusal';
 import { useEditRights } from '@/lib/hooks/usePermissions';
 import React, { useState, useEffect, useCallback, useRef } from 'react';
 import { useOpenOnNew } from '@/lib/ui/open-on-new';
@@ -152,7 +153,7 @@ export default function PermitsPage() {
     setLoadError('');
     try {
       const res = await fetch(`/api/projects/${projectId}/permits`);
-      if (!res.ok) throw new Error('Failed to load');
+      if (!res.ok) throw await apiErrorFrom(res, 'Failed to load');
       const json = await res.json();
       setPermits(json.permits || []);
     } catch {
@@ -235,7 +236,7 @@ export default function PermitsPage() {
           expiry_date: form.expiry_date || null,
         }),
       });
-      if (!res.ok) throw new Error('save failed');
+      if (!res.ok) throw await apiErrorFrom(res, 'save failed');
       const json = await res.json();
       if (!json.permit) throw new Error('save failed');
       setPermits(prev => [...prev, json.permit as Permit]);
@@ -378,7 +379,7 @@ export default function PermitsPage() {
   // ── Register body ──
   let listBody: React.ReactNode;
   if (!loading && loadError) {
-    listBody = <EmptyState icon={<Warning size={22} />} title="Couldn't load permits" text={`${loadError} Nothing has been lost — try again.`} action={<Button onClick={fetchPermits}>Retry</Button>} />;
+    listBody = <EmptyState icon={<Warning size={22} />} title="Couldn't load permits" text={retryText(loadError)} action={<Button onClick={fetchPermits}>Retry</Button>} />;
   } else if (!loading && permits.length === 0) {
     listBody = (
       <EmptyState

@@ -27,6 +27,8 @@ export const JOB_TOOL_ACCESS: Readonly<Record<string, AccessRule>> = {
   '/cash-flow': r('cash flow', [['Budget', 'View']]),
   '/payroll': r('payroll', [['Budget', 'View']]),
   '/pay-apps': r('pay applications', [['Pay Apps', 'View']]),
+  '/pay-apps/new': r('new pay applications', [['Pay Apps', 'Edit']]),
+  '/contracts/new': r('new contracts', [['Budget', 'Edit']]),
   '/change-orders': r('change orders', [['Change Orders', 'View']]),
   '/proposal': r('the proposal', [['Sales', 'View'], ['Budget', 'View']]),
   '/estimate': r('the estimate', [['Sales', 'View'], ['Budget', 'View']]),

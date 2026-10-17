@@ -1,5 +1,6 @@
 'use client';
 
+import { apiErrorFrom } from '@/lib/api-refusal';
 import React, { useState, useEffect, useMemo, useCallback, useRef } from 'react';
 import { paletteHex } from '@/lib/design-tokens';
 import { textPrompt } from '@/lib/ui/async-dialog';
@@ -278,7 +279,7 @@ async function seedPresets(headers: Record<string, string>): Promise<void> {
       headers: { 'Content-Type': 'application/json', ...headers },
       body: JSON.stringify({ name: p.name, description: p.desc, permissions: p.perms, color: p.color, is_builtin: true }),
     });
-    if (!res.ok) throw new Error('Could not seed the built-in roles.');
+    if (!res.ok) throw await apiErrorFrom(res, 'Could not seed the built-in roles.');
   }
 }
 /* eslint-enable @typescript-eslint/no-explicit-any */
@@ -469,7 +470,7 @@ export function AccessManager({ jump, onChanged }: { jump?: { tab: Tab; n: numbe
       ]);
 
       // A failed roster read is an error on screen, never an empty team.
-      if (!usersRes.ok) throw new Error('Unable to load your team. Please try again.');
+      if (!usersRes.ok) throw await apiErrorFrom(usersRes, 'Unable to load your team. Please try again.');
       const loadedUsers: TenantUser[] = (((await usersRes.json())?.users ?? []) as TenantUser[]);
       setUsers(loadedUsers);
 
@@ -481,7 +482,7 @@ export function AccessManager({ jump, onChanged }: { jump?: { tab: Tab; n: numbe
 
       /* Roles — seed the built-in presets as REAL rows if this tenant has none. */
       const rolesRes = await fetch('/api/roles', { headers });
-      if (!rolesRes.ok) throw new Error('Unable to load roles. Please sign in and try again.');
+      if (!rolesRes.ok) throw await apiErrorFrom(rolesRes, 'Unable to load roles. Please try again.');
       const rolesJson = await rolesRes.json();
       // eslint-disable-next-line @typescript-eslint/no-explicit-any
       let rolesRaw: any[] = Array.isArray(rolesJson) ? rolesJson : Array.isArray(rolesJson?.roles) ? rolesJson.roles : [];
@@ -578,7 +579,7 @@ export function AccessManager({ jump, onChanged }: { jump?: { tab: Tab; n: numbe
       const res = editRoleId
         ? await fetch(`/api/roles/${editRoleId}`, { method: 'PUT', headers: { 'Content-Type': 'application/json', ...headers }, body })
         : await fetch('/api/roles', { method: 'POST', headers: { 'Content-Type': 'application/json', ...headers }, body });
-      if (!res.ok) throw new Error('save failed');
+      if (!res.ok) throw await apiErrorFrom(res, 'save failed');
       const saved = await res.json().catch(() => null);
       const savedId: string | null = saved?.role?.id ?? editRoleId ?? null;
       setShowRoleModal(false);
@@ -603,7 +604,7 @@ export function AccessManager({ jump, onChanged }: { jump?: { tab: Tab; n: numbe
           permissions: source.permissions, is_builtin: false,
         }),
       });
-      if (!res.ok) throw new Error('duplicate failed');
+      if (!res.ok) throw await apiErrorFrom(res, 'duplicate failed');
       notify('Role duplicated.');
       await loadData();
     } catch {
@@ -618,7 +619,7 @@ export function AccessManager({ jump, onChanged }: { jump?: { tab: Tab; n: numbe
     const headers = await getAuthHeaders();
     try {
       const res = await fetch(`/api/roles/${id}`, { method: 'DELETE', headers });
-      if (!res.ok) throw new Error('delete failed');
+      if (!res.ok) throw await apiErrorFrom(res, 'delete failed');
       if (selectedRoleId === id) setSelectedRoleId(null);
       notify('Role deleted.');
       await loadData();
@@ -639,7 +640,7 @@ export function AccessManager({ jump, onChanged }: { jump?: { tab: Tab; n: numbe
         method: 'PUT', headers: { 'Content-Type': 'application/json', ...headers },
         body: JSON.stringify({ permissions: newPerms }),
       });
-      if (!res.ok) throw new Error('permission save failed');
+      if (!res.ok) throw await apiErrorFrom(res, 'permission save failed');
     } catch {
       notify(`Could not save "${category}" (${permLevelLabel(level)}).`, 'err');
       await loadData();
@@ -662,7 +663,7 @@ export function AccessManager({ jump, onChanged }: { jump?: { tab: Tab; n: numbe
         method: 'POST', headers: { 'Content-Type': 'application/json', ...headers },
         body: JSON.stringify({ _type: 'assignment', user_id: assignUserId, role_id: assignRoleId, project_id: assignProjectId || null }),
       });
-      if (!res.ok) throw new Error('assign failed');
+      if (!res.ok) throw await apiErrorFrom(res, 'assign failed');
       setShowAssign(false);
       setAssignUserId('');
       setAssignRoleId('');
@@ -678,7 +679,7 @@ export function AccessManager({ jump, onChanged }: { jump?: { tab: Tab; n: numbe
     const headers = await getAuthHeaders();
     try {
       const res = await fetch(`/api/roles/assignments/${id}`, { method: 'DELETE', headers });
-      if (!res.ok) throw new Error('remove failed');
+      if (!res.ok) throw await apiErrorFrom(res, 'remove failed');
       notify('Assignment removed.');
       await loadData();
     } catch {
@@ -750,7 +751,7 @@ export function AccessManager({ jump, onChanged }: { jump?: { tab: Tab; n: numbe
     const headers = await getAuthHeaders();
     try {
       const res = await fetch(`/api/team/users/${userId}/reset-password`, { method: 'POST', headers });
-      if (!res.ok) throw new Error('reset failed');
+      if (!res.ok) throw await apiErrorFrom(res, 'reset failed');
       notify(`Password reset email sent to ${userName}.`);
     } catch {
       notify('Could not send the reset email.', 'err');

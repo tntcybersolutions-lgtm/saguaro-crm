@@ -20,6 +20,7 @@ import { confirmDialog } from '@/lib/ui/async-dialog';
 import SaguaroDatePicker from '@/components/SaguaroDatePicker';
 import { useUnsavedGuard } from '@/lib/useUnsavedGuard';
 import UnsavedGuardModal from '@/components/UnsavedGuardModal';
+import { apiErrorFrom, errorText, retryText } from '@/lib/api-refusal';
 import { humanError } from '@/lib/errors';
 import { useParams, useRouter } from 'next/navigation';
 import { useProjects } from '@/lib/hooks/useProjects';
@@ -218,7 +219,7 @@ export default function InvoiceDetailPage() {
     try {
       const res = await fetch(`/api/invoices/${id}`);
       if (res.status === 404) { setNotFound(true); return; }
-      if (!res.ok) throw new Error('Failed to load invoice');
+      if (!res.ok) throw await apiErrorFrom(res, "Couldn't load the invoice. Please try again.");
       const data = await res.json();
       const inv: Invoice = data.invoice ?? data;
       setInvoice(inv);
@@ -236,7 +237,7 @@ export default function InvoiceDetailPage() {
       }
     } catch (e: any) {
       console.error(e);
-      setError(humanError(e, 'Failed to load invoice.'));
+      setError(errorText(e, "Couldn't load the invoice. Please try again."));
     } finally {
       setLoading(false);
     }
@@ -296,7 +297,7 @@ export default function InvoiceDetailPage() {
           notes: form.notes || null,
         }),
       });
-      if (!res.ok) throw new Error('Failed to update invoice');
+      if (!res.ok) throw await apiErrorFrom(res, 'Failed to update invoice');
       const data = await res.json();
       const saved: Invoice = data.invoice ?? data;
       setInvoice(saved);
@@ -360,7 +361,7 @@ export default function InvoiceDetailPage() {
     setBusy('delete');
     try {
       const res = await fetch(`/api/invoices/${id}/delete`, { method: 'DELETE' });
-      if (!res.ok) throw new Error('Failed to delete invoice');
+      if (!res.ok) throw await apiErrorFrom(res, 'Failed to delete invoice');
       router.push('/app/invoicing');
     } catch (e: any) {
       console.error(e); showToast(humanError(e, 'Delete failed. Please try again.'), true);
@@ -409,7 +410,7 @@ export default function InvoiceDetailPage() {
             <EmptyState
               icon={<WarningCircle size={22} />}
               title="Couldn't load the invoice"
-              text={`${error} Nothing has been lost — try again.`}
+              text={retryText(error)}
               action={<div className="idBtns" style={{ justifyContent: 'center' }}><Button icon={<ArrowsClockwise size={15} />} onClick={loadInvoice}>Retry</Button><Button icon={<ArrowLeft size={14} />} onClick={() => router.push('/app/invoicing')}>Back to Invoicing</Button></div>}
             />
           </Card>

@@ -10,7 +10,8 @@
  *         DELETE /api/invoices/:id/delete
  */
 import { jsonRequest } from '@/lib/list-view';
-import { useEditRights } from '@/lib/hooks/usePermissions';
+import { apiErrorFrom } from '@/lib/api-refusal';
+import { useEditRights, IfAllowed } from '@/lib/hooks/usePermissions';
 import React, { useState, useEffect, useCallback } from 'react';
 import { useParams } from 'next/navigation';
 import { useProjectContext } from '@/lib/hooks/useProjectContext';
@@ -217,7 +218,7 @@ export default function InvoicesPage() {
         notes: form.notes,
         status: 'draft',
       }) });
-      if (!res.ok) throw new Error('save failed');
+      if (!res.ok) throw await apiErrorFrom(res, 'save failed');
       const json = await res.json();
       if (!json.invoice) throw new Error('save failed');
       setInvoices(prev => [...prev, json.invoice as Invoice]);
@@ -278,7 +279,7 @@ export default function InvoicesPage() {
     setEditInv(null);
     try {
       const res = await fetch(`/api/invoices/${id}/update`, { method: 'PATCH', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ amount, tax }) });
-      if (!res.ok) throw new Error('update failed');
+      if (!res.ok) throw await apiErrorFrom(res, 'update failed');
       show('Amount updated.');
     } catch {
       show('Could not update the amount. Please try again.', 'bad');
@@ -295,7 +296,7 @@ export default function InvoicesPage() {
     setAdjustInv(null);
     try {
       const res = await fetch(`/api/invoices/${id}/update`, { method: 'PATCH', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ amount: newAmt, tax }) });
-      if (!res.ok) throw new Error('update failed');
+      if (!res.ok) throw await apiErrorFrom(res, 'update failed');
       show(`Adjusted ${pct > 0 ? '+' : ''}${pct}%`);
     } catch {
       show('Could not adjust the amount. Please try again.', 'bad');
@@ -316,7 +317,7 @@ export default function InvoicesPage() {
     setInvoices(prev => prev.filter(i => i.id !== inv.id));
     try {
       const res = await fetch(`/api/invoices/${inv.id}/delete`, { method: 'DELETE' });
-      if (!res.ok) throw new Error('delete failed');
+      if (!res.ok) throw await apiErrorFrom(res, 'delete failed');
       show('Invoice deleted.');
     } catch {
       show('Could not delete the invoice. Please try again.', 'bad');
@@ -375,7 +376,7 @@ export default function InvoicesPage() {
       ]}
       title="Client invoices"
       subtitle={ctx?.project?.name || undefined}
-      actions={<Button variant="primary" icon={<Plus size={15} weight="bold" />} onClick={() => openCreate()}>New invoice</Button>}
+      actions={<IfAllowed perm={['Budget', 'Edit']}><Button variant="primary" icon={<Plus size={15} weight="bold" />} onClick={() => openCreate()}>New invoice</Button></IfAllowed>}
     >
       {!loadError && <StatRow items={stats} />}
 
@@ -424,7 +425,7 @@ export default function InvoicesPage() {
                 text={ctxBilled > 0
                   ? `You have certified ${fmt(ctxBilled)} across ${payAppCount} pay application${payAppCount === 1 ? '' : 's'} — client invoices track the money you collect against it.`
                   : 'Create your first invoice to start billing owners and tracking payments.'}
-                action={<Button variant="primary" icon={<Plus size={15} weight="bold" />} onClick={() => openCreate(certified > 0)}>{certified > 0 ? `Invoice certified ${fmt(certified)}` : 'New invoice'}</Button>}
+                action={<IfAllowed perm={['Budget', 'Edit']}><Button variant="primary" icon={<Plus size={15} weight="bold" />} onClick={() => openCreate(certified > 0)}>{certified > 0 ? `Invoice certified ${fmt(certified)}` : 'New invoice'}</Button></IfAllowed>}
               />
             ) : (
               <EmptyState title="Nothing matches" text="Change the search or the status filter." action={<Button onClick={() => { setSearch(''); setStatusFilter('all'); }}>Clear filters</Button>} />

@@ -8,6 +8,7 @@
  */
 
 import React, { useState } from 'react';
+import { apiErrorFrom } from '@/lib/api-refusal';
 import { mutate as swrMutate } from 'swr';
 import { Check } from '@phosphor-icons/react';
 import { JOB_COLORS, projectColor } from '@/lib/project-colors';
@@ -23,7 +24,7 @@ export default function JobColorPicker({ projectId, color, onSaved }: { projectI
     setBusy(hex); setErr(null);
     try {
       const r = await fetch(`/api/projects/${projectId}`, { method: 'PUT', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ color: hex }) });
-      if (!r.ok) throw new Error('Could not save the job colour.');
+      if (!r.ok) throw await apiErrorFrom(r, 'Could not save the job colour.');
       onSaved?.(hex);
       await Promise.all([refreshProjectContext(projectId), swrMutate('/api/projects/list')]);
     } catch (e) {

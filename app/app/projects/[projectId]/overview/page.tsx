@@ -20,6 +20,7 @@
  * Wording and rules live in lib/job-page (pure, tested). Nothing here scrolls
  * the page.
  */
+import { ApiError, messageFor, isRefusal, apiErrorFrom } from '@/lib/api-refusal';
 import React, { useEffect, useState } from 'react';
 import useSWR, { mutate as swrMutate } from 'swr';
 import Link from 'next/link';
@@ -85,7 +86,7 @@ const aggregateFetcher = async (url: string) => {
     let msg = '';
     try { const body = await r.json(); msg = body?.error || ''; } catch { /* non-JSON body: the status line is all there is */ }
     console.error('load job failed', r.status, msg);
-    throw new Error(msg || 'Request failed');
+    throw new ApiError(messageFor(r.status, { error: msg }, "Couldn't load this job. Please try again."), r.status);
   }
   const d = await r.json();
   if (!d?.project) return { notFound: true } as NotFound;
@@ -211,10 +212,12 @@ export default function JobPage() {
   if (!p) {
     if ((aggError || !aggLoading) && (toolsError || !toolsLoading) && (aggError || toolsError)) {
       const why = humanError(aggError || toolsError, 'Network error. Check your connection and try again.');
+      // A refusal is not a failure — nothing to retry, so no Retry.
+      const refused = isRefusal(aggError) || isRefusal(toolsError);
       return (
         <div className="k-frame jx" role="alert">{css}
-          <header className="jx-head"><h1 className="k-title">Couldn&apos;t load this job</h1></header>
-          <Brief tone="danger" icon={<WarningCircle size={18} weight="fill" />} action={{ label: 'Retry', onClick: retryAll }}>{why}</Brief>
+          <header className="jx-head"><h1 className="k-title">{refused ? "You don't have access to this job" : <>Couldn&apos;t load this job</>}</h1></header>
+          <Brief tone={refused ? 'warning' : 'danger'} icon={<WarningCircle size={18} weight="fill" />} action={refused ? { label: 'All jobs', href: '/app/projects' } : { label: 'Retry', onClick: retryAll }}>{why}</Brief>
         </div>
       );
     }
@@ -313,7 +316,7 @@ export default function JobPage() {
     try {
       const auth = await getAuthHeaders();
       const res = await fetch('/api/autopilot/run', { method: 'POST', headers: { 'Content-Type': 'application/json', ...auth }, body: JSON.stringify({ projectId }) });
-      if (!res.ok) throw new Error('Scan failed');
+      if (!res.ok) throw await apiErrorFrom(res, 'Scan failed');
       const json = await res.json();
       setScanMsg({ ok: true, text: json.summary || 'Autopilot scan complete.' });
       await Promise.all([reloadAgg(), reloadTools()]);

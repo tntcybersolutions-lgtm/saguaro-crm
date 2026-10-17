@@ -21,11 +21,13 @@
  * The NudgeRing anchor and the unsaved-work guard are unchanged.
  */
 import React, { useState, useEffect, useCallback, useMemo } from 'react';
+import { IfAllowed } from '@/lib/hooks/usePermissions';
 import { confirmDialog } from '@/lib/ui/async-dialog';
 import { useProjectContext } from '@/lib/hooks/useProjectContext';
 import { useUnsavedGuard } from '@/lib/useUnsavedGuard';
 import UnsavedGuardModal from '@/components/UnsavedGuardModal';
 import SaguaroDatePicker from '@/components/SaguaroDatePicker';
+import { apiErrorFrom, errorText, isRefusal, retryText } from '@/lib/api-refusal';
 import { humanError } from '@/lib/errors';
 import { Plus, PaperPlaneTilt, Trash, Receipt, FilePdf, ArrowClockwise, WarningCircle, ArrowSquareOut } from '@phosphor-icons/react';
 import {
@@ -151,6 +153,7 @@ export default function InvoicingPage() {
   const [projects, setProjects] = useState<Project[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
+  const [refused, setRefused] = useState(false);
   /** True when the invoice list read failed — keeps "empty" from reading as an
    *  all-clear (0 overdue, $0 outstanding) on a ledger we never managed to read. */
   const [loadFailed, setLoadFailed] = useState(false);
@@ -217,7 +220,7 @@ export default function InvoicingPage() {
   const fetchInvoices = useCallback(async () => {
     try {
       const res = await fetch('/api/invoices/list');
-      if (!res.ok) throw new Error('Failed to load invoices');
+      if (!res.ok) throw await apiErrorFrom(res, "Couldn't load invoices. Please try again.");
       const data = await res.json();
       setInvoices(Array.isArray(data) ? data : data.invoices ?? []);
       setLoadFailed(false);
@@ -225,7 +228,8 @@ export default function InvoicingPage() {
       console.error(e);
       // An empty ledger and an unread ledger look identical unless we say so.
       setLoadFailed(true);
-      setError(humanError(e, "Couldn't load invoices. Please try again."));
+      setRefused(isRefusal(e));
+      setError(errorText(e, "Couldn't load invoices. Please try again."));
     } finally {
       setLoading(false);
     }
@@ -286,7 +290,7 @@ export default function InvoicingPage() {
           notes: form.notes || null,
         }),
       });
-      if (!res.ok) throw new Error('Failed to create invoice');
+      if (!res.ok) throw await apiErrorFrom(res, 'Failed to create invoice');
       setShowCreate(false);
       setForm({ ...EMPTY_FORM });
       setError('');
@@ -431,12 +435,15 @@ export default function InvoicingPage() {
 
   // ── Register body: loading / error / empty / no-match / rows — each distinct ──
   let listBody: React.ReactNode;
-  if (!loading && loadFailed) {
+  if (!loading && loadFailed && refused) {
+    // A refusal is not a failure: say so, and offer nothing to retry.
+    listBody = <EmptyState icon={<WarningCircle size={22} />} title="You don't have access to invoices" text={error} />;
+  } else if (!loading && loadFailed) {
     listBody = (
       <EmptyState
         icon={<WarningCircle size={22} />}
         title="Invoices could not be loaded"
-        text={`${error || 'The ledger could not be read.'} This is not an empty ledger — nothing has been lost. Try again.`}
+        text={retryText(error || 'The ledger could not be read.', 'This is not an empty ledger — nothing has been lost. Try again.')}
         action={<Button icon={<ArrowClockwise size={15} />} onClick={() => { setLoading(true); fetchInvoices(); }}>Retry</Button>}
       />
     );
@@ -445,7 +452,7 @@ export default function InvoicingPage() {
       <EmptyState
         icon={<Receipt size={22} />}
         title="No invoices yet"
-        action={<Button icon={<Plus size={15} weight="bold" />} onClick={() => setShowCreate(true)}>New Invoice</Button>}
+        action={<IfAllowed perm={['Budget', 'Edit']}><Button icon={<Plus size={15} weight="bold" />} onClick={() => setShowCreate(true)}>New Invoice</Button></IfAllowed>}
       />
     );
   } else {
@@ -477,9 +484,9 @@ export default function InvoicingPage() {
         title="Invoicing"
         subtitle="Invoices and payments across your jobs"
         actions={
-          <Button variant="primary" data-tour="new-invoice" icon={<Plus size={15} weight="bold" />} onClick={() => setShowCreate(true)}>
+          <IfAllowed perm={['Budget', 'Edit']}><Button variant="primary" data-tour="new-invoice" icon={<Plus size={15} weight="bold" />} onClick={() => setShowCreate(true)}>
             New Invoice
-          </Button>
+          </Button></IfAllowed>
         }
       >
         {!loadFailed && <StatRow items={stats} />}

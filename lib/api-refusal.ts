@@ -88,3 +88,18 @@ export function errorText(e: unknown, fallback = 'Something went wrong. Please t
 export function isRefusal(e: unknown): boolean {
   return e instanceof ApiError && (e.status === 403 || e.status === 401);
 }
+
+/** Is this sentence a refusal or a signed-out notice (not a failure to retry)? */
+export function isRefusalText(msg: string | null | undefined): boolean {
+  return /^you don't have permission|^your session expired/i.test((msg || '').trim());
+}
+
+/**
+ * A load-failure line for an empty state: the message, then "Nothing has been
+ * lost — try again." — unless the message is a refusal, which no retry fixes.
+ */
+export function retryText(msg: string | null | undefined, tail = 'Nothing has been lost — try again.'): string {
+  const m = (msg || '').trim();
+  if (isRefusalText(m)) return m;
+  return m ? `${m} ${tail}` : tail;
+}

@@ -18,6 +18,7 @@
  * conditions server-side whenever the fields are left blank.
  */
 import { itemBulkEdit } from '@/lib/items/bulk';
+import { retryText, apiErrorFrom } from '@/lib/api-refusal';
 import { useEditRights } from '@/lib/hooks/usePermissions';
 import React, { useState, useEffect, useCallback, useRef } from 'react';
 import { confirmDialog } from '@/lib/ui/async-dialog';
@@ -280,7 +281,7 @@ export default function DailyLogsPage(){
       setLoadError('');
       const h = await getAuthHeaders();
       const r = await fetch(`/api/daily-logs/list?projectId=${projectId}`,{headers:h});
-      if (!r.ok) throw new Error('Failed to load data');
+      if (!r.ok) throw await apiErrorFrom(r, 'Failed to load data');
       const d = await r.json();
       setLogs(await withSaved(d.logs||[]));
     }catch{
@@ -727,7 +728,7 @@ export default function DailyLogsPage(){
       <EmptyState
         icon={<WarningCircle size={22}/>}
         title="Couldn't load daily logs"
-        text={`${loadError} Nothing has been lost — try again.`}
+        text={retryText(loadError)}
         action={<Button icon={<ArrowClockwise size={15}/>} onClick={load}>Retry</Button>}
       />
     );
