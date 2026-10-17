@@ -9,7 +9,7 @@
  * fixture.json — the live inputs, exported read-only:
  *   select json_build_object(
  *     'profiles',    (select json_agg(json_build_object('id', id, 'role', role, 'tenant_id', tenant_id) order by id) from profiles),
- *     'assignments', (select json_agg(json_build_object('user_id', user_id, 'tenant_id', tenant_id, 'role_id', role_id, 'project_id', project_id) order by id) from user_role_assignments),
+ *     'assignments', (select json_agg(json_build_object('user_id', user_id, 'tenant_id', tenant_id, 'role_id', role_id, 'project_id', project_id, 'permissions', permissions) order by id) from user_role_assignments),
  *     'roles',       (select json_agg(json_build_object('id', id, 'tenant_id', tenant_id, 'permissions', permissions, 'name', name, 'is_builtin', is_builtin) order by id) from role_definitions)
  *   )::text;
  *
@@ -18,7 +18,9 @@
  *   u:<user>:<project|->:<12 digits>   every real user, no project / each scoped project / an unrelated one
  *   r<n>:<12 digits>                   every stored role, alone, as a global grant to a non-admin member
  *   multi / foreign / proj-none / proj-P / proj-Q   edge cases (see buildCases)
+ *   j<n>:<-|P|Q>:<12 digits>         job roles (20261017h): J1..J9, see the .sql
  *   meta:<foreman>,<sub>,<super>,<foreignRole>,<P>,<Q>
+ *   meta2:<readOnly>,<pm>,<foreman>,<super>,<adminRole>
  * Digits are levels (0 None, 1 View, 2 Edit, 3 Full) in CATEGORIES order.
  *
  * The TS side runs the REAL getEffectivePermissions() against an in-memory
@@ -28,7 +30,7 @@
 import fs from 'node:fs';
 
 type Profile = { id: string; role: string | null; tenant_id: string | null };
-type Assignment = { user_id: string; tenant_id: string; role_id: string | null; project_id: string | null };
+type Assignment = { user_id: string; tenant_id: string; role_id: string | null; project_id: string | null; permissions?: unknown };
 type Role = { id: string; tenant_id: string; permissions: unknown; name?: string; is_builtin?: boolean };
 type Fixture = { profiles: Profile[]; assignments: Assignment[]; roles: Role[] };
 
@@ -124,6 +126,36 @@ async function main() {
   report('project-only grant, no project asked', edge('proj-none'), await tsDigits([member('z')], zA, 'z', null));
   report('project-only grant, that project', edge('proj-P'), await tsDigits([member('z')], zA, 'z', P));
   report('project-only grant, another project', edge('proj-Q'), await tsDigits([member('z')], zA, 'z', Q));
+
+  // 3b) Job roles — the same nine people the .sql builds, the same rows.
+  const meta2 = tokens.find((t) => t.startsWith('meta2:'))?.slice(6).split(',');
+  if (!meta2) { failed++; console.error('FAIL job roles: no meta2 token (run the 20261017h harness)'); }
+  else {
+    const [rRO, rPM, rFo, rSu, rAdm] = meta2;
+    const none = Object.fromEntries(CATEGORIES.map((c) => [c, 'None']));
+    const J = (n: number) => `00000000-0000-4000-8000-0000000000b${n}`;
+    const people: Profile[] = Array.from({ length: 9 }, (_, i) => ({ id: J(i + 1), role: i === 8 ? 'admin' : 'member', tenant_id: SAG }));
+    const row = (n: number, role_id: string | null, project_id: string | null, permissions: unknown = null): Assignment =>
+      ({ user_id: J(n), tenant_id: SAG, role_id, project_id, permissions });
+    const rows: Assignment[] = [
+      row(1, rRO, null), row(1, rPM, P),
+      row(2, rPM, null), row(2, null, P, none),
+      row(3, rFo, null), row(3, rSu, P, { Budget: 'Full', Sales: 'None' }),
+      row(4, rFo, null), row(4, null, P, { Budget: 'Edit', RFIs: 'bogus' }),
+      row(5, rAdm, null), row(5, rRO, P),
+      row(6, null, P, { Admin: 'Full', Projects: 'Edit' }),
+      row(7, rForeign, P),
+      row(8, null, P, none),
+      row(9, null, P, none),
+    ];
+    for (const t of tokens.filter((x) => /^j\d:/.test(x))) {
+      const [head, tag, digits] = t.split(':');
+      const n = Number(head.slice(1));
+      const pid = tag === 'P' ? P : tag === 'Q' ? Q : null;
+      report(`job role J${n} @ ${tag}`, digits, await tsDigits(people, rows, J(n), pid));
+    }
+    if (tokens.filter((x) => /^j\d:/.test(x)).length !== 27) { failed++; console.error('FAIL job roles: expected 27 j tokens'); }
+  }
 
   // 4) The field templates can file a daily log / punch item (Projects ≥ Edit)
   //    and a Foreman can upload a site photo (Documents ≥ Edit) — on BOTH sides,

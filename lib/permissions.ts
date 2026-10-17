@@ -15,6 +15,7 @@ import { NextRequest, NextResponse } from 'next/server';
 import { CATEGORIES, INHERITS_WHEN_ABSENT, LEVEL_RANK, type PermCategory, type PermLevel } from './permission-categories';
 import type { SupabaseClient } from '@supabase/supabase-js';
 import { createServerClient, getUser } from './supabase-server';
+import { projectIdForRequest } from './permission-scope';
 import type { Database } from './database.types';
 
 /* ── vocabulary ── the category list lives in lib/permission-categories,
@@ -69,20 +70,109 @@ function maxLevel(a: PermLevel, b: PermLevel): PermLevel {
   return LEVEL_RANK[a] >= LEVEL_RANK[b] ? a : b;
 }
 
+/** A user_role_assignments row as the resolver reads it. */
+export type AssignmentRow = {
+  role_id: string | null;
+  project_id: string | null;
+  /** Per-category levels for this job. Honored on project rows only. */
+  permissions?: unknown;
+};
+
+/** One stored role's map. A category the role never mentioned inherits from the
+ *  one it used to be gated on (INHERITS_WHEN_ABSENT) rather than defaulting to
+ *  None. `in` rather than a truthiness check: an explicit "Sales": "None" is a
+ *  decision and must not be overridden. */
+function roleLevels(stored: unknown): PermissionMap {
+  const perms = (stored ?? {}) as Record<string, unknown>;
+  const out = fill('None');
+  for (const c of CATEGORIES) {
+    const inheritFrom = INHERITS_WHEN_ABSENT[c];
+    const raw = (inheritFrom && !(c in perms)) ? perms[inheritFrom] : perms[c];
+    out[c] = normalizeLevel(raw);
+  }
+  return out;
+}
+
+/** The per-category levels on a project row, when it carries any. */
+function overridesOf(v: unknown): Record<string, unknown> | null {
+  return v && typeof v === 'object' && !Array.isArray(v) ? (v as Record<string, unknown>) : null;
+}
+
+/**
+ * The resolution order, as a pure function (getEffectivePermissions feeds it;
+ * rbac.permission_level_for in 20261017h is its line-for-line port, and
+ * tools/rls-permission-parity proves the two agree):
+ *
+ *  1. profiles.role 'admin' | 'owner'  ⇒  Full on every category, every job.
+ *  2. COMPANY role — the user's global grants (project_id IS NULL), highest
+ *     level wins per category. No global grant ⇒ memberDefault().
+ *  3. No job asked about, or the person has no row for that job ⇒ company role.
+ *  4. JOB role (Procore behavior) — the rows for that job REPLACE the company
+ *     role there, up or down. Each row is its role (or, with no role, the
+ *     company role) with the row's per-category levels laid on top; more than
+ *     one row for the job ⇒ highest wins. "No access" is a row with no role and
+ *     every category None.
+ *  5. Admin (roles, payroll, billing, company settings) is company-wide: a job
+ *     role never changes it.
+ *  6. A company admin (company role Admin: Full) stays an admin everywhere: on
+ *     a job the job role can add to the company role, never take from it.
+ *
+ * `assignments` and `roles` must already be this tenant's rows.
+ */
+export function resolvePermissions(input: {
+  baseRole: string | null | undefined;
+  assignments: readonly AssignmentRow[];
+  roles: ReadonlyMap<string, unknown>;
+  projectId?: string | null;
+}): PermissionMap {
+  if (ADMIN_ROLES.has((input.baseRole || '').toLowerCase())) return adminAll();
+
+  const levelsFor = (roleId: string): PermissionMap =>
+    input.roles.has(roleId) ? roleLevels(input.roles.get(roleId)) : fill('None');
+
+  // 2) Company role.
+  const globalIds = Array.from(new Set(
+    input.assignments.filter((a) => a.project_id == null).map((a) => a.role_id).filter((r): r is string => !!r),
+  ));
+  let company: PermissionMap;
+  if (globalIds.length === 0) {
+    company = memberDefault();
+  } else {
+    company = fill('None');
+    for (const id of globalIds) {
+      const m = levelsFor(id);
+      for (const c of CATEGORIES) company[c] = maxLevel(company[c], m[c]);
+    }
+  }
+
+  // 3) No job, or not on this job specifically.
+  const pid = input.projectId;
+  if (pid == null) return company;
+  const jobRows = input.assignments.filter((a) => a.project_id === pid);
+  if (jobRows.length === 0) return company;
+
+  // 4) Job role replaces the company role on this job.
+  const job = fill('None');
+  for (const row of jobRows) {
+    const m: PermissionMap = row.role_id ? levelsFor(row.role_id) : { ...company };
+    const ov = overridesOf(row.permissions);
+    if (ov) for (const c of CATEGORIES) if (c in ov) m[c] = normalizeLevel(ov[c]);
+    for (const c of CATEGORIES) job[c] = maxLevel(job[c], m[c]);
+  }
+
+  // 5) Admin stays company-wide.
+  job['Admin'] = company['Admin'];
+
+  // 6) A company admin is never reduced on a job.
+  if (company['Admin'] === 'Full') {
+    for (const c of CATEGORIES) job[c] = maxLevel(job[c], company[c]);
+  }
+  return job;
+}
+
 /**
  * Resolve a user's effective permission map for a tenant, optionally within a
- * project.
- *
- * Rules:
- *  - profiles.role === 'admin' | 'owner'  ⇒  Full on every category (bypass).
- *  - Otherwise, gather the user's role_definitions via user_role_assignments:
- *      • a GLOBAL assignment (project_id IS NULL) always applies;
- *      • a PROJECT-SCOPED assignment applies only when `projectId` is provided
- *        and matches. (With no projectId, only global grants are considered.)
- *    Merge them by taking the HIGHEST level per category across all applicable
- *    roles (highest-wins).
- *  - A non-admin user with NO applicable assignments ⇒ memberDefault()
- *    (View on operational categories, None on Admin).
+ * project — see resolvePermissions for the order.
  */
 export async function getEffectivePermissions(
   db: ServerDb,
@@ -90,7 +180,6 @@ export async function getEffectivePermissions(
   tenantId: string,
   projectId?: string | null,
 ): Promise<PermissionMap> {
-  // 1) Base role bypass.
   const { data: profile } = await db
     .from('profiles')
     .select('role')
@@ -100,45 +189,68 @@ export async function getEffectivePermissions(
   const baseRole = (profile?.role || '').toLowerCase();
   if (ADMIN_ROLES.has(baseRole)) return adminAll();
 
-  // 2) Applicable role assignments (global + this project).
+  /* select('*'): the per-job `permissions` column arrives with 20261017h. Naming
+     it before that migration is applied would fail the whole read and drop
+     every user to the member default. */
   const { data: assignments } = await db
     .from('user_role_assignments')
-    .select('role_id, project_id')
+    .select('*')
     .eq('user_id', userId)
     .eq('tenant_id', tenantId);
 
-  const applicable = (assignments ?? []).filter(
+  const rows = (assignments ?? []) as AssignmentRow[];
+  const applicable = rows.filter(
     (a) => a.project_id == null || (projectId != null && a.project_id === projectId),
   );
+  const roleIds = Array.from(new Set(applicable.map((a) => a.role_id).filter((r): r is string => !!r)));
 
-  const roleIds = Array.from(
-    new Set(applicable.map((a) => a.role_id).filter((r): r is string => !!r)),
-  );
-
-  // 3) No applicable assignments → safe member default.
-  if (roleIds.length === 0) return memberDefault();
-
-  const { data: roleDefs } = await db
-    .from('role_definitions')
-    .select('id, permissions')
-    .eq('tenant_id', tenantId)
-    .in('id', roleIds);
-
-  // 4) Merge highest-wins across every applicable role.
-  const merged = fill('None');
-  for (const rd of roleDefs ?? []) {
-    const perms = (rd.permissions ?? {}) as Record<string, unknown>;
-    for (const c of CATEGORIES) {
-      /* A category the stored role never mentioned inherits from the one it
-         used to be gated on, rather than defaulting to None — see
-         INHERITS_WHEN_ABSENT. `in` rather than a truthiness check: an explicit
-         "Sales": "None" is a decision and must not be overridden. */
-      const inheritFrom = INHERITS_WHEN_ABSENT[c];
-      const raw = (inheritFrom && !(c in perms)) ? perms[inheritFrom] : perms[c];
-      merged[c] = maxLevel(merged[c], normalizeLevel(raw));
-    }
+  const roles = new Map<string, unknown>();
+  if (roleIds.length > 0) {
+    const { data: roleDefs } = await db
+      .from('role_definitions')
+      .select('id, permissions')
+      .eq('tenant_id', tenantId)
+      .in('id', roleIds);
+    for (const rd of roleDefs ?? []) roles.set(rd.id, rd.permissions);
   }
-  return merged;
+
+  return resolvePermissions({ baseRole, assignments: applicable, roles, projectId });
+}
+
+/**
+ * The jobs this person has been shut out of: a job role on which Projects is
+ * None ("No access", or a role that grants nothing there). Project lists drop
+ * them, so a job you cannot open does not sit in your picker. Admins and
+ * owners: none.
+ */
+export async function jobsClosedTo(db: ServerDb, userId: string, tenantId: string): Promise<Set<string>> {
+  const closed = new Set<string>();
+  const { data: profile } = await db.from('profiles').select('role').eq('id', userId).maybeSingle();
+  if (ADMIN_ROLES.has((profile?.role || '').toLowerCase())) return closed;
+
+  const { data: assignments, error } = await db
+    .from('user_role_assignments')
+    .select('*')
+    .eq('user_id', userId)
+    .eq('tenant_id', tenantId);
+  if (error) throw error;
+  const rows = (assignments ?? []) as AssignmentRow[];
+  const jobIds = Array.from(new Set(rows.map((a) => a.project_id).filter((p): p is string => !!p)));
+  if (jobIds.length === 0) return closed;
+
+  const roleIds = Array.from(new Set(rows.map((a) => a.role_id).filter((r): r is string => !!r)));
+  const roles = new Map<string, unknown>();
+  if (roleIds.length > 0) {
+    const { data: roleDefs, error: rErr } = await db
+      .from('role_definitions').select('id, permissions').eq('tenant_id', tenantId).in('id', roleIds);
+    if (rErr) throw rErr;
+    for (const rd of roleDefs ?? []) roles.set(rd.id, rd.permissions);
+  }
+  for (const pid of jobIds) {
+    const m = resolvePermissions({ baseRole: profile?.role, assignments: rows, roles, projectId: pid });
+    if (m['Projects'] === 'None') closed.add(pid);
+  }
+  return closed;
 }
 
 /** True if `perms` grants at least `minLevel` on `category`. */
@@ -189,8 +301,9 @@ export type PermissionGuard =
  *   if (!g.ok) return g.res;
  *   // ... g.user is the authenticated user, g.perms the effective map
  *
- * opts.projectId narrows the check to a project (so project-scoped role grants
- * count). opts.db reuses an existing service client.
+ * opts.projectId names the job (its job role applies there); left out, the
+ * guard finds it in the request (lib/permission-scope); null means
+ * company-wide. opts.db reuses an existing service client.
  */
 export async function requirePermission(
   req: NextRequest,
@@ -241,11 +354,20 @@ export async function requireAnyPermission(
    * 404, not 403: a project in another tenant should be indistinguishable from
    * one that does not exist, or the response confirms which ids are real.
    */
-  if (opts?.projectId) {
+  /* Which job. A route that names one (or names null: company-wide on
+     purpose) is taken at its word; otherwise the request itself says — the
+     /api/projects/<id> URL, the record in the URL, ?projectId=, or the body
+     (lib/permission-scope). That is how every project-scoped route gets the
+     job role without each one remembering to pass it. */
+  const projectId = opts?.projectId !== undefined
+    ? opts.projectId
+    : await projectIdForRequest(req, db, user.tenantId);
+
+  if (projectId) {
     const { data: owned, error } = await db
       .from('projects')
       .select('id')
-      .eq('id', opts.projectId)
+      .eq('id', projectId)
       .eq('tenant_id', user.tenantId)
       .maybeSingle();
 
@@ -257,7 +379,7 @@ export async function requireAnyPermission(
     }
   }
 
-  const perms = await getEffectivePermissions(db, user.id, user.tenantId, opts?.projectId);
+  const perms = await getEffectivePermissions(db, user.id, user.tenantId, projectId);
 
   if (!hasAnyPermission(perms, categories, minLevel)) {
     return {

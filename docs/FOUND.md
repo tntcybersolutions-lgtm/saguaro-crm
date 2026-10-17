@@ -454,6 +454,30 @@ the ungated proposal_signatures / _events (20261017c, applied). Found on the way
   fails, wiped on sign-out). The offline-field brief said "never cache /api"; left as is because removing it takes
   away offline reading on every screen opened before (punch list, RFIs, drawings, daily-log lists). Needs a ruling.
 - `public/sw.js` ("Saguaro Field v7", precaches `/field/*`) is registered by nothing — `/field` does not exist; dead file.
+- Offline badges ("Waiting for Signal") use `Badge tone="gold"` — yellow on a label, against DESIGN_SYSTEM §4
+  (`app/app/daily-logs/page.tsx:470`, `app/app/projects/[projectId]/daily-logs/page.tsx:584`,
+  `components/media/OnThisPhone.tsx:78`, `app/app/projects/[projectId]/punch-list/page.tsx:497`).
+- Videos kept on the phone (`/api/files/record`) carry no client id yet — a lost answer can still file a video twice.
+
+## 17 Oct 2026 — permissions per job (feat/project-permissions) — found, NOT fixed
+
+- `lib/job-page.sanity.test.ts` fails on main before this branch: "every tool page
+  under the job has a row — commitments, meetings" (the tools registry lacks rows for
+  those two pages). Not in `test:sanity`, so nothing runs it.
+- Line-item tables with no `project_id` (`change_order_line_items`,
+  `invoice_line_items`, `pay_application_lines`, `proposal_lines`,
+  `cash_flow_line_items`, `portal_sub_pay_app_line_items`) keep the company-role
+  RLS gate; a job role does not reach them from the browser. The server routes that
+  read them are guarded by the parent's job through `requirePermission`.
+- Cross-job list routes (`/api/rfis/list`, `/api/daily-logs/list`, the dashboard
+  rollups) still read with the company role and service client: a person with
+  "No access" on one job can see that job's rows in a company-wide list. Project
+  pickers (`/api/projects`, `/api/projects/list`) already drop the job.
+- `app/api/roles/assignments/[id]/route.ts` PATCH can move a grant onto a job where
+  the person already has one; the new one-job-row index turns that into a 500
+  instead of a 409.
+- A PATCH that moves a record to another job (`project_id` in the body) is checked
+  against the job the record is on now, not the one it is moving to.
 - FIXED (fix/offline-leftovers): "Waiting for Signal" badges now use the amber `pending` Badge tone; videos carry
   the phone's client id (`project_files.client_id`, migration 20261017f) and are filed once.
 - `lib/status-colors.ts` `under_contract` is #E8FF2A (neon yellow-green) — every `Badge tone="under_contract"`

@@ -11,9 +11,9 @@
  * Assignment grants real access three ways, all tenant-scoped and idempotent:
  *   1. projects.assigned_to (+ assigned_to_name) — the assignee of record.
  *   2. work_assignments — puts the job in the assignee's My Work hub.
- *   3. user_role_assignments — a project-scoped "Project Manager" grant, which
- *      is what getEffectivePermissions() reads (best effort: skipped when the
- *      tenant has no such role).
+ *   3. user_role_assignments — a project-scoped "Project Manager" job role,
+ *      which is what getEffectivePermissions() reads (best effort: skipped when
+ *      the tenant has no such role, or the person already has a job role here).
  * The assignee gets an in-app notification (no email). On a reassignment the
  * previous assignee's work assignment is ended (see endProjectAssignment).
  */
@@ -160,13 +160,16 @@ export async function assignProjectToUser(
     .maybeSingle();
 
   if (pmRole?.id) {
+    /* Any job role already set for this person on this job stands — it is the
+       admin's explicit answer (Team page → Job role), and there is one job row
+       per person per job (ura_one_job_row, 20261017h). Only a person with no
+       job role yet gets the Project Manager one. */
     const { data: existingGrant } = await db
       .from('user_role_assignments')
-      .select('id')
+      .select('id, role_id')
       .eq('tenant_id', tenantId)
       .eq('user_id', assigneeUserId)
       .eq('project_id', projectId)
-      .eq('role_id', pmRole.id)
       .maybeSingle();
 
     if (!existingGrant) {
@@ -179,7 +182,7 @@ export async function assignProjectToUser(
       } as never);
       if (graErr) throw graErr;
     }
-    documentsAccessGranted = true;
+    documentsAccessGranted = !existingGrant || existingGrant.role_id === pmRole.id;
   }
 
   // Tell the assignee — in-app only, never blocks the assignment.
