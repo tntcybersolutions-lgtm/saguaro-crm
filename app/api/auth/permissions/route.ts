@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from 'next/server';
 import { createServerClient, getUser } from '@/lib/supabase-server';
 import { getEffectivePermissions } from '@/lib/permissions';
 import { apiError } from '@/lib/api-error';
+import { isUuid } from '@/lib/permission-scope';
 
 export const dynamic = 'force-dynamic';
 
@@ -31,7 +32,15 @@ export async function GET(req: NextRequest) {
 
   try {
     const db = createServerClient();
-    const permissions = await getEffectivePermissions(db, user.id, user.tenantId);
+    /* ?projectId= → the map that applies on that job (its job role, if one is
+       set). Only a job in this company counts; anything else is company-wide. */
+    const asked = new URL(req.url).searchParams.get('projectId');
+    let projectId: string | null = null;
+    if (isUuid(asked)) {
+      const { data: own } = await db.from('projects').select('id').eq('id', asked).eq('tenant_id', user.tenantId).maybeSingle();
+      projectId = own?.id ?? null;
+    }
+    const permissions = await getEffectivePermissions(db, user.id, user.tenantId, projectId);
 
     /* The base role travels with the map because the rail needs one thing the
        map cannot express: whether this person is staff at all. */
@@ -44,6 +53,7 @@ export async function GET(req: NextRequest) {
     return NextResponse.json({
       permissions,
       role: (profile as { role?: string } | null)?.role ?? null,
+      projectId,
       name: (profile as { full_name?: string } | null)?.full_name ?? null,
     });
   } catch (e) {
