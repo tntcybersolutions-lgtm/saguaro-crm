@@ -111,7 +111,13 @@ function useSheet(): boolean {
 
 type Group = { key: string; label: string; items: Proj[] };
 
-export default function HeaderProjectPicker({ userId = null }: { userId?: string | null } = {}) {
+/**
+ * variant="title" — the phone top bar inside a job: the screen's name on top,
+ * the job under it, one tap opens the job sheet (Procore's mobile header). The
+ * desktop crumb trail is hidden on a phone, so without this a phone user could
+ * not see or switch which job they were in.
+ */
+export default function HeaderProjectPicker({ userId = null, variant = 'crumb', title }: { userId?: string | null; variant?: 'crumb' | 'title'; title?: string } = {}) {
   const pathname = usePathname() ?? '';
   const router = useRouter();
   const { projects, loading, error, degraded, revalidate } = useProjects();
@@ -430,6 +436,7 @@ export default function HeaderProjectPicker({ userId = null }: { userId?: string
         type="button"
         data-tour="project-picker"
         className="jp-trigger"
+        data-variant={variant}
         data-in-job={currentName ? 'true' : undefined}
         onClick={() => { if (open) { close(); return; } openList(); }}
         onKeyDown={triggerKeys}
@@ -437,13 +444,22 @@ export default function HeaderProjectPicker({ userId = null }: { userId?: string
         aria-haspopup="listbox"
         title={currentName ? `${currentName} — switch job` : 'Select a job'}
       >
-        {currentName && currentId
-          ? <ProjectTile project={current ?? currentId} name={currentName} size={28} />
-          : <span className="jp-trig-tile" aria-hidden><Buildings size={15} weight="duotone" /></span>}
-        <span className="jp-trig-text">
-          <span className="jp-trig-label">{currentName ?? 'Select a job'}</span>
-          {trigMeta && <span className="jp-trig-meta">{trigMeta}</span>}
-        </span>
+        {variant === 'title' ? (
+          <span className="jp-trig-text">
+            <span className="jp-trig-title">{title || currentName || 'Job'}</span>
+            <span className="jp-trig-job">{currentName ?? 'Select a job'}</span>
+          </span>
+        ) : (
+          <>
+            {currentName && currentId
+              ? <ProjectTile project={current ?? currentId} name={currentName} size={28} />
+              : <span className="jp-trig-tile" aria-hidden><Buildings size={15} weight="duotone" /></span>}
+            <span className="jp-trig-text">
+              <span className="jp-trig-label">{currentName ?? 'Select a job'}</span>
+              {trigMeta && <span className="jp-trig-meta">{trigMeta}</span>}
+            </span>
+          </>
+        )}
         <CaretUpDown size={13} weight="bold" aria-hidden className="jp-trig-caret" />
       </button>
 
@@ -490,6 +506,10 @@ const CSS = `
 .jp-trig-text { display: flex; flex-direction: column; min-width: 0; line-height: 1.2; }
 .jp-trig-label { overflow: hidden; text-overflow: ellipsis; min-width: 0; }
 .jp-trig-meta { color: var(--text-tertiary); font-size: 12px; font-weight: 600; overflow: hidden; text-overflow: ellipsis; }
+.jp-wrap:has(.jp-trigger[data-variant="title"]) { flex: 1 1 auto; }
+.jp-trigger[data-variant="title"] { width: 100%; min-height: 44px; padding: 2px 6px; gap: 6px; }
+.jp-trig-title { font-size: 17px; font-weight: 650; color: var(--text-primary); overflow: hidden; text-overflow: ellipsis; }
+.jp-trig-job { font-size: 13px; font-weight: 500; color: var(--text-secondary); overflow: hidden; text-overflow: ellipsis; }
 .jp-trig-caret { color: var(--text-tertiary); flex-shrink: 0; margin-left: auto; }
 
 /* Desktop: a flat popover — the surface colour, one hairline, the smallest
