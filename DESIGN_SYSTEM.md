@@ -26,7 +26,7 @@ jet-black era), **this file wins**. Copy rules stay in `docs/COPY-STYLE.md`.
 | Module accent (the page's) | `--acc` (set per route by the app shell) | one of the eight `--mod-*` hues below |
 | Primary action, selected navigation | `--brand-primary` + `--on-brand` | `#FFE000` on `#101722` |
 | Informational links | `--link` / `--link-hover` | `#38BDF8` / `#7DD3FC` |
-| Status | `--success` / `--warning` / `--danger` / `--info` | `#4ADE80` / `#FBBF24` / `#F87171` / `#38BDF8` |
+| Status | `--success` / `--warning` / `--danger` / `--info` | `#4ADE80` / `#FBBF24` / `#F87171` / `#CBD5E1` (info is slate since 16 Oct 2026 — never yellow, never blue) |
 
 `lib/design-tokens.ts` and `lib/status-colors.ts` mirror these for TypeScript.
 No page defines its own hex. `tools/check-design-system.mjs` fails the build if
@@ -61,7 +61,8 @@ states are mixes of approved values (no new hex). The status values
 | Primary action | #FFE000 | #FFE000 | `--brand-primary`, `--action-primary-bg` | `.k-btn-primary`, `goldButtonStyle` |
 | Primary hover / pressed | — (derived) | mix #FFE000 90% / 80% + #101722 | `--action-primary-hover`, `--action-primary-pressed` | primary buttons |
 | Selected navigation / tab / control | #FFE000 + dark text | #FFE000 on #101722 | `--nav-active-*`, `--tab-selected-*`, `--selected-control-*` | sidebar, job tabs, `.k-tab`, `StagePicker` |
-| Links / information | #38BDF8 | #38BDF8 | `--link`, `--info`, `--info-fg`, `--focus-ring`, `--chart-1` | links, info callouts, focus rings, charts |
+| Links | #38BDF8 → #E8FF2A (no blue: Chad) | #E8FF2A | `--link` | real links only |
+| Information, focus, first chart series (16 Oct 2026) | — | #CBD5E1 info · #F8FAFC focus ring · #CBD5E1 chart-1 / progress bars | `--info*`, `--focus-ring`, `--chart-1/2` | info callouts, focus rings, progress bars, charts — never the action yellow |
 | Link hover | — (derived) | mix #38BDF8 72% + #F8FAFC | `--link-hover` | links |
 | Selected row | — (derived) | mix #38BDF8 10% + #1B2636 | `--selected-row-bg`, `--selected-row-indicator` | tables, lists |
 | Success | #4ADE80 | #4ADE80 | `--success`, `--success-fg/bg/border` | badges, callouts, timelines |
@@ -152,6 +153,32 @@ date, delete): each row goes through the record's own route
   inputs to 16px is a deliberate exception: it has to beat inline font sizes so
   iOS never zooms into a field. Reducing the rest means moving those inline
   styles into classes, screen by screen.
+
+### Shared-layer polish (16 Oct 2026)
+
+- **No yellow off the action:** `--status-under-contract` and the "waiting on
+  you" status tone are amber; a Badge/Pill `gold` tone is neutral slate; a
+  `gold` list dot is amber; `figureColor()` renders any yellow, link, info or
+  module accent on a number as white.
+- **Icons without tiles:** `.k-tile`, `IconChip`, `SectionCard` / `Card` /
+  `EmptyState` / `PremiumEmpty` icons are the glyph alone in its hue — no
+  tinted square. `ModuleHero` draws title + subtitle only (no eyebrow, no
+  icon tile).
+- **Flat lists:** `.pmTable` (premium `DataTable`, `components/DataTable`),
+  `.k-actionbar` and the chart frames (`components/charts/*`) carry no fill,
+  radius or shadow — a hairline above and below. Phone rows and list tools sit
+  on the page gutter.
+- **No explainer strip:** the "You Are Here" bar (`NextStepBar`) is removed
+  from the app shell.
+- **Back:** the top bar's Back always names the screen's real parent
+  (`lib/topbar-crumbs`), never an earlier, unrelated screen.
+- **Phones:** every button in the work area is at least 44 × 44 (switches,
+  checkboxes and radios excepted), and so are links drawn as buttons
+  (`.pmBtn`, `.fl-act`, `.k-chip`, `.k-btn`, `.k-tap`). The 12px text floor
+  includes `font.size.xs` and SVG file glyphs.
+- **Job photo:** the job banner shows the cover photo whole at its own aspect
+  ratio — full width on a phone, beside the facts on wider screens — never
+  cropped and never over a blurred copy. Weather days are flat columns.
 
 ## 2. Type, spacing, shape, depth
 

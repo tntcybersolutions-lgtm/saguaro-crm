@@ -56,7 +56,7 @@ export default function OfflineBar({ top }: { top?: string }) {
   if (!body) return <SyncLine />;
   return (
     <>
-    <SyncLine />
+    <SyncLine covered />
     <div className="offb" data-tone={tone} role="status" aria-live="polite" style={top ? ({ ['--offb-top' as string]: top } as React.CSSProperties) : undefined}>
       <style dangerouslySetInnerHTML={{ __html: CSS }} />
       {body}

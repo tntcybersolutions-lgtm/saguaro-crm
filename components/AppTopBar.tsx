@@ -8,11 +8,11 @@
  *   desktop  [‹ Parent]  Job picker | Page title …  Search  Help  (✦ Sage)  🔔  (CD)
  *
  * Back (Chad, 2026-10-11: "a back button easy for users to go back to prior
- * screen") is a lit pill that names where it goes and takes you to the screen
- * you were actually on before (lib/navHistory). On the first screen of a tab
- * — a link opened fresh, a reload — it goes up to the parent screen instead,
- * and on a tab's own page with nothing before it there is no Back. It goes
- * through the unsaved-changes gate like every other way out. The title takes
+ * screen") is a lit pill that names where it goes: this screen's parent
+ * (job tool → the job, the job → Jobs, a sub-page → its section). It reuses
+ * the browser's history only when the screen before was that parent
+ * (lib/navHistory). A tab's own page and a section under Home have no Back.
+ * It goes through the unsaved-changes gate like every other way out. The title takes
  * the rest of the row. Sage and the account are 32px round buttons with a
  * 44px hit area.
  */
@@ -92,24 +92,21 @@ export default function AppTopBar({
 
   const { back, title } = resolveTopBar(pathname, { projectNames, companyName: companyName || null });
 
-  /* ── Back: the screen you were on, else the parent screen ───────────── */
+  /* ── Back: always this screen's real parent ─────────────────────────────
+     The label and the destination come from the path (lib/topbar-crumbs), so
+     they can never name an unrelated screen visited earlier ("‹ Vlans" on a
+     job's overview, "‹ Dashboard Setup" on Documents). When the screen you
+     came from IS that parent, Back steps through the browser's history so the
+     list keeps its scroll and filters; otherwise it opens the parent. */
   const [prevPath, setPrevPath] = useState<string | null>(null);
   useEffect(() => { setPrevPath(recordVisit(pathname)); }, [pathname]);
-  const jobName = (id: string) =>
-    projectNames[id] ||
-    (crumbProjects as Array<{ id?: string; name?: string }>).find((x) => x?.id === id)?.name ||
-    'Job';
-  const screenName = (path: string): string => {
-    if (path === '/app' || path === '/app/') return 'Home';
-    const job = path.match(/^\/app\/projects\/([^/]+)(?:\/overview)?\/?$/);
-    if (job && UUID_RE.test(job[1])) return jobName(job[1]);
-    return resolveTopBar(path, { projectNames, companyName: null }).title || 'Back';
+  const samePage = (a: string, b: string) => {
+    const n = (p: string) => p.split('?')[0].replace(/\/+$/, '').replace(/^(\/app\/projects\/[^/]+)\/overview$/, '$1');
+    return n(a) === n(b);
   };
-  const backTo = prevPath
-    ? { label: screenName(prevPath), go: () => router.back() }
-    : back
-      ? { label: back.label, go: () => router.push(back.href) }
-      : null;
+  const backTo = back
+    ? { label: back.label, go: () => (prevPath && samePage(prevPath, back.href) ? router.back() : router.push(back.href)) }
+    : null;
   /* The pill never shrinks, so it is never cut to "‹ F": a long name shows as
      its short form ("Maple Ridge — Phase 2" → "Maple Ridge") or as "Back".
      The full name stays in the tooltip and the accessible name. On a phone it
@@ -217,7 +214,7 @@ export default function AppTopBar({
             alignItems: 'center',
             height: 20,
             padding: '0 6px',
-            fontSize: font.size.xs,
+            fontSize: font.size.sm,
             fontWeight: font.weight.semibold,
             fontFamily: font.mono,
             color: 'var(--sg-text-3)',

@@ -154,12 +154,10 @@ function StorageSettings() {
       />
 
       {/* Live figures — connections and providers come straight from the API. */}
-      {!loading && (
+      {!loading && connectors.length > 0 && (
         <StatStrip items={[
-          {href: '/app/settings/storage', label: 'Connections', value: String(connectors.length), sub: connectors.length ? 'Linked to this workspace' : 'None yet' },
-          {href: '/app/settings/storage', label: 'Healthy', value: String(healthy), accent: connectors.length > 0 && healthy < connectors.length ? RED : (healthy > 0 ? GREEN : undefined), sub: connectors.length > 0 && healthy < connectors.length ? `${connectors.length - healthy} need attention` : 'Verified reachable' },
-          {href: '/app/settings/storage', label: 'One-Click Providers', value: String(oneClick.length), sub: oneClick.map((p) => p.label).join(', ') || 'None set up' },
-          {href: '/app/settings/storage', label: 'Bring Your Own', value: String(advanced.length), sub: 'Key-based options (S3, Egnyte)' },
+          {label: 'Connections', value: String(connectors.length), sub: connectors.length ? 'Linked to this workspace' : 'None yet' },
+          {label: 'Healthy', value: String(healthy), accent: connectors.length > 0 && healthy < connectors.length ? RED : (healthy > 0 ? GREEN : undefined), sub: connectors.length > 0 && healthy < connectors.length ? `${connectors.length - healthy} need attention` : 'Verified reachable' },
         ]} />
       )}
 
@@ -171,14 +169,13 @@ function StorageSettings() {
       <SectionCard flat
         title="Connected Storage"
         subtitle={connectors.length ? 'Test, tune, or remove existing connections' : undefined}
-        icon={<CloudArrowUp size={17} weight="duotone" color="var(--text-secondary)" />}
         style={{ marginBottom: 24 }}
       >
         <div style={{ display: 'flex', flexDirection: 'column', gap: 10 }}>
           {loading ? <><SkeletonRow /><SkeletonRow /></>
             : connectors.length === 0 ? (
               <div style={{ fontSize: 13, color: FAINT, lineHeight: 1.55 }}>
-                No storage connected yet. Pick a provider below — once connected, its files show up in every project&apos;s Files tab for browsing and import.
+                Nothing connected yet. Connected files show in every job&apos;s Files tab.
               </div>
             )
               : connectors.map((c) => <ConnectorCard key={c.id} c={c} onTest={() => test(c.id)} onRemove={() => remove(c.id, c.display_name)} onSaveConfig={(cfg) => saveConfig(c.id, cfg)} />)}
@@ -187,20 +184,20 @@ function StorageSettings() {
 
       {/* One-click OAuth providers — the mainstream, no keys */}
       <SectionCard
+        flat
         title="Connect in One Click"
-        subtitle="Your team signs in with their existing account — no API keys, nothing to paste."
-        icon={<CheckCircle size={17} weight="duotone" color="var(--text-secondary)" />}
+        subtitle="Sign in with your existing account."
       >
-        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(230px, 1fr))', gap: 12 }}>
+        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(min(100%, 230px), 1fr))', gap: '0 28px' }}>
           {loading && <><SkeletonRow h={110} /><SkeletonRow h={110} /><SkeletonRow h={110} /></>}
           {!loading && oneClick.map((p) => (
             <button key={p.id} onClick={() => startAdd(p.id, p.auth)}
               className="pmHover"
               style={{
                 textAlign: 'left', fontFamily: 'inherit',
-                background: 'linear-gradient(160deg, rgba(255,255,255,0.045), rgba(255,255,255,0.012))',
-                border: `1px solid ${BORDER}`,
-                borderRadius: 12, padding: 14, cursor: 'pointer', color: WHITE,
+                background: 'transparent',
+                border: 0, borderTop: `1px solid ${BORDER}`,
+                borderRadius: 0, padding: '14px 0', cursor: 'pointer', color: WHITE,
               }}>
               <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}><CloudArrowUp size={18} color="var(--text-secondary)" weight="fill" /><span style={{ fontWeight: 700, fontSize: 14 }}>{p.label}</span></div>
               <div style={{ color: MUTED, fontSize: 12, marginTop: 6, lineHeight: 1.4 }}>{p.blurb}</div>
@@ -215,14 +212,14 @@ function StorageSettings() {
           {advOpen ? <CaretDown size={14} /> : <CaretRight size={14} />}Advanced — Bring Your Own Bucket
         </button>
         {advOpen && (
-          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(230px, 1fr))', gap: 12, marginTop: 12 }}>
+          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(min(100%, 230px), 1fr))', gap: '0 28px', marginTop: 12 }}>
             {advanced.map((p) => (
               <button key={p.id} onClick={() => startAdd(p.id, p.auth)}
                 className="pmHover"
                 style={{
                   textAlign: 'left', fontFamily: 'inherit',
-                  background: 'linear-gradient(160deg, rgba(255,255,255,0.045), rgba(255,255,255,0.012))',
-                  border: `1px solid ${BORDER}`, borderRadius: 12, padding: 14, cursor: 'pointer', color: WHITE,
+                  background: 'transparent',
+                  border: 0, borderTop: `1px solid ${BORDER}`, borderRadius: 0, padding: '14px 0', cursor: 'pointer', color: WHITE,
                 }}>
                 <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}><CloudArrowUp size={18} color={MUTED} weight="fill" /><span style={{ fontWeight: 700, fontSize: 14 }}>{p.label}</span></div>
                 <div style={{ color: MUTED, fontSize: 12, marginTop: 6, lineHeight: 1.4 }}>{p.blurb}</div>

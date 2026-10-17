@@ -3,7 +3,7 @@ import React, { useState, useEffect, useMemo, useCallback } from 'react';
 import SaguaroDatePicker from '@/components/SaguaroDatePicker';
 import { humanError } from '@/lib/errors';
 import { CaretUp, CaretDown, Clipboard, CheckCircle, Asterisk, Stack, MagnifyingGlass, Plus } from '@phosphor-icons/react';
-import { PremiumSurface, ModuleHero, StatCard, SectionCard, PremiumEmpty, goldButtonStyle, ghostButtonStyle, secondaryButtonStyle } from '@/components/ui/premium';
+import { PremiumSurface, ModuleHero, StatStrip, SectionCard, PremiumEmpty, goldButtonStyle, ghostButtonStyle, secondaryButtonStyle } from '@/components/ui/premium';
 import { useUnsavedGuard, useComposerDirty } from '@/lib/useUnsavedGuard';
 import UnsavedGuardModal from '@/components/UnsavedGuardModal';
 
@@ -1056,7 +1056,7 @@ export default function CustomFieldsPage() {
         eyebrowIcon={<Clipboard size={13} weight="fill" color="var(--text-secondary)" />}
         title="Custom"
         accent="Fields"
-        subtitle="Add your own fields to any module. They flow into exports."
+        subtitle="Your own fields on any module."
         actions={<>
           <button
             style={{ ...ghostButtonStyle, opacity: loadingSummary ? 0.6 : 1 }}
@@ -1140,46 +1140,15 @@ export default function CustomFieldsPage() {
           </div>
         )}
 
-        {/* Stats Row */}
-        <div
-          style={{
-            display: 'grid',
-            gridTemplateColumns: 'repeat(auto-fit, minmax(180px, 1fr))',
-            gap: 12,
-            marginBottom: 20,
-          }}
-        >
-          <StatCard
-            icon={<Clipboard size={19} weight="duotone" color="var(--text-secondary)" />}
-            label={`${activeModule} Fields`}
-            value={stats.total}
-            sub={stats.total > 0 ? 'Defined on this module' : 'None defined yet'}
-            delay={0.02}
-           href="/app/custom-fields"/>
-          <StatCard
-            icon={<CheckCircle size={19} weight="duotone" color={GREEN} />}
-            label="Active"
-            value={stats.active}
-            accent={stats.active > 0 ? GREEN : undefined}
-            sub={stats.active > 0 ? `Showing on every ${activeModule} record` : 'Toggle a field on to show it'}
-            delay={0.06}
-           href="/app/custom-fields"/>
-          <StatCard
-            icon={<Asterisk size={19} weight="duotone" color={AMBER} />}
-            label="Required"
-            value={stats.required}
-            accent={stats.required > 0 ? AMBER : undefined}
-            sub="Blocks save until filled in"
-            delay={0.10}
-           href="/app/custom-fields"/>
-          <StatCard
-            icon={<Stack size={19} weight="duotone" color={PURPLE} />}
-            label="Field Types"
-            value={Object.keys(stats.byType).length}
-            sub={`Of ${FIELD_TYPES.length} available types in use`}
-            delay={0.14}
-           href="/app/custom-fields"/>
-        </div>
+        {/* Stats — one flat strip, once the module has fields to count */}
+        {stats.total > 0 && (
+          <StatStrip items={[
+            { label: `${activeModule} Fields`, value: stats.total },
+            { label: 'Active', value: stats.active, accent: stats.active > 0 ? GREEN : undefined },
+            { label: 'Required', value: stats.required, accent: stats.required > 0 ? AMBER : undefined },
+            { label: 'Field Types', value: Object.keys(stats.byType).length, sub: `of ${FIELD_TYPES.length}` },
+          ]} />
+        )}
 
         {/* Search Bar */}
         <div style={{ marginBottom: 16, display: 'flex', gap: 10, alignItems: 'center' }}>
@@ -1476,7 +1445,7 @@ export default function CustomFieldsPage() {
             <style>{`@keyframes spin { to { transform: rotate(360deg); } }`}</style>
           </div>
         ) : filteredFields.length === 0 ? (
-          <SectionCard flush>
+          <div>
             <PremiumEmpty
               icon={searchTerm
                 ? <MagnifyingGlass size={30} weight="duotone" color="var(--text-secondary)" />
@@ -1485,20 +1454,17 @@ export default function CustomFieldsPage() {
                 ? `No fields match "${searchTerm}"`
                 : `${activeModule} has no custom fields yet`}
               description={searchTerm
-                ? 'Try a different keyword, or clear the search to see every field defined on this module.'
-                : `Add a field and it appears on every ${activeModule} record instantly — text, numbers, dates, dropdowns, checkboxes, files, or URLs, each with optional validation rules and a default value. Already built a set elsewhere? Import JSON drops it in whole.`}
+                ? undefined
+                : `Fields you add show on every ${activeModule} record.`}
               action={searchTerm ? (
                 <button style={ghostButtonStyle} className="pmBtn" onClick={() => setSearchTerm('')}>Clear Search</button>
               ) : (
-                <div style={{ display: 'flex', gap: 10, flexWrap: 'wrap', justifyContent: 'center' }}>
-                  <button style={secondaryButtonStyle} className="pmBtn" onClick={() => { resetForm(); setShowForm(true); }}>
-                    <Plus size={15} weight="bold" /> New Field
-                  </button>
-                  <button style={ghostButtonStyle} className="pmBtn" onClick={importFields}>Import JSON</button>
-                </div>
+                <button style={secondaryButtonStyle} className="pmBtn" onClick={() => { resetForm(); setShowForm(true); }}>
+                  <Plus size={15} weight="bold" /> New Field
+                </button>
               )}
             />
-          </SectionCard>
+          </div>
         ) : (
           <div>
             {/* Column Headers */}
@@ -1851,7 +1817,7 @@ export default function CustomFieldsPage() {
         )}
 
         {/* ── Footer ── */}
-        <div
+        {fields.length > 0 && <div
           style={{
             marginTop: 32,
             padding: '16px 0',
@@ -1875,7 +1841,7 @@ export default function CustomFieldsPage() {
               Export
             </button>
             <button
-              style={btn(GOLD, ON_GOLD)}
+              style={btn(BORDER, DIM)}
               onClick={() => {
                 resetForm();
                 setShowForm(true);
@@ -1885,7 +1851,7 @@ export default function CustomFieldsPage() {
               + Add Field
             </button>
           </div>
-        </div>
+        </div>}
       </div>
       <UnsavedGuardModal guard={guard} />
     </PremiumSurface>

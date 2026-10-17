@@ -44,4 +44,6 @@ export function computePayApp(input: PayAppInput): PayAppResult {
   };
 }
 
-export const usd = (cents: number) => '$' + (cents / 100).toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+/** Display only. The sign leads the dollar sign (-$2,150.00, never $-2,150.00),
+ *  and the grouping is US whatever the browser's locale. */
+export const usd = (cents: number) => (cents < 0 ? '-' : '') + '$' + (Math.abs(cents) / 100).toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 });

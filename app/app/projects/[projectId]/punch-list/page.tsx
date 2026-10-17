@@ -494,7 +494,7 @@ export default function PunchListPage(){
     const b=statusBadge(i.status);
     if(!i._offline) return <Badge tone={b.tone}>{b.label}</Badge>;
     return <span style={{display:'inline-flex',gap:6,flexWrap:'wrap'}} title={i._offlineError?`Couldn't send: ${i._offlineError}`:"Saved on this phone — it sends when you're back online."}>
-      <Badge tone={b.tone}>{b.label}</Badge><Badge tone={i._offlineError?'overdue':'gold'}>{i._offlineError?"Couldn't Send":'Waiting for Signal'}</Badge>
+      <Badge tone={b.tone}>{b.label}</Badge><Badge tone={i._offlineError?'overdue':'pending'}>{i._offlineError?"Couldn't Send":'Waiting for Signal'}</Badge>
     </span>;
   } };
   const tradeCol: Column<any> = { key:'trade', header:'Trade', phone:'hide', accessor:i=>(i.trade||'').toLowerCase(), render:i=>i.trade?<span>{i.trade}</span>:null };

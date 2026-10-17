@@ -1,6 +1,6 @@
 'use client';
 /**
- * Time Clock (web) — Pass 4, on the RFIs reference layout (console + register + rail).
+ * Time Clock (web) — the clock, this week as bars, the entries register.
  *
  * Clock in/out goes through the canonical timeclock API
  * (/api/timeclock/status|in|out) so this screen and the field screen agree on one
@@ -14,11 +14,13 @@
  * RLS-scoped browser client, and manual add/edit + PTO/sick logging still write
  * directly (they are not clock events).
  *
- * Anatomy: title → StatRow (today / week / overtime / gross or pending) →
- * workspace: shift console + this week + the entries register (DataTable) on the
- * left, a 320–384px "this week at a glance" + "after you clock out" rail on the
- * right. Phone: stacked. Add / edit time and PTO open in a FormModal. "Live"
- * only ever appears next to a timestamp (the running shift's clock-in time).
+ * Anatomy — it SHOWS, it doesn't explain: the clock at the top (a big live
+ * time, the state, the job + cost code pickers and one Clock In / Clock Out
+ * button) → this week (the numbers, then a bar per day: regular, overtime past
+ * the 40th hour, PTO / sick, and the shift running now) → the entries register
+ * (DataTable). Phone: stacked, one column. Add / edit time and PTO open in a
+ * FormModal. Status lines are a few words ("Saved on phone · sends when
+ * signal returns"), never a paragraph.
  */
 import { useEffect, useMemo, useState, useCallback, useRef } from 'react';
 import SaguaroDatePicker from '@/components/SaguaroDatePicker';
@@ -30,14 +32,12 @@ import { getSupabaseBrowser, ensureBrowserSession, getAuthHeaders } from '@/lib/
 import { computeTimesheet, weekKey, fmtHours, liveElapsed, type TimeEntry } from '@/lib/timeclock';
 import { CSI_DIVISIONS } from '@/lib/construction-intelligence';
 import { LEAVE_LABEL, LEAVE_TYPES, checkLeave, leaveHoursOf, leaveInsertRow, type LeaveField } from '@/lib/leave-entry';
-import { Clock, Play, Stop, Plus, Trash, PaperPlaneRight, Sun, MapPin, HardHat, Timer, PencilSimple } from '@phosphor-icons/react';
+import { Clock, Play, Stop, Plus, Trash, PaperPlaneRight, Sun, HardHat, Timer, PencilSimple } from '@phosphor-icons/react';
 import {
-  PageShell, Card, StatRow, Badge, Button, DataTable, EmptyState, DetailList,
+  PageShell, Card, StatRow, Badge, Button, DataTable, EmptyState,
   FormModal, Field, Input, Select, FormGrid,
   type Column, type Action, type BadgeTone, type StatItem,
 } from '@/components/ui/kit';
-import { FlowSteps } from '@/components/ui/premium';
-import { layout } from '@/lib/design-tokens';
 
 /* eslint-disable @typescript-eslint/no-explicit-any */
 const TZ = (() => { try { return Intl.DateTimeFormat().resolvedOptions().timeZone; } catch { return 'UTC'; } })();
@@ -105,13 +105,14 @@ async function savedClockState(): Promise<{ in: boolean; at: string; projectId: 
   return { in: last.url.endsWith('/in'), at: new Date(last.createdAt).toISOString(), projectId: body.projectId ?? null, csi: body.csiDivision ?? null };
 }
 
-/** One status → one badge. Pending stays amber, approved green, the running
- *  shift green with a dot, rejected red; everything else neutral. */
+/** One status → one badge. Pending amber (the warning tone — never brand
+ *  yellow), approved green, the running shift green with a dot, rejected red;
+ *  everything else neutral. */
 function entryStatus(s: string | null | undefined): { label: string; tone: BadgeTone } {
   const k = String(s || '').toLowerCase();
   if (k === 'clocked_in') return { label: 'On the Clock', tone: 'ongoing' };
   if (k === 'approved') return { label: 'Approved', tone: 'ongoing' };
-  if (k === 'pending') return { label: 'Pending', tone: 'under_contract' };
+  if (k === 'pending') return { label: 'Pending', tone: 'pending' };
   if (k === 'rejected') return { label: 'Rejected', tone: 'overdue' };
   return { label: k ? k.replace(/_/g, ' ').replace(/\b\w/g, (c) => c.toUpperCase()) : '—', tone: 'neutral' };
 }
@@ -119,35 +120,46 @@ const LEAVE_FIELD_ID: Record<LeaveField, string> = { type: 'tc-leave-type', proj
 
 const CSS = `
 .tcWs > .k-page { max-width: none; }
-.tcCq { container: tcws / inline-size; min-width: 0; }
-.tcSplit { display: grid; grid-template-columns: minmax(0, 1fr); gap: 16px; align-items: start; min-width: 0; }
-.tcSplit > * { min-width: 0; }
-.tcMain { display: flex; flex-direction: column; gap: 16px; min-width: 0; }
-.tcRail { order: -1; display: flex; flex-direction: column; gap: 16px; }
-@container tcws (min-width: 900px) {
-  .tcSplit { grid-template-columns: minmax(0, 1fr) clamp(${layout.detailRailMin}px, 30%, ${layout.detailRailMax}px); }
-  .tcRail { order: 0; position: sticky; top: 16px; }
-}
-.tcConsole { display: flex; flex-direction: column; align-items: center; text-align: center; gap: 8px; padding: 10px 0 6px; }
-.tcClock { font-size: 46px; font-weight: 800; letter-spacing: -1px; color: var(--text-tertiary); font-variant-numeric: tabular-nums; line-height: 1.1; }
+.tcCq { container: tcws / inline-size; min-width: 0; display: flex; flex-direction: column; gap: 20px; }
+.tcHero { display: grid; grid-template-columns: minmax(0, 1fr); gap: 16px; align-items: center; padding: 4px 0 20px; border-bottom: 1px solid var(--border-subtle); min-width: 0; }
+@container tcws (min-width: 860px) { .tcHero { grid-template-columns: minmax(0, 1fr) minmax(360px, 480px); gap: 32px; } }
+.tcNow { display: flex; flex-direction: column; gap: 6px; min-width: 0; }
+.tcClock { font-size: 64px; font-weight: 800; letter-spacing: -1.5px; color: var(--text-primary); font-variant-numeric: tabular-nums; line-height: 1; }
 .tcClock[data-live="true"] { color: var(--status-ongoing); }
-.tcSince { color: var(--text-tertiary); font-size: var(--fs-sm); }
-.tcFacts { display: flex; gap: 16px; justify-content: center; flex-wrap: wrap; font-size: var(--fs-xs); color: var(--text-tertiary); }
-.tcFacts span { display: inline-flex; align-items: center; gap: 5px; }
-.tcPickers { display: grid; grid-template-columns: minmax(0, 1fr) minmax(0, 1fr); gap: 10px; width: 100%; max-width: 560px; margin-top: 6px; text-align: left; }
+.tcState { display: flex; align-items: center; gap: 8px; flex-wrap: wrap; font-size: var(--fs-md); font-weight: 700; color: var(--text-secondary); }
+.tcState[data-live="true"] { color: var(--text-primary); }
+.tcState i { width: 8px; height: 8px; border-radius: 50%; background: var(--text-tertiary); flex: none; }
+.tcState[data-live="true"] i { background: var(--status-ongoing); }
+.tcFacts { display: flex; gap: 6px 16px; flex-wrap: wrap; font-size: var(--fs-sm); color: var(--text-secondary); min-width: 0; }
+.tcFacts span { display: inline-flex; align-items: center; gap: 6px; min-width: 0; overflow-wrap: anywhere; }
+.tcCtl { display: flex; flex-direction: column; gap: 10px; min-width: 0; }
+.tcPickers { display: grid; grid-template-columns: minmax(0, 1fr) minmax(0, 1fr); gap: 10px; }
 @media (max-width: 560px) { .tcPickers { grid-template-columns: minmax(0, 1fr); } }
-.tcBigBtn { min-height: 52px; padding: 0 28px; font-size: var(--fs-md); border-radius: var(--radius-md); margin-top: 8px; }
-.tcBigBtn[data-live="true"] { background: rgba(248,113,113,.14); border-color: rgba(248,113,113,.45); color: var(--status-overdue); }
-.tcBigBtn[data-live="false"] { background: rgba(74,222,128,.14); border-color: rgba(74,222,128,.45); color: var(--status-ongoing); }
-.tcMsg { font-size: var(--fs-sm); color: var(--status-ongoing); }
+.tcBigBtn { width: 100%; height: 56px; font-size: 17px; border-radius: var(--radius-md); }
+.tcBigBtn[data-live="true"] { background: color-mix(in srgb, var(--danger) 14%, transparent); border-color: color-mix(in srgb, var(--danger) 50%, transparent); color: var(--danger); }
+.tcBigBtn[data-live="true"]:hover { background: color-mix(in srgb, var(--danger) 22%, transparent); }
+.tcBigBtn[data-live="false"] { background: color-mix(in srgb, var(--success) 14%, transparent); border-color: color-mix(in srgb, var(--success) 50%, transparent); color: var(--success); }
+.tcBigBtn[data-live="false"]:hover { background: color-mix(in srgb, var(--success) 22%, transparent); }
+.tcMsg { font-size: var(--fs-sm); font-weight: 600; color: var(--status-ongoing); }
 .tcMsg[data-tone="err"] { color: var(--status-overdue); }
-.tcDays { display: flex; flex-direction: column; gap: 4px; }
-.tcDay { display: flex; align-items: center; gap: 12px; padding: 5px 0; font-size: var(--fs-sm); }
-.tcDay > span:first-child { width: 110px; flex-shrink: 0; color: var(--text-secondary); }
-.tcBar { flex: 1; height: 6px; border-radius: 999px; background: rgba(255,255,255,0.07); overflow: hidden; }
-.tcBarFill { height: 100%; border-radius: 999px; background: rgba(74,222,128,.75); }
-.tcBarFill[data-ot="true"] { background: var(--status-under-contract); }
-.tcDay > b { font-weight: 700; font-variant-numeric: tabular-nums; width: 56px; text-align: right; color: var(--text-primary); }
+.tcMsg[data-tone="wait"] { color: var(--warning); }
+.tcBars { display: grid; grid-template-columns: repeat(7, minmax(0, 1fr)); gap: 8px; padding-top: 12px; }
+.tcCol { display: flex; flex-direction: column; align-items: stretch; gap: 6px; min-width: 0; }
+.tcColVal { text-align: center; font-size: 13px; font-weight: 800; font-variant-numeric: tabular-nums; color: var(--text-primary); white-space: nowrap; }
+.tcColVal[data-zero="true"] { color: var(--text-tertiary); font-weight: 600; }
+.tcPlot { height: 160px; display: flex; align-items: flex-end; justify-content: center; border-bottom: 1px solid var(--border-default); }
+.tcBar { width: min(48px, 100%); display: flex; flex-direction: column-reverse; border-radius: 4px 4px 0 0; overflow: hidden; min-height: 0; }
+.tcBar > span { display: block; width: 100%; }
+.tcBar > [data-k="reg"] { background: color-mix(in srgb, var(--success) 80%, transparent); }
+.tcBar > [data-k="ot"] { background: var(--warning); }
+.tcBar > [data-k="leave"] { background: color-mix(in srgb, var(--text-tertiary) 55%, transparent); }
+.tcBar > [data-k="run"] { background: color-mix(in srgb, var(--success) 35%, transparent); }
+.tcDayLbl { display: flex; flex-direction: column; align-items: center; line-height: 1.25; font-size: 12px; color: var(--text-secondary); }
+.tcDayLbl b { font-size: 13px; font-weight: 700; color: var(--text-secondary); }
+.tcDayLbl[data-today="true"], .tcDayLbl[data-today="true"] b { color: var(--text-primary); font-weight: 800; }
+.tcKey { display: flex; gap: 6px 16px; flex-wrap: wrap; padding-top: 10px; font-size: 12px; color: var(--text-secondary); }
+.tcKey span { display: inline-flex; align-items: center; gap: 6px; }
+.tcKey i { width: 10px; height: 10px; border-radius: 2px; flex: none; }
 .tcMuted { color: var(--text-tertiary); }
 .tcNum { font-variant-numeric: tabular-nums; }
 .tcList .k-table th:first-child, .tcList .k-table td:first-child { position: sticky; left: 0; z-index: 1; background: var(--bg-solid); }
@@ -156,12 +168,14 @@ const CSS = `
 .tcSeg[aria-pressed="true"] { border-color: var(--border-strong); background: rgba(255,255,255,0.12); color: var(--text-primary); }
 .tcSegRow { display: flex; gap: 8px; flex-wrap: wrap; }
 .tcDateInput { width: 100%; }
-.tcNote { font-size: var(--fs-xs); color: var(--text-tertiary); line-height: 1.5; margin-top: 8px; }
 @media (max-width: 640px) {
   .tcWs .k-btn, .tcWs .k-stat, .tcWs select.k-select, .tcWs .k-input { min-height: 44px; }
   .tcWs .tcDateInput input { min-height: 44px !important; } /* beats the picker's inline 40px — a thumb target */
   .tcWs .k-table td { height: 48px; }
-  .tcClock { font-size: 38px; }
+  .tcWs .tcBigBtn { min-height: 56px; }
+  .tcClock { font-size: 52px; }
+  .tcBars { gap: 4px; }
+  .tcPlot { height: 128px; }
 }
 `;
 
@@ -186,7 +200,7 @@ export default function TimeClockPage() {
   const [busy, setBusy] = useState(false);
   const [now, setNow] = useState(Date.now());
   const [msg, setMsg] = useState('');
-  const [msgTone, setMsgTone] = useState<'ok' | 'err'>('ok');
+  const [msgTone, setMsgTone] = useState<'ok' | 'err' | 'wait'>('ok');
   const [manual, setManual] = useState<any | null>(null);
   const [leave, setLeave] = useState<any | null>(null);
   const [csiDiv, setCsiDiv] = useState('');
@@ -199,7 +213,7 @@ export default function TimeClockPage() {
   const [statusLoaded, setStatusLoaded] = useState(false);
   const inflight = useRef(false); // double-tap guard that beats a React re-render
 
-  const say = useCallback((text: string, tone: 'ok' | 'err' = 'ok') => { setMsg(text); setMsgTone(tone); }, []);
+  const say = useCallback((text: string, tone: 'ok' | 'err' | 'wait' = 'ok') => { setMsg(text); setMsgTone(tone); }, []);
 
   const loadEntries = useCallback(async (empId: string) => {
     const { data } = await sb.from('time_entries').select('id, project_id, work_date, clock_in, clock_out, hours_worked, regular_hours, overtime_hours, total_hours, status, timezone, entry_type, meal_break_mins, csi_division, cost_code_description').eq('employee_id', empId).order('work_date', { ascending: false }).order('clock_in', { ascending: false }).limit(80);
@@ -423,10 +437,10 @@ export default function TimeClockPage() {
     // rather than lose the shift; the server files it when the signal is back.
     if (!projectId && !(isOffline() && projects.length === 0)) {
       say(
-        projectsState === 'loading' ? 'Your jobs are still loading — pick one, then clock in.'
-        : projectsState === 'error' ? "Couldn't load your jobs. Reload the page, then pick the job you're on."
-        : projects.length === 0 ? 'No active jobs yet — create a project first, then clock in to it.'
-        : 'Pick a project before clocking in.',
+        projectsState === 'loading' ? 'Jobs still loading · pick one, then clock in'
+        : projectsState === 'error' ? "Couldn't load jobs · reload the page"
+        : projects.length === 0 ? 'No active jobs yet'
+        : 'Pick a job first',
         'err',
       );
       return;
@@ -444,7 +458,7 @@ export default function TimeClockPage() {
       }, 'Clock in');
       if (r.saved) {
         await syncStatus(); // shows the shift the phone is holding
-        say("Clocked in — no signal, so it's saved on this phone at the time you tapped. It sends by itself when you have signal.");
+        say('Clocked in · saved on phone · sends when signal returns', 'wait');
         inflight.current = false; setBusy(false);
         return;
       }
@@ -452,13 +466,13 @@ export default function TimeClockPage() {
       if (status >= 200 && status < 300 && json?.ok && json?.shift) {
         setShift(json.shift as Shift); setStatusLoaded(true);
         // alreadyOpen means the server refused to open a second shift — adopt the one it returned.
-        say(json.alreadyOpen ? 'You were already on the clock — showing your open shift.' : 'Clocked in');
+        say(json.alreadyOpen ? 'Already on the clock' : 'Clocked in');
         if (emp) await loadEntries(emp.id);
       } else {
         say(humanError(json, "Couldn't clock you in. Please try again."), 'err');
         await syncStatus(); // never leave the UI showing a state the server did not confirm
       }
-    } catch (e: any) { console.error(e); say(humanError(e, "Couldn't reach the clock. Check your connection and try again."), 'err'); }
+    } catch (e: any) { console.error(e); say(humanError(e, "Couldn't reach the clock · try again"), 'err'); }
     inflight.current = false; setBusy(false);
   };
 
@@ -484,7 +498,7 @@ export default function TimeClockPage() {
       }, 'Clock out');
       if (r.saved) {
         await syncStatus();
-        say("Clocked out — no signal, so it's saved on this phone at the time you tapped. It sends by itself when you have signal.");
+        say('Clocked out · saved on phone · sends when signal returns', 'wait');
         inflight.current = false; setBusy(false);
         return;
       }
@@ -492,7 +506,7 @@ export default function TimeClockPage() {
       if (status >= 200 && status < 300 && json?.ok) {
         setShift(null); setStatusLoaded(true);
         const worked = Number(json?.hours?.worked ?? json?.shift?.hoursWorked ?? 0) || 0;
-        say(`Clocked out — ${worked.toFixed(2)} h`);
+        say(`Clocked out · ${worked.toFixed(2)} h`);
         if (emp) await loadEntries(emp.id);
       } else if (status === 409) {
         await syncStatus();
@@ -502,7 +516,7 @@ export default function TimeClockPage() {
         say(humanError(json, "Couldn't clock you out. Please try again."), 'err');
         await syncStatus();
       }
-    } catch (e: any) { console.error(e); say(humanError(e, "Couldn't reach the clock. Check your connection and try again."), 'err'); }
+    } catch (e: any) { console.error(e); say(humanError(e, "Couldn't reach the clock · try again"), 'err'); }
     inflight.current = false; setBusy(false);
   };
 
@@ -519,7 +533,7 @@ export default function TimeClockPage() {
        which throws — outside the try, so the tap did nothing and said nothing.
        Each required value is now checked here and named in the dialog. */
     const entryProject = manual.id ? null : (manual.project || '');
-    if (!manual.id && !entryProject) { manualStop('Pick the project these hours go to.', 'tc-manual-project'); return; }
+    if (!manual.id && !entryProject) { manualStop('Pick the job.', 'tc-manual-project'); return; }
     if (!/^\d{4}-\d{2}-\d{2}$/.test(String(manual.date || ''))) { manualStop('Pick the date you worked.', 'tc-manual-date'); return; }
     if (!/^\d{2}:\d{2}/.test(String(manual.in || ''))) { manualStop('Enter the Clock In time.', 'tc-manual-in'); return; }
     if (!/^\d{2}:\d{2}/.test(String(manual.out || ''))) { manualStop('Enter the Clock Out time.', 'tc-manual-out'); return; }
@@ -570,7 +584,7 @@ export default function TimeClockPage() {
     try {
       const { error } = await sb.from('time_entries').insert(leaveInsertRow({ tenantId, employeeId: emp.id, projectId: c.projectId, type: c.type, date: c.date, hours: c.hours, timezone: TZ }));
       if (error) throw error;
-      setLeave(null); await loadEntries(emp.id); say(`${LEAVE_LABEL[c.type]} logged — ${c.hours} h on ${fmtDate(c.date)}`);
+      setLeave(null); await loadEntries(emp.id); say(`${LEAVE_LABEL[c.type]} logged · ${c.hours} h · ${fmtDate(c.date)}`);
     } catch (e: any) { console.error(e); setLeaveErr(humanError(e, "Couldn't log that leave.")); }
     finally { setSavingEntry(false); }
   };
@@ -604,14 +618,36 @@ export default function TimeClockPage() {
     return `${Math.floor(s / 3600)}:${String(Math.floor(s % 3600 / 60)).padStart(2, '0')}:${String(s % 60).padStart(2, '0')}`;
   })();
 
-  // ── Stat tiles ──
+  // ── This week, a bar per day ──
+  // Sun → Sat of this week. Worked hours past the week's 40th are overtime (the
+  // engine's rule, weeklyOtThreshold 40), so each bar shows exactly where OT began.
+  // PTO / sick sits on top in slate; the shift running now is the pale cap on today.
+  const liveHours = clockedIn ? Math.max(0, liveElapsed(openShift.clock_in, new Date(now).toISOString())) : 0;
+  const weekDays = (() => {
+    const start = new Date(thisWeekKey + 'T12:00:00');
+    let cum = 0;
+    return Array.from({ length: 7 }, (_, i) => {
+      const date = localDay(new Date(start.getTime() + i * 86400000));
+      const row = week?.days.find((d) => d.date === date);
+      const worked = Number(row?.worked) || 0;
+      const leave = Math.max(0, (Number(row?.hours) || 0) - worked);
+      const before = cum;
+      cum += worked;
+      const ot = Math.max(0, Math.min(worked, cum - Math.max(40, before)));
+      const run = date === todayStr ? liveHours : 0;
+      return { date, reg: worked - ot, ot, leave, run, total: worked + leave + run };
+    });
+  })();
+  const barMax = Math.max(10, ...weekDays.map((d) => d.total));
+  const fmtH = (h: number) => `${(Math.round(h * 10) / 10).toFixed(1)}h`;
+
   const stats: StatItem[] = [
-    { label: 'Today', value: `${todayHours.toFixed(2)} h`, tone: clockedIn ? 'good' : 'default', sub: clockedIn ? `Shift running since ${fmtTime(openShift.clock_in)}` : 'Completed shifts' },
-    { label: 'This Week', value: `${(week?.workedHours ?? 0).toFixed(2)} h`, sub: mounted ? `Week of ${fmtDate(thisWeekKey)}` : 'This week' },
-    { label: 'Overtime', value: `${(week?.overtimeHours ?? 0).toFixed(2)} h`, tone: (week?.overtimeHours ?? 0) > 0 ? 'warn' : 'default', sub: 'Past 40 h/week or 8 h/day' },
-    ...(regRate > 0
-      ? [{ label: 'Est. Gross', value: fmtMoney(estGross), tone: 'good' as const, sub: `$${regRate}/h reg · $${otRate}/h OT` }]
-      : [{ label: 'Pending Approval', value: String(pendingCount), tone: pendingCount > 0 ? 'warn' as const : 'default' as const, sub: 'Entries awaiting review' }]),
+    { label: 'This Week', value: `${(week?.workedHours ?? 0).toFixed(2)} h` },
+    { label: 'Overtime', value: `${(week?.overtimeHours ?? 0).toFixed(2)} h`, tone: (week?.overtimeHours ?? 0) > 0 ? 'warn' : 'default' },
+    { label: 'Today', value: `${todayHours.toFixed(2)} h`, tone: clockedIn ? 'good' : 'default' },
+    ...(regRate > 0 ? [{ label: 'Est. Gross', value: fmtMoney(estGross), tone: 'good' as const }] : []),
+    { label: 'Pending', value: String(pendingCount), tone: pendingCount > 0 ? 'warn' as const : 'default' as const },
+    ...(leaveHours > 0 ? [{ label: 'Leave', value: `${leaveHours.toFixed(2)} h` }] : []),
   ];
 
   // ── Entries register ──
@@ -641,7 +677,13 @@ export default function TimeClockPage() {
     ];
   };
 
-  const leaveSummary = week ? Object.entries(week.byType).filter(([k]) => k !== 'regular') : [];
+  const jobsHint =
+    projectsState === 'loading' ? 'Loading jobs…'
+    : projectsState === 'error' ? "Couldn't load jobs · reload the page"
+    : projects.length === 0 ? 'No active jobs yet'
+    : undefined;
+  const shiftJob = clockedIn ? (jobName(openShift.project_id) || 'Job') : '';
+  const shiftCode = clockedIn && openShift.csi_division ? `Div ${openShift.csi_division} · ${openShift.cost_code_description || CSI_DIVISIONS[openShift.csi_division]?.name || 'Cost coded'}` : '';
 
   return (
     <div className="tcWs">
@@ -649,7 +691,6 @@ export default function TimeClockPage() {
       <PageShell
         crumbs={[{ label: 'Home', href: '/app' }, { label: 'Time Clock' }]}
         title="Time Clock"
-        subtitle="GPS-stamped, CSI-coded labor. Same engine as the phone."
         actions={
           <>
             <Button icon={<Plus size={15} weight="bold" />} onClick={openAddTime} disabled={!emp}>Add Time</Button>
@@ -657,126 +698,117 @@ export default function TimeClockPage() {
           </>
         }
       >
-        <StatRow items={stats} />
-
         <div className="tcCq">
-          <div className="tcSplit">
-            <div className="tcMain">
-              {/* Shift console — walks in knowing the project, cost code, timezone, and GPS */}
-              <Card>
-                <div className="tcConsole">
-                  <div className="tcClock" data-live={clockedIn ? 'true' : 'false'} aria-live="polite">{clockedIn ? elapsed : 'Clocked Out'}</div>
-                  <div className="tcSince">{clockedIn ? `Since ${fmtTime(openShift.clock_in)} · ${openShift.timezone || TZ}` : (emp ? 'Ready to clock in' : 'Resolving your employee record…')}</div>
-                  <div className="tcFacts">
-                    <span><HardHat size={13} />{clockedIn ? (jobName(openShift.project_id) || 'Project') : (projName || 'Pick a project below')}</span>
-                    <span><Timer size={13} />{clockedIn ? (openShift.csi_division ? `Div ${openShift.csi_division} — ${openShift.cost_code_description || CSI_DIVISIONS[openShift.csi_division]?.name || 'cost coded'}` : 'No cost code on this shift') : (csiDiv ? `Div ${csiDiv} — ${CSI_DIVISIONS[csiDiv]?.name}` : 'No cost code — pick one below')}</span>
-                    <span><MapPin size={13} />GPS stamps in &amp; out</span>
-                  </div>
-                  {!clockedIn && (
-                    <div className="tcPickers">
-                      <Field
-                        label="Project"
-                        hint={
-                          projectsState === 'loading' ? 'Loading your jobs…'
-                          : projectsState === 'error' ? "Couldn't load your jobs. Reload the page to try again."
-                          : projects.length === 0 ? 'No active jobs yet — create a project first.'
-                          : projects.length > 1 ? 'Labor cost lands in this job’s budget.' : undefined
-                        }
-                      >
-                        <Select
-                          value={projectId}
-                          onChange={(e) => setProjectId(e.target.value)}
-                          placeholder={projects.length === 1 ? undefined : 'Select project…'}
-                          options={projects.map((p) => ({ value: p.id, label: p.name }))}
-                        />
-                      </Field>
-                      <Field label="Cost Code" hint="CSI division applied to the next clock-in.">
-                        <Select
-                          value={csiDiv}
-                          onChange={(e) => setCsiDiv(e.target.value)}
-                          options={[{ value: '', label: 'No Cost Code' }, ...Object.entries(CSI_DIVISIONS).map(([code, d]) => ({ value: code, label: `Div ${code} — ${d.name}` }))]}
-                        />
-                      </Field>
-                    </div>
-                  )}
-                  <Button
-                    className="tcBigBtn"
-                    data-live={clockedIn ? 'true' : 'false'}
-                    icon={clockedIn ? <Stop size={20} weight="fill" /> : <Play size={20} weight="fill" />}
-                    onClick={clockedIn ? clockOut : clockIn}
-                    disabled={busy || !emp}
-                  >
-                    {busy ? (clockedIn ? 'Clocking out…' : 'Clocking in…') : clockedIn ? 'Clock Out' : 'Clock In'}
-                  </Button>
-                  {msg && <div className="tcMsg" data-tone={msgTone} role="status">{msg}</div>}
-                </div>
-              </Card>
-
-              {week && (
-                <Card
-                  title={`Week of ${fmtDate(week.weekStart)}`}
-                  subtitle={`${week.regularHours.toFixed(2)} h regular · ${week.overtimeHours.toFixed(2)} h overtime${regRate > 0 ? ` · est. ${fmtMoney(estGross)} gross` : ''}`}
-                  actions={<Button size="sm" icon={<PaperPlaneRight size={14} />} onClick={submitWeek}>Submit Week</Button>}
-                >
-                  <div className="tcDays">
-                    {week.days.map((d) => {
-                      const hrs = Number(d.hours) || 0;
-                      return (
-                        <div key={d.date} className="tcDay">
-                          <span>{fmtDate(d.date)}</span>
-                          <div className="tcBar"><div className="tcBarFill" data-ot={hrs > 8 ? 'true' : undefined} style={{ width: `${Math.min(100, (hrs / 10) * 100)}%` }} /></div>
-                          <b>{fmtHours(d.hours)}</b>
-                        </div>
-                      );
-                    })}
-                  </div>
-                  {leaveSummary.length > 0 && <div className="tcNote">Leave: {leaveSummary.map(([k, v]) => `${v}h ${LEAVE_LABEL[k] || k}`).join(' · ')}</div>}
-                </Card>
-              )}
-
-              <div className="tcList">
-                <Card title="Recent Entries" subtitle={entries.length > 0 ? `${entries.length} shown · ${pendingCount} pending approval` : undefined} flush>
-                  {entries.length === 0 ? (
-                    <EmptyState
-                      icon={<Clock size={22} />}
-                      title="No time on the books yet"
-                      text="Clock in above to start a GPS-stamped shift, or backfill a day with Add Time. Entries land as pending, roll into the weekly timesheet, and hit job cost under their CSI division."
-                      action={<Button icon={<Plus size={15} weight="bold" />} onClick={openAddTime} disabled={!emp}>Add Time</Button>}
-                    />
-                  ) : (
-                    <DataTable
-                      columns={columns}
-                      rows={entries}
-                      rowKey={(e) => e.id}
-                      rowActions={rowActions}
-                      onRowClick={(e) => { if (!(e.entry_type && e.entry_type !== 'regular') && e.status !== 'clocked_in') openManualFor(e); }}
-                    />
-                  )}
-                </Card>
+          {/* The clock: the time, the state, the job, one button. */}
+          <section className="tcHero" aria-label="Clock in and out">
+            <div className="tcNow">
+              <div className="tcClock" data-live={clockedIn ? 'true' : 'false'} aria-live="off">
+                {clockedIn ? elapsed : mounted ? new Date(now).toLocaleTimeString([], { hour: 'numeric', minute: '2-digit' }) : ' '}
               </div>
+              <div className="tcState" data-live={clockedIn ? 'true' : 'false'}>
+                <i aria-hidden />
+                {clockedIn ? `On the clock since ${fmtTime(openShift.clock_in)}` : emp ? 'Clocked out' : 'Loading your record…'}
+              </div>
+              {clockedIn && (
+                <div className="tcFacts">
+                  <span><HardHat size={15} aria-hidden />{shiftJob}</span>
+                  {shiftCode && <span><Timer size={15} aria-hidden />{shiftCode}</span>}
+                </div>
+              )}
             </div>
+            <div className="tcCtl">
+              {!clockedIn && (
+                <div className="tcPickers">
+                  <Field label="Job" hint={jobsHint}>
+                    <Select
+                      value={projectId}
+                      onChange={(e) => setProjectId(e.target.value)}
+                      placeholder={projects.length === 1 ? undefined : 'Pick a job…'}
+                      options={projects.map((p) => ({ value: p.id, label: p.name }))}
+                    />
+                  </Field>
+                  <Field label="Cost Code">
+                    <Select
+                      value={csiDiv}
+                      onChange={(e) => setCsiDiv(e.target.value)}
+                      options={[{ value: '', label: 'No Cost Code' }, ...Object.entries(CSI_DIVISIONS).map(([code, d]) => ({ value: code, label: `Div ${code} — ${d.name}` }))]}
+                    />
+                  </Field>
+                </div>
+              )}
+              <Button
+                className="tcBigBtn"
+                data-live={clockedIn ? 'true' : 'false'}
+                icon={clockedIn ? <Stop size={20} weight="fill" /> : <Play size={20} weight="fill" />}
+                onClick={clockedIn ? clockOut : clockIn}
+                disabled={busy || !emp}
+              >
+                {busy ? (clockedIn ? 'Clocking out…' : 'Clocking in…') : clockedIn ? 'Clock Out' : 'Clock In'}
+              </Button>
+              {msg && <div className="tcMsg" data-tone={msgTone} role="status">{msg}</div>}
+            </div>
+          </section>
 
-            {/* Context rail — what the system does with these hours */}
-            <aside className="tcRail" aria-label="This week at a glance">
-              <Card title="This Week at a Glance">
-                <DetailList items={[
-                  ['Worked Hours', `${(week?.workedHours ?? 0).toFixed(2)} h`],
-                  ['Regular / OT', `${(week?.regularHours ?? 0).toFixed(2)} / ${(week?.overtimeHours ?? 0).toFixed(2)}`],
-                  ['Leave Logged', `${leaveHours.toFixed(2)} h`],
-                  ['Pending Approval', String(pendingCount)],
-                  ...(regRate > 0 ? [['Est. Gross', fmtMoney(estGross)] as [string, React.ReactNode]] : []),
-                ]} />
-                <div className="tcNote">Overtime splits automatically past 40 h/week and 8 h/shift. Rates come from your employee record.</div>
-              </Card>
-              <Card title="After You Clock Out">
-                <FlowSteps title="" steps={[
-                  { title: 'Entry lands as pending', desc: 'GPS-stamped, timezone-aware, meal break deducted.' },
-                  { title: 'CSI division prices the labor', desc: csiDiv ? `Coding to Div ${csiDiv} — ${CSI_DIVISIONS[csiDiv]?.name}.` : 'Pick a cost code so hours hit the right budget line.' },
-                  { title: 'Submit the week', desc: 'One click sends the whole timesheet for approval.' },
-                  { title: 'Approved hours hit job cost', desc: 'Labor cost rolls into the project budget and reports.' },
-                ]} />
-              </Card>
-            </aside>
+          {/* This week: the numbers, then a bar per day. */}
+          <Card
+            title="This Week"
+            subtitle={mounted ? `Week of ${fmtDate(thisWeekKey)}` : undefined}
+            actions={<Button size="sm" icon={<PaperPlaneRight size={14} />} onClick={submitWeek} disabled={!week || !emp}>Submit Week</Button>}
+          >
+            <StatRow items={stats} />
+            {mounted && (
+              <>
+                <div className="tcBars" role="img" aria-label={`Hours by day: ${weekDays.map((d) => `${fmtDate(d.date)} ${fmtH(d.total)}`).join(', ')}`}>
+                  {weekDays.map((d) => {
+                    const pct = (h: number) => `${(h / barMax) * 100}%`;
+                    const dt = new Date(d.date + 'T12:00:00');
+                    return (
+                      <div key={d.date} className="tcCol">
+                        <div className="tcColVal" data-zero={d.total > 0 ? undefined : 'true'}>{d.total > 0 ? fmtH(d.total) : '—'}</div>
+                        <div className="tcPlot">
+                          <div className="tcBar" style={{ height: pct(d.total) }}>
+                            {d.reg > 0 && <span data-k="reg" style={{ height: `${(d.reg / d.total) * 100}%` }} />}
+                            {d.ot > 0 && <span data-k="ot" style={{ height: `${(d.ot / d.total) * 100}%` }} />}
+                            {d.leave > 0 && <span data-k="leave" style={{ height: `${(d.leave / d.total) * 100}%` }} />}
+                            {d.run > 0 && <span data-k="run" style={{ height: `${(d.run / d.total) * 100}%` }} />}
+                          </div>
+                        </div>
+                        <div className="tcDayLbl" data-today={d.date === todayStr ? 'true' : undefined}>
+                          <b>{dt.toLocaleDateString('en-US', { weekday: 'short' })}</b>
+                          <span>{dt.getDate()}</span>
+                        </div>
+                      </div>
+                    );
+                  })}
+                </div>
+                <div className="tcKey" aria-hidden>
+                  <span><i style={{ background: 'color-mix(in srgb, var(--success) 80%, transparent)' }} />Regular</span>
+                  {weekDays.some((d) => d.ot > 0) && <span><i style={{ background: 'var(--warning)' }} />Overtime</span>}
+                  {weekDays.some((d) => d.leave > 0) && <span><i style={{ background: 'color-mix(in srgb, var(--text-tertiary) 55%, transparent)' }} />PTO / Sick</span>}
+                  {liveHours > 0 && <span><i style={{ background: 'color-mix(in srgb, var(--success) 35%, transparent)' }} />Running now</span>}
+                </div>
+              </>
+            )}
+          </Card>
+
+          <div className="tcList">
+            <Card title="Recent Entries" subtitle={entries.length > 0 ? `${entries.length} · ${pendingCount} pending` : undefined} flush>
+              {entries.length === 0 ? (
+                <EmptyState
+                  icon={<Clock size={22} />}
+                  title="No time yet"
+                  action={<Button icon={<Plus size={15} weight="bold" />} onClick={openAddTime} disabled={!emp}>Add Time</Button>}
+                />
+              ) : (
+                <DataTable
+                  columns={columns}
+                  rows={entries}
+                  rowKey={(e) => e.id}
+                  rowActions={rowActions}
+                  onRowClick={(e) => { if (!(e.entry_type && e.entry_type !== 'regular') && e.status !== 'clocked_in') openManualFor(e); }}
+                />
+              )}
+            </Card>
           </div>
         </div>
       </PageShell>
@@ -795,12 +827,12 @@ export default function TimeClockPage() {
         {manual && (
           <FormGrid cols={2}>
             {!manual.id && (
-              <Field label="Project" required span hint="Labor cost lands in this job’s budget.">
+              <Field label="Job" required span>
                 <Select
                   id="tc-manual-project"
                   value={manual.project ?? ''}
                   onChange={(e) => { setManual({ ...manual, project: e.target.value }); setManualErr(''); }}
-                  placeholder="Select project…"
+                  placeholder="Pick a job…"
                   options={projects.map((p) => ({ value: p.id, label: p.name }))}
                   aria-invalid={manualErr && !manual.project ? true : undefined}
                 />
@@ -818,7 +850,7 @@ export default function TimeClockPage() {
             <Field label="Meal Break (min)">
               <Input inputMode="numeric" value={manual.meal} onChange={(e) => setManual({ ...manual, meal: e.target.value })} placeholder="30" />
             </Field>
-            <Field label="Cost Code" hint="The CSI division routes these hours to the right budget line in job cost.">
+            <Field label="Cost Code">
               <Select
                 value={manual.csi ?? ''}
                 onChange={(e) => setManual({ ...manual, csi: e.target.value })}
@@ -834,7 +866,6 @@ export default function TimeClockPage() {
         open={!!leave}
         onClose={() => setLeave(null)}
         title="Log PTO / Sick"
-        subtitle="Leave lands as pending and shows on the weekly timesheet."
         onSubmit={saveLeave}
         submitLabel={leave ? `Log ${LEAVE_LABEL[leave.type] || leave.type}` : 'Log'}
         busy={savingEntry}
@@ -849,12 +880,12 @@ export default function TimeClockPage() {
                 ))}
               </div>
             </Field>
-            <Field label="Job" required span hint="The job whose timesheet this leave is approved on. Leave hours never post to job cost.">
+            <Field label="Job" required span>
               <Select
                 id={LEAVE_FIELD_ID.project}
                 value={leave.project ?? ''}
                 onChange={(e) => { setLeave({ ...leave, project: e.target.value }); setLeaveErr(''); }}
-                placeholder="Select job…"
+                placeholder="Pick a job…"
                 options={projects.map((p) => ({ value: p.id, label: p.name }))}
                 aria-invalid={leaveErr && !leave.project ? true : undefined}
               />

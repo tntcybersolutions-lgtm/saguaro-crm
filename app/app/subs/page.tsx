@@ -234,7 +234,7 @@ export default function SubsAndVendorsPage() {
         eyebrowIcon={<UsersThree size={13} weight="fill" color="var(--text-secondary)" />}
         title="Subs &"
         accent="Vendors"
-        subtitle="Everyone you pay — their trade, their paperwork, and whether they can be awarded work today."
+        subtitle="Everyone you pay, and whether they can be awarded work today."
       />
 
       <div style={{ display: 'grid', gap: 12, gridTemplateColumns: 'repeat(auto-fit, minmax(210px, 1fr))', marginBottom: 22 }}>
@@ -250,7 +250,6 @@ export default function SubsAndVendorsPage() {
       <div id="subs-directory" style={{ scrollMarginTop: 76 }} />
       <SectionCard
         title="Directory"
-        subtitle="Added from any job; available on every job after."
         icon={<UsersThree size={17} weight="duotone" color="var(--text-secondary)" />}
         action={<span style={{ fontSize: 12, color: DIM }}>{shown.length} of {showInactive ? subs.length : working.length}</span>}
         flush

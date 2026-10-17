@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { createServerClient, getUser } from '@/lib/supabase-server';
 import { apiError } from '@/lib/api-error';
+import { isLiveJob } from '@/lib/live-jobs';
 import { ENTITY_TYPES, ENTITY_META, normalizeRow, type EntityType } from '@/lib/approvals';
 
 export const dynamic = 'force-dynamic';
@@ -83,20 +84,23 @@ export async function GET(req: NextRequest) {
 
     // Resolve project names for display.
     const projectNames: Record<string, string> = {};
+    // An item on an archived or deleted job is not waiting on anyone.
+    const deadJobs = new Set<string>();
     if (projectIds.size > 0) {
       try {
         const { data: projs } = await db
           .from('projects')
-          .select('id, name')
+          .select('id, name, is_archived, archived_at, is_deleted, deleted_at')
           .in('id', Array.from(projectIds))
           .eq('tenant_id', user.tenantId);
         for (const p of (projs || []) as Array<Record<string, unknown>>) {
           projectNames[String(p.id)] = String(p.name ?? '');
+          if (!isLiveJob(p as Parameters<typeof isLiveJob>[0])) deadJobs.add(String(p.id));
         }
       } catch { /* projects optional */ }
     }
 
-    const pending = flat.map(({ et, row }) => {
+    const pending = flat.filter(({ row }) => !row.project_id || !deadJobs.has(String(row.project_id))).map(({ et, row }) => {
       const meta = ENTITY_META[et];
       const n = normalizeRow(meta, row);
       const wf = workflowByModule[et];

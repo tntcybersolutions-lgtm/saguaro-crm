@@ -473,9 +473,7 @@ export default function DashboardPage() {
           aux={<LivePulse />}
           title={greetLead}
           accent={greetAccent}
-          subtitle={portfolioEmpty
-            ? 'Start with a project. Everything else builds on it.'
-            : "Here's what needs your attention today."}
+          subtitle={portfolioEmpty ? 'Start with a project.' : undefined}
           actions={
           /* Secondary actions left, the primary one last — the order every
              other tool a GC has open uses, so the eye stops hunting. */

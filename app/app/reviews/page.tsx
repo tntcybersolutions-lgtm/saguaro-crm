@@ -128,7 +128,7 @@ export default function ReviewsPage() {
       ) : state === 'error' ? (
         <div style={{ ...card, color: DIM }}>Couldn’t load reviews. <button onClick={load} style={{ color: 'var(--text-primary)', background: 'none', border: 'none', cursor: 'pointer', textDecoration: 'underline' }}>Retry</button></div>
       ) : reviews.length === 0 ? (
-        <div style={{ ...card, color: DIM }}>No reviews yet. Add the first one above — it’s what turns a happy job into the next referral.</div>
+        <div style={{ ...card, color: DIM }}>No reviews yet.</div>
       ) : (
         reviews.map((r) => (
           <div key={r.id} style={card}>

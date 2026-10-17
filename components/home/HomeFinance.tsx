@@ -22,14 +22,15 @@ import { CHART } from '@/components/charts/shared';
 
 type Strip = StripFigure;
 
-// Yellow is for actions and the selected item only, so money lines are blue
-// (billed) and green (collected), and every colour sits beside its label.
-const BLUE = 'var(--info)';
+// Yellow is for actions and the selected item only (and --info / --chart-1
+// are the brand yellow now), so billed is slate and collected is green, and
+// every colour sits beside its label.
+const BLUE = 'var(--text-secondary)';
 const GREEN = CHART.green;
 const STAGE_COLOR: Record<string, string> = {
   Bidding: 'var(--warning)',
-  Building: 'var(--info)',
-  Closeout: 'var(--text-secondary)',
+  Building: 'var(--text-primary)',
+  Closeout: 'var(--c-gray)',
   Complete: 'var(--success)',
 };
 
@@ -151,15 +152,15 @@ function Aging({ f }: { f: FinanceHome }) {
   return (
     <Panel title="Owed to you" sub={total ? <>{money(total)} waiting on owners{f.kpis.daysToPay != null ? <> · usually paid in {f.kpis.daysToPay} days</> : null}</> : 'Every pay app sent has been paid.'}
       action={{ label: 'Collect', href: '/app/billing/payapp' }}>
-      <div className="hf-aging">
+      {total > 0 && <div className="hf-aging">
         {f.aging.map((b, i) => (
           <div key={b.key} className="hf-age" data-k={b.key}>
             <span className="hf-age-l">{b.label}</span>
             <span className="hf-age-bar"><i style={{ width: `${b.amount ? Math.max(3, (b.amount / max) * 100) : 0}%`, opacity: 1 - i * 0.12 }} /></span>
-            <span className="hf-age-v">{b.amount ? money(b.amount) : '—'}{b.count ? <small>{plural(b.count, 'app')}</small> : null}</span>
+            <span className="hf-age-v">{money(b.amount)}{b.count ? <small>{plural(b.count, 'app')}</small> : null}</span>
           </div>
         ))}
-      </div>
+      </div>}
     </Panel>
   );
 }
@@ -314,7 +315,7 @@ a.hf-card:focus-visible{outline:2px solid var(--focus-ring);outline-offset:2px}
 .hf-p-head p{margin:3px 0 0;font-size:13px;line-height:1.4;color:var(--text-secondary)}
 .hf-p-act{flex:none;display:inline-flex;align-items:center;min-height:44px;margin:-12px -4px -12px 0;padding:0 4px;font-size:14px;font-weight:600;color:var(--link);text-decoration:none}
 .hf-p-act:hover{color:var(--link-hover)}
-.hf-blue{color:${BLUE}} .hf-green{color:${GREEN}}
+.hf-blue{color:var(--text-primary)} .hf-green{color:${GREEN}}
 .hf-chart{height:210px;margin:0 -4px}
 .hf-legend{display:flex;flex-wrap:wrap;gap:6px 16px;margin-top:6px;font-size:13px;color:var(--text-secondary)}
 .hf-legend i,.hf-tip i{display:inline-block;width:9px;height:9px;border-radius:3px;margin-right:6px;vertical-align:-1px}

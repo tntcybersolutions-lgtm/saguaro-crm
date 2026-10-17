@@ -7,7 +7,7 @@ import { humanError } from '@/lib/errors';
 import { TRADESPERSON_ROLES as ROLES } from '@/lib/contractor-trades';
 import { tradeOptions } from '@/lib/taxonomy';
 import { StandardSelect } from '@/components/ui/Select';
-import { PremiumSurface, ModuleHero, StatCard, SectionCard, PremiumEmpty, goldButtonStyle, ghostButtonStyle } from '@/components/ui/premium';
+import { PremiumSurface, ModuleHero, StatCard, StatStrip, SectionCard, PremiumEmpty, goldButtonStyle, ghostButtonStyle } from '@/components/ui/premium';
 import { UsersThree, ClipboardText, UserGear, Warning, Gauge, Scales, Plus, DownloadSimple, ArrowsClockwise, FunnelSimple, CurrencyDollar, Clock, TrendDown, UserMinus, CalendarBlank, Buildings } from '@phosphor-icons/react';
 import { useUnsavedGuard, useComposerDirty } from '@/lib/useUnsavedGuard';
 import UnsavedGuardModal from '@/components/UnsavedGuardModal';
@@ -491,7 +491,7 @@ export default function ResourcePlanningPage() {
       eyebrowIcon={<UsersThree size={13} weight="fill" color="var(--text-secondary)" />}
       title="Resource"
       accent="Planning"
-      subtitle="Workforce scheduling, utilization, capacity planning, and cost forecasting"
+      subtitle="Who is on which job, week by week."
       actions={<>
         {saving && <Spinner />}
         <button onClick={exportCSV} style={ghostButtonStyle} className="pmBtn"><DownloadSimple size={15} weight="bold" /> Export CSV</button>
@@ -515,22 +515,22 @@ export default function ResourcePlanningPage() {
       </div>
     </div>}
 
-    {/* Stats row */}
-    <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(180px, 1fr))', gap: 12, marginBottom: 24 }}>
-      {[
-        { label: 'Total People', value: people.length, accent: BLUE, sub: 'In workforce', icon: <UsersThree size={19} weight="duotone" color="var(--text-secondary)" /> },
-        { label: 'Active Assignments', value: assignments.filter(a => a.status !== 'released' && a.status !== 'unavailable').length, accent: GREEN, sub: 'Not released', icon: <ClipboardText size={19} weight="duotone" color={GREEN} /> },
-        { label: 'Current FTEs', value: totalFTEs, accent: PURPLE, sub: 'Full-time equiv', icon: <UserGear size={19} weight="duotone" color={PURPLE} /> },
-        { label: 'Conflicts', value: conflicts.length, accent: conflicts.length ? RED : GREEN, sub: 'Scheduling overlaps', icon: <Warning size={19} weight="duotone" color={conflicts.length ? RED : GREEN} /> },
-        { label: 'Avg Utilization', value: avgUtil + '%', accent: avgUtil > 100 ? RED : avgUtil > 80 ? AMBER : GREEN, sub: 'Next 4 weeks', icon: <Gauge size={19} weight="duotone" color={avgUtil > 100 ? RED : avgUtil > 80 ? AMBER : GREEN} /> },
-        { label: 'Overbooked / Available', value: `${overbookedCount} / ${availableCount}`, accent: overbookedCount > 0 ? RED : GREEN, sub: 'This week', icon: <Scales size={19} weight="duotone" color={overbookedCount > 0 ? RED : GREEN} /> },
-      ].map((s, i) => <StatCard key={s.label} label={s.label} value={s.value} sub={s.sub} accent={s.accent} icon={s.icon} delay={0.04 * i}  href="/app/resource-planning"/>)}
-    </div>
+    {/* Stats — one flat strip, once there is a workforce to count */}
+    {people.length > 0 && (
+      <StatStrip items={[
+        { label: 'People', value: people.length },
+        { label: 'Active Assignments', value: assignments.filter(a => a.status !== 'released' && a.status !== 'unavailable').length },
+        { label: 'Current FTEs', value: totalFTEs },
+        { label: 'Conflicts', value: conflicts.length, accent: conflicts.length ? RED : undefined, sub: 'Scheduling overlaps' },
+        { label: 'Avg Utilization', value: avgUtil + '%', accent: avgUtil > 100 ? RED : avgUtil > 80 ? AMBER : undefined, sub: 'Next 4 weeks' },
+        { label: 'Overbooked / Available', value: `${overbookedCount} / ${availableCount}`, accent: overbookedCount > 0 ? RED : undefined, sub: 'This week' },
+      ]} />
+    )}
 
     {/* Filters */}
     <SectionCard
+      flat
       title="Filters"
-      icon={<FunnelSimple size={17} weight="duotone" color="var(--text-secondary)" />}
       action={hasFilters ? <button onClick={clearFilters} style={{ ...btn(), fontSize: 12, padding: '5px 12px' }}>Clear Filters</button> : undefined}
       style={{ marginBottom: 18 }}
     >
@@ -681,7 +681,7 @@ export default function ResourcePlanningPage() {
               </div>)}
             </div>
             {/* Rows */}
-            {gridData.rows.length === 0 && <PremiumEmpty compact icon={<UsersThree size={30} weight="duotone" color="var(--text-secondary)" />} title={hasFilters ? 'No assignments match filters' : 'No assignment data'} onClearFilters={hasFilters ? clearFilters : undefined} primary={{ label: 'New Assignment', onClick: openNewAssignment }} />}
+            {gridData.rows.length === 0 && <PremiumEmpty compact icon={<UsersThree size={30} weight="duotone" color="var(--text-secondary)" />} title={hasFilters ? 'No assignments match filters' : 'No assignment data'} onClearFilters={hasFilters ? clearFilters : undefined} secondary={{ label: 'New Assignment', onClick: openNewAssignment }} />}
             {gridData.rows.map(row => <React.Fragment key={row.name}>
               {/* Person total row */}
               <div style={{ display: 'grid', gridTemplateColumns: `160px 140px repeat(${gridData.GRID_WEEKS}, 1fr)`, background: conflictPersons.has(row.name) ? `color-mix(in srgb, ${RED} 3%, transparent)` : `color-mix(in srgb, ${BG} 38%, transparent)`, borderBottom: `1px solid color-mix(in srgb, ${BORDER} 8%, transparent)`, minHeight: 32, alignItems: 'center' }}>
@@ -726,7 +726,7 @@ export default function ResourcePlanningPage() {
               })}
             </div>
             {/* Rows */}
-            {filteredPeople.length === 0 && <PremiumEmpty compact icon={<CalendarBlank size={30} weight="duotone" color="var(--text-secondary)" />} title={hasFilters ? 'No assignments match filters' : 'No assignments yet'} onClearFilters={hasFilters ? clearFilters : undefined} primary={{ label: 'New Assignment', onClick: openNewAssignment }} />}
+            {filteredPeople.length === 0 && <PremiumEmpty compact icon={<CalendarBlank size={30} weight="duotone" color="var(--text-secondary)" />} title={hasFilters ? 'No assignments match filters' : 'No assignments yet'} onClearFilters={hasFilters ? clearFilters : undefined} secondary={{ label: 'New Assignment', onClick: openNewAssignment }} />}
             {filteredPeople.map(([name, asns]) => {
               const isConflict = conflictPersons.has(name);
               return <div key={name} style={{ display: 'grid', gridTemplateColumns: `180px repeat(${TIMELINE_WEEKS},1fr)`, borderBottom: `1px solid color-mix(in srgb, ${BORDER} 8%, transparent)`, minHeight: 36, alignItems: 'center', background: isConflict ? `color-mix(in srgb, ${RED} 3%, transparent)` : 'transparent' }}>
@@ -763,7 +763,7 @@ export default function ResourcePlanningPage() {
 
       {/* ========== PEOPLE LIST ========== */}
       {!loading && tab === 'people' && <Card title={`People & Assignments (${filteredPeople.length})`} icon={<UsersThree size={17} weight="duotone" color="var(--text-secondary)" />}>
-        {filteredPeople.length === 0 && <PremiumEmpty compact icon={<UsersThree size={30} weight="duotone" color="var(--text-secondary)" />} title={hasFilters ? 'No people match these filters' : 'No people yet'} onClearFilters={hasFilters ? clearFilters : undefined} primary={{ label: 'New Assignment', onClick: openNewAssignment }} />}
+        {filteredPeople.length === 0 && <PremiumEmpty compact icon={<UsersThree size={30} weight="duotone" color="var(--text-secondary)" />} title={hasFilters ? 'No people match these filters' : 'No people yet'} onClearFilters={hasFilters ? clearFilters : undefined} secondary={{ label: 'New Assignment', onClick: openNewAssignment }} />}
         {filteredPeople.map(([name, asns]) => {
           const util = utilization.find(u => u.name === name);
           const isConflict = conflictPersons.has(name);
@@ -857,10 +857,10 @@ export default function ResourcePlanningPage() {
       {!loading && tab === 'utilization' && <div>
         {/* Summary cards */}
         <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(180px, 1fr))', gap: 12, marginBottom: 18 }}>
-          <StatCard label="Avg Utilization" value={`${avgUtil}%`} accent={avgUtil > 100 ? RED : avgUtil > 80 ? AMBER : GREEN} icon={<Gauge size={19} weight="duotone" color={avgUtil > 100 ? RED : avgUtil > 80 ? AMBER : GREEN} />}  href="/app/resource-planning"/>
-          <StatCard label="Overbooked (100%+)" value={overbookedCount} accent={overbookedCount > 0 ? RED : GREEN} icon={<Warning size={19} weight="duotone" color={overbookedCount > 0 ? RED : GREEN} />}  href="/app/resource-planning"/>
-          <StatCard label="Under-Utilized (<50%)" value={utilization.filter(u => u.pct < 50 && u.pct > 0).length} accent={BLUE} icon={<TrendDown size={19} weight="duotone" color="var(--text-secondary)" />}  href="/app/resource-planning"/>
-          <StatCard label="Unassigned" value={utilization.filter(u => u.pct === 0).length} accent={DIM} icon={<UserMinus size={19} weight="duotone" color={DIM} />}  href="/app/resource-planning"/>
+          <StatCard label="Avg Utilization" value={`${avgUtil}%`} accent={avgUtil > 100 ? RED : avgUtil > 80 ? AMBER : GREEN} icon={<Gauge size={19} weight="duotone" color={avgUtil > 100 ? RED : avgUtil > 80 ? AMBER : GREEN} />}/>
+          <StatCard label="Overbooked (100%+)" value={overbookedCount} accent={overbookedCount > 0 ? RED : GREEN} icon={<Warning size={19} weight="duotone" color={overbookedCount > 0 ? RED : GREEN} />}/>
+          <StatCard label="Under-Utilized (<50%)" value={utilization.filter(u => u.pct < 50 && u.pct > 0).length} accent={BLUE} icon={<TrendDown size={19} weight="duotone" color="var(--text-secondary)" />}/>
+          <StatCard label="Unassigned" value={utilization.filter(u => u.pct === 0).length} accent={DIM} icon={<UserMinus size={19} weight="duotone" color={DIM} />}/>
         </div>
 
         <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 18 }}>
@@ -913,7 +913,7 @@ export default function ResourcePlanningPage() {
             return <div key={w} style={{ fontSize: 12, fontWeight: 700, color: DIM, textAlign: 'center', padding: 6 }}>{`${d.getMonth() + 1}/${d.getDate()}`} - {`${addDays(d, 6).getMonth() + 1}/${addDays(d, 6).getDate()}`}</div>;
           })}
         </div>
-        {availability.length === 0 && <PremiumEmpty compact icon={<UsersThree size={30} weight="duotone" color="var(--text-secondary)" />} title="No people tracked yet" primary={{ label: 'New Assignment', onClick: openNewAssignment }} />}
+        {availability.length === 0 && <PremiumEmpty compact icon={<UsersThree size={30} weight="duotone" color="var(--text-secondary)" />} title="No people tracked yet" secondary={{ label: 'New Assignment', onClick: openNewAssignment }} />}
         {availability.map(a => <div key={a.name} style={{ display: 'grid', gridTemplateColumns: '200px repeat(4,1fr)', gap: 2, marginBottom: 2 }}>
           <div style={{ padding: '6px 8px', fontSize: 12, color: TEXT, fontWeight: 600, background: `color-mix(in srgb, ${RAISED} 50%, transparent)`, borderRadius: 3, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
             {a.name} <span style={{ fontSize: 12, color: DIM }}>({a.trade} - {a.role})</span>
@@ -1014,18 +1014,18 @@ export default function ResourcePlanningPage() {
 
         {/* Cost summary */}
         <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(180px, 1fr))', gap: 12 }}>
-          <StatCard label="Total Labor Cost" value={fmtMoney(projectCosts.reduce((s, p) => s + p.labor, 0))} accent={GOLD} icon={<CurrencyDollar size={19} weight="duotone" color="var(--text-secondary)" />}  href="/app/resource-planning"/>
-          <StatCard label="Total Hours" value={projectCosts.reduce((s, p) => s + p.hours, 0).toLocaleString()} accent={BLUE} icon={<Clock size={19} weight="duotone" color="var(--text-secondary)" />}  href="/app/resource-planning"/>
+          <StatCard label="Total Labor Cost" value={fmtMoney(projectCosts.reduce((s, p) => s + p.labor, 0))} accent={GOLD} icon={<CurrencyDollar size={19} weight="duotone" color="var(--text-secondary)" />}/>
+          <StatCard label="Total Hours" value={projectCosts.reduce((s, p) => s + p.hours, 0).toLocaleString()} accent={BLUE} icon={<Clock size={19} weight="duotone" color="var(--text-secondary)" />}/>
           <StatCard label="Blended Rate" accent={GREEN} icon={<Scales size={19} weight="duotone" color={GREEN} />} value={(() => {
             const h = projectCosts.reduce((s, p) => s + p.hours, 0);
             const c = projectCosts.reduce((s, p) => s + p.labor, 0);
             return h > 0 ? fmtMoney(c / h) + '/hr' : '-';
-          })()}  href="/app/resource-planning"/>
+          })()}/>
           <StatCard label="Cost per FTE/Month" accent={PURPLE} icon={<UserGear size={19} weight="duotone" color={PURPLE} />} value={(() => {
             const fte = parseFloat(totalFTEs);
             const monthlyCost = forecast[0]?.cost || 0;
             return fte > 0 ? fmtMoney(monthlyCost / fte) : '-';
-          })()}  href="/app/resource-planning"/>
+          })()}/>
         </div>
 
         {/* Trade breakdown */}

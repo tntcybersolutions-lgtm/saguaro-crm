@@ -467,7 +467,7 @@ export default function DailyLogsPage() {
     { key: 'project', header: 'Project', accessor: l => projectName(l.project_id).toLowerCase(), render: l => <span className="dlClamp" style={{ maxWidth: 260, color: 'var(--text-primary)', fontWeight: 600 }} title={projectName(l.project_id)}>{projectName(l.project_id) || <span className="dlMuted">Unknown project</span>}</span> },
     { key: 'status', phone: 'show', header: 'Status', accessor: l => ((l as any)._offline ? 'Waiting for Signal' : logStatus(l).label), render: l => {
       const off = l as DailyLog & { _offline?: boolean; _offlineError?: string };
-      if (off._offline) return <span title={off._offlineError ? `Couldn't send: ${off._offlineError}` : "Saved on this phone — it sends when you're back online."}><Badge tone={off._offlineError ? 'overdue' : 'gold'}>{off._offlineError ? "Couldn't Send" : 'Waiting for Signal'}</Badge></span>;
+      if (off._offline) return <span title={off._offlineError ? `Couldn't send: ${off._offlineError}` : "Saved on this phone — it sends when you're back online."}><Badge tone={off._offlineError ? 'overdue' : 'pending'}>{off._offlineError ? "Couldn't Send" : 'Waiting for Signal'}</Badge></span>;
       const s = logStatus(l); return <Badge tone={s.tone}>{s.label}</Badge>;
     } },
     { key: 'crew_count', header: 'Crew', accessor: l => Number(l.crew_count) || 0, align: 'right', render: l => <span className="dlNum" style={{ display: 'inline-flex', alignItems: 'center', gap: 4 }}><UsersThree size={14} style={{ color: 'var(--text-tertiary)' }} />{Number(l.crew_count) || 0}</span> },
