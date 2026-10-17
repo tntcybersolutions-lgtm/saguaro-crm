@@ -8,7 +8,9 @@
  *   revised budget  = original + approved changes (Procore's "Revised Budget")
  *   committed       = live commitments + issued POs on the line, else what was
  *                     entered on the line
- *   direct costs    = live bills on the line
+ *   billed to date  = live bills on the line, before tax
+ *   direct costs    = billed beyond what is committed (a bill on a committed
+ *                     line draws the commitment down, it does not stack on it)
  *   uncommitted     = revised − committed          (Purchase Orders)
  *   remaining       = revised − actual             (Bills)
  *   cost to complete= revised − actual − committed not yet spent  (Budget)
@@ -37,6 +39,7 @@ export interface BudgetRollupInputs {
 
 export interface RolledBudgetLine extends BudgetLineView {
   committed_source: 'commitments' | 'entered';
+  billed_to_date: number;
   direct_costs: number;
   projected_cost: number;
   over_under: number;
@@ -103,19 +106,23 @@ export function rollupBudgetLines(inp: BudgetRollupInputs): RolledBudgetLine[] {
   const billsByLine = new Map<string, number>();
   for (const x of inp.bills) {
     if (!x.cost_code || DEAD.has(norm(x.status))) continue;
-    add(billsByLine, findLine(x.cost_code), num(x.total) || num(x.amount));
+    add(billsByLine, findLine(x.cost_code), num(x.amount) || num(x.total)); // before tax, the basis Cost control and line Actual use
   }
   return inp.lines.map((r) => {
     const v = toBudgetLineView(r);
     const liveCommitted = committedByLine.get(v.id) || 0;
     const committed = liveCommitted > 0 ? round(liveCommitted) : v.committed_cost;
-    const direct = round(billsByLine.get(v.id) || 0);
+    /* A $612,000 subcontract billed in full is $612,000, not $1,224,000: only
+       spend beyond what is committed is a direct cost. */
+    const billed = round(billsByLine.get(v.id) || 0);
+    const direct = round(Math.max(0, billed - committed));
     const projectedCost = round(committed + direct);
     const eac = Math.max(v.forecast_cost, projectedCost);
     return {
       ...v,
       committed_cost: committed,
       committed_source: liveCommitted > 0 ? 'commitments' : 'entered',
+      billed_to_date: billed,
       direct_costs: direct,
       projected_cost: projectedCost,
       forecast_cost: round(eac),
