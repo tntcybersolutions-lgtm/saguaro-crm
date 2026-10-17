@@ -21,12 +21,11 @@ import { normalisePhase, stepsForPhase, stepsDone } from '@/lib/project-phase';
 import { isClosedStatus } from '@/lib/project-lifecycle';
 import Link from 'next/link';
 import { Compass, CaretDown, CaretUp, Check, ArrowRight } from '@phosphor-icons/react';
-import { SectionCard, goldButtonStyle } from '@/components/ui/premium';
+import { SectionCard } from '@/components/ui/premium';
 import { useProjects } from '@/lib/hooks/useProjects';
 import { useProjectContext } from '@/lib/hooks/useProjectContext';
 
 const GOLD = 'var(--brand-primary)';
-const GOLD_HI = 'var(--brand-primary-strong)';
 const TEXT = 'var(--text-primary)';
 const MUTED = 'rgba(255,255,255,0.62)';
 const FAINT = 'var(--text-secondary)';
@@ -159,9 +158,7 @@ export default function GettingStartedRail({ projectId, compact = false }: { pro
      project, and a GC with work in flight is not being onboarded any more. */
   const autoThreshold = compact ? 2 : projectId ? 3 : 2;
   /* Type sizes: compact never drops below 12px (Pass 3 global rule). */
-  const fs = compact
-    ? { title: 13.5, desc: 12.5, verb: 12, here: 12, note: 12 }
-    : { title: 12.5, desc: 11.5, verb: 10.5, here: 9, note: 10.5 };
+  const fs = { title: 14, desc: 13, verb: 13 };
   const showCollapsed = autoCollapse ? doneCount >= autoThreshold : collapsed;
 
   function toggle() {
@@ -176,45 +173,24 @@ export default function GettingStartedRail({ projectId, compact = false }: { pro
   return (
     <div data-tour="getting-started" style={{ marginBottom: compact ? 0 : 24 }}>
       <SectionCard
-        title="Your Path to First Payment"
+        title="Path to First Payment"
         subtitle={
           activeProject
             ? `${activeProject.name}${next ? ` · next up: ${next.title}` : ''}`
             : next ? `Next up: ${next.title}` : undefined
         }
-        icon={<Compass size={17} weight="duotone" color="var(--text-secondary)" />}
         flush={showCollapsed}
         action={
           <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
-            {!projectId && projects.length > 1 && (
-              <select
-                value={activeId ?? ''}
-                onChange={(e) => chooseProject(e.target.value)}
-                aria-label="Which project this path is for"
-                style={{
-                  maxWidth: 220, padding: '4px 8px', borderRadius: 8, cursor: 'pointer',
-                  background: 'rgba(255,255,255,0.05)', border: '1px solid rgba(255,255,255,0.12)',
-                  color: MUTED, fontSize: 12, fontWeight: 600,
-                }}
-              >
-                {projects.map((p: { id: string; name: string }) => (
-                  <option key={p.id} value={p.id}>{p.name}</option>
-                ))}
-              </select>
-            )}
-            <span style={{
-              padding: '3px 10px', borderRadius: 999, background: 'var(--bg-surface-2)',
-              border: '1px solid var(--border-default)', color: 'var(--text-primary)',
-              fontSize: compact ? 12 : 11, fontWeight: 800, letterSpacing: compact ? 'normal' : '0.05em', whiteSpace: 'nowrap',
-            }}>{doneCount} of {steps.length} steps</span>
+            <span style={{ color: 'var(--text-secondary)', fontSize: 13, fontWeight: 700, whiteSpace: 'nowrap', fontVariantNumeric: 'tabular-nums' }}>{doneCount} of {steps.length}</span>
             <button
               onClick={toggle}
               aria-label={showCollapsed ? 'Expand getting started' : 'Collapse getting started'}
               className={compact ? 'pmBtn gsr-toggle' : 'pmBtn'}
               style={{
                 display: 'inline-flex', alignItems: 'center', justifyContent: 'center',
-                width: compact ? 36 : 28, height: compact ? 36 : 28, borderRadius: 8, cursor: 'pointer',
-                background: 'rgba(255,255,255,0.05)', border: '1px solid rgba(255,255,255,0.1)',
+                width: 44, height: 44, borderRadius: 8, cursor: 'pointer',
+                background: 'transparent', border: 0,
               }}
             >
               {showCollapsed ? <CaretDown size={13} weight="bold" color={MUTED} /> : <CaretUp size={13} weight="bold" color={MUTED} />}
@@ -224,27 +200,42 @@ export default function GettingStartedRail({ projectId, compact = false }: { pro
       >
         {showCollapsed ? null : (
           <>
+            {!projectId && projects.length > 1 && (
+              <select
+                value={activeId ?? ''}
+                onChange={(e) => chooseProject(e.target.value)}
+                aria-label="Which project this path is for"
+                style={{
+                  maxWidth: '100%', minHeight: 44, padding: '0 10px', marginBottom: 12, borderRadius: 8, cursor: 'pointer',
+                  background: 'var(--bg-input)', border: '1px solid var(--border-default)',
+                  color: TEXT, fontSize: 16, fontWeight: 600,
+                }}
+              >
+                {projects.map((p: { id: string; name: string }) => (
+                  <option key={p.id} value={p.id}>{p.name}</option>
+                ))}
+              </select>
+            )}
             {/* Progress */}
-            <div style={{ height: 6, borderRadius: 999, background: 'rgba(255,255,255,0.07)', overflow: 'hidden', marginBottom: 18 }}>
-              <div style={{ height: '100%', width: `${(doneCount / steps.length) * 100}%`, background: `var(--brand-primary)`, borderRadius: 999, transition: 'width .4s ease' }} />
+            <div style={{ height: 6, borderRadius: 999, background: 'var(--bg-surface-2)', overflow: 'hidden', marginBottom: 18 }}>
+              <div style={{ height: '100%', width: `${(doneCount / steps.length) * 100}%`, background: 'var(--success)', borderRadius: 999, transition: 'width .4s ease' }} />
             </div>
 
             {/* The pipeline — FlowSteps anatomy, every row deep-linked */}
             <div style={{ position: 'relative' }}>
-              <div style={{ position: 'absolute', left: 10, top: 10, bottom: 16, width: 1, background: 'linear-gradient(180deg, var(--brand-primary-35), rgba(255,255,255,0.08))' }} />
+              <div style={{ position: 'absolute', left: 10, top: 10, bottom: 16, width: 1, background: 'var(--border-default)' }} />
               {steps.map((s, i) => {
                 const isCur = i === curIdx;
                 // Every row with an href is reachable — done rows say "Review",
                 // the current one says "Resume", future ones say "Open".
                 const verb = s.done ? 'Review' : isCur ? 'Resume' : 'Open';
-                const base = isCur ? 'var(--brand-primary-08)' : 'transparent';
+                const base = 'transparent';
                 const row = (
                   <div
                     style={{
                       display: 'flex', gap: 12, alignItems: 'flex-start', position: 'relative',
-                      padding: '7px 8px', margin: '0 -8px', borderRadius: 10,
+                      padding: '10px 8px', margin: '0 -8px', borderRadius: 10, minHeight: 44,
                       background: base,
-                      border: isCur ? '1px solid var(--brand-primary-35)' : '1px solid transparent',
                       transition: 'background .15s ease',
                     }}
                     onMouseEnter={e => { if (s.href) e.currentTarget.style.background = 'rgba(255,255,255,0.06)'; }}
@@ -253,32 +244,24 @@ export default function GettingStartedRail({ projectId, compact = false }: { pro
                     <div style={{
                       width: 21, height: 21, borderRadius: 999, flexShrink: 0, zIndex: 1,
                       display: 'flex', alignItems: 'center', justifyContent: 'center',
-                      background: s.done ? `var(--brand-primary)` : '#101011',
-                      border: s.done ? 'none' : `1px solid rgba(251,191,36,${isCur ? 0.85 : 0.45})`,
-                      boxShadow: isCur ? '0 0 12px var(--brand-primary-35)' : undefined,
-                      color: s.done ? 'var(--on-brand)' : GOLD_HI, fontSize: 12, fontWeight: 900,
+                      background: s.done ? 'var(--success)' : 'var(--bg-base)',
+                      border: s.done ? 'none' : `1px solid ${isCur ? 'var(--text-primary)' : 'var(--border-strong)'}`,
+                      color: s.done ? 'var(--on-brand)' : isCur ? TEXT : MUTED, fontSize: 12, fontWeight: 900,
                     }}>
                       {s.done ? <Check size={12} weight="bold" color="var(--on-brand)" /> : i + 1}
                     </div>
                     <div style={{ minWidth: 0, paddingTop: 1, flex: 1 }}>
                       <div style={{ display: 'flex', alignItems: 'center', gap: 7, minWidth: 0 }}>
                         <span style={{ fontSize: fs.title, fontWeight: 800, color: s.done ? MUTED : TEXT, lineHeight: 1.35, minWidth: 0 }}>{s.title}</span>
-                        {isCur && (
-                          <span style={{
-                            padding: '1px 7px', borderRadius: 999, flexShrink: 0,
-                            background: 'var(--bg-surface-2)', border: '1px solid var(--border-default)',
-                            color: 'var(--text-primary)', fontSize: fs.here, fontWeight: 900, letterSpacing: compact ? 'normal' : '0.08em',
-                          }}>You Are Here</span>
-                        )}
                       </div>
-                      <div style={{ fontSize: fs.desc, color: s.done ? FAINT : MUTED, lineHeight: 1.5, marginTop: 2 }}>{s.desc}</div>
+                      {isCur && <div style={{ fontSize: fs.desc, color: MUTED, lineHeight: 1.5, marginTop: 2 }}>{s.desc}</div>}
                     </div>
                     {s.href && (
                       <span style={{
                         display: 'inline-flex', alignItems: 'center', gap: 4, flexShrink: 0, marginTop: 2,
-                        color: isCur ? GOLD_HI : FAINT, fontSize: fs.verb, fontWeight: 800, whiteSpace: 'nowrap',
+                        color: isCur ? TEXT : MUTED, fontSize: fs.verb, fontWeight: 700, whiteSpace: 'nowrap',
                       }}>
-                        {verb} <ArrowRight size={12} weight="bold" color={isCur ? GOLD_HI : FAINT} />
+                        {verb} <ArrowRight size={12} weight="bold" />
                       </span>
                     )}
                   </div>
@@ -289,26 +272,15 @@ export default function GettingStartedRail({ projectId, compact = false }: { pro
               })}
             </div>
 
-            {/* Plain-language proof the rail is not one-way. */}
-            <div style={{ fontSize: fs.note, color: compact ? MUTED : FAINT, marginTop: 10 }}>
-              Every step stays open — go back to review what you entered, or jump ahead. Nothing here is locked.
-            </div>
-
-            {/* Gold CTA on the next incomplete step */}
+            {/* The next incomplete step. Outlined: the page's one yellow is its own header action. */}
             {next?.href && (
-              compact ? (
-                <Link href={next.href} className="pmBtn" style={{
-                  display: 'inline-flex', alignItems: 'center', gap: 6, marginTop: 14, minHeight: 40, padding: '0 14px',
-                  borderRadius: 10, border: '1px solid var(--border-default)', background: 'transparent',
-                  color: 'var(--link)', fontSize: 14, fontWeight: 700, textDecoration: 'none',
-                }}>
-                  Next: {next.title} <ArrowRight size={14} weight="bold" color="var(--text-secondary)" />
-                </Link>
-              ) : (
-                <Link href={next.href} style={{ ...goldButtonStyle, marginTop: 18 }} className="pmBtn">
-                  Next: {next.title} <ArrowRight size={15} weight="bold" color="var(--on-brand)" />
-                </Link>
-              )
+              <Link href={next.href} className="pmBtn" style={{
+                display: 'inline-flex', alignItems: 'center', gap: 6, marginTop: 14, minHeight: 44, padding: '0 14px',
+                borderRadius: 10, border: '1px solid var(--border-strong)', background: 'transparent',
+                color: TEXT, fontSize: 14, fontWeight: 700, textDecoration: 'none',
+              }}>
+                Next: {next.title} <ArrowRight size={14} weight="bold" color="var(--text-secondary)" />
+              </Link>
             )}
           </>
         )}
