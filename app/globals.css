@@ -1582,6 +1582,8 @@ li[data-done="true"] .pj-next-step strong { color: var(--text-tertiary); text-de
 .sag-tb-back:focus-visible { outline: 2px solid var(--focus-ring); outline-offset: 2px; }
 .sag-tb-back > svg { flex: none; color: var(--text-secondary); }
 @media (min-width: 768px) { .sag-tb-back { display: none; } .sag-tb-phone-only { display: none; } }
+/* Phone, inside a job: the title row is the job switcher (AppTopBar → HeaderProjectPicker variant="title"). */
+@media (max-width: 767px) { .sag-tb-jobtitle { display: flex; min-width: 0; width: 100%; } }
 /* The desktop trail, Procore's way: ⌂ Home / [Job ▾] / Parent / Title.
    Home is always the first crumb, so leaving a job is one click from any
    screen. Crumbs are quiet text that light on hover, never pills. */
