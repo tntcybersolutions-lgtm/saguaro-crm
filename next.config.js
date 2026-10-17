@@ -60,6 +60,16 @@ const nextConfig = {
       // (TestFlight). Point the old marketing URLs at the canonical app page.
       { source: '/field-app', destination: '/get-the-app', permanent: false },
       { source: '/field/install', destination: '/get-the-app', permanent: false },
+      // The old /field/* field app lives in /app now (one app — CLAUDE.md §0).
+      // Old bookmarks, emails and older app builds landed on a bare 404 with no
+      // way back (live QA D12); send each to the screen that does that job.
+      { source: '/field', destination: '/app', permanent: false },
+      { source: '/field/clock', destination: '/app/time', permanent: false },
+      { source: '/field/daily-log', destination: '/app/daily-logs', permanent: false },
+      { source: '/field/daily-logs', destination: '/app/daily-logs', permanent: false },
+      { source: '/field/punch', destination: '/app/my-work', permanent: false },
+      { source: '/field/:path*', destination: '/app', permanent: false },
+      { source: '/app/my-day', destination: '/app', permanent: false },
       // AI Design Studio retired — not an offering. Send any old/indexed links home.
       { source: '/design', destination: '/', permanent: false },
       { source: '/design/:path*', destination: '/', permanent: false },

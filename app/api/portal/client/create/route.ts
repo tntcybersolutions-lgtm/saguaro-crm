@@ -1,4 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server';
+import { requirePermission } from '@/lib/permissions';
 import { createServerClient, getUser } from '@/lib/supabase-server';
 import { sendClientPortalInvite } from '@/lib/email';
 import { randomUUID } from 'crypto';
@@ -14,10 +15,11 @@ export const dynamic = 'force-dynamic';
  */
 export async function POST(req: NextRequest) {
   try {
-    const user = await getUser(req);
-    if (!user) {
-      return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
-    }
+    /* Opening a job to the owner is the job's management: Projects full on
+       that job (the body names it). It only asked "signed in?" before. */
+    const gate = await requirePermission(req, 'Projects', 'Full');
+    if (!gate.ok) return gate.res;
+    const user = gate.user;
 
     const { projectId, clientName, clientEmail, expiresInDays } = await req.json();
 

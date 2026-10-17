@@ -1,4 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server';
+import { companyDisplayName } from '@/lib/company-name';
 import { createServerClient } from '@/lib/supabase-server';
 import { checkRateLimit, getClientIP } from '@/lib/rate-limit';
 import { sendSubPortalInvite } from '@/lib/email';
@@ -60,7 +61,7 @@ export async function POST(req: NextRequest) {
     if (subById.size) filters.push(`sub_id.in.(${[...subById.keys()].join(',')})`);
     const { data: sessions, error: sesErr } = await db
       .from('portal_sub_sessions')
-      .select('token, sub_id, sub_company, sub_contact_name, project_id, created_by, created_at')
+      .select('token, sub_id, sub_company, sub_contact_name, project_id, created_by, created_at, tenant_id')
       .eq('status', 'active')
       .or(filters.join(','))
       .order('created_at', { ascending: false })
@@ -83,7 +84,8 @@ export async function POST(req: NextRequest) {
             to: email,
             contactName: (sub?.contact_name as string) || (s.sub_contact_name as string) || '',
             companyName: (sub?.company_name as string) || (s.sub_company as string) || email,
-            gcCompanyName: gcRow?.company || gcRow?.full_name || 'Your General Contractor',
+            // The company, never the person who sent the invite (live QA D18).
+            gcCompanyName: (s.tenant_id ? await companyDisplayName(db as never, s.tenant_id as string) : null) || gcRow?.company || 'Your General Contractor',
             projectName: (project as { name?: string } | null)?.name || 'Your Project',
             portalUrl: `${appUrl}/portals/sub/${s.token}`,
             isResend: true,

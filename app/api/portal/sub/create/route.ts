@@ -1,4 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server';
+import { companyDisplayName } from '@/lib/company-name';
 import { requirePermission } from '@/lib/permissions';
 import { createServerClient, getUser } from '@/lib/supabase-server';
 import { sendSubPortalInvite } from '@/lib/email';
@@ -182,8 +183,10 @@ export async function POST(req: NextRequest) {
       .eq('tenant_id', user.tenantId)
       .maybeSingle();
     if (profileErr) console.error('[portal/sub/create] profile read', profileErr);
-    const gcCompanyName = (profile as { company?: string; full_name?: string } | null)?.company
-      || (profile as { company?: string; full_name?: string } | null)?.full_name
+    /* The general contractor is the COMPANY (tenants name), never the person
+       who clicked invite (live QA D18: "General Contractor: Claude QA"). */
+    const gcCompanyName = (await companyDisplayName(db as never, user.tenantId, user.id))
+      || (profile as { company?: string; full_name?: string } | null)?.company
       || 'Your General Contractor';
 
     // The invite email — reported as sent only when the provider accepted it.
@@ -197,6 +200,7 @@ export async function POST(req: NextRequest) {
         gcCompanyName,
         projectName: project.name,
         portalUrl,
+        replyTo: user.email || null,
       });
       emailSent = mail.sent;
       emailError = mail.error;
@@ -205,9 +209,27 @@ export async function POST(req: NextRequest) {
     }
     if (!emailSent) console.error('[portal/sub/create] invite not emailed to', inviteEmail, '-', emailError);
 
+    /* Is the company on THIS job's subcontractor list? Without it the portal's
+       daily logs, RFIs, invoices, compliance and messages stay closed ("open
+       once you're on the subcontractor list") — the GC is told now, not the sub
+       later (live QA D10). */
+    let onRoster = false;
+    if (resolvedSubId) {
+      const { data: rosterRow, error: rosterErr } = await db
+        .from('project_subcontractors')
+        .select('id')
+        .eq('project_id', projectId)
+        .eq('subcontractor_id', resolvedSubId)
+        .limit(1);
+      if (rosterErr) console.error('[portal/sub/create] roster check', rosterErr);
+      onRoster = !!rosterRow?.length;
+    }
+
     return NextResponse.json({
       session,
       portalUrl,
+      onRoster,
+      projectId,
       projectName: project.name,
       companyName: companyName || null,
       contactName: contactName || null,

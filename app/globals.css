@@ -1788,6 +1788,15 @@ li[data-done="true"] .pj-next-step strong { color: var(--text-tertiary); text-de
      own line under the record, right-aligned. */
   .k-table td.k-td-actions { position: absolute !important; top: 6px; right: 0; width: auto; padding: 0 !important; }
   .k-table tr:has(> td.k-td-actions) > td:first-child { padding-right: 52px !important; }
+  /* When the first cell is empty (a hidden select box), the record's first
+     shown line is what sits beside the "…" — hold the room there instead, or
+     the menu lands on top of the date and blocks taps on it. */
+  .k-table tr:has(> td.k-td-actions) > td:not(:empty):not(.k-td-actions):not(td:not(:empty) ~ td) { padding-right: 52px !important; }
+  /* The totals row spans the screen like the rows above it — as a table
+     footer it shrank to its content and floated half-width under the list. */
+  .k-table tfoot, .k-table tfoot tr { display: block; width: 100%; }
+  .k-table tfoot tr.k-total-row td { height: auto; border-top: 0; }
+  .k-table tfoot tr.k-total-row { border-top: 2px solid var(--border-default); border-bottom: 0; }
   .k-table td.k-td-actions:has(.k-btn:not(.k-icon-btn)) { position: static !important; justify-content: flex-end; flex-wrap: wrap; gap: 8px; margin-top: 6px; padding: 8px 0 0 !important; border-top: 1px solid var(--border-subtle); }
   .k-table tr:has(> td.k-td-actions .k-btn:not(.k-icon-btn)) > td:first-child { padding-right: 0 !important; }
   /* Inside a card the rows are a divided list, not cards inside a card. */

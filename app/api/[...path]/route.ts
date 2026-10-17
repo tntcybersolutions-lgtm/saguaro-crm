@@ -302,8 +302,9 @@ export async function GET(
 
   // GET /api/context/:projectId
   if (seg0 === 'context' && seg1) {
-    const user = await getUserFromRequest(req);
-    if (!user) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
+    const g = await requirePermission(req, 'Projects', 'View', { projectId: /^[0-9a-f-]{36}$/i.test(seg1) ? seg1 : null });
+    if (!g.ok) return g.res;
+    const user = g.user;
     const ctx = await getProjectContext(user.tenantId, seg1);
     return NextResponse.json(ctx);
   }
@@ -395,13 +396,18 @@ export async function GET(
 
   // GET /api/payroll/:projectId
   if (seg0 === 'payroll' && seg1 && seg1 !== 'create') {
+    // Certified payroll is wages: Budget view on that job (payroll/list asks the same).
+    const g = await requirePermission(req, 'Budget', 'View', { projectId: /^[0-9a-f-]{36}$/i.test(seg1) ? seg1 : null });
+    if (!g.ok) return g.res;
     return getCertifiedPayrollHandler(req, seg1);
   }
 
   // GET /api/bid-packages?projectId=...  (list all for a project)
   if (seg0 === 'bid-packages' && !seg1) {
-    const user = await getUserFromRequest(req);
-    if (!user) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
+    // The job's role decides (a No-access job is a 403), not just a session.
+    const g = await requirePermission(req, 'Projects', 'View');
+    if (!g.ok) return g.res;
+    const user = g.user;
     const { searchParams } = new URL(req.url);
     const projectId = searchParams.get('projectId') || '';
     if (!projectId) return NextResponse.json({ error: 'projectId required' }, { status: 400 });

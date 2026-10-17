@@ -21,6 +21,17 @@ function getClient(): SupabaseClient {
   const url = process.env.NEXT_PUBLIC_SUPABASE_URL ?? DEMO_URL;
   const key  = process.env.SUPABASE_SERVICE_ROLE_KEY ?? DEMO_KEY;
 
+  /* With real credentials this IS the app's server client (lib/supabase-server):
+     one service connection, so every read made for a signed-in person carries
+     their viewer scope — closed jobs left out, money and rates hidden without
+     the rights (lib/viewer-scope). A second raw client here was a way around it. */
+  if (process.env.NEXT_PUBLIC_SUPABASE_URL && process.env.SUPABASE_SERVICE_ROLE_KEY && process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY) {
+    // eslint-disable-next-line @typescript-eslint/no-var-requires
+    const { createServerClient } = require('../lib/supabase-server') as { createServerClient: () => SupabaseClient };
+    _client = createServerClient();
+    return _client;
+  }
+
   _client = createClient(url, key, {
     auth: {
       autoRefreshToken: false,

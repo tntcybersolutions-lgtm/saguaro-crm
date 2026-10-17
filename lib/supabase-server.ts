@@ -55,8 +55,9 @@ async function requestContext(): Promise<{ user: CachedUser | null; method: stri
     ].filter(Boolean) as string[];
     for (const token of candidates) {
       const key = await tokenKey(token);
-      const hit = userCache.get(key) || actorCache.get(key);
-      if (hit && hit.until > Date.now()) return { user: hit.user, method };
+      for (const hit of [userCache.get(key), actorCache.get(key), verifiedForScope.get(key)]) {
+        if (hit && hit.until > Date.now()) return { user: hit.user, method };
+      }
     }
     return { user: null, method };
   } catch {
@@ -205,10 +206,30 @@ const userCache = new Map<string, { user: CachedUser; until: number }>();
 /** Users signed in through a refresh this instance verified, keyed by that refresh token (history actor only). */
 const actorCache = new Map<string, { user: CachedUser; until: number }>();
 
+/* Every database call asks who the request's person is (the viewer scope),
+   so the hash of a token is remembered rather than recomputed per call. */
+const keyMemo = new Map<string, string>();
 async function tokenKey(token: string): Promise<string> {
+  const memo = keyMemo.get(token);
+  if (memo) return memo;
   const bytes = new TextEncoder().encode(token);
   const digest = await crypto.subtle.digest('SHA-256', bytes);
-  return Array.from(new Uint8Array(digest), (b) => b.toString(16).padStart(2, '0')).join('');
+  const key = Array.from(new Uint8Array(digest), (b) => b.toString(16).padStart(2, '0')).join('');
+  if (keyMemo.size >= USER_CACHE_MAX) keyMemo.clear();
+  keyMemo.set(token, key);
+  return key;
+}
+
+/**
+ * Sessions getUser() verified in the last minute, for the viewer scope only.
+ * The sign-in cache above skips a token in its last seconds of life; the
+ * scope must still know whose request it is, or that request would read
+ * unscoped. Never used to answer getUser().
+ */
+const verifiedForScope = new Map<string, { user: CachedUser; until: number }>();
+function rememberForScope(key: string, user: CachedUser) {
+  if (verifiedForScope.size >= USER_CACHE_MAX) verifiedForScope.clear();
+  verifiedForScope.set(key, { user, until: Date.now() + USER_CACHE_TTL_MS });
 }
 
 /** The token's own expiry in ms (no signature check — used only to bound the cache). */
@@ -283,7 +304,7 @@ export async function getUser(
     if (accessToken) {
       const key = await tokenKey(accessToken);
       const hit = userCache.get(key);
-      if (hit && hit.until > Date.now()) return hit.user;
+      if (hit && hit.until > Date.now()) { rememberForScope(key, hit.user); return hit.user; }
       if (hit) userCache.delete(key);
 
       // Start the tenant lookup alongside the token check (one round trip, not
@@ -295,6 +316,7 @@ export async function getUser(
         const early = sub === user.id && tenantP ? await tenantP : null;
         const verified = { id: user.id, tenantId: early || (await getTenant(user.id)), email: user.email || '' };
         rememberUser(key, accessToken, verified);
+        rememberForScope(key, verified);
         return verified;
       }
     }

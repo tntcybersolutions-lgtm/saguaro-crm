@@ -124,7 +124,7 @@ export default function PortalsPage() {
   const [inviteTab, setInviteTab] = useState<Tab>('client');
   const [inviteLoading, setInviteLoading] = useState(false);
   const [inviteError, setInviteError] = useState('');
-  const [inviteSuccess, setInviteSuccess] = useState<{ url: string; name: string; emailSent?: boolean } | null>(null);
+  const [inviteSuccess, setInviteSuccess] = useState<{ url: string; name: string; emailSent?: boolean; rosterHref?: string } | null>(null);
 
   // Client invite form
   const [clientForm, setClientForm] = useState({ projectId: '', clientName: '', clientEmail: '', expiresInDays: '365' });
@@ -235,7 +235,11 @@ export default function PortalsPage() {
       if (!res.ok) {
         setInviteError(data.error || 'Failed to create portal access');
       } else {
-        setInviteSuccess({ url: data.portalUrl, name: isClient ? clientForm.clientName : subForm.companyName, emailSent: data.emailSent });
+        setInviteSuccess({
+          url: data.portalUrl, name: isClient ? clientForm.clientName : subForm.companyName, emailSent: data.emailSent,
+          // A sub not on the job's roster gets a mostly closed portal: say so, with the way to fix it.
+          rosterHref: !isClient && data.onRoster === false && data.projectId ? `/app/projects/${data.projectId}/subs` : undefined,
+        });
         if (isClient) setClientForm({ projectId: '', clientName: '', clientEmail: '', expiresInDays: '365' });
         else setSubForm({ projectId: '', companyName: '', contactName: '', email: '' });
         guard.clearDraft();
@@ -398,6 +402,7 @@ export default function PortalsPage() {
             name={inviteSuccess.name}
             type={inviteTab}
             emailSent={inviteSuccess.emailSent}
+            rosterHref={inviteSuccess.rosterHref}
             onCopied={() => show('Portal link copied.')}
             onAnother={() => setInviteSuccess(null)}
             onClose={() => { setShowInvite(false); setInviteSuccess(null); }}
@@ -463,7 +468,7 @@ export default function PortalsPage() {
 
 // ─── Sub-components ───────────────────────────────────────────────────────────
 
-function SuccessCard({ url, name, type, emailSent, onCopied, onAnother, onClose }: { url: string; name: string; type: Tab; emailSent?: boolean; onCopied: () => void; onAnother: () => void; onClose: () => void; }) {
+function SuccessCard({ url, name, type, emailSent, rosterHref, onCopied, onAnother, onClose }: { url: string; name: string; type: Tab; emailSent?: boolean; rosterHref?: string; onCopied: () => void; onAnother: () => void; onClose: () => void; }) {
   const [linkCopied, setLinkCopied] = useState(false);
 
   const [copyFailed, setCopyFailed] = useState(false);
@@ -488,6 +493,12 @@ function SuccessCard({ url, name, type, emailSent, onCopied, onAnother, onClose 
         {emailSent ? <Envelope size={16} weight="fill" /> : <WarningCircle size={16} weight="fill" />}
         {emailSent ? 'Invitation email sent automatically.' : 'Email not sent automatically — copy the portal link below and share it directly.'}
       </div>
+      {rosterHref && (
+        <div className="poMail" data-ok="false" role="status">
+          <WarningCircle size={16} weight="fill" />
+          <span>{name} isn&apos;t on this job&apos;s subcontractor list, so their daily logs, RFIs and invoices stay closed. <a className="k-link" href={rosterHref}>Add them to the job</a></span>
+        </div>
+      )}
 
       {/* Link box */}
       <div className="poLink">

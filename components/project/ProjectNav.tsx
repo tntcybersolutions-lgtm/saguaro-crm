@@ -14,7 +14,9 @@ import React, { useEffect, useLayoutEffect, useRef, useState } from 'react';
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
 import { CaretDown, List } from '@phosphor-icons/react';
-import { PROJECT_PHASES, phaseForPath } from '@/lib/project-nav';
+import { PROJECT_PHASES, phaseForPath, type ProjectPhase } from '@/lib/project-nav';
+import { usePermissions } from '@/lib/hooks/usePermissions';
+import { ruleFor, allowedBy } from '@/lib/route-access';
 
 const useIso = typeof window === 'undefined' ? useEffect : useLayoutEffect;
 
@@ -24,9 +26,25 @@ export default function ProjectNav({ projectId, onOpenModules }: { projectId: st
   const rel = pathname.startsWith(base) ? pathname.slice(base.length) : '';
   const activeKey = rel === '' || rel === '/' || rel.startsWith('/overview') ? 'overview' : phaseForPath(rel);
 
+  /* A section lands on the first of its tools this person's role ON THIS JOB
+     can open; a section with none is not offered (a Foreman's "Financials"
+     opened the budget only to be refused — live QA D9). Until the
+     permissions are known, every section shows as before. */
+  const { permissions, resolved, jobScoped } = usePermissions(projectId);
+  const phases: ProjectPhase[] = React.useMemo(() => {
+    if (!resolved) return PROJECT_PHASES;
+    const out: ProjectPhase[] = [];
+    for (const ph of PROJECT_PHASES) {
+      if (ph.key === 'overview') { out.push(ph); continue; }
+      const first = [ph.href, ...ph.match].find((r) => allowedBy(ruleFor(base + r).rule, permissions, jobScoped));
+      if (first !== undefined) out.push(first === ph.href ? ph : { ...ph, href: first });
+    }
+    return out;
+  }, [resolved, permissions, jobScoped, base]);
+
   const rowRef = useRef<HTMLDivElement | null>(null);
   const itemRefs = useRef<(HTMLAnchorElement | null)[]>([]);
-  const [visible, setVisible] = useState<number>(PROJECT_PHASES.length);
+  const [visible, setVisible] = useState<number>(phases.length);
   const [open, setOpen] = useState(false);
   const menuRef = useRef<HTMLDivElement | null>(null);
 
@@ -35,10 +53,10 @@ export default function ProjectNav({ projectId, onOpenModules }: { projectId: st
     const row = rowRef.current;
     if (!row) return;
     const measure = () => {
-      if (window.matchMedia('(max-width: 767px)').matches) { setVisible(PROJECT_PHASES.length); return; }
+      if (window.matchMedia('(max-width: 767px)').matches) { setVisible(phases.length); return; }
       const avail = row.clientWidth - 96; // room for "More"
       let used = 0; let n = 0;
-      for (let i = 0; i < PROJECT_PHASES.length; i++) {
+      for (let i = 0; i < phases.length; i++) {
         const el = itemRefs.current[i];
         // Each pill's natural width, cached once it has really been laid out.
         // A zero (measured before fonts/layout) must not be cached — that is
@@ -46,7 +64,7 @@ export default function ProjectNav({ projectId, onOpenModules }: { projectId: st
         const cached = el?.dataset.w ? Number(el.dataset.w) : 0;
         const w = cached > 0 ? cached : (el?.offsetWidth || 0);
         if (el && !cached && w > 0) el.dataset.w = String(w);
-        if (w === 0) { n = PROJECT_PHASES.length; break; } // not laid out yet — show all, re-measure on the next resize
+        if (w === 0) { n = phases.length; break; } // not laid out yet — show all, re-measure on the next resize
         if (used + w + 6 > avail) break;
         used += w + 6; n++;
       }
@@ -59,7 +77,7 @@ export default function ProjectNav({ projectId, onOpenModules }: { projectId: st
     // callbacks are not delivered while a tab is throttled in the background).
     window.addEventListener('resize', measure);
     return () => { ro.disconnect(); window.removeEventListener('resize', measure); };
-  }, []);
+  }, [phases.length]);
 
   useEffect(() => {
     if (!open) return;
@@ -69,7 +87,7 @@ export default function ProjectNav({ projectId, onOpenModules }: { projectId: st
     return () => { document.removeEventListener('mousedown', onDown); document.removeEventListener('keydown', onKey); };
   }, [open]);
 
-  const hidden = PROJECT_PHASES.slice(visible);
+  const hidden = phases.slice(visible);
   const activeHidden = hidden.some((p) => p.key === activeKey);
 
   return (
@@ -80,7 +98,7 @@ export default function ProjectNav({ projectId, onOpenModules }: { projectId: st
         </button>
       )}
       <div className="pj-nav-row" ref={rowRef}>
-        {PROJECT_PHASES.map((ph, i) => {
+        {phases.map((ph, i) => {
           const Icon = ph.icon;
           const active = ph.key === activeKey;
           const href = base + (ph.key === 'overview' ? '/overview' : ph.href);

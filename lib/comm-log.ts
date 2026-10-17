@@ -54,6 +54,9 @@ export function htmlToText(html: string, max = 8000): string {
       const label = inner.replace(/<[^>]+>/g, ' ').replace(/\s+/g, ' ').trim();
       return /^(mailto:|#)/i.test(href) || label === href ? label || href : `${label} (${href})`;
     })
+    // Inline emphasis carries no break: "<strong>Acme</strong>'s jobs" reads
+    // "Acme's jobs", not "Acme 's jobs" (live QA D18).
+    .replace(/<\/?(strong|b|em|i|u|span|small|code)\b[^>]*>/gi, '')
     .replace(/<br\s*\/?>/gi, '\n')
     .replace(/<\/(p|div|tr|li|h[1-6]|table)>/gi, '\n')
     .replace(/<[^>]+>/g, ' ')
