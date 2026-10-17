@@ -31,7 +31,7 @@ import { money, SIGN_STATUS_LABEL, type ProposalLineItem, type SignStatus } from
 import {
   PageShell, Card, StatRow, Badge, Button, DataTable, EmptyState,
   FormModal, Field, Input, Textarea, Select, FormGrid, DateInput,
-  ItemList, ItemRow, MetaItem, Callout, StagePicker, Timeline,
+  ItemList, ItemRow, MetaItem, Callout, StagePicker, Timeline, Menu,
   type Column, type BadgeTone, type Tone,
 } from '@/components/ui/kit';
 
@@ -39,7 +39,7 @@ import {
    page, the board and the ticker agree. */
 const STAGE_TONE: Record<string, BadgeTone> = {
   New: 'lead', Contacted: 'lead', Qualified: 'lead', Proposal: 'lead',
-  Negotiation: 'lead', Won: 'under_contract', Lost: 'closed',
+  Negotiation: 'lead', Won: 'ongoing', Lost: 'closed',
 };
 const ACTIVITY_TYPES = ['call', 'email', 'meeting', 'note'] as const;
 const ACTIVITY_LABELS: Record<string, string> = { call: 'Phone Call', email: 'Email', meeting: 'Meeting', note: 'Note' };
@@ -449,6 +449,8 @@ export default function DealPage() {
      midnight, which made a follow-up due today read "Overdue" all day long
      anywhere west of Greenwich. */
   const overdue = !!lead.next_action_date && !isWon && !isLost && lead.next_action_date.slice(0, 10) < localDay();
+  const firstName = String(lead.contact_name || '').trim().split(/\s+/)[0] || '';
+  const valueNum = Number(lead.estimated_value) || 0;
 
   return (
     <PageShell
@@ -465,15 +467,16 @@ export default function DealPage() {
       }
       actions={
         <>
-          <Button icon={<PencilSimple size={15} />} onClick={openEdit}>Edit Deal</Button>
-          <Button
-            icon={<EnvelopeSimple size={15} />}
-            onClick={() => setSendOpen(true)}
-            disabled={!lead.email}
-            title={lead.email ? `Email ${lead.contact_name || 'the contact'} at ${lead.email}` : 'No email on this deal — add one to send.'}
-          >
-            Email the GC
-          </Button>
+          <Button icon={<PencilSimple size={15} />} onClick={openEdit}>Edit</Button>
+          {lead.email && (
+            <Button
+              icon={<EnvelopeSimple size={15} />}
+              onClick={() => setSendOpen(true)}
+              title={`Email ${lead.contact_name || 'the contact'} at ${lead.email}`}
+            >
+              Email {firstName || 'contact'}
+            </Button>
+          )}
           {/* A deal already linked to a job links to it at any stage; the
               handoff that opens one is offered once the deal is Won. */}
           {lead.project_id ? (
@@ -481,16 +484,19 @@ export default function DealPage() {
           ) : isWon && (
             <Button variant="primary" onClick={convert} disabled={converting} icon={<ArrowRight size={15} />}>{converting ? 'Opening…' : 'Open the Job'}</Button>
           )}
-          <Button variant="danger" icon={<Trash size={15} />} onClick={deleteDeal} disabled={deleting}>{deleting ? 'Deleting…' : 'Delete Deal'}</Button>
+          <Menu label="More deal actions" actions={[
+            { label: deleting ? 'Deleting…' : 'Delete deal', icon: <Trash size={14} />, tone: 'danger', disabled: deleting, onClick: () => { void deleteDeal(); } },
+          ]} />
         </>
       }
     >
       <StatRow items={[
-        { label: 'Estimated Value', value: fmt(lead.estimated_value), icon: <CurrencyDollar size={15} weight="bold" /> },
-        { label: 'Probability', value: prob != null ? `${prob}%` : '—', icon: <Gauge size={15} weight="bold" />,
-          sub: prob != null ? <span className="k-prog" aria-hidden><span style={{ width: `${prob}%` }} /></span> : 'Not set' },
-        { label: 'Next Action', value: lead.next_action_date ? fmtDate(lead.next_action_date) : '—', icon: <CalendarCheck size={15} weight="bold" />,
-          tone: overdue ? 'bad' : 'default', sub: overdue ? 'Overdue' : lead.next_action_date ? 'Scheduled' : lead.next_action ? 'No date set' : 'Nothing scheduled' },
+        { label: 'Estimated value', value: fmt(lead.estimated_value), icon: <CurrencyDollar size={15} weight="bold" />,
+          sub: prob != null && valueNum > 0 ? `${fmt(Math.round(valueNum * prob / 100))} weighted` : undefined },
+        ...(prob != null ? [{ label: 'Probability', value: `${prob}%`, icon: <Gauge size={15} weight="bold" />,
+          sub: <span className="k-prog" aria-hidden><span style={{ width: `${prob}%` }} /></span> }] : []),
+        ...(lead.next_action_date ? [{ label: 'Next action', value: fmtDate(lead.next_action_date), icon: <CalendarCheck size={15} weight="bold" />,
+          tone: (overdue ? 'bad' : 'default') as 'bad' | 'default', sub: overdue ? 'Overdue' : 'Scheduled' }] : []),
       ]} />
 
       {/* The one next step, as the concept's alert card. */}
@@ -499,7 +505,6 @@ export default function DealPage() {
           tone="success"
           icon={<CheckCircle size={20} weight="fill" />}
           title={lead.project_id ? 'Won — this deal is open as a job' : 'Won — ready to become a job'}
-          text={lead.project_id ? 'Budget, schedule and the client portal live on the job now.' : 'Opening the job carries the customer, value and files across.'}
         />
       ) : !isLost && (
         <Callout
@@ -508,7 +513,7 @@ export default function DealPage() {
           title={lead.next_action || 'No next step yet'}
           text={lead.next_action
             ? (lead.next_action_date ? `${overdue ? 'Was due' : 'Due'} ${fmtDate(lead.next_action_date)}.` : 'No date set.')
-            : 'Add the next step and a date so this deal shows up on My Day.'}
+            : undefined}
           actions={<Button icon={<PencilSimple size={15} />} onClick={openEdit}>{lead.next_action ? 'Change' : 'Add Next Step'}</Button>}
         />
       )}
@@ -517,7 +522,6 @@ export default function DealPage() {
       <Card
         icon={<Funnel size={17} weight="bold" />}
         title="Pipeline"
-        subtitle="One click moves the deal; the board and sales overview update at once."
         actions={!isLost ? (
           <Button variant="ghost" onClick={() => void moveStage('Lost')} disabled={!!savingStage}>{savingStage === 'Lost' ? 'Saving…' : 'Mark as Lost'}</Button>
         ) : (
@@ -534,7 +538,7 @@ export default function DealPage() {
         {proposalError ? (
           <EmptyState icon={<WarningCircle size={22} />} title="Proposal didn't load" text={proposalError} action={<Button onClick={() => void loadProposals()}>Retry</Button>} />
         ) : !currentProposal ? (
-          <EmptyState title="No proposal yet" text="Build it here with line items, then send it for signature." action={<Button icon={<FileText size={15} />} onClick={() => setEditor({ proposal: null })}>Create Proposal</Button>} />
+          <EmptyState title="No proposal yet" action={<Button icon={<FileText size={15} />} onClick={() => setEditor({ proposal: null })}>Create Proposal</Button>} />
         ) : (
           <>
             {proposalSigned && !isWon && (
@@ -588,13 +592,11 @@ export default function DealPage() {
       <div style={{ display: 'grid', gap: 16, gridTemplateColumns: 'repeat(auto-fit, minmax(min(100%, 420px), 1fr))', alignItems: 'start' }}>
         <Card icon={<User size={17} weight="bold" />} title="Contact & Details">
           <ItemList>
-            <ItemRow icon={<User size={16} />} title="Contact" value={lead.contact_name || '—'} />
-            <ItemRow icon={<EnvelopeSimple size={16} />} tone={lead.email ? 'info' : 'neutral'} title="Email"
-              value={lead.email ? <a href={`mailto:${lead.email}`}>{lead.email}</a> : '—'} />
-            <ItemRow icon={<Phone size={16} />} tone={lead.phone ? 'info' : 'neutral'} title="Phone"
-              value={lead.phone ? <a href={`tel:${lead.phone}`}>{lead.phone}</a> : '—'} />
-            <ItemRow icon={<Megaphone size={16} />} title="Source" value={lead.source || '—'} />
-            <ItemRow icon={<MapPin size={16} />} title="Location" value={lead.location || '—'} />
+            {lead.contact_name && <ItemRow icon={<User size={16} />} title="Contact" value={lead.contact_name} />}
+            {lead.email && <ItemRow icon={<EnvelopeSimple size={16} />} tone="info" title="Email" value={<a href={`mailto:${lead.email}`}>{lead.email}</a>} />}
+            {lead.phone && <ItemRow icon={<Phone size={16} />} tone="info" title="Phone" value={<a href={`tel:${lead.phone}`}>{lead.phone}</a>} />}
+            {lead.source && <ItemRow icon={<Megaphone size={16} />} title="Source" value={lead.source} />}
+            {lead.location && <ItemRow icon={<MapPin size={16} />} title="Location" value={lead.location} />}
           </ItemList>
           {lead.notes && (
             <div style={{ marginTop: 12 }}>
@@ -604,7 +606,7 @@ export default function DealPage() {
           )}
         </Card>
 
-        <Card icon={<Note size={17} weight="bold" />} title="Activity" subtitle="Calls, emails, meetings and notes on this deal.">
+        <Card icon={<Note size={17} weight="bold" />} title="Activity">
           <form method="post"
             className="k-toolbar"
             style={{ marginBottom: 14 }}
@@ -627,7 +629,7 @@ export default function DealPage() {
             <Button type="submit" disabled={actSaving || !actDesc.trim()}>{actSaving ? 'Adding…' : 'Add'}</Button>
           </form>
           {activities.length === 0 ? (
-            <EmptyState title="No activity yet" text="The first call or note shows up here." />
+            <EmptyState title="No activity yet" />
           ) : (
             <Timeline items={activities.map((a) => ({
               key: a.id,
@@ -664,7 +666,7 @@ export default function DealPage() {
           rowActions={(m) => [{ label: 'Download', icon: <DownloadSimple size={14} />, inline: true, href: m.url }, { label: 'Remove', icon: <Trash size={14} />, tone: 'danger', onClick: () => void removeMedia(m) }]}
           empty={mediaError
             ? <EmptyState icon={<WarningCircle size={22} />} title="Files didn't load" text={mediaError} action={<Button onClick={() => void loadMedia()}>Retry</Button>} />
-            : <EmptyState title="No files yet" text="Proposals, plans and site photos." primary={uploading ? undefined : { label: 'Upload Files', icon: <UploadSimple size={15} />, onClick: () => fileRef.current?.click() }} perm={['Sales', 'Edit']} />}
+            : <EmptyState title="No files yet" primary={uploading ? undefined : { label: 'Upload Files', icon: <UploadSimple size={15} />, onClick: () => fileRef.current?.click() }} perm={['Sales', 'Edit']} />}
         />
       </Card>
 
@@ -681,7 +683,7 @@ export default function DealPage() {
       <FormModal
         open={sendOpen}
         onClose={() => setSendOpen(false)}
-        title="Email the GC"
+        title={`Email ${lead.contact_name || 'contact'}`}
         subtitle={lead.email ? `${lead.contact_name || 'Contact'} · ${lead.email}` : undefined}
         busy={sending}
         onSubmit={sendToGc}
@@ -691,7 +693,7 @@ export default function DealPage() {
           <Field label="Subject" required>
             <Input value={sendSubject} onChange={(e) => setSendSubject(e.target.value)} placeholder="e.g. Updated proposal for Back Nine" autoFocus />
           </Field>
-          <Field label="Message" required hint="Logged on this deal's activity. If email isn't set up on this environment, nothing is sent and you'll be told.">
+          <Field label="Message" required hint="Logged on this deal's activity.">
             <Textarea value={sendMessage} onChange={(e) => setSendMessage(e.target.value)} placeholder="Write your message to the GC…" rows={8} />
           </Field>
         </FormGrid>
@@ -702,7 +704,6 @@ export default function DealPage() {
         open={editOpen && !!form}
         onClose={() => { if (!savingEdit) setEditOpen(false); }}
         title="Edit Deal"
-        subtitle="Stage moves from the bar on the page."
         busy={savingEdit}
         error={editError}
         onSubmit={saveEdit}

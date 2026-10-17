@@ -15,7 +15,7 @@ import MarkOutcomeModal from '@/components/bids/MarkOutcomeModal';
 import { postLearningEvent } from '@/lib/last-used';
 import { SUB_TRADES, SUB_TRADES_BY_DIVISION } from '@/lib/construction-intelligence';
 import {
-  PageShell, Card, StatRow, Badge, Button, Tabs, Toolbar, DataTable, EmptyState,
+  PageShell, Card, StatRow, Badge, Button, Tabs, Toolbar, DataTable, EmptyState, Menu,
   FormModal, Field, Input, Textarea, FormGrid, Toast, useToast, Select,
   type Column, type BadgeTone, type StatItem,
 } from '@/components/ui/kit';
@@ -54,9 +54,9 @@ const daysUntil = (d?: string | null) => {
   return isNaN(t) ? null : Math.ceil((t - Date.now()) / 86400000);
 };
 const fmtDate = (d?: string | null) => {
-  if (!d) return '—';
+  if (!d) return '';
   const dt = new Date(String(d).length <= 10 ? String(d) + 'T00:00:00' : String(d));
-  return isNaN(dt.getTime()) ? '—' : dt.toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' });
+  return isNaN(dt.getTime()) ? '' : dt.toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' });
 };
 const spreadTone = (s: number) => (s <= 10 ? 'var(--success)' : s <= 25 ? 'var(--warning)' : 'var(--danger)');
 
@@ -457,26 +457,24 @@ function BidsPageInner() {
     (b) => !needle || `${b.project_name || ''} ${b.project_type || ''} ${b.location || ''}`.toLowerCase().includes(needle),
   );
 
+  /* Four figures, the ones a GC acts on. The widest spread lives in the
+     table's Spread column, sorted on demand. */
+  const awaiting = activePackages.length - coveredCount;
   const packageStats: StatItem[] = [
-    { label: 'Live Packages', value: activePackages.length, sub: `${openNow.length} open for bids` },
-    { label: 'Bids In', value: `${respondedTotal} / ${invitedTotal}`, sub: 'Responses vs invites', tone: respondedTotal > 0 ? 'good' : 'default' },
-    { label: 'Coverage', value: activePackages.length ? `${coveredCount}/${activePackages.length}` : '—', sub: activePackages.length - coveredCount > 0 ? `${activePackages.length - coveredCount} awaiting first bid` : 'Every package has a bid' },
-    { label: 'Low-Bid Pipeline', value: fmt(lowBidPipeline), sub: 'Sum of current low bids' },
-    { label: 'Awarded', value: fmt(awardedTotal), sub: `${awardedPkgs.length} package${awardedPkgs.length === 1 ? '' : 's'} placed` },
-    {
-      label: 'Widest Spread',
-      value: widestSpread ? `${Math.round(Number(widestSpread.spread_pct))}%` : '—',
-      sub: widestSpread ? `${widestSpread.name || 'package'} — level before award` : 'Needs 2+ bids on a package',
-      tone: widestSpread ? (Number(widestSpread.spread_pct) <= 10 ? 'good' : Number(widestSpread.spread_pct) <= 25 ? 'warn' : 'bad') : 'default',
-    },
+    { label: 'Open for bids', value: openNow.length, sub: `${activePackages.length} live package${activePackages.length === 1 ? '' : 's'}`,
+      onClick: () => setTab('pipeline'), active: tab === 'pipeline' },
+    { label: 'Bids in', value: `${respondedTotal} / ${invitedTotal}`, tone: respondedTotal > 0 ? 'good' : 'default',
+      sub: awaiting > 0 ? `${awaiting} package${awaiting === 1 ? '' : 's'} with no bid` : 'Every package has a bid' },
+    ...(lowBidPipeline > 0 ? [{ label: 'Low bids', value: fmt(lowBidPipeline), sub: widestSpread ? `Widest spread ${Math.round(Number(widestSpread.spread_pct))}%` : 'Sum of current low bids' }] : []),
+    ...(awardedPkgs.length > 0 ? [{ label: 'Awarded', value: fmt(awardedTotal), sub: `${awardedPkgs.length} package${awardedPkgs.length === 1 ? '' : 's'}` }] : []),
   ];
+  const decidedBids = (historyStats?.wonBids ?? 0) + (historyStats?.lostBids ?? 0);
   const historyStatItems: StatItem[] = historyStats ? [
-    { label: 'Total Bids', value: historyStats.totalBids ?? 0 },
-    { label: 'Won', value: historyStats.wonBids ?? 0, tone: 'good' },
-    { label: 'Lost', value: historyStats.lostBids ?? 0, tone: 'bad' },
-    { label: 'Win Rate', value: `${historyStats.winRate ?? 0}%`, tone: (historyStats.winRate ?? 0) >= 50 ? 'good' : 'warn' },
-    { label: 'Avg Margin', value: `${(Number(historyStats.avgMargin) || 0).toFixed(1)}%` },
-    { label: 'Total Value', value: fmt(Number(historyStats.totalValue) || 0) },
+    ...(decidedBids > 0 ? [{ label: 'Win rate', value: `${historyStats.winRate ?? 0}%`, tone: ((historyStats.winRate ?? 0) >= 50 ? 'good' : 'warn') as 'good' | 'warn',
+      sub: `${historyStats.wonBids ?? 0} won · ${historyStats.lostBids ?? 0} lost` }] : []),
+    { label: 'Bids', value: historyStats.totalBids ?? 0 },
+    ...(Number(historyStats.avgMargin) ? [{ label: 'Avg margin', value: `${(Number(historyStats.avgMargin) || 0).toFixed(1)}%` }] : []),
+    ...(Number(historyStats.totalValue) ? [{ label: 'Total value', value: fmt(Number(historyStats.totalValue) || 0) }] : []),
   ] : [];
 
   const pkgHref = (p: Pkg) => `/app/projects/${p.project_id}/bid-packages/${p.id}`;
@@ -484,21 +482,21 @@ function BidsPageInner() {
   const pkgColumns: Column<Pkg>[] = [
     { key: 'name', header: 'Package', primary: true, accessor: (p) => p.name || 'Untitled Package' },
     { key: 'trade', header: 'Trade' },
-    { key: 'status', header: 'Status', render: (p) => <Badge tone={packageTone(String(p.status || ''))} dot><span style={{ textTransform: 'capitalize' }}>{String(p.status || '—').replace(/_/g, ' ')}</span></Badge> },
+    { key: 'status', header: 'Status', render: (p) => <Badge tone={packageTone(String(p.status || ''))} dot><span style={{ textTransform: 'capitalize' }}>{String(p.status || 'draft').replace(/_/g, ' ')}</span></Badge> },
     {
       key: 'due', header: 'Bid Due', accessor: (p) => p.bid_due_date || p.due_date,
       render: (p) => {
         const due = p.bid_due_date || p.due_date;
         const dd = daysUntil(due);
         return (
-          <>
-            {fmtDate(due)}
+          <span style={{ display: 'inline-flex', flexDirection: 'column', gap: 2, lineHeight: 1.25 }}>
+            <span>{due ? fmtDate(due) : ''}</span>
             {dd != null && (
-              <span style={{ marginLeft: 6, fontSize: 'var(--fs-xs)', fontWeight: 700, color: dd < 0 ? 'var(--danger)' : dd <= 3 ? 'var(--warning)' : 'var(--text-tertiary)' }}>
-                {dd < 0 ? `${Math.abs(dd)}d overdue` : dd === 0 ? 'due today' : `${dd}d left`}
+              <span style={{ fontSize: 12, fontWeight: 700, color: dd < 0 ? 'var(--danger)' : dd <= 3 ? 'var(--warning)' : 'var(--text-tertiary)' }}>
+                {dd < 0 ? `${Math.abs(dd)}d overdue` : dd === 0 ? 'Due today' : `${dd}d left`}
               </span>
             )}
-          </>
+          </span>
         );
       },
     },
@@ -513,13 +511,13 @@ function BidsPageInner() {
       key: 'low', header: 'Low Bid', align: 'right', accessor: (p) => Number(p.low_bid_amount) || null,
       render: (p) => (p.low_bid_amount ? (
         <span title={p.low_bid_company || undefined}>{fmt(p.low_bid_amount)}</span>
-      ) : '—'),
+      ) : ''),
     },
     {
       key: 'spread', header: 'Spread', align: 'right', accessor: (p) => (p.spread_pct != null ? Number(p.spread_pct) : null),
       render: (p) => {
         const s = p.spread_pct != null && Number.isFinite(Number(p.spread_pct)) ? Number(p.spread_pct) : null;
-        if (s == null) return <span style={{ color: 'var(--text-tertiary)' }}>{(Number(p.num_responded ?? p.bid_count) || 0) === 1 ? 'Needs 2 bids' : '—'}</span>;
+        if (s == null) return <span style={{ color: 'var(--text-tertiary)' }}>{(Number(p.num_responded ?? p.bid_count) || 0) === 1 ? 'Needs 2 bids' : ''}</span>;
         return <span style={{ fontWeight: 700, color: spreadTone(s) }}>{Math.round(s)}%</span>;
       },
     },
@@ -546,33 +544,34 @@ function BidsPageInner() {
 
   return (
     <PageShell
-      title="Bid Board"
-      subtitle="Active bid packages, invites, and awards — all in one board"
+      title="Bid board"
       actions={
         <>
-          <Button href="/app/bid-intelligence" icon={<Brain size={15} />}>Bid Intelligence</Button>
-          <Button href="/app/bids/leveling" icon={<ArrowRight size={15} />}>Bid Leveling</Button>
+          <Menu label="More bid tools" actions={[
+            { label: 'Bid intelligence', icon: <Brain size={14} />, href: '/app/bid-intelligence' },
+            { label: 'Bid leveling', icon: <ArrowRight size={14} />, href: '/app/bids/leveling' },
+          ]} />
           {/* Score a Bid is de-featured: still reachable at /app/bids?tab=score (Bid Intelligence has its own scorer). */}
-          <Button variant="primary" onClick={startNewPackage} icon={<Plus size={15} weight="bold" />}>New Bid Package</Button>
+          <Button variant="primary" onClick={startNewPackage} icon={<Plus size={15} weight="bold" />}>New bid package</Button>
         </>
       }
     >
       {tab !== 'history' && !pkgLoading && !pkgError && packages.length > 0 && <StatRow items={packageStats} />}
       {tab === 'history' && !historyLoading && !historyError && historyStatItems.length > 0 && <StatRow items={historyStatItems} />}
 
-      <Card flush>
-        <div style={{ padding: '4px 16px 0' }}>
+      <div style={{ display: 'flex', flexDirection: 'column', gap: 12, minWidth: 0 }}>
+        <div>
           <Tabs
             value={tab}
             onChange={(k) => setTab(k as Tab)}
             tabs={[
-              { key: 'active', label: 'Active Packages', count: pkgLoading || pkgError ? undefined : activePackages.length },
-              { key: 'pipeline', label: 'Open for Bids', count: pkgLoading || pkgError ? undefined : openNow.length },
-              { key: 'history', label: 'Bid History', count: historyStats?.totalBids },
+              { key: 'active', label: 'Active', count: pkgLoading || pkgError ? undefined : activePackages.length },
+              { key: 'pipeline', label: 'Open for bids', count: pkgLoading || pkgError ? undefined : openNow.length },
+              { key: 'history', label: 'History', count: historyStats?.totalBids },
             ]}
           />
         </div>
-        <div style={{ padding: 12 }}>
+        <div>
           <Toolbar
             search={q}
             onSearch={setQ}
@@ -613,10 +612,7 @@ function BidsPageInner() {
               empty={
                 <EmptyState
                   title={needle ? 'No bids match your search' : historyFilter === 'all' ? 'No bid history yet' : `No ${historyFilter} bids`}
-                  text={historyFilter === 'all' && !needle
-                    ? 'Bid outcomes land here. Record a win or loss on any package and your win rate, average margin, and pursued value build themselves.'
-                    : 'Try a different filter or clear the search.'}
-                  action={<Button onClick={refreshHistory}>Refresh</Button>}
+                  action={historyFilter === 'all' && !needle ? undefined : <Button onClick={() => { setQ(''); setHistoryFilter('all'); fetchHistory(undefined); }}>Clear filters</Button>}
                 />
               }
             />
@@ -650,22 +646,21 @@ function BidsPageInner() {
             empty={
               <EmptyState
                 title={needle ? 'No packages match your search' : tab === 'pipeline' ? 'Nothing open for bids' : 'No active bid packages'}
-                text={needle
-                  ? 'Clear the search to see every package.'
-                  : 'Create a bid package on a project. Invites go out with portal links, and sub bids come back priced against your line items.'}
-                action={<Button variant="primary" icon={<Plus size={15} weight="bold" />} onClick={startNewPackage}>New Bid Package</Button>}
+                action={needle
+                  ? <Button onClick={() => setQ('')}>Clear search</Button>
+                  : <Button icon={<Plus size={15} weight="bold" />} onClick={startNewPackage}>New bid package</Button>}
               />
             }
           />
         )}
-      </Card>
+      </div>
 
       {/* ── Score a bid ── */}
       <FormModal
         open={showScore}
         onClose={closeScore}
         title="Score a Bid"
-        subtitle="Fit score and win probability from your own bid history. The result is saved to Bid History as pending."
+        subtitle="Scored against your own bid history."
         busy={scoring}
         error={scoreError}
         onSubmit={scoreResult ? undefined : async () => { await submitScore(); }}
@@ -693,7 +688,7 @@ function BidsPageInner() {
             <Field
               label="Auto-Fill from a Project"
               span
-              hint={autofilling ? 'Filling from the project…' : scoreMeta.historyHint || 'Sage pulls value, trade, location and due date from the project record.'}
+              hint={autofilling ? 'Filling from the project…' : scoreMeta.historyHint || undefined}
             >
               <select className="k-select" value={pickProject} onChange={(e) => autofillFromProject(e.target.value)} disabled={autofilling}>
                 <option value="">{scoreProjects.length ? 'Choose a project…' : 'No projects found — enter manually'}</option>
@@ -788,7 +783,6 @@ function BidsPageInner() {
         onClose={() => setShowNewPkg(false)}
         size="sm"
         title="New Bid Package"
-        subtitle="Packages go out from a job — pick it and the package wizard opens."
         onSubmit={continueNewPackage}
         submitLabel="Continue"
       >

@@ -4,6 +4,7 @@ import { requirePermission } from '@/lib/permissions';
 import { onRFIAnswered } from '@/lib/triggers';
 import { runInBackground } from '@/lib/background';
 import { apiError } from '@/lib/api-error';
+import { writeWithOptionalColumns } from '@/lib/optional-column';
 
 export const dynamic = 'force-dynamic';
 
@@ -75,17 +76,19 @@ export async function POST(
     const nowIso = new Date().toISOString();
 
     // Update the RFI with the official answer
-    const { error: updateError } = await db
-      .from('rfis')
-      .update({
+    // answer_source: null — an answer given here replaces one that came by email (lib/inbound-reply).
+    const { result: { error: updateError } } = await writeWithOptionalColumns(
+      {
         answer,
         answered_by: user.email || '',
         answered_at: nowIso,
         answered_date: nowIso,
         status: 'answered',
-      })
-      .eq('id', id)
-      .eq('tenant_id', user.tenantId);
+        answer_source: null,
+      },
+      ['answer_source'],
+      (row) => db.from('rfis').update(row as never).eq('id', id).eq('tenant_id', user.tenantId),
+    );
 
     if (updateError) throw updateError;
 

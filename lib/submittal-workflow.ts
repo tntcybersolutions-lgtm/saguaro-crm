@@ -72,6 +72,9 @@ export type WfChain = {
   revision: number;
 };
 
+/** Statuses that mean "with the reviewer" — moving into one emails the reviewer (lib/triggers onSubmittalSentForReview). */
+export const SUBMITTAL_REVIEW_STATUSES: ReadonlySet<string> = new Set(['submitted', 'under_review']);
+
 const FINAL_OK = new Set(['approved', 'approved_as_noted', 'closed']);
 const FINAL_BACK = new Set(['rejected', 'revise_resubmit', 'resubmit']);
 const IN_REVIEW = new Set(['submitted', 'under_review']);

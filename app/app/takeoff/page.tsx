@@ -91,9 +91,9 @@ const RING_CSS = { green: 'var(--status-ongoing)', amber: 'var(--status-under-co
 /** Takeoff status → badge: complete green, analyzing blue, not analyzed amber, failed red. */
 function statusBadge(s: string): { label: string; tone: BadgeTone } {
   if (s === 'complete') return { label: 'Complete', tone: 'ongoing' };
-  if (s === 'analyzing') return { label: 'Analyzing', tone: 'lead' };
+  if (s === 'analyzing') return { label: 'Analyzing', tone: 'closed' };
   if (s === 'failed') return { label: 'Failed', tone: 'overdue' };
-  return { label: 'Not analyzed', tone: 'under_contract' }; // uploaded / pending
+  return { label: 'Not analyzed', tone: 'lead' }; // uploaded / pending
 }
 
 type NextStep = 'open' | 'analyze' | 'reupload' | 'refresh';
@@ -313,7 +313,8 @@ export default function TakeoffPage() {
   /* The drop zone is shown on Upload Blueprint (or as the empty state); the
      statistics and the how-it-works example sit behind the toolbar toggles. */
   const [uploadOpen, setUploadOpen] = useState(false);
-  const [summaryOpen, setSummaryOpen] = useState(false);
+  /* The figures lead; the toggle can still fold them away. */
+  const [summaryOpen, setSummaryOpen] = useState(true);
   const [howOpen, setHowOpen] = useState(false);
   /** The record a Re-upload goes into (the next chosen file lands there). */
   const [reuploadTarget, setReuploadTarget] = useState<Takeoff | null>(null);
@@ -650,13 +651,13 @@ export default function TakeoffPage() {
     ? Math.round(processingSecs.reduce((a, b) => a + b, 0) / processingSecs.length)
     : 0;
 
-  const stats: StatItem[] = loadingList
-    ? ['This Month', 'Avg Confidence', 'Total Bid Value', 'Avg Processing'].map(label => ({ label, value: '—', sub: 'Loading…' }))
-    : [
-        { label: 'This Month', value: thisMonthComplete.length, sub: `Completed takeoffs · ${completed.length} of ${takeoffs.length} complete overall` },
-        { label: 'Avg Confidence', value: completed.length ? `${avgConfidence}%` : '—', tone: completed.length ? (avgConfidence >= 75 ? 'good' : avgConfidence >= 50 ? 'warn' : 'bad') : 'default', sub: "The AI's own score, averaged across analyses" },
-        { label: 'Total Bid Value', value: completed.length ? fmt(totalBidValue) : '—', sub: 'Sum of complete takeoffs' },
-        { label: 'Avg Processing', value: processingSecs.length ? `~${fmtSecs(avgProcessingSecs)}` : '—', sub: 'Per blueprint analysis' },
+  const stats: StatItem[] = loadingList ? [] : [
+        { label: 'Complete', value: `${completed.length} / ${takeoffs.length}`, sub: `${thisMonthComplete.length} this month` },
+        ...(completed.length ? [
+          { label: 'Bid value', value: fmt(totalBidValue), sub: 'Complete takeoffs' },
+          { label: 'Avg confidence', value: `${avgConfidence}%`, tone: (avgConfidence >= 75 ? 'good' : avgConfidence >= 50 ? 'warn' : 'bad') as 'good' | 'warn' | 'bad', sub: 'AI score' },
+        ] : []),
+        ...(processingSecs.length ? [{ label: 'Avg processing', value: `~${fmtSecs(avgProcessingSecs)}`, sub: 'Per blueprint' }] : []),
       ];
 
   const isEmpty = !loadingList && takeoffs.length === 0;
@@ -982,7 +983,6 @@ export default function TakeoffPage() {
       <PageShell
         crumbs={[{ label: 'Home', href: '/app' }, { label: 'Takeoff Studio' }]}
         title="Takeoff Studio"
-        subtitle="Upload a blueprint for an AI-priced takeoff, or open one to continue."
         actions={viewing ? undefined : (
           <>
             {!isEmpty && <Button variant="primary" icon={<UploadSimple size={15} weight="bold" />} onClick={resetUpload}>Upload Blueprint</Button>}
@@ -1039,19 +1039,18 @@ export default function TakeoffPage() {
               </Card>
             )}
 
-            {summaryOpen && takeoffs.length > 0 && <StatRow items={stats} />}
+            {summaryOpen && takeoffs.length > 0 && stats.length > 0 && <StatRow items={stats} />}
 
             {showUpload && (
               <Card
                 title={isEmpty && phase === 'idle' ? 'Start your first takeoff' : 'New takeoff'}
-                subtitle={phase === 'idle' ? 'One blueprint at a time — the estimate attaches to a project.' : undefined}
               >
                 {uploadBody}
               </Card>
             )}
 
             {!isEmpty && (
-              <Card title="Your takeoffs" subtitle={!loadingList ? `${takeoffs.length} on file, newest first.` : undefined} flush>
+              <Card title={loadingList ? 'Takeoffs' : `Takeoffs · ${takeoffs.length}`} flush>
                 <DataTable
                   columns={listColumns}
                   rows={takeoffs}

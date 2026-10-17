@@ -205,11 +205,11 @@ export default function TodosPage() {
   }
 
   const stats: StatItem[] = [
-    { label: 'Active', value: loading ? '—' : activeCount, icon: <ListChecks size={15} />, onClick: () => setFilter('active'), active: filter === 'active', sub: busiest ? `Most on ${busiest[0]} (${busiest[1]})` : `${team.length + subs.length} people on the roster` },
-    { label: 'Due this week', value: loading ? '—' : dueThisWeek, icon: <CalendarBlank size={15} />, sub: nextDue ? `Next: ${fmtDay(nextDue.due_date)} — ${nextDue.title.slice(0, 24)}` : 'Nothing coming due' },
-    { label: 'Overdue', value: loading ? '—' : overdueCount, tone: overdueCount > 0 ? 'bad' : 'good', icon: <WarningCircle size={15} />, sub: overdueCount > 0 ? 'Needs attention today' : 'Nothing slipping' },
-    { label: 'High priority open', value: loading ? '—' : highOpen, tone: highOpen > 0 ? 'bad' : 'default', icon: <Fire size={15} />, onClick: () => { setFilter('active'); setPriorityFilter(priorityFilter === 'high' ? 'all' : 'high'); }, active: priorityFilter === 'high', sub: highOpen > 0 ? 'Knock these out first' : 'None open' },
-    { label: 'Completion', value: loading ? '—' : `${completionPct}%`, tone: completionPct >= 75 ? 'good' : 'default', icon: <ChartPieSlice size={15} />, onClick: () => setFilter('completed'), active: filter === 'completed', sub: `${completedCount} of ${totalCount} done` },
+    { label: 'Active', value: activeCount, icon: <ListChecks size={15} />, onClick: () => setFilter('active'), active: filter === 'active', sub: busiest ? `Most on ${busiest[0]} (${busiest[1]})` : `${team.length + subs.length} people on the roster` },
+    { label: 'Due this week', value: dueThisWeek, icon: <CalendarBlank size={15} />, sub: nextDue ? `Next: ${fmtDay(nextDue.due_date)} — ${nextDue.title.slice(0, 24)}` : 'Nothing coming due' },
+    { label: 'Overdue', value: overdueCount, tone: overdueCount > 0 ? 'bad' : 'good', icon: <WarningCircle size={15} />, sub: overdueCount > 0 ? 'Needs attention today' : 'Nothing slipping' },
+    { label: 'High priority open', value: highOpen, tone: highOpen > 0 ? 'bad' : 'default', icon: <Fire size={15} />, onClick: () => { setFilter('active'); setPriorityFilter(priorityFilter === 'high' ? 'all' : 'high'); }, active: priorityFilter === 'high', sub: highOpen > 0 ? 'Knock these out first' : 'None open' },
+    { label: 'Completion', value: `${completionPct}%`, tone: completionPct >= 75 ? 'good' : 'default', icon: <ChartPieSlice size={15} />, onClick: () => setFilter('completed'), active: filter === 'completed', sub: `${completedCount} of ${totalCount} done` },
   ];
 
   const dueLabel = (t: TodoItem) => {
@@ -255,21 +255,18 @@ export default function TodosPage() {
     { label: 'Mark done', icon: <CheckCircle size={15} />, onClick: () => toggleComplete(t.id), hidden: t.complete },
   ];
 
-  const openRfis = Number(ctx?.counts?.openRfis) || 0;
-  const openPunch = Number(ctx?.counts?.openPunch) || 0;
   const empty = todos.length === 0 ? (
     <EmptyState
       icon={<Clipboard size={22} />}
       title="No tasks yet"
-      text={ctx ? `RFIs (${openRfis} open) and punch (${openPunch} open) live in their own modules — to-dos are callbacks, pickups and reminders.` : 'Callbacks, pickups and field reminders, each with an owner and a due date.'}
-      action={<Button variant="primary" icon={<Plus size={15} weight="bold" />} onClick={openCreate}>Add task</Button>}
+      action={<Button icon={<Plus size={15} weight="bold" />} onClick={openCreate}>Add task</Button>}
     />
   ) : filter === 'completed' && completedCount === 0 ? (
-    <EmptyState title="Nothing completed yet" text={`${activeCount} task${activeCount === 1 ? ' is' : 's are'} still active.`} action={<Button onClick={() => setFilter('all')}>Show all</Button>} />
+    <EmptyState title="Nothing completed yet" action={<Button onClick={() => setFilter('all')}>Show all</Button>} />
   ) : filter === 'active' && activeCount === 0 ? (
-    <EmptyState title="No active tasks" text="Every task is checked off." action={<Button onClick={() => setFilter('all')}>Show all</Button>} />
+    <EmptyState title="Every task is done" action={<Button onClick={() => setFilter('all')}>Show all</Button>} />
   ) : (
-    <EmptyState title="Nothing matches" text="Change the search or the filters." action={<Button onClick={() => { setSearch(''); setPriorityFilter('all'); setFilter('all'); }}>Clear filters</Button>} />
+    <EmptyState title="Nothing matches" onClearFilters={() => { setSearch(''); setPriorityFilter('all'); setFilter('all'); }} />
   );
 
   const base = `/app/projects/${projectId}`;
@@ -283,12 +280,12 @@ export default function TodosPage() {
           { label: 'To-Dos' },
         ]}
         title="To-Dos"
-        subtitle="Project tasks and action items."
         actions={<Button variant="primary" icon={<Plus size={15} weight="bold" />} onClick={openCreate}>Add task</Button>}
       >
-        {(todos.length > 0 || ctx || loading) && <StatRow items={stats} />}
+        {/* Figures, tabs and search once there is a task — an empty list is one line and one button. */}
+        {!loading && todos.length > 0 && <StatRow items={stats} />}
 
-        <Tabs
+        {todos.length > 0 && <Tabs
           tabs={[
             { key: 'all', label: 'All', count: totalCount },
             { key: 'active', label: 'Active', count: activeCount },
@@ -296,9 +293,9 @@ export default function TodosPage() {
           ]}
           value={filter}
           onChange={(k) => setFilter(k as FilterTab)}
-        />
+        />}
 
-        <Toolbar
+        {todos.length > 0 && <Toolbar
           search={search}
           onSearch={setSearch}
           placeholder="Search tasks…"
@@ -306,8 +303,8 @@ export default function TodosPage() {
             <Select aria-label="Priority" value={priorityFilter} onChange={e => setPriorityFilter(e.target.value)} style={{ width: 'auto', minWidth: 150 }}
               options={[{ value: 'all', label: 'All priorities' }, ...PRIORITIES.map(p => ({ value: p, label: cap(p) }))]} />
           }
-          actions={<span style={{ fontSize: 'var(--fs-sm)', color: 'var(--text-tertiary)' }}>{filtered.length} of {todos.length}</span>}
-        />
+          actions={filtered.length !== todos.length ? <span style={{ fontSize: 'var(--fs-sm)', color: 'var(--text-tertiary)' }}>{filtered.length} of {todos.length}</span> : undefined}
+        />}
 
         <Card flush>
           <DataTable<TodoItem>

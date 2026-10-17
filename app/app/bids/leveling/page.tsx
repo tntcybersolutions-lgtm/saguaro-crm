@@ -47,6 +47,15 @@ const SEG = { base: 'var(--status-closed)', gap: 'var(--status-under-contract)',
    child) — see tools/check-style-escapes.mjs. Sticky cells use the opaque
    --bg-solid tokens because glass would show the scrolled cells through. */
 const CSS = `
+.lv-pick { list-style: none; margin: 0; padding: 0; border-top: 1px solid var(--border-default); }
+.lv-pick li a { display: flex; align-items: center; gap: 12px; min-height: 56px; padding: 10px 4px; border-bottom: 1px solid var(--border-default); color: var(--text-primary); text-decoration: none; }
+.lv-pick li a:hover { background: var(--bg-row-hover); }
+.lv-pick-name { display: flex; flex-direction: column; gap: 2px; flex: 1; min-width: 0; }
+.lv-pick-name b { font-size: 14px; font-weight: 700; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.lv-pick small { font-size: 13px; color: var(--text-secondary); }
+.lv-pick-fig { display: flex; flex-direction: column; align-items: flex-end; gap: 2px; font-variant-numeric: tabular-nums; white-space: nowrap; }
+.lv-pick-fig b { font-size: 14px; font-weight: 700; }
+.lv-pick svg { color: var(--text-tertiary); flex: none; }
 .lv-root .lv-stack { display: flex; flex-direction: column; gap: var(--sp-4); min-width: 0; }
 .lv-toolbar { display: flex; flex-wrap: wrap; gap: var(--sp-2) var(--sp-3); align-items: center; }
 .lv-toolbar label { display: inline-flex; align-items: center; gap: 8px; font-size: 13px; color: var(--text-secondary); }
@@ -425,15 +434,8 @@ function BidLevelingBoard() {
     return (
       <div className="lv-root">
         {style}
-        <PageShell title="Bid Leveling" subtitle="Normalize sub bids to one scope, then compare price and coverage." crumbs={crumbs}>
-          <Card>
-            <EmptyState
-              icon={<Scales size={22} />}
-              title="Pick a Package to Level"
-              text="Leveling compares the bids on one package — spread, low bid, coverage gaps and who has not answered. Open the package you want to compare and choose Level Bids; its own page is where the bids live."
-              action={<Button variant="primary" href="/app/bids" icon={<ArrowRight size={14} weight="bold" />}>Browse Bid Packages</Button>}
-            />
-          </Card>
+        <PageShell title="Bid leveling" crumbs={crumbs}>
+          <PackagePicker />
         </PageShell>
       </div>
     );
@@ -442,7 +444,7 @@ function BidLevelingBoard() {
   const title = pkgName ? `${pkgName} — Bid Leveling` : 'Bid Leveling';
   const subtitle = (
     <span style={{ display: 'inline-flex', alignItems: 'center', gap: 6, flexWrap: 'wrap' }}>
-      <EyeSlash size={14} /> Internal to your team — subcontractors never see this tabulation or your adjustments.
+      <EyeSlash size={14} /> Internal · subs never see this
     </span>
   );
 
@@ -519,13 +521,19 @@ function BidLevelingBoard() {
         crumbs={crumbs}
         actions={
           <>
-            <Button onClick={analysePackage} disabled={pkgBusy} icon={<Sparkle size={15} weight="bold" />}>
-              {pkgBusy ? 'Working…' : 'Ask Sage to Find the Gaps'}
-            </Button>
-            <Button onClick={() => savePackage(false)} disabled={pkgBusy}>Save to Package</Button>
-            <Button variant="primary" onClick={() => savePackage(true)} disabled={pkgBusy || pkgComplete}>
-              {pkgComplete ? 'Leveling Complete' : 'Save & Mark Complete'}
-            </Button>
+            {/* With no bidders there is nothing to level, save or complete: the
+                one action is Add bidder (in the grid below). */}
+            {bidders.length > 0 && (
+              <>
+                <Button onClick={analysePackage} disabled={pkgBusy} icon={<Sparkle size={15} weight="bold" />}>
+                  {pkgBusy ? 'Working…' : 'Ask Sage to find the gaps'}
+                </Button>
+                <Button onClick={() => savePackage(false)} disabled={pkgBusy}>Save</Button>
+                <Button variant="primary" onClick={() => savePackage(true)} disabled={pkgBusy || pkgComplete}>
+                  {pkgComplete ? 'Leveling complete' : 'Save & mark complete'}
+                </Button>
+              </>
+            )}
             {bidders.length > 0 && (
               <Menu label="More leveling actions" actions={[
                 { label: 'Export Bid Tab', icon: <FilePdf size={15} />, onClick: exportPdf },
@@ -655,11 +663,8 @@ function BidLevelingBoard() {
           {bidders.length === 0 ? (
             <EmptyState
               icon={<Scales size={22} />}
-              title={scopeLines.length === 0 ? 'No Bids or Scope Yet' : 'No Bids to Level Yet'}
-              text={scopeLines.length === 0
-                ? 'This package has no submitted bids and no scope lines. Load a CSI scope template above, then add bidders or paste a proposal below.'
-                : 'Add a bidder by hand or paste a proposal for Sage to read. Bids submitted through the package appear here automatically.'}
-              action={<Button onClick={() => { addBidder(); setTab('bidders'); }} icon={<Plus size={15} />}>Add Bidder</Button>}
+              title={scopeLines.length === 0 ? 'No bids or scope yet' : 'No bids to level yet'}
+              action={<Button variant="primary" onClick={() => { addBidder(); setTab('bidders'); }} icon={<Plus size={15} />}>Add bidder</Button>}
             />
           ) : (
             <>
@@ -917,11 +922,11 @@ function BidLevelingBoard() {
           {tab === 'bidders' && (
             <Card
               title="Bidders"
-              subtitle={bidders.length > 0 ? `${bidders.length} in the tabulation. Submitted amounts are read-only; adjustments are internal.` : 'Add bidders by hand or paste a proposal for Sage to read.'}
+              subtitle={bidders.length > 0 ? `${bidders.length} in the tabulation` : undefined}
               actions={<Button onClick={addBidder} icon={<Plus size={15} />}>Add Bidder</Button>}
             >
               {bidders.length === 0 ? (
-                <EmptyState title="No Bidders Yet" text="Submitted bids load here." primary={{ label: 'Add Bidder', onClick: addBidder }} perm={['Projects', 'Edit']} />
+                <EmptyState title="No bidders yet" />
               ) : (
                 <div className="lv-stack" style={{ gap: 'var(--sp-2)' }}>
                   {bidders.map((b) => {
@@ -1010,6 +1015,61 @@ function BidLevelingBoard() {
         </div>
       </PageShell>
     </div>
+  );
+}
+
+/* Arriving without ?package=: the packages that have bids to level, with
+   their spread and low bid, one tap from the board. Same list the bid board
+   reads (/api/bid-packages/list, archived jobs already left out). */
+type PickRow = { id: string; name?: string | null; trade?: string | null; status?: string | null; num_responded?: number | null; bid_count?: number | null; num_invited?: number | null; low_bid_amount?: number | null; spread_pct?: number | null; leveling_complete?: boolean | null };
+function PackagePicker() {
+  const [rows, setRows] = useState<PickRow[] | null>(null);
+  const [err, setErr] = useState('');
+  const load = useCallback(async () => {
+    setErr('');
+    try {
+      const r = await fetch('/api/bid-packages/list');
+      const d = await r.json().catch(() => ({}));
+      if (!r.ok) throw new Error(d.error || 'Could not load bid packages.');
+      const list = (Array.isArray(d) ? d : d.bidPackages || []) as PickRow[];
+      setRows(list);
+    } catch (e) {
+      setErr(humanError(e, 'Could not load bid packages.'));
+      setRows([]);
+    }
+  }, []);
+  useEffect(() => { void load(); }, [load]);
+  const bids = (p: PickRow) => Number(p.num_responded ?? p.bid_count) || 0;
+  const withBids = (rows || []).filter((p) => bids(p) > 0 && String(p.status || '').toLowerCase() !== 'closed')
+    .sort((a, b) => Number(!!a.leveling_complete) - Number(!!b.leveling_complete) || bids(b) - bids(a));
+  const money = (n: number | null | undefined) => '$' + (Number(n) || 0).toLocaleString('en-US', { maximumFractionDigits: 0 });
+
+  if (rows === null) return <div className="k-hint" aria-busy="true">Loading packages…</div>;
+  if (err) return <EmptyState icon={<Warning size={20} />} title="Couldn't load bid packages" text={err} action={<Button onClick={() => void load()}>Try again</Button>} />;
+  if (withBids.length === 0) {
+    return <EmptyState icon={<Scales size={20} />} title="No package has bids yet" action={<Button href="/app/bids" icon={<ArrowRight size={14} weight="bold" />}>Open the bid board</Button>} />;
+  }
+  return (
+    <ul className="lv-pick" aria-label="Packages with bids">
+      {withBids.map((p) => {
+        const sp = p.spread_pct != null && Number.isFinite(Number(p.spread_pct)) ? Math.round(Number(p.spread_pct)) : null;
+        return (
+          <li key={p.id}>
+            <a href={`/app/bids/leveling?package=${encodeURIComponent(p.id)}`}>
+              <span className="lv-pick-name">
+                <b>{p.name || 'Untitled package'}</b>
+                <small>{[p.trade, `${bids(p)} of ${Number(p.num_invited) || bids(p)} bids in`].filter(Boolean).join(' · ')}</small>
+              </span>
+              <span className="lv-pick-fig">
+                {p.low_bid_amount ? <b>{money(p.low_bid_amount)}</b> : null}
+                <small>{p.leveling_complete ? 'Leveled' : sp != null ? `${sp}% spread` : 'Needs 2 bids'}</small>
+              </span>
+              <CaretRight size={16} aria-hidden />
+            </a>
+          </li>
+        );
+      })}
+    </ul>
   );
 }
 

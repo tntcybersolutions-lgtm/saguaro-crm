@@ -20,7 +20,7 @@ import { WarningCircle } from '@phosphor-icons/react';
 import { FlatStyles, Brief, RowAction, RowSkeleton, FlatEmpty } from '@/components/ui/flat';
 import { jobStage, stageLabel, dateLine, fmtMoneyShort, billedPct, plural, ymd, type JobStage } from '@/lib/job-page';
 import type { JobHealth } from '@/lib/job-health';
-import { HealthRing, ScheduleBar, ItemDots, OverUnder, StagePill, PortfolioBand, ITEM_COLUMNS, fmtMoneyExact, JOB_HEALTH_CSS } from '@/components/jobs/JobHealthParts';
+import { HealthRing, ScheduleBar, ItemDots, OverUnder, StagePill, PortfolioBand, ITEM_COLUMNS, fmtMoneyExact, fmtMoneyWhole, JOB_HEALTH_CSS } from '@/components/jobs/JobHealthParts';
 import { isDoneStatus } from '@/lib/project-lifecycle';
 
 type StageFilter = 'all' | 'bidding' | 'building' | 'complete' | 'closed';
@@ -42,6 +42,12 @@ function bucket(p: JobRow): Exclude<StageFilter, 'all'> {
 }
 
 type JobsView = 'board' | 'table';
+/** 'YYYY-MM-DD' → "Nov 2, 2026" (a calendar day, read without a time zone shift). */
+function dayLabel(d: string | null | undefined): string {
+  const m = /^(\d{4})-(\d{2})-(\d{2})/.exec(String(d || ''));
+  if (!m) return '';
+  return new Date(Number(m[1]), Number(m[2]) - 1, Number(m[3])).toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' });
+}
 const VIEW_KEY = 'saguaro.jobs.view';
 const STAGE_TEXT: Record<Exclude<StageFilter, 'all'>, string> = { bidding: 'Bidding', building: 'Building', complete: 'Complete', closed: 'Closed' };
 
@@ -53,12 +59,12 @@ const JOB_COLUMNS: Column<JobRow>[] = [
   { key: 'project_number', header: 'Number', accessor: (p) => p.project_number || '' },
   { key: 'stage', header: 'Stage', phone: 'show', accessor: (p) => STAGE_TEXT[bucket(p)] },
   { key: 'city', header: 'City', accessor: (p) => [p.city, p.state].filter(Boolean).join(', ') },
-  { key: 'start_date', header: 'Start', accessor: (p) => ymd(p.start_date) || '', groupable: false, filterable: false },
-  { key: 'end_date', header: 'Finish', accessor: (p) => ymd(p.end_date) || '', groupable: false, filterable: false },
-  { key: 'health', header: 'Health', align: 'right', accessor: (p) => p.health?.score ?? null, render: (p) => (p.health ? String(p.health.score) : '—') },
-  { key: 'contract', header: 'Contract', align: 'right', phone: 'show', total: 'sum', format: fmtMoneyExact, accessor: (p) => Number(p.contract_amount) || 0, render: (p) => (Number(p.contract_amount) > 0 ? fmtMoneyExact(Number(p.contract_amount)) : '—') },
-  { key: 'billed', header: 'Billed', align: 'right', total: 'sum', format: fmtMoneyExact, accessor: (p) => (typeof p.billed_live === 'number' ? p.billed_live : 0), render: (p) => (typeof p.billed_live === 'number' ? fmtMoneyExact(p.billed_live) : '—') },
-  { key: 'billed_pct', header: 'Billed %', align: 'right', hidden: true, accessor: (p) => (typeof p.billed_live === 'number' ? billedPct(p.billed_live, Number(p.contract_amount) || 0) : null), render: (p) => { const v = typeof p.billed_live === 'number' ? billedPct(p.billed_live, Number(p.contract_amount) || 0) : null; return v == null ? '—' : `${v}%`; } },
+  { key: 'start_date', header: 'Start', accessor: (p) => ymd(p.start_date) || '', render: (p) => dayLabel(ymd(p.start_date)), groupable: false, filterable: false },
+  { key: 'end_date', header: 'Finish', accessor: (p) => ymd(p.end_date) || '', render: (p) => dayLabel(ymd(p.end_date)), groupable: false, filterable: false },
+  { key: 'health', header: 'Health', align: 'right', accessor: (p) => p.health?.score ?? null, render: (p) => (p.health ? String(p.health.score) : '') },
+  { key: 'contract', header: 'Contract', align: 'right', phone: 'show', total: 'sum', format: fmtMoneyExact, accessor: (p) => Number(p.contract_amount) || 0, render: (p) => (Number(p.contract_amount) > 0 ? fmtMoneyExact(Number(p.contract_amount)) : '') },
+  { key: 'billed', header: 'Billed', align: 'right', total: 'sum', format: fmtMoneyExact, accessor: (p) => (typeof p.billed_live === 'number' ? p.billed_live : 0), render: (p) => (typeof p.billed_live === 'number' ? fmtMoneyExact(p.billed_live) : '') },
+  { key: 'billed_pct', header: 'Billed %', align: 'right', hidden: true, accessor: (p) => (typeof p.billed_live === 'number' ? billedPct(p.billed_live, Number(p.contract_amount) || 0) : null), render: (p) => { const v = typeof p.billed_live === 'number' ? billedPct(p.billed_live, Number(p.contract_amount) || 0) : null; return v == null ? '' : `${v}%`; } },
 ];
 
 const CHIPS: { key: StageFilter; label: string }[] = [
@@ -168,8 +174,8 @@ export default function JobsPage() {
               <span className="jt-ou" role="cell"><OverUnder health={h} /></span>
               <span className="jt-dots" role="cell"><ItemDots health={h} /></span>
               <span className="jt-money" role="cell">
-                <b>{contract > 0 ? fmtMoneyExact(contract) : '—'}</b>
-                <small>{pct != null ? `${pct}% billed` : contract > 0 ? 'Not billed yet' : ' '}</small>
+                {contract > 0 ? <b>{fmtMoneyWhole(contract)}</b> : <small>No contract yet</small>}
+                {contract > 0 && <small>{pct != null ? `${pct}% billed` : 'Not billed yet'}</small>}
               </span>
             </Link>
           );

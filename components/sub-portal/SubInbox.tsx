@@ -53,6 +53,16 @@ const CSS = `
 .sbx-btn:disabled { opacity: .55; cursor: wait; }
 .sbx textarea { width: 100%; box-sizing: border-box; min-height: 88px; font-size: 16px; padding: 10px 12px; border-radius: 10px; border: 1px solid var(--border-default); background: var(--bg-surface-2); color: var(--text-primary); resize: vertical; font-family: inherit; }
 .sbx-err { color: var(--c-red); font-size: 13px; font-weight: 700; }
+/* The invoice against its subcontract: a bar of billed to date, this invoice on the end. */
+.sbx-commit { display: grid; gap: 6px; }
+.sbx-commit-top { display: flex; justify-content: space-between; gap: 8px; flex-wrap: wrap; font-size: 13px; color: var(--text-secondary); }
+.sbx-commit-top b { color: var(--text-primary); }
+.sbx-commit-bar { position: relative; height: 8px; border-radius: 4px; background: var(--bg-surface-2); overflow: hidden; }
+.sbx-commit-bar i { position: absolute; top: 0; bottom: 0; left: 0; background: var(--text-secondary); }
+.sbx-commit-bar i[data-k="this"] { background: var(--success); }
+.sbx-commit-bar i[data-over="true"] { background: var(--danger); }
+.sbx-commit-over { color: var(--danger); font-size: 13px; font-weight: 700; }
+.sbx-ok { color: var(--success); font-size: 13px; font-weight: 700; }
 .sbx-lines { overflow-x: auto; }
 .sbx-lines table { width: 100%; border-collapse: collapse; min-width: 520px; font-size: 13px; }
 .sbx-lines th { text-align: left; font-size: 12px; color: var(--text-tertiary); padding: 6px 8px; border-bottom: 1px solid var(--border-default); }
@@ -210,6 +220,7 @@ function InvoiceCard({ r, reload }: { r: Row; reload: () => Promise<void> }) {
   const [busy, setBusy] = useState(false);
   const [reason, setReason] = useState<string | null>(null);
   const [err, setErr] = useState('');
+  const [done, setDone] = useState('');
   const act = async (action: SubInvoiceAction, note?: string) => {
     if (action === 'approve' || action === 'paid') {
       const ok = await confirmDialog({
@@ -221,8 +232,17 @@ function InvoiceCard({ r, reload }: { r: Row; reload: () => Promise<void> }) {
       });
       if (!ok) return;
     }
-    setBusy(true); setErr('');
-    try { await send(`/api/sub-portal/inbox/invoices/${r.id}`, 'PATCH', { action, note }); setReason(null); await reload(); }
+    setBusy(true); setErr(''); setDone('');
+    try {
+      const j = await send(`/api/sub-portal/inbox/invoices/${r.id}`, 'PATCH', { action, note });
+      const p = j.posted as { posted?: boolean; commitment?: { vendor: string; billed: number; revised: number } | null; budgetLine?: { cost_code: string | null } | null } | undefined;
+      if (p?.posted && p.commitment) {
+        setDone(`Subcontract billed ${usd(p.commitment.billed)} of ${usd(p.commitment.revised)}${p.budgetLine?.cost_code ? ` · budget ${p.budgetLine.cost_code} actual updated` : ''}.`);
+      } else if (action === 'approve') {
+        setDone('Approved. No single subcontract with this sub on the job, so it was not posted to a commitment.');
+      }
+      setReason(null); await reload();
+    }
     catch (e) { setErr(humanError(e, "Couldn't update the invoice.")); }
     finally { setBusy(false); }
   };
@@ -241,6 +261,7 @@ function InvoiceCard({ r, reload }: { r: Row; reload: () => Promise<void> }) {
         <div><small>Retainage</small><b>{usd(r.retainage)}</b></div>
         <div><small>Net due</small><b>{usd(r.net_amount)}</b></div>
       </div>
+      <CommitmentBar c={r.commitment} waiting={r.status === 'submitted' || r.status === 'under_review'} />
       {lines.length > 0 && (
         <button type="button" className="sbx-btn" onClick={() => setOpen((o) => !o)} aria-expanded={open}>
           {open ? <CaretUp size={14} /> : <CaretDown size={14} />} {lines.length} line{lines.length === 1 ? '' : 's'}
@@ -276,7 +297,29 @@ function InvoiceCard({ r, reload }: { r: Row; reload: () => Promise<void> }) {
         </div>
       )}
       {err && <div className="sbx-err" role="alert">{err}</div>}
+      {done && <div className="sbx-ok" role="status">{done}</div>}
     </article>
+  );
+}
+
+/** Billed to date on the sub's subcontract, with this invoice on the end of the bar. */
+function CommitmentBar({ c, waiting }: { c?: Row | null; waiting: boolean }) {
+  if (!c || !(Number(c.revised) > 0)) return null;
+  const revised = Number(c.revised), billed = Number(c.billed) || 0, after = Number(c.billed_after) || billed;
+  const scale = Math.max(revised, after);
+  const pct = (n: number) => `${Math.min(100, (n / scale) * 100)}%`;
+  return (
+    <div className="sbx-commit">
+      <div className="sbx-commit-top">
+        <span>{c.number ? `${c.number} · ` : ''}Subcontract <b>{usd(revised)}</b></span>
+        <span>Billed <b>{usd(billed)}</b>{waiting && after !== billed ? <> → <b>{usd(after)}</b></> : null} · {Math.round((after / revised) * 100)}%</span>
+      </div>
+      <div className="sbx-commit-bar" aria-hidden>
+        {waiting && after > billed && <i data-k="this" data-over={after > revised || undefined} style={{ width: pct(after) }} />}
+        <i style={{ width: pct(billed) }} />
+      </div>
+      {Number(c.over_by) > 0 && <div className="sbx-commit-over">{usd(c.over_by)} past the subcontract</div>}
+    </div>
   );
 }
 
