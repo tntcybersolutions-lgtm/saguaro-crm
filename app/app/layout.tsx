@@ -538,7 +538,7 @@ export default function AppLayout({ children }: { children: React.ReactNode }) {
       <GlobalShortcuts onProjectSwitch={() => setShowProjectSwitcher(true)} />
 
       {/* Offline / back-online status, on every screen */}
-      <OfflineBar top={`calc(${sidebarTokens.headerHeight}px + env(safe-area-inset-top, 0px) + var(--sag-header-msg-h, 0px) + 8px)`} />
+      <OfflineBar top={`calc(${sidebarTokens.headerHeight}px + env(safe-area-inset-top, 0px) + var(--sag-header-msg-h, 0px))`} />
       {/* What the app is doing right now — every save, send and upload, as numbered steps. */}
       <StatusCenter />
 

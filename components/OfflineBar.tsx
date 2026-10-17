@@ -12,17 +12,17 @@ import { startAppWorker } from '@/lib/offline/worker';
 import SyncLine from '@/components/offline/SyncLine';
 
 const CSS = `
-.offb { position: fixed; left: 50%; transform: translateX(-50%); top: var(--offb-top, 12px); z-index: 10050;
-  display: flex; align-items: center; gap: 10px; width: max-content; max-width: min(620px, calc(100vw - 24px)); padding: 10px 16px; border-radius: 14px;
-  font-size: 14px; font-weight: 700; line-height: 1.3; box-shadow: 0 14px 34px -12px rgba(0,0,0,0.75); pointer-events: none; }
+.offb { position: fixed; left: 0; right: 0; top: var(--offb-top, 0px); z-index: 10050;
+  display: flex; align-items: center; justify-content: center; gap: 8px; padding: 6px 16px;
+  background: var(--bg-base); border-bottom: 1px solid var(--border-default);
+  font-size: 13px; font-weight: 600; line-height: 1.3; color: var(--text-secondary); pointer-events: none; }
 .offb svg { flex: 0 0 auto; }
-.offb small { display: block; font-size: 13px; font-weight: 600; opacity: .85; }
-.offb[data-tone="off"] { background: var(--c-orange); color: var(--on-brand); }
-.offb[data-tone="sync"] { background: var(--bg-solid-2); color: var(--text-primary); border: 1px solid var(--border-default); }
-.offb[data-tone="on"] { background: var(--c-green); color: var(--on-brand); }
+.offb b { font-weight: 700; }
+.offb[data-tone="off"] b, .offb[data-tone="off"] svg { color: var(--warning); }
+.offb[data-tone="sync"] b, .offb[data-tone="sync"] svg { color: var(--text-primary); }
+.offb[data-tone="on"] b, .offb[data-tone="on"] svg { color: var(--success); }
 @media (prefers-reduced-motion: no-preference) { .offb { animation: offb-in .2s ease-out; } }
-@keyframes offb-in { from { opacity: 0; transform: translate(-50%, -8px); } to { opacity: 1; transform: translate(-50%, 0); } }
-@media (max-width: 767px) { .offb { left: 12px; right: 12px; width: auto; max-width: none; transform: none; } @keyframes offb-in { from { opacity: 0; } to { opacity: 1; } } }
+@keyframes offb-in { from { opacity: 0; } to { opacity: 1; } }
 `;
 
 /** `top`: where the bar sits — just under the app header. */
@@ -45,13 +45,13 @@ export default function OfflineBar({ top }: { top?: string }) {
   let tone = '';
   if (!net.online) {
     tone = 'off';
-    body = (<><CloudSlash size={20} weight="bold" /><span>You&apos;re offline<small>{net.pending ? `${net.pending} item${net.pending === 1 ? '' : 's'} waiting for signal — ${net.pending === 1 ? 'it sends by itself' : 'they send by themselves'} when you're back.` : 'Daily logs, clock in and out, and photos you add are saved on this phone and send when you\'re back.'}</small></span></>);
+    body = (<><CloudSlash size={16} weight="bold" /><span><b>No signal</b> · {net.pending ? `${net.pending} waiting to send` : 'saving on this phone'}</span></>);
   } else if (showBack && net.syncing) {
     tone = 'sync';
-    body = (<><ArrowsClockwise size={20} weight="bold" /><span>Back online<small>Sending what you saved offline… {net.synced ? `${net.synced} done` : ''}</small></span></>);
+    body = (<><ArrowsClockwise size={16} weight="bold" /><span><b>Back online</b> · sending{net.synced ? ` · ${net.synced} done` : '…'}</span></>);
   } else if (showBack) {
     tone = 'on';
-    body = (<><CloudCheck size={20} weight="bold" /><span>Back online{net.synced ? <small>{net.synced} item{net.synced === 1 ? '' : 's'} sent from this phone.</small> : null}</span></>);
+    body = (<><CloudCheck size={16} weight="bold" /><span><b>Back online</b>{net.synced ? ` · ${net.synced} sent` : ''}</span></>);
   }
   if (!body) return <SyncLine />;
   return (

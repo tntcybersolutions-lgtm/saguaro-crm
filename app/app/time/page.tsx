@@ -25,7 +25,7 @@ import SaguaroDatePicker from '@/components/SaguaroDatePicker';
 import { humanError } from '@/lib/errors';
 import { confirmDialog } from '@/lib/ui/async-dialog';
 import { sendOrSave, listSaved, isOffline, drainOutbox } from '@/lib/offline/outbox';
-import { loadJobs } from '@/lib/offline/last-known';
+import { loadJobs, rememberMe, lastKnownMe } from '@/lib/offline/last-known';
 import { getSupabaseBrowser, ensureBrowserSession, getAuthHeaders } from '@/lib/supabase-browser';
 import { computeTimesheet, weekKey, fmtHours, liveElapsed, type TimeEntry } from '@/lib/timeclock';
 import { CSI_DIVISIONS } from '@/lib/construction-intelligence';
@@ -271,7 +271,19 @@ export default function TimeClockPage() {
         for (const p of (data ?? []) as { id: string; name: string | null }[]) names[p.id] = p.name || '';
         setJobNames(names);
       });
-      if (!user?.email) return;
+      /* No signal: the employee record can't be fetched, so use the one this
+         phone kept the last time it could. Without this Clock In stayed
+         disabled ("Resolving your employee record…") after an offline reload. */
+      const fromPhone = async (): Promise<boolean> => {
+        const kept = await lastKnownMe();
+        if (!kept) return false;
+        setTenantId(kept.tenantId);
+        setEmp(kept.emp);
+        loadEntries(kept.emp.id);
+        return true;
+      };
+      if (isOffline() && (await fromPhone())) return;
+      if (!user?.email) { if (await fromPhone()) return; return; }
       // Resolve the signed-in user's tenant so every write is tenant-scoped (RLS/NOT NULL) — without
       // this, the employees insert below is silently rejected and the page hangs on "Resolving…".
       const { data: prof } = await sb.from('profiles').select('tenant_id, full_name').eq('id', user.id).maybeSingle();
@@ -305,8 +317,10 @@ export default function TimeClockPage() {
           e = ins.data;
         }
       }
+      if (!e && (await fromPhone())) return; // the lookups failed for lack of signal
       if (e) {
         setEmp(e); loadEntries(e.id);
+        void rememberMe({ emp: { id: e.id, full_name: e.full_name ?? null, first_name: e.first_name ?? null }, tenantId: tid });
         // My own rate, for costing my hours. If it cannot be read the entries
         // are stamped with no rate, exactly as for a person with none on file.
         try {
