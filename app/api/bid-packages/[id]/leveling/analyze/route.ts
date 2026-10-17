@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { createServerClient } from '@/lib/supabase-server';
-import { requirePermission } from '@/lib/permissions';
+import { requirePermission, requireAnyPermission, PROPOSAL_MONEY } from '@/lib/permissions';
 import { aiLimiter } from '@/lib/rate-limit';
 import { must, tryWrite } from '@/lib/db-write';
 import { apiError } from '@/lib/api-error';
@@ -55,6 +55,9 @@ const toCents = (v: any) => dollarsToCents(v);
 export async function POST(req: NextRequest, { params }: { params: Promise<{ id: string }> }) {
   const gate = await requirePermission(req, 'Projects', 'Edit');
   if (!gate.ok) return gate.res;
+  // Reads and scores every sub's bid amounts. Bid and proposal dollars: Sales or Budget (PROPOSAL_MONEY, lib/permissions).
+  const money = await requireAnyPermission(req, PROPOSAL_MONEY, 'Edit', { db: gate.db });
+  if (!money.ok) return money.res;
   const user = gate.user;
   const { id } = await params;
 

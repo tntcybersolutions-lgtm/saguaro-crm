@@ -1,10 +1,11 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { createServerClient, getUser } from '@/lib/supabase-server';
-import { requirePermission } from '@/lib/permissions';
+import { createServerClient } from '@/lib/supabase-server';
+import { requireAnyPermission, PROPOSAL_MONEY } from '@/lib/permissions';
 import { apiError } from '@/lib/api-error';
 
 export async function GET(req: NextRequest, { params }: { params: { projectId: string } }) {
-  const g = await requirePermission(req, 'Documents', 'View', { projectId: params.projectId });
+  // Proposal dollars: Sales or Budget (PROPOSAL_MONEY; role_gate_*_proposals agrees).
+  const g = await requireAnyPermission(req, PROPOSAL_MONEY, 'View', { projectId: params.projectId });
   if (!g.ok) return g.res;
   const user = g.user;
   try {

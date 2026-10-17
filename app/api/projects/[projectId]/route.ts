@@ -13,8 +13,11 @@ import { pickProjectUpdate } from '@/lib/project-update';
 export async function GET(req: NextRequest, { params }: { params: Promise<{ projectId: string }> }) {
   const { projectId } = await params;
   try {
-    const user = await getUser(req);
-    if (!user) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
+    // Role check, not just sign-in: Projects: View, the rule this tool's pages,
+    // its writes and (where the table is gated) the database apply.
+    const g = await requirePermission(req, 'Projects', 'View', { projectId: projectId });
+    if (!g.ok) return g.res;
+    const user = g.user;
 
     const db = createServerClient();
     const [

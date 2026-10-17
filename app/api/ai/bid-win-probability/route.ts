@@ -1,10 +1,13 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { createServerClient, getUser } from '@/lib/supabase-server';
+import { requireAnyPermission, PROPOSAL_MONEY } from '@/lib/permissions';
+import { createServerClient } from '@/lib/supabase-server';
 import Anthropic from '@anthropic-ai/sdk';
 
 export async function POST(req: NextRequest) {
-  const user = await getUser(req);
-  if (!user) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
+  // Reads past bid amounts. Bid and proposal dollars: Sales or Budget (PROPOSAL_MONEY, lib/permissions).
+  const g = await requireAnyPermission(req, PROPOSAL_MONEY, 'View');
+  if (!g.ok) return g.res;
+  const user = g.user;
 
   const body = await req.json().catch(() => ({}));
   const db = createServerClient();

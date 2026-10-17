@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { requirePermission } from '@/lib/permissions';
+import { requirePermission, requireAnyPermission, PROPOSAL_MONEY } from '@/lib/permissions';
 import { apiError } from '@/lib/api-error';
 import { acceptProposal } from '@/lib/proposal-accept';
 
@@ -20,6 +20,9 @@ export const runtime = 'nodejs';
 export async function PATCH(req: NextRequest, { params }: { params: Promise<{ id: string }> }) {
   const g = await requirePermission(req, 'Projects', 'Edit');
   if (!g.ok) return g.res;
+  // Proposal dollars: Sales or Budget (PROPOSAL_MONEY; role_gate_*_proposals agrees).
+  const money = await requireAnyPermission(req, PROPOSAL_MONEY, 'Edit', { db: g.db });
+  if (!money.ok) return money.res;
   const { id } = await params;
   const { user } = g;
   // eslint-disable-next-line @typescript-eslint/no-explicit-any

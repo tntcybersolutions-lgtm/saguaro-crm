@@ -23,7 +23,7 @@ import { createHash, randomBytes } from 'crypto';
 import { NextRequest, NextResponse } from 'next/server';
 import { createServerClient, getUser } from '@/lib/supabase-server';
 import { companyDisplayName } from '@/lib/company-name';
-import { requirePermission, type AuthedUser } from '@/lib/permissions';
+import { type AuthedUser, requireAnyPermission, PROPOSAL_MONEY } from '@/lib/permissions';
 import { createNotification } from '@/lib/notifications';
 import { acceptProposal } from '@/lib/proposal-accept';
 import { stageStamps } from '@/lib/lead-stages';
@@ -140,9 +140,11 @@ export async function guardProposal(
   if (error) throw error;
   if (!data) return { ok: false, res: NextResponse.json({ error: 'Proposal not found' }, { status: 404 }) };
   const p = data as ProposalRow;
-  const g = p.project_id
-    ? await requirePermission(req, 'Documents', level, { projectId: p.project_id, db })
-    : await requirePermission(req, 'Sales', level, { db });
+  /* Proposal dollars and the signer's name, email and IP: Sales or Budget,
+     on a job's proposal and a deal's alike (PROPOSAL_MONEY — the same rule as
+     role_gate_*_proposals and _proposal_signatures in the database). It was
+     Documents on a job, so a Subcontractor could read the amounts. */
+  const g = await requireAnyPermission(req, PROPOSAL_MONEY, level, { projectId: p.project_id || null, db });
   if (!g.ok) return g;
   return { ok: true, user: g.user, db, proposal: p };
 }

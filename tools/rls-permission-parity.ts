@@ -10,7 +10,7 @@
  *   select json_build_object(
  *     'profiles',    (select json_agg(json_build_object('id', id, 'role', role, 'tenant_id', tenant_id) order by id) from profiles),
  *     'assignments', (select json_agg(json_build_object('user_id', user_id, 'tenant_id', tenant_id, 'role_id', role_id, 'project_id', project_id) order by id) from user_role_assignments),
- *     'roles',       (select json_agg(json_build_object('id', id, 'tenant_id', tenant_id, 'permissions', permissions) order by id) from role_definitions)
+ *     'roles',       (select json_agg(json_build_object('id', id, 'tenant_id', tenant_id, 'permissions', permissions, 'name', name, 'is_builtin', is_builtin) order by id) from role_definitions)
  *   )::text;
  *
  * sql-output.txt — what rbac.permission_level_for returned for the same
@@ -29,7 +29,7 @@ import fs from 'node:fs';
 
 type Profile = { id: string; role: string | null; tenant_id: string | null };
 type Assignment = { user_id: string; tenant_id: string; role_id: string | null; project_id: string | null };
-type Role = { id: string; tenant_id: string; permissions: unknown };
+type Role = { id: string; tenant_id: string; permissions: unknown; name?: string; is_builtin?: boolean };
 type Fixture = { profiles: Profile[]; assignments: Assignment[]; roles: Role[] };
 
 /* lib/permissions → lib/supabase-server refuses to load without these. The stub
@@ -63,7 +63,7 @@ async function main() {
     console.error('usage: tsx tools/rls-permission-parity.ts <fixture.json> <sql-output.txt>');
     process.exit(2);
   }
-  const { getEffectivePermissions, CATEGORIES } = await import('../lib/permissions');
+  const { getEffectivePermissions, hasAnyPermission, PROPOSAL_MONEY, CATEGORIES } = await import('../lib/permissions');
   const fx: Fixture = JSON.parse(fs.readFileSync(fixturePath, 'utf8'));
   const tokens = fs.readFileSync(sqlPath, 'utf8').trim().split(/\s+/);
   const RANK: Record<string, number> = { None: 0, View: 1, Edit: 2, Full: 3 };
@@ -125,7 +125,42 @@ async function main() {
   report('project-only grant, that project', edge('proj-P'), await tsDigits([member('z')], zA, 'z', P));
   report('project-only grant, another project', edge('proj-Q'), await tsDigits([member('z')], zA, 'z', Q));
 
-  console.log(`${checked} cases x ${CATEGORIES.length} categories compared; ${failed} disagree.`);
+  // 4) The field templates can file a daily log / punch item (Projects ≥ Edit)
+  //    and a Foreman can upload a site photo (Documents ≥ Edit) — on BOTH sides,
+  //    for every built-in Foreman / Superintendent row in every company
+  //    (20261017b). Digits from step 2: index of the category in CATEGORIES.
+  const at = (digits: string, c: string) => Number(digits[CATEGORIES.indexOf(c as never)]);
+  let fieldRoles = 0;
+  for (let i = 0; i < fx.roles.length; i++) {
+    const rd = fx.roles[i];
+    if (!rd.is_builtin || (rd.name !== 'Foreman' && rd.name !== 'Superintendent')) continue;
+    const tok = tokens.find((x) => x.startsWith(`r${i + 1}:`));
+    if (!tok) continue;
+    const sqlD = tok.split(':')[1];
+    const tsD = await tsDigits([{ id: X, role: 'member', tenant_id: rd.tenant_id }],
+      [{ user_id: X, tenant_id: rd.tenant_id, role_id: rd.id, project_id: null }], X, null);
+    fieldRoles++;
+    checked++;
+    const need = rd.name === 'Foreman' ? ['Projects', 'Documents'] : ['Projects'];
+    for (const c of need) {
+      if (at(sqlD, c) < 2 || at(tsD, c) < 2) { failed++; console.error(`FAIL ${rd.name} ${rd.id.slice(0, 8)}: ${c} sql=${at(sqlD, c)} ts=${at(tsD, c)} (needs Edit)`); }
+    }
+  }
+
+  // 5) Proposal / bid money (PROPOSAL_MONEY = Sales or Budget): the TS helper
+  //    the routes call agrees with the SQL levels the policies read.
+  for (const t of tokens.filter((x) => x.startsWith('u:'))) {
+    const [, user, proj, digits] = t.split(':');
+    const db = stubDb({ profiles: fx.profiles as never, user_role_assignments: fx.assignments as never, role_definitions: fx.roles as never });
+    const prof = fx.profiles.find((p) => p.id === user);
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    const perms = await getEffectivePermissions(db as any, user, prof?.tenant_id || user, proj === '-' ? null : proj);
+    const sqlMoney = at(digits, 'Sales') >= 1 || at(digits, 'Budget') >= 1;
+    checked++;
+    if (hasAnyPermission(perms, PROPOSAL_MONEY, 'View') !== sqlMoney) { failed++; console.error(`FAIL proposal money ${user.slice(0, 8)} @ ${proj}`); }
+  }
+
+  console.log(`${checked} cases x ${CATEGORIES.length} categories compared (${fieldRoles} field templates checked for daily logs); ${failed} disagree.`);
   process.exit(failed ? 1 : 0);
 }
 

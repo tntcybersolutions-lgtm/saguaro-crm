@@ -1,14 +1,14 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { createServerClient, getUser } from '@/lib/supabase-server';
-import { requirePermission } from '@/lib/permissions';
+import { createServerClient } from '@/lib/supabase-server';
+import { requireAnyPermission, PROPOSAL_MONEY } from '@/lib/permissions';
 import type { Database } from '@/lib/database.types';
 import { apiError } from '@/lib/api-error';
 
 export async function POST(req: NextRequest) {
-  const g = await requirePermission(req, 'Documents', 'Edit');
+  // Proposal dollars: Sales or Budget (PROPOSAL_MONEY; role_gate_*_proposals agrees).
+  const g = await requireAnyPermission(req, PROPOSAL_MONEY, 'Edit');
   if (!g.ok) return g.res;
-  const user = await getUser(req);
-  if (!user) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
+  const user = g.user;
   let body: Record<string, unknown> = {};
   try {
     body = await req.json().catch(() => ({}));
