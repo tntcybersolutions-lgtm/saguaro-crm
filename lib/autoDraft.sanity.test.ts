@@ -5,12 +5,14 @@
  * components/AutoUnsavedGuard follows). Pins: one key per screen and form;
  * what is kept and restored; that a save (or Discard) removes the copy; that
  * passwords, card numbers and opted-out fields are never written down; and
- * that sign-out wipes every draft, the page-owned ones included.
+ * that sign-out wipes every draft, the page-owned ones included; and that a
+ * draft belongs to the signed-in user — another person signing in on the same
+ * device never gets it back, and it is wiped.
  */
 import { describe, test, expect, beforeEach } from '@jest/globals';
 import {
-  AUTO_PREFIX, DRAFT_PREFIX, DRAFT_TTL_MS, type DraftStore,
-  draftKey, routeOf, saveDraft, readDraft, removeDraft, draftKeysForRoute, clearRouteDrafts, wipeDrafts, canKeepDrafts,
+  DRAFT_PREFIX, DRAFT_TTL_MS, type DraftStore, ownerPrefix, setDraftOwner, getDraftOwner, pageDraftKey,
+  draftKey as keyFor, routeOf, saveDraft, readDraft, removeDraft, draftKeysForRoute, clearRouteDrafts, wipeDrafts, canKeepDrafts,
   isSecretField, looksLikeCardNumber, fieldBase, numberKeys, formIdOf, restorePlan, restoredLabel,
 } from './autoDraft';
 import { formNoun, isCloseLabel, leaveMessage } from './autoGuard';
@@ -28,13 +30,16 @@ function memStore(): DraftStore & { map: Map<string, string> } {
   };
 }
 
+const ME = 'user-a';
+const draftKey = (route: string, formId: string) => keyFor(ME, route, formId);
+
 let s: ReturnType<typeof memStore>;
 beforeEach(() => { s = memStore(); });
 
 describe('keys', () => {
   test('one key per screen and form; query and hash do not split it', () => {
     const k = draftKey('/app/projects/p1/rfis/?tab=open#top', formIdOf({ kind: 'dialog', title: 'New RFI' }));
-    expect(k).toBe(`${AUTO_PREFIX}/app/projects/p1/rfis|dialog:New RFI`);
+    expect(k).toBe(`${DRAFT_PREFIX}u:user-a:auto:/app/projects/p1/rfis|dialog:New RFI`);
     expect(routeOf('/app/time/')).toBe('/app/time');
     expect(draftKey('/app/projects/p1/rfis', 'dialog:New RFI')).toBe(k);
   });
@@ -84,9 +89,9 @@ describe('save, restore, discard', () => {
     saveDraft(s, elsewhere, { c: '3' });
     removeDraft(s, key);
     expect(readDraft(s, key)).toBeNull();
-    expect(draftKeysForRoute(s, '/app/projects/p1/rfis')).toEqual([other]);
-    clearRouteDrafts(s, '/app/projects/p1/rfis/');
-    expect(draftKeysForRoute(s, '/app/projects/p1/rfis')).toEqual([]);
+    expect(draftKeysForRoute(s, ME, '/app/projects/p1/rfis')).toEqual([other]);
+    clearRouteDrafts(s, ME, '/app/projects/p1/rfis/');
+    expect(draftKeysForRoute(s, ME, '/app/projects/p1/rfis')).toEqual([]);
     expect(readDraft(s, elsewhere)).not.toBeNull();
   });
 
@@ -146,10 +151,50 @@ describe('sign-out', () => {
   test('wipes every draft — automatic and page-owned — and nothing else', () => {
     saveDraft(s, draftKey('/app/projects/p1/rfis', 'page'), { a: '1' });
     saveDraft(s, draftKey('/app/time', 'form:Clock in'), { b: '2' });
-    s.setItem(`${DRAFT_PREFIX}invoice:42`, JSON.stringify({ t: Date.now(), data: { amount: 1 } }));
+    s.setItem(pageDraftKey(ME, 'invoice:42'), JSON.stringify({ t: Date.now(), data: { amount: 1 } }));
     s.setItem('saguaro-sidebar-collapsed', 'true');
+    setDraftOwner(s, ME);
     expect(wipeDrafts(s)).toBe(3);
     expect([...s.map.keys()]).toEqual(['saguaro-sidebar-collapsed']);
+    expect(getDraftOwner()).toBeNull(); // nothing is kept again until someone signs in
+  });
+});
+
+describe('a draft belongs to the person who typed it (shared PC, trailer tablet)', () => {
+  test('the key carries the user id; another user never reads it', () => {
+    const route = '/app/projects/p1/rfis';
+    const mine = keyFor('user-a', route, 'dialog:New RFI');
+    const theirs = keyFor('user-b', route, 'dialog:New RFI');
+    expect(mine.startsWith(ownerPrefix('user-a'))).toBe(true);
+    expect(mine).not.toBe(theirs);
+    saveDraft(s, mine, { 'text:subject': 'Door hardware' });
+    expect(readDraft(s, theirs)).toBeNull();
+    expect(draftKeysForRoute(s, 'user-b', route)).toEqual([]);
+    expect(draftKeysForRoute(s, 'user-a', route)).toEqual([mine]);
+    expect(pageDraftKey('user-a', 'invoice:42')).not.toBe(pageDraftKey('user-b', 'invoice:42'));
+    expect(ownerPrefix('a:b|c')).toBe(`${DRAFT_PREFIX}u:abc:`); // separators cannot forge another user's namespace
+  });
+
+  test('signing in as a different user wipes every draft that is not theirs', () => {
+    const route = '/app/time';
+    saveDraft(s, keyFor('user-a', route, 'form:Clock in'), { a: '1' });
+    s.setItem(pageDraftKey('user-a', 'invoice:42'), JSON.stringify({ t: Date.now(), data: { amount: 1 } }));
+    saveDraft(s, keyFor('user-b', route, 'form:Clock in'), { b: '2' });
+    s.setItem(`${DRAFT_PREFIX}invoice:7`, JSON.stringify({ t: Date.now(), data: {} })); // an old draft with no owner
+    s.setItem('saguaro-sidebar-collapsed', 'true');
+
+    expect(setDraftOwner(s, 'user-b')).toBe(3);
+    expect(getDraftOwner()).toBe('user-b');
+    expect([...s.map.keys()].sort()).toEqual([keyFor('user-b', route, 'form:Clock in'), 'saguaro-sidebar-collapsed'].sort());
+
+    // The same person again keeps theirs.
+    expect(setDraftOwner(s, 'user-b')).toBe(0);
+    expect(readDraft(s, keyFor('user-b', route, 'form:Clock in'))).not.toBeNull();
+  });
+
+  test('until the shell knows who is signed in, there is no owner', () => {
+    setDraftOwner(s, null);
+    expect(getDraftOwner()).toBeNull();
   });
 });
 

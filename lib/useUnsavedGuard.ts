@@ -12,7 +12,8 @@
  *      internal anchor clicks while dirty and opens the house
  *      Save / Discard / Stay confirm (<UnsavedGuardModal guard={guard} />).
  *   3. DRAFT AUTOSAVE: dirty form data is debounced into localStorage
- *      (`sag_draft:<key>`), flushed synchronously on pagehide/popstate, and
+ *      (`sag_draft:u:<signed-in user>:<key>` — one person's draft never comes back
+ *      for another on a shared device), flushed synchronously on pagehide/popstate, and
  *      restored with a "Draft restored from 2:14 PM" toast (Undo / Discard) on return. Cleared on save or
  *      explicit discard. This also covers the browser BACK button, which the
  *      App Router handles before any guard can cancel it — the work is never
@@ -32,12 +33,12 @@
  *   ...
  *   guard.clearDraft();                   // after your own successful save
  */
-import { useCallback, useEffect, useRef, useState } from 'react';
+import { useCallback, useEffect, useRef, useState, useSyncExternalStore } from 'react';
 import { useRouter } from 'next/navigation';
 import { useToast } from '@/components/Toast';
 import { registerNavGuard } from '@/lib/navGuard';
 import { formNoun } from '@/lib/autoGuard';
-import { DRAFT_PREFIX, restoredLabel } from '@/lib/autoDraft';
+import { restoredLabel, pageDraftKey, getDraftOwner, subscribeDraftOwner } from '@/lib/autoDraft';
 
 const DRAFT_TTL_MS = 7 * 24 * 60 * 60 * 1000; // drafts older than 7 days are dropped
 const AUTOSAVE_DEBOUNCE_MS = 800;
@@ -153,18 +154,14 @@ export function useComposerDirty<T>(open: boolean, value: T, ready = true): bool
   return !formValuesEqual(value, baselineRef.current.snapshot);
 }
 
-function draftStorageKey(key: string): string {
-  return DRAFT_PREFIX + key;
-}
-
 function readDraft<T>(key: string): { t: number; data: T } | null {
   try {
-    const raw = localStorage.getItem(draftStorageKey(key));
+    const raw = localStorage.getItem(key);
     if (!raw) return null;
     const parsed = JSON.parse(raw) as { t?: number; data?: T };
     if (!parsed || typeof parsed.t !== 'number' || parsed.data === undefined) return null;
     if (Date.now() - parsed.t > DRAFT_TTL_MS) {
-      localStorage.removeItem(draftStorageKey(key));
+      localStorage.removeItem(key);
       return null;
     }
     return { t: parsed.t, data: parsed.data };
@@ -175,7 +172,7 @@ function readDraft<T>(key: string): { t: number; data: T } | null {
 
 function writeDraft(key: string, data: unknown): void {
   try {
-    localStorage.setItem(draftStorageKey(key), JSON.stringify({ t: Date.now(), data }));
+    localStorage.setItem(key, JSON.stringify({ t: Date.now(), data }));
   } catch {
     /* storage full / unavailable — best-effort */
   }
@@ -183,14 +180,17 @@ function writeDraft(key: string, data: unknown): void {
 
 function removeDraft(key: string): void {
   try {
-    localStorage.removeItem(draftStorageKey(key));
+    localStorage.removeItem(key);
   } catch {
     /* ignore */
   }
 }
 
 export function useUnsavedGuard<T = unknown>(opts: UnsavedGuardOptions<T>): UnsavedGuardApi {
-  const { dirty, draftKey, draftData, restoreDraft, draftEnabled = true, onSave, formName } = opts;
+  const { dirty, draftKey: pageKey, draftData, restoreDraft, draftEnabled = true, onSave, formName } = opts;
+  // Kept under the signed-in user's name; nothing is kept until the shell knows who that is.
+  const owner = useSyncExternalStore(subscribeDraftOwner, getDraftOwner, () => null);
+  const draftKey = pageKey && owner ? pageDraftKey(owner, pageKey) : undefined;
   const router = useRouter();
   const { showToast } = useToast();
 
@@ -402,8 +402,8 @@ export function useUnsavedGuard<T = unknown>(opts: UnsavedGuardOptions<T>): Unsa
   // which asks every mounted dirty form here before it moves.
   const requestCloseRef = useRef(requestClose);
   requestCloseRef.current = requestClose;
-  const ownsDraftsRef = useRef(!!draftKey);
-  ownsDraftsRef.current = !!draftKey;
+  const ownsDraftsRef = useRef(!!pageKey);
+  ownsDraftsRef.current = !!pageKey;
   useEffect(() => {
     return registerNavGuard({
       isDirty: () => dirtyRef.current,

@@ -9,7 +9,7 @@
  * is never written down.
  */
 import { describe, test, expect, beforeEach } from '@jest/globals';
-import { AUTO_PREFIX } from './autoDraft';
+import { draftKey, setDraftOwner } from './autoDraft';
 
 declare const jest: { mock: (m: string, f: () => unknown) => void };
 declare const require: (m: string) => any; // eslint-disable-line @typescript-eslint/no-explicit-any
@@ -87,7 +87,7 @@ function Page() {
   );
 }
 
-const KEY = `${AUTO_PREFIX}/app/projects/p1/rfis|dialog:New RFI`;
+const KEY = draftKey('user-a', '/app/projects/p1/rfis', 'dialog:New RFI');
 
 /** A person's click: trusted, as the browser marks real input (the gate ignores clicks code makes). */
 const jsdomUtils = require('jsdom/lib/jsdom/living/generated/utils');
@@ -98,7 +98,7 @@ function userClick(el: HTMLElement) {
   jsdomUtils.implForWrapper(el)._dispatch(impl);
 }
 
-beforeEach(() => { dom.window.localStorage.clear(); writes.length = 0; answer = 200; });
+beforeEach(() => { dom.window.localStorage.clear(); writes.length = 0; answer = 200; setDraftOwner(dom.window.localStorage, 'user-a'); });
 
 function userKey(el: HTMLElement, key: string) {
   const ev = new dom.window.KeyboardEvent('keydown', { key, bubbles: true, cancelable: true });
@@ -239,6 +239,25 @@ describe('drafts, end to end in the DOM', () => {
     last = getStatusGroups().at(-1).steps.at(-1);
     expect(last.state).toBe('done');
     expect(last.result).toBe('RFI sent');
+    view.unmount();
+  });
+
+  test("another user signing in on this device never gets the first one's draft", async () => {
+    const view = render(<Page />);
+    const input = screen.getByLabelText('Subject') as HTMLInputElement;
+    fireEvent.focus(input);
+    fireEvent.change(input, { target: { value: 'Owner walk punch' } });
+    await wait(900);
+    expect(dom.window.localStorage.getItem(KEY)).not.toBeNull();
+    act(() => { fireEvent.click(screen.getByText('Hide')); });
+
+    // The tablet changes hands: the shell learns a different user is signed in.
+    act(() => { setDraftOwner(dom.window.localStorage, 'user-b'); });
+    expect(dom.window.localStorage.getItem(KEY)).toBeNull();
+    act(() => { fireEvent.click(screen.getByText('Open')); });
+    await wait(1500);
+    expect((screen.getByLabelText('Subject') as HTMLInputElement).value).toBe('');
+    expect(screen.queryByText(/^Draft restored/)).toBeNull();
     view.unmount();
   });
 });

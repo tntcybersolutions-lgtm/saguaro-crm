@@ -9,7 +9,9 @@
  * fields are copied to this device ~800ms after they stop (lib/autoDraft).
  * Leave, reload, crash or lose signal and come back: the form fills itself
  * back in — "Draft restored from 2:14 PM" with Undo / Discard. A successful
- * save or Discard removes the copy; sign-out wipes them all. Passwords, card
+ * save or Discard removes the copy; sign-out wipes them all. Drafts belong to
+ * the signed-in user (nothing is kept until the shell knows who that is), so
+ * on a shared PC or tablet nobody else's ever comes back. Passwords, card
  * numbers and [data-no-draft] fields are never kept.
  *
  * ASKS BEFORE LEAVING. Trying to leave with unsaved changes — a link, the
@@ -36,7 +38,7 @@ import { registerNavGuard, isPageGuardDirty, isNavGuarded, requestNavigation, ru
 import { SCOPE_SELECTOR, IGNORE_SELECTOR, isGuardableField, isLooseWorkField, pickSaveButton, isSaveRequest, isCloseLabel, formNoun } from '@/lib/autoGuard';
 import {
   type DraftStore, DRAFT_DEBOUNCE_MS, draftKey, draftKeysForRoute, clearRouteDrafts, saveDraft, readDraft, removeDraft,
-  isSecretField, fieldBase, numberKeys, formIdOf, restorePlan, restoredLabel, canKeepDrafts,
+  isSecretField, fieldBase, numberKeys, formIdOf, restorePlan, restoredLabel, canKeepDrafts, getDraftOwner, subscribeDraftOwner,
 } from '@/lib/autoDraft';
 import { step, hasStatusCenter } from '@/lib/ui/status';
 import { inRetryPress } from '@/lib/ui/status-fetch';
@@ -155,7 +157,7 @@ function store(): DraftStore | null {
 }
 
 function draftsOn(): boolean {
-  return !pageOwnsDrafts() && !!store();
+  return !!getDraftOwner() && !pageOwnsDrafts() && !!store();
 }
 
 /** The outermost form/dialog around a field — one draft per dialog, not per inner <form>. */
@@ -205,8 +207,10 @@ function formIdFor(scope: Element | null): string {
   return n > 0 ? `${base}#${n + 1}` : base;
 }
 
-function keyFor(scope: Element | null): string {
-  return draftKey(window.location.pathname, formIdFor(scope));
+/** This user's key for a form on this screen — null until we know who is signed in. */
+function keyFor(scope: Element | null): string | null {
+  const who = getDraftOwner();
+  return who ? draftKey(who, window.location.pathname, formIdFor(scope)) : null;
 }
 
 function draftable(el: Element): el is HTMLInputElement | HTMLTextAreaElement | HTMLSelectElement {
@@ -254,6 +258,7 @@ function writeDraftFor(scope: Element | null) {
   if (!s || pageOwnsDrafts()) return;
   if (scope && !scope.isConnected) return; // closed: its last copy stands until a save or Discard
   const key = keyFor(scope);
+  if (!key) return;
   keyOfScope.set(scope || document.body, key);
   const fields: Record<string, string> = {};
   for (const [k, el] of keyedFields(scope)) {
@@ -282,7 +287,11 @@ function scheduleDraft(el: Element) {
 function refreshDraft(scope: Element | null) {
   const s = store();
   if (!s) return;
-  if (!scope || scope === document.body) { clearRouteDrafts(s, window.location.pathname); return; }
+  if (!scope || scope === document.body) {
+    const who = getDraftOwner();
+    if (who) clearRouteDrafts(s, who, window.location.pathname);
+    return;
+  }
   const ds = draftScopeOf(scope);
   if (!ds) { writeDraftFor(null); return; } // a loose field saved itself
   if (!ds.isConnected) {
@@ -382,21 +391,22 @@ function restoreInto(scope: Element | null, key: string, toast: Parameters<typeo
 /** Find forms on screen with a copy waiting, once each. */
 function scanRestore(toast: Parameters<typeof announce>[2]) {
   const s = store();
-  if (!s || pageOwnsDrafts()) return;
+  const who = getDraftOwner();
+  if (!s || !who || pageOwnsDrafts()) return;
   const route = window.location.pathname;
-  const waiting = new Set(draftKeysForRoute(s, route));
+  const waiting = new Set(draftKeysForRoute(s, who, route));
   if (!waiting.size) return;
   const scopes = [...document.querySelectorAll(SCOPE_SELECTOR)].filter((sc) => draftScopeOf(sc) === sc && !handledScopes.has(sc) && !sc.closest(IGNORE_SELECTOR) && visible(sc));
   for (const sc of scopes) {
     if (!keyedFields(sc).size) continue; // its fields have not drawn yet
     handledScopes.add(sc);
     const key = keyFor(sc);
-    if (waiting.has(key)) restoreInto(sc, key, toast);
+    if (key && waiting.has(key)) restoreInto(sc, key, toast);
   }
   if (handledLooseRoute !== route && keyedFields(null).size) {
     handledLooseRoute = route;
     const key = keyFor(null);
-    if (waiting.has(key)) restoreInto(null, key, toast);
+    if (key && waiting.has(key)) restoreInto(null, key, toast);
   }
 }
 
@@ -531,7 +541,8 @@ export default function AutoUnsavedGuard() {
       const scopes = new Set<Element | null>(fields.filter(draftable).map((f) => draftScopeOf(f)));
       for (const sc of scopes) {
         writeDraftFor(sc);
-        if (readDraft(s, keyFor(sc))) kept = true;
+        const k = keyFor(sc);
+        if (k && readDraft(s, k)) kept = true;
       }
     }
     setHasDraft(kept);
@@ -619,17 +630,20 @@ export default function AutoUnsavedGuard() {
     const run = () => {
       timer = 0;
       const s = store();
-      if (!s || !draftKeysForRoute(s, window.location.pathname).length) return; // nothing kept for this screen
+      const who = getDraftOwner();
+      if (!s || !who || !draftKeysForRoute(s, who, window.location.pathname).length) return; // nothing kept for this screen
       if (inflightReads > 0 && waited < 6000) { waited += 300; timer = window.setTimeout(run, 300); return; }
       waited = 0;
       try { scanRestore((m, t, o) => toastRef.current(m, t, o)); } catch (e) { console.error('[draft] restore', e); }
     };
     const later = (ms = 450) => { if (timer) window.clearTimeout(timer); timer = window.setTimeout(run, ms); };
     const mo = new MutationObserver(() => later());
+    // The signed-in user becomes known a moment after load: look again then.
+    const offOwner = subscribeDraftOwner(() => later(100));
     // A dialog kept in the page and only shown (hidden / open flips) counts as appearing too.
     mo.observe(document.body, { childList: true, subtree: true, attributes: true, attributeFilter: ['hidden', 'open', 'data-open', 'aria-hidden'] });
     later(700);
-    return () => { mo.disconnect(); if (timer) window.clearTimeout(timer); };
+    return () => { mo.disconnect(); offOwner(); if (timer) window.clearTimeout(timer); };
   }, [pathname]);
 
   /* Leaving: links, the browser's own exits, history, and router moves through useGuardedRouter. */

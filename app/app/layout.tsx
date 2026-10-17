@@ -20,6 +20,7 @@ import SubscriptionWall from '../../components/SubscriptionWall';
 import OfflineBar from '../../components/OfflineBar';
 import StatusCenter from '../../components/StatusCenter';
 import { clearOfflineCopies } from '@/lib/offline/worker';
+import { setDraftOwner } from '@/lib/autoDraft';
 import ErrorBoundary from '../../components/ErrorBoundary';
 import GlobalShortcuts from '../../components/GlobalShortcuts';
 import ProjectSwitcher from '../../components/ProjectSwitcher';
@@ -205,7 +206,14 @@ export default function AppLayout({ children }: { children: React.ReactNode }) {
       const company = me && typeof me.company === 'string' && me.company.trim() ? me.company.trim() : null;
       if (me) {
         setCompanyName(company);
-        if (me.id) setSageUserId(me.id);
+        // Drafts are this person's: anyone else's on this device are wiped before any can restore.
+        // (The server's answer, never the cached id above: a shared device may have changed hands.)
+        if (me.id) {
+          setSageUserId(me.id);
+          let ls: Storage | null = null;
+          try { ls = window.localStorage; } catch { ls = null; }
+          setDraftOwner(ls, me.id);
+        }
         if (me.name) {
           const parts = me.name.trim().split(/\s+/);
           initials = parts.length >= 2

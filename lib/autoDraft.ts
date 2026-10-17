@@ -9,16 +9,22 @@
  * itself back in and says "Draft restored from 2:14 PM" with Undo / Discard.
  * A successful save, or Discard, removes the copy. Sign-out wipes them all.
  *
- * One key per screen and form: `sag_draft:auto:<path>|<form>`. Page-owned
- * drafts (lib/useUnsavedGuard) live under the same `sag_draft:` prefix, so one
- * wipe on sign-out covers both.
+ * Every draft belongs to the person who typed it — a shared office PC or the
+ * tablet in the trailer is normal, and one person's draft must never come back
+ * for another. Keys carry the signed-in user's id:
+ *
+ *   automatic   sag_draft:u:<user>:auto:<path>|<form>
+ *   page-owned  sag_draft:u:<user>:<page key>        (lib/useUnsavedGuard)
+ *
+ * Nothing is kept or restored until the shell knows who is signed in
+ * (setDraftOwner). Signing in as someone else wipes every draft that is not
+ * theirs; sign-out wipes them all.
  *
  * Never kept: passwords, card numbers and codes (isSecretField /
  * looksLikeCardNumber), and anything inside [data-no-draft].
  */
 
 export const DRAFT_PREFIX = 'sag_draft:';
-export const AUTO_PREFIX = `${DRAFT_PREFIX}auto:`;
 export const DRAFT_TTL_MS = 7 * 24 * 60 * 60 * 1000;
 export const DRAFT_DEBOUNCE_MS = 800;
 
@@ -80,6 +86,52 @@ export function looksLikeCardNumber(value: string): boolean {
   return sum % 10 === 0;
 }
 
+/* ── Whose drafts ─────────────────────────────────────────────────────── */
+
+let owner: string | null = null;
+const ownerSubs = new Set<() => void>();
+
+/** A user id as it may sit in a key (no separators, bounded). */
+function cleanId(id: string): string {
+  return String(id).replace(/[^A-Za-z0-9_-]/g, '').slice(0, 64);
+}
+
+/** Every draft of this user starts with this. */
+export function ownerPrefix(userId: string): string {
+  return `${DRAFT_PREFIX}u:${cleanId(userId)}:`;
+}
+
+/** Who is signed in, as far as drafts know (null until the shell says). */
+export function getDraftOwner(): string | null { return owner; }
+export function subscribeDraftOwner(fn: () => void): () => void { ownerSubs.add(fn); return () => { ownerSubs.delete(fn); }; }
+
+/**
+ * The shell knows who is signed in. Drafts that are not theirs — another
+ * person's, or an old unowned one — are wiped before anything can restore.
+ * Returns how many were wiped.
+ */
+export function setDraftOwner(store: DraftStore | null, userId: string | null | undefined): number {
+  const id = userId ? cleanId(userId) : '';
+  let wiped = 0;
+  if (id && store) {
+    const mine = ownerPrefix(id);
+    for (const k of keys(store, DRAFT_PREFIX)) {
+      if (!k.startsWith(mine)) { removeDraft(store, k); wiped++; }
+    }
+  }
+  const next = id || null;
+  if (next !== owner) {
+    owner = next;
+    ownerSubs.forEach((f) => { try { f(); } catch (e) { console.error('[draft] owner listener', e); } });
+  }
+  return wiped;
+}
+
+/** Where a page's own draft (useUnsavedGuard draftKey) is kept for this user. */
+export function pageDraftKey(userId: string, key: string): string {
+  return `${ownerPrefix(userId)}${key}`;
+}
+
 /* ── Keys ──────────────────────────────────────────────────────────────── */
 
 /** "/app/projects/1/rfis/?tab=open#x" → "/app/projects/1/rfis". */
@@ -88,9 +140,9 @@ export function routeOf(path: string): string {
   return p || '/';
 }
 
-/** The storage key for one form on one screen. */
-export function draftKey(route: string, formId: string): string {
-  return `${AUTO_PREFIX}${routeOf(route)}|${formId}`;
+/** The storage key for one user's form on one screen. */
+export function draftKey(userId: string, route: string, formId: string): string {
+  return `${ownerPrefix(userId)}auto:${routeOf(route)}|${formId}`;
 }
 
 /** Ids the framework makes up per render (React useId, Radix) say nothing about the field. */
@@ -179,20 +231,21 @@ function keys(store: DraftStore, prefix: string): string[] {
   return out;
 }
 
-/** Every automatic draft kept for one screen. */
-export function draftKeysForRoute(store: DraftStore, route: string): string[] {
-  return keys(store, `${AUTO_PREFIX}${routeOf(route)}|`);
+/** Every automatic draft this user kept for one screen. */
+export function draftKeysForRoute(store: DraftStore, userId: string, route: string): string[] {
+  return keys(store, `${ownerPrefix(userId)}auto:${routeOf(route)}|`);
 }
 
-/** A page-level save (one Save for the whole screen): every draft on it goes. */
-export function clearRouteDrafts(store: DraftStore, route: string): void {
-  for (const k of draftKeysForRoute(store, route)) removeDraft(store, k);
+/** A page-level save (one Save for the whole screen): every draft of this user on it goes. */
+export function clearRouteDrafts(store: DraftStore, userId: string, route: string): void {
+  for (const k of draftKeysForRoute(store, userId, route)) removeDraft(store, k);
 }
 
 /** Sign-out: no draft of this person's survives for the next one on the device. */
 export function wipeDrafts(store: DraftStore): number {
   const all = keys(store, DRAFT_PREFIX);
   for (const k of all) removeDraft(store, k);
+  setDraftOwner(null, null);
   return all.length;
 }
 
