@@ -16,7 +16,7 @@ import {
   type Column, type StatItem,
 } from '@/components/ui/kit';
 import { Clipboard, Plug, Shuffle, WifiHigh, Ruler, ChartBar, FileText, Archive, Palette, DownloadSimple, WarningCircle, type Icon as PhosphorIcon } from '@phosphor-icons/react';
-import NetworkTabs, { networkCrumbs } from '../_components/NetworkTabs';
+import NetworkTabs, { networkCrumbs, NetworkNotSetUp } from '../_components/NetworkTabs';
 
 interface ReportHistory {
   id: string;
@@ -154,11 +154,20 @@ export default function ReportsPage() {
     { key: 'created_at', header: 'Generated', phone: 'show', render: (r) => new Date(r.created_at).toLocaleString() },
   ];
 
+  if (!loading && !loadError && !networkProjectId) {
+    return (
+      <PageShell crumbs={networkCrumbs(projectId, ctx?.project?.name, 'Reports')} title="Network reports" subtitle={ctx?.project?.name || undefined}>
+        <NetworkTabs projectId={projectId} value="reports" />
+        <NetworkNotSetUp projectId={projectId} />
+      </PageShell>
+    );
+  }
+
   return (
     <PageShell
       crumbs={networkCrumbs(projectId, ctx?.project?.name, 'Reports')}
       title="Network reports"
-      subtitle="IP schedules, cable schedules, port maps and as-builts."
+      subtitle={ctx?.project?.name || undefined}
       actions={
         <>
           <Select aria-label="Format" value={selectedFormat} onChange={e => setSelectedFormat(e.target.value)} style={{ width: 'auto', minWidth: 110 }}

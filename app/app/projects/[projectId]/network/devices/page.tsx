@@ -15,13 +15,14 @@ import {
   FormGrid, FormModal, DetailList, Toast, useToast,
   type Column, type BadgeTone, type StatItem,
 } from '@/components/ui/kit';
+import { Facts } from '@/lib/ui/filled-facts';
 import {
   Globe, ArrowsLeftRight, Shield, WifiHigh, Printer, VideoCamera, HardDrives, Laptop, Phone, Plug,
   CellSignalFull, BatteryFull, Package, Plus, X, CheckCircle, WarningCircle, Clock, type Icon as PhosphorIcon,
 } from '@phosphor-icons/react';
 import { useUnsavedGuard, useComposerDirty } from '@/lib/useUnsavedGuard';
 import UnsavedGuardModal from '@/components/UnsavedGuardModal';
-import NetworkTabs, { networkCrumbs } from '../_components/NetworkTabs';
+import NetworkTabs, { networkCrumbs, NetworkNotSetUp } from '../_components/NetworkTabs';
 
 interface Device {
   id: string;
@@ -215,23 +216,32 @@ function DeviceInventoryPage() {
   const columns: Column<Device>[] = [
     { key: 'hostname', header: 'Hostname', primary: true, phone: 'show', render: (d) => <span style={{ display: 'inline-flex', alignItems: 'center', gap: 8 }}><DeviceTypeIcon type={d.device_type} />{d.hostname}</span> },
     { key: 'device_type', header: 'Type', accessor: (d) => deviceTypeLabel(d.device_type), render: (d) => deviceTypeLabel(d.device_type) },
-    { key: 'manufacturer', header: 'Manufacturer', accessor: (d) => manufacturerLabel(d.manufacturer), render: (d) => manufacturerLabel(d.manufacturer) || '—' },
-    { key: 'model', header: 'Model', render: (d) => d.model || '—' },
+    { key: 'manufacturer', header: 'Manufacturer', accessor: (d) => manufacturerLabel(d.manufacturer), render: (d) => manufacturerLabel(d.manufacturer) || null },
+    { key: 'model', header: 'Model', render: (d) => d.model || null },
     { key: 'ip_address', header: 'IP address', phone: 'show', render: (d) => d.ip_address ? <span style={mono}>{d.ip_address}</span> : '—' },
     { key: 'mac_address', header: 'MAC', render: (d) => d.mac_address ? <span style={mono}>{d.mac_address}</span> : '—' },
-    { key: 'vlan_name', header: 'VLAN', render: (d) => d.vlan_name || '—' },
-    { key: 'location', header: 'Location', render: (d) => d.location || '—' },
+    { key: 'vlan_name', header: 'VLAN', render: (d) => d.vlan_name || null },
+    { key: 'location', header: 'Location', render: (d) => d.location || null },
     { key: 'status', header: 'Status', phone: 'show', accessor: (d) => statusLabel(d.status), render: (d) => <Badge tone={statusTone(d.status)} dot>{statusLabel(d.status)}</Badge> },
   ];
 
   const openForm = () => { setFormError(''); setShowForm(true); setSelectedDevice(null); };
   const set = <K extends keyof typeof form>(k: K, v: (typeof form)[K]) => setForm({ ...form, [k]: v });
 
+  if (!loading && !loadError && !networkProjectId) {
+    return (
+      <PageShell crumbs={networkCrumbs(projectId, ctx?.project?.name, 'Devices')} title="Devices" subtitle={ctx?.project?.name || undefined}>
+        <NetworkTabs projectId={projectId} value="devices" />
+        <NetworkNotSetUp projectId={projectId} />
+      </PageShell>
+    );
+  }
+
   return (
     <PageShell
       crumbs={networkCrumbs(projectId, ctx?.project?.name, 'Devices')}
       title="Devices"
-      subtitle="Routers, switches, access points and endpoints."
+      subtitle={ctx?.project?.name || undefined}
       actions={<Button variant="primary" icon={<Plus size={15} weight="bold" />} onClick={openForm}>Add device</Button>}
     >
       <NetworkTabs projectId={projectId} value="devices" />
@@ -260,7 +270,7 @@ function DeviceInventoryPage() {
           icon={<DeviceTypeIcon type={selectedDevice.device_type} size={18} />}
           actions={<Button variant="ghost" size="sm" icon={<X size={16} />} aria-label="Close details" onClick={() => setSelectedDevice(null)} />}
         >
-          <DetailList items={[
+          <Facts items={[
             ['IP Address', selectedDevice.ip_address || 'N/A'],
             ['MAC Address', selectedDevice.mac_address || 'N/A'],
             ['Location', selectedDevice.location || 'N/A'],
@@ -290,10 +300,10 @@ function DeviceInventoryPage() {
           rowActions={(d) => [{ label: 'View details', icon: <HardDrives size={14} />, onClick: () => setSelectedDevice(d) }]}
           empty={
             devices.length === 0 ? (
-              <EmptyState icon={<Package size={22} />} title="No devices yet" text="Add the first device to start the network inventory."
+              <EmptyState icon={<Package size={22} />} title="No devices yet"
                 action={<Button variant="primary" icon={<Plus size={15} weight="bold" />} onClick={openForm}>Add device</Button>} />
             ) : (
-              <EmptyState title="No devices match your filters" text="Clear the type/status filters or adjust the search."
+              <EmptyState title="No devices match your filters"
                 action={<Button onClick={() => { setSearch(''); setFilterType(''); setFilterStatus(''); }}>Clear filters</Button>} />
             )
           }

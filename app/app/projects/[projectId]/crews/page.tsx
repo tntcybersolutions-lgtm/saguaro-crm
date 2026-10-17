@@ -32,6 +32,7 @@ import {
   FormModal, Field, Input, Textarea, Select, FormGrid, DetailList, Toast, useToast,
   type Column, type Action, type BadgeTone, type StatItem,
 } from '@/components/ui/kit';
+import { Facts } from '@/lib/ui/filled-facts';
 import { useUnsavedGuard, useComposerDirty } from '@/lib/useUnsavedGuard';
 import UnsavedGuardModal from '@/components/UnsavedGuardModal';
 import Suggest from '@/components/ui/Suggest';
@@ -52,7 +53,7 @@ function statusBadge(status: string | null | undefined, archived = false): { lab
   if (archived) return { label: 'Archived', tone: 'closed' };
   switch ((status ?? '').toLowerCase()) {
     case 'active':   return { label: 'Active', tone: 'ongoing' };
-    case 'standby':  return { label: 'Standby', tone: 'under_contract' };
+    case 'standby':  return { label: 'Standby', tone: 'lead' };
     case 'inactive': return { label: 'Inactive', tone: 'closed' };
     default:         return { label: status ? cap(status) : '—', tone: 'neutral' };
   }
@@ -312,8 +313,8 @@ export default function CrewsPage() {
   const isSel = (c: Crew) => selected?.id === c.id;
   const nameCol: Column<Crew> = { key: 'name', header: 'Crew', accessor: (c) => c.name.toLowerCase(), render: (c) => <span className="crName" data-sel={isSel(c) ? 'true' : undefined} title={c.name}>{c.name}</span> };
   const statusCol: Column<Crew> = { key: 'status', header: 'Status', accessor: (c) => (c.status ?? '').toLowerCase(), render: (c) => { const b = statusBadge(c.status, showArchived || !!c.deleted_at); return <Badge tone={b.tone}>{b.label}</Badge>; } };
-  const foremanCol: Column<Crew> = { key: 'foreman', header: 'Foreman', accessor: (c) => (c.foreman_name ?? '').toLowerCase(), render: (c) => c.foreman_name ? <span style={{ color: 'var(--text-primary)' }}>{c.foreman_name}</span> : <span className="crMuted">—</span> };
-  const tradeCol: Column<Crew> = { key: 'trade', header: 'Trade', accessor: (c) => (c.trade ?? '').toLowerCase(), render: (c) => c.trade ? <span>{c.trade}</span> : <span className="crMuted">—</span> };
+  const foremanCol: Column<Crew> = { key: 'foreman', header: 'Foreman', accessor: (c) => (c.foreman_name ?? '').toLowerCase(), render: (c) => c.foreman_name ? <span style={{ color: 'var(--text-primary)' }}>{c.foreman_name}</span> : null };
+  const tradeCol: Column<Crew> = { key: 'trade', header: 'Trade', accessor: (c) => (c.trade ?? '').toLowerCase(), render: (c) => c.trade ? <span>{c.trade}</span> : null };
   const membersCol: Column<Crew> = { key: 'members', header: 'Members', accessor: (c) => c.memberCount || 0, align: 'right', render: (c) => <span className="crNum" style={{ display: 'inline-flex', alignItems: 'center', gap: 4, color: 'var(--text-primary)', fontWeight: 700 }}><UsersThree size={14} style={{ color: 'var(--text-tertiary)' }} />{c.memberCount || 0}</span> };
   const columns: Column<Crew>[] = rosterOpen
     ? [nameCol, statusCol, membersCol]
@@ -351,10 +352,9 @@ export default function CrewsPage() {
               <div className="crBadges">
                 <Badge tone={statusBadge(selected.status, !!selected.deleted_at).tone} dot>{statusBadge(selected.status, !!selected.deleted_at).label}</Badge>
               </div>
-              <div className="crNext"><ClipboardText size={14} /> This roster feeds the manpower prefill on new daily logs.</div>
             </div>
             <div className="crSection">
-              <DetailList items={[
+              <Facts items={[
                 ['Foreman', selected.foreman_name || ''],
                 ['Trade', selected.trade || ''],
                 ['Members', String(selected.memberCount || 0)],
@@ -398,9 +398,7 @@ export default function CrewsPage() {
       <EmptyState
         icon={<UsersThree size={22} />}
         title={showArchived ? 'No archived crews' : 'No crews yet'}
-        text={showArchived
-          ? 'Archived crews land here with their rosters intact — restore one any time.'
-          : 'Build a crew with a foreman, a trade, and a roster. Daily logs then prefill their manpower-by-trade section from your active crews — no retyping headcounts.'}
+        text={showArchived ? undefined : 'Daily logs fill their manpower from your active crews.'}
         action={!showArchived ? <Button icon={<Plus size={15} weight="bold" />} onClick={openCreate}>Build First Crew</Button> : undefined}
       />
     );
@@ -418,7 +416,7 @@ export default function CrewsPage() {
           <EmptyState
             icon={<UsersThree size={22} />}
             title="No crews match these filters"
-            text="Clear the search or status filter to see more."
+           
             action={<Button onClick={clearFilters}>Clear Filters</Button>}
           />
         }
@@ -439,7 +437,7 @@ export default function CrewsPage() {
           { label: 'Crews' },
         ]}
         title="Crews & Rosters"
-        subtitle="Build a crew once; every daily log's manpower fills itself."
+        subtitle={ctx?.project?.name || undefined}
         actions={
           <>
             <Button icon={<Archive size={15} />} aria-pressed={showArchived} onClick={() => { setShowArchived(v => !v); setPanel(null); }}>
@@ -449,7 +447,7 @@ export default function CrewsPage() {
           </>
         }
       >
-        {!loadError && <StatRow items={stats} />}
+        {!loadError && (loading || crews.length > 0) && <StatRow items={stats} />}
 
         {!loading && !loadError && crews.length > 0 && (
           <Toolbar
@@ -470,7 +468,6 @@ export default function CrewsPage() {
                 {filtersActive && <Button variant="ghost" size="sm" onClick={clearFilters}>Clear</Button>}
               </>
             }
-            actions={<span className="crMuted" style={{ fontSize: 'var(--fs-sm)' }}>{filtered.length} of {crews.length}</span>}
           />
         )}
 

@@ -85,7 +85,7 @@ interface ToolboxTalk {
 
 const SEVERITY_BADGE: Record<string, BadgeTone> = {
   'Near Miss': 'lead',
-  'First Aid': 'under_contract',
+  'First Aid': 'lead',
   'Recordable': 'overdue',
   'Lost Time': 'overdue',
 };
@@ -98,7 +98,7 @@ const STATUS_BADGE: Record<string, BadgeTone> = {
 const CA_STATUS_BADGE: Record<string, BadgeTone> = {
   open: 'neutral',
   in_progress: 'lead',
-  verified: 'under_contract',
+  verified: 'completed',
   closed: 'completed',
 };
 
@@ -270,11 +270,15 @@ export default function SafetyPage() {
   const lastIncident = incidents
     .filter(i => i.severity !== 'Near Miss')
     .sort((a, b) => b.date.localeCompare(a.date))[0];
-  const daysSinceLast = lastIncident
-    ? Math.floor((Date.now() - new Date(lastIncident.date).getTime()) / 86400000)
-    : incidents.length > 0
-      ? Math.floor((Date.now() - new Date(incidents[0].date).getTime()) / 86400000)
-      : 0;
+  /* With nothing recordable on file the clock runs from the job's start (to its
+     closeout once the job is closed) — a clean job is not "0 days" incident-free. */
+  const jobStart = (ctx?.project?.startDate as string | null) || null;
+  const jobClosed = /closed|complete/i.test(String(ctx?.project?.status || ''));
+  const jobEnd = jobClosed ? ((ctx?.project?.closeoutDate as string | null) || (ctx?.project?.endDate as string | null) || null) : null;
+  const dayDiff = (from: string, to?: string | null) => Math.max(0, Math.floor(((to ? new Date(`${to.slice(0, 10)}T12:00:00`).getTime() : Date.now()) - new Date(`${from.slice(0, 10)}T12:00:00`).getTime()) / 86400000));
+  const daysSinceLast: number | null = lastIncident
+    ? dayDiff(lastIncident.date, jobEnd)
+    : jobStart ? dayDiff(jobStart, jobEnd) : null;
 
   const recordables = incidents.filter(isOshaRecordable).length;
   const nearMisses = incidents.filter(i => i.type === 'Near Miss' || i.severity === 'Near Miss').length;
@@ -518,9 +522,9 @@ export default function SafetyPage() {
       active: tab === 'actions' && (caFilter === 'overdue' || caFilter === 'open'),
     },
     {
-      label: 'Days Incident-Free', value: unknown ? '—' : daysSinceLast, icon: <Timer size={15} />,
-      tone: !unknown && daysSinceLast > 30 ? 'good' : 'default',
-      sub: loading ? 'Loading…' : lastIncident ? `Since ${fmtDate(lastIncident.date)}` : 'No recordable incidents',
+      label: 'Days Incident-Free', value: unknown || daysSinceLast === null ? '—' : daysSinceLast, icon: <Timer size={15} />,
+      tone: !unknown && daysSinceLast !== null && daysSinceLast > 30 ? 'good' : 'default',
+      sub: loading ? 'Loading…' : lastIncident ? `Since ${fmtDate(lastIncident.date)}` : jobStart ? (jobEnd ? 'Start to closeout' : 'Since the job started') : 'No start date on the job',
     },
   ];
 
@@ -528,8 +532,8 @@ export default function SafetyPage() {
   const incidentColumns: Column<Incident>[] = [
     { key: 'description', header: 'Description', primary: true, phone: 'show', accessor: i => i.description || '', render: i => <span className="sfClamp" title={i.description}>{i.description || '—'}</span> },
     { key: 'date', header: 'Date', phone: 'show', accessor: i => i.date || '', render: i => <span className="sfMuted" style={{ whiteSpace: 'nowrap' }}>{fmtDate(i.date)}</span> },
-    { key: 'type', header: 'Type', phone: 'hide', render: i => i.type || '—' },
-    { key: 'osha', header: 'OSHA', accessor: i => (isOshaRecordable(i) ? 'Recordable' : ''), render: i => isOshaRecordable(i) ? <Badge tone="overdue">Recordable</Badge> : <span className="sfMuted">—</span> },
+    { key: 'type', header: 'Type', phone: 'hide', render: i => i.type || null },
+    { key: 'osha', header: 'OSHA', accessor: i => (isOshaRecordable(i) ? 'Recordable' : ''), render: i => isOshaRecordable(i) ? <Badge tone="overdue">Recordable</Badge> : null },
     { key: 'severity', header: 'Severity', phone: 'hide', render: i => <Badge tone={SEVERITY_BADGE[i.severity] || 'neutral'}>{i.severity || '—'}</Badge> },
     { key: 'status', header: 'Status', phone: 'show', render: i => <Badge tone={STATUS_BADGE[i.status] || 'neutral'} dot>{i.status || '—'}</Badge> },
   ];
@@ -565,18 +569,18 @@ export default function SafetyPage() {
         rowKey={i => i.id}
         loading={loading}
         defaultSort={{ key: 'date', dir: 'desc' }}
-        empty={<EmptyState title="No incidents match these filters" text="Clear the search or filters to see more." action={<Button onClick={clearIncidentFilters}>Clear filters</Button>} />}
+        empty={<EmptyState title="No incidents match these filters" action={<Button onClick={clearIncidentFilters}>Clear filters</Button>} />}
       />
     );
   }
 
   // ── Toolbox talks ──
   const talkColumns: Column<ToolboxTalk>[] = [
-    { key: 'topic', header: 'Topic', primary: true, phone: 'show', render: t => t.topic || '—' },
+    { key: 'topic', header: 'Topic', primary: true, phone: 'show', render: t => t.topic || null },
     { key: 'talk_date', header: 'Date', phone: 'show', accessor: t => t.talk_date || '', render: t => <span className="sfMuted" style={{ whiteSpace: 'nowrap' }}>{fmtDate(t.talk_date)}</span> },
-    { key: 'conducted_by', header: 'Presenter', render: t => t.conducted_by || <span className="sfMuted">—</span> },
+    { key: 'conducted_by', header: 'Presenter', render: t => t.conducted_by || null },
     { key: 'attendee_count', header: 'Attendees', align: 'right', phone: 'show', total: 'sum', accessor: t => t.attendee_count, render: t => <span style={{ display: 'inline-flex', alignItems: 'center', gap: 6 }}><UsersThree size={13} />{t.attendee_count}</span> },
-    { key: 'notes', header: 'Notes', phone: 'hide', render: t => t.notes ? <span className="sfClamp sfMuted" title={t.notes}>{t.notes}</span> : <span className="sfMuted">—</span> },
+    { key: 'notes', header: 'Notes', phone: 'hide', render: t => t.notes ? <span className="sfClamp sfMuted" title={t.notes}>{t.notes}</span> : null },
   ];
 
   // ── Corrective actions ──
@@ -613,7 +617,7 @@ export default function SafetyPage() {
           { label: 'Safety' },
         ]}
         title="Safety"
-        subtitle="Incidents, toolbox talks and OSHA records."
+        subtitle={ctx?.project?.name || undefined}
         actions={
           <>
             <Button variant="ghost" icon={<FilePdf size={15} weight="bold" />} onClick={handleGenerateJHA}>Generate JHA</Button>
@@ -649,7 +653,6 @@ export default function SafetyPage() {
                     {incidentFiltersActive && <Button variant="ghost" size="sm" onClick={clearIncidentFilters}>Clear</Button>}
                   </>
                 }
-                actions={<span className="sfMuted" style={{ fontSize: 'var(--fs-sm)' }}>{filteredIncidents.length} of {incidents.length}</span>}
               />
             )}
             <Card flush>{incidentBody}</Card>
@@ -703,7 +706,6 @@ export default function SafetyPage() {
                     ]}
                   />
                 }
-                actions={<span className="sfMuted" style={{ fontSize: 'var(--fs-sm)' }}>{filteredActions.length} of {actions.length}</span>}
               />
             )}
             <Card
@@ -726,7 +728,6 @@ export default function SafetyPage() {
                   <EmptyState
                     icon={<Wrench size={22} />}
                     title="No corrective actions"
-                    text="Incidents create them, or add one directly."
                     action={<Button icon={<Plus size={15} weight="bold" />} onClick={openCA}>Add Corrective Action</Button>}
                   />
                 ) : (

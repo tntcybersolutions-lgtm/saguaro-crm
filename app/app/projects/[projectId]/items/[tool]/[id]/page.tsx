@@ -42,9 +42,18 @@ function display(f: ItemField, v: unknown): string {
   }
 }
 
+/** A stored user id (some rows keep the creator's id, not a name) means
+ *  nothing to a reader, so it is never shown as a value. */
+const ID_RE = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
+/** Ball in court holding a status word ("closed") is an old import, not a person. */
+const STATUS_WORD = /^(open|closed|answered|approved|rejected|draft|submitted|pending|completed|verified|void|n\/a|none)$/i;
+
 /** Nothing filled in: null, missing or blank text. A 0, a "No" and a date are values. */
-function isEmpty(v: unknown): boolean {
-  return v === null || v === undefined || (typeof v === 'string' && v.trim() === '');
+function isEmpty(v: unknown, key?: string): boolean {
+  if (v === null || v === undefined) return true;
+  if (typeof v !== 'string') return false;
+  const t = v.trim();
+  return t === '' || ID_RE.test(t) || (key === 'ball_in_court' && STATUS_WORD.test(t));
 }
 
 function inputValue(f: ItemField, v: unknown): string {
@@ -163,9 +172,9 @@ export default function ItemPage() {
 
   /* Read mode shows only what is filled in (Edit shows every field). The
      status cell always stays: it is where the record stands. */
-  const strip = tool.fields.filter((f) => f.strip && (f.key === tool.statusKey || !isEmpty(item[f.key])));
-  const body = tool.fields.filter((f) => !f.strip && !isEmpty(item[f.key]));
-  const emptyCount = tool.fields.filter((f) => !f.strip && isEmpty(item[f.key]) && tool.edit.includes(f.key)).length;
+  const strip = tool.fields.filter((f) => f.strip && (f.key === tool.statusKey || !isEmpty(item[f.key], f.key)));
+  const body = tool.fields.filter((f) => !f.strip && !isEmpty(item[f.key], f.key));
+  const emptyCount = tool.fields.filter((f) => !f.strip && isEmpty(item[f.key], f.key) && tool.edit.includes(f.key)).length;
   const late = overdue(tool, item);
   const num = item[tool.numberKey];
   const title = String(item[tool.titleKey] || '').trim() || tool.noun;
@@ -334,7 +343,7 @@ function CommentsTab({ type, id, projectId, tool, comments, reload, show }: {
   return (
     <section className="ip-section" aria-label="Comments">
       {comments === null ? <div className="ip-loading">Loading comments…</div> : comments.length === 0 ? (
-        <p className="ip-muted">No comments yet. Questions, answers and files about this {tool.noun.toLowerCase()} go here, and everyone on the job sees them.</p>
+        <p className="ip-muted">No comments yet.</p>
       ) : (
         <ol className="ip-thread">
           {comments.map((c) => (
@@ -449,12 +458,12 @@ const CSS = `
 .ip-compose textarea{font-size:16px}
 .ip-compose-row,.ip-row-head{display:flex;align-items:center;gap:12px;flex-wrap:wrap}
 .ip-spacer{flex:1}
-.ip-file-btn{position:relative;display:inline-flex;align-items:center;gap:6px;min-height:40px;padding:0 12px;border:1px solid var(--border-default);border-radius:8px;color:var(--text-secondary);font-size:14px;font-weight:600;cursor:pointer;overflow:hidden}
+.ip-file-btn{position:relative;display:inline-flex;align-items:center;gap:6px;min-height:44px;padding:0 12px;border:1px solid var(--border-default);border-radius:8px;color:var(--text-secondary);font-size:14px;font-weight:600;cursor:pointer;overflow:hidden}
 .ip-file-btn:hover{color:var(--text-primary)}
 .ip-file-btn input{position:absolute;inset:0;opacity:0;cursor:pointer}
-.ip-check{display:inline-flex;align-items:center;gap:6px;font-size:14px;color:var(--text-secondary)}
-.ip-check input{accent-color:var(--brand-primary);width:16px;height:16px}
-.ip-icon-btn{display:inline-flex;align-items:center;justify-content:center;width:32px;height:32px;border:0;border-radius:6px;background:transparent;color:var(--text-tertiary);cursor:pointer}
+.ip-check{display:inline-flex;align-items:center;gap:8px;min-height:44px;font-size:14px;color:var(--text-secondary);cursor:pointer}
+.ip-check input{accent-color:var(--success);width:20px;height:20px}
+.ip-icon-btn{display:inline-flex;align-items:center;justify-content:center;width:40px;height:40px;border:0;border-radius:6px;background:transparent;color:var(--text-tertiary);cursor:pointer}
 .ip-icon-btn:hover{color:var(--text-primary);background:var(--bg-surface-2)}
 .ip-list{list-style:none;margin:8px 0 0;padding:0}
 .ip-list li{display:grid;grid-template-columns:auto minmax(0,1fr) auto auto;align-items:center;gap:12px;min-height:48px;border-bottom:1px solid var(--border-default);font-size:14px;color:var(--text-secondary)}

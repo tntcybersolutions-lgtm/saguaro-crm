@@ -36,8 +36,8 @@ interface Spec {
 
 const STATUS_TONE: Record<string, BadgeTone> = {
   draft: 'neutral',
-  issued: 'under_contract',
-  revised: 'under_contract',
+  issued: 'neutral',
+  revised: 'lead',
   approved: 'ongoing',
 };
 const cap = (s: string) => (s ? s.charAt(0).toUpperCase() + s.slice(1) : '—');
@@ -218,12 +218,12 @@ export default function SpecsPage() {
   ];
 
   const columns: Column<Spec>[] = [
-    { key: 'section', header: 'Section #', primary: true, phone: 'show', width: 130, accessor: (s) => s.section, render: (s) => s.section || '—' },
-    { key: 'title', header: 'Title', phone: 'show', render: (s) => s.title || '—' },
-    { key: 'division', header: 'Division', accessor: (s) => specDiv(s) || s.division, render: (s) => { const c = specDiv(s); return c ? `${c} — ${divName(c)}` : (s.division || '—'); } },
+    { key: 'section', header: 'Section #', primary: true, phone: 'show', width: 130, accessor: (s) => s.section, render: (s) => s.section || null },
+    { key: 'title', header: 'Title', phone: 'show', render: (s) => s.title || null },
+    { key: 'division', header: 'Division', accessor: (s) => specDiv(s) || s.division, render: (s) => { const c = specDiv(s); return c ? `${c} — ${divName(c)}` : (s.division || null); } },
     { key: 'status', header: 'Status', phone: 'show', accessor: (s) => cap(s.status), render: (s) => <Badge tone={STATUS_TONE[s.status] || 'neutral'} dot>{cap(s.status)}</Badge> },
     { key: 'last_updated', header: 'Last updated', accessor: (s) => s.last_updated || '', render: (s) => fmtDay(s.last_updated) },
-    { key: 'related_submittals', header: 'Submittals', accessor: (s) => (s.related_submittals || []).join(', '), render: (s) => (s.related_submittals && s.related_submittals.length > 0 ? s.related_submittals.join(', ') : '—') },
+    { key: 'related_submittals', header: 'Submittals', accessor: (s) => (s.related_submittals || []).join(', '), render: (s) => (s.related_submittals && s.related_submittals.length > 0 ? s.related_submittals.join(', ') : null) },
   ];
 
   const rowActions = (s: Spec): Action[] => [
@@ -249,7 +249,7 @@ export default function SpecsPage() {
           text={pkgs.length > 0
             ? `Your ${pkgs.length} bid package${pkgs.length === 1 ? ' references' : 's reference'} ${pkgDivisions.size > 0 ? `${pkgDivisions.size} CSI division${pkgDivisions.size === 1 ? '' : 's'}` : 'the CSI divisions'} — add a section per division.`
             : 'Add sections by CSI MasterFormat number.'}
-          action={<Button variant="primary" icon={<Plus size={15} weight="bold" />} onClick={openForm}>Add section</Button>}
+          action={<Button icon={<Plus size={15} weight="bold" />} onClick={openForm}>Add section</Button>}
         />
       ) : (
         <EmptyState title="Nothing matches" text="Change the search or the status filter." action={<Button onClick={() => { setSearch(''); setStatusFilter('all'); }}>Clear filters</Button>} />
@@ -267,10 +267,10 @@ export default function SpecsPage() {
           { label: 'Specifications' },
         ]}
         title="Spec sections"
-        subtitle={specs.length > 0 ? `${specs.length} section${specs.length === 1 ? '' : 's'} across ${coveredDivisions} of ${DIV_CODES.length} CSI divisions.` : 'Project specifications organized by CSI division.'}
+        subtitle={specs.length > 0 ? `${specs.length} section${specs.length === 1 ? '' : 's'} across ${coveredDivisions} of ${DIV_CODES.length} CSI divisions.` : (ctx?.project?.name || undefined)}
         actions={<Button variant="primary" icon={<Plus size={15} weight="bold" />} onClick={openForm}>Add section</Button>}
       >
-        <StatRow items={stats} />
+        {(loading || specs.length > 0) && <StatRow items={stats} />}
 
         {!loading && specs.length > 0 && (
           <>
@@ -287,7 +287,6 @@ export default function SpecsPage() {
                 <Select aria-label="Status" value={statusFilter} onChange={e => setStatusFilter(e.target.value)} style={{ width: 'auto', minWidth: 150 }}
                   options={[{ value: 'all', label: 'All statuses' }, { value: 'draft', label: 'Draft' }, { value: 'issued', label: 'Issued' }, { value: 'revised', label: 'Revised' }, { value: 'approved', label: 'Approved' }]} />
               }
-              actions={<span style={{ fontSize: 'var(--fs-sm)', color: 'var(--text-tertiary)' }}>{filtered.length} of {specs.length}</span>}
             />
           </>
         )}

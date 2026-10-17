@@ -9,7 +9,7 @@
  * FileDropzone, so big drawing sets upload straight to storage.
  */
 import React, { useCallback, useEffect, useState } from 'react';
-import { SectionCard, goldButtonStyle, ghostButtonStyle } from '@/components/ui/premium';
+import { SectionCard, goldButtonStyle, ghostButtonStyle, secondaryButtonStyle } from '@/components/ui/premium';
 import { FileDropzone } from '@/components/FileDropzone';
 import { PaperPlaneTilt, DownloadSimple, Plus, Paperclip } from '@phosphor-icons/react';
 
@@ -79,10 +79,9 @@ export default function PermitCorrespondence({ projectId }: { projectId: string 
   return (
     <SectionCard
       title="Architect & City Correspondence"
-      subtitle="Every document and message sent to or received from the architect and the AHJ — tracked here."
       icon={<PaperPlaneTilt size={17} weight="duotone" color="var(--text-secondary)" />}
       action={
-        <button onClick={() => setOpen((v) => !v)} className="pmBtn" style={open ? ghostButtonStyle : goldButtonStyle}>
+        <button onClick={() => setOpen((v) => !v)} className="pmBtn" style={{ ...(open ? ghostButtonStyle : secondaryButtonStyle), minHeight: 44 }}>
           {open ? 'Cancel' : <><Plus size={15} weight="bold" /> Log Correspondence</>}
         </button>
       }
@@ -91,7 +90,7 @@ export default function PermitCorrespondence({ projectId }: { projectId: string 
       {msg && <div style={{ marginBottom: 12, fontSize: 13, color: 'var(--text-primary)' }}>{msg}</div>}
 
       {open && (
-        <div style={{ display: 'grid', gap: 12, marginBottom: 18, padding: 16, border: `1px solid ${BORDER}`, borderRadius: 12, background: 'rgba(255,255,255,0.02)' }}>
+        <div style={{ display: 'grid', gap: 12, marginBottom: 18, padding: '4px 0 16px', borderBottom: '1px solid var(--border-default)' }}>
           <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(160px, 1fr))', gap: 12 }}>
             <select value={direction} onChange={(e) => setDirection(e.target.value as any)} aria-label="Direction">
               <option value="outbound">Sent — to them</option>
@@ -124,17 +123,17 @@ export default function PermitCorrespondence({ projectId }: { projectId: string 
       )}
 
       {loading ? (
-        <div style={{ padding: 24, color: 'var(--text-tertiary)', fontSize: 13 }}>Loading…</div>
+        <div style={{ padding: '12px 0', color: 'var(--text-tertiary)', fontSize: 14 }}>Loading…</div>
       ) : items.length === 0 ? (
-        <div style={{ padding: 24, color: 'var(--text-tertiary)', fontSize: 13 }}>No correspondence logged yet. Use “Log Correspondence” to record what you send to and receive from the architect or the city.</div>
+        <div style={{ padding: '12px 0', color: 'var(--text-secondary)', fontSize: 14 }}>Nothing sent or received yet.</div>
       ) : (
-        <div style={{ display: 'grid', gap: 8 }}>
+        <div style={{ display: 'grid' }}>
           {items.map((c) => {
             const inbound = c.direction === 'inbound';
-            const tone = inbound ? 'var(--success)' : GOLD;
+            const tone = inbound ? 'var(--success)' : 'var(--text-secondary)';
             const n = Array.isArray(c.document_ids) ? c.document_ids.length : 0;
             return (
-              <div key={c.id} style={{ display: 'flex', gap: 12, alignItems: 'flex-start', padding: '11px 14px', borderRadius: 10, background: 'rgba(255,255,255,0.03)', border: `1px solid ${BORDER}` }}>
+              <div key={c.id} style={{ display: 'flex', gap: 12, alignItems: 'flex-start', padding: '12px 0', borderBottom: '1px solid var(--border-subtle)' }}>
                 <span title={inbound ? 'Received' : 'Sent'} style={{ flexShrink: 0, marginTop: 2, color: tone }}>
                   {inbound ? <DownloadSimple size={16} weight="bold" /> : <PaperPlaneTilt size={16} weight="bold" />}
                 </span>
@@ -142,7 +141,7 @@ export default function PermitCorrespondence({ projectId }: { projectId: string 
                   <div style={{ fontSize: 14, fontWeight: 700, color: 'var(--text-primary)' }}>{c.subject}</div>
                   <div style={{ fontSize: 12, color: 'var(--text-tertiary)', marginTop: 2 }}>
                     <span style={{ color: tone, fontWeight: 700 }}>{inbound ? 'From' : 'To'} {c.party_name || c.party || 'AHJ'}</span>
-                    {' · '}{new Date(c.created_at).toLocaleDateString()}
+                    {' · '}{new Date(c.created_at).toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' })}
                     {n > 0 && <> · <Paperclip size={11} weight="bold" /> {n}</>}
                     {c.created_by_name && <> · {c.created_by_name}</>}
                   </div>
