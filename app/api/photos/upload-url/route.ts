@@ -3,6 +3,8 @@ import { createServerClient } from '@/lib/supabase-server';
 import { requirePermission } from '@/lib/permissions';
 import { apiError } from '@/lib/api-error';
 import { PHOTO_BUCKET, safeObjectName } from '@/lib/photo-store';
+import { readClientId } from '@/lib/offline/client-id';
+import { signFields } from '@/lib/storage-signing';
 
 export const runtime = 'nodejs';
 
@@ -40,6 +42,20 @@ export async function POST(req: NextRequest) {
       .maybeSingle();
     if (projErr) throw projErr;
     if (!project) return NextResponse.json({ error: 'Project not found' }, { status: 404 });
+
+    // A photo kept on the phone and sent again: the first send already filed it.
+    // Say so before the phone uploads the same bytes a second time.
+    const clientId = readClientId(req.headers, body);
+    if (clientId) {
+      const { data: hits, error: findErr } = await db.from('photos').select('*')
+        .eq('tenant_id', user.tenantId).eq('client_id' as never, clientId as never).limit(1);
+      if (findErr) throw findErr;
+      const hit = ((hits as Record<string, unknown>[] | null) || [])[0];
+      if (hit) {
+        const [signed] = await signFields([hit], ['url', 'thumbnail_url'], 3600, { strict: false });
+        return NextResponse.json({ existing: signed ?? hit });
+      }
+    }
 
     const path = `${user.tenantId}/projects/${projectId}/photo-staging/${Date.now()}-${Math.random().toString(36).slice(2, 8)}-${safeObjectName(fileName)}`;
     const { data, error } = await db.storage.from(PHOTO_BUCKET).createSignedUploadUrl(path);

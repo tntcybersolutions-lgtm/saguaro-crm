@@ -6,6 +6,7 @@ import { apiError } from '@/lib/api-error';
 import { signFields } from '@/lib/storage-signing';
 import { storePhoto, downloadStaged, removeQuietly, PhotoStoreError } from '@/lib/photo-store';
 import { readFix } from '@/lib/photo-gps';
+import { readClientId, isUniqueViolation } from '@/lib/offline/client-id';
 
 // sharp re-encode of a big original; the bytes come from storage, not the request.
 export const runtime = 'nodejs';
@@ -52,6 +53,24 @@ export async function POST(req: NextRequest) {
     if (projErr) throw projErr;
     if (!project) return NextResponse.json({ error: 'Project not found' }, { status: 404 });
 
+    // Sent again from the phone's outbox after the first send already filed it:
+    // return that photo, drop the second staged copy, write nothing.
+    const clientId = readClientId(req.headers, body);
+    const filedByThisPhone = async () => {
+      if (!clientId) return null;
+      const { data: hits, error: findErr } = await db.from('photos').select('*')
+        .eq('tenant_id', user.tenantId).eq('client_id' as never, clientId as never).limit(1);
+      if (findErr) throw findErr;
+      return ((hits as Record<string, unknown>[] | null) || [])[0] ?? null;
+    };
+    const replay = async (photo: Record<string, unknown>) => {
+      await removeQuietly(db, [path]);
+      const [signed] = await signFields([photo], ['url', 'thumbnail_url'], 3600, { strict: false });
+      return NextResponse.json({ success: true, photo: signed ?? photo, replayed: true });
+    };
+    const earlier = await filedByThisPhone();
+    if (earlier) return replay(earlier);
+
     const album = ALBUMS.has(str('album')) ? str('album') : 'General';
     const title = str('title').slice(0, 200);
     const takenAtRaw = str('takenAt');
@@ -78,8 +97,17 @@ export async function POST(req: NextRequest) {
           ...(title ? { title } : {}),
           album,
           ...(str('description') ? { description: str('description').slice(0, 4000) } : {}),
+          ...(clientId ? { client_id: clientId } : {}),
         },
       });
+    } catch (e: unknown) {
+      // Two sends of the same photo raced; the other one filed it.
+      const cause = e instanceof PhotoStoreError ? e.detail : e;
+      if (clientId && isUniqueViolation(cause)) {
+        const raced = await filedByThisPhone();
+        if (raced) return replay(raced);
+      }
+      throw e;
     } finally {
       // The display copy + thumbnail are what the job keeps (same as the
       // multipart route); the staged original is not referenced by anything.

@@ -14,6 +14,7 @@ import {
   punchTime,
 } from '@/lib/timeclock/server';
 import { apiError } from '@/lib/api-error';
+import { readClientId } from '@/lib/offline/client-id';
 
 /**
  * POST /api/timeclock/out
@@ -39,6 +40,19 @@ export async function POST(req: NextRequest) {
   try {
     const body = await req.json().catch(() => ({} as Record<string, unknown>));
     const employee = await resolveEmployee(db, g.user);
+
+    // 0) A clock-out kept on the phone and sent again: the shift this tap
+    //    already closed is the answer, not an "you are not on the clock" 409.
+    const clientId = readClientId(req.headers, body);
+    if (clientId) {
+      const { data, error } = await db.from('time_entries').select(SHIFT_COLUMNS)
+        .eq('tenant_id', t).eq('employee_id', employee.id).eq('client_out_id' as never, clientId as never).limit(1);
+      if (error) throw error;
+      const closed = ((data as ShiftRow[] | null) || [])[0];
+      if (closed) {
+        return NextResponse.json({ ok: true, shift: toShift(closed), hours: splitHours(Number(closed.hours_worked ?? 0) || 0), replayed: true });
+      }
+    }
 
     // 1) Find the shift to close — server state only.
     let open: ShiftRow | null = null;
@@ -92,6 +106,7 @@ export async function POST(req: NextRequest) {
         status: 'pending',
         gps_clock_out: gpsPayload(body.lat, body.lng, body.address, body.clientTime, nowIso, savedOffline),
         updated_at: nowIso,
+        ...(clientId ? { client_out_id: clientId } : {}),
       } as never)
       .eq('tenant_id', t)
       .eq('id', open.id)

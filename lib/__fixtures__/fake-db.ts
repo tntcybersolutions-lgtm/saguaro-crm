@@ -1,7 +1,7 @@
 /**
  * In-memory stand-in for the Supabase query builder, for route tests that run
  * the real handlers. Supports the calls our routes make: select/insert/update/
- * upsert/delete, eq/neq/is/in/ilike/gte/or, order/limit, single/maybeSingle.
+ * upsert/delete, eq/neq/is/not/in/ilike/gte/or, order/limit, single/maybeSingle.
  */
 export type Row = Record<string, any>; // eslint-disable-line @typescript-eslint/no-explicit-any
 
@@ -67,6 +67,8 @@ export function makeFakeDb() {
     }
     neq(c: string, v: unknown) { this.filters.push((r) => r[c] !== v); return this; }
     is(c: string, v: unknown) { this.filters.push((r) => (r[c] ?? null) === v); return this; }
+    /** Only the form our routes use: .not(col, 'is', null). */
+    not(c: string, op: string, v: unknown) { if (op === 'is') this.filters.push((r) => (r[c] ?? null) !== v); return this; }
     in(c: string, vs: unknown[]) { this.filters.push((r) => vs.includes(r[c])); return this; }
     ilike(c: string, p: string) { const re = likeToRe(p); this.filters.push((r) => re.test(String(r[c] ?? ''))); return this; }
     gte(c: string, v: unknown) { this.filters.push((r) => r[c] >= (v as number)); return this; }
@@ -94,6 +96,12 @@ export function makeFakeDb() {
             if (t.some((x) => x.tenant_id === r.tenant_id && x.from_type === r.from_type && x.from_id === r.from_id && x.to_type === r.to_type && x.to_id === r.to_id)) {
               return { data: null, error: { code: '23505', message: 'duplicate key' } };
             }
+          }
+        }
+        // The partial unique (tenant_id, client_id) index every offline-written table carries.
+        for (const r of rows) {
+          if (r.client_id != null && t.some((x) => x.tenant_id === r.tenant_id && x.client_id === r.client_id)) {
+            return { data: null, error: { code: '23505', message: `duplicate key value violates unique constraint "${this.table}_tenant_client_id_key"` } };
           }
         }
         t.push(...rows); out = rows;

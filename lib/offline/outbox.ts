@@ -17,6 +17,7 @@ import { step } from '@/lib/ui/status';
 import { describeRequest } from '@/lib/ui/status-labels';
 import { STATUS_HEADER, reasonFromResponse } from '@/lib/ui/status-fetch';
 import { SAVED_AT_HEADER } from '@/lib/offline/saved-at';
+import { CLIENT_ID_HEADER, clientIdFor, newClientId } from '@/lib/offline/client-id';
 
 export interface OutboxItem {
   id: string;
@@ -35,6 +36,8 @@ export interface OutboxItem {
   lastError?: string;
   /** GPS stamp taken when the photo was kept on the phone (lib/photo-gps.ts). */
   location?: { lat: number; lng: number } | null;
+  /** The phone's id for this photo — every send carries it, so the server files it once. */
+  clientId?: string;
 }
 
 /** The waiting photo or video as a File again, whichever way it was kept. */
@@ -52,6 +55,8 @@ export interface NetState {
   synced: number;
   /** When `online` last flipped (ms). */
   changedAt: number;
+  /** Items that stopped retrying (refused MAX_ATTEMPTS times) — they need a Retry. */
+  failed: number;
 }
 
 /** A write (create / edit / delete) kept on the phone until it can be sent. */
@@ -72,6 +77,8 @@ export interface SavedRequest {
   createdAt: number;
   attempts: number;
   lastError?: string;
+  /** The phone's id for this write — sent on every try, so a replay never makes a second row. */
+  clientId?: string;
 }
 
 const DB = 'saguaro-offline';
@@ -113,7 +120,8 @@ export const CANNOT_KEEP = "No signal, and this phone couldn't keep a copy of it
 export async function addToOutbox(o: Omit<OutboxItem, 'id' | 'createdAt' | 'attempts' | 'file' | 'bytes'> & { file: Blob }): Promise<string> {
   const id = `${Date.now()}-${Math.random().toString(36).slice(2, 9)}`;
   const { file, ...meta } = o;
-  const base = { ...meta, id, createdAt: Date.now(), attempts: 0 };
+  // Same id the first (failed) upload of this pick was sent with, if there was one.
+  const base = { ...meta, id, createdAt: Date.now(), attempts: 0, clientId: meta.clientId ?? clientIdFor(file) };
   try {
     await tx('readwrite', (s) => s.put({ ...base, file }));
   } catch {
@@ -176,6 +184,43 @@ export async function removeSaved(id: string): Promise<void> {
   await refreshPending();
 }
 
+/** Try a saved write again that stopped retrying, and send it now if there's signal. */
+export async function retrySaved(id: string): Promise<void> {
+  const cur = (await tx('readonly', (s) => s.get(id), REQS)) as SavedRequest | undefined;
+  if (!cur) return;
+  await tx('readwrite', (s) => s.put({ ...cur, attempts: 0, lastError: undefined }), REQS);
+  await refreshPending();
+  if (!isOffline()) void drainOutbox();
+}
+
+/** Everything that stopped retrying, oldest first — for the sync line's list. */
+export async function listStuck(): Promise<Array<{ id: string; what: 'write' | 'media'; label: string; error?: string; createdAt: number }>> {
+  try {
+    const writes = (await listSaved()).filter((r) => r.attempts >= MAX_ATTEMPTS)
+      .map((r) => ({ id: r.id, what: 'write' as const, label: r.label, error: r.lastError, createdAt: r.createdAt }));
+    const media = (await listOutbox()).filter((i) => i.attempts >= MAX_ATTEMPTS)
+      .map((i) => ({ id: i.id, what: 'media' as const, label: i.kind === 'video' ? `Video ${i.name}` : `Photo ${i.name}`, error: i.lastError, createdAt: i.createdAt }));
+    return [...writes, ...media].sort((a, b) => a.createdAt - b.createdAt);
+  } catch {
+    return [];
+  }
+}
+
+/** Retry every item that stopped retrying. */
+export async function retryAllStuck(): Promise<void> {
+  for (const it of await listStuck()) {
+    if (it.what === 'write') {
+      const cur = (await tx('readonly', (s) => s.get(it.id), REQS)) as SavedRequest | undefined;
+      if (cur) await tx('readwrite', (s) => s.put({ ...cur, attempts: 0, lastError: undefined }), REQS);
+    } else {
+      const cur = (await tx('readonly', (s) => s.get(it.id))) as OutboxItem | undefined;
+      if (cur) await tx('readwrite', (s) => s.put({ ...cur, attempts: 0, lastError: undefined }));
+    }
+  }
+  await refreshPending();
+  if (!isOffline()) void drainOutbox();
+}
+
 /** The id a screen gives a row that is only on this phone. */
 export const savedRowId = (id: string) => `offline-${id}`;
 export const savedIdOf = (rowId: string): string | null => (rowId.startsWith('offline-') ? rowId.slice(8) : null);
@@ -187,14 +232,17 @@ export const savedIdOf = (rowId: string): string | null => (rowId.startsWith('of
  */
 export async function sendOrSave(r: {
   url: string; method: SavedRequest['method']; body?: unknown; projectId?: string | null; kind: string; label: string; row?: Record<string, unknown>; recordId?: string;
+  /** The write's id on this phone. Left out: a fresh one. The same id goes on the first try and every replay. */
+  clientId?: string;
 }): Promise<{ saved: true; id: string } | { saved: false; response: Response }> {
   const body = r.body === undefined ? null : typeof r.body === 'string' ? r.body : JSON.stringify(r.body);
+  const clientId = r.clientId ?? newClientId();
   // This write is one step in the status box; it says itself whether it went or stayed on the phone.
   const words = describeRequest(r.method, r.url) ?? { doing: r.label, done: r.label, failed: `Couldn't send: ${r.label}` };
   const h = step(words.doing);
   if (!isOffline()) {
     try {
-      const response = await fetch(r.url, { method: r.method, headers: { 'Content-Type': 'application/json', [STATUS_HEADER]: 'off', ...(await getAuthHeaders()) }, body: body ?? undefined });
+      const response = await fetch(r.url, { method: r.method, headers: { 'Content-Type': 'application/json', [STATUS_HEADER]: 'off', [CLIENT_ID_HEADER]: clientId, ...(await getAuthHeaders()) }, body: body ?? undefined });
       if (response.ok) h.done(words.done);
       else void reasonFromResponse(response).then((why) => h.fail(words.failed, why));
       return { saved: false, response };
@@ -206,7 +254,7 @@ export async function sendOrSave(r: {
   try {
     await tx('readwrite', (s) => s.put({
       id, projectId: r.projectId ?? null, kind: r.kind, label: r.label, url: r.url, method: r.method, body,
-      row: r.row, recordId: r.recordId, createdAt: Date.now(), attempts: 0,
+      row: r.row, recordId: r.recordId, createdAt: Date.now(), attempts: 0, clientId,
     } satisfies SavedRequest), REQS);
   } catch (e) {
     h.fail(words.failed, 'No signal, and this phone could not keep a copy. Try again when you have signal.', true);
@@ -222,7 +270,7 @@ async function noteFailure(item: OutboxItem, message: string): Promise<void> {
 }
 
 // ── connection state ─────────────────────────────────────────────────────────
-let state: NetState = { online: true, pending: 0, syncing: false, synced: 0, changedAt: 0 };
+let state: NetState = { online: true, pending: 0, syncing: false, synced: 0, changedAt: 0, failed: 0 };
 const subs = new Set<() => void>();
 function set(p: Partial<NetState>) {
   state = { ...state, ...p };
@@ -245,9 +293,11 @@ export function looksLikeNetworkError(e: unknown): boolean {
 
 export async function refreshPending(): Promise<void> {
   try {
-    const media = (await listOutbox()).filter((i) => i.attempts < MAX_ATTEMPTS).length;
-    const writes = (await listSaved()).filter((r) => r.attempts < MAX_ATTEMPTS).length;
-    set({ pending: media + writes });
+    const allMedia = await listOutbox();
+    const allWrites = await listSaved();
+    const media = allMedia.filter((i) => i.attempts < MAX_ATTEMPTS).length;
+    const writes = allWrites.filter((r) => r.attempts < MAX_ATTEMPTS).length;
+    set({ pending: media + writes, failed: allMedia.length + allWrites.length - media - writes });
   } catch { /* no IndexedDB (private mode): nothing can be pending */ }
 }
 
@@ -280,7 +330,7 @@ async function drainOnce(): Promise<{ done: number; failed: number }> {
   for (const w of writes) {
     try {
       // SAVED_AT_HEADER: when it was really done, so a punch kept on the phone keeps its time.
-      const res = await fetch(w.url, { method: w.method, headers: { 'Content-Type': 'application/json', [STATUS_HEADER]: 'off', [SAVED_AT_HEADER]: new Date(w.createdAt).toISOString(), ...(await getAuthHeaders()) }, body: w.body ?? undefined });
+      const res = await fetch(w.url, { method: w.method, headers: { 'Content-Type': 'application/json', [STATUS_HEADER]: 'off', [SAVED_AT_HEADER]: new Date(w.createdAt).toISOString(), ...(w.clientId ? { [CLIENT_ID_HEADER]: w.clientId } : {}), ...(await getAuthHeaders()) }, body: w.body ?? undefined });
       if (!res.ok && res.status !== 404) {
         // 404 on an edit/delete: the record is already gone — nothing left to do.
         const text = await res.text().catch(() => '');
@@ -306,7 +356,7 @@ async function drainOnce(): Promise<{ done: number; failed: number }> {
     try {
       const file = outboxFile(item);
       if (item.kind === 'video') await uploadVideo(file, { projectId: item.projectId });
-      else await uploadPhoto(file, { projectId: item.projectId, album: item.album || undefined, location: item.location ?? null });
+      else await uploadPhoto(file, { projectId: item.projectId, album: item.album || undefined, location: item.location ?? null, clientId: item.clientId ?? item.id });
       // Off the phone the moment it is on the server, so a later run can't send it again.
       await tx('readwrite', (s) => s.delete(item.id));
       done++;
@@ -340,9 +390,18 @@ export function startOfflineWatch(): () => void {
   void refreshPending().then(() => { if (!isOffline()) void drainOutbox(); });
   // A phone that "has signal" but no data never fires 'online' again: retry quietly.
   const timer = window.setInterval(() => { if (!isOffline() && state.pending > 0) void drainOutbox(); }, 60_000);
+  // Back in the app (unlocked the phone, switched back from the camera): send now.
+  const onFocus = () => {
+    if (typeof document !== 'undefined' && document.visibilityState === 'hidden') return;
+    void refreshPending().then(() => { if (!isOffline() && state.pending > 0) void drainOutbox(); });
+  };
+  window.addEventListener('focus', onFocus);
+  document.addEventListener('visibilitychange', onFocus);
   return () => {
     window.removeEventListener('online', flip);
     window.removeEventListener('offline', flip);
+    window.removeEventListener('focus', onFocus);
+    document.removeEventListener('visibilitychange', onFocus);
     window.clearInterval(timer);
   };
 }

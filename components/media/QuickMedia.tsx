@@ -30,6 +30,7 @@ import MediaUploadPanel from '@/components/media/MediaUploadPanel';
 import { useUploadQueue } from '@/lib/useUploadQueue';
 import { uploadPhoto, uploadVideo, mediaKindOf } from '@/lib/media-upload';
 import { addToOutbox, isOffline, looksLikeNetworkError } from '@/lib/offline/outbox';
+import { loadJobs } from '@/lib/offline/last-known';
 import { photoFix } from '@/lib/photo-gps';
 import { useToast } from '@/components/Toast';
 
@@ -89,10 +90,10 @@ export default function QuickMedia() {
   useEffect(() => {
     if (!open || jobs) return;
     let alive = true;
-    fetch('/api/projects?limit=200&fields=id,name', { credentials: 'include' })
-      .then((r) => (r.ok ? r.json() : { projects: [] }))
-      .then((j) => { if (alive) setJobs(((j?.projects || []) as Job[]).filter((p) => p?.id && p.name)); })
-      .catch(() => { if (alive) setJobs([]); });
+    // No signal: the last job list this phone saw, so a photo can still be taken for a job.
+    loadJobs('/api/projects?limit=200&fields=id,name')
+      .then(({ jobs: list }) => { if (alive) setJobs((list as Job[]).filter((p) => p?.id && p.name)); })
+      .catch((e) => { console.warn('[quick-media] no job list', e); if (alive) setJobs([]); });
     return () => { alive = false; };
   }, [open, jobs]);
 
