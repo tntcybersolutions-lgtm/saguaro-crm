@@ -31,7 +31,7 @@ const CSS = `
 .mdc-body{flex:1;overflow-y:auto;padding:6px 20px 24px;overscroll-behavior:contain}
 .mdc-sec{padding:18px 0 4px}
 .mdc-sec + .mdc-sec{border-top:1px solid var(--border-subtle)}
-.mdc-lbl{display:flex;align-items:baseline;justify-content:space-between;margin:0 0 10px;font-size:11.5px;font-weight:900;letter-spacing:.12em;text-transform:uppercase;color:var(--text-tertiary)}
+.mdc-lbl{display:flex;align-items:baseline;justify-content:space-between;margin:0 0 10px;font-size:12px;font-weight:900;letter-spacing:.12em;text-transform:uppercase;color:var(--text-tertiary)}
 .mdc-lbl span{letter-spacing:0;text-transform:none;font-weight:700;color:var(--text-tertiary)}
 .mdc-list{list-style:none;margin:0;padding:0;display:flex;flex-direction:column;gap:6px}
 .mdc-item{display:grid;grid-template-columns:28px 36px minmax(0,1fr) auto auto;align-items:center;gap:10px;padding:8px 8px 8px 4px;border-radius:12px;background:rgba(255,255,255,.025);border:1px solid transparent;transition:border-color .15s,background .15s,opacity .15s,transform .15s}
@@ -66,14 +66,14 @@ const CSS = `
 .mdc-row span{display:block;font-size:12.5px;color:var(--text-tertiary)}
 .mdc-hours{display:grid;grid-template-columns:1fr 1fr;gap:10px}
 .mdc-step{display:flex;align-items:center;justify-content:space-between;gap:6px;padding:6px;border-radius:14px;background:rgba(255,255,255,.04);border:1px solid var(--border-subtle)}
-.mdc-step em{display:block;font-style:normal;font-size:10.5px;font-weight:900;letter-spacing:.12em;text-transform:uppercase;color:var(--text-tertiary);text-align:center}
+.mdc-step em{display:block;font-style:normal;font-size:12px;font-weight:900;letter-spacing:.12em;text-transform:uppercase;color:var(--text-tertiary);text-align:center}
 .mdc-step b{display:block;font-size:18px;font-weight:900;text-align:center;font-variant-numeric:tabular-nums}
 .mdc-step button{display:grid;place-items:center;width:40px;height:40px;border-radius:10px;border:1px solid var(--border-default);background:none;color:var(--text-primary);cursor:pointer}
 .mdc-step button:hover:not([disabled]){border-color:var(--brand-primary);color:var(--brand-primary)}
 .mdc-step button[disabled]{opacity:.3;cursor:default}
 .mdc-day{position:relative;height:14px;margin:12px 0 22px;border-radius:8px;background:linear-gradient(90deg,var(--md-night) 0%,var(--md-dusk) 25%,var(--border-default) 50%,var(--md-dusk) 75%,var(--md-night) 100%);overflow:visible}
 .mdc-day i{position:absolute;top:0;bottom:0;border-radius:8px;background:linear-gradient(90deg,rgba(232,255,42,.75),rgba(253,186,116,.75));box-shadow:0 0 18px rgba(232,255,42,.35);transition:left .2s,width .2s}
-.mdc-day span{position:absolute;top:20px;font-size:10px;font-weight:900;color:var(--text-tertiary)}
+.mdc-day span{position:absolute;top:20px;font-size:12px;font-weight:900;color:var(--text-tertiary)}
 .mdc-f{display:flex;align-items:center;gap:10px;padding:14px 20px;border-top:1px solid var(--border-subtle);background:var(--md-sheet-foot)}
 .mdc-save{display:inline-flex;align-items:center;gap:6px;font-size:13px;font-weight:700;color:var(--text-tertiary)}
 .mdc-save[data-s=saved]{color:var(--success)}

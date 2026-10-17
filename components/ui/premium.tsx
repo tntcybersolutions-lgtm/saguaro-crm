@@ -152,14 +152,12 @@ export function PremiumSurface({
  * word, no module bar, no margin scribble. On a phone the actions are one
  * row under the title that scrolls sideways inside itself.
  *
- * The concept header: the module icon in a slate tile, the record it belongs
- * to (`eyebrow`, e.g. the job) as a quiet line above the title, the title, then
- * the subtitle. `accent` reads as the rest of the title; `accentColor` and
- * `note` are not drawn; `aux` (a live control or badge) stays under the subtitle.
+ * The header is the title and the subtitle — nothing else. `eyebrow`,
+ * `eyebrowIcon`, `accentColor` and `note` are accepted for callers and not
+ * drawn; `accent` reads as the rest of the title; `aux` (a live control or
+ * badge) stays under the subtitle.
  */
 export function ModuleHero({
-  eyebrow,
-  eyebrowIcon,
   aux,
   title,
   accent,
@@ -182,16 +180,13 @@ export function ModuleHero({
   accentColor?: string;
   style?: React.CSSProperties;
 }) {
+  /* Title + one short line (Chad, 16 Oct 2026: a screen shows, it does not
+     explain). The module tile beside the title and the eyebrow line above it
+     are no longer drawn — the top bar already says where you are. */
   return (
     <div className="pmHead" data-align={align === 'center' ? 'center' : undefined} style={style}>
       <div className="pmHeadLead">
-      {eyebrowIcon && align !== 'center' && (
-        <span className="k-tile pmHeadTile" aria-hidden>
-          {React.isValidElement(eyebrowIcon) ? React.cloneElement(eyebrowIcon as React.ReactElement<{ size?: number }>, { size: 22 }) : eyebrowIcon}
-        </span>
-      )}
       <div className="pmHeadText">
-        {eyebrow && <div className="pmEyebrow">{eyebrow}</div>}
         <h1 className="pmH1">
           {title}
           {accent != null && accent !== '' && <>{' '}{accent}</>}
@@ -206,18 +201,16 @@ export function ModuleHero({
 }
 
 // ─── IconChip ────────────────────────────────────────────────────────────────
-// A tile in a module hue: a low tint of `vivid` (lib/ui/app-accent) with a
-// matching ring, or of the page's accent (--acc) without it — flat, no
-// gradient, no glow.
+// An icon in a module hue (`vivid`, lib/ui/app-accent, or the page's --acc).
+// The glyph alone — no tinted square behind it (16 Oct 2026: no boxed tiles).
 export function IconChip({ children, size = 40, vivid }: { children: React.ReactNode; size?: number; vivid?: string }) {
   return (
     <span
       className="pmChip"
       style={{
         flex: '0 0 auto', display: 'inline-flex', alignItems: 'center', justifyContent: 'center',
-        width: size, height: size, borderRadius: Math.round(size * 0.28),
-        background: `color-mix(in srgb, ${vivid ?? 'var(--acc)'} 16%, var(--bg-surface-2))`,
-        border: `1px solid color-mix(in srgb, ${vivid ?? 'var(--acc)'} 42%, var(--bg-surface-2))`,
+        width: size, height: size,
+        background: 'none', border: 0,
         color: vivid ?? 'var(--acc)',
       }}
     >
@@ -238,7 +231,7 @@ export function vividOf(accentKey?: string | null): string {
  *  colours (green / amber / red / blue) pass through. */
 export function figureColor(accent?: string | null): string | undefined {
   if (!accent) return undefined;
-  return /brand-primary|#FFE[06]00/i.test(accent) ? undefined : accent;
+  return /brand-primary|--gold|--c-yellow|--link\b|--info\b|--acc\b|--mod-|#FFE[06]00|#E8FF2A/i.test(accent) ? undefined : accent;
 }
 
 // ─── StatCard (premium) ──────────────────────────────────────────────────────
@@ -348,7 +341,7 @@ export function SectionCard({
     <div className={tray ? 'pmSec pmSecTray' : 'pmSec'} style={style}>
       {hasHead && (
         <div className="pmSecHead">
-          {icon && <span className="k-tile" aria-hidden style={{ width: 34, height: 34 }}>{icon}</span>}
+          {icon && <span className="k-tile" aria-hidden style={{ width: 22, height: 22 }}>{icon}</span>}
           <div style={{ minWidth: 0, flex: 1 }}>
             {title && <div className="pmSecTitle" role="heading" aria-level={2}>{title}</div>}
             {subtitle && <div className="pmSecSub">{subtitle}</div>}
@@ -392,7 +385,7 @@ export function PremiumEmpty({
   return (
     <div className="pmEmpty" data-tone={tone === 'error' ? 'error' : undefined} role={tone === 'error' ? 'alert' : undefined} style={compact ? { padding: '8px 0' } : undefined}>
       {icon && (
-        <span className="k-tile" aria-hidden style={{ width: 36, height: 36, color: tone === 'error' ? 'var(--danger-fg)' : undefined }}>
+        <span className="k-tile" aria-hidden style={{ width: 20, height: 20, color: tone === 'error' ? 'var(--danger-fg)' : 'var(--text-tertiary)' }}>
           {React.isValidElement(icon) ? React.cloneElement(icon as React.ReactElement<{ size?: number }>, { size: 18 }) : icon}
         </span>
       )}

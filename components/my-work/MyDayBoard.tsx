@@ -114,12 +114,12 @@ const CSS = `
 .md-ring{flex:none;position:relative;width:118px;height:118px;border:0;background:none;padding:0;cursor:pointer;border-radius:50%}
 .md-ring svg{display:block;transform:rotate(-90deg)}
 .md-ring b{position:absolute;inset:0;display:grid;place-items:center;align-content:center;font-size:28px;font-weight:900;font-variant-numeric:tabular-nums;letter-spacing:-.02em}
-.md-ring b small{display:block;margin-top:2px;font-size:10px;font-weight:800;letter-spacing:.12em;text-transform:uppercase;color:var(--md-3)}
+.md-ring b small{display:block;margin-top:2px;font-size:12px;font-weight:800;letter-spacing:.12em;text-transform:uppercase;color:var(--md-3)}
 .md-nums{flex:1;min-width:0;display:grid;grid-template-columns:repeat(5,minmax(0,1fr));gap:0}
 .md-num{position:relative;display:flex;flex-direction:column;align-items:flex-start;gap:6px;min-width:0;padding:10px 18px;border:0;border-left:1px solid var(--md-line);background:none;color:inherit;text-align:left;cursor:pointer;border-radius:0;transition:background .15s}
 .md-num:hover{background:rgba(255,255,255,.035)}
 .md-num b{font-size:clamp(26px,3.2cqi,40px);font-weight:900;line-height:1;font-variant-numeric:tabular-nums;letter-spacing:-.02em;white-space:nowrap}
-.md-num span{font-size:11px;font-weight:800;letter-spacing:.1em;text-transform:uppercase;color:var(--md-3);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;max-width:100%}
+.md-num span{font-size:12px;font-weight:800;letter-spacing:.1em;text-transform:uppercase;color:var(--md-3);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;max-width:100%}
 .md-num span em{font-style:normal}
 .md-short{display:none}
 .md-num[data-tone=red] b{color:var(--md-red)}
@@ -164,7 +164,7 @@ const CSS = `
 .md-sec + .md-sec{border-top:1px solid var(--md-line)}
 .md-sec-h{display:flex;align-items:baseline;gap:12px;margin:0 0 10px}
 .md-sec-h .md-h2{margin:0;font-size:21px;font-weight:900;letter-spacing:-.015em;color:var(--title-section)}
-.md-sec-h .md-when{font-size:11px;font-weight:800;letter-spacing:.12em;text-transform:uppercase;color:var(--md-3)}
+.md-sec-h .md-when{font-size:12px;font-weight:800;letter-spacing:.12em;text-transform:uppercase;color:var(--md-3)}
 .md-sec-h .md-count{margin-left:auto;font-size:13px;font-weight:800;color:var(--md-2);font-variant-numeric:tabular-nums}
 .md-empty{display:flex;align-items:center;gap:10px;padding:14px 0;color:var(--md-2);font-size:14.5px}
 .md-empty svg{color:var(--md-green)}
@@ -211,17 +211,17 @@ const CSS = `
 .md-agenda{position:relative}
 .md-tline{position:relative;height:var(--h,96px);margin:4px 0 0;border-top:1px solid var(--md-line);border-bottom:1px solid var(--md-line);background:repeating-linear-gradient(90deg,transparent 0,transparent calc(var(--hw) - 1px),rgba(255,255,255,.05) calc(var(--hw) - 1px),rgba(255,255,255,.05) var(--hw))}
 .md-hours{position:relative;height:22px;margin-top:6px}
-.md-hours span{position:absolute;top:0;transform:translateX(-50%);font-size:11px;font-weight:800;color:var(--md-3);white-space:nowrap}
+.md-hours span{position:absolute;top:0;transform:translateX(-50%);font-size:12px;font-weight:800;color:var(--md-3);white-space:nowrap}
 .md-ev{position:absolute;display:flex;flex-direction:column;justify-content:center;gap:1px;height:38px;padding:0 10px;border-radius:9px;background:color-mix(in srgb,var(--j) 22%,var(--bg-surface));box-shadow:inset 3px 0 0 var(--j);color:var(--md-text);text-decoration:none;overflow:hidden;min-width:56px;transition:transform .15s}
 .md-ev:hover{transform:translateY(-1px);background:color-mix(in srgb,var(--j) 30%,var(--bg-surface))}
 .md-ev b{font-size:12.5px;font-weight:800;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
-.md-ev span{font-size:11px;color:var(--md-2);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.md-ev span{font-size:12px;color:var(--md-2);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
 .md-ev[data-past=true]{opacity:.5}
 .md-now{position:absolute;top:-6px;bottom:-6px;width:2px;background:var(--md-neon);box-shadow:0 0 12px var(--md-neon);z-index:2}
-.md-now::before{content:attr(data-t);position:absolute;top:-20px;left:50%;transform:translateX(-50%);padding:1px 6px;border-radius:6px;background:var(--md-neon);color:var(--bg-base);font-size:10.5px;font-weight:900;white-space:nowrap}
+.md-now::before{content:attr(data-t);position:absolute;top:-20px;left:50%;transform:translateX(-50%);padding:1px 6px;border-radius:6px;background:var(--md-neon);color:var(--bg-base);font-size:12px;font-weight:900;white-space:nowrap}
 .md-tline-empty{position:absolute;inset:0;display:grid;place-items:center;color:var(--md-3);font-size:13px;font-weight:700}
 .md-anytime{display:flex;flex-wrap:wrap;align-items:center;gap:8px;margin-top:10px}
-.md-anytime > em{font-style:normal;font-size:11px;font-weight:800;letter-spacing:.12em;text-transform:uppercase;color:var(--md-3);margin-right:4px}
+.md-anytime > em{font-style:normal;font-size:12px;font-weight:800;letter-spacing:.12em;text-transform:uppercase;color:var(--md-3);margin-right:4px}
 .md-pill{display:inline-flex;align-items:center;gap:8px;min-height:36px;padding:0 12px;border-radius:999px;border:1px solid color-mix(in srgb,var(--k) 40%,transparent);background:color-mix(in srgb,var(--k) 10%,transparent);color:var(--md-text);font-size:13px;font-weight:700;text-decoration:none;max-width:100%}
 .md-pill svg{color:var(--k);flex:none}
 .md-pill span{white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
@@ -240,7 +240,7 @@ const CSS = `
 .md-stack i[data-t=gold]{background:var(--md-gold)}
 .md-stack i[data-t=grey]{background:var(--md-planned)}
 .md-dl{display:flex;flex-direction:column;align-items:center;line-height:1.1;padding:4px 2px;border-radius:8px;width:100%}
-.md-dl small{font-size:10px;font-weight:800;letter-spacing:.08em;text-transform:uppercase;color:var(--md-3)}
+.md-dl small{font-size:12px;font-weight:800;letter-spacing:.08em;text-transform:uppercase;color:var(--md-3)}
 .md-dl span{font-size:13px;font-weight:800;color:var(--md-2);font-variant-numeric:tabular-nums}
 .md-day[data-weekend=true] .md-dl{opacity:.55}
 .md-day[data-today=true] .md-dl{background:var(--md-neon)}

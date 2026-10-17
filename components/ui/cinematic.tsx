@@ -22,7 +22,7 @@ export const CIN = {
   gold: 'var(--brand-primary)',
   goldHi: 'var(--brand-primary-strong)',
   goldSoft: '#FFF7A8',
-  amber: 'var(--brand-primary)',
+  amber: 'var(--warning)',
   green: 'var(--success)',
   red: 'var(--danger)',
   blue: 'var(--warning)',

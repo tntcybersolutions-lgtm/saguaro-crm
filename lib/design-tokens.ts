@@ -64,7 +64,8 @@ export const colors = {
   red:        '#F87171',
   orange:     '#FBBF24',
   amber:      '#FBBF24',
-  blue:       '#E8FF2A',
+  /* Informational (mirrors --info): slate, never the action yellow. */
+  blue:       '#CBD5E1',
 
   white:      '#ffffff',
   black:      '#000000',
@@ -104,7 +105,7 @@ export const font = {
   mono: '"SF Mono", "Fira Code", "Cascadia Code", monospace',
 
   size: {
-    xs:  '11px',
+    xs:  '12px', /* the text floor (DESIGN_SYSTEM.md §2) — was 11px */
     sm:  '12px',
     md:  '13px',
     lg:  '14px',
