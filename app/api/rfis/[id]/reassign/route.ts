@@ -2,6 +2,9 @@ import { NextRequest, NextResponse } from 'next/server';
 import { createServerClient, getUser } from '@/lib/supabase-server';
 import { requirePermission } from '@/lib/permissions';
 import { apiError } from '@/lib/api-error';
+import { prepareReassignment, actorName } from '@/lib/rfi-server';
+import { onRFIAssigned } from '@/lib/triggers';
+import { runInBackground } from '@/lib/background';
 
 export const dynamic = 'force-dynamic';
 
@@ -55,18 +58,26 @@ async function reassign(
     if (body.assigned_to_email) update.assigned_to_email = body.assigned_to_email;
     if (body.assigned_to_company) update.assigned_to_company = body.assigned_to_company;
 
+    const { data: before, error: readErr } = await db.from('rfis').select('*').eq('id', id).eq('tenant_id', user.tenantId).maybeSingle();
+    if (readErr) throw readErr;
+    if (!before) return NextResponse.json({ error: 'RFI not found' }, { status: 404 });
+
+    // The new assignee is emailed (with the RFI link and reply-by-email) — lib/rfi-server.
+    const { patch, notify } = await prepareReassignment(db, user.tenantId, before as Record<string, unknown>, update, user.email || null);
     const { error } = await db
       .from('rfis')
-      .update(update)
+      .update(patch)
       .eq('id', id)
       .eq('tenant_id', user.tenantId);
 
     if (error) throw error;
+    if (notify?.email) runInBackground(onRFIAssigned(id, notify, { email: user.email || null, name: await actorName(db, user) }), 'onRFIAssigned');
 
     return NextResponse.json({
       success: true,
       assigned_to_name: assignedTo,
       ball_in_court: ballInCourt,
+      assigned: notify ? { name: notify.name, emailed: notify.email } : null,
     });
   } catch (e) {
     return apiError('rfis/[id]/reassign', e);

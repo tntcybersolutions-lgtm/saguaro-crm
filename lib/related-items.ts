@@ -10,6 +10,7 @@
  * Every column named here exists on the live table (checked Oct 16, 2026).
  */
 import type { PermCategory } from '@/lib/permission-categories';
+import { formatRfiNumber } from '@/lib/rfi';
 
 export const RELATED_TYPE_KEYS = [
   'rfi', 'submittal', 'change_order', 'punch_item', 'daily_log', 'drawing', 'document', 'photo',
@@ -172,6 +173,7 @@ export function relatedNumber(def: RelatedDef, row: Record<string, unknown>): st
   if (/^\d{4}-\d{2}-\d{2}$/.test(s)) {
     return `${def.numberPrefix}${new Date(`${s}T12:00:00`).toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' })}`;
   }
+  if (def.type === 'rfi') return formatRfiNumber(s);
   return /^[A-Za-z]/.test(s) || !def.numberPrefix ? s : `${def.numberPrefix}${s}`;
 }
 

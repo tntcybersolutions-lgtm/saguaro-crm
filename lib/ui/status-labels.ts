@@ -104,12 +104,16 @@ const NOUNS: Record<string, string> = {
   autopilot: 'autopilot scan', intelligence: 'insight', network: 'network record', cables: 'cable', franchise: 'franchise record',
   'field-issues': 'field issue', observations: 'observation', 'tm-tickets': 'T&M ticket', 'daily-reports': 'daily report',
   dashboard: 'dashboard', home: 'home view', people: 'person', access: 'access', close: 'job closeout',
+  'notification-preferences': 'notification settings', 'notification-settings': 'notification settings',
   jacket: 'bid jacket', addon: 'add-on', 'addon-request': 'add-on request', 'saved-views': 'view', 'user-preferences': 'setting',
 };
 
 const SENT_NOUNS = new Set(['messages', 'message', 'replies', 'reply', 'correspondence']);
 
-const ID_SEG = /^(?:[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}|\d+|[A-Za-z0-9_-]{24,}|\[.+\])$/i;
+/* A long token is an id only when it reads like one — it carries a digit, or
+   has no hyphens. "notification-preferences" (24 letters and a hyphen) is a
+   route name; reading it as an id left Save on Notification settings silent. */
+const ID_SEG = /^(?:[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}|\d+|(?=[A-Za-z0-9_-]*\d)[A-Za-z0-9_-]{24,}|[A-Za-z0-9_]{24,}|\[.+\])$/i;
 const GENERIC = new Set(['api', 'v1', 'v2', 'list', 'item', 'items', 'all', 'me', 'my']);
 
 function nounFor(seg: string): string {
@@ -130,6 +134,8 @@ export function describeRequest(method: string, pathname: string): StatusWords |
   const m = method.toUpperCase();
   if (m === 'GET' || m === 'HEAD' || m === 'OPTIONS') return null;
   const path = pathname.split('?')[0].replace(/^\/+/, '').replace(/^api\//, '').replace(/\/+$/, '');
+  // The one auth route a person saves a form to: their own profile.
+  if (path === 'auth/me' && (m === 'PUT' || m === 'PATCH' || m === 'POST')) return { doing: 'Saving your profile', done: 'Profile saved', failed: "Couldn't save your profile" };
   if (SILENT.some((re) => re.test(path))) return null;
 
   let segs = path.split('/').filter((s) => s && !ID_SEG.test(s) && !GENERIC.has(s.toLowerCase()));

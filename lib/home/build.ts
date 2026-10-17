@@ -22,6 +22,7 @@ import {
 } from './rank';
 import { buildTicker, zonedMidnightIso, type ReviewGroup, type TickerItem, type TickerSummary } from './ticker';
 import { inspectionOutcome } from '@/lib/inspection-result';
+import { rfiLabel } from '@/lib/rfi';
 import { isLiveJob } from '@/lib/live-jobs';
 
 type ServerDb = ReturnType<typeof createServerClient>;
@@ -227,7 +228,7 @@ async function buildOps(ctx: BuildCtx, projects: Map<string, ProjectInfo>, peopl
       if (tier === 2) { overdueWork++; overdueByProject.set(x.project_id, (overdueByProject.get(x.project_id) || 0) + 1); }
       items.push({
         id: `rfi:${x.id}`, sourceType: 'rfi', sourceId: x.id,
-        title: `RFI ${x.rfi_number ? '#' + x.rfi_number + ' ' : ''}${x.subject || 'Untitled'}`,
+        title: `${rfiLabel(x.rfi_number)} ${x.subject || 'Untitled'}`,
         projectId: x.project_id, projectName: pname(x.project_id),
         owner: x.assigned_to_name || x.assigned_to_email || x.ball_in_court || null,
         dueAt: due, tier,

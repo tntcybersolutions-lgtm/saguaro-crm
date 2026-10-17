@@ -5,6 +5,7 @@ import { onRFIAnswered } from '@/lib/triggers';
 import { runInBackground } from '@/lib/background';
 import { apiError } from '@/lib/api-error';
 import { writeWithOptionalColumns } from '@/lib/optional-column';
+import { recordOfficialResponse } from '@/lib/rfi-server';
 
 export const dynamic = 'force-dynamic';
 
@@ -92,21 +93,13 @@ export async function POST(
 
     if (updateError) throw updateError;
 
-    // Record an official response entry
-    const { error: writeErr } = await db.from('rfi_responses').insert({
-      tenant_id: user.tenantId,
-      rfi_id: id,
-      responder_name: user.email || '',
-      responder_email: user.email || '',
-      response_text: answer,
-      attachments: attachments.length ? attachments : [],
-      is_official: true,
-      responded_at: nowIso,
+    // The official response on the RFI's thread — the only official one (lib/rfi-server).
+    await recordOfficialResponse(db, user.tenantId, id, {
+      text: answer,
+      name: user.email || '',
+      email: user.email || null,
+      attachments,
     });
-    if (writeErr) {
-      console.error('[rfis/respond]', writeErr);
-      throw writeErr;
-    }
 
     runInBackground(onRFIAnswered(id), 'onRFIAnswered');
 

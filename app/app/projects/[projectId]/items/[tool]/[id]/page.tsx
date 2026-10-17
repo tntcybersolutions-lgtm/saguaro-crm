@@ -13,7 +13,7 @@
 import React, { useCallback, useEffect, useMemo, useState } from 'react';
 import { useParams } from 'next/navigation';
 import { PageShell, Button, Tabs, Field, Input, Textarea, Select, Toast, useToast, EmptyState } from '@/components/ui/kit';
-import { PencilSimple, FloppyDisk, X, Paperclip, ChatText, Trash, FileText, ArrowSquareOut } from '@phosphor-icons/react';
+import { PencilSimple, FloppyDisk, X, Paperclip, ChatText, Trash, FileText, ArrowSquareOut, SealCheck } from '@phosphor-icons/react';
 import RelatedItems from '@/components/related/RelatedItems';
 import { RELATED_TYPE_FOR_TOOL } from '@/lib/related-items';
 import ItemHistory from '@/components/item/ItemHistory';
@@ -24,10 +24,12 @@ import CoWorkflow from '@/components/change-orders/CoWorkflow';
 import { useEditRights } from '@/lib/hooks/usePermissions';
 import { LOG_SECTIONS } from '@/lib/daily-log-sections';
 import { itemTool, itemNumber, nounInSentence, statusLabel, valueLabel, type ItemField, type ItemTool } from '@/lib/items/registry';
+import { isPersonKey, personName, type People } from '@/lib/person-names';
 
 type Item = Record<string, unknown>;
 type FileRow = { id: string; name: string; size: number | null; kind: string | null; by: string | null; at: string; url: string | null };
-type Comment = { id: string; body: string; author_name: string | null; created_at: string; attachments?: { id: string; name: string }[]; is_official?: boolean; mine?: boolean; source?: string | null };
+/** A thread entry. For an RFI the thread is its comments and its responses (lib/rfi mergeRfiThread). */
+type Comment = { id: string; kind?: 'comment' | 'response'; body: string; author_name: string | null; company?: string | null; created_at: string; attachments?: { id?: string; name: string; url?: string | null }[]; is_official?: boolean; mine?: boolean; source?: string | null };
 
 const money = new Intl.NumberFormat('en-US', { style: 'currency', currency: 'USD', minimumFractionDigits: 2 });
 
@@ -45,7 +47,9 @@ function display(f: ItemField, v: unknown): string {
 }
 
 /** A stored user id (some rows keep the creator's id, not a name) means
- *  nothing to a reader, so it is never shown as a value. */
+ *  nothing to a reader, so it is never shown as a value: person fields go
+ *  through the people map the API sends (lib/person-names) first — see
+ *  withNames — and an id that still has no name is treated as empty. */
 const ID_RE = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
 /** Ball in court holding a status word ("closed") is an old import, not a person. */
 const STATUS_WORD = /^(open|closed|answered|approved|rejected|draft|submitted|pending|completed|verified|void|n\/a|none)$/i;
@@ -56,6 +60,14 @@ function isEmpty(v: unknown, key?: string): boolean {
   if (typeof v !== 'string') return false;
   const t = v.trim();
   return t === '' || ID_RE.test(t) || (key === 'ball_in_court' && STATUS_WORD.test(t));
+}
+
+/** The item as a reader sees it: every person field ("Created by", "Approved
+ *  by", "Assigned to"…) as the person's name, or empty when unknown. */
+function withNames(item: Item, people: People): Item {
+  const out: Item = { ...item };
+  for (const k of Object.keys(out)) if (isPersonKey(k) || k === 'ball_in_court') out[k] = personName(out[k], people);
+  return out;
 }
 
 function inputValue(f: ItemField, v: unknown): string {
@@ -84,8 +96,12 @@ export default function ItemPage() {
   const tool = itemTool(type);
   const { toast, show } = useToast(3500);
   const coRights = useEditRights('Change Orders');
+  const rfiRights = useEditRights('RFIs');
 
   const [item, setItem] = useState<Item | null>(null);
+  const [people, setPeople] = useState<People>({});
+  // Person fields as names (never ids) — what read mode shows and Edit starts from.
+  const view = useMemo(() => (item ? withNames(item, people) : null), [item, people]);
   const [projectName, setProjectName] = useState('');
   const [files, setFiles] = useState<FileRow[]>([]);
   const [loadErr, setLoadErr] = useState('');
@@ -105,6 +121,7 @@ export default function ItemPage() {
     if (!r.ok) { setLoadErr(await readErr(r, `Couldn't load this ${tool.noun}.`)); return; }
     const j = await r.json();
     setItem(j.item);
+    setPeople((p) => ({ ...p, ...(j.people || {}) }));
     setProjectName(j.project?.name || '');
     setFiles(Array.isArray(j.files) ? j.files : []);
   }, [tool, type, id]);
@@ -127,20 +144,29 @@ export default function ItemPage() {
 
   useEffect(() => { void load(); void loadComments(); void loadLinkCount(); }, [load, loadComments, loadLinkCount]);
 
+  // ?tab=responses (the link in an RFI email) opens the thread.
+  useEffect(() => {
+    try {
+      const t = new URLSearchParams(window.location.search).get('tab');
+      if (t === 'responses' || t === 'comments') setTab('comments');
+    } catch (e) { console.error('[item page] tab param', e); }
+  }, []);
+
   const startEdit = () => {
-    if (!tool || !item) return;
-    const d: Record<string, string> = { [tool.titleKey]: inputValue({ key: tool.titleKey, label: '', kind: 'text' }, item[tool.titleKey]) };
-    tool.fields.filter((f) => tool.edit.includes(f.key)).forEach((f) => { d[f.key] = inputValue(f, item[f.key]); });
+    if (!tool || !item || !view) return;
+    const d: Record<string, string> = { [tool.titleKey]: inputValue({ key: tool.titleKey, label: '', kind: 'text' }, view[tool.titleKey]) };
+    tool.fields.filter((f) => tool.edit.includes(f.key)).forEach((f) => { d[f.key] = inputValue(f, view[f.key]); });
     setDraft(d);
     setEditing(true);
   };
 
   const save = async () => {
-    if (!tool || !item) return;
+    if (!tool || !item || !view) return;
     const changed: Record<string, unknown> = {};
+    // Compared with what Edit started from, so an untouched person field (shown as a name) is not rewritten.
     Object.entries(draft).forEach(([k, v]) => {
       const f = tool.fields.find((x) => x.key === k) || { key: k, label: '', kind: 'text' as const };
-      if (v !== inputValue(f, item[k])) changed[k] = f.kind === 'bool' ? v === 'true' : v;
+      if (v !== inputValue(f, view[k])) changed[k] = f.kind === 'bool' ? v === 'true' : v;
     });
     if (Object.keys(changed).length === 0) { setEditing(false); return; }
     setSaving(true);
@@ -170,15 +196,15 @@ export default function ItemPage() {
       </PageShell>
     );
   }
-  if (!item) {
+  if (!item || !view) {
     return <PageShell title={tool.noun} crumbs={[{ label: tool.plural, href: listHref }]}><div className="ip-loading" aria-busy="true">Loading…</div></PageShell>;
   }
 
   /* Read mode shows only what is filled in (Edit shows every field). The
      status cell always stays: it is where the record stands. */
-  const strip = tool.fields.filter((f) => f.strip && (f.key === tool.statusKey || !isEmpty(item[f.key], f.key)));
-  const body = tool.fields.filter((f) => !f.strip && !isEmpty(item[f.key], f.key));
-  const emptyCount = tool.fields.filter((f) => !f.strip && isEmpty(item[f.key], f.key) && tool.edit.includes(f.key)).length;
+  const strip = tool.fields.filter((f) => f.strip && (f.key === tool.statusKey || !isEmpty(view[f.key], f.key)));
+  const body = tool.fields.filter((f) => !f.strip && !isEmpty(view[f.key], f.key));
+  const emptyCount = tool.fields.filter((f) => !f.strip && isEmpty(view[f.key], f.key) && tool.edit.includes(f.key)).length;
   const late = overdue(tool, item);
   const num = item[tool.numberKey];
   const title = String(item[tool.titleKey] || '').trim() || tool.noun;
@@ -206,7 +232,7 @@ export default function ItemPage() {
           <div key={f.key} className="ip-strip-cell" role="listitem" data-late={f.key === 'due_date' && late ? 'true' : undefined}>
             <span className="ip-strip-label">{f.label}</span>
             <span className="ip-strip-value" data-status={f.key === tool.statusKey ? String(item[f.key] || '') : undefined}>
-              {display(f, item[f.key])}{f.key === 'due_date' && late ? ' · overdue' : ''}
+              {display(f, view[f.key])}{f.key === 'due_date' && late ? ' · overdue' : ''}
             </span>
           </div>
         ))}
@@ -231,7 +257,7 @@ export default function ItemPage() {
         tabs={[
           ...(tool.type === 'daily_logs' ? [{ key: 'log', label: `Log · ${LOG_SECTIONS.length} sections` }] : []),
           { key: 'general', label: tool.type === 'daily_logs' ? 'Details' : 'General' },
-          { key: 'comments', label: 'Comments', count: counts.comments },
+          { key: 'comments', label: tool.type === 'rfis' ? 'Responses' : 'Comments', count: counts.comments },
           { key: 'related', label: 'Related', count: counts.links },
           { key: 'files', label: 'Files', count: counts.files },
           { key: 'history', label: 'History' },
@@ -271,7 +297,7 @@ export default function ItemPage() {
                   {body.map((f) => (
                     <div key={f.key} className="ip-fact" data-long={f.kind === 'long' ? 'true' : undefined}>
                       <dt>{f.label}</dt>
-                      <dd>{display(f, item[f.key])}</dd>
+                      <dd>{display(f, view[f.key])}</dd>
                     </div>
                   ))}
                 </dl>
@@ -292,7 +318,11 @@ export default function ItemPage() {
           <DailyLogSections logId={id} projectId={projectId} files={files} onFilesChanged={load} onSaved={() => { setHistoryKey((k) => k + 1); void load(); }} show={show} />
         </section>
       )}
-      {tab === 'comments' && <CommentsTab type={type} id={id} projectId={projectId} tool={tool} comments={comments} reload={loadComments} show={show} />}
+      {tab === 'comments' && (
+        <CommentsTab type={type} id={id} projectId={projectId} tool={tool} comments={comments} files={files} canAnswer={rfiRights.edit} show={show}
+          reload={loadComments}
+          onAnswered={async () => { await Promise.all([load(), loadComments()]); setHistoryKey((k) => k + 1); }} />
+      )}
       {tab === 'related' && relType && (
         <section className="ip-section" aria-label="Related items">
           <RelatedItems type={relType} id={id} projectId={projectId} heading={null} onCount={setLinkCount} />
@@ -319,9 +349,27 @@ async function uploadToItem(file: File, projectId: string, tool: ItemTool, id: s
   return { id: j.file.id, name: j.file.file_name || file.name };
 }
 
-function CommentsTab({ type, id, projectId, tool, comments, reload, show }: {
-  type: string; id: string; projectId: string; tool: ItemTool; comments: Comment[] | null; reload: () => Promise<void>; show: (m: string, t?: 'good' | 'bad') => void;
+function CommentsTab({ type, id, projectId, tool, comments, files, canAnswer, reload, onAnswered, show }: {
+  type: string; id: string; projectId: string; tool: ItemTool; comments: Comment[] | null; files: FileRow[]; canAnswer: boolean;
+  reload: () => Promise<void>; onAnswered: () => Promise<void>; show: (m: string, t?: 'good' | 'bad') => void;
 }) {
+  const isRfi = tool.type === 'rfis';
+  const fileUrl = (a: { id?: string; url?: string | null }) => a.url || (a.id ? files.find((f) => f.id === a.id)?.url : null) || null;
+  const [marking, setMarking] = useState<string | null>(null);
+
+  /** Make this response the RFI's official answer, or take the mark off. */
+  const markOfficial = async (c: Comment, official: boolean) => {
+    setMarking(c.id);
+    const r = await fetch(`/api/items/${type}/${id}/comments`, {
+      method: 'PATCH', credentials: 'include', headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ entryId: c.id, kind: c.kind || 'comment', official }),
+    });
+    setMarking(null);
+    if (!r.ok) { show(await readErr(r, "Couldn't change the official answer."), 'bad'); return; }
+    show(official ? 'Official answer set. The RFI is answered.' : 'Official mark removed. The RFI is open again.');
+    await onAnswered();
+  };
+
   const [text, setText] = useState('');
   const [official, setOfficial] = useState(false);
   const [pending, setPending] = useState<File[]>([]);
@@ -342,8 +390,9 @@ function CommentsTab({ type, id, projectId, tool, comments, reload, show }: {
     });
     setBusy(false);
     if (!r.ok) { show(await readErr(r, "Couldn't post the comment."), 'bad'); return; }
+    const wasOfficial = official && isRfi;
     setText(''); setPending([]); setOfficial(false);
-    await reload();
+    if (wasOfficial) { show('Posted as the official answer. The RFI is answered.'); await onAnswered(); } else await reload();
   };
 
   const remove = async (c: Comment) => {
@@ -355,35 +404,44 @@ function CommentsTab({ type, id, projectId, tool, comments, reload, show }: {
   return (
     <section className="ip-section" aria-label="Comments">
       {comments === null ? <div className="ip-loading">Loading comments…</div> : comments.length === 0 ? (
-        <p className="ip-muted">No comments yet.</p>
+        <p className="ip-muted">{isRfi ? 'No responses yet.' : 'No comments yet.'}</p>
       ) : (
         <ol className="ip-thread">
           {comments.map((c) => (
             <li key={c.id} className="ip-comment" data-official={c.is_official ? 'true' : undefined}>
               <div className="ip-comment-head">
                 <strong>{c.author_name || 'Someone'}</strong>
-                {c.is_official && <span className="ip-official">Official answer</span>}
+                {c.company && <span className="ip-via">{c.company}</span>}
+                {c.is_official && <span className="ip-official"><SealCheck size={14} weight="fill" /> Official answer</span>}
                 {c.source === 'email' && <span className="ip-via">via email</span>}
-                <time dateTime={c.created_at}>{new Date(c.created_at).toLocaleString('en-US', { month: 'short', day: 'numeric', hour: 'numeric', minute: '2-digit' })}</time>
-                {c.mine && <button type="button" className="ip-icon-btn" aria-label="Remove my comment" onClick={() => void remove(c)}><Trash size={14} /></button>}
+                <time dateTime={c.created_at}>{new Date(c.created_at).toLocaleString('en-US', { month: 'short', day: 'numeric', year: 'numeric', hour: 'numeric', minute: '2-digit' })}</time>
+                {c.mine && c.kind !== 'response' && <button type="button" className="ip-icon-btn" aria-label="Remove my comment" onClick={() => void remove(c)}><Trash size={14} /></button>}
               </div>
               {c.body && <p className="ip-comment-body">{c.body}</p>}
               {!!c.attachments?.length && (
-                <ul className="ip-attach">{c.attachments.map((a) => <li key={a.id}><Paperclip size={13} /> {a.name}</li>)}</ul>
+                <ul className="ip-attach">{c.attachments.map((a, i) => {
+                  const url = fileUrl(a);
+                  return <li key={a.id || `${a.name}-${i}`}><Paperclip size={13} /> {url ? <a href={url} target="_blank" rel="noreferrer">{a.name}</a> : a.name}</li>;
+                })}</ul>
+              )}
+              {isRfi && canAnswer && (c.body || '').trim() !== '' && (
+                <button type="button" className="ip-mark" disabled={marking === c.id} onClick={() => void markOfficial(c, !c.is_official)}>
+                  {marking === c.id ? 'Saving…' : c.is_official ? 'Remove official mark' : 'Mark as official answer'}
+                </button>
               )}
             </li>
           ))}
         </ol>
       )}
       <div className="ip-compose">
-        <Textarea rows={3} placeholder={`Comment on this ${nounInSentence(tool)}…`} value={text} onChange={(e) => setText(e.target.value)} aria-label="Comment" />
+        <Textarea rows={3} placeholder={isRfi ? 'Respond to this RFI…' : `Comment on this ${nounInSentence(tool)}…`} value={text} onChange={(e) => setText(e.target.value)} aria-label="Comment" />
         <div className="ip-compose-row">
           <label className="ip-file-btn">
             <Paperclip size={15} /> Attach
             <input type="file" multiple onChange={(e) => setPending(Array.from(e.target.files || []))} />
           </label>
           {pending.length > 0 && <span className="ip-muted">{pending.length} file{pending.length === 1 ? '' : 's'} ready</span>}
-          {tool.type === 'rfis' && (
+          {isRfi && canAnswer && (
             <label className="ip-check"><input type="checkbox" checked={official} onChange={(e) => setOfficial(e.target.checked)} /> Mark as official answer</label>
           )}
           <div className="ip-spacer" />
@@ -464,7 +522,14 @@ const CSS = `
 .ip-comment[data-official="true"]{border-left:3px solid var(--success);padding-left:12px}
 .ip-comment-head{display:flex;align-items:center;gap:8px;font-size:14px;color:var(--text-primary)}
 .ip-comment-head time{margin-left:auto;color:var(--text-tertiary);font-size:12px}
-.ip-official{font-size:12px;font-weight:700;color:var(--success)}
+.ip-official{display:inline-flex;align-items:center;gap:4px;font-size:12px;font-weight:700;color:var(--success)}
+.ip-attach a{color:var(--link);text-decoration:none}
+.ip-attach a:hover{text-decoration:underline}
+.ip-mark{position:relative;margin-top:6px;background:none;border:0;padding:0;font:inherit;font-size:13px;font-weight:650;color:var(--text-secondary);cursor:pointer}
+.ip-mark::after{content:'';position:absolute;inset:-12px -8px}
+.ip-mark:hover{color:var(--text-primary)}
+.ip-mark:disabled{opacity:.6;cursor:default}
+.ip-mark:focus-visible{outline:2px solid var(--focus-ring);outline-offset:2px;border-radius:4px}
 .ip-via{font-size:12px;color:var(--text-tertiary)}
 .ip-comment-body{margin:6px 0 0;font-size:15px;color:var(--text-primary);white-space:pre-wrap;overflow-wrap:anywhere}
 .ip-attach{list-style:none;margin:8px 0 0;padding:0;display:flex;flex-wrap:wrap;gap:12px;font-size:13px;color:var(--text-secondary)}

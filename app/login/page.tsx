@@ -6,6 +6,7 @@
 import { useHydrated } from '@/lib/use-hydrated';
 import React, { useState } from 'react';
 import Link from 'next/link';
+import { safeNextPath } from '@/lib/record-links';
 import { CheckCircle, WarningCircle, Eye, EyeSlash, Lock } from '@phosphor-icons/react';
 import { Card, Field, Input, Button } from '@/components/ui/kit';
 
@@ -75,8 +76,7 @@ export default function LoginPage(){
           body: JSON.stringify({ access_token, refresh_token, expires_at: expires_at ? Number(expires_at) : undefined }),
         }).then(res => {
           if (res.ok) {
-            const next = new URLSearchParams(window.location.search).get('next') || '/app';
-            window.location.replace(next);
+            window.location.replace(safeNextPath(new URLSearchParams(window.location.search).get('next')));
           } else {
             setError('Confirmation failed. Please try signing in or request a new link.');
           }
@@ -114,8 +114,9 @@ export default function LoginPage(){
       }
 
       // Success. An explicit ?next= (a deep link they were sent to) always wins.
+      // Only a path on this site — ?next= is anyone's to edit (lib/record-links safeNextPath).
       const explicitNext = new URLSearchParams(window.location.search).get('next');
-      if (explicitNext) { window.location.href = explicitNext; return; }
+      if (explicitNext) { window.location.href = safeNextPath(explicitNext); return; }
 
       // Otherwise land a sales-ONLY rep on their own workspace, not the GC's
       // build dashboard (MUST-PASS sales workspace P2). "Sales only" = can sell

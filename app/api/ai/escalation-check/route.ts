@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from 'next/server';
 import { createServerClient, getUser } from '@/lib/supabase-server';
 import { apiError } from '@/lib/api-error';
 import { requestDay } from '@/lib/time-zone';
+import { rfiLabel } from '@/lib/rfi';
 
 /* eslint-disable @typescript-eslint/no-explicit-any */
 
@@ -175,7 +176,7 @@ export async function POST(req: NextRequest) {
             item_type: 'rfi',
             item_id: item.rfi_id,
             severity: item.severity,
-            reason: `RFI #${item.rfi_number} open for ${item.hours_open} hours${item.past_due ? ' (past due)' : ''}`,
+            reason: `${rfiLabel(item.rfi_number)} open for ${item.hours_open} hours${item.past_due ? ' (past due)' : ''}`,
             assigned_to: item.assigned_to,
             created_by: user.id,
             resolved: false,

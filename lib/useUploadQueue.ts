@@ -7,7 +7,9 @@
  */
 import { useCallback, useEffect, useRef, useState } from 'react';
 import { mediaKindOf, type MediaKind } from '@/lib/media-upload';
-import { step, type StepHandle } from '@/lib/ui/status';
+import { step, SAVED_OFFLINE, type StepHandle } from '@/lib/ui/status';
+
+const cap = (t: string) => (t ? t[0].toUpperCase() + t.slice(1) : t);
 
 export type QueueStatus = 'waiting' | 'uploading' | 'done' | 'failed';
 
@@ -123,7 +125,7 @@ export function useUploadQueue(uploader: Uploader, opts: { onItemDone?: () => vo
     if (!total) { h.drop(); return; }
     const kept = done.filter((i) => /phone/i.test(i.doneLabel || '')).length;
     if (failed) h.fail(`${failed} of ${what(total)} didn't upload`, done.length ? `${done.length} went up. Tap Retry on the ones marked red.` : 'Tap Retry on the ones marked red.');
-    else if (kept) h.offline(`${what(kept)} saved on this phone`, "They upload by themselves when you're back online.");
+    else if (kept) h.offline(SAVED_OFFLINE, cap(what(kept)));
     else h.done(`${what(total)} uploaded`, done[0]?.doneLabel && done.every((i) => i.doneLabel === done[0].doneLabel) ? done[0].doneLabel : undefined);
   }, [busy, items]);
 

@@ -11,7 +11,7 @@ import {
   sendLienWaiverRequest, sendLienWaiverSigned,
   sendBidPackageCreated, sendSubInvitedToBid, sendBidSubmitted,
   sendBidAwarded, sendBidNotAwarded,
-  sendRFISubmitted, sendRFIAnswered,
+  sendRFISubmitted, sendRFIAnswered, sendRFIAssigned,
   sendChangeOrderApproved,
   sendSubmittalForReview,
   sendInsuranceExpiring,
@@ -27,6 +27,9 @@ import { coAmount } from '@/lib/change-order-amount';
 import { applyChangeOrderMoney } from '@/lib/change-order-cascade';
 import { ownerContact, architectContact, gcContact } from '@/lib/project-parties';
 import { SUBMITTAL_REVIEW_STATUSES } from '@/lib/submittal-workflow';
+import { rfiHref, rfiLabel, emailIn } from '@/lib/rfi';
+import { recordHref } from '@/lib/record-links';
+import { resolveAssignee } from '@/lib/rfi-server';
 
 /* Fallback is the live domain. It used to be a Vercel preview URL that no
    longer resolves, so any email sent without NEXT_PUBLIC_APP_URL set carried
@@ -77,7 +80,7 @@ export async function onPayAppCreated(payAppId: string): Promise<void> {
       project.tenant_id, null, 'pay_app_submitted',
       `Pay App #${pa.app_number} created`,
       `Draft pay application created for ${project.name}`,
-      `${APP_URL}/app/projects/${project.id}/pay-apps/${payAppId}`, project.id
+      recordHref('pay_apps', project.id, payAppId, { base: APP_URL }), project.id
     );
 
     // Generate PDFs in background
@@ -129,7 +132,7 @@ export async function onPayAppSubmitted(payAppId: string): Promise<void> {
       project.tenant_id, null, 'pay_app_submitted',
       `Pay App #${pa.app_number} submitted to owner`,
       `Application for ${project.name} submitted. Amount: $${(pa.current_payment_due || 0).toLocaleString()}`,
-      `${APP_URL}/app/projects/${project.id}/pay-apps/${payAppId}`, project.id
+      recordHref('pay_apps', project.id, payAppId, { base: APP_URL }), project.id
     );
     await dispatchWebhookEvent(project.tenant_id, 'pay_app.submitted', {
       id: payAppId,
@@ -155,7 +158,7 @@ export async function onPayAppApproved(payAppId: string): Promise<void> {
     // Email GC
     const gc = gcContact(project);
     if (gc.email) {
-      await sendPayAppApproved(gc.email, gc.name, project.name, pa.app_number, pa.current_payment_due || 0);
+      await sendPayAppApproved(gc.email, gc.name, project.name, pa.app_number, pa.current_payment_due || 0, recordHref('pay_apps', project.id, payAppId, { base: APP_URL }));
     }
 
     // Auto-generate conditional lien waivers for the project's subs.
@@ -282,7 +285,7 @@ export async function onPayAppCertified(payAppId: string): Promise<void> {
 
     const gc = gcContact(project);
     if (gc.email) {
-      await sendPayAppCertified(gc.email, gc.name, project.name, pa.current_payment_due || 0, new Date().toLocaleDateString());
+      await sendPayAppCertified(gc.email, gc.name, project.name, pa.current_payment_due || 0, new Date().toLocaleDateString(), recordHref('pay_apps', project.id, payAppId, { base: APP_URL }));
     }
     await createNotification(
       project.tenant_id, null, 'pay_app_certified',
@@ -332,7 +335,7 @@ export async function onBidPackageCreated(bidPackageId: string): Promise<void> {
       /* It used to add "Invitations are being sent." Nothing here sends any:
          invitations go out when the GC invites subs or issues the jacket. */
       `Bid package for ${what} on ${project.name} created.`,
-      `${APP_URL}/app/projects/${project.id}/bid-packages/${bidPackageId}`, project.id
+      recordHref('bid_packages', project.id, bidPackageId, { base: APP_URL }), project.id
     );
     await dispatchWebhookEvent(project.tenant_id, 'bid_package.created', {
       id: bidPackageId,
@@ -464,7 +467,7 @@ export async function onBidSubmitted(bidSubmissionId: string): Promise<void> {
       await withComm(
         { tenantId: project.tenant_id, projectId: project.id, bidPackageId: pkg.id, subId: s.sub_id ?? null,
           relatedType: 'bid_received', relatedId: bidSubmissionId, toName: project.gc_name || null },
-        () => sendBidSubmitted(gcEmail, project.gc_name || 'GC', bidder, project.name, amountBid),
+        () => sendBidSubmitted(gcEmail, project.gc_name || 'GC', bidder, project.name, amountBid, recordHref('bid_packages', project.id, pkg.id, { base: APP_URL })),
       );
     }
 
@@ -472,7 +475,7 @@ export async function onBidSubmitted(bidSubmissionId: string): Promise<void> {
       project.tenant_id, null, 'bid_submitted',
       `New bid received from ${bidder}`,
       `${bidder} submitted a bid of $${amountBid.toLocaleString()} for ${pkg.trade || pkg.name} on ${project.name}`,
-      `${APP_URL}/app/projects/${project.id}/bid-packages/${pkg.id}`, project.id
+      recordHref('bid_packages', project.id, pkg.id, { base: APP_URL }), project.id
     );
     await dispatchWebhookEvent(project.tenant_id, 'bid.submitted', {
       id: bidSubmissionId,
@@ -715,7 +718,7 @@ export async function onBidAwarded(bidSubmissionId: string): Promise<AwardNotice
       tenantId, null, 'bid_awarded',
       `Bid awarded to ${winnerName}`,
       `${winnerName} awarded ${pkg.trade || pkg.name} contract for $${awardAmount.toLocaleString()} on ${project.name}`,
-      `${APP_URL}/app/projects/${project.id}/bid-packages/${pkg.id}`, project.id
+      recordHref('bid_packages', project.id, pkg.id, { base: APP_URL }), project.id
     );
     await dispatchWebhookEvent(tenantId, 'bid.awarded', {
       id: bidSubmissionId,
@@ -783,26 +786,57 @@ export async function onSubAddedToProject(projectId: string, subId: string): Pro
 }
 
 // ─── RFIs ─────────────────────────────────────────────────────────────────────
+/* Every RFI email and notification links to the RFI's own page (lib/rfi
+   rfiHref) and shows its number one way (formatRfiNumber: "RFI-012"). They
+   used to say "RFI #RFI-012", the email button opened the dashboard, and the
+   notification link pointed at /rfis/:id, a page that does not exist. */
+
+async function loadRfi(db: ReturnType<typeof adminClient>, rfiId: string): Promise<{ r: any; project: any } | null> {
+  const { data: rfi, error } = await db.from('rfis').select('*').eq('id', rfiId).maybeSingle();
+  if (error) throw error;
+  if (!rfi) return null;
+  const r = rfi as any;
+  const { data: project, error: pErr } = await db.from('projects').select('*').eq('id', r.project_id).eq('tenant_id', r.tenant_id).maybeSingle();
+  if (pErr) throw pErr;
+  if (!project) return null;
+  return { r, project };
+}
+
 export async function onRFICreated(rfiId: string): Promise<void> {
   try {
     const db = adminClient();
-    const { data: rfi } = await db.from('rfis').select('*, projects(*)').eq('id', rfiId).single();
-    if (!rfi) return;
-    const r = rfi as any;
-    const project = r.projects;
-    if (!project) return;
+    const loaded = await loadRfi(db, rfiId);
+    if (!loaded) return;
+    const { r, project } = loaded;
+    const link = rfiHref(project.id, rfiId, { base: APP_URL });
+    const reply = { tenantId: project.tenant_id, type: 'rfis' as const, id: rfiId };
+    const email = { projectName: project.name, rfiNumber: r.rfi_number, subject: r.subject, question: r.question, dueDate: r.due_date, link };
 
-    const architectEmail = architectContact(project).email;
-    if (architectEmail) {
-      await sendRFISubmitted(architectEmail, project.name, r.rfi_number, r.subject, r.submitted_by_name || 'GC',
-        { tenantId: project.tenant_id, type: 'rfis', id: rfiId });
+    // The assignee (when the job knows their email) and the architect, once each.
+    const assignee = r.assigned_to_name || r.assigned_to_email
+      ? await resolveAssignee(db, project.tenant_id, project.id, { name: String(r.assigned_to_name || r.assigned_to_email || ''), email: emailIn(r.assigned_to_email) })
+      : null;
+    if (assignee?.email && !emailIn(r.assigned_to_email)) {
+      // Kept on the RFI so a reply from them is recognized and My Work shows it as theirs.
+      const { error } = await db.from('rfis').update({ assigned_to_email: assignee.email }).eq('id', rfiId).eq('tenant_id', project.tenant_id);
+      if (error) console.error('[onRFICreated] assignee email not saved', error);
+    }
+    const to = new Set<string>();
+    if (assignee?.email) to.add(assignee.email);
+    const architectEmail = emailIn(architectContact(project).email);
+    if (architectEmail) to.add(architectEmail);
+    const submitter = emailIn(r.submitted_by);
+    if (submitter) to.delete(submitter);
+    for (const addr of to) {
+      const res = await sendRFISubmitted(addr, { ...email, submittedBy: r.submitted_by_name || r.submitted_by || 'GC' }, reply);
+      if (!res.sent) console.error('[onRFICreated] email not sent', addr, res.error);
     }
 
     await createNotification(
       project.tenant_id, null, 'rfi_submitted',
-      `RFI #${r.rfi_number} submitted`,
+      `${rfiLabel(r.rfi_number)} submitted`,
       `"${r.subject}" — due ${r.due_date || 'TBD'}`,
-      `${APP_URL}/app/projects/${project.id}/rfis/${rfiId}`, project.id
+      link, project.id
     );
     await dispatchWebhookEvent(project.tenant_id, 'rfi.submitted', {
       id: rfiId,
@@ -818,26 +852,66 @@ export async function onRFICreated(rfiId: string): Promise<void> {
   }
 }
 
+/**
+ * The RFI was handed to someone new (assignee / ball in court changed): email
+ * them — with the reply-by-email Reply-To, so they can answer from their inbox
+ * — and, when they sign in to Saguaro, put it in their notifications.
+ */
+export async function onRFIAssigned(rfiId: string, who: { name: string; email: string | null }, actor: { email: string | null; name?: string | null }): Promise<void> {
+  try {
+    const db = adminClient();
+    const loaded = await loadRfi(db, rfiId);
+    if (!loaded) return;
+    const { r, project } = loaded;
+    const link = rfiHref(project.id, rfiId, { base: APP_URL });
+    const label = rfiLabel(r.rfi_number);
+    if (who.email) {
+      const res = await sendRFIAssigned(who.email, {
+        projectName: project.name, rfiNumber: r.rfi_number, subject: r.subject, question: r.question, dueDate: r.due_date, link,
+        assigneeName: who.name || who.email, assignedBy: actor.name || actor.email || 'Your project team',
+      }, { tenantId: project.tenant_id, type: 'rfis', id: rfiId });
+      if (!res.sent) console.error('[onRFIAssigned] email not sent', who.email, res.error);
+
+      // In the app too, when the assignee is one of the company's users.
+      const { data: prof, error } = await db.from('profiles').select('id').eq('tenant_id', project.tenant_id).ilike('email', who.email).limit(1).maybeSingle();
+      if (error) console.error('[onRFIAssigned] profile lookup failed', error);
+      const userId = (prof as { id?: string } | null)?.id;
+      if (userId) {
+        await createNotification(
+          project.tenant_id, userId, 'rfi_assigned',
+          `${label} assigned to you`,
+          `"${r.subject}"${r.due_date ? ` — due ${r.due_date}` : ''}`,
+          link, project.id,
+        );
+      }
+    }
+  } catch (err) {
+    console.error('[onRFIAssigned]', err);
+  }
+}
+
 export async function onRFIAnswered(rfiId: string): Promise<void> {
   try {
     const db = adminClient();
-    const { data: rfi } = await db.from('rfis').select('*, projects(*)').eq('id', rfiId).single();
-    if (!rfi) return;
-    const r = rfi as any;
-    const project = r.projects;
-    if (!project) return;
+    const loaded = await loadRfi(db, rfiId);
+    if (!loaded) return;
+    const { r, project } = loaded;
+    const link = rfiHref(project.id, rfiId, { base: APP_URL });
 
     const submitterEmail = gcContact(project).email;
     if (submitterEmail) {
-      await sendRFIAnswered(submitterEmail, 'Project Team', project.name, r.rfi_number, r.answer || '',
-        { tenantId: project.tenant_id, type: 'rfis', id: rfiId });
+      const res = await sendRFIAnswered(submitterEmail, {
+        projectName: project.name, rfiNumber: r.rfi_number, subject: r.subject, dueDate: null, link,
+        submitterName: 'Project Team', answer: r.answer || '',
+      }, { tenantId: project.tenant_id, type: 'rfis', id: rfiId });
+      if (!res.sent) console.error('[onRFIAnswered] email not sent', submitterEmail, res.error);
     }
 
     await createNotification(
       project.tenant_id, null, 'rfi_answered',
-      `RFI #${r.rfi_number} answered`,
+      `${rfiLabel(r.rfi_number)} answered`,
       `"${r.subject}" has been answered`,
-      `${APP_URL}/app/projects/${project.id}/rfis/${rfiId}`, project.id
+      link, project.id
     );
     await dispatchWebhookEvent(project.tenant_id, 'rfi.responded', {
       id: rfiId,
@@ -884,7 +958,7 @@ export async function onSubmittalSentForReview(submittalId: string, previousStat
         specSection: s.spec_section || null,
         dueDate: s.due_date || null,
         submittedBy: s.subcontractor || s.submitted_by || null,
-        link: `${APP_URL}/app/projects/${project.id}/items/submittals/${submittalId}`,
+        link: recordHref('submittals', project.id, submittalId, { base: APP_URL }),
         reply: { tenantId: s.tenant_id, type: 'submittals', id: submittalId },
       }),
     );
@@ -928,14 +1002,15 @@ export async function onChangeOrderApproved(changeOrderId: string, opts: { money
     const ownerEmail = ownerContact(project).email;
     if (ownerEmail) {
       await sendChangeOrderApproved(ownerEmail, project.name, c.co_number, impact,
-        { tenantId: String(c.tenant_id || project.tenant_id), type: 'change_orders', id: changeOrderId });
+        { tenantId: String(c.tenant_id || project.tenant_id), type: 'change_orders', id: changeOrderId },
+        recordHref('change_orders', project.id, changeOrderId, { base: APP_URL }));
     }
 
     await createNotification(
       project.tenant_id, null, 'change_order_approved',
       `Change Order #${c.co_number} approved`,
       `CO #${c.co_number} approved — $${impact.toLocaleString()} added to contract`,
-      `${APP_URL}/app/projects/${project.id}/change-orders`, project.id
+      recordHref('change_orders', project.id, changeOrderId, { base: APP_URL }), project.id
     );
     await dispatchWebhookEvent(project.tenant_id, 'change_order.approved', {
       id: changeOrderId,
@@ -980,7 +1055,9 @@ export async function onInsuranceExpiring(certId: string, daysLeft: number): Pro
       await sendInsuranceExpiring(parties.subEmail, parties.subName, projectName, c.policy_type, c.expiry_date, daysLeft);
     }
     if (parties.gcEmail) {
-      await sendInsuranceExpiring(parties.gcEmail, parties.subName, projectName, c.policy_type, c.expiry_date, daysLeft);
+      // The GC's copy opens the job's insurance screen; the sub's has no app login.
+      await sendInsuranceExpiring(parties.gcEmail, parties.subName, projectName, c.policy_type, c.expiry_date, daysLeft,
+        c.project_id ? `${APP_URL}/app/projects/${c.project_id}/insurance` : undefined);
     }
 
     await must(db.from('insurance_certificates').update({ last_checked_at: new Date().toISOString() }).eq('id', certId), 'insurance_certificates update');

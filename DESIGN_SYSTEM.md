@@ -323,7 +323,15 @@ Navigation glyphs (sidebar, job tool rows) are one colour: slate
 Notifications are one slim line, not a card: the kit `Toast` (status dot +
 words, 36px) and the status box (`StatusCenter`), whose DONE / WORKING heading
 is read to screen readers but not shown — only a failure or "no signal" keeps a
-visible heading.
+visible heading. A step may carry plain outlined text buttons under its words
+(never yellow): Retry on a failure trying again can fix, Undo / Discard on
+"Draft restored from 2:14 PM". A write kept offline always reads "Saved on this
+phone — will send when you're back online" (`SAVED_OFFLINE`, lib/ui/status).
+
+The leave prompt (`UnsavedGuardModal`) is the same everywhere: "Leave without
+saving?", one sentence ("Your changes to this RFI haven't been saved." plus "A
+draft is kept on this device." only when one is), then Keep editing (focused) ·
+Discard changes (red text) · Save and leave (the one yellow button).
 
 ## 4. Page hierarchy (every screen)
 

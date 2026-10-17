@@ -23,6 +23,8 @@ import { useUnsavedGuard, useComposerDirty } from '@/lib/useUnsavedGuard';
 import UnsavedGuardModal from '@/components/UnsavedGuardModal';
 import Suggest from '@/components/ui/Suggest';
 import { localDay } from '@/lib/calendar-day';
+import { usePeople } from '@/lib/hooks/usePeople';
+import { personName } from '@/lib/person-names';
 
 interface TodoItem {
   id: string;
@@ -67,6 +69,8 @@ export default function TodosPage() {
   const params = useParams();
   const projectId = params.projectId as string;
   const [todos, setTodos] = useState<TodoItem[]>([]);
+  // Assignees by name — the column can hold a user id (lib/person-names).
+  const people = usePeople(todos.map(t => t.assigned_to));
   const [loading, setLoading] = useState(true);
   const [showForm, setShowForm] = useState(false);
   const [form, setForm] = useState(EMPTY_FORM);
@@ -205,7 +209,7 @@ export default function TodosPage() {
   }
 
   const stats: StatItem[] = [
-    { label: 'Active', value: activeCount, icon: <ListChecks size={15} />, onClick: () => setFilter('active'), active: filter === 'active', sub: busiest ? `Most on ${busiest[0]} (${busiest[1]})` : `${team.length + subs.length} people on the roster` },
+    { label: 'Active', value: activeCount, icon: <ListChecks size={15} />, onClick: () => setFilter('active'), active: filter === 'active', sub: busiest ? `Most on ${personName(busiest[0], people) || 'one person'} (${busiest[1]})` : `${team.length + subs.length} people on the roster` },
     { label: 'Due this week', value: dueThisWeek, icon: <CalendarBlank size={15} />, sub: nextDue ? `Next: ${fmtDay(nextDue.due_date)} — ${nextDue.title.slice(0, 24)}` : 'Nothing coming due' },
     { label: 'Overdue', value: overdueCount, tone: overdueCount > 0 ? 'bad' : 'good', icon: <WarningCircle size={15} />, sub: overdueCount > 0 ? 'Needs attention today' : 'Nothing slipping' },
     { label: 'High priority open', value: highOpen, tone: highOpen > 0 ? 'bad' : 'default', icon: <Fire size={15} />, onClick: () => { setFilter('active'); setPriorityFilter(priorityFilter === 'high' ? 'all' : 'high'); }, active: priorityFilter === 'high', sub: highOpen > 0 ? 'Knock these out first' : 'None open' },
@@ -246,7 +250,7 @@ export default function TodosPage() {
         </div>
       ),
     },
-    { key: 'assigned_to', header: 'Assigned to', accessor: (t) => t.assigned_to || '', render: (t) => t.assigned_to || (!t.complete ? <span className="tdUnassigned">Unassigned</span> : '—') },
+    { key: 'assigned_to', header: 'Assigned to', accessor: (t) => t.assigned_to || '', render: (t) => personName(t.assigned_to, people) || (!t.complete ? <span className="tdUnassigned">Unassigned</span> : '—') },
     { key: 'due_date', header: 'Due', phone: 'show', accessor: (t) => t.due_date || '9999', render: (t) => <span className={isOverdue(t) ? 'tdLate' : 'tdDue'}>{dueLabel(t)}</span> },
     { key: 'priority', header: 'Priority', phone: 'show', accessor: (t) => PRIORITY_RANK[t.priority] ?? 9, render: (t) => <Badge tone={PRIORITY_TONE[t.priority] || 'neutral'} dot>{cap(t.priority)}</Badge> },
   ];

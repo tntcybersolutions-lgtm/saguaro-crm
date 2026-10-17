@@ -45,10 +45,13 @@ import RadioEvidence, {
 import { MODULES } from '@/lib/status-system';
 import { layout } from '@/lib/design-tokens';
 import { useOpenOnNew, useOpenRecord } from '@/lib/ui/open-on-new';
+import { formatRfiNumber, rfiLabel, nextRfiNumber as nextRfiNumberFor } from '@/lib/rfi';
+import { usePeople } from '@/lib/hooks/usePeople';
+import { personName } from '@/lib/person-names';
 
 interface RFI {
   id: string;
-  rfi_number: number;
+  rfi_number: number | string;
   subject: string;
   question: string;
   spec_section: string;
@@ -136,9 +139,9 @@ function ballInCourt(rfi: RFI): string {
   return /^(open|closed|answered|draft|submitted|pending|under_review|n\/a|none)$/i.test(v) ? '' : v;
 }
 
-/** "RFI-004" stays as stored; a bare number reads "#4". */
-const rfiNo = (n: unknown) => (/^\d+$/.test(String(n ?? '')) ? `#${n}` : String(n ?? ''));
-const rfiRef = (n: unknown) => (/^\d+$/.test(String(n ?? '')) ? `RFI #${n}` : String(n ?? 'RFI'));
+/** One RFI number, one look, everywhere (lib/rfi): "RFI-004". */
+const rfiNo = (n: unknown) => formatRfiNumber(n);
+const rfiRef = (n: unknown) => rfiLabel(n);
 
 const money = new Intl.NumberFormat('en-US', { style: 'currency', currency: 'USD', maximumFractionDigits: 2 });
 
@@ -209,6 +212,8 @@ const DATE_INPUT_STYLE: React.CSSProperties = {
 export default function RFIsPage() {
   const { projectId } = useParams() as { projectId: string };
   const [rfis, setRfis] = useState<RFI[]>([]);
+  // Who submitted / answered, as names — some rows keep the user's id (lib/person-names).
+  const people = usePeople(rfis.flatMap(r => [r.submitted_by, r.answered_by]));
   const [loading, setLoading] = useState(true);
   const [loadError, setLoadError] = useState('');
   const [showForm, setShowForm] = useState(false);
@@ -349,7 +354,8 @@ export default function RFIsPage() {
   // SmartCreate intelligence — ctx snapshot + the live log
   const subs: any[] = ctx?.subs || [];
   const architectName = ctx?.defaults?.architectName || ctx?.project?.architectName || '';
-  const nextRfiNumber = totalCount + 1;
+  // The number the job's next RFI gets (per job; the database stamps the real one).
+  const nextRfiNumber = nextRfiNumberFor(rfis.map(r => r.rfi_number));
   const oldestOpenDays = rfis.filter(r => r.status === 'open').reduce((m, r) => Math.max(m, daysOpen(r)), 0);
   const specDiv = (CSI_DIVISIONS as Record<string, { name: string }>)[fSpecSection.slice(0, 2)] ? fSpecSection.slice(0, 2) : '';
 
@@ -537,7 +543,11 @@ export default function RFIsPage() {
       });
       const d = await r.json();
       if (d.error) throw new Error(d.error);
-      show('RFI reassigned. The ball is in their court.');
+      // Say whether the new person was actually emailed — never promise mail that did not go.
+      const who = d.assigned as { name?: string; emailed?: string | null } | null | undefined;
+      show(who
+        ? (who.emailed ? `Reassigned to ${who.name}. Emailed ${who.emailed}.` : `Reassigned to ${who.name}. No email on file, so nobody was emailed.`)
+        : 'RFI updated.');
       revalidate();
     } catch (e: unknown) {
       // Rollback + reopen the assign form with the typed values intact.
@@ -761,7 +771,7 @@ export default function RFIsPage() {
 
           {selected.answer && (
             <div className="rfiSection">
-              <div className="rfiSectionTitle">Answer{selected.answered_by ? ` — ${selected.answered_by}` : ''}{detail?.answer_source === 'email' ? ' · via email' : ''}</div>
+              <div className="rfiSectionTitle">Answer{personName(selected.answered_by, people) ? ` — ${personName(selected.answered_by, people)}` : ''}{detail?.answer_source === 'email' ? ' · via email' : ''}</div>
               <div className="rfiProse">{selected.answer}</div>
             </div>
           )}
@@ -808,7 +818,7 @@ export default function RFIsPage() {
                 ['Schedule Impact', detailValue(scheduleImpact ?? '—')],
                 ['Spec Section', selected.spec_section || ''],
                 ['Drawing', detailValue(detail?.drawing_reference ? String(detail.drawing_reference) : '—')],
-                ['Submitted By', selected.submitted_by || ''],
+                ['Submitted By', personName(selected.submitted_by, people) || ''],
                 ['Created', fmtDate(selected.created_at)],
               ].filter(([, v]) => v != null && v !== '' && v !== '—') as [string, React.ReactNode][]} />
               {detailError && (
@@ -965,7 +975,7 @@ export default function RFIsPage() {
         open={showForm}
         onClose={closeCreate}
         title="New RFI"
-        subtitle={`#${nextRfiNumber} on this project · ${openCount} open${overdueCount > 0 ? `, ${overdueCount} overdue` : ''}${subs.length > 0 ? ` · ${subs.length} subs on the roster` : ''}`}
+        subtitle={`${nextRfiNumber} on this project · ${openCount} open${overdueCount > 0 ? `, ${overdueCount} overdue` : ''}${subs.length > 0 ? ` · ${subs.length} subs on the roster` : ''}`}
         onSubmit={async () => { await submitRFI(); }}
         submitLabel="Submit RFI"
         busy={saving}
@@ -976,7 +986,7 @@ export default function RFIsPage() {
             <Input value={fSubject} onChange={e => { setFSubject(e.target.value); if (formError) setFormError(''); }} placeholder="e.g. Clarify footing depth at grid A-3" autoFocus aria-invalid={formError === 'Subject is required.' || undefined} />
           </Field>
           <Field label="RFI Number" hint="Next in the project sequence — confirmed at submit.">
-            <Input value={`#${nextRfiNumber}`} readOnly />
+            <Input value={nextRfiNumber} readOnly />
           </Field>
           <Field label="Response Due" hint={auto.due && fDueDate === isoPlusDays(7) ? 'Defaulted to +7 days — overdue tracking runs against this date.' : 'Overdue tracking runs against this date.'}>
             <div className="rfiDateInput"><SaguaroDatePicker value={fDueDate} onChange={setFDueDate} style={DATE_INPUT_STYLE} /></div>

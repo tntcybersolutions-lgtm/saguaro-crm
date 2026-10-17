@@ -117,13 +117,13 @@ check('link on, due tomorrow: Remind is red (≤ 2 days) and offered', onLink.fi
 
 /* ── Other builders ───────────────────────────────────────────────────── */
 
-check('RFI labels', rfiLabel('14') === 'RFI 14' && rfiLabel('RFI-014') === 'RFI 14' && rfiLabel('') === 'the RFI');
+check('RFI labels', rfiLabel('14') === 'RFI-014' && rfiLabel('RFI-014') === 'RFI-014' && rfiLabel('') === 'the RFI');
 const rf = rfiItems([
   { id: 'r1', project_id: CR, rfi_number: '14', subject: 'Smoke damper sequence', status: 'open', due_date: '2026-10-08', ball_in_court: 'gc' },
   { id: 'r2', project_id: CR, rfi_number: '15', subject: 'Sensor location', status: 'open', response_due_date: '2026-10-12', ball_in_court: 'architect' },
 ], ctx, { id: 'me', email: 'pm@zz.test' });
-check('RFI in our court, 2 days late → "Answer RFI 14", red', rf[0].title === 'Answer RFI 14' && rf[0].tone === 'red' && bucketOf(rf[0], T) === 'today');
-check("RFI in the architect's court → \"Get an answer on RFI 15\", This week", rf[1].title === 'Get an answer on RFI 15' && bucketOf(rf[1], T) === 'week' && rf[1].day === '2026-10-12');
+check('RFI in our court, 2 days late → "Answer RFI-014", red', rf[0].title === 'Answer RFI-014' && rf[0].tone === 'red' && bucketOf(rf[0], T) === 'today');
+check("RFI in the architect's court → \"Get an answer on RFI-015\", This week", rf[1].title === 'Get an answer on RFI-015' && bucketOf(rf[1], T) === 'week' && rf[1].day === '2026-10-12');
 
 const cois = coiItems([
   { id: 'c1', project_id: CR, sub_id: 's-valley', sub_name: 'Valley Sheet Metal Co.', policy_type: 'GL', expiry_date: '2026-10-30' },

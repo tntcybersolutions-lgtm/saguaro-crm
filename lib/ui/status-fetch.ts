@@ -13,6 +13,12 @@
  * queue) sends `x-saguaro-status: off`. A caller can also name the step
  * itself: `x-saguaro-status: Sending pay app to the owner|Pay app sent|Couldn't send the pay app`.
  * The header is removed before the request leaves the browser.
+ *
+ * A write that fails for a reason trying again can fix (no signal, a server
+ * hiccup, a conflict, too many at once) gets a Retry button. Retry presses the
+ * same button again when it is still on screen — so the page's own handler
+ * runs and the screen updates as it would have — and otherwise sends the same
+ * request once more.
  */
 import { describeRequest, type StatusWords } from './status-labels';
 import { step, getStatusGroups } from './status';
@@ -25,6 +31,26 @@ const GESTURE_MS = 10_000;
 
 let installed = false;
 let lastGesture = 0;
+/** The button (or form) the person last pressed — what Retry presses again. */
+let lastTrigger: HTMLElement | null = null;
+let retryDepth = 0;
+
+/** True while Retry is pressing a button on the person's behalf (the unsaved-changes gate counts it as theirs). */
+export function inRetryPress(): boolean {
+  return retryDepth > 0;
+}
+
+/** Failures that trying again can fix. A refusal (no permission, bad input, gone) cannot. */
+export function isRetryable(status: number | null): boolean {
+  if (status == null) return true; // never reached the server
+  return status >= 500 || status === 408 || status === 409 || status === 425 || status === 429;
+}
+
+/** A body that can be sent a second time as it is. A stream cannot. */
+function replayable(init?: RequestInit): boolean {
+  const b = init?.body;
+  return b == null || typeof b === 'string' || b instanceof FormData || b instanceof URLSearchParams || b instanceof Blob || b instanceof ArrayBuffer || ArrayBuffer.isView(b);
+}
 
 function headerOf(input: RequestInfo | URL, init?: RequestInit): string | null {
   const h = new Headers(input instanceof Request ? input.headers : undefined);
@@ -127,9 +153,29 @@ export function installStatusFetch(): void {
   if (installed || typeof window === 'undefined' || typeof window.fetch !== 'function') return;
   installed = true;
   const mark = () => { lastGesture = Date.now(); };
-  window.addEventListener('pointerdown', mark, { capture: true, passive: true });
+  const press = (e: Event) => {
+    mark();
+    const t = e.target instanceof Element ? e.target.closest<HTMLElement>('button, input[type="submit"], [role="button"], [role="menuitem"]') : null;
+    // The status box's own buttons (Retry, Close) are never what a retry presses.
+    if (t && !t.closest('.stc')) lastTrigger = t;
+  };
+  window.addEventListener('pointerdown', press, { capture: true, passive: true });
+  window.addEventListener('click', press, { capture: true, passive: true });
   window.addEventListener('keydown', mark, { capture: true, passive: true });
-  window.addEventListener('submit', mark, { capture: true });
+  window.addEventListener('submit', (e) => {
+    mark();
+    const sub = (e as SubmitEvent).submitter;
+    if (sub instanceof HTMLElement) lastTrigger = sub;
+  }, { capture: true });
+  // A native Are-you-sure holds the write back while the person reads it; the
+  // answer is their gesture, so the write that follows still shows its step.
+  for (const name of ['confirm', 'prompt'] as const) {
+    const orig = window[name];
+    if (typeof orig !== 'function') continue;
+    (window as unknown as Record<string, unknown>)[name] = function (this: Window, ...args: unknown[]) {
+      try { return (orig as (...a: unknown[]) => unknown).apply(this, args); } finally { mark(); }
+    };
+  }
 
   const supabaseOrigin = (() => {
     try { return process.env.NEXT_PUBLIC_SUPABASE_URL ? new URL(process.env.NEXT_PUBLIC_SUPABASE_URL).origin : ''; } catch { return ''; }
@@ -151,16 +197,35 @@ export function installStatusFetch(): void {
     const open = getStatusGroups().some((g) => !g.dismissed && g.settledAt == null);
     if (!flag && !open && Date.now() - lastGesture > GESTURE_MS) return original(input, init);
 
+    // What Retry needs: the button pressed for this write, and a copy of the request.
+    const trigger = Date.now() - lastGesture <= GESTURE_MS && lastTrigger?.isConnected ? lastTrigger : null;
+    const canReplay = replayable(init) && (!(input instanceof Request) || !input.bodyUsed);
+    const spare = input instanceof Request && canReplay ? input.clone() : null;
+    const retry = () => {
+      const b = trigger as HTMLButtonElement | null;
+      if (b && b.isConnected && !b.disabled && b.getAttribute('aria-disabled') !== 'true') {
+        lastGesture = Date.now();
+        lastTrigger = b;
+        retryDepth++;
+        try { b.click(); } finally { retryDepth--; }
+        return;
+      }
+      if (!canReplay) return;
+      lastGesture = Date.now();
+      void window.fetch(spare ? spare.clone() : input, init).catch(() => { /* its own step says why */ });
+    };
+    const retryOn = (status: number | null) => (isRetryable(status) && (trigger || canReplay) ? [{ label: 'Retry', run: retry }] : []);
+
     const h = step(words.doing);
     try {
       const res = await original(input, init);
       if (res.ok || res.status === 304) h.done(words.done);
-      else void reasonFromResponse(res).then((why) => h.fail(words.failed, why));
+      else void reasonFromResponse(res).then((why) => { h.fail(words.failed, why); h.setActions(retryOn(res.status)); });
       return res;
     } catch (e) {
       if (e instanceof DOMException && e.name === 'AbortError') h.drop();
-      else if (isNetworkError(e)) h.fail(words.failed, NO_SIGNAL_DETAIL, true);
-      else h.fail(words.failed, 'Something stopped it before it reached the server. Try again.');
+      else if (isNetworkError(e)) { h.fail(words.failed, NO_SIGNAL_DETAIL, true); h.setActions(retryOn(null)); }
+      else { h.fail(words.failed, 'Something stopped it before it reached the server. Try again.'); h.setActions(retryOn(null)); }
       throw e;
     }
   };

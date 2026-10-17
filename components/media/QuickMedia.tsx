@@ -33,6 +33,7 @@ import { addToOutbox, isOffline, looksLikeNetworkError } from '@/lib/offline/out
 import { loadJobs } from '@/lib/offline/last-known';
 import { photoFix } from '@/lib/photo-gps';
 import { useToast } from '@/components/Toast';
+import { SAVED_OFFLINE } from '@/lib/ui/status';
 
 export const QUICK_MEDIA_EVENT = 'saguaro:quick-media';
 const LAST_JOB_KEY = 'sag_quick_media_job';
@@ -112,7 +113,7 @@ export default function QuickMedia() {
     if (!projectId) throw new Error('Pick a job first.');
     const keep = async () => {
       await addToOutbox({ projectId, kind, album: kind === 'video' ? null : 'General', name: file.name || (kind === 'video' ? 'video.mov' : 'photo.jpg'), type: file.type, size: file.size, file, location: kind === 'image' ? await photoFix() : null });
-      return { doneLabel: "Saved on this phone — sends when you're back online" };
+      return { doneLabel: SAVED_OFFLINE };
     };
     if (isOffline()) return keep();
     try {

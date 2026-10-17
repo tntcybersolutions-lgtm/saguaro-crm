@@ -493,6 +493,34 @@ the ungated proposal_signatures / _events (20261017c, applied). Found on the way
   above STATUS_COLORS says under contract is blue. Needs a ruling on the color.
 - `--title-section` is `var(--c-yellow-hi)` (`app/globals.css:217`): every Card / section heading is yellow text,
   against DESIGN_SYSTEM §4 ("yellow never labels"). Needs a ruling.
+- `app/api/radio/promote/route.ts:226` (and :83, :102) returns `error.message` from the database to the
+  caller ("Could not create the RFI: …") instead of `apiError` (§3).
+- `lib/db-embeds.ts` still lists `rfis → projects` as a duplicate FK; live `pg_constraint` (17 Oct) shows only
+  `rfis_project_id_fkey`, so the note is stale (harmless — the named embed still works).
+- `app/api/sage/ask-docs/route.ts:19` and `app/api/takeoff/spec-check/route.ts:20` read `rfis.title`,
+  `description`, `response`, `specification_section`, `number` — none exist on `rfis` (it is subject /
+  question / answer / spec_section / rfi_number), so RFIs never match there.
+- `lib/email.ts` sub- and owner-facing buttons (`sendBidAwarded`, `sendBidNotAwarded`, `sendWelcome`) still
+  point at `${APP_URL}/app`; a sub has no app login, so these want the sub portal link.
+- `lib/esign-events.ts:31` links a signed contract to the contracts list, not the contract (the signature
+  row's `source_id` is only known to be a proposal id).
+- `app/api/rfis/[id]/respond/route.ts` updates the RFI without checking it exists (no 404), and
+  `app/api/rfis/[id]/status/route.ts` likewise.
+- Project invoices and bills have no one-record page; `lib/record-links` sends their links to the list.
+- "ZZ QA Reply-by-email test" job has RFI-007 and RFI-008 (test data created before per-job numbering);
+  demo tenant "Desert Vista Medical Plaza" has RFI-001/002/004–007 and "Camelback Fire Station 34" RFI-003.
+  Left as sent; renumber only if the owner says so.
+- Found on fix/gaps-subs-names-minutes (not fixed there):
+  - `app/app/projects/[projectId]/compliance/page.tsx` License column shows "Pending" for every sub — no
+    license data source is read (the scorecard API does not return `subcontractors.license_number` /
+    `license_expiry`), so the badge is a made-up status. Missing licenses stat is always 0 for the same reason.
+  - Two subcontract pickers now exist: `lib/sub-invoice-posting.ts` `pickSubCommitment` (posting, one
+    subcontract or nothing) and `lib/sub-billing-cap.ts` `subContracts` (cap, all of the sub's live
+    subcontracts summed). They agree on a job with one subcontract per sub; worth one shared picker.
+  - `app/api/projects/[projectId]/route.ts` maps a contract's `name` from `party_name` (the contact person,
+    "Hector Alvarado") before `party_company`, so any screen listing contracts as "subs" names a person.
+  - `/api/compliance` reads all of the tenant's `w9_requests` to match by email or company name (no sub id on
+    that table); fine at today's volume, worth a `sub_id` column if requests grow.
 
 ## 2026-10-16 — found while driving drawings / schedule / reports / models / sub billing (not fixed)
 

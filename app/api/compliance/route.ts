@@ -2,7 +2,7 @@ import { NextRequest, NextResponse } from 'next/server';
 import { createServerClient, getUser } from '@/lib/supabase-server';
 import { requestDay } from '@/lib/time-zone';
 import { apiError } from '@/lib/api-error';
-import { coiStatus, type CoiCertRow } from '@/lib/coi-coverage';
+import { loadSubCompliance, type SubRow } from '@/lib/sub-compliance';
 
 export const dynamic = 'force-dynamic';
 
@@ -72,14 +72,11 @@ export async function GET(req: NextRequest) {
   const { today } = await requestDay(req.headers, db, tenantId, 'compliance');
   const subIds = subs.map((s: any) => s.id);
 
-  // Fetch all insurance certificates for these subs
-  // Every coverage column (lib/coi-coverage COI_CERT_COLUMNS), not just policy_type + expiry_date.
-  const { data: certs, error: certErr } = await db
-    .from('insurance_certificates')
-    .select('sub_id, policy_type, expiry_date, gl_expiry, wc_expiry, auto_expiry, umbrella_expiry, status')
-    .eq('tenant_id', tenantId)
-    .in('sub_id', subIds);
-  if (certErr) throw certErr;
+  /* Compliant or not is ONE rule (lib/sub-compliance) — W-9 on file and
+     insurance not expired, read from every place either can live. The W-9
+     screen, the sub portal's invoice gate and the award gate read the same
+     rule, so no two screens can disagree about the same sub. */
+  const rules = await loadSubCompliance(db, tenantId, subs as SubRow[], today);
 
   // Fetch all lien waivers for these subs
   const { data: waivers, error: waiverErr } = await db
@@ -90,60 +87,28 @@ export async function GET(req: NextRequest) {
     .in('subcontractor_id', subIds);
   if (waiverErr) throw waiverErr;
 
-  // w9_requests has no subcontractor foreign key at all — a request is raised
-  // against a vendor_email, because a W-9 goes out to whoever is getting paid,
-  // sub or not. Email is the only join there is.
-  const emailOf = (s: any) => String(s.email || s.contact_email || '').trim().toLowerCase();
-  const subEmails = (subs as any[]).map(emailOf).filter(Boolean);
-  const { data: w9s, error: w9Err } = subEmails.length
-    ? await db
-        .from('w9_requests')
-        .select('vendor_email, status, submitted_at')
-        .eq('tenant_id', tenantId)
-        .in('vendor_email', subEmails)
-    : { data: [] as any[], error: null };
-  if (w9Err) throw w9Err;
-
-  const certMap = new Map<string, any[]>();
   const waiverMap = new Map<string, any[]>();
-  const w9Map = new Map<string, any>();
-
-  // insurance_certificates keys the sub as sub_id, not subcontractor_id. Reading
-  // the wrong property bucketed every certificate under `undefined`, so the
-  // insurance half of the score — 40 of the 100 points — was always zero.
-  for (const cert of (certs || [])) {
-    const id = (cert as any).sub_id;
-    if (!certMap.has(id)) certMap.set(id, []);
-    certMap.get(id)!.push(cert);
-  }
   for (const w of (waivers || [])) {
     const id = (w as any).subcontractor_id;
     if (!waiverMap.has(id)) waiverMap.set(id, []);
     waiverMap.get(id)!.push(w);
   }
-  // Keyed by email, and a submitted request always wins over an older pending one.
-  for (const w9 of (w9s || [])) {
-    const key = ((w9 as any).vendor_email || '').toLowerCase();
-    if (!key) continue;
-    if (!w9Map.has(key) || (w9 as any).submitted_at) w9Map.set(key, w9);
-  }
-
   const scoredSubs = (subs as any[]).map((sub) => {
-    const subCerts = certMap.get(sub.id) || [];
     const subWaivers = waiverMap.get(sub.id) || [];
-    const w9 = w9Map.get(emailOf(sub));
+    const rule = rules.get(sub.id)!;
 
-    // W-9 status (25 points). subcontractors carries a w9_on_file boolean; the
-    // request lifecycle (pending / submitted) lives in w9_requests.
-    const w9Status = sub.w9_on_file === true ? 'approved' : (w9?.status || 'not_requested');
-    const w9Score = w9Status === 'submitted' || w9Status === 'approved' ? 25 : w9Status === 'pending' ? 10 : 0;
+    // W-9 (25 points) — the rule's answer: on file, asked for, or missing
+    // (in the vocabulary the screens already read: approved / pending / not_requested).
+    const w9Status = rule.w9 === 'on_file' ? 'approved' : rule.w9 === 'requested' ? 'pending' : 'not_requested';
+    const w9Score = rule.w9 === 'on_file' ? 25 : rule.w9 === 'requested' ? 10 : 0;
 
-    // Insurance status (40 points) — current GL and WC, read from every
-    // coverage on the certificate (an ACORD 25 carries both on one row).
-    const coi = coiStatus(subCerts as CoiCertRow[], today, sub.insurance_expiry);
-    const hasGL = coi.hasGL;
+    // Insurance (40 points) — current GL and WC, read from every coverage on
+    // the certificate (an ACORD 25 carries both on one row); a COI the sub
+    // uploaded in their portal counts as liability coverage.
+    const coi = rule.coi;
+    const hasGL = rule.insurance !== 'missing';
     const hasWC = coi.hasWC;
-    const insScore = (hasGL ? 20 : 0) + (hasWC ? 20 : 0) - (coi.expiringCerts > 0 ? 5 : 0);
+    const insScore = (hasGL ? 20 : 0) + (hasWC ? 20 : 0) - (rule.insurance === 'expiring' ? 5 : 0);
 
     // Lien waiver status (35 points)
     const totalWaivers = subWaivers.length;
@@ -151,10 +116,11 @@ export async function GET(req: NextRequest) {
     const waiverScore = totalWaivers === 0 ? 25 : Math.round((signedWaivers / totalWaivers) * 35);
 
     const score = Math.max(0, Math.min(100, w9Score + insScore + waiverScore));
-    /* No current liability coverage is not a points problem, it is a hold: the
-       award gate refuses that sub, so the scorecard must not call them "at
-       risk" while a W-9 and signed waivers carry the score to 60. */
-    const compliance = !hasGL ? 'non_compliant' : score >= 80 ? 'compliant' : score >= 50 ? 'at_risk' : 'non_compliant';
+    /* Not compliant by the rule (no W-9 on file, or no current insurance) is
+       not a points problem, it is a hold: the portal won't take their invoice
+       and the award gate refuses them, so the scorecard must not call them
+       "at risk" while signed waivers carry the score. */
+    const compliance = !rule.compliant ? 'non_compliant' : score >= 80 ? 'compliant' : 'at_risk';
 
     const assigned = assignMap.get(sub.id);
 
@@ -168,11 +134,14 @@ export async function GET(req: NextRequest) {
       project_ids: assigned?.projects || [],
       score,
       compliance,
-      w9: { status: w9Status, score: w9Score },
+      compliant: rule.compliant,
+      missing: rule.missing,
+      w9: { status: w9Status, on_file: rule.w9 === 'on_file', score: w9Score },
       insurance: {
+        status: rule.insurance,
         active_certs: coi.activeCerts || (hasGL ? 1 : 0),
-        expiring_certs: coi.expiringCerts,
-        soonest_expiry: coi.soonestExpiry,
+        expiring_certs: rule.insurance === 'expiring' ? Math.max(1, coi.expiringCerts) : coi.expiringCerts,
+        soonest_expiry: rule.insuranceExpiry,
         has_gl: hasGL,
         has_wc: hasWC,
         score: Math.max(0, insScore),

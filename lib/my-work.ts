@@ -25,6 +25,7 @@ import { daysUntilDay, toDay } from '@/lib/calendar-day';
 import { inviteState } from '@/lib/bid-invite-state';
 import { bidDueDay, isBiddingStatus } from '@/lib/bid-deadline';
 import { inspectionOutcome } from '@/lib/inspection-result';
+import { rfiLabel as formatRfiLabel } from '@/lib/rfi';
 
 /* ── Shape ─────────────────────────────────────────────────────────────── */
 
@@ -284,11 +285,9 @@ export interface RfiRow {
   assigned_to?: string | null; assigned_to_email?: string | null;
 }
 
-/** 'RFI-014' stays; '14' → 'RFI 14'; nothing → 'the RFI'. */
+/** The RFI number the one way every screen shows it (lib/rfi): 'RFI-014'; nothing → 'the RFI'. */
 export function rfiLabel(n: unknown): string {
-  const s = String(n ?? '').trim();
-  if (!s) return 'the RFI';
-  return /^rfi/i.test(s) ? s.toUpperCase().replace(/^RFI[\s#-]*0*(\d)/, 'RFI $1') : `RFI ${s.replace(/^#/, '').replace(/^0+(\d)/, '$1')}`;
+  return formatRfiLabel(n, 'the RFI');
 }
 
 const OURS = ['', 'gc', 'contractor', 'general contractor', 'us'];

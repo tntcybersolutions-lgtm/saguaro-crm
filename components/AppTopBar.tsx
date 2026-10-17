@@ -5,6 +5,7 @@
  * One solid row with a hairline under it:
  *
  *   phone    [‹]  Page title …………………………………  (✦)  (CD)
+ *            (inside a job the title has the job under it — tap to switch)
  *   desktop  ⌂ Home / [Job ▾] / Parent / Page title …  Search  Photos  Help  (✦ Sage)  🔔  (CD)
  *
  * Desktop is a trail, Procore's way (Chad, 17 Oct 2026: "give users a way to
@@ -217,7 +218,15 @@ export default function AppTopBar({
       {/* The page you are on. Takes the rest of the row. On desktop Home's
           title is the Home crumb itself, so it is not said twice. */}
       <span className="sag-tb-title sag-crumb-last" aria-current={atHome ? undefined : 'page'}>
-        {atHome ? <span className="sag-tb-phone-only">{title}</span> : title}
+        {atHome ? <span className="sag-tb-phone-only">{title}</span>
+          : projId ? (
+            <>
+              <span className="sag-topbar-desktop">{title}</span>
+              {/* Phone: the screen, and under it the job — tap to switch jobs. */}
+              <span className="sag-tb-phone-only sag-tb-jobtitle"><HeaderProjectPicker userId={userId} variant="title" title={title || undefined} /></span>
+            </>
+          )
+          : title}
       </span>
 
       {/* Search (⌘K) */}

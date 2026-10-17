@@ -16,7 +16,7 @@
  */
 import React, { useEffect, useRef, useState, useSyncExternalStore } from 'react';
 import { Check, X } from '@phosphor-icons/react';
-import { subscribeStatus, getStatusGroups, getServerStatusGroups, dismissGroup, step, registerStatusCenter, type StatusGroup, type StatusStep } from '@/lib/ui/status';
+import { subscribeStatus, getStatusGroups, getServerStatusGroups, dismissGroup, step, registerStatusCenter, runAction, type StatusGroup, type StatusStep } from '@/lib/ui/status';
 import { installStatusFetch } from '@/lib/ui/status-fetch';
 
 const CSS = `
@@ -55,6 +55,11 @@ const CSS = `
 .stc-detail { margin-top: 2px; font-size: 13px; font-weight: 600; color: var(--text-secondary); overflow-wrap: anywhere; }
 .stc-bar { margin-top: 6px; height: 4px; border-radius: 4px; background: var(--border-subtle); overflow: hidden; }
 .stc-bar > span { display: block; height: 100%; background: var(--info-fg); border-radius: 4px; transition: width .25s ease; }
+.stc-acts { display: flex; flex-wrap: wrap; gap: 8px; margin-top: 8px; }
+.stc-act { min-height: 36px; padding: 0 14px; border-radius: 8px; border: 1px solid var(--border-default); background: transparent;
+  color: var(--text-primary); font: inherit; font-size: 14px; font-weight: 700; cursor: pointer; }
+.stc-act:hover { background: var(--bg-surface-2); }
+.stc-act:focus-visible { outline: 2px solid var(--text-primary); outline-offset: 2px; }
 .stc-more { font-size: 13px; color: var(--text-tertiary); padding: 4px 0 2px; }
 /* Done / working (every screen size): the steps carry the meaning, so the
    heading word steps aside (still read out to a screen reader) and the close
@@ -72,6 +77,7 @@ const CSS = `
   .stc-x { width: 44px; height: 44px; margin: 0; }
   .stc:not([data-tone="bad"]):not([data-tone="nosig"]) ol { padding-right: 44px; }
   .stc ol { max-height: 32vh; }
+  .stc-act { min-height: 44px; }
   .stc li, .stc:not([data-tone="bad"]):not([data-tone="nosig"]) li { padding: 11px 0; }
 }
 `;
@@ -100,6 +106,13 @@ function Row({ s, n, numbered }: { s: StatusStep; n: number; numbered: boolean }
       <span className="stc-body">
         <span className="stc-label">{numbered ? `${n}. ` : ''}{text}{count}</span>
         {s.detail ? <span className="stc-detail" style={{ display: 'block' }}>{s.detail}</span> : null}
+        {settled && s.actions?.length ? (
+          <span className="stc-acts" style={{ display: 'flex' }}>
+            {s.actions.map((a) => (
+              <button key={a.label} type="button" className="stc-act" onClick={() => runAction(s.id, a)}>{a.label}</button>
+            ))}
+          </span>
+        ) : null}
         {s.state === 'running' && typeof s.progress === 'number' ? (
           <span className="stc-bar" style={{ display: 'block' }}><span style={{ width: `${Math.round(Math.max(0.03, Math.min(1, s.progress)) * 100)}%` }} /></span>
         ) : null}
@@ -183,7 +196,7 @@ export default function StatusCenter() {
   return (
     <>
       <style dangerouslySetInnerHTML={{ __html: CSS }} />
-      <section className="stc" data-tone={tone} data-place={place} role="status" aria-live="polite" aria-label="What Saguaro is doing">
+      <section className="stc" data-tone={tone} data-place={place} role={tone === 'bad' ? 'alert' : 'status'} aria-live={tone === 'bad' ? 'assertive' : 'polite'} aria-label="What Saguaro is doing">
         <div className="stc-head">
           <span className="stc-title">{TITLE[tone]}</span>
           <button type="button" className="stc-x" aria-label="Close" onClick={() => dismissGroup(g.id)}><X size={18} weight="bold" /></button>
