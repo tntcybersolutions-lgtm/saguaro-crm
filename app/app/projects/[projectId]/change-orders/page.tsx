@@ -39,13 +39,14 @@ import { useParams } from 'next/navigation';
 import { toCents, toDollars, summarizeContract } from '@/lib/calc';
 import {
   Robot, X, Warning, CheckCircle, XCircle, Plus, Clipboard, PencilSimple, Copy, Trash,
-  ArrowClockwise, WarningCircle, ArrowSquareOut, Handshake, SealCheck, HourglassMedium, Scales,
+  ArrowClockwise, WarningCircle, ArrowSquareOut, SealCheck, HourglassMedium, Scales, Lightbulb, Stack,
 } from '@phosphor-icons/react';
 import {
   PageShell, Card, StatRow, Badge, Button, Toolbar, DataTable, EmptyState, RowActions,
-  FormModal, Field, Input, Textarea, Select, FormGrid, DetailList, Toast, useToast,
+  FormModal, Field, Input, Textarea, Select, FormGrid, DetailList, Toast, useToast, Tabs,
   type Column, type Action, type BadgeTone, type StatItem,
 } from '@/components/ui/kit';
+import CoWorkflow from '@/components/change-orders/CoWorkflow';
 import Suggest from '@/components/ui/Suggest';
 import { layout } from '@/lib/design-tokens';
 import { useOpenRecord } from '@/lib/ui/open-on-new';
@@ -132,12 +133,34 @@ function AIRiskPanel({ result: raw, onClose }: { result: AIRiskResult; onClose: 
   );
 }
 
-/** One status → one badge. Pending amber (a decision is owed), Approved green, Rejected red. */
-function statusBadge(s:string|null|undefined): { label:string; tone:BadgeTone } {
-  const k = String(s||'pending').toLowerCase();
-  if (k==='approved') return { label:'Approved', tone:'ongoing' };
+type Stage = 'pco'|'cor'|'approved';
+const APPROVED_STATUSES = ['approved','schedule_updated','budget_updated'];
+/** The stage as the database trigger keeps it (20261017g); rows read before it was set read the same way. */
+function stageOf(c:any): Stage {
+  const st = String(c?.status||'').toLowerCase();
+  if (APPROVED_STATUSES.includes(st)) return 'approved';
+  const s = String(c?.stage||'').toLowerCase();
+  if (s==='pco'||s==='cor') return s;
+  return st==='draft'||st==='identified'||String(c?.change_type||'').toLowerCase()==='pco' ? 'pco' : 'cor';
+}
+const isClosed = (c:any) => ['rejected','void'].includes(String(c?.status||'').toLowerCase());
+/** Counted once: a PCO rolled into a request is carried by the request. */
+const counted = (c:any) => !c?.cor_id && !isClosed(c);
+
+/** One change → one badge: where it is in PCO → request → approved. */
+function statusBadge(c:any, byId?: Map<string, any>): { label:string; tone:BadgeTone } {
+  const k = String(c?.status||'pending').toLowerCase();
   if (k==='rejected') return { label:'Rejected', tone:'overdue' };
-  return { label:'Pending', tone:'under_contract' };
+  if (k==='void') return { label:'Void', tone:'neutral' };
+  const st = stageOf(c);
+  if (st==='approved') return { label:'Approved', tone:'ongoing' };
+  if (st==='pco') {
+    const cor = c?.cor_id && byId ? byId.get(String(c.cor_id)) : null;
+    return { label: c?.cor_id ? `In CO-${padCo(cor?.co_number ?? '')}` : 'Potential', tone:'neutral' };
+  }
+  if (k==='submitted') return { label:'Owner to sign', tone:'under_contract' };
+  if (c?.sent_to_owner_at) return { label:'With owner', tone:'under_contract' };
+  return { label:'Request', tone:'under_contract' };
 }
 
 /** One label / value line of the composer's live contract ladder. */
@@ -194,6 +217,11 @@ const CSS = `
 .coRow > span + span { color: var(--text-primary); font-weight: 600; font-variant-numeric: tabular-nums; white-space: nowrap; }
 .coRow[data-strong="true"] > span { color: var(--text-primary); font-weight: 800; }
 .coFormBtns { display: flex; gap: 8px; flex-wrap: wrap; }
+.coPick { list-style: none; margin: 16px 0 0; padding: 0; }
+.coPick li { border-bottom: 1px solid var(--border-subtle); }
+.coPick label { display: grid; grid-template-columns: auto auto minmax(0,1fr) auto; align-items: center; gap: 12px; min-height: 48px; cursor: pointer; font-size: var(--fs-md); }
+.coPick input { width: 18px; height: 18px; accent-color: var(--brand-primary); }
+.coPickT { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; color: var(--text-primary); }
 .coInlineErr { display: flex; align-items: center; gap: 8px; flex-wrap: wrap; font-size: var(--fs-sm); color: var(--status-overdue); }
 .coRisk { border: 1px solid var(--brand-primary-25); border-radius: var(--radius-sm); padding: 14px 16px; background: var(--bg-surface-2); display: flex; flex-direction: column; gap: 12px; }
 .coRiskHead { display: flex; align-items: center; gap: 8px; flex-wrap: wrap; font-weight: 800; color: var(--text-primary); font-size: var(--fs-md); }
@@ -248,6 +276,16 @@ export default function ChangeOrdersPage() {
   const [coCopiedId, setCoCopiedId] = useState<string|null>(null);
   const [coSearch,setCoSearch] = useState('');
   const [coStatusFilter,setCoStatusFilter] = useState('all');
+  /** 'all' | 'pco' | 'cor' | 'approved' | 'rejected' — the stage view of the log. */
+  const [stageView,setStageView] = useState('all');
+  const [fKind,setFKind] = useState<'cor'|'pco'>('cor');
+  const [fMin,setFMin] = useState('');
+  const [fMax,setFMax] = useState('');
+  const [showRoll,setShowRoll] = useState(false);
+  const [rollPick,setRollPick] = useState<string[]>([]);
+  const [rollTitle,setRollTitle] = useState('');
+  const [rolling,setRolling] = useState(false);
+  const [wfKey,setWfKey] = useState(0);
 
   // /api/project-context snapshot — the screen walks in knowing the contract
   // money, CO history, bid packages, and schedule before the GC types anything.
@@ -263,10 +301,10 @@ export default function ChangeOrdersPage() {
 
   /* ── Unsaved-work protection (R14): dirty once anything is typed in the
    *    composer; draft autosaves per project and restores on return. ── */
-  const coFormDirty = showForm && (!!fTitle || !!fDesc || !!fReason || !!fCost || !!fSchedule || !!fRelatedPkg);
+  const coFormDirty = showForm && (!!fTitle || !!fDesc || !!fReason || !!fCost || !!fSchedule || !!fRelatedPkg || !!fMin || !!fMax);
   const coDraft = useMemo(() => ({
-    fTitle, fDesc, fReason, fCost, fSchedule, fRelatedPkg,
-  }), [fTitle, fDesc, fReason, fCost, fSchedule, fRelatedPkg]);
+    fTitle, fDesc, fReason, fCost, fSchedule, fRelatedPkg, fKind, fMin, fMax,
+  }), [fTitle, fDesc, fReason, fCost, fSchedule, fRelatedPkg, fKind, fMin, fMax]);
   const guard = useUnsavedGuard({
     dirty: coFormDirty,
     draftKey: `change-order:${projectId}`,
@@ -276,6 +314,7 @@ export default function ChangeOrdersPage() {
       if (!v) return;
       setFTitle(v.fTitle ?? ''); setFDesc(v.fDesc ?? ''); setFReason(v.fReason ?? '');
       setFCost(v.fCost ?? ''); setFSchedule(v.fSchedule ?? ''); setFRelatedPkg(v.fRelatedPkg ?? '');
+      setFKind(v.fKind === 'pco' ? 'pco' : 'cor'); setFMin(v.fMin ?? ''); setFMax(v.fMax ?? '');
       setShowForm(true);
     },
     onSave: () => submitCO(),
@@ -350,13 +389,15 @@ export default function ChangeOrdersPage() {
     try{
       const r = await fetch('/api/change-orders/create',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({
         projectId,title:fTitle,description:fDesc,reason:fReason,
-        costImpact:parseFloat(fCost)||0,scheduleImpact:parseFloat(fSchedule)||0,
+        costImpact: fKind==='pco' ? 0 : parseFloat(fCost)||0, scheduleImpact:parseFloat(fSchedule)||0,
         relatedBidPackageId:fRelatedPkg||null,
+        ...(fKind==='pco' ? { stage:'pco', estimatedMin:parseFloat(fMin)||0, estimatedMax:parseFloat(fMax)||parseFloat(fMin)||0 } : {}),
       })});
       const d = await r.json();
       if(d.error) throw new Error(d.error);
-      setFTitle(''); setFDesc(''); setFReason(''); setFCost(''); setFSchedule(''); setFRelatedPkg('');
+      setFTitle(''); setFDesc(''); setFReason(''); setFCost(''); setFSchedule(''); setFRelatedPkg(''); setFMin(''); setFMax('');
       setShowForm(false);
+      if (d.changeOrder?.id) setSelectedId(String(d.changeOrder.id));
       if (riskTarget==='form') { setRiskResult(null); setRiskTarget(null); setRiskError(''); }
       await load();
       return true;
@@ -378,7 +419,11 @@ export default function ChangeOrdersPage() {
       const r = await fetch(`/api/change-orders/${id}/approve`,{method:'POST',headers:{'Content-Type':'application/json'}});
       const d = await r.json();
       if(d.error) throw new Error(d.error);
-      setCos(prev=>prev.map(c=>c.id===id?{...c,status:'approved'}:c));
+      /* 202: the approval is recorded but the company's tiers need more
+         approvers (or the owner's signature) — nothing booked yet. */
+      if (r.status===202) { setToast({msg:String(d.message||'Approval recorded.'),type:'success'}); await load(); setWfKey(k=>k+1); return; }
+      setCos(prev=>prev.map(c=>c.id===id?{...c,status:'approved',stage:'approved'}:c));
+      setWfKey(k=>k+1);
       setToast({msg:'Change order approved.',type:'success'});
     }catch(e:any){
       console.error(e); setToast({msg:humanError(e, 'Failed to approve the change order. Please try again.'),type:'error'});
@@ -395,6 +440,7 @@ export default function ChangeOrdersPage() {
       const d = await r.json();
       if(d.error) throw new Error(d.error);
       setCos(prev=>prev.map(c=>c.id===id?{...c,status:'rejected'}:c));
+      setWfKey(k=>k+1);
       setToast({msg:'Change order rejected.',type:'success'});
     }catch(e:any){
       console.error(e); setToast({msg:humanError(e, 'Failed to reject the change order. Please try again.'),type:'error'});
@@ -410,10 +456,13 @@ export default function ChangeOrdersPage() {
     setCoEditId(null);
     try {
       const r = await fetch(`/api/change-orders/${id}/update`, { method: 'PATCH', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ cost_impact: amount }) });
-      if (!r.ok) throw new Error('update failed');
+      const d = await r.json().catch(() => ({}));
+      // An approved CO re-priced past the role's tier is refused with the reason.
+      if (!r.ok) throw new Error(d.error || 'update failed');
+      setWfKey(k=>k+1);
       setToast({ msg: 'Cost impact updated.', type: 'success' });
-    } catch {
-      setToast({ msg: 'Could not update the change order. Please try again.', type: 'error' });
+    } catch (e) {
+      setToast({ msg: humanError(e, 'Could not update the change order. Please try again.'), type: 'error' });
       load();
     }
   }
@@ -433,6 +482,25 @@ export default function ChangeOrdersPage() {
       setToast({msg:'Change order deleted.',type:'success'});
     } catch { setToast({msg:'Failed to delete the change order. Please try again.',type:'error'}); load(); }
   }
+  /** Several PCOs → one request priced at their sum (POST /api/change-orders/roll-up). */
+  async function rollUp() {
+    setRolling(true);
+    try {
+      const r = await fetch('/api/change-orders/roll-up', { method:'POST', headers:{'Content-Type':'application/json'}, body: JSON.stringify({ projectId, pcoIds: rollPick, title: rollTitle }) });
+      const d = await r.json().catch(()=>({}));
+      if (!r.ok) throw new Error(d.error || 'Could not build the request.');
+      setShowRoll(false);
+      await load();
+      if (d.changeOrder?.id) setSelectedId(String(d.changeOrder.id));
+      setStageView('all');
+      setToast({ msg:`CO-${padCo(d.changeOrder?.co_number)} is ready to send to the owner.`, type:'success' });
+    } catch (e) {
+      setToast({ msg: humanError(e, 'Could not build the request. Please try again.'), type:'error' });
+    } finally {
+      setRolling(false);
+    }
+  }
+
   async function confirmDeleteCO(id: string) {
     if (await confirmDialog({ title: 'Delete change order?', message: 'This cannot be undone.', confirmLabel: 'Delete', danger: true })) handleDeleteCO(id);
   }
@@ -441,7 +509,7 @@ export default function ChangeOrdersPage() {
   // change orders only; pending tracked separately (summarizeContract enforces this).
   const contractSummary = summarizeContract(
     toCents(contractSum),
-    cos.map((c:any)=>({ id:String(c.id), description:c.title||'', amount:toCents(coAmount(c)), status:(c.status||'pending') as 'pending'|'approved'|'rejected' })),
+    cos.filter((c:any)=>!c.cor_id).map((c:any)=>({ id:String(c.id), description:c.title||'', amount:toCents(coAmount(c)), status:(stageOf(c)==='approved' ? 'approved' : isClosed(c) ? 'rejected' : 'pending') as 'pending'|'approved'|'rejected' })),
   );
   const approvedCOs   = toDollars(contractSummary.approvedChangeOrders);
   const pendingCOs    = toDollars(contractSummary.pendingChangeOrders);
@@ -449,9 +517,17 @@ export default function ChangeOrdersPage() {
 
   // SmartCreate intelligence — the form walks in knowing the CO history, bid
   // packages, and schedule. cost_impact is TEXT in the DB: Number() everything.
-  const approvedCount  = cos.filter(c=>c.status==='approved').length;
-  const pendingCount   = cos.filter(c=>c.status==='pending').length;
-  const rejectedCount  = cos.filter(c=>c.status==='rejected').length;
+  const approvedCount  = cos.filter(c=>stageOf(c)==='approved').length;
+  const pendingCount   = cos.filter(c=>stageOf(c)!=='approved' && counted(c)).length;
+  const rejectedCount  = cos.filter(c=>isClosed(c)).length;
+  // Totals per stage — each change counted once (a rolled-up PCO rides on its request).
+  const byId = useMemo(() => new Map(cos.map((c:any)=>[String(c.id), c])), [cos]);
+  const potential = cos.filter(c=>stageOf(c)==='pco' && counted(c));
+  const requests  = cos.filter(c=>stageOf(c)==='cor' && counted(c));
+  const potentialTotal = potential.reduce((a,c)=>a+coAmount(c),0);
+  const requestTotal   = requests.reduce((a,c)=>a+coAmount(c),0);
+  const withOwnerCount = requests.filter(c=>c.sent_to_owner_at || String(c.status).toLowerCase()==='submitted').length;
+  const rollable = cos.filter(c=>stageOf(c)==='pco' && !c.cor_id && !isClosed(c));
   const lastCo         = cos.length>0 ? cos[cos.length-1] : null;
   const nextCoNumber   = Math.max(cos.reduce((m,c)=>Math.max(m,Number(c.co_number)||0),0)+1, Number(ctx?.defaults?.nextCoNumber)||1);
   const fCostNum       = Number(fCost)||0;
@@ -466,12 +542,13 @@ export default function ChangeOrdersPage() {
   const coQ = coSearch.trim().toLowerCase();
   const filteredCos = cos.filter((c:any)=>{
     if (coStatusFilter !== 'all' && String(c.status||'pending') !== coStatusFilter) return false;
+    if (stageView === 'rejected' ? !isClosed(c) : stageView !== 'all' && (stageOf(c) !== stageView || isClosed(c))) return false;
     if (!coQ) return true;
     return [c.title, c.description, c.reason, `co-${padCo(c.co_number)}`].some(v => String(v||'').toLowerCase().includes(coQ));
   });
-  const filtersActive = !!coSearch || coStatusFilter !== 'all';
-  const clearFilters = () => { setCoSearch(''); setCoStatusFilter('all'); };
-  const toggleStatus = (s:string) => setCoStatusFilter(prev => (prev===s ? 'all' : s));
+  const filtersActive = !!coSearch || coStatusFilter !== 'all' || stageView !== 'all';
+  const clearFilters = () => { setCoSearch(''); setCoStatusFilter('all'); setStageView('all'); };
+  const toggleStage = (s:string) => setStageView(prev => (prev===s ? 'all' : s));
 
   const selected = selectedId ? cos.find(c=>c.id===selectedId) || null : null;
   const detailOpen = !!selected;
@@ -485,19 +562,19 @@ export default function ChangeOrdersPage() {
 
   const signOf = (n:number) => (n<0 ? 'neg' : n>0 ? 'pos' : 'zero');
 
-  // ── Stat tiles: contract position — the CO tiles filter the log ──
+  // ── Stat tiles: one per stage (each filters the log), then the contract ──
   const stats: StatItem[] = loading
     ? [
-        { label:'Original Contract', value:'—', sub:'Loading…', icon:<Handshake size={15}/> },
-        { label:'Approved COs', value:'—', sub:'Loading…', icon:<SealCheck size={15}/> },
-        { label:'Pending COs', value:'—', sub:'Loading…', icon:<HourglassMedium size={15}/> },
+        { label:'Potential', value:'—', sub:'Loading…', icon:<Lightbulb size={15}/> },
+        { label:'With the owner', value:'—', sub:'Loading…', icon:<HourglassMedium size={15}/> },
+        { label:'Approved', value:'—', sub:'Loading…', icon:<SealCheck size={15}/> },
         { label:'Revised Contract', value:'—', sub:'Loading…', icon:<Scales size={15}/> },
       ]
     : [
-        { label:'Original Contract', value:fmt(contractSum), sub:'Prime contract baseline', icon:<Handshake size={15}/>, href:`/app/projects/${projectId}/contracts` },
-        { label:'Approved COs', value:fmtSigned(approvedCOs), tone: approvedCOs>0 ? 'good' : approvedCOs<0 ? 'bad' : 'default', sub: coStatusFilter==='approved' ? 'Filtered — click to clear' : `${approvedCount} approved`, icon:<SealCheck size={15}/>, onClick:()=>toggleStatus('approved'), active: coStatusFilter==='approved' },
-        { label:'Pending COs', value:fmtSigned(pendingCOs), tone: pendingCount>0 ? 'warn' : 'default', sub: coStatusFilter==='pending' ? 'Filtered — click to clear' : pendingCount>0 ? `${pendingCount} awaiting decision` : 'None awaiting decision', icon:<HourglassMedium size={15}/>, onClick:()=>toggleStatus('pending'), active: coStatusFilter==='pending' },
-        { label:'Revised Contract', value:fmt(currentContract), sub:`Original + approved COs${rejectedCount>0?` · ${rejectedCount} rejected`:''}`, icon:<Scales size={15}/>, href:`/app/projects/${projectId}/contracts` },
+        { label:'Potential', value:fmtSigned(potentialTotal), tone: potential.length>0 ? 'warn' : 'default', sub: stageView==='pco' ? 'Filtered — click to clear' : `${potential.length} not priced yet`, icon:<Lightbulb size={15}/>, onClick:()=>toggleStage('pco'), active: stageView==='pco' },
+        { label:'With the owner', value:fmtSigned(requestTotal), tone: requests.length>0 ? 'warn' : 'default', sub: stageView==='cor' ? 'Filtered — click to clear' : `${requests.length} request${requests.length===1?'':'s'}${withOwnerCount?` · ${withOwnerCount} sent`:''}`, icon:<HourglassMedium size={15}/>, onClick:()=>toggleStage('cor'), active: stageView==='cor' },
+        { label:'Approved', value:fmtSigned(approvedCOs), tone: approvedCOs>0 ? 'good' : approvedCOs<0 ? 'bad' : 'default', sub: stageView==='approved' ? 'Filtered — click to clear' : `${approvedCount} on the contract`, icon:<SealCheck size={15}/>, onClick:()=>toggleStage('approved'), active: stageView==='approved' },
+        { label:'Revised Contract', value:fmt(currentContract), sub:`${fmt(contractSum)} original${rejectedCount>0?` · ${rejectedCount} rejected`:''}`, icon:<Scales size={15}/>, href:`/app/projects/${projectId}/contracts` },
       ];
 
   // ── Log columns: full log, or a compact log beside the change order ──
@@ -505,9 +582,9 @@ export default function ChangeOrdersPage() {
   const titleCol: Column<any> = { key:'title', header:'Title', primary:true, phone:'show', accessor:c=>c.title||'', render:c=>(
     <div className="coTitle"><span title={c.title}>{c.title||'Untitled change order'}</span>{c.description && <span title={c.description}>{c.description}</span>}</div>
   ) };
-  const statusCol: Column<any> = { key:'status', header:'Status', phone:'show', accessor:c=>statusBadge(c.status).label, render:c=>{const b=statusBadge(c.status);return <Badge tone={b.tone}>{b.label}</Badge>;} };
-  /* Signed total of what is on screen, rejected left out — a rejected CO never moves the contract. */
-  const costTotal = (list:any[]) => { const n = list.filter(c=>String(c.status||'pending')!=='rejected').reduce((a,c)=>a+coAmount(c),0); return <span className="coMoney" data-sign={signOf(n)} title="Approved + pending (rejected left out)">{fmtSigned(n)}</span>; };
+  const statusCol: Column<any> = { key:'status', header:'Stage', phone:'show', accessor:c=>statusBadge(c, byId).label, render:c=>{const b=statusBadge(c, byId);return <Badge tone={b.tone}>{b.label}</Badge>;} };
+  /* Signed total of what is on screen, each change once: rejected left out, and a PCO inside a request carried by the request. */
+  const costTotal = (list:any[]) => { const n = list.filter(counted).reduce((a,c)=>a+coAmount(c),0); return <span className="coMoney" data-sign={signOf(n)} title="Each change once (rejected left out)">{fmtSigned(n)}</span>; };
   const costCol: Column<any> = { key:'cost', header:'Cost Impact', phone:'show', accessor:c=>coAmount(c), align:'right', total:costTotal, format:fmtSigned, render:c=>{const n=coAmount(c);return <span className="coMoney" data-sign={signOf(n)}>{fmtSigned(n)}</span>;} };
   const schedCol: Column<any> = { key:'schedule', header:'Schedule', phone:'hide', accessor:c=>Number(c.schedule_impact)||0, align:'right', total:'sum', format:n=>n>0?`+${n} day${n===1?'':'s'}`:'—', render:c=>{const d=Number(c.schedule_impact)||0;return d>0 ? <span style={{color:'var(--text-primary)'}}>+{d} day{d===1?'':'s'}</span> : <span className="coMuted">—</span>;} };
   const reasonCol: Column<any> = { key:'reason', header:'Reason', phone:'hide', accessor:c=>c.reason||'', render:c=>c.reason ? <span className="coTitle" style={{maxWidth:200}}><span style={{color:'var(--text-secondary)',fontWeight:500}} title={c.reason}>{c.reason}</span></span> : <span className="coMuted">—</span> };
@@ -519,13 +596,13 @@ export default function ChangeOrdersPage() {
 
   /** The record's verbs — shared by the row overflow and the rail. */
   function coActions(co:any): Action[] {
-    const s = String(co.status||'pending');
+    const open = stageOf(co)==='cor' && !isClosed(co);
     const busy = approvingId===co.id;
     return [
       { label:'Open Details', icon:<Clipboard size={15}/>, onClick:()=>setSelectedId(co.id) },
       { label:'Open full page', icon:<ArrowSquareOut size={15}/>, href:`/app/projects/${projectId}/items/change_orders/${co.id}`, hidden:String(co.id).startsWith('temp-') },
-      { label:'Approve', icon:<CheckCircle size={15}/>, onClick:()=>approveCO(co.id), hidden:s!=='pending', disabled:busy },
-      { label:'Reject', icon:<XCircle size={15}/>, onClick:()=>rejectCO(co.id), hidden:s!=='pending', disabled:busy, tone:'danger' },
+      { label:'Approve', icon:<CheckCircle size={15}/>, onClick:()=>approveCO(co.id), hidden:!open, disabled:busy },
+      { label:'Reject', icon:<XCircle size={15}/>, onClick:()=>rejectCO(co.id), hidden:!open || !coRights.full, disabled:busy, tone:'danger' },
       { label:'Analyze Risk (AI)', icon:<Robot size={15}/>, onClick:()=>{ setSelectedId(co.id); analyzeRisk({title:co.title,description:co.description,reason:co.reason,cost_impact:coAmount(co),schedule_impact:co.schedule_impact,status:co.status},co.id); }, disabled: riskLoading&&riskTarget===co.id },
       { label:'Edit Amount', icon:<PencilSimple size={15}/>, onClick:()=>{ setSelectedId(co.id); setCoEditId(co.id); setCoEditVal(String(coAmount(co))); } },
       { label:'Copy Amount', icon:<Copy size={15}/>, onClick:()=>handleCopyCO(co.id, coAmount(co)) },
@@ -535,11 +612,10 @@ export default function ChangeOrdersPage() {
 
   // ── Detail workspace ──
   const detailWorkspace = selected && (()=>{
-    const s = String(selected.status||'pending');
     const cost = coAmount(selected);
     const sched = Number(selected.schedule_impact)||0;
-    const busy = approvingId===selected.id;
     const editing = coEditId===selected.id;
+    const badge = statusBadge(selected, byId);
     return (
       <div ref={detailRef} className="coDetailCq">
         <div className="coDetail">
@@ -548,9 +624,16 @@ export default function ChangeOrdersPage() {
             subtitle={selected.reason || undefined}
             actions={<Button variant="ghost" size="sm" icon={<X size={16}/>} aria-label="Close details" title="Close details" onClick={()=>setSelectedId(null)}/>}
           >
+            {/* Where it stands (PCO → request → approved), the approvals its tier needs, and the one next action. */}
+            {!String(selected.id).startsWith('temp-') && (
+              <div className="coSection">
+                <CoWorkflow coId={String(selected.id)} projectId={projectId} refreshKey={`${wfKey}:${selected.status}:${coAmount(selected)}`} canFull={coRights.full}
+                  show={(m, t) => setToast({ msg: m, type: t === 'bad' ? 'error' : 'success' })} onChanged={() => { void load(); }} />
+              </div>
+            )}
+            {editing && (
             <div className="coSection">
               <div className="coSectionTitle">Cost Impact</div>
-              {editing ? (
                 <FormGrid cols={2}>
                   <Field label="Cost Impact ($)" hint="Enter a negative number for a deductive change order.">
                     <Input type="number" step="0.01" value={coEditVal} autoFocus onChange={e=>setCoEditVal(e.target.value)} onKeyDown={e=>{ if(e.key==='Enter') handleEditCO(selected.id); if(e.key==='Escape') setCoEditId(null); }} />
@@ -562,10 +645,8 @@ export default function ChangeOrdersPage() {
                     </div>
                   </Field>
                 </FormGrid>
-              ) : (
-                <div className="coBig" data-sign={signOf(cost)}>{fmtSigned(cost)}{coCopiedId===selected.id && <span className="coMuted" style={{fontSize:'var(--fs-xs)',marginLeft:10}}>Copied</span>}</div>
-              )}
             </div>
+            )}
             <div className="coSection">
               <div className="coSectionTitle">Description</div>
               {selected.description ? <div className="coProse">{selected.description}</div> : <div className="coMuted" style={{fontSize:'var(--fs-sm)'}}>No description was entered.</div>}
@@ -583,13 +664,9 @@ export default function ChangeOrdersPage() {
             <Card title="Details">
               <div className="coSection">
                 <div className="coBadges">
-                  <Badge tone={statusBadge(s).tone} dot>{statusBadge(s).label}</Badge>
+                  <Badge tone={badge.tone} dot>{badge.label}</Badge>
                   {cost<0 && <Badge tone="neutral">Deductive</Badge>}
-                </div>
-                <div className="coNext">
-                  {s==='pending' && 'Awaiting a decision. Approving moves the revised contract and syncs the budget line; rejecting leaves the contract untouched.'}
-                  {s==='approved' && 'Approved — counted in the revised contract sum.'}
-                  {s==='rejected' && 'Rejected — not counted in the contract sum.'}
+                  {coCopiedId===selected.id && <span className="coMuted" style={{fontSize:'var(--fs-xs)'}}>Copied</span>}
                 </div>
               </div>
               <div className="coSection">
@@ -598,17 +675,11 @@ export default function ChangeOrdersPage() {
                   ['Schedule Impact', sched>0 ? `+${sched} day${sched===1?'':'s'}` : '—'],
                   ['Reason', selected.reason || ''],
                   ['Created', fmtDate(selected.created_at)],
-                  ['Approved', selected.approved_at ? fmtDate(selected.approved_at) : (s==='approved' ? 'Yes' : '—')],
+                  ['Approved', selected.approved_at ? fmtDate(selected.approved_at) : (stageOf(selected)==='approved' ? 'Yes' : '—')],
                 ]}/>
               </div>
               <div className="coSection">
                 <div className="coActions">
-                  {s==='pending' && (
-                    <div className="coActionsRow">
-                      <Button icon={<CheckCircle size={16}/>} onClick={()=>approveCO(selected.id)} disabled={busy}>{busy?'Working…':'Approve'}</Button>
-                      <Button variant="danger" icon={<XCircle size={16}/>} onClick={()=>rejectCO(selected.id)} disabled={busy}>Reject</Button>
-                    </div>
-                  )}
                   <Button icon={<Robot size={16}/>} onClick={()=>analyzeRisk({title:selected.title,description:selected.description,reason:selected.reason,cost_impact:coAmount(selected),schedule_impact:selected.schedule_impact,status:selected.status},selected.id)} disabled={riskLoading&&riskTarget===selected.id}>
                     {riskLoading&&riskTarget===selected.id ? 'Analyzing…' : 'Analyze Risk (AI)'}
                   </Button>
@@ -711,22 +782,30 @@ export default function ChangeOrdersPage() {
             placeholder="Search by CO number, title, or reason…"
             filters={
               <>
-                <Select
-                  aria-label="Status"
-                  value={coStatusFilter}
-                  onChange={e=>setCoStatusFilter(e.target.value)}
-                  style={{ width:'auto', minWidth:150 }}
-                  options={[
-                    { value:'all', label:'All Statuses' },
-                    { value:'pending', label:`Pending${pendingCount?` (${pendingCount})`:''}` },
-                    { value:'approved', label:`Approved${approvedCount?` (${approvedCount})`:''}` },
-                    { value:'rejected', label:`Rejected${rejectedCount?` (${rejectedCount})`:''}` },
+                <Tabs
+                  value={stageView}
+                  onChange={setStageView}
+                  tabs={[
+                    { key:'all', label:'All', count: cos.length },
+                    { key:'pco', label:'Potential', count: potential.length },
+                    { key:'cor', label:'Requests', count: requests.length },
+                    { key:'approved', label:'Approved', count: approvedCount },
+                    ...(rejectedCount ? [{ key:'rejected', label:'Rejected', count: rejectedCount }] : []),
                   ]}
                 />
                 {filtersActive && <Button variant="ghost" size="sm" onClick={clearFilters}>Clear</Button>}
               </>
             }
-            actions={<span className="coMuted" style={{ fontSize:'var(--fs-sm)' }}>{filteredCos.length} of {cos.length}</span>}
+            actions={
+              <>
+                {coRights.edit && rollable.length > 0 && (
+                  <Button icon={<Stack size={15}/>} onClick={()=>{ setRollPick(rollable.map((c:any)=>String(c.id))); setRollTitle(''); setShowRoll(true); }}>
+                    Roll {rollable.length} into a request
+                  </Button>
+                )}
+                <span className="coMuted" style={{ fontSize:'var(--fs-sm)' }}>{filteredCos.length} of {cos.length}</span>
+              </>
+            }
           />
         )}
 
@@ -754,10 +833,16 @@ export default function ChangeOrdersPage() {
             <Button icon={<Robot size={15}/>} onClick={()=>analyzeRisk({title:fTitle,description:fDesc,reason:fReason,cost_impact:parseFloat(fCost)||0,schedule_impact:parseFloat(fSchedule)||0},'form')} disabled={(riskLoading&&riskTarget==='form')||!fTitle.trim()}>
               {riskLoading&&riskTarget==='form' ? 'Analyzing…' : 'Analyze Risk (AI)'}
             </Button>
-            <Button variant="primary" onClick={createCO} disabled={saving||!fTitle.trim()}>{saving ? 'Creating…' : 'Create Change Order'}</Button>
+            <Button variant="primary" onClick={createCO} disabled={saving||!fTitle.trim()}>{saving ? 'Creating…' : fKind==='pco' ? 'Log Potential Change' : 'Create Request'}</Button>
           </>
         }
       >
+        <div style={{ marginBottom:16 }}>
+          <Tabs value={fKind} onChange={(k)=>setFKind(k==='pco'?'pco':'cor')} tabs={[
+            { key:'pco', label:'Potential change · estimate' },
+            { key:'cor', label:'Request to owner · priced' },
+          ]}/>
+        </div>
         <FormGrid cols={2}>
           <Field label="CO Number" hint={lastCo ? `Assigned automatically — follows CO-${padCo(lastCo.co_number)}.` : 'Assigned automatically — first change order on this project.'}>
             <Input value={`CO-${padCo(nextCoNumber)}`} readOnly />
@@ -773,9 +858,20 @@ export default function ChangeOrdersPage() {
           <Field label="Title" required span>
             <Input value={fTitle} onChange={e=>{ setFTitle(e.target.value); if (error) setError(''); }} placeholder="e.g. Add electrical outlets in server room" autoFocus aria-invalid={error==='Title is required.'||undefined} />
           </Field>
+          {fKind==='pco' ? (
+            <>
+              <Field label="Estimate — low ($)" hint="No money moves on a potential change.">
+                <Input type="number" step="0.01" value={fMin} onChange={e=>setFMin(e.target.value)} placeholder="0" />
+              </Field>
+              <Field label="Estimate — high ($)">
+                <Input type="number" step="0.01" value={fMax} onChange={e=>setFMax(e.target.value)} placeholder="0" />
+              </Field>
+            </>
+          ) : (
           <Field label="Cost Impact ($)" hint={<>New contract sum <b>{fmt(newContractSum)}</b> — {fmt(contractSum)} original{approvedCOs!==0 && <> {approvedCOs>0?'+':'-'} {fmt(Math.abs(approvedCOs))} approved COs</>} + this CO. Enter a negative number for a credit.</>}>
             <Input type="number" step="0.01" value={fCost} onChange={e=>setFCost(e.target.value)} placeholder="0" />
           </Field>
+          )}
           <Field label="Schedule Impact (days)" hint={pushedEnd
             ? <>Pushes completion from {fmtDate(projEnd)} to <b>{pushedEnd.toLocaleDateString('en-US',{month:'short',day:'numeric',year:'numeric'})}</b>.</>
             : Number(ctx?.schedule?.criticalCount)>0
@@ -810,6 +906,40 @@ export default function ChangeOrdersPage() {
           </div>
         )}
 
+      </FormModal>
+
+      {/* ── Roll potential changes into one request to the owner ── */}
+      <FormModal
+        open={showRoll}
+        onClose={()=>{ if(!rolling) setShowRoll(false); }}
+        title={`New request — CO-${padCo(nextCoNumber)}`}
+        subtitle={`${rollPick.length} potential change${rollPick.length===1?'':'s'} · ${fmtSigned(rollable.filter((c:any)=>rollPick.includes(String(c.id))).reduce((a:number,c:any)=>a+coAmount(c),0))}`}
+        busy={rolling}
+        footer={
+          <>
+            <Button variant="ghost" onClick={()=>setShowRoll(false)} disabled={rolling}>Cancel</Button>
+            <Button variant="primary" onClick={()=>void rollUp()} disabled={rolling||rollPick.length===0}>{rolling ? 'Building…' : 'Create Request'}</Button>
+          </>
+        }
+      >
+        <Field label="Title" hint="Left blank, it names the changes inside.">
+          <Input value={rollTitle} onChange={e=>setRollTitle(e.target.value)} placeholder="e.g. Level 2 electrical revisions" />
+        </Field>
+        <ul className="coPick" aria-label="Potential changes">
+          {rollable.map((c:any)=>{
+            const on = rollPick.includes(String(c.id));
+            return (
+              <li key={c.id}>
+                <label>
+                  <input type="checkbox" checked={on} onChange={()=>setRollPick(p=>on ? p.filter(x=>x!==String(c.id)) : [...p, String(c.id)])}/>
+                  <span className="coNum">CO-{padCo(c.co_number)}</span>
+                  <span className="coPickT">{c.title||'Untitled'}</span>
+                  <span className="coMoney" data-sign={signOf(coAmount(c))}>{fmtSigned(coAmount(c))}</span>
+                </label>
+              </li>
+            );
+          })}
+        </ul>
       </FormModal>
 
       {/* Above the FormModal overlay so the unsaved-work prompt is never hidden behind it. */}

@@ -5,7 +5,7 @@ import { hasFeature } from '@/lib/entitlements-server';
 
 import { apiError } from '@/lib/api-error';
 import { must } from '@/lib/db-write';
-import { writeChangeOrder } from '@/lib/change-order-status';
+import { writeChangeOrder, coWriteFailure } from '@/lib/change-order-status';
 // CO workflow (full 8-step, per SCS spec): Issue → GC Pricing → PM Review →
 // Architect Review → Owner Approval → Executed → Schedule Updated → Budget Updated.
 export const CO_FLOW = ['draft', 'pricing', 'pm_review', 'architect_review', 'pending_owner', 'approved', 'schedule_updated', 'budget_updated'];
@@ -134,7 +134,7 @@ export async function PATCH(req: NextRequest) {
        'approved' puts the CO on the contract and the budget, a reject takes an
        approved one back off, and the two posting steps keep it on. */
     const w = await writeChangeOrder(db, user.tenantId, String(body.id), patch, { actorId: user.id, select: 'id,status' });
-    if (!w.ok) return NextResponse.json({ error: 'not found' }, { status: 400 });
+    if (!w.ok) { const f = coWriteFailure(w); return NextResponse.json(f.body, { status: f.status }); }
     return NextResponse.json({ changeOrder: w.after });
   } catch (e: any) {
     return apiError('franchise/change-orders', e, "update failed", 500);

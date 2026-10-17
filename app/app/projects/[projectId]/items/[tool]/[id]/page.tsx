@@ -20,6 +20,8 @@ import ItemHistory from '@/components/item/ItemHistory';
 import WorkflowChain from '@/components/submittals/WorkflowChain';
 import type { SubmittalLike } from '@/lib/submittal-workflow';
 import DailyLogSections from '@/components/item/DailyLogSections';
+import CoWorkflow from '@/components/change-orders/CoWorkflow';
+import { useEditRights } from '@/lib/hooks/usePermissions';
 import { LOG_SECTIONS } from '@/lib/daily-log-sections';
 import { itemTool, itemNumber, nounInSentence, statusLabel, valueLabel, type ItemField, type ItemTool } from '@/lib/items/registry';
 
@@ -72,6 +74,7 @@ export default function ItemPage() {
   const id = params?.id as string;
   const tool = itemTool(type);
   const { toast, show } = useToast(3500);
+  const coRights = useEditRights('Change Orders');
 
   const [item, setItem] = useState<Item | null>(null);
   const [projectName, setProjectName] = useState('');
@@ -141,7 +144,8 @@ export default function ItemPage() {
     setItem(j.item);
     setEditing(false);
     setHistoryKey((k) => k + 1);
-    show('Saved.');
+    // A change order approval held for more approvers (202) says who is next.
+    show(typeof j.message === 'string' && j.message ? j.message : 'Saved.');
   };
 
   const counts = useMemo(() => ({ comments: comments?.length ?? 0, links: linkCount ?? 0, files: files.length }), [comments, linkCount, files]);
@@ -181,7 +185,8 @@ export default function ItemPage() {
           <Button variant="primary" icon={<FloppyDisk size={15} />} onClick={() => void save()} disabled={saving}>{saving ? 'Saving…' : 'Save'}</Button>
         </>
       ) : (
-        <Button variant="primary" icon={<PencilSimple size={15} />} onClick={startEdit}>Edit</Button>
+        /* A change order's one primary action is its next step (CoWorkflow); Edit steps back. */
+        <Button variant={tool.type === 'change_orders' ? 'secondary' : 'primary'} icon={<PencilSimple size={15} />} onClick={startEdit}>Edit</Button>
       )}
     >
       <style dangerouslySetInnerHTML={{ __html: CSS }} />
@@ -197,6 +202,13 @@ export default function ItemPage() {
           </div>
         ))}
       </div>
+
+      {tool.type === 'change_orders' && (
+        <section className="ip-chain" aria-label="Change order stages">
+          <CoWorkflow coId={id} projectId={projectId} refreshKey={historyKey} canFull={coRights.full} show={show}
+            onChanged={() => { void load(); setHistoryKey((k) => k + 1); }} />
+        </section>
+      )}
 
       {tool.type === 'submittals' && (
         <section className="ip-chain" aria-label="Approval workflow">

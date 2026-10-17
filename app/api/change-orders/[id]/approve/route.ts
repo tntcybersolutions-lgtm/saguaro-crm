@@ -2,11 +2,13 @@ import { NextRequest, NextResponse } from 'next/server';
 import { requirePermission } from '@/lib/permissions';
 import { apiError } from '@/lib/api-error';
 import { applyChangeOrderMoney } from '@/lib/change-order-cascade';
-import { writeChangeOrder } from '@/lib/change-order-status';
+import { writeChangeOrder, coWriteFailure } from '@/lib/change-order-status';
 
 export async function POST(req: NextRequest, { params }: { params: Promise<{ id: string }> }) {
   const { id } = await params;
-  const g = await requirePermission(req, 'Change Orders', 'Full');
+  /* Edit at the door; who may approve THIS amount is the company's approval
+     tiers, enforced in the shared step (lib/change-order-status). */
+  const g = await requirePermission(req, 'Change Orders', 'Edit');
   if (!g.ok) return g.res;
   try {
     const db = g.db;
@@ -23,7 +25,7 @@ export async function POST(req: NextRequest, { params }: { params: Promise<{ id:
     }
     // The one shared step (lib/change-order-status): stamps, contract, budget, owner notice.
     const w = await writeChangeOrder(db, g.user.tenantId, id, { status: 'approved' }, { actorId: g.user.id, before: before as Record<string, unknown> });
-    if (!w.ok) return NextResponse.json({ error: w.error }, { status: w.status });
+    if (!w.ok) { const f = coWriteFailure(w); return NextResponse.json(f.body, { status: f.status }); }
     const after = w.after;
     return NextResponse.json({ success: true, changeOrder: after });
   } catch (e) {

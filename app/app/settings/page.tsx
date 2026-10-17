@@ -62,6 +62,7 @@ const SETTINGS_SECTIONS = [
       { icon: Clipboard, label: 'Custom Fields', desc: 'Add custom fields to projects, contacts, and bids', href: '/app/custom-fields' },
       { icon: FileText, label: 'Document Templates', desc: 'Manage your company document templates', href: '/app/documents' },
       { icon: Gear, label: 'Autopilot Rules', desc: 'Configure RFI, change order, and approval automations', href: '/app/autopilot' },
+      { icon: ShieldCheck, label: 'Change Order Approvals', desc: 'Who can approve a change order, by dollar amount', href: '/app/settings/change-orders' },
     ],
   },
   {
