@@ -9,6 +9,7 @@ import {
 import { DOC } from '@/lib/document-templates/report-theme';
 import { requestDay } from '@/lib/time-zone';
 import { apiError } from '@/lib/api-error';
+import { peopleFor, personName } from '@/lib/person-names';
 
 export const runtime = 'nodejs';
 export const dynamic = 'force-dynamic';
@@ -180,8 +181,12 @@ async function loadRfis(projectId: string, tenantId: string, ids: string[]) {
   const db = createServerClient();
   let q = db.from('rfis').select('*').eq('tenant_id', tenantId).eq('project_id', projectId);
   if (ids.length > 0) q = q.in('id', ids);
-  const { data } = await q.order('rfi_number', { ascending: true });
-  return (data as Row[]) || [];
+  const { data, error } = await q.order('rfi_number', { ascending: true });
+  if (error) throw error;
+  const rows = (data as Row[]) || [];
+  // "By:" prints a name — some rows keep the submitter's user id (lib/person-names).
+  const people = await peopleFor(db, tenantId, rows as Record<string, unknown>[], ['submitted_by']);
+  return rows.map((r) => ({ ...r, submitted_by: personName((r as Record<string, unknown>).submitted_by, people) })) as Row[];
 }
 
 async function projectName(projectId: string, tenantId: string): Promise<string> {

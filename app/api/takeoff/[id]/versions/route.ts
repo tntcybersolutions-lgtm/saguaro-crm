@@ -10,6 +10,7 @@ import { createServerClient, getUser } from '@/lib/supabase-server';
 import { requirePermission } from '@/lib/permissions';
 import { computeTakeoff, type Condition, type ComputeOpts, type RateOverrides } from '@/lib/takeoff';
 import { must } from '@/lib/db-write';
+import { canSaveComplete } from '@/lib/takeoff-status';
 
 export const runtime = 'nodejs';
 const toDollars = (cents: number) => Math.round(cents) / 100;
@@ -65,6 +66,9 @@ export async function POST(req: NextRequest, { params }: { params: Promise<{ id:
     regionMultiplier: src.region_multiplier ?? undefined, regionLabel: src.region_label ?? undefined, rates,
   };
   const r = computeTakeoff(conditions, opts);
+  // A revision is saved as complete only with something measured in it (lib/takeoff-status).
+  const canSave = canSaveComplete(r.lines.length);
+  if (!canSave.ok) return Response.json({ error: canSave.message }, { status: 400 });
 
   // count existing revisions for a sensible default label
   const { count } = await supabase.from('takeoffs').select('id', { count: 'exact', head: true }).eq('tenant_id', user.tenantId).or(`id.eq.${root},root_takeoff_id.eq.${root}`);

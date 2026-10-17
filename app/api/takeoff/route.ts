@@ -2,6 +2,7 @@ import { NextRequest } from 'next/server';
 import { createServerClient, getUser } from '@/lib/supabase-server';
 import { signFields } from '@/lib/storage-signing';
 import { ok, serverError, unauthorized } from '@/lib/api-response';
+import { withTakeoffState } from '@/lib/takeoff-status';
 import { hiddenProjectIds } from '@/lib/live-projects';
 
 export const dynamic = 'force-dynamic';
@@ -40,8 +41,11 @@ export async function GET(req: NextRequest) {
     const hidden = projectId ? new Set<string>() : await hiddenProjectIds(supabase, user.tenantId);
     const visible = ((data || []) as Record<string, unknown>[])
       .filter((t) => !t.project_id || !hidden.has(String(t.project_id)));
+    /* status is read from what is in the takeoff (lib/takeoff-status): one
+       marked complete with nothing measured reads 'empty', never Complete.
+       stored_status and item_count ride along. */
     const rows = await signFields(
-      visible,
+      await withTakeoffState(supabase, user.tenantId, visible),
       ['file_url', 'thumbnail_url'],
       3600,
       { strict: false },

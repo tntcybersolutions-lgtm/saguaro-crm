@@ -45,6 +45,8 @@ import {
 } from '@phosphor-icons/react';
 import { layout } from '@/lib/design-tokens';
 import { localDay } from '@/lib/calendar-day';
+import { usePeople } from '@/lib/hooks/usePeople';
+import { personName } from '@/lib/person-names';
 
 // Legacy vocab: old rows carry 'disputed' — displayed as rejected everywhere.
 const STATUS_ORDER = ['draft', 'submitted', 'approved', 'rejected', 'billed'] as const;
@@ -274,6 +276,9 @@ export default function TmTicketsPage() {
   const { data, error: loadError, isLoading, mutate: mutateTickets } = useSWR<{ tickets: TmTicketRow[] }>(listKey, fetcher, { revalidateOnFocus: true });
   const { data: me } = useSWR<{ id: string; email: string; name: string }>('/api/auth/me', fetcher, { revalidateOnFocus: false });
   const tickets = data?.tickets ?? [];
+  // Who approved, by name — the column keeps an email or a user id (lib/person-names).
+  const people = usePeople(tickets.map(t => t.approved_by));
+  const approver = (v: string | null | undefined) => personName(v, people);
 
   const [search, setSearch] = useState('');
   const [statusFilter, setStatusFilter] = useState('all');
@@ -654,7 +659,7 @@ export default function TmTicketsPage() {
     return (
       <div className="tmDesc" style={{ maxWidth: 'none' }}>
         <span><Badge tone={b.tone}>{b.label}</Badge></span>
-        {displayStatus(t.status) !== 'draft' && t.approved_by && <small>by {t.approved_by}{t.approved_at ? ` · ${fmtDate(t.approved_at)}` : ''}</small>}
+        {displayStatus(t.status) !== 'draft' && approver(t.approved_by) && <small>by {approver(t.approved_by)}{t.approved_at ? ` · ${fmtDate(t.approved_at)}` : ''}</small>}
       </div>
     );
   } };
@@ -673,9 +678,9 @@ export default function TmTicketsPage() {
         >
           <div className="tmSection">
             <div className="tmBig">{fmtUSD(selected.total)}</div>
-            {selStatus !== 'draft' && selected.approved_by && (
+            {selStatus !== 'draft' && approver(selected.approved_by) && (
               <div className="tmMuted" style={{ fontSize: 'var(--fs-sm)' }}>
-                {selStatus === 'rejected' ? 'Rejected' : 'Approved'} by {selected.approved_by}{selected.approved_at ? ` on ${fmtDate(selected.approved_at)}` : ''}
+                {selStatus === 'rejected' ? 'Rejected' : 'Approved'} by {approver(selected.approved_by)}{selected.approved_at ? ` on ${fmtDate(selected.approved_at)}` : ''}
               </div>
             )}
           </div>
@@ -763,7 +768,7 @@ export default function TmTicketsPage() {
                 ['Markup', `${num(selected.markup_pct)}%`],
                 ['Tax', `${num(selected.tax_pct)}%`],
                 ['Total', <span key="t" className="tmTotal">{fmtUSD(selected.total)}</span>],
-                ['Approved By', selected.approved_by || ''],
+                ['Approved By', approver(selected.approved_by) || ''],
               ]} />
             </div>
             <div className="tmSection">

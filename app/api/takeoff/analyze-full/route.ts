@@ -9,6 +9,7 @@ import { NextRequest } from 'next/server';
 import { createServerClient, getUser } from '@/lib/supabase-server';
 import { requirePermission } from '@/lib/permissions';
 import { ASSEMBLIES, ASSEMBLY_MENU, applyMarkupStack, explodeCondition, type ComputeOpts, type Condition, type LineItem, type RateOverrides } from '@/lib/takeoff';
+import { canSaveComplete } from '@/lib/takeoff-status';
 
 export const runtime = 'nodejs';
 export const maxDuration = 300;
@@ -130,6 +131,9 @@ export async function POST(req: NextRequest) {
   // persist (create takeoff + line items) — only when asked; the review flow returns conditions unsaved
   let takeoffId: string | null = null;
   if (projectId && body.save) {
+    // Saved as complete only with something measured in it (lib/takeoff-status).
+    const canSave = canSaveComplete(allLines.length);
+    if (!canSave.ok) return Response.json({ error: canSave.message }, { status: 400 });
     const supabase = supa;
     // The project must belong to the caller's tenant — never attach a takeoff to a foreign
     // project_id (service-role bypasses RLS, and a foreign id later leaks the project name).

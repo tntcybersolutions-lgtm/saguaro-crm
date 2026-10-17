@@ -16,6 +16,8 @@ import { useUnsavedGuard, useComposerDirty } from '@/lib/useUnsavedGuard';
 import UnsavedGuardModal from '@/components/UnsavedGuardModal';
 import { StatusPill } from '@/components/ui/Status';
 import { localDay } from '@/lib/calendar-day';
+import { usePeople } from '@/lib/hooks/usePeople';
+import { personName } from '@/lib/person-names';
 
 /* ───── PALETTE ───── */
 const GOLD = 'var(--brand-primary)', BG = 'var(--bg-base)', RAISED = 'var(--bg-surface)', BORDER = 'rgba(255,255,255,0.12)',
@@ -140,6 +142,8 @@ export default function WarrantyClaimsPage() {
   const [projects, setProjects] = useState<Project[]>([]);
   const [selectedProject, setSelectedProject] = useState('');
   const [claims, setClaims] = useState<WarrantyClaim[]>([]);
+  // Who reported each claim, by name — the column keeps the reporter's email (lib/person-names).
+  const people = usePeople(claims.map(c => c.reported_by));
   const claimRights = useEditRights('Safety');
   const [loading, setLoading] = useState(false);
   const [activeTab, setActiveTab] = useState<'dashboard'|'claims'|'create'>('dashboard');
@@ -733,7 +737,7 @@ export default function WarrantyClaimsPage() {
             {/* info grid */}
             <div style={{ ...css.card, display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(180px, 1fr))', gap: 12, fontSize: 13 }}>
               <div><span style={{ color: DIM }}>Location:</span> {detailClaim.location || '---'}</div>
-              <div><span style={{ color: DIM }}>Reported By:</span> {detailClaim.reported_by || '---'}</div>
+              {personName(detailClaim.reported_by, people) && <div><span style={{ color: DIM }}>Reported By:</span> {personName(detailClaim.reported_by, people)}</div>}
               <div><span style={{ color: DIM }}>Reported Date:</span> {detailClaim.reported_date || '---'}</div>
               <div><span style={{ color: DIM }}>Warranty Expiry:</span> {detailClaim.warranty_expiry || '---'}</div>
               <div><span style={{ color: DIM }}>Covered:</span> {detailClaim.covered_under_warranty ? 'Yes' : 'No'}</div>

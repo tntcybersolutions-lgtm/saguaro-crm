@@ -9,6 +9,8 @@ import { PremiumSurface, ModuleHero, StatStrip, SectionCard, PremiumEmpty, GoldB
 import { VideoCamera, MapPin, Camera, CheckCircle, XCircle, AirplaneTilt, Globe, House, FilmSlate, Phone, LinkSimple, Plus } from '@phosphor-icons/react';
 
 import { FlatStyles, RowSkeleton } from '@/components/ui/flat';
+import { usePeople } from '@/lib/hooks/usePeople';
+import { personName } from '@/lib/person-names';
 type VStatus = 'pending' | 'verified' | 'rejected';
 const STATUS_COLOR: Record<VStatus, string> = { pending: C.gold, verified: C.green, rejected: C.red };
 const STATUS_LABEL: Record<VStatus, string> = { pending: 'Pending', verified: 'Verified', rejected: 'Rejected' };
@@ -33,6 +35,8 @@ export default function VerifyHubPage() {
   const { ready, loading: gateLoading } = useFranchiseGate();
   const { verifications, loading } = useVerifications();
   const { projects } = useProjects();
+  // Requester / verifier by name — the columns can hold a user id (lib/person-names).
+  const people = usePeople(((verifications as any[]) || []).flatMap((v) => [v?.requested_by, v?.verified_by]));
   const [filter, setFilter] = useState<'all' | VStatus>('pending');
   const [q, setQ] = useState('');
   const [requesting, setRequesting] = useState<false | { method: string }>(false);
@@ -145,7 +149,7 @@ export default function VerifyHubPage() {
                     <div style={{ display: 'flex', gap: 8, flexWrap: 'wrap', marginTop: 10, alignItems: 'center' }}>
                       {v.method && METHOD_META[v.method] && (() => { const MI = METHOD_ICON[v.method]; return <span style={{ fontSize: 12, fontWeight: 700, color: C.text, background: 'var(--bg-surface-2)', padding: '3px 9px', borderRadius: 6, display: 'inline-flex', alignItems: 'center', gap: 4 }}>{MI && <MI size={12} weight="regular" color={C.text} />}{METHOD_META[v.method].label}</span>; })()}
                       {stage && <span style={{ fontSize: 12, fontWeight: 700, color: stage.color, background: `color-mix(in srgb, ${stage.color} 9%, transparent)`, padding: '3px 9px', borderRadius: 6 }}>Gate: {stage.label}</span>}
-                      {v.requested_by && <span style={{ fontSize: 12, color: C.dim, padding: '3px 0' }}>Requested by {v.requested_by}</span>}
+                      {personName(v.requested_by, people) && <span style={{ fontSize: 12, color: C.dim, padding: '3px 0' }}>Requested by {personName(v.requested_by, people)}</span>}
                     </div>
 
                     {v.evidence_note && <div style={{ fontSize: 13, color: C.dim, marginTop: 10, lineHeight: 1.5 }}>{v.evidence_note}</div>}
@@ -159,7 +163,7 @@ export default function VerifyHubPage() {
                       </div>
                     ) : (
                       <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginTop: 12, fontSize: 12, color: C.dim }}>
-                        <span>{st === 'verified' ? <><span style={{ display: 'inline-flex', verticalAlign: 'middle' }}><CheckCircle size={14} weight="fill" color={C.dim} /></span> Verified</> : <><span style={{ display: 'inline-flex', verticalAlign: 'middle' }}><XCircle size={14} weight="fill" color={C.dim} /></span> Rejected</>}{v.verified_by ? ` by ${v.verified_by}` : ''}{v.verified_at ? ` · ${fmtDate(v.verified_at)}` : ''}</span>
+                        <span>{st === 'verified' ? <><span style={{ display: 'inline-flex', verticalAlign: 'middle' }}><CheckCircle size={14} weight="fill" color={C.dim} /></span> Verified</> : <><span style={{ display: 'inline-flex', verticalAlign: 'middle' }}><XCircle size={14} weight="fill" color={C.dim} /></span> Rejected</>}{personName(v.verified_by, people) ? ` by ${personName(v.verified_by, people)}` : ''}{v.verified_at ? ` · ${fmtDate(v.verified_at)}` : ''}</span>
                         <button onClick={() => decide(v, 'pending')} disabled={busy[v.id]} style={{ fontSize: 12, fontWeight: 700, color: C.blue, background: 'none', border: 'none', cursor: 'pointer' }}>Reopen</button>
                       </div>
                     )}

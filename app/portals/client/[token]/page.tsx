@@ -1659,7 +1659,7 @@ export default function ClientPortalPage() {
                 <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', fontSize: 12, color: DIM }}>
                   <div>
                     <div>{fmtDate(doc.date)}</div>
-                    <div style={{ marginTop: 2 }}>By: {doc.uploaded_by}</div>
+                    {doc.uploaded_by && <div style={{ marginTop: 2 }}>By: {doc.uploaded_by}</div>}
                   </div>
                   <div style={{ fontSize: 12, color: DIM }}>{doc.size}</div>
                 </div>

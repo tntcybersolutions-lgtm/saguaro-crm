@@ -4,12 +4,15 @@
  * types what they billed this period per line (carried over from their last
  * invoice), sees the totals, and sends it to the GC. A compliance hold (COI or
  * W-9 not current) comes back from the server and is said in plain words with
- * a way to fix it.
+ * a way to fix it. What is left to bill on the subcontract shows beside the
+ * totals, and an invoice past it is stopped here with that amount — the server
+ * refuses it too (lib/sub-billing-cap).
  */
 import React, { useMemo, useState } from 'react';
 import SaguaroDatePicker from '@/components/SaguaroDatePicker';
 import { localDay } from '@/lib/calendar-day';
 import { blankLine, draftTotals, invoiceBody, linesFromLast, type DraftLine } from '@/lib/sub-invoice-draft';
+import { checkBillingCap, remainingSentence, type BillingRoom } from '@/lib/sub-billing-cap';
 
 const box: React.CSSProperties = { background: 'var(--bg-surface)', border: '1px solid rgba(255,255,255,0.12)', borderRadius: 12, padding: 16, display: 'grid', gap: 14, minWidth: 0 };
 const input: React.CSSProperties = { width: '100%', background: 'var(--bg-base)', border: '1px solid rgba(255,255,255,0.12)', borderRadius: 8, padding: '10px 12px', color: 'var(--text-primary)', fontSize: 16, minHeight: 44, boxSizing: 'border-box' };
@@ -17,8 +20,10 @@ const label: React.CSSProperties = { display: 'block', fontSize: 12, fontWeight:
 const btn = (go?: boolean): React.CSSProperties => ({ minHeight: 44, padding: '0 18px', borderRadius: 10, fontWeight: 800, fontSize: 14, cursor: 'pointer', border: go ? 'none' : '1px solid rgba(255,255,255,0.16)', background: go ? 'var(--brand-primary)' : 'transparent', color: go ? 'var(--on-brand)' : 'var(--text-primary)' });
 const usd = (n: number) => n.toLocaleString('en-US', { style: 'currency', currency: 'USD' });
 
-export default function SubInvoiceForm({ token, lastLines, onFiled, onFixCompliance }: {
+export default function SubInvoiceForm({ token, billing, lastLines, onFiled, onFixCompliance }: {
   token: string;
+  /** Room left on the subcontract; null when there is none to measure against. */
+  billing?: BillingRoom | null;
   lastLines?: ReadonlyArray<Record<string, unknown>> | null;
   onFiled: () => void;
   onFixCompliance: () => void;
@@ -33,6 +38,9 @@ export default function SubInvoiceForm({ token, lastLines, onFiled, onFixComplia
   const [err, setErr] = useState('');
   const [hold, setHold] = useState<string[] | null>(null);
   const totals = useMemo(() => draftTotals(lines, ret), [lines, ret]);
+  const cap = useMemo(() => checkBillingCap(billing ?? null, totals.requested), [billing, totals.requested]);
+  // A fully billed contract says so as soon as the form opens — nothing to type first.
+  const capMsg = !cap.ok ? cap.message : billing && billing.remaining <= 0 ? remainingSentence(billing) : '';
   // Any edit clears the last message — it was about the numbers before this change.
   const set = (k: string, p: Partial<DraftLine>) => { setErr(''); setLines((ls) => ls.map((l) => (l.key === k ? { ...l, ...p } : l))); };
 
@@ -41,6 +49,7 @@ export default function SubInvoiceForm({ token, lastLines, onFiled, onFixComplia
     if (!to) { setErr('Pick the date this invoice runs through.'); return; }
     if (from && from > to) { setErr('The period starts after it ends.'); return; }
     if (totals.problems.length) { setErr(totals.problems[0]); return; }
+    if (capMsg) { setErr(capMsg); return; }
     setSaving(true);
     try {
       const r = await fetch(`/api/portal/sub/pay-apps?token=${encodeURIComponent(token)}`, {
@@ -49,6 +58,7 @@ export default function SubInvoiceForm({ token, lastLines, onFiled, onFixComplia
       });
       const j = await r.json().catch(() => ({}));
       if (r.status === 409 && j.complianceBlock) { setHold(Array.isArray(j.missing) ? j.missing : []); return; }
+      // Over the contract: the server says how much is left, in the same words.
       if (!r.ok) { setErr(j.error || "Couldn't send the invoice. Please try again."); return; }
       setOpen(false); setLines(linesFromLast(lastLines)); onFiled();
     } catch {
@@ -82,10 +92,11 @@ export default function SubInvoiceForm({ token, lastLines, onFiled, onFixComplia
         <button type="button" style={{ ...btn(), justifySelf: 'start' }} onClick={() => setLines((ls) => [...ls, blankLine()])}>+ Add line</button>
       </div>
       <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(140px, 1fr))', gap: 8 }}>
-        {[['This period', totals.requested], ['Retainage to date', totals.retainage], ['Net due', totals.net]].map(([k, v]) => (
+        {([['This period', totals.requested], ['Retainage to date', totals.retainage], ['Net due', totals.net]] as [string, number][])
+          .concat(billing ? ([['Left to bill', billing.remaining]] as [string, number][]) : []).map(([k, v]) => (
           <div key={k as string} style={{ background: 'var(--bg-base)', borderRadius: 8, padding: '8px 10px', minWidth: 0 }}>
             <div style={{ fontSize: 12, fontWeight: 700, color: 'var(--text-tertiary)' }}>{k as string}</div>
-            <div style={{ fontSize: 16, fontWeight: 800, color: 'var(--text-primary)', whiteSpace: 'nowrap' }}>{usd(v as number)}</div>
+            <div style={{ fontSize: 16, fontWeight: 800, color: k === 'Left to bill' && capMsg ? 'var(--danger)' : 'var(--text-primary)', whiteSpace: 'nowrap' }}>{usd(v as number)}</div>
           </div>
         ))}
       </div>
@@ -96,9 +107,9 @@ export default function SubInvoiceForm({ token, lastLines, onFiled, onFixComplia
           <button type="button" style={{ ...btn(true), justifySelf: 'start' }} onClick={onFixCompliance}>Upload them now</button>
         </div>
       )}
-      {err && <div role="alert" style={{ color: 'var(--danger)', fontSize: 14, fontWeight: 700 }}>{err}</div>}
+      {(err || capMsg) && <div role="alert" style={{ color: 'var(--danger)', fontSize: 14, fontWeight: 700 }}>{err || capMsg}</div>}
       <div style={{ display: 'flex', gap: 8, flexWrap: 'wrap' }}>
-        <button type="button" style={btn(true)} disabled={saving} onClick={() => void submit()}>{saving ? 'Sending…' : `Send invoice for ${usd(totals.net)}`}</button>
+        <button type="button" style={btn(true)} disabled={saving || !!capMsg} onClick={() => void submit()}>{saving ? 'Sending…' : `Send invoice for ${usd(totals.net)}`}</button>
         <button type="button" style={btn()} disabled={saving} onClick={() => { setOpen(false); setErr(''); setHold(null); }}>Cancel</button>
       </div>
     </section>

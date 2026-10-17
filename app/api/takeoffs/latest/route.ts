@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { createServerClient, getUser } from '@/lib/supabase-server';
 import { ok, badRequest, serverError } from '@/lib/api-response';
+import { takeoffItemCounts } from '@/lib/takeoff-status';
 
 export const dynamic = 'force-dynamic';
 
@@ -17,17 +18,20 @@ export async function GET(req: NextRequest) {
     if (!projectId) return badRequest('projectId required');
 
     // Query takeoff first, then materials separately to avoid FK resolution issues
-    const { data: takeoff, error } = await supabase
+    // The newest takeoff that is complete AND has something measured in it —
+    // one marked complete with no lines is not an estimate (lib/takeoff-status).
+    const { data: completeRows, error } = await supabase
       .from('takeoffs')
       .select('*')
       .eq('project_id', projectId)
       .eq('tenant_id', user.tenantId)
       .eq('status', 'complete')
       .order('created_at', { ascending: false })
-      .limit(1)
-      .maybeSingle();
+      .limit(10);
 
     if (error) throw error;
+    const counts = await takeoffItemCounts(supabase, user.tenantId, (completeRows || []).map((t) => t.id));
+    const takeoff = (completeRows || []).find((t) => (counts[t.id] ?? 0) > 0) ?? null;
 
     if (!takeoff) return ok(null);
 
