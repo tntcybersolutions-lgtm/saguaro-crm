@@ -2,6 +2,7 @@ import { NextRequest } from 'next/server';
 import { createServerClient, getUser } from '@/lib/supabase-server';
 import { signFields } from '@/lib/storage-signing';
 import { ok, notFound, serverError, unauthorized } from '@/lib/api-response';
+import { takeoffState } from '@/lib/takeoff-status';
 
 export async function GET(
   req: NextRequest,
@@ -74,6 +75,10 @@ export async function GET(
 
     const result = {
       ...signedTakeoff,
+      // Complete only with something measured in it (lib/takeoff-status).
+      status: takeoffState((signedTakeoff as Record<string, unknown>).status, materialRows.length),
+      stored_status: (signedTakeoff as Record<string, unknown>).status,
+      item_count: materialRows.length,
       project_name: projectName,
       materials: materialRows,
     };

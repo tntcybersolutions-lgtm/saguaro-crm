@@ -40,6 +40,8 @@
 import { liveJobs } from '@/lib/live-jobs';
 import { receivableOnly } from '@/lib/invoice-direction';
 
+import { isTakeoffComplete } from './takeoff-status';
+
 export type SuggestionSeverity = 'red' | 'amber' | 'info';
 
 export interface Suggestion {
@@ -295,6 +297,14 @@ export async function computeSuggestions(db: Db, tenantId: string): Promise<Sugg
       ),
     ]);
 
+  /* A takeoff marked complete with nothing measured is not complete
+     (lib/takeoff-status) — nothing to export, so no nudge to export it. */
+  const takeoffCounts = takeoffs.length
+    ? await safeRows('takeoff_item_counts', db.from('takeoff_item_counts').select('takeoff_id, items').eq('tenant_id', tenantId).in('takeoff_id', takeoffs.map((t) => t.id)), degraded)
+    : [];
+  const measured = new Map(takeoffCounts.map((c) => [String(c.takeoff_id), Number(c.items) || 0]));
+  const completeTakeoffs = takeoffs.filter((t) => isTakeoffComplete(t.status, measured.get(String(t.id)) ?? 0));
+
   const dismissed = new Set<string>();
   for (const e of dismissEvents) {
     const sid = e?.meta?.suggestionId;
@@ -481,7 +491,7 @@ export async function computeSuggestions(db: Db, tenantId: string): Promise<Sugg
   /* ── R5: completed takeoffs never exported to an estimate — $ = priced value ── */
   {
     const hits: Suggestion[] = [];
-    for (const t of takeoffs) {
+    for (const t of completeTakeoffs) {
       const age = daysSinceTs(t.created_at);
       if (age === null || age < 7) continue;
       const value = round2(num(t.sell_price) || num(t.grand_total) || num(t.total_cost));

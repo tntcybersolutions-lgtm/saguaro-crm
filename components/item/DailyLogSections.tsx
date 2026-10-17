@@ -218,6 +218,9 @@ const CSS = `
   .dls-table tr{display:grid;grid-template-columns:1fr 1fr;gap:6px;padding:10px 0;border-bottom:1px solid var(--border-default)}
   .dls-table td{display:flex;flex-direction:column;gap:2px;padding:0}
   .dls-table td::before{content:attr(data-label);font-size:12px;color:var(--text-tertiary);font-weight:600}
+  /* Two columns on a 390px screen: an input never holds a column wider than it is. */
+  .dls-table td{min-width:0}
+  .dls-table .k-input,.dls-table textarea.k-input{min-width:0}
   .dls-table td:last-child::before{content:''}
 }
 `;
