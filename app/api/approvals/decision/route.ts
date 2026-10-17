@@ -4,7 +4,7 @@ import { requirePermission } from '@/lib/permissions';
 import { metaFor, pickAmount, itemLabel, moduleLabel, type EntityMeta } from '@/lib/approvals';
 import { must } from '@/lib/db-write';
 import { apiError } from '@/lib/api-error';
-import { writeChangeOrder } from '@/lib/change-order-status';
+import { writeChangeOrder, coWriteFailure } from '@/lib/change-order-status';
 import { transitionPoStatus } from '@/lib/purchase-order-status';
 import { transitionPayAppStatus } from '@/lib/pay-app-status';
 
@@ -130,10 +130,11 @@ export async function POST(req: NextRequest) {
       /* A change order decided here is the same decision as its own Approve /
          Reject: the same Change Orders: Full permission and the one shared
          step (lib/change-order-status) that moves the contract and budget. */
-      const full = await requirePermission(req, 'Change Orders', 'Full', { db });
+      // Approving: the company's tiers (in writeChangeOrder) decide. Rejecting: Full.
+      const full = await requirePermission(req, 'Change Orders', decision === 'approved' ? 'Edit' : 'Full', { db });
       if (!full.ok) return full.res;
       const w = await writeChangeOrder(db, user.tenantId, body.entityId, { status: decision }, { actorId: user.id });
-      if (!w.ok) return NextResponse.json({ error: w.error }, { status: w.status });
+      if (!w.ok) { const f = coWriteFailure(w); return NextResponse.json(f.body, { status: f.status }); }
       entityUpdated = true;
     } else if (isFinal && meta.table === 'purchase_orders') {
       /* A PO approved here is the same move as on its own page; a rejected one

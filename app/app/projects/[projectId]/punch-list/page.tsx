@@ -72,7 +72,7 @@ const STATUS_RANK:Record<string,number>={open:0,in_progress:1,completed:2,voided
  *  only In Progress (amber), Completed (green) and Voided (grey) carry a hue. */
 function statusBadge(s:string): { label:string; tone:BadgeTone } {
   if (s==='completed') return { label:'Completed', tone:'ongoing' };
-  if (s==='in_progress') return { label:'In Progress', tone:'under_contract' };
+  if (s==='in_progress') return { label:'In Progress', tone:'lead' };
   if (s==='voided') return { label:'Voided', tone:'closed' };
   return { label: STATUS_LABELS[s]||s||'Open', tone:'neutral' };
 }
@@ -497,10 +497,10 @@ export default function PunchListPage(){
       <Badge tone={b.tone}>{b.label}</Badge><Badge tone={i._offlineError?'overdue':'pending'}>{i._offlineError?"Couldn't Send":'Waiting for Signal'}</Badge>
     </span>;
   } };
-  const tradeCol: Column<any> = { key:'trade', header:'Trade', phone:'hide', accessor:i=>(i.trade||'').toLowerCase(), render:i=>i.trade?<span>{i.trade}</span>:<span className="plMuted">—</span> };
-  const locationCol: Column<any> = { key:'location', header:'Location', phone:'hide', accessor:i=>(i.location||'').toLowerCase(), render:i=>i.location?<span style={{display:'inline-flex',alignItems:'center',gap:4}}><MapPin size={12}/>{i.location}</span>:<span className="plMuted">—</span> };
-  const assignedCol: Column<any> = { key:'assigned_to', header:'Assigned To', accessor:i=>(i.assigned_to||'').toLowerCase(), render:i=>i.assigned_to?<span style={{color:'var(--text-primary)'}}>{i.assigned_to}</span>:<span className="plMuted">Unassigned</span> };
-  const dueCol: Column<any> = { key:'due_date', header:'Due', phone:'show', accessor:i=>i.due_date||'', render:i=><span className={isLate(i)?'plLate':undefined}>{fmtDate(i.due_date)}</span> };
+  const tradeCol: Column<any> = { key:'trade', header:'Trade', phone:'hide', accessor:i=>(i.trade||'').toLowerCase(), render:i=>i.trade?<span>{i.trade}</span>:null };
+  const locationCol: Column<any> = { key:'location', header:'Location', phone:'hide', accessor:i=>(i.location||'').toLowerCase(), render:i=>i.location?<span style={{display:'inline-flex',alignItems:'center',gap:4}}><MapPin size={12}/>{i.location}</span>:null };
+  const assignedCol: Column<any> = { key:'assigned_to', header:'Assigned To', accessor:i=>(i.assigned_to||'').toLowerCase(), render:i=>i.assigned_to?<span style={{color:'var(--text-primary)'}}>{i.assigned_to}</span>:i.status==='completed'?null:<span className="plMuted">Unassigned</span> };
+  const dueCol: Column<any> = { key:'due_date', header:'Due', phone:'show', width:120, accessor:i=>i.due_date||'', render:i=>i.due_date?<span className={isLate(i)?'plLate':undefined} style={{whiteSpace:'nowrap'}}>{fmtDate(i.due_date)}</span>:null };
   const columns: Column<any>[] = (selected && mode!=='create')
     ? [titleCol, priorityCol, statusCol, dueCol]
     : [titleCol, priorityCol, statusCol, tradeCol, locationCol, assignedCol, dueCol];
@@ -537,12 +537,12 @@ export default function PunchListPage(){
           subtitle={[selected.trade, selected.location].filter(Boolean).join(' · ') || undefined}
           actions={<Button variant="ghost" size="sm" icon={<X size={16}/>} aria-label="Close details" title="Close details" onClick={closePanel}/>}
         >
-          <div className="plSection">
-            <div className="plSectionTitle">Description</div>
-            {selected.description && selected.title
-              ? <div className="plProse">{selected.description}</div>
-              : <div className="plMuted" style={{fontSize:'var(--fs-sm)'}}>No description was entered.</div>}
-          </div>
+          {selected.description && selected.title && (
+            <div className="plSection">
+              <div className="plSectionTitle">Description</div>
+              <div className="plProse">{selected.description}</div>
+            </div>
+          )}
 
           {/* The voice behind the item, when it was filed from the radio */}
           {selectedRadio&&(
@@ -567,22 +567,16 @@ export default function PunchListPage(){
                 <Badge tone={priorityBadge(selected.priority).tone}>{prKey(selected.priority)==='critical'&&<Lightning size={11} weight="fill"/>} {priorityBadge(selected.priority).label}</Badge>
                 {isLate(selected)&&<Badge tone="overdue">Past Due</Badge>}
               </div>
-              {selected.status==='completed' && selected.completed_at && (
-                <div className="plNext">Completed {fmtDate(selected.completed_at)}.</div>
-              )}
-              {selected.status!=='completed' && selected.status!=='voided' && (
-                <div className="plNext">{selected.assigned_to ? `${selected.assigned_to} sees it on their field list.` : 'Assign a sub and it shows on their field list.'}</div>
-              )}
             </div>
             <div className="plSection">
-              <DetailList items={[
+              <DetailList items={([
                 ['Trade', selected.trade || ''],
                 ['Location', selected.location || ''],
-                ['Assigned To', selected.assigned_to || 'Unassigned'],
-                ['Due Date', <span key="due" className={isLate(selected)?'plLate':undefined}>{fmtDate(selected.due_date)}</span>],
+                ['Assigned To', selected.assigned_to || (selected.status==='completed' ? '' : 'Unassigned')],
+                ['Due Date', selected.due_date ? <span key="due" className={isLate(selected)?'plLate':undefined}>{fmtDate(selected.due_date)}</span> : ''],
                 ['Created', fmtDate(selected.created_at)],
-                ['Completed', selected.completed_at ? fmtDate(selected.completed_at) : '—'],
-              ]}/>
+                ['Completed', selected.completed_at ? fmtDate(selected.completed_at) : ''],
+              ] as [string, React.ReactNode][]).filter(([,v])=>v!=null&&v!==''&&v!=='—')}/>
             </div>
             <div className="plSection">
               <div className="plActions">
@@ -627,21 +621,12 @@ export default function PunchListPage(){
       <EmptyState
         icon={<CheckCircle size={22}/>}
         title="Punch list is empty"
-        text="Add deficiencies and correction items to track closeout."
         action={<Button icon={<Plus size={15} weight="bold"/>} onClick={openCreate}>Add First Item</Button>}
       />
     );
   } else {
     listBody = (
       <>
-        {!loading && items.length>0 && (
-          <div className="plBar" aria-label="Overall completion">
-            <span>Overall completion</span>
-            <div className="plBarTrack"><div className="plBarFill" style={{width:`${pct}%`}}/></div>
-            <b>{pct}%</b>
-            <span className="plNum">{done} of {items.length}</span>
-          </div>
-        )}
         <DataTable
           columns={columns}
           rows={filtered}
@@ -658,7 +643,7 @@ export default function PunchListPage(){
             <EmptyState
               icon={<CheckCircle size={22}/>}
               title="No items match these filters"
-              text="Clear the search, status, priority, or trade filter to see more."
+             
               action={<Button onClick={clearFilters}>Clear Filters</Button>}
             />
           }
@@ -679,7 +664,7 @@ export default function PunchListPage(){
           { label:'Punch List' },
         ]}
         title="Punch List"
-        subtitle="Deficiencies and closeout items, tracked to completion."
+        subtitle={ctx?.project?.name || undefined}
         actions={
           <Button variant="primary" icon={<Plus size={15} weight="bold"/>} onClick={openCreate}>
             Add Item
@@ -721,7 +706,6 @@ export default function PunchListPage(){
                 {filtersActive && <Button variant="ghost" size="sm" onClick={clearFilters}>Clear</Button>}
               </>
             }
-            actions={<span className="plMuted" style={{ fontSize:'var(--fs-sm)' }}>{filtered.length} of {items.length}</span>}
           />
         )}
 

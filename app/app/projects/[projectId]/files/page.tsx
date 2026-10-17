@@ -59,6 +59,8 @@ function downloadFile(f: any) {
   a.href = f.file_url; a.download = f.file_name || ''; a.target = '_blank'; a.rel = 'noreferrer';
   document.body.appendChild(a); a.click(); a.remove();
 }
+/** A stored category ("subcontract", "pay_app") read as words. */
+const catLabel = (c?: string | null) => (c ? String(c).replace(/[_-]+/g, ' ').replace(/^\w/, (m) => m.toUpperCase()) : '');
 const SourceIcon = ({ f }: { f: any }) => (f.source === 'generated' ? <Sparkle size={13} weight="fill" /> : f.source === 'drawing' ? <Compass size={13} /> : <CloudArrowUp size={13} />);
 
 /* Photos and video keep a picture grid; everything else reads as a register. */
@@ -72,10 +74,12 @@ const FL_CSS = `
 .flViews { display: inline-flex; gap: 6px; }
 .flViews .k-btn[aria-pressed="true"] { border-color: var(--border-strong); background: var(--bg-surface-2); color: var(--text-primary); }
 .flGrid { display: grid; grid-template-columns: repeat(auto-fill, minmax(210px, 1fr)); gap: 14px; }
-.flCard { background: var(--bg-surface-2); border: 1px solid var(--border-default); border-radius: var(--radius-md); overflow: hidden; cursor: pointer; display: flex; flex-direction: column; transition: border-color .15s; text-align: left; font: inherit; color: inherit; padding: 0; }
-.flCard:hover, .flCard:focus-visible { border-color: var(--border-strong); outline: none; }
-.flCardDoc { display: flex; align-items: center; gap: 10px; padding: 14px 14px 0; }
-.flCardBody { padding: 12px 14px 14px; display: flex; flex-direction: column; gap: 6px; flex: 1; }
+/* Grid items sit on the page — no tile box; a thin rule under each one. */
+.flCard { background: none; border: 0; border-bottom: 1px solid var(--border-subtle); border-radius: 0; cursor: pointer; display: flex; flex-direction: column; transition: opacity .15s; text-align: left; font: inherit; color: inherit; padding: 0 0 10px; }
+.flCard:hover { opacity: .88; }
+.flCard:focus-visible { outline: 2px solid var(--focus-ring); outline-offset: 2px; }
+.flCardDoc { display: flex; align-items: center; gap: 10px; padding: 4px 0 0; }
+.flCardBody { padding: 10px 0 0; display: flex; flex-direction: column; gap: 6px; flex: 1; }
 .flCardName { font-size: 14px; font-weight: 700; line-height: 1.3; color: var(--text-primary); display: -webkit-box; -webkit-line-clamp: 3; -webkit-box-orient: vertical; overflow: hidden; word-break: break-word; }
 .flMeta { display: flex; flex-wrap: wrap; align-items: center; gap: 4px 10px; font-size: 12px; color: var(--text-secondary); }
 .flKind { font-weight: 800; color: var(--tint); }
@@ -201,7 +205,7 @@ export default function FilesPage() {
   const stats: StatItem[] = [
     { label: 'Library', value: loading ? '—' : counts.total, icon: <Files size={15} />, onClick: clearFilters, active: !filtersActive, sub: bytesTotal > 0 ? `${fmtSize(bytesTotal)} stored · ${folders.length} folder${folders.length === 1 ? '' : 's'}` : `${folders.length} folder${folders.length === 1 ? '' : 's'}` },
     { label: 'Added this week', value: loading ? '—' : addedThisWeek, tone: addedThisWeek > 0 ? 'good' : 'default', icon: <CalendarPlus size={15} />, onClick: () => setRecentOnly((v) => !v), active: recentOnly, sub: lastUpload ? `Last upload ${fmtDate(lastUpload)}` : 'Nothing uploaded yet' },
-    { label: 'Photos', value: loading ? '—' : counts.image, icon: <ImageIcon size={15} />, href: `${base}/photos`, sub: 'Site + progress shots' },
+    { label: 'Images', value: loading ? '—' : counts.image, icon: <ImageIcon size={15} />, onClick: () => setKindFilter((k) => (k === 'image' ? 'all' : 'image')), active: kindFilter === 'image', sub: 'In this library' },
     { label: 'Videos', value: loading ? '—' : counts.video, icon: <FileVideo size={15} />, onClick: toggleVideos, active: kindFilter === 'video', sub: 'Walkthroughs, site video' },
     { label: 'Docs & drawings', value: loading ? '—' : docCount, icon: <FilePdf size={15} />, href: `${base}/drawings`, sub: 'PDFs, sheets, CAD, docs' },
   ];
@@ -241,16 +245,16 @@ export default function FilesPage() {
         return (
           <span className="k-name" title={f.file_name}>
             <span className="flIco" style={{ ['--tint' as string]: KIND_TINT[k] } as React.CSSProperties}><Icon size={19} weight="duotone" /></span>
-            <span className="k-name-text"><span className="flName">{f.file_name}</span><span>{[f.category, f.file_size ? fmtSize(f.file_size) : ''].filter(Boolean).join(' · ') || KIND_LABEL[k]}</span></span>
+            <span className="k-name-text"><span className="flName">{f.file_name}</span><span>{[catLabel(f.category), f.file_size ? fmtSize(f.file_size) : ''].filter(Boolean).join(' · ') || KIND_LABEL[k]}</span></span>
           </span>
         );
       },
     },
     { key: 'kind', header: 'Type', phone: 'show', accessor: (f) => KIND_LABEL[kindOf(f)], render: (f) => <Badge tone="neutral">{KIND_LABEL[kindOf(f)]}</Badge> },
-    { key: 'folder', header: 'Folder', accessor: (f) => f.folder || 'Unfiled', render: (f) => f.folder ? <span className="flSrc"><FolderOpen size={13} />{f.folder}</span> : '—' },
+    { key: 'folder', header: 'Folder', accessor: (f) => f.folder || 'Unfiled', render: (f) => f.folder ? <span className="flSrc"><FolderOpen size={13} />{f.folder}</span> : null },
     { key: 'source', header: 'Source', accessor: (f) => sourceOf(f), render: (f) => <span className="flSrc"><SourceIcon f={f} />{sourceOf(f)}</span> },
     { key: 'file_size', header: 'Size', align: 'right', hidden: true, accessor: (f) => Number(f.file_size) || 0, render: (f) => fmtSize(f.file_size) },
-    { key: 'created_at', header: 'Added', phone: 'show', accessor: (f) => f.created_at || '', render: (f) => fmtDate(f.created_at) || '—' },
+    { key: 'created_at', header: 'Added', phone: 'show', accessor: (f) => f.created_at || '', render: (f) => fmtDate(f.created_at) || null },
   ];
 
   const emptyNode = trash
@@ -313,7 +317,7 @@ export default function FilesPage() {
           { label: 'Files' },
         ]}
         title="Files & media"
-        subtitle="Plans, permits, contracts, photos and video in one place."
+        subtitle={ctx?.project?.name || undefined}
         actions={
           <>
             <Button icon={<CloudArrowDown size={15} weight="bold" />} onClick={() => setShowImport(true)}>Import from cloud</Button>
@@ -325,8 +329,7 @@ export default function FilesPage() {
 
         {!trash && (
           <div className="flDrop">
-            <FileDropzone projectId={projectId} folder={folder !== 'all' ? folder : null} onUploaded={(rows) => { if (rows?.length) { setFiles((prev) => [...rows, ...prev]); flash(`${rows.length} uploaded.`); } }} />
-            <p className="flDropNote">Uploads go to {folder !== 'all' ? <b>{folder}</b> : 'the library'}.</p>
+            <FileDropzone compact projectId={projectId} folder={folder !== 'all' ? folder : null} onUploaded={(rows) => { if (rows?.length) { setFiles((prev) => [...rows, ...prev]); flash(`${rows.length} uploaded${folder !== 'all' ? ` to ${folder}` : ''}.`); } }} />
           </div>
         )}
 

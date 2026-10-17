@@ -5,7 +5,14 @@
 -- so the synthetic users and grants never commit.
 -- Run through the Supabase SQL runner, copy the text after "PARITY" from the
 -- error into a file, and pass it to the .ts harness with the fixture
--- (export query at the top of the .ts file).
+-- (export query at the top of the .ts file). To prove a migration before it is
+-- applied, send the migration and this file in ONE call: the RAISE rolls both
+-- back.
+--
+-- Job roles (20261017h): synthetic members J1..J9 in Saguaro, each with a
+-- company role and a row on job P, asked about with no job, P and Q. Tokens:
+--   j<n>:<->|P|Q:<12 digits>   meta2:<readOnly>,<pm>,<foreman>,<super>,<adminRole>
+
 DO $parity$
 DECLARE
   cats text[] := ARRAY['Projects','Budget','Schedule','Safety','Documents','RFIs','Submittals','Change Orders','Pay Apps','Reports','Sales','Admin'];
@@ -17,6 +24,8 @@ DECLARE
   out text := '';
   r record; pr record; n int := 0; d text; c text;
   rFore uuid; rSub uuid; rSup uuid; rForeign uuid; P uuid; Q uuid; aX uuid;
+  rRO uuid; rPM uuid; rAdm uuid; ju uuid[]; jn int;
+  noAccess jsonb := '{"Projects":"None","Budget":"None","Schedule":"None","Safety":"None","Documents":"None","RFIs":"None","Submittals":"None","Change Orders":"None","Pay Apps":"None","Reports":"None","Sales":"None","Admin":"None"}';
 BEGIN
   FOR r IN SELECT id FROM profiles ORDER BY id LOOP
     FOR pr IN SELECT NULL::uuid AS pid UNION SELECT DISTINCT project_id FROM user_role_assignments WHERE user_id = r.id AND project_id IS NOT NULL LOOP
@@ -53,6 +62,34 @@ BEGIN
   d := ''; FOREACH c IN ARRAY cats LOOP d := d || rbac.permission_level_for(Z, c, NULL)::text; END LOOP; out := out || ' proj-none:' || d;
   d := ''; FOREACH c IN ARRAY cats LOOP d := d || rbac.permission_level_for(Z, c, P)::text; END LOOP; out := out || ' proj-P:' || d;
   d := ''; FOREACH c IN ARRAY cats LOOP d := d || rbac.permission_level_for(Z, c, Q)::text; END LOOP; out := out || ' proj-Q:' || d;
+  -- Job roles.
+  SELECT id INTO rRO FROM role_definitions WHERE tenant_id = SAG AND name = 'Read-Only' AND is_builtin LIMIT 1;
+  SELECT id INTO rPM FROM role_definitions WHERE tenant_id = SAG AND name = 'Project Manager' AND is_builtin LIMIT 1;
+  SELECT id INTO rAdm FROM role_definitions WHERE tenant_id = SAG AND permissions ->> 'Admin' = 'Full' ORDER BY id LIMIT 1;
+  ju := ARRAY(SELECT ('00000000-0000-4000-8000-0000000000b' || g.i)::uuid FROM generate_series(1, 9) AS g(i) ORDER BY g.i);
+  INSERT INTO auth.users (id, instance_id, aud, role, email, raw_user_meta_data, created_at, updated_at)
+    SELECT u, '00000000-0000-0000-0000-000000000000', 'authenticated', 'authenticated', 'parity-' || right(u::text, 2) || '@example.invalid', jsonb_build_object('tenant_id', SAG), now(), now()
+      FROM unnest(ju) u;
+  UPDATE profiles SET role = 'member', tenant_id = SAG WHERE id = ANY (ju);
+  UPDATE profiles SET role = 'admin' WHERE id = ju[9];
+  INSERT INTO user_role_assignments (user_id, tenant_id, role_id, project_id, permissions) VALUES
+    (ju[1], SAG, rRO,   NULL, NULL), (ju[1], SAG, rPM,  P, NULL),                                   -- raised on a job
+    (ju[2], SAG, rPM,   NULL, NULL), (ju[2], SAG, NULL, P, noAccess),                               -- no access on a job
+    (ju[3], SAG, rFore, NULL, NULL), (ju[3], SAG, rSup, P, '{"Budget":"Full","Sales":"None"}'),     -- job role + levels
+    (ju[4], SAG, rFore, NULL, NULL), (ju[4], SAG, NULL, P, '{"Budget":"Edit","RFIs":"bogus"}'),     -- company role + levels
+    (ju[5], SAG, rAdm,  NULL, NULL), (ju[5], SAG, rRO,  P, NULL),                                   -- company admin, Read-Only job
+    (ju[6], SAG, NULL,  P, '{"Admin":"Full","Projects":"Edit"}'),                                   -- no company role, levels only
+    (ju[7], SAG, rForeign, P, NULL),                                                                -- another company's role
+    (ju[8], SAG, NULL,  P, noAccess),                                                               -- member, no access
+    (ju[9], SAG, NULL,  P, noAccess);                                                               -- admin profile, no access
+  FOR jn IN 1..9 LOOP
+    FOR pr IN SELECT * FROM (VALUES ('-', NULL::uuid), ('P', P), ('Q', Q)) v(tag, pid) LOOP
+      d := '';
+      FOREACH c IN ARRAY cats LOOP d := d || rbac.permission_level_for(ju[jn], c, pr.pid)::text; END LOOP;
+      out := out || ' j' || jn || ':' || pr.tag || ':' || d;
+    END LOOP;
+  END LOOP;
+  out := out || ' meta2:' || rRO || ',' || rPM || ',' || rFore || ',' || rSup || ',' || rAdm;
   out := out || ' meta:' || rFore || ',' || rSub || ',' || rSup || ',' || rForeign || ',' || P || ',' || Q;
   RAISE EXCEPTION 'PARITY%', out;
 END $parity$;

@@ -51,7 +51,7 @@ interface Invoice {
 /** Lowercase-normalized status — kills the 'Sent' vs 'sent' split-brain. */
 const statusKey = (s?: string | null) => (s || 'draft').toLowerCase();
 
-const TONE: Record<string, BadgeTone> = { draft: 'neutral', waiting: 'under_contract', good: 'ongoing', done: 'completed', bad: 'overdue', warn: 'lead', active: 'ongoing' };
+const TONE: Record<string, BadgeTone> = { draft: 'neutral', waiting: 'lead', good: 'ongoing', done: 'completed', bad: 'overdue', warn: 'lead', active: 'ongoing' };
 function invBadge(key: string): { label: string; tone: BadgeTone } {
   const def = MODULES.invoices?.statuses?.[key];
   return { label: def?.label || (key.charAt(0).toUpperCase() + key.slice(1)), tone: (def && TONE[def.tone]) || 'neutral' };
@@ -345,19 +345,19 @@ export default function InvoicesPage() {
   ];
 
   const columns: Column<Invoice>[] = [
-    { key: 'invoice_number', header: 'Invoice #', primary: true, groupable: false },
+    { key: 'invoice_number', header: 'Invoice #', primary: true, groupable: false, width: 150, render: i => <span style={{ whiteSpace: 'nowrap', fontWeight: 700 }}>{i.invoice_number}</span> },
     { key: 'vendor_name', header: 'Bill to' },
     { key: 'description', header: 'Description', hidden: true },
     { key: 'total', header: 'Total', align: 'right', total: 'sum', format: fmt, phone: 'show', accessor: effectiveTotal, render: i => <strong style={{ fontVariantNumeric: 'tabular-nums' }}>{fmt(effectiveTotal(i))}</strong> },
-    { key: 'created_at', header: 'Issued', accessor: i => i.created_at || '', render: i => fmtDate(i.created_at) },
-    { key: 'due_date', header: 'Due', accessor: i => i.due_date || '', render: i => <span style={{ color: isOverdue(i) ? 'var(--danger)' : undefined, whiteSpace: 'nowrap' }}>{i.due_date ? fmtDate(i.due_date.slice(0, 10)) : '—'}</span> },
+    { key: 'created_at', header: 'Issued', width: 120, accessor: i => i.created_at || '', render: i => <span style={{ whiteSpace: 'nowrap' }}>{fmtDate(i.created_at)}</span> },
+    { key: 'due_date', header: 'Due', width: 120, accessor: i => i.due_date || '', render: i => (i.due_date ? <span style={{ color: isOverdue(i) ? 'var(--danger)' : undefined, whiteSpace: 'nowrap' }}>{fmtDate(i.due_date.slice(0, 10))}</span> : null) },
     { key: 'status', header: 'Status', phone: 'show', accessor: effKey, render: i => { const st = invBadge(effKey(i)); return <Badge tone={st.tone} dot>{st.label}</Badge>; } },
-    { key: 'notes', header: 'Notes', render: i => <span style={{ color: 'var(--text-secondary)' }}>{i.notes || '—'}</span> },
+    { key: 'notes', header: 'Notes', hidden: true, render: i => (i.notes ? <span style={{ color: 'var(--text-secondary)' }}>{i.notes}</span> : null) },
   ];
 
   const rowActions = (inv: Invoice): Action[] => [
     { label: sendingId === inv.id ? 'Sending…' : 'Send to owner', icon: <PaperPlaneTilt size={14} />, inline: true, hidden: statusKey(inv.status) !== 'draft', disabled: sendingId === inv.id, onClick: () => { void handleSend(inv.id); } },
-    { label: pdfBusy === inv.id ? 'Building…' : inv.pdf_url ? 'Open PDF' : 'PDF', icon: <FilePdf size={14} />, inline: true, disabled: pdfBusy === inv.id, onClick: () => { void handlePdf(inv); } },
+    { label: pdfBusy === inv.id ? 'Building…' : 'PDF', icon: <FilePdf size={14} />, inline: true, disabled: pdfBusy === inv.id, onClick: () => { void handlePdf(inv); } },
     { label: 'Edit amount', icon: <PencilSimple size={14} />, onClick: () => { setEditInv(inv); setEditVal(String(inv.amount)); } },
     { label: 'Adjust %', icon: <Percent size={14} />, onClick: () => setAdjustInv(inv) },
     { label: 'Copy total', icon: <Copy size={14} />, onClick: () => handleCopyInv(effectiveTotal(inv)) },
@@ -374,7 +374,7 @@ export default function InvoicesPage() {
         { label: 'Client invoices' },
       ]}
       title="Client invoices"
-      subtitle="Owner billing and payment tracking."
+      subtitle={ctx?.project?.name || undefined}
       actions={<Button variant="primary" icon={<Plus size={15} weight="bold" />} onClick={() => openCreate()}>New invoice</Button>}
     >
       {!loadError && <StatRow items={stats} />}

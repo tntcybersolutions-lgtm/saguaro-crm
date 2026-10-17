@@ -33,7 +33,7 @@ import {
   FormModal, Field, Input, Textarea, FormGrid, Toast, useToast,
   type Column, type Action, type BadgeTone, type StatItem,
 } from '@/components/ui/kit';
-import { FlowSteps, InsightRow, AutoChip } from '@/components/ui/premium';
+import { InsightRow, AutoChip } from '@/components/ui/premium';
 import NudgeRing from '@/components/intelligence/NudgeRing';
 import { ANCHOR_INVOICES_OVERDUE } from '@/lib/suggestions';
 import Suggest from '@/components/ui/Suggest';
@@ -86,7 +86,7 @@ function parseDateOnly(v: string): Date | null {
   if (!m) { const d = new Date(v); return isNaN(d.getTime()) ? null : d; }
   return new Date(Number(m[1]), Number(m[2]) - 1, Number(m[3]));
 }
-const fmtDate = (v?: string | null) => { if (!v) return '—'; const d = parseDateOnly(v); return d ? d.toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' }) : '—'; };
+const fmtDate = (v?: string | null) => { if (!v) return ''; const d = parseDateOnly(v); return d ? d.toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' }) : ''; };
 
 /** Overdue = due before today (local), and not paid / not a draft. */
 function isOverdue(i: { due_date?: string | null; status?: string | null }): boolean {
@@ -129,9 +129,9 @@ const CSS = `
 .ivLate { color: var(--status-overdue); font-weight: 700; }
 .ivMuted { color: var(--text-tertiary); }
 .ivBadges { display: inline-flex; align-items: center; gap: 6px; flex-wrap: wrap; }
-.ivLadder { border: 1px solid var(--border-default); border-radius: var(--radius-sm); padding: 12px 14px; background: var(--bg-surface-2); margin-bottom: 16px; }
-.ivTotalBox { display: flex; align-items: center; min-height: 40px; padding: 8px 12px; border-radius: var(--radius-sm); border: 1px solid var(--brand-primary-35); background: var(--brand-primary-08); color: var(--text-primary); font-weight: 800; font-variant-numeric: tabular-nums; }
-.ivReadonly { display: flex; align-items: center; min-height: 40px; padding: 8px 12px; border-radius: var(--radius-sm); border: 1px solid var(--border-subtle); background: var(--bg-surface-2); color: var(--text-tertiary); }
+.ivLadder { padding: 0 0 12px; border-bottom: 1px solid var(--border-default); margin-bottom: 16px; }
+.ivTotalBox { display: flex; align-items: center; min-height: 40px; font-size: var(--fs-lg); color: var(--text-primary); font-weight: 800; font-variant-numeric: tabular-nums; }
+.ivReadonly { display: flex; align-items: center; min-height: 40px; color: var(--text-secondary); }
 .ivDateInput { width: 100%; }
 @media (max-width: 640px) {
   .ivWs .k-btn, .ivWs .k-stat, .ivWs select.k-select, .ivWs .k-input { min-height: 44px; }
@@ -142,7 +142,7 @@ const CSS = `
 
 const DATE_INPUT_STYLE: React.CSSProperties = {
   width: '100%', minHeight: 40, padding: '8px 12px', fontSize: 14,
-  background: 'var(--bg-surface-2)', border: '1px solid var(--border-default)',
+  background: 'var(--bg-input)', border: '1px solid var(--border-default)',
   borderRadius: 'var(--radius-sm)', color: 'var(--text-primary)',
 };
 
@@ -402,21 +402,21 @@ export default function InvoicingPage() {
         { label: 'Drafts', value: '—', sub: 'Loading…' },
       ]
     : [
-        { label: 'Total Billed', value: fmtUsd(pageBilled), sub: filtersActive ? 'Click to show everything' : `Across ${invoices.length} invoice${invoices.length === 1 ? '' : 's'}`, onClick: filtersActive ? clearFilters : undefined },
-        { label: 'Collected', value: fmtUsd(pagePaid), tone: pagePaid > 0 ? 'good' : 'default', sub: statusFilter === 'paid' ? 'Filtered — click to clear' : 'Marked paid', onClick: () => toggleStatus('paid') },
-        { label: 'Outstanding', value: fmtUsd(pageOutstanding), tone: pageOutstanding > 0 ? 'warn' : 'default', sub: statusFilter === 'outstanding' ? 'Filtered — click to clear' : 'Sent, awaiting payment', onClick: () => toggleStatus('outstanding') },
-        { label: 'Overdue', value: pageOverdue, tone: pageOverdue > 0 ? 'bad' : 'default', sub: statusFilter === 'overdue' ? 'Filtered — click to clear' : pageOverdue > 0 ? 'Past due, excludes drafts' : 'Nothing past due', onClick: () => toggleStatus('overdue') },
-        { label: 'Drafts', value: pageDrafts, sub: statusFilter === 'draft' ? 'Filtered — click to clear' : 'Not yet sent', onClick: () => toggleStatus('draft') },
+        { label: 'Total Billed', value: fmtUsd(pageBilled), sub: `${invoices.length} invoice${invoices.length === 1 ? '' : 's'}`, onClick: filtersActive ? clearFilters : undefined, active: filtersActive ? false : undefined },
+        { label: 'Collected', value: fmtUsd(pagePaid), tone: pagePaid > 0 ? 'good' : 'default', onClick: () => toggleStatus('paid'), active: statusFilter === 'paid' },
+        { label: 'Outstanding', value: fmtUsd(pageOutstanding), tone: pageOutstanding > 0 ? 'warn' : 'default', sub: 'Sent, not paid', onClick: () => toggleStatus('outstanding'), active: statusFilter === 'outstanding' },
+        { label: 'Overdue', value: pageOverdue, tone: pageOverdue > 0 ? 'bad' : 'default', onClick: () => toggleStatus('overdue'), active: statusFilter === 'overdue' },
+        { label: 'Drafts', value: pageDrafts, onClick: () => toggleStatus('draft'), active: statusFilter === 'draft' },
       ];
 
   // ── Register columns ──
   const columns: Column<Invoice>[] = [
     { key: 'invoice_number', header: 'Invoice #', accessor: i => i.invoice_number || '', width: 140, render: i => <span className="ivNum">{i.invoice_number || <span className="ivMuted">No number</span>}</span> },
-    { key: 'vendor_name', header: 'Bill To', accessor: i => (i.vendor_name || '').toLowerCase(), render: i => <span className="ivClamp" style={{ color: 'var(--text-primary)', fontWeight: 600 }} title={i.vendor_name}>{i.vendor_name || '—'}</span> },
-    { key: 'project', phone: 'hide', header: 'Project', accessor: i => projectName(i.project_id).toLowerCase(), render: i => projectName(i.project_id) ? <span className="ivClamp" style={{ maxWidth: 170 }} title={projectName(i.project_id)}>{projectName(i.project_id)}</span> : <span className="ivMuted">—</span> },
-    { key: 'description', phone: 'hide', header: 'Description', accessor: i => (i.description || '').toLowerCase(), render: i => i.description ? <span className="ivClamp" style={{ maxWidth: 170 }} title={i.description}>{i.description}</span> : <span className="ivMuted">—</span> },
+    { key: 'vendor_name', header: 'Bill To', accessor: i => (i.vendor_name || '').toLowerCase(), render: i => <span style={{ color: 'var(--text-primary)', fontWeight: 600 }} title={i.vendor_name}>{i.vendor_name}</span> },
+    { key: 'project', phone: 'hide', header: 'Project', accessor: i => projectName(i.project_id).toLowerCase(), render: i => <span title={projectName(i.project_id)}>{projectName(i.project_id)}</span> },
+    { key: 'description', phone: 'hide', header: 'Description', accessor: i => (i.description || '').toLowerCase(), render: i => <span title={i.description || undefined}>{i.description}</span> },
     { key: 'total', phone: 'show', header: 'Total', accessor: i => effectiveTotal(i), align: 'right', render: i => <span className="ivTotal">{fmtUsd(effectiveTotal(i))}</span> },
-    { key: 'due_date', phone: 'show', header: 'Due', accessor: i => i.due_date || '', render: i => <span className={isOverdue(i) ? 'ivLate' : undefined}>{fmtDate(i.due_date)}</span> },
+    { key: 'due_date', phone: 'show', header: 'Due', fit: 'full', accessor: i => i.due_date || '', render: i => <span className={isOverdue(i) ? 'ivLate' : undefined}>{fmtDate(i.due_date)}</span> },
     { key: 'status', phone: 'show', header: 'Status', accessor: i => STATUS_RANK[statusKey(i.status)] ?? 9, render: i => {
       const b = statusBadge(i.status);
       return <span className="ivBadges"><Badge tone={b.tone}>{b.label}</Badge>{isOverdue(i) && <Badge tone="overdue">Overdue</Badge>}</span>;
@@ -445,7 +445,6 @@ export default function InvoicingPage() {
       <EmptyState
         icon={<Receipt size={22} />}
         title="No invoices yet"
-        text="Create the first invoice — generate the PDF, send it from the table, and overdue flags itself from the due date."
         action={<Button icon={<Plus size={15} weight="bold" />} onClick={() => setShowCreate(true)}>New Invoice</Button>}
       />
     );
@@ -463,7 +462,6 @@ export default function InvoicingPage() {
           <EmptyState
             icon={<Receipt size={22} />}
             title="No invoices match these filters"
-            text="Clear the search, project, or status filter to see more."
             action={<Button onClick={clearFilters}>Clear Filters</Button>}
           />
         }
@@ -477,7 +475,7 @@ export default function InvoicingPage() {
       <PageShell
         crumbs={[{ label: 'Home', href: '/app' }, { label: 'Invoicing' }]}
         title="Invoicing"
-        subtitle="Invoices, payments, and sending to vendors — money owed to you."
+        subtitle="Invoices and payments across your jobs"
         actions={
           <Button variant="primary" data-tour="new-invoice" icon={<Plus size={15} weight="bold" />} onClick={() => setShowCreate(true)}>
             New Invoice
@@ -519,7 +517,6 @@ export default function InvoicingPage() {
                 {filtersActive && <Button variant="ghost" size="sm" onClick={clearFilters}>Clear</Button>}
               </>
             }
-            actions={<span className="ivMuted" style={{ fontSize: 'var(--fs-sm)' }}>{visible.length} of {invoices.length}</span>}
           />
         )}
 
@@ -537,7 +534,7 @@ export default function InvoicingPage() {
         open={showCreate}
         onClose={closeComposer}
         title="New Invoice"
-        subtitle={ctx?.project?.name ? `${ctx.project.name} · the server computes the total — amount + tax, every time.` : 'The server computes the total — amount + tax, every time.'}
+        subtitle={ctx?.project?.name || undefined}
         onSubmit={handleCreate}
         submitLabel="Create Invoice"
         busy={creating}
@@ -553,16 +550,16 @@ export default function InvoicingPage() {
           </div>
         )}
         <FormGrid cols={2}>
-          <Field label="Project" required hint={ctx ? 'Snapshot loaded — fields below pre-fill from it.' : 'Pick one to pre-fill the rest.'}>
+          <Field label="Project" required hint={ctx ? undefined : 'Fills in the rest'}>
             <Select value={form.project_id} onChange={(e) => { setForm({ ...form, project_id: e.target.value }); if (error) setError(''); }} required placeholder="Select project…" options={projects.map(p => ({ value: p.id, label: p.name }))} />
           </Field>
-          <Field label="Bill To" required hint={<>{auto.billto && <AutoChip />} {ctxVendors.length > 0 ? `${ctxVendors.length} known name${ctxVendors.length === 1 ? '' : 's'} on this project — start typing.` : 'The owner fills in once a project is picked.'}</>}>
+          <Field label="Bill To" required hint={<>{auto.billto && <AutoChip />} {ctxVendors.length > 0 ? `${ctxVendors.length} known name${ctxVendors.length === 1 ? '' : 's'} on this job` : null}</>}>
             <Suggest className="k-input" value={form.vendor_name} onChange={(e) => { setForm({ ...form, vendor_name: e.target.value }); if (error) setError(''); }} required placeholder="Client / owner name" options={ctxVendors} />
           </Field>
-          <Field label="Invoice #" hint={<>{auto.num && <AutoChip />} {auto.num ? 'Next in sequence on this project.' : 'Auto-suggested when you pick a project.'}</>}>
+          <Field label="Invoice #" hint={<>{auto.num && <AutoChip />} {auto.num ? 'Next in sequence' : null}</>}>
             <Input value={form.invoice_number} onChange={(e) => setForm({ ...form, invoice_number: e.target.value })} placeholder="INV-001" />
           </Field>
-          <Field label="Vendor Email" hint={<>{auto.email && <AutoChip />} Needed to send the invoice by email.</>}>
+          <Field label="Email" hint={<>{auto.email && <AutoChip />} Needed to email the invoice</>}>
             <Input type="email" value={form.vendor_email} onChange={(e) => setForm({ ...form, vendor_email: e.target.value })} placeholder="vendor@email.com" />
           </Field>
           <Field label="Amount">
@@ -571,13 +568,13 @@ export default function InvoicingPage() {
           <Field label="Tax">
             <Input type="number" step="0.01" value={form.tax} onChange={(e) => setForm({ ...form, tax: e.target.value })} placeholder="0.00" />
           </Field>
-          <Field label="Invoice Total" hint="Amount + tax — computed live.">
+          <Field label="Invoice Total" hint="Amount + tax">
             <div className="ivTotalBox">{fmtUsd(liveTotal)}</div>
           </Field>
-          <Field label="Issue Date" hint={<><AutoChip /> Recorded automatically when the invoice is created.</>}>
+          <Field label="Issue Date" hint={<AutoChip />}>
             <div className="ivReadonly">{new Date().toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' })}</div>
           </Field>
-          <Field label="Due Date" hint={<>{auto.due && <AutoChip />} {auto.due ? 'Net 30 from today — adjust freely.' : 'Overdue flags itself from this date.'}</>}>
+          <Field label="Due Date" hint={<>{auto.due && <AutoChip />} {auto.due ? 'Net 30 from today' : null}</>}>
             <div className="ivDateInput"><SaguaroDatePicker value={form.due_date} onChange={(v) => setForm({ ...form, due_date: v })} style={DATE_INPUT_STYLE} /></div>
           </Field>
           <Field label="Status">
@@ -588,7 +585,7 @@ export default function InvoicingPage() {
           <Field label="Category">
             <Input value={form.category} onChange={(e) => setForm({ ...form, category: e.target.value })} placeholder="Materials, Labor, etc." />
           </Field>
-          <Field label="Cost Code" hint={ctxCodes.length > 0 ? `${ctxCodes.length} codes from the project budget.` : 'Budget codes load from the project.'}>
+          <Field label="Cost Code">
             {ctxCodes.length > 0 ? (
               <Select value={form.cost_code} onChange={(e) => setForm({ ...form, cost_code: e.target.value })} options={[{ value: '', label: 'No cost code' }, ...ctxCodes.map(c => ({ value: c.costCode, label: `${c.costCode} — ${c.description}` }))]} />
             ) : (
@@ -598,18 +595,10 @@ export default function InvoicingPage() {
           <Field label="Description" span>
             <Textarea value={form.description} onChange={(e) => setForm({ ...form, description: e.target.value })} rows={2} placeholder="Invoice description…" />
           </Field>
-          <Field label="Notes" span hint="Internal — never printed on the invoice.">
+          <Field label="Internal notes" span hint="Never printed on the invoice">
             <Textarea value={form.notes} onChange={(e) => setForm({ ...form, notes: e.target.value })} rows={2} placeholder="Internal notes…" />
           </Field>
         </FormGrid>
-        <div style={{ marginTop: 16 }}>
-          <FlowSteps title="After You Create" steps={[
-            { title: 'Draft Is Saved', desc: 'Review and edit anything before it goes out.' },
-            { title: 'Generate the PDF', desc: 'One click builds the document — the row keeps the real .pdf link.' },
-            { title: 'Send to Owner', desc: 'One click emails it straight from the register.' },
-            { title: 'Payment Is Tracked', desc: 'Overdue flags itself from the due date — drafts never count.' },
-          ]} />
-        </div>
       </FormModal>
 
       {/* Above the FormModal overlay so the unsaved-work prompt is never hidden behind it. */}
