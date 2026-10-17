@@ -32,7 +32,16 @@ export async function GET(req: NextRequest) {
     const { data, error } = await query;
     if (error) throw error;
 
-    return NextResponse.json({ alerts: data || [], source: 'live' });
+    /* The table stores the sentence in body (summary on older rows) and the
+       time in last_detected_at / created_at. Readers ask for message and date,
+       so name them here once — the Autopilot page showed a dash for both. */
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    const alerts = (data || []).map((a: any) => ({
+      ...a,
+      message: a.message ?? a.body ?? a.summary ?? null,
+      date: a.date ?? a.last_detected_at ?? a.created_at ?? null,
+    }));
+    return NextResponse.json({ alerts, source: 'live' });
   } catch (err: unknown) {
     return apiError('autopilot/alerts GET', err);
   }
