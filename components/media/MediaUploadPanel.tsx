@@ -37,7 +37,7 @@ const CSS = `
 .muBig[data-primary="true"]:hover { background: var(--brand-primary-hover); }
 .muBig[data-primary="true"] svg { color: var(--on-brand); }
 .mu[data-drag="true"] .muSheet { outline: 2px dashed var(--focus-ring); outline-offset: -8px; }
-.muDropHint { display: flex; align-items: center; justify-content: center; gap: 8px; min-height: 64px; border-radius: 12px; border: 1px dashed var(--border-strong); color: var(--text-secondary); font-size: 14px; font-weight: 600; }
+.muDropHint { display: flex; align-items: center; gap: 8px; min-height: 40px; color: var(--text-secondary); font-size: 14px; font-weight: 600; }
 .muList { display: flex; flex-direction: column; gap: 8px; }
 .muRow { display: grid; grid-template-columns: 48px minmax(0, 1fr) auto; gap: 12px; align-items: center; padding: 8px; border-radius: 10px; background: var(--bg-surface-2); border: 1px solid var(--border-subtle); }
 .muThumb { width: 48px; height: 48px; border-radius: 8px; overflow: hidden; background: var(--bg-input); display: flex; align-items: center; justify-content: center; color: var(--text-tertiary); }
