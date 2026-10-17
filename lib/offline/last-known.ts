@@ -105,6 +105,33 @@ export async function loadJobs(url = '/api/projects?limit=500&fields=id,name'): 
   }
 }
 
+/**
+ * Who is signed in on this phone, for the time clock: their employee row
+ * (id and name only — never pay) and their company. Without it a reload with
+ * no signal could not resolve the employee, and Clock In stayed disabled.
+ * Replaced every time the server answers; wiped on sign-out with the jobs.
+ */
+const ME = 'me';
+export interface KnownMe { emp: { id: string; full_name: string | null; first_name: string | null }; tenantId: string }
+
+export async function rememberMe(me: KnownMe): Promise<void> {
+  if (!me?.emp?.id || !me.tenantId) return;
+  try {
+    await put(ME, { emp: { id: me.emp.id, full_name: me.emp.full_name ?? null, first_name: me.emp.first_name ?? null }, tenantId: me.tenantId });
+  } catch (e) {
+    console.debug('[last-known] employee not kept on this phone', e);
+  }
+}
+
+export async function lastKnownMe(): Promise<KnownMe | null> {
+  try {
+    const hit = await get<KnownMe>(ME);
+    return hit?.value?.emp?.id ? hit.value : null;
+  } catch {
+    return null;
+  }
+}
+
 /** On sign-out: forget this person's jobs. */
 export async function clearLastKnown(): Promise<void> {
   try {
