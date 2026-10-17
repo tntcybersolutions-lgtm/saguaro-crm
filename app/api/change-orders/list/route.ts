@@ -17,7 +17,9 @@ export async function GET(req: NextRequest) {
     if (projectId) query = query.eq('project_id', projectId);
     const { data, error } = await query;
     if (error) throw error;
-    return NextResponse.json({ changeOrders: data || [], source: 'live' });
+    // The owner's approval-link token is the owner's signature; it never leaves in a list.
+    const rows = ((data || []) as Record<string, unknown>[]).map(({ owner_approval_token: _t, ...r }) => r);
+    return NextResponse.json({ changeOrders: rows, source: 'live' });
   } catch (e) {
     // A failed read must NOT render as an empty list. The screen would say
     // "no change orders" with total confidence when the truth is that the query

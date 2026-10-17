@@ -16,7 +16,7 @@ import { buildBidHistoryContext } from '@/lib/construction-intelligence';
 
 import { apiError } from '@/lib/api-error';
 import { requirePermission } from '@/lib/permissions';
-import { writeChangeOrder } from '@/lib/change-order-status';
+import { writeChangeOrder, coWriteFailure } from '@/lib/change-order-status';
 // ─── CORS helpers ─────────────────────────────────────────────────────────────
 
 const APP_URL = process.env.NEXT_PUBLIC_APP_URL ?? 'https://saguarocontrol.net';
@@ -594,11 +594,12 @@ export async function POST(
     // let any caller approve another tenant's change order (cross-tenant IDOR).
     // Deciding a CO is Change Orders: Full, and it goes through the one shared
     // step (lib/change-order-status) so the contract and budget move with it.
-    const g = await requirePermission(req, 'Change Orders', 'Full');
+    // Edit at the door; the approval tiers in writeChangeOrder decide this amount.
+    const g = await requirePermission(req, 'Change Orders', 'Edit');
     if (!g.ok) return g.res;
     try {
       const w = await writeChangeOrder(g.db, g.user.tenantId, seg1, { status: 'approved' }, { actorId: g.user.id, select: 'id' });
-      if (!w.ok) return NextResponse.json({ error: w.error }, { status: w.status });
+      if (!w.ok) { const f = coWriteFailure(w); return NextResponse.json(f.body, { status: f.status }); }
     } catch (err) {
       return apiError('[...path] POST', err, 'Failed to approve change order');
     }
