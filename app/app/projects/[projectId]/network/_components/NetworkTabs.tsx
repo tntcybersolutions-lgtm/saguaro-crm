@@ -6,7 +6,8 @@
  */
 import React from 'react';
 import { useRouter } from 'next/navigation';
-import { Tabs } from '@/components/ui/kit';
+import { Tabs, EmptyState } from '@/components/ui/kit';
+import { Globe } from '@phosphor-icons/react';
 
 export type NetworkTab = 'overview' | 'devices' | 'vlans' | 'cables' | 'firewall' | 'wifi' | 'config' | 'wizard' | 'reports';
 
@@ -48,6 +49,18 @@ export default function NetworkTabs({ projectId, value }: { projectId: string; v
       tabs={TABS}
       value={value}
       onChange={(k) => { if (k !== value) router.push(networkHref(projectId, k as NetworkTab)); }}
+    />
+  );
+}
+
+/** A Network page on a job whose network module was never set up: one line and
+ *  the way to set it up — never a row of zero figures and empty tables. */
+export function NetworkNotSetUp({ projectId }: { projectId: string }) {
+  return (
+    <EmptyState
+      icon={<Globe size={22} />}
+      title="This job's network isn't set up yet"
+      primary={{ label: 'Set Up Network', href: networkHref(projectId) }}
     />
   );
 }

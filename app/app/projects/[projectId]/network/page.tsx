@@ -190,10 +190,10 @@ export default function NetworkDashboard() {
 
   if (showSetup) {
     return (
-      <PageShell crumbs={crumbs} title="Network" subtitle="Design, document and certify this building's network.">
-        <Card title="Set up the network module" subtitle={ctx?.project?.name ? `Low-voltage / IT network for ${ctx.project.name}` : undefined} icon={<Globe size={18} />}>
+      <PageShell crumbs={crumbs} title="Network" subtitle={ctx?.project?.name || undefined}>
+        <Card title="Set up the network module">
           <FormGrid cols={3}>
-            <Field label="Site type" hint="Sets the wizard's VLAN plan, device density and WiFi targets.">
+            <Field label="Site type">
               <Select value={setupForm.site_type} onChange={e => setSetupForm({ ...setupForm, site_type: e.target.value })} options={SITE_TYPES} />
             </Field>
             <Field label="Square footage">
@@ -243,7 +243,7 @@ export default function NetworkDashboard() {
     <PageShell
       crumbs={crumbs}
       title="Network"
-      subtitle={networkProject ? `${cap(siteType)} · ${sqFt} SF · ${floors} floor${floors > 1 ? 's' : ''}` : 'Low-voltage and IT network for this job.'}
+      subtitle={networkProject ? `${cap(siteType)} · ${sqFt} SF · ${floors} floor${floors > 1 ? 's' : ''}` : (ctx?.project?.name || undefined)}
       actions={
         <>
           <Menu

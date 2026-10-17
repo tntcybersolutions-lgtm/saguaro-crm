@@ -235,7 +235,7 @@ export default function NetworkWizardPage() {
     <PageShell
       crumbs={networkCrumbs(projectId, ctx?.project?.name, 'AI Wizard')}
       title="AI network wizard"
-      subtitle="Describe the site and get a complete network design."
+      subtitle={ctx?.project?.name || undefined}
     >
       <style>{CSS}</style>
       <NetworkTabs projectId={projectId} value="wizard" />

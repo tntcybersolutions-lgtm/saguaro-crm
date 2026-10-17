@@ -18,7 +18,7 @@ import { Facts } from '@/lib/ui/filled-facts';
 import { Network, Plus, Stack, Devices, Cpu, WarningCircle } from '@phosphor-icons/react';
 import { useUnsavedGuard, useComposerDirty } from '@/lib/useUnsavedGuard';
 import UnsavedGuardModal from '@/components/UnsavedGuardModal';
-import NetworkTabs, { networkCrumbs, networkHref } from '../_components/NetworkTabs';
+import NetworkTabs, { networkCrumbs, networkHref, NetworkNotSetUp } from '../_components/NetworkTabs';
 
 interface Vlan {
   id: string;
@@ -192,11 +192,20 @@ export default function VlanManagerPage() {
   const set = <K extends keyof typeof form>(k: K, val: (typeof form)[K]) => setForm({ ...form, [k]: val });
   const openForm = () => { setFormError(''); setShowForm(true); };
 
+  if (!loading && !loadError && !networkProjectId) {
+    return (
+      <PageShell crumbs={networkCrumbs(projectId, ctx?.project?.name, 'VLANs')} title="VLANs" subtitle={ctx?.project?.name || undefined}>
+        <NetworkTabs projectId={projectId} value="vlans" />
+        <NetworkNotSetUp projectId={projectId} />
+      </PageShell>
+    );
+  }
+
   return (
     <PageShell
       crumbs={networkCrumbs(projectId, ctx?.project?.name, 'VLANs')}
       title="VLANs"
-      subtitle="Segment the network, assign subnets and plan DHCP scopes."
+      subtitle={ctx?.project?.name || undefined}
       actions={<Button variant="primary" icon={<Plus size={15} weight="bold" />} onClick={openForm}>Add VLAN</Button>}
     >
       <NetworkTabs projectId={projectId} value="vlans" />
@@ -227,10 +236,10 @@ export default function VlanManagerPage() {
           defaultSort={{ key: 'vlan_id', dir: 'asc' }}
           empty={
             vlans.length === 0 ? (
-              <EmptyState icon={<Network size={22} />} title="No VLANs configured" text="Add the first VLAN to segment this job's network into subnets and DHCP scopes."
+              <EmptyState icon={<Network size={22} />} title="No VLANs configured"
                 action={<Button variant="primary" icon={<Plus size={15} weight="bold" />} onClick={openForm}>Add VLAN</Button>} />
             ) : (
-              <EmptyState title="Nothing matches" text="Change the search or the filter."
+              <EmptyState title="Nothing matches"
                 action={<Button onClick={() => { setSearch(''); setPurposeFilter(''); }}>Clear filters</Button>} />
             )
           }

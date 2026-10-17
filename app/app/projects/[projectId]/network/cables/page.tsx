@@ -19,7 +19,7 @@ import {
 import { CheckCircle, Square, XCircle, Plus, PlugsConnected, ListChecks, Gauge, Percent, WarningCircle } from '@phosphor-icons/react';
 import { useUnsavedGuard, useComposerDirty } from '@/lib/useUnsavedGuard';
 import UnsavedGuardModal from '@/components/UnsavedGuardModal';
-import NetworkTabs, { networkCrumbs } from '../_components/NetworkTabs';
+import NetworkTabs, { networkCrumbs, NetworkNotSetUp } from '../_components/NetworkTabs';
 
 interface CableRun {
   id: string;
@@ -197,11 +197,20 @@ export default function CableSchedulePage() {
   const set = <K extends keyof typeof form>(k: K, v: (typeof form)[K]) => setForm({ ...form, [k]: v });
   const openForm = () => { setFormError(''); setShowForm(true); };
 
+  if (!loading && !loadError && !networkProjectId) {
+    return (
+      <PageShell crumbs={networkCrumbs(projectId, ctx?.project?.name, 'Cables')} title="Cable schedule" subtitle={ctx?.project?.name || undefined}>
+        <NetworkTabs projectId={projectId} value="cables" />
+        <NetworkNotSetUp projectId={projectId} />
+      </PageShell>
+    );
+  }
+
   return (
     <PageShell
       crumbs={networkCrumbs(projectId, ctx?.project?.name, 'Cables')}
       title="Cable schedule"
-      subtitle="Every cable run, its terminations, pathway and test result."
+      subtitle={ctx?.project?.name || undefined}
       actions={<Button variant="primary" icon={<Plus size={15} weight="bold" />} onClick={openForm}>Add cable run</Button>}
     >
       <NetworkTabs projectId={projectId} value="cables" />
@@ -244,10 +253,10 @@ export default function CableSchedulePage() {
           ]}
           empty={
             cables.length === 0 ? (
-              <EmptyState icon={<PlugsConnected size={22} />} title="No cable runs yet" text="Add the first run to start this job's cable schedule."
+              <EmptyState icon={<PlugsConnected size={22} />} title="No cable runs yet"
                 action={<Button variant="primary" icon={<Plus size={15} weight="bold" />} onClick={openForm}>Add cable run</Button>} />
             ) : (
-              <EmptyState title="No cable runs match your filters" text="Clear or change the filters to see more runs."
+              <EmptyState title="No cable runs match your filters"
                 action={<Button onClick={() => { setSearch(''); setFilterType(''); setFilterTested(''); setFilterFloor(''); }}>Clear filters</Button>} />
             )
           }

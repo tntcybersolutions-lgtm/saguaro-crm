@@ -22,7 +22,7 @@ import {
 } from '@phosphor-icons/react';
 import { useUnsavedGuard, useComposerDirty } from '@/lib/useUnsavedGuard';
 import UnsavedGuardModal from '@/components/UnsavedGuardModal';
-import NetworkTabs, { networkCrumbs } from '../_components/NetworkTabs';
+import NetworkTabs, { networkCrumbs, NetworkNotSetUp } from '../_components/NetworkTabs';
 
 interface Device {
   id: string;
@@ -228,11 +228,20 @@ function DeviceInventoryPage() {
   const openForm = () => { setFormError(''); setShowForm(true); setSelectedDevice(null); };
   const set = <K extends keyof typeof form>(k: K, v: (typeof form)[K]) => setForm({ ...form, [k]: v });
 
+  if (!loading && !loadError && !networkProjectId) {
+    return (
+      <PageShell crumbs={networkCrumbs(projectId, ctx?.project?.name, 'Devices')} title="Devices" subtitle={ctx?.project?.name || undefined}>
+        <NetworkTabs projectId={projectId} value="devices" />
+        <NetworkNotSetUp projectId={projectId} />
+      </PageShell>
+    );
+  }
+
   return (
     <PageShell
       crumbs={networkCrumbs(projectId, ctx?.project?.name, 'Devices')}
       title="Devices"
-      subtitle="Routers, switches, access points and endpoints."
+      subtitle={ctx?.project?.name || undefined}
       actions={<Button variant="primary" icon={<Plus size={15} weight="bold" />} onClick={openForm}>Add device</Button>}
     >
       <NetworkTabs projectId={projectId} value="devices" />
@@ -291,10 +300,10 @@ function DeviceInventoryPage() {
           rowActions={(d) => [{ label: 'View details', icon: <HardDrives size={14} />, onClick: () => setSelectedDevice(d) }]}
           empty={
             devices.length === 0 ? (
-              <EmptyState icon={<Package size={22} />} title="No devices yet" text="Add the first device to start the network inventory."
+              <EmptyState icon={<Package size={22} />} title="No devices yet"
                 action={<Button variant="primary" icon={<Plus size={15} weight="bold" />} onClick={openForm}>Add device</Button>} />
             ) : (
-              <EmptyState title="No devices match your filters" text="Clear the type/status filters or adjust the search."
+              <EmptyState title="No devices match your filters"
                 action={<Button onClick={() => { setSearch(''); setFilterType(''); setFilterStatus(''); }}>Clear filters</Button>} />
             )
           }

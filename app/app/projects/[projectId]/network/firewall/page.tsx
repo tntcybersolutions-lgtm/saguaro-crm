@@ -19,7 +19,7 @@ import {
 import { ShieldCheck, CheckCircle, Prohibit, ClipboardText, Plus, CaretUp, CaretDown, Power, WarningCircle } from '@phosphor-icons/react';
 import { useUnsavedGuard, useComposerDirty } from '@/lib/useUnsavedGuard';
 import UnsavedGuardModal from '@/components/UnsavedGuardModal';
-import NetworkTabs, { networkCrumbs } from '../_components/NetworkTabs';
+import NetworkTabs, { networkCrumbs, NetworkNotSetUp } from '../_components/NetworkTabs';
 
 interface FirewallRule {
   id: string;
@@ -244,11 +244,20 @@ export default function FirewallRulesPage() {
   const set = <K extends keyof typeof form>(k: K, v: (typeof form)[K]) => setForm({ ...form, [k]: v });
   const openForm = () => { setFormError(''); setShowForm(true); };
 
+  if (!loading && !loadError && !networkProjectId) {
+    return (
+      <PageShell crumbs={networkCrumbs(projectId, ctx?.project?.name, 'Firewall')} title="Firewall rules" subtitle={ctx?.project?.name || undefined}>
+        <NetworkTabs projectId={projectId} value="firewall" />
+        <NetworkNotSetUp projectId={projectId} />
+      </PageShell>
+    );
+  }
+
   return (
     <PageShell
       crumbs={networkCrumbs(projectId, ctx?.project?.name, 'Firewall')}
       title="Firewall rules"
-      subtitle="Define, order and toggle the packet-filtering policy."
+      subtitle={ctx?.project?.name || undefined}
       actions={<Button variant="primary" icon={<Plus size={15} weight="bold" />} onClick={openForm}>Add rule</Button>}
     >
       <NetworkTabs projectId={projectId} value="firewall" />
@@ -281,10 +290,10 @@ export default function FirewallRulesPage() {
           ]}
           empty={
             rules.length === 0 ? (
-              <EmptyState icon={<ShieldCheck size={22} />} title="No firewall rules yet" text="Add the first rule to start the policy. Numbering steps by 10 automatically."
+              <EmptyState icon={<ShieldCheck size={22} />} title="No firewall rules yet"
                 action={<Button variant="primary" icon={<Plus size={15} weight="bold" />} onClick={openForm}>Add rule</Button>} />
             ) : (
-              <EmptyState title="No rules in this category" text="Pick a different category, or add a rule to this one."
+              <EmptyState title="No rules in this category"
                 action={<Button onClick={() => setActiveCategory('all')}>Show all rules</Button>} />
             )
           }
