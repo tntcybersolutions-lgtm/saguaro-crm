@@ -18,7 +18,9 @@ import {
 import { Handshake, Plus, Receipt, Wallet, Scales, ArrowSquareOut, WarningCircle, ShoppingCart } from '@phosphor-icons/react';
 import type { CommitmentRow } from '@/lib/commitments';
 
-const fmt = (n: number) => '$' + (Number(n) || 0).toLocaleString('en-US', { minimumFractionDigits: 0, maximumFractionDigits: 0 });
+/* Currency style puts the sign first: -$2,150, never $-2,150. */
+const fmt = (n: number) => (Number(n) || 0).toLocaleString('en-US', { style: 'currency', currency: 'USD', minimumFractionDigits: 0, maximumFractionDigits: 0 });
+const fmtSigned = (n: number) => (n > 0 ? '+' : '') + fmt(n);
 const DEAD = new Set(['void', 'voided', 'cancelled', 'canceled', 'rejected']);
 
 function tone(s: string): BadgeTone {
@@ -79,26 +81,26 @@ export default function CommitmentsPage() {
   const stats: StatItem[] = [
     { label: 'Committed', value: loading ? '—' : fmt(sum(live, 'revised')), sub: loading ? undefined : `${live.length} live · ${fmt(sum(live, 'approved_changes'))} in changes`, icon: <Handshake size={15} />, onClick: () => setState('live'), active: state === 'live' },
     { label: 'Billed to date', value: loading ? '—' : fmt(sum(live, 'billed')), sub: loading ? undefined : `${fmt(sum(live, 'paid'))} paid`, icon: <Receipt size={15} /> },
-    { label: 'Remaining', value: loading ? '—' : fmt(sum(live, 'remaining')), sub: 'Left to bill on live commitments', icon: <Wallet size={15} /> },
+    { label: 'Remaining', value: loading ? '—' : fmt(sum(live, 'remaining')), icon: <Wallet size={15} /> },
     { label: 'Retainage held', value: loading ? '—' : fmt(sum(live, 'retainage_held')), icon: <Scales size={15} /> },
-    { label: 'Over-billed', value: loading ? '—' : String(overBilled.length), sub: loading ? undefined : overBilled.length ? 'Billed past the revised amount' : 'None', tone: overBilled.length ? 'bad' : 'default', icon: <WarningCircle size={15} />, onClick: () => setState('over'), active: state === 'over' },
+    { label: 'Over-billed', value: loading ? '—' : String(overBilled.length), tone: overBilled.length ? 'bad' : 'default', icon: <WarningCircle size={15} />, onClick: () => setState('over'), active: state === 'over' },
   ];
 
   const columns: Column<CommitmentRow>[] = [
-    { key: 'number', header: '#', width: 110, accessor: (r) => r.number || '', render: (r) => r.number || '—', groupable: false },
+    { key: 'number', header: '#', width: 110, accessor: (r) => r.number || '', render: (r) => r.number || '', groupable: false },
     { key: 'vendor', header: 'Company', primary: true, phone: 'show' },
-    { key: 'title', header: 'Title', render: (r) => r.title || '—' },
-    { key: 'kind', header: 'Type', render: (r) => r.kind },
+    { key: 'title', header: 'Title', hidden: true, render: (r) => r.title || '' },
+    { key: 'kind', header: 'Type', width: 72, render: (r) => (r.kind === 'Purchase order' ? 'PO' : 'Sub') },
     { key: 'status', header: 'Status', phone: 'show', render: (r) => <Badge tone={tone(r.status)} dot>{label(r.status)}</Badge> },
     { key: 'original', header: 'Original', align: 'right', total: 'sum', format: fmt, render: (r) => fmt(r.original) },
-    { key: 'approved_changes', header: 'Approved changes', align: 'right', total: 'sum', format: fmt, render: (r) => r.approved_changes ? <span style={{ color: 'var(--warning)' }}>{(r.approved_changes > 0 ? '+' : '') + fmt(r.approved_changes)}</span> : '—' },
+    { key: 'approved_changes', header: 'Approved changes', align: 'right', total: 'sum', format: fmt, render: (r) => (r.approved_changes ? fmtSigned(r.approved_changes) : '') },
     { key: 'revised', header: 'Revised', align: 'right', total: 'sum', format: fmt, phone: 'show', render: (r) => <strong>{fmt(r.revised)}</strong> },
-    { key: 'billed', header: 'Billed', align: 'right', total: 'sum', format: fmt, render: (r) => <span title={r.billed_source === 'bills' ? "From this company's bills on the job" : 'Entered on the commitment'} style={{ color: r.revised > 0 && r.billed > r.revised ? 'var(--danger)' : undefined }}>{r.billed ? fmt(r.billed) : '—'}</span> },
-    { key: 'percent_billed', header: '% billed', align: 'right', render: (r) => (r.revised > 0 ? `${r.percent_billed}%` : '—') },
-    { key: 'paid', header: 'Paid', align: 'right', total: 'sum', format: fmt, render: (r) => (r.paid ? fmt(r.paid) : '—') },
+    { key: 'billed', header: 'Billed', align: 'right', total: 'sum', format: fmt, render: (r) => <span title={r.billed_source === 'bills' ? "From this company's bills on the job" : 'Entered on the commitment'} style={{ color: r.revised > 0 && r.billed > r.revised ? 'var(--danger)' : undefined }}>{r.billed ? fmt(r.billed) : ''}</span> },
+    { key: 'percent_billed', header: '% billed', align: 'right', hidden: true, render: (r) => (r.revised > 0 ? `${r.percent_billed}%` : '') },
+    { key: 'paid', header: 'Paid', align: 'right', total: 'sum', format: fmt, render: (r) => (r.paid ? fmt(r.paid) : '') },
     { key: 'remaining', header: 'Remaining', align: 'right', total: 'sum', format: fmt, render: (r) => <span style={{ color: r.remaining < 0 ? 'var(--danger)' : undefined }}>{fmt(r.remaining)}</span> },
-    { key: 'retainage_held', header: 'Retainage', align: 'right', total: 'sum', format: fmt, hidden: true, render: (r) => (r.retainage_held ? fmt(r.retainage_held) : '—') },
-    { key: 'executed_date', header: 'Executed / issued', hidden: true, render: (r) => r.executed_date ? new Date(`${r.executed_date.slice(0, 10)}T12:00:00`).toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' }) : '—' },
+    { key: 'retainage_held', header: 'Retainage', align: 'right', total: 'sum', format: fmt, hidden: true, render: (r) => (r.retainage_held ? fmt(r.retainage_held) : '') },
+    { key: 'executed_date', header: 'Executed / issued', hidden: true, render: (r) => r.executed_date ? new Date(`${r.executed_date.slice(0, 10)}T12:00:00`).toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' }) : '' },
   ];
 
   const base = `/app/projects/${projectId}`;
@@ -110,7 +112,7 @@ export default function CommitmentsPage() {
         { label: 'Commitments' },
       ]}
       title="Commitments"
-      subtitle="Every subcontract and purchase order on the job: what you owe, what's billed, what's left."
+      subtitle="Subcontracts and purchase orders on this job."
       actions={
         <>
           <Button icon={<ShoppingCart size={15} />} href={`${base}/purchase-orders`}>New purchase order</Button>
@@ -154,7 +156,7 @@ export default function CommitmentsPage() {
               <EmptyState
                 icon={<Handshake size={22} />}
                 title="No commitments on this job yet"
-                text="Award a bid package, write a subcontract or issue a purchase order and it lands here with its billing."
+                text="Subcontracts and purchase orders show here with their billing."
                 action={<Button variant="primary" icon={<Plus size={15} weight="bold" />} href={`${base}/contracts`}>New subcontract</Button>}
               />
             ) : (

@@ -10,13 +10,13 @@ import { useRouter } from 'next/navigation';
 import { computePayApp, estimateToSov, usd, type SovLine } from '@/lib/finance';
 import { getAuthHeaders } from '@/lib/supabase-browser';
 import { humanError } from '@/lib/errors';
-import { Plus, DownloadSimple, CheckCircle, FloppyDisk, Receipt, Calculator, ListNumbers, Buildings, CurrencyDollar, Percent, Coins, Scales, ChartPieSlice } from '@phosphor-icons/react';
+import { Plus, DownloadSimple, CheckCircle, FloppyDisk, ListNumbers, CurrencyDollar, Percent, Coins, Scales, ChartPieSlice } from '@phosphor-icons/react';
 import { PremiumSurface, ModuleHero, SectionCard, StatCard, PremiumEmpty, goldButtonStyle, ghostButtonStyle, secondaryButtonStyle } from '@/components/ui/premium';
 import { openPdf } from '@/components/PdfViewer';
 import SaguaroDatePicker from '@/components/SaguaroDatePicker';
 
 import { printHtml } from '@/lib/print-doc';
-const PANEL = 'var(--bg-surface-2)', LINE = 'rgba(255,255,255,0.09)', GOLD = 'var(--brand-primary)', TEXT = 'var(--text-secondary)', DIM = 'var(--text-tertiary)', GREEN = 'var(--success)';
+const PANEL = 'var(--bg-surface-2)', LINE = 'var(--border-default)', TEXT = 'var(--text-secondary)', DIM = 'var(--text-tertiary)', GREEN = 'var(--success)';
 const uid = () => Math.random().toString(36).slice(2, 9);
 const c = (dollars: string) => Math.round((parseFloat(dollars) || 0) * 100);
 const d = (cents: number) => (cents / 100).toFixed(2);
@@ -202,13 +202,14 @@ export default function PayAppPage() {
   };
 
   const inp: React.CSSProperties = { background: 'var(--bg-base)', border: `1px solid ${LINE}`, borderRadius: 6, color: TEXT, padding: '7px 9px', fontSize: 13, width: '100%' };
-  const num: React.CSSProperties = { ...inp, textAlign: 'right' as const };
+  const num: React.CSSProperties = { ...inp, textAlign: 'right' as const, fontVariantNumeric: 'tabular-nums' };
+  const fieldLbl: React.CSSProperties = { display: 'flex', flexDirection: 'column', gap: 5, fontSize: 13, color: TEXT, fontWeight: 600 };
 
   // G702 summary metrics → premium StatCards (values still computed live by the finance engine).
   // Plain figures: they used to link to this same page, so a tap reloaded it
   // and threw away every number typed into the form.
   const g702Stats: { label: string; value: string; icon: React.ReactNode; accent?: string }[] = [
-    { label: 'Contract w/ COs', value: usd(result.contractSumToDateCents), icon: <CurrencyDollar size={19} weight="duotone" color="var(--text-secondary)" />, accent: GOLD },
+    { label: 'Contract w/ COs', value: usd(result.contractSumToDateCents), icon: <CurrencyDollar size={19} weight="duotone" color="var(--text-secondary)" /> },
     { label: 'Completed & Stored', value: usd(result.totalCompletedStoredCents), icon: <CheckCircle size={19} weight="duotone" color={GREEN} />, accent: GREEN },
     { label: 'Retainage', value: usd(result.retainageCents), icon: <Percent size={19} weight="duotone" color="var(--text-secondary)" /> },
     { label: 'Earned Less Retainage', value: usd(result.totalEarnedLessRetainageCents), icon: <Coins size={19} weight="duotone" color="var(--text-secondary)" /> },
@@ -221,14 +222,13 @@ export default function PayAppPage() {
       {/* Header */}
       <ModuleHero
         eyebrow="Progress Billing · AIA G702 / G703"
-        eyebrowIcon={<Receipt size={13} weight="fill" color="var(--text-secondary)" />}
         title="Pay"
         accent="Application"
-        subtitle="Enter this period's progress; the certificate computes live."
+        subtitle="The certificate updates as you type"
       />
 
       {/* Setup — project, takeoff seed source & contract terms */}
-      <SectionCard title="Application Setup" icon={<Buildings size={17} weight="duotone" color="var(--text-secondary)" />} style={{ marginBottom: 20 }}>
+      <SectionCard title="Application Setup" style={{ marginBottom: 20 }}>
         <div style={{ display: 'flex', gap: 10, flexWrap: 'wrap', alignItems: 'center' }}>
           <select value={projectId} onChange={(e) => setProjectId(e.target.value)} style={{ ...inp, width: 'auto' }}>{projects.map((p) => <option key={p.id} value={p.id}>{p.name}</option>)}</select>
           <select onChange={(e) => seedFromTakeoff(e.target.value)} defaultValue="" style={{ ...inp, width: 'auto' }}><option value="">Seed SOV from takeoff…</option>{takeoffs.map((t) => <option key={t.id} value={t.id}>{t.name}</option>)}</select>
@@ -238,17 +238,17 @@ export default function PayAppPage() {
         {/* contract terms */}
         <div style={{ display: 'flex', gap: 10, marginTop: 16, flexWrap: 'wrap' }}>
           {/* The server assigns the number — shown, not typed. */}
-          <label style={{ fontSize: 12, color: DIM, fontWeight: 700 }}>App #<input value={appNo} readOnly aria-readonly="true" title="Numbered automatically — the next application on this job." style={{ ...inp, marginTop: 5, width: 60, opacity: 0.75 }} /></label>
+          <label style={fieldLbl}>App #<input value={appNo} readOnly aria-readonly="true" title="Numbered automatically — the next application on this job." style={{ ...inp, width: 64, color: DIM }} /></label>
           {/* period_to is a DATE column — a date picker, not free text. */}
-          <div style={{ display: 'flex', flexDirection: 'column', gap: 5 }}><label htmlFor="payapp-period-to" style={{ fontSize: 12, color: DIM, fontWeight: 700 }}>Period To</label><SaguaroDatePicker id="payapp-period-to" value={period} onChange={(v) => { setPeriod(v); setFormErr(''); }} style={{ ...inp, width: 160 }} placeholder="Pick a date" /></div>
+          <div style={{ display: 'flex', flexDirection: 'column', gap: 5 }}><label htmlFor="payapp-period-to" style={{ fontSize: 13, color: TEXT, fontWeight: 600 }}>Period To</label><SaguaroDatePicker id="payapp-period-to" value={period} onChange={(v) => { setPeriod(v); setFormErr(''); }} style={{ ...inp, width: 160 }} placeholder="Pick a date" /></div>
           {[['Contract $', contract, setContract, 130], ['Change Orders $', cos, setCos, 130], ['Retainage %', ret, setRet, 90], ['Prev. Certs $', prevCerts, setPrevCerts, 130]].map(([lbl, val, set, w]: any) => (
-            <label key={lbl} style={{ fontSize: 12, color: DIM, fontWeight: 700 }}>{lbl}<input inputMode="decimal" value={val} onChange={(e) => set(e.target.value)} style={{ ...inp, marginTop: 5, width: w }} /></label>
+            <label key={lbl} style={fieldLbl}>{lbl}<input inputMode="decimal" value={val} onChange={(e) => set(e.target.value)} style={{ ...num, width: w }} /></label>
           ))}
         </div>
       </SectionCard>
 
       {/* G702 summary */}
-      <SectionCard flat title="G702 — Application Summary" icon={<Calculator size={17} weight="duotone" color="var(--text-secondary)" />} style={{ marginBottom: 20 }}>
+      <SectionCard flat title="G702 — Application Summary" style={{ marginBottom: 20 }}>
         <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(180px, 1fr))', gap: 12 }}>
           {g702Stats.map((s) => (
             <StatCard key={s.label} label={s.label} value={s.value} icon={s.icon} accent={s.accent} />
@@ -263,7 +263,6 @@ export default function PayAppPage() {
       {/* SOV / G703 */}
       <SectionCard
         title="G703 — Continuation Sheet (Schedule of Values)"
-        icon={<ListNumbers size={17} weight="duotone" color="var(--text-secondary)" />}
         flush
         style={{ marginBottom: 20 }}
         action={lines.length > 0 ? <button onClick={addLine} style={{ ...ghostButtonStyle, padding: '8px 14px', fontSize: 13 }} className="pmBtn"><Plus size={14} weight="bold" /> Add SOV Line</button> : undefined}
@@ -273,7 +272,7 @@ export default function PayAppPage() {
             compact
             icon={<ListNumbers size={30} weight="duotone" color="var(--text-secondary)" />}
             title="No schedule of values yet"
-            description="Add lines manually or seed the SOV straight from a takeoff above to skip the re-keying."
+            description="Add lines, or seed them from a takeoff above"
             action={<button onClick={addLine} style={secondaryButtonStyle} className="pmBtn"><Plus size={15} weight="bold" /> Add SOV Line</button>}
           />
         ) : (
@@ -288,7 +287,7 @@ export default function PayAppPage() {
                   <input value={l.description} onChange={(e) => upd(l.id, 'description', e.target.value)} placeholder="Work" style={inp} />
                   <input value={l._sv} onChange={(e) => upd(l.id, '_sv', e.target.value)} style={num} />
                   <input value={l._prev} onChange={(e) => upd(l.id, '_prev', e.target.value)} style={num} />
-                  <input value={l._this} onChange={(e) => upd(l.id, '_this', e.target.value)} style={{ ...num, borderColor: GOLD }} />
+                  <input value={l._this} onChange={(e) => upd(l.id, '_this', e.target.value)} style={{ ...num, borderColor: 'var(--border-strong)', color: 'var(--text-primary)', fontWeight: 700 }} aria-label={`${l.description || 'Line'} this period`} />
                   <input value={l._stored} onChange={(e) => upd(l.id, '_stored', e.target.value)} style={num} />
                   <span style={{ textAlign: 'right', fontSize: 13 }}>{rr ? usd(rr.totalCompletedStoredCents) : ''}</span>
                   <span style={{ textAlign: 'right', fontSize: 13, color: DIM }}>{rr ? `${rr.percentComplete}%` : ''}</span>
@@ -300,16 +299,15 @@ export default function PayAppPage() {
       </SectionCard>
 
       {formErr && (
-        <div role="alert" style={{ marginBottom: 12, padding: '10px 12px', borderRadius: 10, background: 'rgba(248,113,113,0.10)', border: '1px solid rgba(248,113,113,0.45)', color: 'var(--danger)', fontSize: 14, lineHeight: 1.5 }}>{formErr}</div>
+        <div role="alert" style={{ marginBottom: 12, padding: '6px 0 6px 12px', borderLeft: '2px solid var(--danger)', color: 'var(--danger)', fontSize: 14, lineHeight: 1.5 }}>{formErr}</div>
       )}
       {/* Enabled whenever idle: a tap on an incomplete form says what is
           missing, instead of a greyed-out button that says nothing. */}
       <div style={{ display: 'flex', gap: 12, flexWrap: 'wrap', alignItems: 'center' }}>
-        <button onClick={save} disabled={saving || generating} style={{ ...goldButtonStyle, padding: '12px 24px', fontSize: 15, minHeight: 44, cursor: saving ? 'default' : 'pointer', opacity: (saving || generating || !lines.length || !projectId) ? 0.5 : 1 }} className="pmBtn"><FloppyDisk size={16} weight="bold" /> {saving ? 'Saving…' : 'Save Pay Application'}</button>
-        <button onClick={generatePdfs} disabled={saving || generating} style={{ ...ghostButtonStyle, padding: '12px 24px', fontSize: 15, minHeight: 44, opacity: (saving || generating || !lines.length || !projectId) ? 0.5 : 1 }} className="pmBtn"><DownloadSimple size={16} weight="bold" /> {generating ? 'Generating…' : 'Generate AIA G702 / G703 (PDF)'}</button>
+        <button onClick={save} disabled={saving || generating} style={{ ...goldButtonStyle, padding: '12px 24px', fontSize: 15, minHeight: 44, cursor: saving ? 'default' : 'pointer', opacity: (saving || generating) ? 0.6 : 1 }} className="pmBtn"><FloppyDisk size={16} weight="bold" /> {saving ? 'Saving…' : 'Save Pay Application'}</button>
+        <button onClick={generatePdfs} disabled={saving || generating} style={{ ...ghostButtonStyle, padding: '12px 24px', fontSize: 15, minHeight: 44, opacity: (saving || generating) ? 0.6 : 1 }} className="pmBtn"><DownloadSimple size={16} weight="bold" /> {generating ? 'Generating…' : 'Generate AIA G702 / G703 (PDF)'}</button>
         <button onClick={printForm} disabled={!lines.length} title="Unsaved on-screen preview for review only — the PDF button produces the stored, numbered document." style={{ ...ghostButtonStyle, padding: '10px 18px', fontSize: 13, opacity: lines.length ? 0.85 : 0.5 }} className="pmBtn">Print Preview</button>
       </div>
-      <p style={{ color: DIM, fontSize: 12, marginTop: 12 }}>Save records the pay application against the project (numbers computed server-side by the shared finance engine) and opens it for submit, approve &amp; certify. Generate saves it, then produces the stored, numbered G702/G703 PDFs through the pdf engine; Print Preview is an unsaved approximation for review only.</p>
     </PremiumSurface>
   );
 }
