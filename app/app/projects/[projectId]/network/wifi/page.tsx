@@ -229,10 +229,10 @@ export default function WifiManagerPage() {
   const ssidColumns: Column<WifiNetwork>[] = [
     { key: 'ssid', header: 'SSID', primary: true, phone: 'show', render: (n) => <>{n.ssid}{n.hidden && <span style={{ color: 'var(--text-secondary)', fontWeight: 400, marginLeft: 8 }}>(Hidden)</span>}</> },
     { key: 'security_type', header: 'Security', phone: 'show', accessor: (n) => securityLabel(n.security_type), render: (n) => <Badge tone={SECURITY_TONE[n.security_type] || 'neutral'}>{securityLabel(n.security_type)}</Badge> },
-    { key: 'vlan_name', header: 'VLAN', render: (n) => n.vlan_name || '—' },
+    { key: 'vlan_name', header: 'VLAN', render: (n) => n.vlan_name || null },
     { key: 'band', header: 'Band', accessor: (n) => bandLabel(n.band), render: (n) => bandLabel(n.band) },
-    { key: 'client_isolation', header: 'Isolation', accessor: (n) => (n.client_isolation ? 'Isolated' : ''), render: (n) => (n.client_isolation ? 'Isolated' : '—') },
-    { key: 'bandwidth_limit_mbps', header: 'Limit', align: 'right', render: (n) => (n.bandwidth_limit_mbps > 0 ? `${n.bandwidth_limit_mbps} Mbps` : '—') },
+    { key: 'client_isolation', header: 'Isolation', accessor: (n) => (n.client_isolation ? 'Isolated' : ''), render: (n) => (n.client_isolation ? 'Isolated' : null) },
+    { key: 'bandwidth_limit_mbps', header: 'Limit', align: 'right', render: (n) => (n.bandwidth_limit_mbps > 0 ? `${n.bandwidth_limit_mbps} Mbps` : null) },
     { key: 'client_count', header: 'Clients', align: 'right', total: 'sum', phone: 'show', accessor: (n) => n.client_count ?? 0 },
   ];
 

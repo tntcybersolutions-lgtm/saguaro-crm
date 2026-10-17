@@ -366,7 +366,7 @@ export default function SubmittalsPage(){
   const isSel = (s:any) => selected?.id===s.id && mode!=='create';
   const numCol: Column<any> = { key:'submittal_number', header:'#', accessor:s=>s.submittal_number||'', width:90, render:s=><span className="sbNum" data-sel={isSel(s)?'true':undefined}>{s.submittal_number||'—'}</span> };
   const titleCol: Column<any> = { key:'title', header:'Title', primary:true, phone:'show', accessor:s=>s.title||'', render:s=><div className="sbTitle"><span title={s.title}>{s.title||'—'}</span>{s.trade&&<span>{s.trade}</span>}</div> };
-  const specCol: Column<any> = { key:'spec_section', phone:'hide', header:'Spec Section', accessor:s=>s.spec_section||'', render:s=>s.spec_section?<span className="sbMuted">{s.spec_section}</span>:<span className="sbMuted">—</span> };
+  const specCol: Column<any> = { key:'spec_section', phone:'hide', header:'Spec Section', accessor:s=>s.spec_section||'', render:s=>s.spec_section?<span className="sbMuted">{s.spec_section}</span>: null };
   const statusCol: Column<any> = { key:'status', phone:'show', header:'Status', accessor:s=>statusBadge(s.status).label, render:s=>{const b=statusBadge(s.status);return <span className="sbBadges"><Badge tone={b.tone}>{b.label}</Badge>{isOverdue(s)&&<Badge tone="overdue">Overdue</Badge>}</span>;} };
   const bicCol: Column<any> = { key:'ball_in_court', phone:'show', header:'Ball in Court', accessor:s=>s.ball_in_court||'', render:s=>{
     const h = ballHolder(s, today);
@@ -381,7 +381,7 @@ export default function SubmittalsPage(){
   const dueCol: Column<any> = { key:'due_date', phone:'show', header:'Required', accessor:s=>s.due_date?String(s.due_date).slice(0,10):'', render:s=><span className={isOverdue(s)?'sbLate':undefined}>{s.due_date?fmtDate(s.due_date):'—'}</span> };
   const revCol: Column<any> = { key:'revision_number', phone:'hide', header:'Rev.', accessor:s=>Number(s.revision_number)||0, align:'right', render:s=><span className="sbMuted">R{s.revision_number??0}</span> };
   const tradeCol: Column<any> = { key:'trade', header:'Trade', hidden:true, phone:'hide', accessor:s=>s.trade||'' };
-  const submittedCol: Column<any> = { key:'submitted_at', header:'Submitted', hidden:true, phone:'hide', accessor:s=>s.submitted_at?String(s.submitted_at).slice(0,10):'', render:s=>s.submitted_at?fmtDate(s.submitted_at):'—' };
+  const submittedCol: Column<any> = { key:'submitted_at', header:'Submitted', hidden:true, phone:'hide', accessor:s=>s.submitted_at?String(s.submitted_at).slice(0,10):'', render:s=>s.submitted_at?fmtDate(s.submitted_at):null };
   const columns: Column<any>[] = detailOpen ? [numCol, titleCol, statusCol, bicCol] : [numCol, titleCol, specCol, statusCol, bicCol, dueCol, revCol, tradeCol, submittedCol];
 
   /** The record's verbs — shared by the row overflow and the rail. */

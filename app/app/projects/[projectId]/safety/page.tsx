@@ -532,8 +532,8 @@ export default function SafetyPage() {
   const incidentColumns: Column<Incident>[] = [
     { key: 'description', header: 'Description', primary: true, phone: 'show', accessor: i => i.description || '', render: i => <span className="sfClamp" title={i.description}>{i.description || '—'}</span> },
     { key: 'date', header: 'Date', phone: 'show', accessor: i => i.date || '', render: i => <span className="sfMuted" style={{ whiteSpace: 'nowrap' }}>{fmtDate(i.date)}</span> },
-    { key: 'type', header: 'Type', phone: 'hide', render: i => i.type || '—' },
-    { key: 'osha', header: 'OSHA', accessor: i => (isOshaRecordable(i) ? 'Recordable' : ''), render: i => isOshaRecordable(i) ? <Badge tone="overdue">Recordable</Badge> : <span className="sfMuted">—</span> },
+    { key: 'type', header: 'Type', phone: 'hide', render: i => i.type || null },
+    { key: 'osha', header: 'OSHA', accessor: i => (isOshaRecordable(i) ? 'Recordable' : ''), render: i => isOshaRecordable(i) ? <Badge tone="overdue">Recordable</Badge> : null },
     { key: 'severity', header: 'Severity', phone: 'hide', render: i => <Badge tone={SEVERITY_BADGE[i.severity] || 'neutral'}>{i.severity || '—'}</Badge> },
     { key: 'status', header: 'Status', phone: 'show', render: i => <Badge tone={STATUS_BADGE[i.status] || 'neutral'} dot>{i.status || '—'}</Badge> },
   ];
@@ -576,11 +576,11 @@ export default function SafetyPage() {
 
   // ── Toolbox talks ──
   const talkColumns: Column<ToolboxTalk>[] = [
-    { key: 'topic', header: 'Topic', primary: true, phone: 'show', render: t => t.topic || '—' },
+    { key: 'topic', header: 'Topic', primary: true, phone: 'show', render: t => t.topic || null },
     { key: 'talk_date', header: 'Date', phone: 'show', accessor: t => t.talk_date || '', render: t => <span className="sfMuted" style={{ whiteSpace: 'nowrap' }}>{fmtDate(t.talk_date)}</span> },
-    { key: 'conducted_by', header: 'Presenter', render: t => t.conducted_by || <span className="sfMuted">—</span> },
+    { key: 'conducted_by', header: 'Presenter', render: t => t.conducted_by || null },
     { key: 'attendee_count', header: 'Attendees', align: 'right', phone: 'show', total: 'sum', accessor: t => t.attendee_count, render: t => <span style={{ display: 'inline-flex', alignItems: 'center', gap: 6 }}><UsersThree size={13} />{t.attendee_count}</span> },
-    { key: 'notes', header: 'Notes', phone: 'hide', render: t => t.notes ? <span className="sfClamp sfMuted" title={t.notes}>{t.notes}</span> : <span className="sfMuted">—</span> },
+    { key: 'notes', header: 'Notes', phone: 'hide', render: t => t.notes ? <span className="sfClamp sfMuted" title={t.notes}>{t.notes}</span> : null },
   ];
 
   // ── Corrective actions ──

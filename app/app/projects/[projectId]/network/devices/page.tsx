@@ -216,12 +216,12 @@ function DeviceInventoryPage() {
   const columns: Column<Device>[] = [
     { key: 'hostname', header: 'Hostname', primary: true, phone: 'show', render: (d) => <span style={{ display: 'inline-flex', alignItems: 'center', gap: 8 }}><DeviceTypeIcon type={d.device_type} />{d.hostname}</span> },
     { key: 'device_type', header: 'Type', accessor: (d) => deviceTypeLabel(d.device_type), render: (d) => deviceTypeLabel(d.device_type) },
-    { key: 'manufacturer', header: 'Manufacturer', accessor: (d) => manufacturerLabel(d.manufacturer), render: (d) => manufacturerLabel(d.manufacturer) || '—' },
-    { key: 'model', header: 'Model', render: (d) => d.model || '—' },
+    { key: 'manufacturer', header: 'Manufacturer', accessor: (d) => manufacturerLabel(d.manufacturer), render: (d) => manufacturerLabel(d.manufacturer) || null },
+    { key: 'model', header: 'Model', render: (d) => d.model || null },
     { key: 'ip_address', header: 'IP address', phone: 'show', render: (d) => d.ip_address ? <span style={mono}>{d.ip_address}</span> : '—' },
     { key: 'mac_address', header: 'MAC', render: (d) => d.mac_address ? <span style={mono}>{d.mac_address}</span> : '—' },
-    { key: 'vlan_name', header: 'VLAN', render: (d) => d.vlan_name || '—' },
-    { key: 'location', header: 'Location', render: (d) => d.location || '—' },
+    { key: 'vlan_name', header: 'VLAN', render: (d) => d.vlan_name || null },
+    { key: 'location', header: 'Location', render: (d) => d.location || null },
     { key: 'status', header: 'Status', phone: 'show', accessor: (d) => statusLabel(d.status), render: (d) => <Badge tone={statusTone(d.status)} dot>{statusLabel(d.status)}</Badge> },
   ];
 

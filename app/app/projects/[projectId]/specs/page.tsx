@@ -218,12 +218,12 @@ export default function SpecsPage() {
   ];
 
   const columns: Column<Spec>[] = [
-    { key: 'section', header: 'Section #', primary: true, phone: 'show', width: 130, accessor: (s) => s.section, render: (s) => s.section || '—' },
-    { key: 'title', header: 'Title', phone: 'show', render: (s) => s.title || '—' },
-    { key: 'division', header: 'Division', accessor: (s) => specDiv(s) || s.division, render: (s) => { const c = specDiv(s); return c ? `${c} — ${divName(c)}` : (s.division || '—'); } },
+    { key: 'section', header: 'Section #', primary: true, phone: 'show', width: 130, accessor: (s) => s.section, render: (s) => s.section || null },
+    { key: 'title', header: 'Title', phone: 'show', render: (s) => s.title || null },
+    { key: 'division', header: 'Division', accessor: (s) => specDiv(s) || s.division, render: (s) => { const c = specDiv(s); return c ? `${c} — ${divName(c)}` : (s.division || null); } },
     { key: 'status', header: 'Status', phone: 'show', accessor: (s) => cap(s.status), render: (s) => <Badge tone={STATUS_TONE[s.status] || 'neutral'} dot>{cap(s.status)}</Badge> },
     { key: 'last_updated', header: 'Last updated', accessor: (s) => s.last_updated || '', render: (s) => fmtDay(s.last_updated) },
-    { key: 'related_submittals', header: 'Submittals', accessor: (s) => (s.related_submittals || []).join(', '), render: (s) => (s.related_submittals && s.related_submittals.length > 0 ? s.related_submittals.join(', ') : '—') },
+    { key: 'related_submittals', header: 'Submittals', accessor: (s) => (s.related_submittals || []).join(', '), render: (s) => (s.related_submittals && s.related_submittals.length > 0 ? s.related_submittals.join(', ') : null) },
   ];
 
   const rowActions = (s: Spec): Action[] => [

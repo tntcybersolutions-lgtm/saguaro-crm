@@ -97,7 +97,7 @@ const CSS = `
 .peMoney { font-variant-numeric: tabular-nums; white-space: nowrap; color: var(--text-primary); font-weight: 600; }
 .peMuted { color: var(--text-tertiary); }
 .peLate { color: var(--status-overdue); font-weight: 700; }
-.peSoon { color: var(--status-under-contract); font-weight: 700; }
+.peSoon { color: var(--warning); font-weight: 700; }
 .peBadges { display: inline-flex; align-items: center; gap: 6px; flex-wrap: wrap; }
 .peSection { display: flex; flex-direction: column; gap: 8px; }
 .peSection + .peSection { margin-top: 20px; padding-top: 20px; border-top: 1px solid var(--border-subtle); }
@@ -321,7 +321,7 @@ export default function PermitsPage() {
   const isSel = (p: Permit) => p.id === selectedId;
   const numCol: Column<Permit> = { key: 'permit_number', header: 'Permit #', primary: true, groupable: false, accessor: p => p.permit_number || '', width: 150, render: p => <span className="peNum" data-sel={isSel(p) ? 'true' : undefined}>{p.permit_number || '—'}</span> };
   const typeCol: Column<Permit> = { key: 'permit_type', header: 'Type', accessor: p => p.permit_type || '', render: p => <span style={{ color: 'var(--text-primary)' }}>{p.permit_type}</span> };
-  const agencyCol: Column<Permit> = { key: 'issuing_authority', phone: 'hide', header: 'Agency', accessor: p => (p.issuing_authority || '').toLowerCase(), render: p => p.issuing_authority || <span className="peMuted">—</span> };
+  const agencyCol: Column<Permit> = { key: 'issuing_authority', phone: 'hide', header: 'Agency', accessor: p => (p.issuing_authority || '').toLowerCase(), render: p => p.issuing_authority || null };
   const statusCol: Column<Permit> = { key: 'status', phone: 'show', header: 'Status', accessor: p => STATUS_RANK[effStatus(p)] ?? 9, render: p => { const b = statusBadge(effStatus(p)); return <span className="peBadges"><Badge tone={b.tone}>{b.label}</Badge>{isExpiringSoon(p) && <Badge tone="lead">Expiring</Badge>}</span>; } };
   const feeCol: Column<Permit> = { key: 'fee', phone: 'show', header: 'Fee', accessor: p => Number(p.fee) || 0, align: 'right', total: 'sum', format: fmtUsd, render: p => <span className="peMoney">{fmtUsd(Number(p.fee) || 0)}</span> };
   const issuedCol: Column<Permit> = { key: 'issued_date', phone: 'hide', header: 'Issued', accessor: p => p.issued_date || '', render: p => <span className="peMuted">{fmtDate(p.issued_date)}</span> };

@@ -462,7 +462,7 @@ const CSS = `
 .ip-file-btn:hover{color:var(--text-primary)}
 .ip-file-btn input{position:absolute;inset:0;opacity:0;cursor:pointer}
 .ip-check{display:inline-flex;align-items:center;gap:8px;min-height:44px;font-size:14px;color:var(--text-secondary);cursor:pointer}
-.ip-check input{accent-color:var(--brand-primary);width:20px;height:20px}
+.ip-check input{accent-color:var(--success);width:20px;height:20px}
 .ip-icon-btn{display:inline-flex;align-items:center;justify-content:center;width:40px;height:40px;border:0;border-radius:6px;background:transparent;color:var(--text-tertiary);cursor:pointer}
 .ip-icon-btn:hover{color:var(--text-primary);background:var(--bg-surface-2)}
 .ip-list{list-style:none;margin:8px 0 0;padding:0}

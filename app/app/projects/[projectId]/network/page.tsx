@@ -235,7 +235,7 @@ export default function NetworkDashboard() {
     { key: 'hostname', header: 'Hostname', primary: true, phone: 'show', render: (d) => <span style={{ display: 'inline-flex', alignItems: 'center', gap: 8 }}><TypeIcon type={d.device_type} />{d.hostname}</span> },
     { key: 'device_type', header: 'Type', accessor: (d) => cap(d.device_type), render: (d) => cap(d.device_type) },
     { key: 'ip_address', header: 'IP address', phone: 'show', render: (d) => d.ip_address ? <span style={{ fontFamily: 'var(--font-mono, monospace)' }}>{d.ip_address}</span> : '—' },
-    { key: 'location', header: 'Location', render: (d) => d.location || '—' },
+    { key: 'location', header: 'Location', render: (d) => d.location || null },
     { key: 'status', header: 'Status', phone: 'show', render: (d) => <Badge tone={deviceTone(d.status)} dot>{cap(d.status || 'planned')}</Badge> },
   ];
 

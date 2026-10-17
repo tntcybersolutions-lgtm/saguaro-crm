@@ -313,8 +313,8 @@ export default function CrewsPage() {
   const isSel = (c: Crew) => selected?.id === c.id;
   const nameCol: Column<Crew> = { key: 'name', header: 'Crew', accessor: (c) => c.name.toLowerCase(), render: (c) => <span className="crName" data-sel={isSel(c) ? 'true' : undefined} title={c.name}>{c.name}</span> };
   const statusCol: Column<Crew> = { key: 'status', header: 'Status', accessor: (c) => (c.status ?? '').toLowerCase(), render: (c) => { const b = statusBadge(c.status, showArchived || !!c.deleted_at); return <Badge tone={b.tone}>{b.label}</Badge>; } };
-  const foremanCol: Column<Crew> = { key: 'foreman', header: 'Foreman', accessor: (c) => (c.foreman_name ?? '').toLowerCase(), render: (c) => c.foreman_name ? <span style={{ color: 'var(--text-primary)' }}>{c.foreman_name}</span> : <span className="crMuted">—</span> };
-  const tradeCol: Column<Crew> = { key: 'trade', header: 'Trade', accessor: (c) => (c.trade ?? '').toLowerCase(), render: (c) => c.trade ? <span>{c.trade}</span> : <span className="crMuted">—</span> };
+  const foremanCol: Column<Crew> = { key: 'foreman', header: 'Foreman', accessor: (c) => (c.foreman_name ?? '').toLowerCase(), render: (c) => c.foreman_name ? <span style={{ color: 'var(--text-primary)' }}>{c.foreman_name}</span> : null };
+  const tradeCol: Column<Crew> = { key: 'trade', header: 'Trade', accessor: (c) => (c.trade ?? '').toLowerCase(), render: (c) => c.trade ? <span>{c.trade}</span> : null };
   const membersCol: Column<Crew> = { key: 'members', header: 'Members', accessor: (c) => c.memberCount || 0, align: 'right', render: (c) => <span className="crNum" style={{ display: 'inline-flex', alignItems: 'center', gap: 4, color: 'var(--text-primary)', fontWeight: 700 }}><UsersThree size={14} style={{ color: 'var(--text-tertiary)' }} />{c.memberCount || 0}</span> };
   const columns: Column<Crew>[] = rosterOpen
     ? [nameCol, statusCol, membersCol]

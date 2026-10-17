@@ -235,7 +235,7 @@ export default function FirewallRulesPage() {
     ) },
     { key: 'direction', header: 'Direction', hidden: true, accessor: (r) => cap(r.direction) },
     { key: 'category', header: 'Category', accessor: (r) => categoryLabel(r.category), render: (r) => <Badge>{categoryLabel(r.category)}</Badge> },
-    { key: 'logging', header: 'Logging', accessor: (r) => (r.logging ? 'Log' : ''), render: (r) => (r.logging ? 'Log' : '—') },
+    { key: 'logging', header: 'Logging', accessor: (r) => (r.logging ? 'Log' : ''), render: (r) => (r.logging ? 'Log' : null) },
     { key: 'enabled', header: 'Enabled', align: 'center', phone: 'show', accessor: (r) => (r.enabled ? 'On' : 'Off'), render: (r) => (
       <EnabledSwitch on={r.enabled} onToggle={() => toggleEnabled(r)} label={`${r.enabled ? 'Disable' : 'Enable'} ${r.name}`} />
     ) },

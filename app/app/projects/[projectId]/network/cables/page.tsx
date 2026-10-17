@@ -181,8 +181,8 @@ export default function CableSchedulePage() {
     { key: 'cable_type', header: 'Type', accessor: (c) => cableLabel(c.cable_type), render: (c) => <Badge>{cableLabel(c.cable_type)}</Badge> },
     { key: 'from', header: 'From', accessor: (c) => `${c.from_location || ''}${c.from_port ? ` (${c.from_port})` : ''}`, render: (c) => (c.from_location || c.from_port) ? `${c.from_location || ''}${c.from_port ? ` (${c.from_port})` : ''}` : '—', groupable: false },
     { key: 'to', header: 'To', accessor: (c) => `${c.to_location || ''}${c.to_port ? ` (${c.to_port})` : ''}`, render: (c) => (c.to_location || c.to_port) ? `${c.to_location || ''}${c.to_port ? ` (${c.to_port})` : ''}` : '—', groupable: false },
-    { key: 'length_ft', header: 'Length', align: 'right', total: 'sum', format: fmtFt, accessor: (c) => Number(c.length_ft) || 0, render: (c) => (c.length_ft ? fmtFt(c.length_ft) : '—') },
-    { key: 'pathway', header: 'Pathway', render: (c) => c.pathway || '—' },
+    { key: 'length_ft', header: 'Length', align: 'right', total: 'sum', format: fmtFt, accessor: (c) => Number(c.length_ft) || 0, render: (c) => (c.length_ft ? fmtFt(c.length_ft) : null) },
+    { key: 'pathway', header: 'Pathway', render: (c) => c.pathway || null },
     { key: 'floor', header: 'Floor', hidden: true, align: 'right' },
     { key: 'tested', header: 'Tested', align: 'center', accessor: (c) => (c.tested ? 'Yes' : 'No'), render: (c) => (
       <span style={{ display: 'inline-flex', verticalAlign: 'middle', color: c.tested ? 'var(--success)' : 'var(--text-secondary)' }} aria-label={c.tested ? 'Tested' : 'Not tested'}>

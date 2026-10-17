@@ -584,11 +584,11 @@ export default function DailyLogsPage(){
     if(l._offline) return <span title={l._offlineError?`Couldn't send: ${l._offlineError}`:"Saved on this phone — it sends when you're back online."}><Badge tone={l._offlineError?'overdue':'gold'}>{l._offlineError?"Couldn't Send":'Waiting for Signal'}</Badge></span>;
     const s=logStatus(l);return <Badge tone={s.tone}>{s.label}</Badge>;
   } };
-  const weatherCol: Column<any> = { key:'weather', header:'Weather', phone:'hide', accessor:l=>l.weather||'', render:l=>l.weather?<span className="pdlClamp" style={{maxWidth:160}} title={l.weather}>{l.weather}</span>:<span className="pdlMuted">—</span> };
+  const weatherCol: Column<any> = { key:'weather', header:'Weather', phone:'hide', accessor:l=>l.weather||'', render:l=>l.weather?<span className="pdlClamp" style={{maxWidth:160}} title={l.weather}>{l.weather}</span>: null };
   const tempCol: Column<any> = { key:'temp', header:'Temp', phone:'hide', accessor:l=>Number(l.high_temp)||0, align:'right', render:l=><span className="pdlMuted pdlNum">{tempStr(l)}</span> };
   const crewCol: Column<any> = { key:'crew_count', header:'Crew', phone:'show', total:'sum', accessor:l=>Number(l.crew_count)||0, align:'right', render:l=><span className="pdlNum" style={{display:'inline-flex',alignItems:'center',gap:4}}><UsersThree size={14} style={{color:'var(--text-tertiary)'}}/>{Number(l.crew_count)||0}</span> };
-  const superCol: Column<any> = { key:'superintendent', header:'Superintendent', phone:'hide', accessor:l=>l.superintendent||'', render:l=>l.superintendent?<span style={{color:'var(--text-primary)'}}>{l.superintendent}</span>:<span className="pdlMuted">—</span> };
-  const workCol: Column<any> = { key:'work_performed', header:'Work Performed', phone:'hide', accessor:l=>l.work_performed||'', render:l=>l.work_performed?<span className="pdlClamp" title={l.work_performed}>{l.work_performed}</span>:<span className="pdlMuted">—</span> };
+  const superCol: Column<any> = { key:'superintendent', header:'Superintendent', phone:'hide', accessor:l=>l.superintendent||'', render:l=>l.superintendent?<span style={{color:'var(--text-primary)'}}>{l.superintendent}</span>: null };
+  const workCol: Column<any> = { key:'work_performed', header:'Work Performed', phone:'hide', accessor:l=>l.work_performed||'', render:l=>l.work_performed?<span className="pdlClamp" title={l.work_performed}>{l.work_performed}</span>: null };
   const flagsCol: Column<any> = { key:'flags', header:'Flags', phone:'show', groupable:false, accessor:l=>((l.delays||'').trim()?2:0)+((l.safety_notes||'').trim()?1:0), render:l=>{
     const hasDelay=!!(l.delays||'').trim(), hasSafety=!!(l.safety_notes||'').trim();
     if(!hasDelay&&!hasSafety) return <span className="pdlMuted">Clear</span>;
