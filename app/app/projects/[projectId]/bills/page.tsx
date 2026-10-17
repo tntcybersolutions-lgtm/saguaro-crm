@@ -299,9 +299,10 @@ export default function BillsPage() {
 
   // ── SmartCreate intelligence (all Number-coerced: DB numerics round-trip as strings) ──
   const budget = ctx?.budget;
-  const bOriginal = Number(budget?.original) || 0;
+  // Revised budget (original + approved changes) — the Budget screen's roll-up (lib/budget-rollup).
+  const bRevised = Number(budget?.revised) || 0;
   const bActual = Number(budget?.actual) || 0;
-  const bRemaining = bOriginal - bActual;
+  const bRemaining = budget?.remaining != null ? Number(budget.remaining) || 0 : bRevised - bActual;
   const vendors: string[] = (ctx?.vendors || []).filter(Boolean);
   const budgetLines: any[] = budget?.lines || [];
   const costCodeOptions: any[] = (ctx?.costCodes || []).filter((c: any) => c.costCode);
@@ -313,7 +314,7 @@ export default function BillsPage() {
     ? (budgetLines.find((l: any) => String(l.costCode) === String(form.cost_code))
       || budgetLines.find((l: any) => String(l.division) === String(form.cost_code).slice(0, 2)))
     : null;
-  const lineBudget = Number(selLine?.original) || 0;
+  const lineBudget = Number(selLine?.revised ?? selLine?.original) || 0;
   const lineActual = Number(selLine?.actual) || 0;
   const lineRemaining = lineBudget - lineActual - grandTotal;
 
@@ -401,8 +402,8 @@ export default function BillsPage() {
     { label: 'Awaiting payment', value: loading ? '—' : fmt(pendingTotal), sub: loading ? undefined : `${unpaid.length} pending or approved`, icon: <Clock size={15} />, onClick: () => toggle('unpaid'), active: statusFilter === 'unpaid' },
     { label: 'Overdue', value: loading ? '—' : String(overdueBills.length), sub: loading || !overdueBills.length ? undefined : `${fmt(overdueTotal)} past due`, tone: overdueBills.length ? 'bad' : 'default', icon: <WarningCircle size={15} />, onClick: () => toggle('Overdue'), active: statusFilter === 'Overdue' },
     ...(ctx ? [
-      { label: 'Actual to date', value: fmt(bActual), sub: `of ${fmt(bOriginal)} budget · ${Number(budget?.lineCount) || budgetLines.length} lines`, icon: <CurrencyDollar size={15} />, href: `${base}/budget` },
-      { label: 'Budget remaining', value: fmt(bRemaining), sub: 'Original less actual', tone: bRemaining < 0 ? 'bad' as const : 'good' as const, icon: <Wallet size={15} />, href: `${base}/budget` },
+      { label: 'Actual to date', value: fmt(bActual), sub: `of ${fmt(bRevised)} revised budget · ${Number(budget?.lineCount) || budgetLines.length} lines`, icon: <CurrencyDollar size={15} />, href: `${base}/budget` },
+      { label: 'Budget remaining', value: fmt(bRemaining), sub: 'Revised budget less actual', tone: bRemaining < 0 ? 'bad' as const : 'good' as const, icon: <Wallet size={15} />, href: `${base}/budget` },
     ] : []),
   ];
 

@@ -101,7 +101,8 @@ function CashFlowContent() {
   const ctxBilled = Number(m?.billedToDate) || 0;
   const ctxPaid = Number(m?.paidToDate) || 0;
   const ctxOutstanding = Math.max(0, ctxBilled - ctxPaid);
-  const budgetOriginal = Number(budget?.original) || 0;
+  // Revised budget (original + approved changes), the Budget screen's measure.
+  const budgetRevised = Number(budget?.revised ?? budget?.original) || 0;
   const budgetCommitted = Number(budget?.committed) || 0;
   const budgetActual = Number(budget?.actual) || 0;
 
@@ -218,7 +219,7 @@ function CashFlowContent() {
     { key: 'running_balance', header: 'Running balance', align: 'right', sortable: false, phone: 'show', total: () => '—', render: p => <strong style={{ color: p.running_balance < 0 ? RED : undefined }}>{fmt(p.running_balance)}</strong> },
   ];
   const open = expandedRow != null ? periods[expandedRow] : null;
-  const variance = budgetOriginal - budgetActual;
+  const variance = budgetRevised - budgetActual;
 
   return (
     <PageShell
@@ -321,7 +322,7 @@ function CashFlowContent() {
         <Card title="Budget & collections" icon={<Wallet size={18} />} subtitle={`${Number(budget?.lineCount) || 0} budget lines — committed vs actual, plus what the owner still owes`}>
           <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(min(100%, 260px), 1fr))', gap: '0 40px' }}>
             <DetailList items={[
-              ['Budget (original)', fmt0(budgetOriginal)],
+              ['Revised budget', fmt0(budgetRevised)],
               ['Committed', fmt0(budgetCommitted)],
               ['Actual cost to date', <span key="a" style={{ color: budgetCommitted > 0 && budgetActual > budgetCommitted ? RED : undefined }}>{fmt0(budgetActual)}</span>],
               ['Budget variance', <strong key="v" style={{ color: variance >= 0 ? GREEN : RED }}>{(variance >= 0 ? '+' : '-') + fmt0(Math.abs(variance))}</strong>],

@@ -16,6 +16,7 @@ jest.mock('@/lib/supabase-server', () => ({ createServerClient: () => fake.db, g
 
 import { NextRequest } from 'next/server';
 import { GET } from '@/app/api/projects/[projectId]/budget/route';
+import { budgetTotals } from './budget-rollup';
 
 const A = 'aaaaaaaa-0000-4000-8000-000000000001';
 const B = 'bbbbbbbb-0000-4000-8000-000000000002';
@@ -103,4 +104,35 @@ describe('budget roll-ups', () => {
     const r = await GET(new NextRequest(`https://saguarocontrol.net/api/projects/${JOB}/budget`), { params: { projectId: JOB } });
     expect(r.status).toBe(404);
   });
+  test('totals measure Uncommitted and Remaining against the REVISED budget', async () => {
+    const j = await get();
+    const t = j.totals;
+    expect(t.original).toBe(350000);
+    expect(t.approvedChanges).toBe(10000);
+    expect(t.revised).toBe(360000); // original + approved changes
+    expect(t.committed).toBe(210000 + 90000);
+    expect(t.uncommitted).toBe(360000 - 300000);
+    expect(t.actual).toBe(50000);
+    expect(t.remaining).toBe(360000 - 50000);
+    // Budget screen's cost to complete: Σ revised − actual − committed not yet spent.
+    expect(t.costToComplete).toBe((210000 - 40000 - (210000 - 40000)) + (150000 - 10000 - (90000 - 10000)));
+  });
+});
+
+describe('budgetTotals — the Pima job (759aa973) as it stands on production', () => {
+  // 10 budget lines; $127,650 of approved changes on 23-0900 and 23-0901.
+  const L = (o: number, a: number, c: number, act: number) => ({ original_budget: o, approved_cos: a, revised_budget: o + a, committed_cost: c, actual_cost: act, forecast_cost: Math.max(o + a, c, act) });
+  const pima = [
+    L(226006, 0, 226006, 226006), L(108000, 0, 108000, 108000), L(23394, 0, 23394, 10850),
+    L(164000, 0, 164000, 164000), L(486200, 52400, 538600, 534100), L(220000, 75250, 295250, 297400),
+    L(38400, 0, 38400, 36900), L(612000, 0, 612000, 612000), L(438000, 0, 438000, 438000), L(96000, 0, 96000, 96000),
+  ];
+  const t = budgetTotals(pima);
+  test('revised is original + approved changes', () => {
+    expect(t.original).toBe(2412000);
+    expect(t.revised).toBe(2539650);
+  });
+  test('Purchase orders Uncommitted is $0, not −$127,650', () => expect(t.uncommitted).toBe(0));
+  test('Bills Budget remaining is $16,394, not −$111,256', () => expect(t.remaining).toBe(16394));
+  test('Budget cost to complete is −$2,150, the same roll-up', () => expect(t.costToComplete).toBe(-2150));
 });
