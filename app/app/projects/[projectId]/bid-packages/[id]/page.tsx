@@ -38,15 +38,15 @@ import { isBiddingStatus } from '@/lib/bid-deadline';
 
 const fmt = (n:number) => '$'+((n||0).toLocaleString('en-US',{minimumFractionDigits:0,maximumFractionDigits:0}));
 const fmtDay = (iso?: string | null) => {
-  if (!iso) return '—';
+  if (!iso) return '';
   const d = new Date(iso.length <= 10 ? `${iso}T12:00:00` : iso);
-  return isNaN(d.getTime()) ? '—' : d.toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' });
+  return isNaN(d.getTime()) ? '' : d.toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' });
 };
 
 /** Package status → one badge (same words as the package register). */
 function packageBadge(s: string): { label: string; tone: BadgeTone } {
   if (isBiddingStatus(s)) return { label: 'Open', tone: 'lead' };
-  if (s === 'closed') return { label: 'Closed — Award Pending', tone: 'under_contract' };
+  if (s === 'closed') return { label: 'Award pending', tone: 'lead' };
   if (s === 'awarded') return { label: 'Awarded', tone: 'ongoing' };
   return { label: 'Draft', tone: 'neutral' };
 }
@@ -472,8 +472,8 @@ export default function BidPackageDetailPage() {
   if (loading && !pkg) return (
     <div className="bdWs">
       <style dangerouslySetInnerHTML={{ __html: CSS }} />
-      <PageShell crumbs={[...crumbsBase, { label: 'Loading…' }]} title="Bid Package" subtitle="Loading the package…">
-        <StatRow items={['Scope Value', 'Awarded Amount', 'Subs Invited', 'Bids Received'].map(label => ({ label, value: '—', sub: 'Loading…' }))} />
+      <PageShell crumbs={[...crumbsBase, { label: 'Loading…' }]} title="Bid Package">
+        <StatRow items={['Scope value', 'Invited', 'Bids in'].map(label => ({ label, value: <span className="k-skel" style={{ width: 80, height: 22 }} /> }))} />
         <Card title="Invited Subcontractors" icon={<UsersThree size={17} />} flush>
           <DataTable<InvitedSub>
             columns={[{ key: 'company_name', header: 'Company', primary: true }, { key: 'status', header: 'Status' }, { key: 'email', header: 'Jacket Email' }, { key: 'bid_amount', header: 'Bid', align: 'right' }]}
@@ -537,11 +537,11 @@ export default function BidPackageDetailPage() {
   const isLow = (b: BidSubmission) => lowAmount != null && priced.length > 0 && (Number(b.amount) || 0) === lowAmount;
 
   const stats: StatItem[] = [
-    { label: 'Scope Value', value: fmt(totalSov), sub: `${pkg.sov_items.length} bid-form line${pkg.sov_items.length === 1 ? '' : 's'}`, icon: <CurrencyDollar size={15} /> },
-    { label: 'Low Bid', value: lowAmount != null ? fmt(lowAmount) : '—', tone: lowAmount != null ? 'good' : 'default', sub: lowAmount != null && totalSov > 0 ? `${lowAmount <= totalSov ? '' : '+'}${fmt(lowAmount - totalSov)} vs scope value` : bidsIn === 1 ? 'One bid in' : 'No bids yet', icon: <Scales size={15} /> },
-    { label: 'Awarded Amount', value: pkg.awarded_amount ? fmt(pkg.awarded_amount) : 'TBD', tone: pkg.awarded_amount ? 'good' : 'default', sub: pkg.awarded_to || 'Not awarded yet', icon: <Trophy size={15} /> },
-    { label: 'Subs Invited', value: String(liveInvites.length), sub: `${liveInvites.filter((s) => s.status === 'viewed').length} viewed`, icon: <UsersThree size={15} /> },
-    { label: 'Bids Received', value: String(bidsIn), tone: bidsIn > 0 ? 'good' : 'default', sub: liveInvites.length > 0 ? `of ${liveInvites.length} invited` : undefined, icon: <Receipt size={15} /> },
+    { label: 'Scope value', value: fmt(totalSov), sub: `${pkg.sov_items.length} bid-form line${pkg.sov_items.length === 1 ? '' : 's'}`, icon: <CurrencyDollar size={15} /> },
+    ...(lowAmount != null ? [{ label: 'Low bid', value: fmt(lowAmount), tone: 'good' as const, sub: totalSov > 0 ? (lowAmount === totalSov ? 'Matches scope value' : `${fmt(Math.abs(lowAmount - totalSov))} ${lowAmount < totalSov ? 'under' : 'over'} scope value`) : undefined, icon: <Scales size={15} /> }] : []),
+    ...(pkg.awarded_amount ? [{ label: 'Awarded', value: fmt(pkg.awarded_amount), tone: 'good' as const, sub: pkg.awarded_to || undefined, icon: <Trophy size={15} /> }] : []),
+    { label: 'Invited', value: String(liveInvites.length), sub: `${liveInvites.filter((s) => s.status === 'viewed').length} viewed`, icon: <UsersThree size={15} /> },
+    { label: 'Bids in', value: String(bidsIn), tone: bidsIn > 0 ? 'good' : 'default', sub: liveInvites.length > 0 ? `of ${liveInvites.length} invited` : undefined, icon: <Receipt size={15} /> },
   ];
 
   // ── Bid comparison: every bid side by side, low bid marked ──
@@ -588,7 +588,7 @@ export default function BidPackageDetailPage() {
       render: sub => (
         <span className="bdWho" data-invite={sub.email} data-status={sub.status} style={{ opacity: sub.status === 'revoked' ? 0.6 : 1 }}>
           <span>{sub.company_name}</span>
-          <span>{sub.contact_name ? `${sub.contact_name} · ` : ''}{sub.email || '—'}</span>
+          <span>{[sub.contact_name, sub.email].filter(Boolean).join(' · ')}</span>
         </span>
       ),
     },
@@ -600,7 +600,7 @@ export default function BidPackageDetailPage() {
         const isAwarded = sub.bid_amount != null && pkg.bid_submissions.some((b) => b.awarded && b.sub_email === sub.email);
         return (
           <span className="bdBadges" style={{ justifyContent: 'flex-end' }}>
-            <span className={sub.bid_amount ? 'bdMoney' : 'bdMuted'} data-low={sub.bid_amount != null && lowAmount != null && sub.bid_amount === lowAmount ? 'true' : undefined}>{sub.bid_amount ? fmt(sub.bid_amount) : '—'}</span>
+            <span className={sub.bid_amount ? 'bdMoney' : 'bdMuted'} data-low={sub.bid_amount != null && lowAmount != null && sub.bid_amount === lowAmount ? 'true' : undefined}>{sub.bid_amount ? fmt(sub.bid_amount) : ''}</span>
             {isAwarded && <Badge tone="completed"><Trophy size={11} weight="fill" /> Awarded</Badge>}
           </span>
         );

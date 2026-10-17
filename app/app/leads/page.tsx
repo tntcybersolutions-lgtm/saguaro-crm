@@ -32,7 +32,7 @@ type Stage = typeof STAGES[number];
 /* Stages read as the six fixed status colors (lib/status-colors). */
 const STAGE_TONE: Record<Stage, BadgeTone> = {
   New: 'lead', Contacted: 'lead', Qualified: 'lead', Proposal: 'lead',
-  Negotiation: 'lead', Won: 'under_contract', Lost: 'closed',
+  Negotiation: 'lead', Won: 'ongoing', Lost: 'closed',
 };
 const SOURCES = LEAD_SOURCES; // shared with the deal page's Edit (lib/lead-stages)
 const ACTIVITY_TYPES = ['call', 'email', 'meeting', 'note'] as const;
@@ -83,6 +83,23 @@ const emptyLead = (): Partial<Lead> => ({
   source: 'Website', stage: 'New', estimated_value: 0, notes: '', tags: [],
   project_type: '', next_action_date: plus3d(),
 });
+
+/* The list sits on the page (no panel). On a phone the filter row keeps
+   search + stage; the rest open from "More filters". */
+const LD_CSS = `
+.ldWrap { display: flex; flex-direction: column; gap: 12px; min-width: 0; }
+.ldBar { min-width: 0; }
+.ldMore { display: contents; }
+.ldMoreBtn { display: none; }
+.ldW150 { width: 150px; } .ldW160 { width: 160px; } .ldW100 { width: 100px; }
+.ldSec { margin: 0 0 8px; font-size: var(--fs-section, 16px); font-weight: 700; color: var(--title-section); }
+@media (max-width: 767px) {
+  .ldMoreBtn { display: inline-flex; }
+  .ldBar[data-more="closed"] .ldMore { display: none; }
+  .ldBar .k-toolbar .k-search { flex: 1 1 100%; }
+  .ldBar .ldF { flex: 1 1 calc(50% - 8px); width: auto; min-width: 0; }
+}
+`;
 
 /* ═══════════════════════════════ MAIN PAGE ═══════════════════════════════ */
 export default function LeadsPage() {
@@ -484,7 +501,7 @@ export default function LeadsPage() {
       key: 'next_action_date', header: 'Follow-Up', accessor: (l) => l.next_action_date || null,
       render: (l) => l.next_action_date
         ? <span style={{ color: isOverdue(l) ? 'var(--danger)' : undefined, fontWeight: isOverdue(l) ? 700 : undefined }}>{fmtDate(l.next_action_date)}</span>
-        : '—',
+        : '',
     },
     { key: 'created_at', header: 'Created', render: (l) => fmtDate(l.created_at) },
   ];
@@ -498,7 +515,7 @@ export default function LeadsPage() {
       key: 'rate', header: 'Win Rate', align: 'right', accessor: (r) => (r.won + r.lost > 0 ? Math.round((r.won / (r.won + r.lost)) * 100) : null),
       render: (r) => {
         const closed = r.won + r.lost;
-        if (!closed) return '—';
+        if (!closed) return '';
         const rate = Math.round((r.won / closed) * 100);
         return <span style={{ fontWeight: 700, color: rate >= 50 ? 'var(--success)' : 'var(--warning)' }}>{rate}%</span>;
       },
@@ -514,39 +531,49 @@ export default function LeadsPage() {
   const emptyAll = (
     <EmptyState
       title="No leads yet"
-      text="Track every prospect from first contact to signed contract. Each new lead gets a follow-up 3 days out, and win/loss outcomes feed your bid intelligence."
-      action={<Button variant="primary" icon={<Plus size={15} weight="bold" />} onClick={() => openEditor(emptyLead())}>Add Your First Lead</Button>}
+      action={<Button icon={<Plus size={15} weight="bold" />} onClick={() => openEditor(emptyLead())}>Add a lead</Button>}
     />
   );
   const emptyFiltered = (
-    <EmptyState title="No leads match your filters" text="Try a different search or clear the filters." action={<Button onClick={clearFilters}>Clear Filters</Button>} />
+    <EmptyState title="No leads match" onClearFilters={clearFilters} />
   );
+  const decided = (metrics.byStage['Won']?.count || 0) + (metrics.byStage['Lost']?.count || 0);
+  const wonCount = metrics.byStage['Won']?.count || 0;
+  const openCount = leads.filter(l => l.stage !== 'Won' && l.stage !== 'Lost').length;
+  /* Source, owner and value filters fold away on a phone; search and stage stay. */
+  const extraFiltersOn = sourceFilter !== 'all' || ownerFilter !== 'all' || !!valueMin || !!valueMax;
+  const [moreFilters, setMoreFilters] = useState(false);
 
   /* ═══════════════════════════════ RENDER ═══════════════════════════════ */
   return (
     <PageShell
-      title="Lead Pipeline"
-      subtitle={loading ? 'Loading leads…' : `${filtered.length} lead${filtered.length !== 1 ? 's' : ''} · ${fmt(metrics.totalVal)} in the pipeline`}
+      title="Leads"
+      subtitle={loading ? undefined : `${leads.length} lead${leads.length !== 1 ? 's' : ''} · ${fmt(metrics.totalVal)} total`}
       actions={
         <>
-          <Button icon={<Globe size={15} />} onClick={() => setWebsiteFormOpen(true)}>Website Form</Button>
-          <Button icon={<DownloadSimple size={15} />} onClick={exportCSV} disabled={filtered.length === 0}>Export CSV</Button>
-          <Button variant="primary" icon={<Plus size={15} weight="bold" />} onClick={() => openEditor(emptyLead())}>New Lead</Button>
+          <Menu
+            label="More lead actions"
+            actions={[
+              { label: 'Website form', icon: <Globe size={14} />, onClick: () => setWebsiteFormOpen(true) },
+              { label: 'Export CSV', icon: <DownloadSimple size={14} />, onClick: exportCSV, disabled: filtered.length === 0 },
+            ]}
+          />
+          <Button variant="primary" icon={<Plus size={15} weight="bold" />} onClick={() => openEditor(emptyLead())}>New lead</Button>
         </>
       }
     >
       {!loading && !error && leads.length > 0 && (
         <StatRow items={[
-          { label: 'Total Pipeline', value: fmt(metrics.totalVal), sub: `${metrics.total} leads` },
-          { label: 'Active Pipeline', value: fmt(metrics.activeVal), sub: 'Open stages only' },
-          { label: 'Won Revenue', value: fmt(metrics.wonVal), sub: `${metrics.byStage['Won']?.count || 0} deals closed`, tone: metrics.wonVal > 0 ? 'good' : 'default' },
-          { label: 'Win Rate', value: `${metrics.winRate}%`, sub: 'Of decided deals', tone: metrics.winRate >= 50 ? 'good' : metrics.winRate >= 25 ? 'warn' : 'bad' },
-          { label: 'Avg Deal Size', value: fmt(metrics.avgDeal), sub: 'Won deals' },
+          { label: 'Open pipeline', value: fmt(metrics.activeVal), sub: `${openCount} open lead${openCount === 1 ? '' : 's'}` },
+          { label: 'Won', value: fmt(metrics.wonVal), sub: `${wonCount} deal${wonCount === 1 ? '' : 's'}`, tone: metrics.wonVal > 0 ? 'good' : 'default' },
+          ...(decided > 0 ? [{ label: 'Win rate', value: `${metrics.winRate}%`, sub: `${wonCount} of ${decided} decided`, tone: (metrics.winRate >= 50 ? 'good' : metrics.winRate >= 25 ? 'warn' : 'bad') as 'good' | 'warn' | 'bad' }] : []),
+          ...(wonCount > 0 ? [{ label: 'Avg won deal', value: fmt(metrics.avgDeal) }] : []),
         ]} />
       )}
 
-      <Card flush>
-        <div style={{ padding: '4px 16px 0' }}>
+      <div className="ldWrap">
+        <style dangerouslySetInnerHTML={{ __html: LD_CSS }} />
+        <div>
           <Tabs
             value={view}
             onChange={(k) => setView(k as View)}
@@ -560,31 +587,36 @@ export default function LeadsPage() {
         </div>
 
         {view !== 'funnel' && view !== 'owners' && (
-          <div style={{ padding: 12 }}>
+          <div className="ldBar" data-more={moreFilters || extraFiltersOn ? 'open' : 'closed'}>
             <Toolbar
               search={search}
               onSearch={setSearch}
               placeholder="Search company, contact, email, tags…"
               filters={
                 <>
-                  <Select aria-label="Stage" options={[...STAGES]} placeholder="All stages" value={stageFilter === 'all' ? '' : stageFilter} onChange={(e) => setStageFilter(e.target.value || 'all')} style={{ width: 150 }} />
-                  <Select aria-label="Source" options={[...SOURCES]} placeholder="All sources" value={sourceFilter === 'all' ? '' : sourceFilter} onChange={(e) => setSourceFilter(e.target.value || 'all')} style={{ width: 150 }} />
+                  <Select aria-label="Stage" options={[...STAGES]} placeholder="All stages" value={stageFilter === 'all' ? '' : stageFilter} onChange={(e) => setStageFilter(e.target.value || 'all')} className="ldF ldW150" />
+                  <Button size="sm" variant="ghost" className="ldMoreBtn" onClick={() => setMoreFilters(v => !v)} aria-expanded={moreFilters || extraFiltersOn}>
+                    {moreFilters || extraFiltersOn ? 'Fewer filters' : 'More filters'}
+                  </Button>
+                  <span className="ldMore">
+                  <Select aria-label="Source" options={[...SOURCES]} placeholder="All sources" value={sourceFilter === 'all' ? '' : sourceFilter} onChange={(e) => setSourceFilter(e.target.value || 'all')} className="ldF ldW150" />
                   <Select
                     aria-label="Owner"
                     options={ownerOptions.map(id => ({ value: id, label: id === 'unassigned' ? 'Unassigned' : ownerName(id) }))}
                     placeholder="All owners"
                     value={ownerFilter === 'all' ? '' : ownerFilter}
                     onChange={(e) => setOwnerFilter(e.target.value || 'all')}
-                    style={{ width: 160 }}
+                    className="ldF ldW160"
                   />
-                  <Input type="number" inputMode="decimal" aria-label="Minimum value" placeholder="Min $" value={valueMin} onChange={(e) => setValueMin(e.target.value)} style={{ width: 100 }} />
-                  <Input type="number" inputMode="decimal" aria-label="Maximum value" placeholder="Max $" value={valueMax} onChange={(e) => setValueMax(e.target.value)} style={{ width: 100 }} />
+                  <Input type="number" inputMode="decimal" aria-label="Minimum value" placeholder="Min $" value={valueMin} onChange={(e) => setValueMin(e.target.value)} className="ldF ldW100" />
+                  <Input type="number" inputMode="decimal" aria-label="Maximum value" placeholder="Max $" value={valueMax} onChange={(e) => setValueMax(e.target.value)} className="ldF ldW100" />
+                  </span>
                 </>
               }
               actions={
                 <>
-                  <span className="k-hint">{filtered.length} of {leads.length}</span>
-                  {filtersOn && <Button size="sm" variant="ghost" onClick={clearFilters}>Clear Filters</Button>}
+                  {filtersOn && <span className="k-hint">{filtered.length} of {leads.length}</span>}
+                  {filtersOn && <Button size="sm" variant="ghost" onClick={clearFilters}>Clear filters</Button>}
                 </>
               }
             />
@@ -620,7 +652,6 @@ export default function LeadsPage() {
           />
         ) : view === 'owners' ? (
           <>
-            <div className="k-hint" style={{ padding: '10px 16px' }}>Click an owner to filter the board and list to their leads.</div>
             <DataTable
               columns={ownerColumns}
               rows={byRep}
@@ -631,8 +662,8 @@ export default function LeadsPage() {
             />
           </>
         ) : view === 'funnel' ? (
-          loading ? <div className="k-card-body k-hint">Loading…</div> : leads.length === 0 ? emptyAll : (
-            <div className="k-card-body" style={{ display: 'flex', flexDirection: 'column', gap: 16 }}>
+          loading ? <div className="k-hint" style={{ padding: '12px 0' }}>Loading…</div> : leads.length === 0 ? emptyAll : (
+            <div style={{ display: 'flex', flexDirection: 'column', gap: 16, paddingTop: 12 }}>
               <div style={{ display: 'flex', flexDirection: 'column', gap: 4, maxWidth: 860 }}>
                 {funnelData.data.map((item, idx) => {
                   const widthPct = Math.max(12, (item.count / funnelData.maxCount) * 100);
@@ -641,7 +672,7 @@ export default function LeadsPage() {
                     <div key={item.stage}>
                       <div style={{ display: 'grid', gridTemplateColumns: '96px minmax(0, 1fr)', alignItems: 'center', gap: 12 }}>
                         <span style={{ textAlign: 'right', fontSize: 'var(--fs-sm)', fontWeight: 600 }}>{item.stage}</span>
-                        <div style={{ width: `${widthPct}%`, minWidth: 140, height: 36, borderRadius: 'var(--radius-sm)', background: 'rgba(251,191,36,0.18)', border: '1px solid rgba(251,191,36,0.4)', display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '0 12px', fontSize: 'var(--fs-sm)', fontWeight: 700, gap: 8 }}>
+                        <div style={{ width: `${widthPct}%`, minWidth: 140, height: 36, borderRadius: 'var(--radius-sm)', background: 'color-mix(in srgb, var(--chart-1) 20%, transparent)', borderLeft: '3px solid var(--chart-1)', display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '0 12px', fontSize: 'var(--fs-sm)', fontWeight: 700, gap: 8 }}>
                           <span>{item.count} lead{item.count !== 1 ? 's' : ''}</span>
                           <span style={{ color: 'var(--text-secondary)' }}>{fmt(item.value)}</span>
                         </div>
@@ -655,26 +686,22 @@ export default function LeadsPage() {
                   );
                 })}
               </div>
-              <StatRow items={[
-                { label: 'Overall Win Rate', value: `${metrics.winRate}%`, tone: metrics.winRate >= 50 ? 'good' : metrics.winRate >= 25 ? 'warn' : 'bad' },
-                { label: 'Avg Deal Size (Won)', value: fmt(metrics.avgDeal) },
-                { label: 'Active Leads', value: leads.filter(l => l.stage !== 'Won' && l.stage !== 'Lost').length },
-              ]} />
-              <Card flush title="Stage Breakdown">
+              <section>
+                <h2 className="ldSec">By stage</h2>
                 <DataTable
                   columns={stageColumns}
                   rows={STAGES.map(s => ({ stage: s, count: metrics.byStage[s]?.count || 0, value: metrics.byStage[s]?.value || 0, pct: metrics.total ? Math.round(((metrics.byStage[s]?.count || 0) / metrics.total) * 100) : 0 }))}
                   rowKey={(r) => r.stage}
                   onRowClick={(r) => { setStageFilter(r.stage); setView('list'); }}
                 />
-              </Card>
+              </section>
             </div>
           )
         ) : loading ? (
-          <div className="k-card-body k-hint">Loading leads…</div>
+          <div className="k-hint" style={{ padding: '12px 0' }}>Loading leads…</div>
         ) : leads.length === 0 ? emptyAll : filtered.length === 0 ? emptyFiltered : (
           /* ═════ BOARD ═════ */
-          <div className="k-board" style={{ padding: '0 12px 12px' }}>
+          <div className="k-board">
             {STAGES.map(stage => {
               const stageLeads = filtered.filter(l => l.stage === stage);
               const stageVal = stageLeads.reduce((s, l) => s + num(l.estimated_value), 0);
@@ -727,7 +754,7 @@ export default function LeadsPage() {
             })}
           </div>
         )}
-      </Card>
+      </div>
 
       {/* ═══════════════════ ADD / EDIT ═══════════════════ */}
       <FormModal

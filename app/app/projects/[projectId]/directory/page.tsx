@@ -16,7 +16,7 @@
  */
 import React, { useCallback, useEffect, useMemo, useState } from 'react';
 import { useParams } from 'next/navigation';
-import { Plus, EnvelopeSimple, Phone, PencilSimple, Trash, UsersThree, Buildings, HardHat, Wrench, WarningCircle, ArrowClockwise, SquaresFour, Rows } from '@phosphor-icons/react';
+import { Plus, EnvelopeSimple, Phone, PencilSimple, Trash, UsersThree, Buildings, Wrench, WarningCircle, ArrowClockwise, SquaresFour, Rows } from '@phosphor-icons/react';
 import {
   PageShell, StatRow, Badge, Button, Toolbar, EmptyState, RowActions, FormModal, FormGrid, Field, Input,
   Toast, useToast, Avatar, CompanyMark, DataTable, type StatItem, type Column,
@@ -150,10 +150,9 @@ export default function ProjectDirectory() {
   const subCount = groups.filter((g) => g.isSub).length;
   const trades = new Set(groups.map((g) => g.trade).filter(Boolean)).size;
   const stats: StatItem[] = [
-    { label: 'Companies', value: loading ? '—' : named.length, sub: loading ? 'Loading…' : `${subCount} on the job as subs`, icon: <Buildings size={15} /> },
-    { label: 'People', value: loading ? '—' : people, sub: loading ? 'Loading…' : `${contacts.filter((c) => c.avatar_url).length} with a photo`, icon: <UsersThree size={15} /> },
-    { label: 'Subcontractors', value: loading ? '—' : subCount, sub: loading ? 'Loading…' : 'From the job’s sub list', icon: <HardHat size={15} /> },
-    { label: 'Trades', value: loading ? '—' : trades, sub: loading ? 'Loading…' : 'Across every company', icon: <Wrench size={15} /> },
+    { label: 'Companies', value: named.length, sub: subCount ? `${subCount} sub${subCount === 1 ? '' : 's'} on the job` : undefined, icon: <Buildings size={15} /> },
+    { label: 'People', value: people, icon: <UsersThree size={15} /> },
+    ...(trades ? [{ label: 'Trades', value: trades, icon: <Wrench size={15} /> }] : []),
   ];
 
   let body: React.ReactNode;
@@ -175,8 +174,8 @@ export default function ProjectDirectory() {
       { key: 'role', header: 'Role', phone: 'show' },
       { key: 'companyName', header: 'Company', phone: 'show' },
       { key: 'trade', header: 'Trade' },
-      { key: 'email', header: 'Email', groupable: false, filterable: false, render: (p) => (p.email ? <a className="k-link" href={mailHref(p.email) ?? undefined} onClick={(e) => e.stopPropagation()}>{p.email}</a> : '—') },
-      { key: 'phone', header: 'Phone', groupable: false, filterable: false, render: (p) => (p.phone ? <a className="k-link" href={telHref(p.phone) ?? undefined} onClick={(e) => e.stopPropagation()}>{p.phone}</a> : '—') },
+      { key: 'email', header: 'Email', groupable: false, filterable: false, render: (p) => (p.email ? <a className="k-link" href={mailHref(p.email) ?? undefined} onClick={(e) => e.stopPropagation()}>{p.email}</a> : '') },
+      { key: 'phone', header: 'Phone', groupable: false, filterable: false, render: (p) => (p.phone ? <a className="k-link" href={telHref(p.phone) ?? undefined} onClick={(e) => e.stopPropagation()}>{p.phone}</a> : '') },
     ];
     body = (
       <DataTable<PersonRow>
@@ -225,7 +224,7 @@ export default function ProjectDirectory() {
         subtitle={ctx?.project?.name || undefined}
         actions={<Button variant="primary" icon={<Plus size={15} weight="bold" />} onClick={() => openAdd()}>Add Someone</Button>}
       >
-        <StatRow items={stats} />
+        {!loading && <StatRow items={stats} />}
         {loadError && (contacts.length > 0 || companies.length > 0) && <p role="alert" className="dirErr">{loadError}</p>}
         {groups.length > 0 && (
           <Toolbar
@@ -344,7 +343,7 @@ const CSS = `
 .dirCo:first-child { border-top: 0; padding-top: 4px; }
 .dirCoHead { display: flex; align-items: center; gap: 12px; min-width: 0; }
 .dirCoText { display: flex; flex-direction: column; gap: 6px; min-width: 0; flex: 1 1 auto; }
-.dirCoName { margin: 0; font-size: var(--fs-lg); font-weight: 800; color: var(--text-primary); line-height: 1.2; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.dirCo .dirCoName { margin: 0; font-size: var(--fs-lg); font-weight: 800; color: var(--text-primary); line-height: 1.2; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
 .dirCoMeta { display: flex; flex-wrap: wrap; align-items: center; gap: 6px 8px; }
 .dirCount { font-size: var(--fs-xs); font-weight: 700; color: var(--text-tertiary); }
 .dirQuick { display: inline-flex; gap: 2px; flex-shrink: 0; }

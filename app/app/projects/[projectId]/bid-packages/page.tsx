@@ -37,7 +37,7 @@ import { layout } from '@/lib/design-tokens';
 import { isBiddingStatus } from '@/lib/bid-deadline';
 import { JacketGatePrompt, JacketSendResult, type SendPayload } from '@/components/JacketSendPanels';
 
-const money = new Intl.NumberFormat('en-US', { style: 'currency', currency: 'USD', minimumFractionDigits: 2, maximumFractionDigits: 2 });
+const money = new Intl.NumberFormat('en-US', { style: 'currency', currency: 'USD', minimumFractionDigits: 0, maximumFractionDigits: 0 });
 const fmt = (n: number) => money.format(Number(n) || 0);
 
 // ─── Types ───────────────────────────────────────────────────────────────────
@@ -60,7 +60,7 @@ type Leveling = { invited: number; responded: number; low: number | null; lowWho
  *  default and an issued package read "Draft". */
 function statusBadge(s: string): { label: string; tone: BadgeTone } {
   if (s === 'open' || s === 'sent') return { label: 'Open', tone: 'lead' };
-  if (s === 'closed') return { label: 'Closed — Award Pending', tone: 'under_contract' };
+  if (s === 'closed') return { label: 'Award pending', tone: 'lead' };
   if (s === 'awarded') return { label: 'Awarded', tone: 'ongoing' };
   return { label: 'Draft', tone: 'neutral' };
 }
@@ -654,9 +654,11 @@ export default function BidPackagesPage() {
     return isNaN(t) ? null : Math.ceil((t - Date.now()) / 86400000);
   };
   const fmtDue = (d?: string | null) => {
-    if (!d) return '—';
+    if (!d) return '';
     const dt = new Date(String(d).slice(0, 10) + 'T12:00:00');
-    return isNaN(dt.getTime()) ? '—' : dt.toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' });
+    if (isNaN(dt.getTime())) return '';
+    const sameYear = dt.getFullYear() === new Date().getFullYear();
+    return dt.toLocaleDateString('en-US', sameYear ? { month: 'short', day: 'numeric' } : { month: 'short', day: 'numeric', year: 'numeric' });
   };
 
   // Row model — the leveling figures each column reads.
@@ -678,7 +680,7 @@ export default function BidPackagesPage() {
 
   const pickStatus = (f: StatusFilter) => setStatusFilter(prev => (prev === f ? 'all' : f));
   const stats: StatItem[] = loading
-    ? ['Packages', 'Open for Bids', 'Award Pending', 'Awarded', 'Bids In'].map(label => ({ label, value: '—', sub: 'Loading…' }))
+    ? []
     : [
         { label: 'Packages', value: packages.length, sub: `${packages.filter(p => matchesStatus(p.status, 'draft')).length} draft`, icon: <Package size={15} />, onClick: () => setStatusFilter('all'), active: statusFilter === 'all' },
         { label: 'Open for Bids', value: openCount, sub: 'Out with the subs', icon: <PaperPlaneTilt size={15} />, onClick: () => pickStatus('open'), active: statusFilter === 'open' },
@@ -701,9 +703,9 @@ export default function BidPackagesPage() {
     { key: 'status', phone: 'show', header: 'Status', accessor: p => STATUS_RANK[p.status] ?? 9, render: p => { const b = statusBadge(p.status); return <Badge tone={b.tone} dot>{b.label}</Badge>; } },
     { key: 'due', phone: 'show', header: 'Bids Due', accessor: p => p.bid_due_date || (p as any).due_date || '', render: p => { const r = rowOf(p); return <span className="bpDue" data-tone={r.due != null && !r.isAwarded ? (r.due < 0 ? 'late' : r.due <= 3 ? 'soon' : undefined) : undefined}>{fmtDue(r.dueRaw)}{r.due != null && !r.isAwarded ? ` · ${r.due < 0 ? `${Math.abs(r.due)}d overdue` : r.due === 0 ? 'due today' : `${r.due}d left`}` : ''}</span>; } },
     { key: 'responses', phone: 'hide', header: 'Invited / Responded', accessor: p => rowOf(p).responded, align: 'right', render: p => { const r = rowOf(p); return <span className="bpMoney">{r.invited} / <span style={{ color: r.responded > 0 ? 'var(--status-ongoing)' : 'var(--text-tertiary)' }}>{r.responded}</span></span>; } },
-    { key: 'low', phone: 'show', header: 'Low Bid / Award', accessor: p => { const r = rowOf(p); return r.isAwarded ? r.awardedAmt : (r.low ?? 0); }, align: 'right', total: 'sum', format: fmt, render: p => { const r = rowOf(p); const who = r.isAwarded ? r.awardedTo : r.det?.lowWho; return <div style={{ textAlign: 'right' }}><span className="bpMoney" style={{ color: r.isAwarded ? 'var(--status-ongoing)' : undefined }}>{r.isAwarded && r.awardedAmt > 0 ? fmt(r.awardedAmt) : r.low != null ? fmt(r.low) : '—'}</span>{who && <span className="bpSub" style={{ marginLeft: 'auto' }}>{who}</span>}</div>; } },
-    { key: 'spread', phone: 'hide', header: 'Spread', accessor: p => rowOf(p).spread ?? -1, render: p => { const r = rowOf(p); return r.spread != null ? <span title={r.spread <= 10 ? 'Tight — market agrees' : r.spread <= 25 ? 'Level scope before award' : 'Wide — check scope gaps'}><Badge tone={spreadTone(r.spread)}>{Math.round(r.spread)}%</Badge></span> : <span className="bpMuted">{r.responded === 1 ? 'Needs 2 bids' : '—'}</span>; } },
-    { key: 'vsBudget', phone: 'hide', header: 'vs Budget', accessor: p => { const r = rowOf(p); return r.budgetEst > 0 && r.low != null ? r.low - r.budgetEst : 0; }, align: 'right', render: p => { const r = rowOf(p); if (r.budgetEst > 0 && r.low != null) return <span className="bpVs bpMoney" data-tone={r.low <= r.budgetEst ? 'under' : 'over'}>{r.low <= r.budgetEst ? '' : '+'}{fmt(r.low - r.budgetEst)}</span>; if (r.budgetEst > 0) return <span className="bpMuted" title="Budget estimate">{fmt(r.budgetEst)}</span>; return <span className="bpMuted">—</span>; } },
+    { key: 'low', phone: 'show', header: 'Low Bid / Award', accessor: p => { const r = rowOf(p); return r.isAwarded ? r.awardedAmt : (r.low ?? 0); }, align: 'right', total: 'sum', format: fmt, render: p => { const r = rowOf(p); const who = r.isAwarded ? r.awardedTo : r.det?.lowWho; return <div style={{ textAlign: 'right' }}><span className="bpMoney" style={{ color: r.isAwarded ? 'var(--status-ongoing)' : undefined }}>{r.isAwarded && r.awardedAmt > 0 ? fmt(r.awardedAmt) : r.low != null ? fmt(r.low) : ''}</span>{who && <span className="bpSub" style={{ marginLeft: 'auto' }}>{who}</span>}</div>; } },
+    { key: 'spread', phone: 'hide', header: 'Spread', accessor: p => rowOf(p).spread ?? -1, render: p => { const r = rowOf(p); return r.spread != null ? <span title={r.spread <= 10 ? 'Tight — market agrees' : r.spread <= 25 ? 'Level scope before award' : 'Wide — check scope gaps'}><Badge tone={spreadTone(r.spread)}>{Math.round(r.spread)}%</Badge></span> : <span className="bpMuted">{r.responded === 1 ? 'Needs 2 bids' : ''}</span>; } },
+    { key: 'vsBudget', phone: 'hide', header: 'vs Budget', accessor: p => { const r = rowOf(p); return r.budgetEst > 0 && r.low != null ? r.low - r.budgetEst : 0; }, align: 'right', render: p => { const r = rowOf(p); if (r.budgetEst > 0 && r.low != null) { const d = r.low - r.budgetEst; return d === 0 ? <span className="bpMuted">On budget</span> : <span className="bpVs bpMoney" data-tone={d < 0 ? 'under' : 'over'}>{d < 0 ? '−' : '+'}{fmt(Math.abs(d))}</span>; } if (r.budgetEst > 0) return <span className="bpMuted" title="Budget estimate">Budget {fmt(r.budgetEst)}</span>; return null; } },
   ];
   const rowActions = (p: BidPackageRow): Action[] => {
     const r = rowOf(p);
@@ -763,10 +765,9 @@ export default function BidPackagesPage() {
           { label: 'Bid Packages' },
         ]}
         title="Bid Packages"
-        subtitle="Solicit, level and award sub bids."
         actions={<Button variant="primary" icon={<Plus size={15} weight="bold" />} onClick={() => { setWizardKey(k => k + 1); setShowWizard(true); }}>Create Bid Package</Button>}
       >
-        {!loadError && <StatRow items={stats} />}
+        {!loadError && stats.length > 0 && <StatRow items={stats} />}
 
         {!loading && !loadError && packages.length > 0 && (
           <Toolbar

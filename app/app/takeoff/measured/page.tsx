@@ -756,11 +756,8 @@ td{padding:8px 10px;border-bottom:1px solid #eee}td.v{font-weight:700;color:#444
       <PremiumSurface>
       <div ref={pageRef} style={{ color: TEXT, fontFamily: 'system-ui,Segoe UI,sans-serif', paddingBottom: conditions.length ? 72 : 0 }}>
         <ModuleHero
-          eyebrow="Measurement-driven · deterministic"
-          eyebrowIcon={<Ruler size={13} weight="fill" color="var(--text-secondary)" />}
           title="Measured"
           accent="Takeoff"
-          subtitle="Add conditions; each explodes into a priced bill and rolls up live."
           actions={<>
             <button onClick={openWizard} title="First-Takeoff Guide" style={ghostButtonStyle} className="pmBtn"><Question size={16} weight="bold" color="var(--text-secondary)" />Guide</button>
             <a href="/app/takeoff/rates" style={{ ...ghostButtonStyle, color: tenantRateCount ? GREEN : 'rgba(255,255,255,0.82)' }} className="pmBtn"><Ic name="costBook" s={18} k="hdr" />Cost catalog{tenantRateCount ? ` · ${tenantRateCount} your rates` : ''}</a>
@@ -790,77 +787,77 @@ td{padding:8px 10px;border-bottom:1px solid #eee}td.v{font-weight:700;color:#444
         })()}
 
         {/* building-type templates — the 60-second cold start */}
-        <SectionCard title="Start from a Building Type" subtitle="Drops a curated condition set — trace each to price it live" icon={<Stack size={17} weight="duotone" color="var(--text-secondary)" />} style={{ marginTop: 8 }}>
+        <SectionCard title="Start from a Building Type" icon={<Stack size={17} weight="duotone" color="var(--text-secondary)" />} style={{ marginTop: 8 }}>
           <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit,minmax(188px,1fr))', gap: 10 }}>
             {BUILDING_TEMPLATES.map((t) => {
               const IconC = TPL_ICON[t.id] || Buildings;
               const active = activeTemplate === t.id;
               return (
-                <button key={t.id} onClick={() => dropTemplate(t.id)} style={{ textAlign: 'left', display: 'flex', flexDirection: 'column', gap: 6, border: `1px solid ${active ? GOLD : LINE}`, background: active ? 'var(--brand-primary-12)' : PANEL, borderRadius: 14, padding: '13px 14px', cursor: 'pointer' }}>
+                <button key={t.id} onClick={() => dropTemplate(t.id)} style={{ textAlign: 'left', display: 'flex', flexDirection: 'column', gap: 6, border: `1px solid ${active ? GOLD : LINE}`, background: 'transparent', borderRadius: 10, padding: '12px 14px', cursor: 'pointer', minHeight: 44 }}>
                   <div style={{ display: 'flex', alignItems: 'center', gap: 9 }}>
                     <span style={{ width: 34, height: 34, borderRadius: 9, display: 'inline-flex', alignItems: 'center', justifyContent: 'center', background: 'var(--bg-surface-2)', flexShrink: 0 }}><IconC size={21} weight="duotone" color="var(--text-secondary)" /></span>
                     <div style={{ fontWeight: 800, fontSize: 14.5, color: TEXT }}>{t.name}</div>
                   </div>
                   <div style={{ fontSize: 12, color: DIM, lineHeight: 1.4 }}>{t.blurb}</div>
-                  <div style={{ marginTop: 'auto', display: 'inline-flex', alignItems: 'center', gap: 5, fontSize: 12, fontWeight: 700, color: active ? GOLD : DIM }}><Stack size={13} weight="bold" />{t.conditions.length} conditions{active ? ' · added' : ''}</div>
+                  <div style={{ marginTop: 'auto', display: 'inline-flex', alignItems: 'center', gap: 5, fontSize: 12, fontWeight: 700, color: active ? TEXT : DIM }}><Stack size={13} weight="bold" />{t.conditions.length} conditions{active ? ' · added' : ''}</div>
                 </button>
               );
             })}
-            <button onClick={chooseBlank} style={{ textAlign: 'left', display: 'flex', flexDirection: 'column', gap: 6, border: `1px dashed ${activeTemplate === 'blank' ? GOLD : LINE}`, background: 'transparent', borderRadius: 14, padding: '13px 14px', cursor: 'pointer' }}>
+            <button onClick={chooseBlank} style={{ textAlign: 'left', display: 'flex', flexDirection: 'column', gap: 6, border: `1px dashed ${activeTemplate === 'blank' ? GOLD : LINE}`, background: 'transparent', borderRadius: 10, padding: '12px 14px', cursor: 'pointer', minHeight: 44 }}>
               <div style={{ display: 'flex', alignItems: 'center', gap: 9 }}>
                 <span style={{ width: 34, height: 34, borderRadius: 9, display: 'inline-flex', alignItems: 'center', justifyContent: 'center', background: 'rgba(255,255,255,0.05)', flexShrink: 0 }}><FileDashed size={21} weight="duotone" color={DIM} /></span>
                 <div style={{ fontWeight: 800, fontSize: 14.5, color: TEXT }}>Blank</div>
               </div>
-              <div style={{ fontSize: 12, color: DIM, lineHeight: 1.4 }}>Start empty — add conditions yourself or trace on the plan.</div>
+              <div style={{ fontSize: 12, color: DIM, lineHeight: 1.4 }}>Start empty.</div>
             </button>
           </div>
         </SectionCard>
 
         {/* AI plan-reading — two crisp entry points */}
-        <SectionCard title="AI Plan Reading" subtitle="Extract conditions, count symbols, or compare revisions." icon={<Sparkle size={17} weight="duotone" color="var(--text-secondary)" />} style={{ marginTop: 16 }}>
+        <SectionCard title="AI Plan Reading" icon={<Sparkle size={17} weight="duotone" color="var(--text-secondary)" />} style={{ marginTop: 16 }}>
           <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit,minmax(250px,1fr))', gap: 12 }}>
-          <label style={{ display: 'flex', gap: 13, alignItems: 'flex-start', border: `1.5px solid color-mix(in srgb, var(--brand-primary) 55%, transparent)`, background: 'linear-gradient(180deg,var(--brand-primary-12),color-mix(in srgb, var(--brand-primary) 3%, transparent))', borderRadius: 14, padding: '15px 16px', cursor: reading ? 'wait' : 'pointer' }}>
+          <label style={{ display: 'flex', gap: 13, alignItems: 'flex-start', border: `1px solid ${LINE}`, background: 'transparent', borderRadius: 10, padding: '14px 16px', cursor: reading ? 'wait' : 'pointer' }}>
             <Ic name="drawings" s={34} k="hero1" />
             <div style={{ flex: 1 }}>
               <div style={{ fontWeight: 800, fontSize: 15, color: TEXT }}>{reading ? 'Reading every sheet…' : 'Read Full Blueprint'}</div>
-              <div style={{ fontSize: 13, color: DIM, marginTop: 3, lineHeight: 1.4 }}>Upload the whole plan-set PDF — AI reads every sheet, extracts all conditions, the engine prices them.</div>
+              <div style={{ fontSize: 13, color: DIM, marginTop: 3, lineHeight: 1.4 }}>Whole plan-set PDF → every condition, priced.</div>
             </div>
             <input ref={blueprintInputRef} type="file" accept="application/pdf,.pdf" disabled={reading} style={{ display: 'none' }} onChange={(e) => { readBlueprint(e.target.files?.[0]); (e.target as HTMLInputElement).value = ''; }} />
           </label>
-          <label style={{ display: 'flex', gap: 13, alignItems: 'flex-start', border: `1.5px solid rgba(56,189,248,0.5)`, background: 'linear-gradient(180deg,rgba(56,189,248,0.10),rgba(56,189,248,0.03))', borderRadius: 14, padding: '15px 16px', cursor: counting ? 'wait' : 'pointer' }}>
+          <label style={{ display: 'flex', gap: 13, alignItems: 'flex-start', border: `1px solid ${LINE}`, background: 'transparent', borderRadius: 10, padding: '14px 16px', cursor: counting ? 'wait' : 'pointer' }}>
             <Ic name="aiCount" s={34} k="hero2" />
             <div style={{ flex: 1 }}>
               <div style={{ fontWeight: 800, fontSize: 15, color: TEXT }}>{counting ? 'Counting symbols…' : 'Count Symbols + Auto-Scale'}</div>
-              <div style={{ fontSize: 13, color: DIM, marginTop: 3, lineHeight: 1.4 }}>Upload one sheet — AI counts doors, fixtures &amp; receptacles, reads the scale, and auto-calibrates the tracer.</div>
+              <div style={{ fontSize: 13, color: DIM, marginTop: 3, lineHeight: 1.4 }}>One sheet → doors, fixtures and receptacles counted, scale set.</div>
             </div>
             <input type="file" accept="image/*" disabled={counting} style={{ display: 'none' }} onChange={(e) => { countSymbols(e.target.files?.[0]); (e.target as HTMLInputElement).value = ''; }} />
           </label>
-          <button onClick={() => { setRevResult(null); setComparing(true); }} style={{ display: 'flex', gap: 13, alignItems: 'flex-start', textAlign: 'left', border: `1.5px solid rgba(251,191,36,0.5)`, background: 'linear-gradient(180deg,rgba(251,191,36,0.10),rgba(251,191,36,0.03))', borderRadius: 14, padding: '15px 16px', cursor: 'pointer' }}>
+          <button onClick={() => { setRevResult(null); setComparing(true); }} style={{ display: 'flex', gap: 13, alignItems: 'flex-start', textAlign: 'left', border: `1px solid ${LINE}`, background: 'transparent', borderRadius: 10, padding: '14px 16px', cursor: 'pointer' }}>
             <Ic name="compareRevs" s={34} k="hero3" />
             <div style={{ flex: 1 }}>
               <div style={{ fontWeight: 800, fontSize: 15, color: TEXT }}>Compare Revisions</div>
-              <div style={{ fontSize: 13, color: DIM, marginTop: 3, lineHeight: 1.4 }}>Upload old + new sheet — AI reports exactly what changed and the cost direction, so nothing slips through.</div>
+              <div style={{ fontSize: 13, color: DIM, marginTop: 3, lineHeight: 1.4 }}>Old and new sheet → what changed and what it costs.</div>
             </div>
           </button>
           </div>
         </SectionCard>
 
         {/* Import an existing takeoff — CSV/Excel quantities + DXF CAD (the migration wedge) */}
-        <SectionCard title="Bring an Existing Takeoff" subtitle="CSV/Excel quantities or AutoCAD DXF — mapped to assemblies & priced live" icon={<FileArrowUp size={17} weight="duotone" color="var(--text-secondary)" />} style={{ marginTop: 16 }}>
+        <SectionCard title="Bring an Existing Takeoff" icon={<FileArrowUp size={17} weight="duotone" color="var(--text-secondary)" />} style={{ marginTop: 16 }}>
           <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit,minmax(250px,1fr))', gap: 12 }}>
-            <label style={{ display: 'flex', gap: 13, alignItems: 'flex-start', border: `1.5px solid rgba(74,222,128,0.5)`, background: 'linear-gradient(180deg,rgba(74,222,128,0.10),rgba(74,222,128,0.03))', borderRadius: 14, padding: '15px 16px', cursor: importing ? 'wait' : 'pointer' }}>
+            <label style={{ display: 'flex', gap: 13, alignItems: 'flex-start', border: `1px solid ${LINE}`, background: 'transparent', borderRadius: 10, padding: '14px 16px', cursor: importing ? 'wait' : 'pointer' }}>
               <FileCsv size={34} weight="duotone" color={GREEN} />
               <div style={{ flex: 1 }}>
                 <div style={{ fontWeight: 800, fontSize: 15, color: TEXT }}>Import CSV / Excel</div>
-                <div style={{ fontSize: 13, color: DIM, marginTop: 3, lineHeight: 1.4 }}>Bring a PlanSwift / STACK / Excel quantity takeoff — each row auto-maps to an assembly and prices through the same engine. Review before it lands.</div>
+                <div style={{ fontSize: 13, color: DIM, marginTop: 3, lineHeight: 1.4 }}>PlanSwift, STACK or Excel quantities, mapped and priced.</div>
               </div>
               <input type="file" accept=".csv,.tsv,.txt,.xlsx,.xls,.xlsm" disabled={!!importing} style={{ display: 'none' }} onChange={(e) => { importQuantities(e.target.files?.[0]); (e.target as HTMLInputElement).value = ''; }} />
             </label>
-            <label style={{ display: 'flex', gap: 13, alignItems: 'flex-start', border: `1.5px solid color-mix(in srgb, var(--brand-primary) 50%, transparent)`, background: 'linear-gradient(180deg,var(--brand-primary-12),color-mix(in srgb, var(--brand-primary) 3%, transparent))', borderRadius: 14, padding: '15px 16px', cursor: importing ? 'wait' : 'pointer' }}>
+            <label style={{ display: 'flex', gap: 13, alignItems: 'flex-start', border: `1px solid ${LINE}`, background: 'transparent', borderRadius: 10, padding: '14px 16px', cursor: importing ? 'wait' : 'pointer' }}>
               <Cube size={34} weight="duotone" color="var(--text-secondary)" />
               <div style={{ flex: 1 }}>
                 <div style={{ fontWeight: 800, fontSize: 15, color: TEXT }}>Import CAD (DXF)</div>
-                <div style={{ fontSize: 13, color: DIM, marginTop: 3, lineHeight: 1.4 }}>Drop an AutoCAD DXF — closed shapes become areas, line work becomes linear runs. Exact quantities, zero tracing.</div>
+                <div style={{ fontSize: 13, color: DIM, marginTop: 3, lineHeight: 1.4 }}>AutoCAD shapes become areas and runs. No tracing.</div>
               </div>
               <input type="file" accept=".dxf" disabled={!!importing} style={{ display: 'none' }} onChange={(e) => { importDxf(e.target.files?.[0]); (e.target as HTMLInputElement).value = ''; }} />
             </label>
@@ -870,7 +867,7 @@ td{padding:8px 10px;border-bottom:1px solid #eee}td.v{font-weight:700;color:#444
 
         {/* live estimate — the fixed bottom bar keeps sell + Save in view; position:sticky here was
             dead (killed by PremiumSurface's overflow:hidden ancestor) */}
-        <div style={{ background: 'var(--bg-surface-2)', border: `1px solid var(--brand-primary-25)`, borderRadius: 14, padding: 20, marginTop: 20 }}>
+        <div style={{ borderTop: `1px solid ${LINE}`, borderBottom: `1px solid ${LINE}`, padding: '20px 0', marginTop: 20 }}>
           <div style={{ display: 'flex', alignItems: 'flex-start', gap: 16, flexWrap: 'wrap' }}>
             <div style={{ flex: 1, minWidth: 180 }}>
               <div style={{ fontSize: 12, color: DIM, fontWeight: 700 }}>Estimate — Computed Live</div>
@@ -1263,7 +1260,7 @@ td{padding:8px 10px;border-bottom:1px solid #eee}td.v{font-weight:700;color:#444
         </SectionCard>
 
         {/* sanity */}
-        {r.sanity.map((f, i) => <div key={i} style={{ display: 'flex', alignItems: 'center', gap: 9, marginTop: 8, padding: '9px 12px', borderRadius: 8, border: `1px solid ${f.level === 'warn' ? 'var(--brand-primary-35)' : LINE}`, background: PANEL, fontSize: 13, color: f.level === 'warn' ? 'var(--warning)' : DIM }}>{f.level === 'warn' ? <Ic name="warnTri" s={17} k={`sn${i}`} /> : <span style={{ width: 7, height: 7, borderRadius: 4, background: DIM, flexShrink: 0 }} />}{f.message}</div>)}
+        {r.sanity.map((f, i) => <div key={i} style={{ display: 'flex', alignItems: 'center', gap: 9, marginTop: 8, padding: '9px 12px', borderRadius: 8, border: `1px solid ${f.level === 'warn' ? 'color-mix(in srgb, var(--warning) 40%, transparent)' : LINE}`, background: PANEL, fontSize: 13, color: f.level === 'warn' ? 'var(--warning)' : DIM }}>{f.level === 'warn' ? <Ic name="warnTri" s={17} k={`sn${i}`} /> : <span style={{ width: 7, height: 7, borderRadius: 4, background: DIM, flexShrink: 0 }} />}{f.message}</div>)}
 
         {/* divisions */}
         {r.byDivision.length > 0 && (
@@ -1314,7 +1311,7 @@ td{padding:8px 10px;border-bottom:1px solid #eee}td.v{font-weight:700;color:#444
             </div>
           )}
 
-          <button onClick={openTracer} style={{ marginTop: 8, width: '100%', display: 'inline-flex', alignItems: 'center', justifyContent: 'center', gap: 8, border: `1px solid var(--brand-primary-35)`, background: 'var(--bg-surface-2)', color: 'var(--text-primary)', borderRadius: 8, padding: '10px', cursor: 'pointer', fontWeight: 700, fontSize: 14 }}><Ic name="penTrace" s={18} k="tracebtn" />Open Plan Tracer → zoom, snap, measure &amp; price on the drawing</button>
+          <button onClick={openTracer} style={{ marginTop: 8, width: '100%', display: 'inline-flex', alignItems: 'center', justifyContent: 'center', gap: 8, border: `1px solid ${LINE}`, background: 'var(--bg-surface-2)', color: 'var(--text-primary)', borderRadius: 8, padding: '10px', cursor: 'pointer', fontWeight: 700, fontSize: 14 }}><Ic name="penTrace" s={18} k="tracebtn" />Open Plan Tracer → zoom, snap, measure &amp; price on the drawing</button>
           {cPts && cPts.length ? <div style={{ color: DIM, fontSize: 12, marginTop: 4 }}><Check size={12} weight="bold" style={{ verticalAlign: '-1px', marginRight: 4 }} />Traced from plan ({cPts.length} points) — value + geometry saved</div> : null}
           <button onClick={addCond} style={{ ...btn, marginTop: 10 }}>+ Add Condition Manually</button>
         </SectionCard>
@@ -1334,10 +1331,10 @@ td{padding:8px 10px;border-bottom:1px solid #eee}td.v{font-weight:700;color:#444
                       {c.instanceCount && c.instanceCount > 1 ? <span style={{ marginLeft: 7, fontSize: 12, fontWeight: 800, color: '#16794a', background: '#eef7ee', borderRadius: 5, padding: '1px 6px' }}>×{c.instanceCount}</span> : null}
                       {(c.building || c.level || c.zone) ? <span style={{ marginLeft: 6, fontSize: 12, fontWeight: 700, color: DIM, border: `1px solid ${LINE}`, borderRadius: 5, padding: '1px 6px' }}>{[c.building, c.level && `L${c.level}`, c.zone].filter(Boolean).join('·')}</span> : null}
                       {c.alternate ? <span style={{ marginLeft: 6, fontSize: 12, fontWeight: 800, color: c.alternateType === 'deduct' ? 'var(--danger)' : 'var(--warning)', background: c.alternateType === 'deduct' ? 'rgba(192,57,43,0.12)' : 'rgba(56,189,248,0.12)', borderRadius: 5, padding: '1px 6px' }}>ALT {c.alternateType === 'deduct' ? '−' : '+'}</span> : null}
-                      {c.note ? <span title={c.note} style={{ marginLeft: 6, fontSize: 12, fontWeight: 700, color: 'var(--text-primary)', border: `1px solid var(--brand-primary-35)`, borderRadius: 5, padding: '1px 6px' }}>note</span> : null}
+                      {c.note ? <span title={c.note} style={{ marginLeft: 6, fontSize: 12, fontWeight: 700, color: 'var(--text-primary)', border: `1px solid ${LINE}`, borderRadius: 5, padding: '1px 6px' }}>note</span> : null}
                       <div style={{ color: DIM, fontSize: 13, marginTop: 2, display: 'flex', alignItems: 'center', gap: 7, flexWrap: 'wrap' }}>{c.value > 0
                       ? <span>{c.value} {unit}{c.heightFt ? ` · ${c.heightFt}′` : ''}{c.thicknessIn ? ` · ${c.thicknessIn}″` : ''} → {lines.length} items</span>
-                      : <><span style={{ display: 'inline-flex', alignItems: 'center', gap: 4, fontSize: 12, fontWeight: 700, color: 'var(--text-primary)', background: 'var(--brand-primary-12)', border: `1px solid var(--brand-primary-35)`, borderRadius: 20, padding: '2px 8px' }}><Ruler size={12} weight="bold" />needs measurement</span><span>{ASSEMBLIES[c.assemblyId]?.name}</span></>}</div></div>
+                      : <><span style={{ display: 'inline-flex', alignItems: 'center', gap: 4, fontSize: 12, fontWeight: 700, color: 'var(--text-primary)', background: 'color-mix(in srgb, var(--warning) 12%, transparent)', border: `1px solid color-mix(in srgb, var(--warning) 40%, transparent)`, borderRadius: 20, padding: '2px 8px' }}><Ruler size={12} weight="bold" />needs measurement</span><span>{ASSEMBLIES[c.assemblyId]?.name}</span></>}</div></div>
                     {/* inline qty editor + targeted Trace — a template/library condition is never a dead end */}
                     <div onClick={(e) => e.stopPropagation()} style={{ display: 'flex', alignItems: 'center', gap: 6, marginRight: 12, flexShrink: 0 }}>
                       {/* Unassigned row (e.g. promoted from Drawings without an assembly) — pick one to
@@ -1383,7 +1380,7 @@ td{padding:8px 10px;border-bottom:1px solid #eee}td.v{font-weight:700;color:#444
             <div style={{ display: 'flex', alignItems: 'center', gap: 12, padding: '16px 20px', borderBottom: `1px solid ${LINE}`, position: 'sticky', top: 0, background: PANEL, borderTopLeftRadius: 18, borderTopRightRadius: 18 }}>
               <div style={{ fontSize: 12, color: 'var(--text-primary)', fontWeight: 800 }}>First Takeoff · 60-Second Start</div>
               <div style={{ marginLeft: 'auto', display: 'flex', gap: 6, alignItems: 'center' }}>
-                {WIZ_STEPS.map((s, i) => <span key={s} title={s} style={{ width: i === wizStep ? 22 : 8, height: 8, borderRadius: 4, background: i === wizStep ? GOLD : i < wizStep ? GREEN : 'rgba(255,255,255,0.15)', transition: 'all .2s' }} />)}
+                {WIZ_STEPS.map((s, i) => <span key={s} title={s} style={{ width: i === wizStep ? 22 : 8, height: 8, borderRadius: 4, background: i === wizStep ? 'var(--chart-1)' : i < wizStep ? GREEN : 'rgba(255,255,255,0.15)', transition: 'all .2s' }} />)}
               </div>
               <button onClick={closeWizard} title="Close" style={{ background: 'none', border: 'none', color: DIM, cursor: 'pointer', display: 'inline-flex' }}><IconX size={20} /></button>
             </div>
@@ -1392,10 +1389,10 @@ td{padding:8px 10px;border-bottom:1px solid #eee}td.v{font-weight:700;color:#444
               {wizStep === 0 && (
                 <div>
                   <div className="k-dialog-title">Pick a Starting Point</div>
-                  <div style={{ fontSize: 14, color: DIM, marginTop: 4, lineHeight: 1.5 }}>Choose the building type — we drop the conditions that type almost always needs (value 0, ready to measure). Or start blank.</div>
+                  <div style={{ fontSize: 14, color: DIM, marginTop: 4, lineHeight: 1.5 }}>A building type, or blank.</div>
                   <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit,minmax(200px,1fr))', gap: 9, marginTop: 14 }}>
                     {BUILDING_TEMPLATES.map((t) => { const IconC = TPL_ICON[t.id] || Buildings; const active = activeTemplate === t.id; return (
-                      <button key={t.id} onClick={() => { dropTemplate(t.id); setWizStep(1); }} style={{ textAlign: 'left', display: 'flex', gap: 10, alignItems: 'center', border: `1px solid ${active ? GOLD : LINE}`, background: active ? 'var(--brand-primary-12)' : BG, borderRadius: 12, padding: '11px 12px', cursor: 'pointer' }}>
+                      <button key={t.id} onClick={() => { dropTemplate(t.id); setWizStep(1); }} style={{ textAlign: 'left', display: 'flex', gap: 10, alignItems: 'center', border: `1px solid ${active ? GOLD : LINE}`, background: BG, borderRadius: 10, padding: '11px 12px', cursor: 'pointer', minHeight: 44 }}>
                         <IconC size={22} weight="duotone" color="var(--text-secondary)" />
                         <div style={{ minWidth: 0 }}><div style={{ fontWeight: 800, fontSize: 14, color: TEXT }}>{t.name}</div><div style={{ fontSize: 12, color: DIM }}>{t.conditions.length} conditions</div></div>
                       </button>
@@ -1455,7 +1452,7 @@ td{padding:8px 10px;border-bottom:1px solid #eee}td.v{font-weight:700;color:#444
                 <div>
                   <div style={{ fontSize: 20, fontWeight: 800, color: TEXT }}>Your Live Estimate</div>
                   <div style={{ fontSize: 14, color: DIM, marginTop: 4, lineHeight: 1.5 }}>Every measured condition rolls up here instantly. Hand a client-ready proposal PDF in one tap.</div>
-                  <div style={{ display: 'flex', alignItems: 'center', gap: 16, marginTop: 14, padding: 16, borderRadius: 12, border: `1px solid var(--brand-primary-25)`, background: 'var(--bg-surface-2)' }}>
+                  <div style={{ display: 'flex', alignItems: 'center', gap: 16, marginTop: 14, padding: 16, borderRadius: 12, border: `1px solid ${LINE}`, background: 'var(--bg-surface-2)' }}>
                     <ConfidenceRing score={confidence.score} />
                     <div style={{ flex: 1, minWidth: 0 }}>
                       <div style={{ fontSize: 30, fontWeight: 800, color: 'var(--text-primary)', fontVariantNumeric: 'tabular-nums' }}>{usd(r.sellCents)}</div>
@@ -1593,7 +1590,7 @@ td{padding:8px 10px;border-bottom:1px solid #eee}td.v{font-weight:700;color:#444
               <button onClick={() => setDxfReview(null)} title="Close" style={{ background: 'none', border: 'none', color: DIM, cursor: 'pointer', display: 'inline-flex' }}><IconX size={20} /></button>
             </div>
             <div style={{ padding: 20, display: 'flex', flexDirection: 'column', gap: 12 }}>
-              {dxfReview.warnings.map((w, i) => <div key={i} style={{ display: 'flex', alignItems: 'flex-start', gap: 7, fontSize: 13, color: 'var(--text-primary)', background: 'var(--bg-surface-2)', border: `1px solid var(--brand-primary-25)`, borderRadius: 8, padding: '8px 10px', lineHeight: 1.4 }}><WarningCircle size={16} weight="bold" style={{ flexShrink: 0, marginTop: 1 }} />{w}</div>)}
+              {dxfReview.warnings.map((w, i) => <div key={i} style={{ display: 'flex', alignItems: 'flex-start', gap: 7, fontSize: 13, color: 'var(--text-primary)', background: 'var(--bg-surface-2)', border: `1px solid color-mix(in srgb, var(--warning) 40%, transparent)`, borderRadius: 8, padding: '8px 10px', lineHeight: 1.4 }}><WarningCircle size={16} weight="bold" style={{ flexShrink: 0, marginTop: 1 }} />{w}</div>)}
 
               {/* Areas bucket */}
               <div style={{ border: `1px solid ${dxfInc.area && dxfReview.areas.length ? GOLD : LINE}`, borderRadius: 12, padding: 14, background: dxfInc.area && dxfReview.areas.length ? 'color-mix(in srgb, var(--brand-primary) 6%, transparent)' : 'transparent', opacity: dxfReview.areas.length ? 1 : 0.5 }}>
@@ -1713,7 +1710,7 @@ td{padding:8px 10px;border-bottom:1px solid #eee}td.v{font-weight:700;color:#444
 
       {/* fixed bottom estimate bar — sell + Save stay in view once conditions exist (replaces the dead sticky) */}
       {conditions.length > 0 && (
-        <div style={{ position: 'fixed', bottom: 0, left: barRect.left, ...(barRect.width ? { width: barRect.width } : { right: 0 }), zIndex: 40, background: 'rgba(13,17,23,0.94)', backdropFilter: 'blur(8px)', borderTop: '1px solid var(--brand-primary-35)', boxShadow: '0 -10px 30px rgba(0,0,0,0.45)', padding: '10px 16px', display: 'flex', alignItems: 'center', gap: 14, flexWrap: 'wrap' }}>
+        <div style={{ position: 'fixed', bottom: 0, left: barRect.left, ...(barRect.width ? { width: barRect.width } : { right: 0 }), zIndex: 40, background: 'rgba(13,17,23,0.94)', backdropFilter: 'blur(8px)', borderTop: '1px solid var(--border-default)', boxShadow: '0 -10px 30px rgba(0,0,0,0.45)', padding: '10px 16px', display: 'flex', alignItems: 'center', gap: 14, flexWrap: 'wrap' }}>
           <div style={{ minWidth: 0 }}>
             <div style={{ fontSize: 12, color: DIM, fontWeight: 700 }}>Sell Price · Live</div>
             <div style={{ fontSize: 22, fontWeight: 800, color: 'var(--text-primary)', letterSpacing: '-0.02em', fontVariantNumeric: 'tabular-nums', lineHeight: 1.1 }}>{usd(r.sellCents)}</div>

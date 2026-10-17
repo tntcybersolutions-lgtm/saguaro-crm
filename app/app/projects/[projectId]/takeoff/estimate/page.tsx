@@ -497,11 +497,10 @@ function EstimatePage() {
   const marginTone = grossMargin > 20 ? 'var(--success)' : grossMargin > 10 ? 'var(--warning)' : 'var(--danger)';
 
   const stats: StatItem[] = [
-    { label: 'Total Cost', value: currency(grandTotal), sub: 'Material + labor', icon: <Calculator size={15} /> },
-    { label: 'Material', value: currency(totalMaterial), sub: 'Rolled up', icon: <Cube size={15} /> },
-    { label: 'Labor', value: currency(totalLabor), sub: `${totalLaborHrs.toFixed(1)} hrs rolled up`, icon: <Users size={15} /> },
-    { label: 'Sell Price', value: currency(sellPrice), sub: `×${markupMultiplier.toFixed(2)} markup`, icon: <Tag size={15} /> },
-    { label: 'Gross Margin', value: `${grossMargin.toFixed(1)}%`, tone: grossMargin > 20 ? 'good' : grossMargin > 10 ? 'warn' : 'bad', sub: 'Of the sell price', icon: <ChartLineUp size={15} /> },
+    { label: 'Total cost', value: currency(grandTotal), sub: `${currency(totalMaterial)} material · ${currency(totalLabor)} labor`, icon: <Calculator size={15} /> },
+    { label: 'Labor hours', value: totalLaborHrs.toFixed(1), icon: <Users size={15} /> },
+    { label: 'Sell price', value: currency(sellPrice), sub: `×${markupMultiplier.toFixed(2)} markup`, icon: <Tag size={15} /> },
+    { label: 'Gross margin', value: `${grossMargin.toFixed(1)}%`, tone: grossMargin > 20 ? 'good' : grossMargin > 10 ? 'warn' : 'bad', sub: 'Of the sell price', icon: <ChartLineUp size={15} /> },
   ];
 
   const editable = (item: LineItem, field: string, value: string | number, width?: number) => {
@@ -550,7 +549,7 @@ function EstimatePage() {
           { label: 'Estimate' },
         ]}
         title="Takeoff Estimate"
-        subtitle={project?.name ? `${project.name} · sheet-by-sheet quantities and live cost.` : 'Sheet-by-sheet quantities and live cost.'}
+        subtitle={project?.name || undefined}
         actions={
           <>
             {/* Client-side nav, deliberately: a full-page <a> unload ABORTED any
@@ -564,13 +563,14 @@ function EstimatePage() {
                 if (tp) selectTakeoff(tp);
               }}
               style={{ width: 'auto', minWidth: 200 }}
-              options={[{ value: '', label: 'Select Takeoff' }, ...takeoffProjects.map(tp => ({ value: tp.id, label: tp.name }))]}
+              options={[{ value: '', label: 'Choose a takeoff' }, ...takeoffProjects.map(tp => ({ value: tp.id, label: tp.name }))]}
             />
             <Button variant="primary" icon={<Plus size={15} weight="bold" />} onClick={createTakeoff}>New Takeoff</Button>
           </>
         }
       >
-        <StatRow items={stats} />
+        {/* Figures once there is something to add up — never a row of $0.00. */}
+        {grandTotal > 0 && <StatRow items={stats} />}
 
         <div className="teGrid" data-detail={rightOpen && selectedItem && detailDraft ? 'true' : 'false'}>
           {/* LEFT — Sheets + Assembly Library */}
@@ -597,7 +597,7 @@ function EstimatePage() {
                 </form>
               )}
               <div className="teScroll" style={{ maxHeight: 360 }}>
-                {sheets.length === 0 && <EmptyState title="No sheets yet" primary={{ label: 'Add Sheet', onClick: () => setAddingSheet(true) }} />}
+                {sheets.length === 0 && !addingSheet && <EmptyState title="No sheets yet" />}
                 {sheets.map(s => (
                   <button
                     key={s.id}

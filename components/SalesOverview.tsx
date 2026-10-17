@@ -16,14 +16,12 @@
 import React, { useEffect, useState, useCallback } from 'react';
 import Link from 'next/link';
 import {
-  TrendUp, CurrencyDollar, Kanban, WarningCircle, CalendarBlank,
-  Target, ArrowRight, CheckCircle,
+  CurrencyDollar, Kanban, WarningCircle, Target, ArrowRight, CheckCircle,
 } from '@phosphor-icons/react';
-import { SectionCard, StatCard, PremiumEmpty } from '@/components/ui/premium';
+import { StatRow, EmptyState, Button, type StatItem } from '@/components/ui/kit';
 import { WinLossBar, DonutRatio } from '@/components/charts';
 
-const GOLD = 'var(--brand-primary)', TEXT = 'var(--text-primary)', DIM = 'rgba(255,255,255,0.62)';
-const BORDER = 'rgba(255,255,255,0.10)', RED = 'var(--danger)', AMBER = 'var(--warning)', GREEN = 'var(--success)';
+const DIM = 'var(--text-tertiary)', RED = 'var(--danger)', AMBER = 'var(--warning)', GREEN = 'var(--success)';
 
 interface FollowUp {
   id: string; what: string; who: string; due: string;
@@ -58,23 +56,36 @@ function dayLabel(iso: string): string {
 }
 
 function FollowUpRow({ f, tone }: { f: FollowUp; tone: string }) {
-  const href = f.leadId ? '/app/leads' : f.projectId ? `/app/projects/${f.projectId}` : '/app/my-work';
+  const href = f.leadId ? `/app/leads/${f.leadId}` : f.projectId ? `/app/projects/${f.projectId}` : '/app/my-work';
   return (
-    <Link
-      href={href}
-      style={{
-        display: 'flex', gap: 10, alignItems: 'baseline', padding: '9px 20px',
-        borderTop: `1px solid ${BORDER}`, textDecoration: 'none',
-      }}
-    >
-      <span style={{ color: tone, fontSize: 13, fontWeight: 800, whiteSpace: 'nowrap', minWidth: 78 }}>
-        {dayLabel(f.due)}
-      </span>
-      <span style={{ color: TEXT, fontSize: 13, flex: 1, minWidth: 0 }}>{f.what}</span>
-      <span style={{ color: DIM, fontSize: 13, whiteSpace: 'nowrap' }}>{f.who}</span>
+    <Link href={href} className="so-row">
+      <span className="so-when" style={{ color: tone }}>{dayLabel(f.due)}</span>
+      <span className="so-what">{f.what}</span>
+      {f.who && <span className="so-who">{f.who}</span>}
     </Link>
   );
 }
+
+/* Flat: figures on the page, rows divided by hairlines, no panels. */
+const SO_CSS = `
+.so { display: flex; flex-direction: column; gap: var(--section-gap, 16px); min-width: 0; }
+.so-charts { display: grid; gap: 24px; grid-template-columns: repeat(auto-fit, minmax(min(100%, 300px), 1fr)); align-items: start; }
+.so-head { display: flex; align-items: baseline; justify-content: space-between; gap: 12px; padding-bottom: 8px; border-bottom: 1px solid var(--border-default); }
+.so-head h2 { margin: 0; font-size: var(--fs-section, 16px); font-weight: 700; color: var(--title-section); }
+.so-head a { font-size: 13px; font-weight: 600; color: var(--link); text-decoration: none; display: inline-flex; align-items: center; gap: 5px; min-height: 44px; }
+.so-group { padding: 12px 0 4px; font-size: 12px; font-weight: 700; letter-spacing: .04em; text-transform: uppercase; }
+.so-row { display: flex; gap: 12px; align-items: baseline; padding: 12px 0; min-height: 44px; box-sizing: border-box; border-bottom: 1px solid var(--border-default); text-decoration: none; }
+.so-row:hover { background: var(--bg-row-hover); }
+.so-when { font-size: 13px; font-weight: 700; white-space: nowrap; min-width: 84px; }
+.so-what { color: var(--text-primary); font-size: 14px; flex: 1; min-width: 0; }
+.so-who { color: var(--text-secondary); font-size: 13px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; max-width: 40%; }
+.so-none { display: flex; align-items: center; gap: 8px; padding: 14px 0; color: var(--text-secondary); font-size: 14px; }
+@media (max-width: 767px) {
+  .so-row { flex-wrap: wrap; row-gap: 2px; }
+  .so-who { max-width: none; flex-basis: 100%; padding-left: 96px; }
+}
+`;
+const FLAT_CHART: React.CSSProperties = { background: 'transparent', border: 'none', boxShadow: 'none', padding: 0, borderRadius: 0 };
 
 export default function SalesOverview({ style }: { style?: React.CSSProperties }) {
   const [d, setD] = useState<Overview | null>(null);
@@ -95,124 +106,81 @@ export default function SalesOverview({ style }: { style?: React.CSSProperties }
   useEffect(() => { load(); }, [load]);
 
   if (loading) {
-    return (
-      <SectionCard title="Sales" icon={<TrendUp size={17} weight="duotone" color="var(--text-secondary)" />} style={style} flush>
-        <div style={{ padding: '18px 20px', color: DIM, fontSize: 13 }}>Loading your pipeline…</div>
-      </SectionCard>
-    );
+    return <div style={style} className="k-hint" aria-busy="true">Loading your pipeline…</div>;
   }
   if (error || !d) {
     return (
-      <SectionCard title="Sales" icon={<TrendUp size={17} weight="duotone" color="var(--text-secondary)" />} style={style} flush>
-        <PremiumEmpty
-          icon={<WarningCircle size={28} weight="duotone" color={RED} />}
-          title="Could not load your sales overview"
-          description={error || 'No data came back.'}
-          tone="error"
-          compact
-          action={<button onClick={load} style={{ padding: '8px 14px', background: 'var(--bg-surface-2)', border: `1px solid var(--brand-primary-25)`, borderRadius: 8, color: 'var(--text-primary)', fontWeight: 700, fontSize: 13, cursor: 'pointer' }}>Try Again</button>}
+      <div style={style}>
+        <EmptyState
+          icon={<WarningCircle size={20} />}
+          title="Couldn't load your sales overview"
+          text={error || 'No data came back.'}
+          action={<Button onClick={load}>Try again</Button>}
         />
-      </SectionCard>
+      </div>
     );
   }
 
   const { contract, pipeline, outcomes, followUps } = d;
-  const stages = Object.entries(pipeline.byStage).sort((a, b) => b[1].value - a[1].value);
+  const stages = Object.entries(pipeline.byStage).filter(([, v]) => v.value > 0).sort((a, b) => b[1].value - a[1].value);
+  const decided = outcomes.wonCount + outcomes.lostCount;
+  const nothingDue = followUps.overdueCount + followUps.todayCount + followUps.upcomingCount === 0;
+
+  /* Every figure routes to the section it summarises — pipeline and win rate
+     to the leads board, past due to the follow-up list on My Work, contract
+     value to the jobs it totals. Past due leads: it is the number a summary
+     is most likely to hide. */
+  const stats: StatItem[] = [
+    { label: 'Past due', value: followUps.overdueCount, icon: <WarningCircle size={15} />, tone: followUps.overdueCount ? 'bad' : 'good',
+      sub: followUps.overdueCount ? `follow-up${followUps.overdueCount === 1 ? '' : 's'} late` : 'Nothing late', href: '/app/my-work' },
+    { label: 'Pipeline', value: money(pipeline.value), icon: <Kanban size={15} />,
+      sub: `${pipeline.openCount} open · ${money(pipeline.weightedValue)} weighted`, href: '/app/leads' },
+    ...(decided > 0 ? [{ label: 'Win rate', value: `${outcomes.winRate ?? 0}%`, icon: <Target size={15} />,
+      sub: `${outcomes.wonCount} won · ${outcomes.lostCount} lost`, href: '/app/leads' } as StatItem] : []),
+    { label: 'Active contracts', value: money(contract.activeValue), icon: <CurrencyDollar size={15} />,
+      sub: `${contract.activeCount} job${contract.activeCount === 1 ? '' : 's'}`, href: '/app/projects' },
+  ];
 
   return (
-    <div style={style}>
-      <div style={{ display: 'grid', gap: 12, gridTemplateColumns: 'repeat(auto-fit, minmax(210px, 1fr))', marginBottom: 16 }}>
-        {/* Every card routes to the section it summarises — contract value to
-            the jobs it totals, pipeline and win rate to the leads board, past
-            due to the follow-up list on My Work. */}
-        <StatCard
-          label="Contract Value"
-          value={money(contract.activeValue)}
-          sub={`${contract.activeCount} active job${contract.activeCount === 1 ? '' : 's'}`}
-          icon={<CurrencyDollar size={17} weight="duotone" color="var(--text-secondary)" />}
-          href="/app/projects"
-        />
-        <StatCard
-          label="Pipeline"
-          value={money(pipeline.value)}
-          sub={`${pipeline.openCount} open · ${money(pipeline.weightedValue)} weighted`}
-          icon={<Kanban size={17} weight="duotone" color="var(--text-secondary)" />}
-          href="/app/leads"
-        />
-        <StatCard
-          label="Past Due"
-          value={String(followUps.overdueCount)}
-          sub={followUps.overdueCount ? 'follow-ups already late' : 'nothing is late'}
-          icon={<WarningCircle size={17} weight="duotone" color={followUps.overdueCount ? RED : GREEN} />}
-          href="/app/my-work"
-        />
-        <StatCard
-          label="Win Rate"
-          value={outcomes.winRate === null ? '—' : `${outcomes.winRate}%`}
-          sub={outcomes.winRate === null ? 'nothing decided yet' : `${outcomes.wonCount} won · ${outcomes.lostCount} lost`}
-          icon={<Target size={17} weight="duotone" color="var(--text-secondary)" />}
-          href="/app/leads"
-        />
-      </div>
+    <div style={style} className="so">
+      <style dangerouslySetInnerHTML={{ __html: SO_CSS }} />
+      <StatRow items={stats} />
 
-      {/* Real tracking graphs — win/loss ratio + pipeline mix, live numbers */}
-      <div style={{ display: 'grid', gap: 12, gridTemplateColumns: 'repeat(auto-fit, minmax(280px, 1fr))', marginBottom: 16 }}>
-        <WinLossBar won={outcomes.wonCount} lost={outcomes.lostCount} title="Win / Loss" subtitle="Closed deals" />
-        {stages.length > 0 && (
-          <DonutRatio
-            title="Pipeline by Stage"
-            data={stages.map(([stage, v]) => ({ label: stage.replace(/_/g, ' '), value: v.value }))}
-            format="currency"
-            centerValue={money(pipeline.value)}
-            centerLabel="Pipeline"
-          />
-        )}
-      </div>
-
-      <SectionCard
-        title="Follow-ups"
-        subtitle="Late first, then today, then the week ahead"
-        icon={<CalendarBlank size={17} weight="duotone" color="var(--text-secondary)" />}
-        action={
-          <Link href="/app/leads" style={{ fontSize: 13, fontWeight: 700, color: 'var(--link)', textDecoration: 'none', display: 'inline-flex', alignItems: 'center', gap: 5 }}>
-            Open leads <ArrowRight size={13} weight="bold" />
-          </Link>
-        }
-        style={{ marginBottom: 16 }}
-        flush
-      >
-        {followUps.overdueCount + followUps.todayCount + followUps.upcomingCount === 0 ? (
-          <PremiumEmpty
-            icon={<CheckCircle size={28} weight="duotone" color={GREEN} />}
-            title="Nothing outstanding"
-            description="No follow-up is late, due today, or falling due this week. Set a next action on a lead and it appears here."
-            compact
-          />
+      <section aria-labelledby="so-fu">
+        <div className="so-head">
+          <h2 id="so-fu">Follow-ups</h2>
+          <Link href="/app/leads">Open leads <ArrowRight size={13} weight="bold" /></Link>
+        </div>
+        {nothingDue ? (
+          <div className="so-none"><CheckCircle size={18} weight="fill" color={GREEN} /> Nothing late, due today or due this week.</div>
         ) : (
           <div>
-            {followUps.overdue.length > 0 && (
-              <div style={{ padding: '10px 20px 2px', color: RED, fontSize: 12, fontWeight: 800 }}>
-                Late · {followUps.overdueCount}
-              </div>
-            )}
+            {followUps.overdue.length > 0 && <div className="so-group" style={{ color: RED }}>Late · {followUps.overdueCount}</div>}
             {followUps.overdue.map(f => <FollowUpRow key={f.id} f={f} tone={RED} />)}
-
-            {followUps.today.length > 0 && (
-              <div style={{ padding: '12px 20px 2px', color: AMBER, fontSize: 12, fontWeight: 800 }}>
-                Today · {followUps.todayCount}
-              </div>
-            )}
+            {followUps.today.length > 0 && <div className="so-group" style={{ color: AMBER }}>Today · {followUps.todayCount}</div>}
             {followUps.today.map(f => <FollowUpRow key={f.id} f={f} tone={AMBER} />)}
-
-            {followUps.upcoming.length > 0 && (
-              <div style={{ padding: '12px 20px 2px', color: DIM, fontSize: 12, fontWeight: 800 }}>
-                Next 7 Days · {followUps.upcomingCount}
-              </div>
-            )}
+            {followUps.upcoming.length > 0 && <div className="so-group" style={{ color: DIM }}>Next 7 days · {followUps.upcomingCount}</div>}
             {followUps.upcoming.map(f => <FollowUpRow key={f.id} f={f} tone={DIM} />)}
           </div>
         )}
-      </SectionCard>
+      </section>
+
+      {(decided > 0 || stages.length > 0) && (
+        <div className="so-charts">
+          {decided > 0 && <WinLossBar won={outcomes.wonCount} lost={outcomes.lostCount} title="Win / loss" style={FLAT_CHART} />}
+          {stages.length > 0 && (
+            <DonutRatio
+              title="Pipeline by stage"
+              data={stages.map(([stage, v]) => ({ label: stage.replace(/_/g, ' '), value: v.value }))}
+              format="currency"
+              centerValue={money(pipeline.value)}
+              centerLabel="Pipeline"
+              size={168}
+              style={FLAT_CHART}
+            />
+          )}
+        </div>
+      )}
     </div>
   );
 }

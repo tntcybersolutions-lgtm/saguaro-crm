@@ -98,6 +98,26 @@ export const COST_CATALOG: Record<string, CostEntry> = {
 
 import type { RateOverrides } from './types';
 
+/* Plain names for the keys whose words are shorthand. Every other key reads
+   from its own words (concrete_cy → "Concrete"). */
+const COST_NAMES: Record<string, string> = {
+  cmu_ea: 'CMU block', cmu_wall_ea: 'CMU wall', tpo_sf: 'TPO roofing', vct_sf: 'VCT flooring', lvt_sf: 'LVT flooring',
+  wwm_sf: 'Welded wire mesh', wrb_sf: 'Weather barrier', agg_base_cy: 'Aggregate base', osb_sheathing_sf: 'OSB sheathing',
+  mod_bit_sf: 'Mod-bit roofing', hvac_sf: 'HVAC', conc_seal_sf: 'Concrete sealer', batt_r19_sf: 'R-19 batt insulation',
+  alum_window_sf: 'Aluminum windows', rigid_insul_sf: 'Rigid insulation', finish_sf: 'Drywall finish',
+  anchor_bolt_set: 'Anchor bolt set', door_hardware_set: 'Door hardware set', door_frame_ea: 'Door and frame',
+  pier_drill_ea: 'Drilled pier', data_drop_ea: 'Data drop', device_ea: 'Electrical device',
+};
+const UNIT_SUFFIX = /_(cy|sf|sy|lf|lb|ea|set)$/;
+
+/** A cost key as a person reads it: "concrete_cy" → "Concrete". The unit is
+ *  shown beside it ("Concrete · CY"), never baked into the name. */
+export function costKeyLabel(costKey: string): string {
+  if (COST_NAMES[costKey]) return COST_NAMES[costKey];
+  const words = String(costKey || '').replace(UNIT_SUFFIX, '').split('_').filter(Boolean).join(' ');
+  return words ? words.charAt(0).toUpperCase() + words.slice(1) : 'Item';
+}
+
 /**
  * Unit material cost (cents) — a tenant's learned/manual rate wins over the book.
  * `regionMultiplier` (city cost index) scales ONLY the national catalog rate; a tenant
