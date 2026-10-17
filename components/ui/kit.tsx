@@ -24,6 +24,7 @@ import { SortBar } from './sort';
 import { EmptyActions, hasEmptyActions, type EmptyActionProps } from './empty-actions';
 import { STATUS_COLORS, type StatusKind } from '@/lib/status-colors';
 import { initialsOf, monoToken } from '@/lib/directory-view';
+import { valueLabel } from '@/lib/value-label';
 import {
   mergeOrder, moveColumn, dropColumn, plainValue, humanValue, rowMatches, cleanFilters, distinctValues,
   viewPayload, stateFromView, runBulk, bulkSummary,
@@ -1460,6 +1461,7 @@ function detailValue(v: React.ReactNode): React.ReactNode {
     const t = v.trim();
     if (EMAIL_RE.test(t)) return <a className="k-link" href={`mailto:${t}`}>{t}</a>;
     if (PHONE_RE.test(t) && t.replace(/\D/g, '').length >= 7) return <a className="k-link" href={`tel:${t.replace(/[^\d+]/g, '')}`}>{t}</a>;
+    return valueLabel(v);
   }
   return v;
 }

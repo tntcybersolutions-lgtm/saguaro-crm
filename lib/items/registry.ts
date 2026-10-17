@@ -10,6 +10,7 @@
  */
 import type { PermCategory } from '@/lib/permission-categories';
 import { PO_STATUSES } from '@/lib/purchase-order-status';
+export { valueLabel } from '@/lib/value-label';
 
 export type FieldKind = 'text' | 'long' | 'date' | 'datetime' | 'money' | 'number' | 'bool' | 'select';
 

@@ -21,7 +21,7 @@ import WorkflowChain from '@/components/submittals/WorkflowChain';
 import type { SubmittalLike } from '@/lib/submittal-workflow';
 import DailyLogSections from '@/components/item/DailyLogSections';
 import { LOG_SECTIONS } from '@/lib/daily-log-sections';
-import { itemTool, itemNumber, nounInSentence, statusLabel, type ItemField, type ItemTool } from '@/lib/items/registry';
+import { itemTool, itemNumber, nounInSentence, statusLabel, valueLabel, type ItemField, type ItemTool } from '@/lib/items/registry';
 
 type Item = Record<string, unknown>;
 type FileRow = { id: string; name: string; size: number | null; kind: string | null; by: string | null; at: string; url: string | null };
@@ -38,7 +38,7 @@ function display(f: ItemField, v: unknown): string {
     case 'date': return new Date(`${String(v).slice(0, 10)}T12:00:00`).toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' });
     case 'datetime': return new Date(String(v)).toLocaleString('en-US', { month: 'short', day: 'numeric', year: 'numeric', hour: 'numeric', minute: '2-digit' });
     case 'select': return statusLabel(String(v));
-    default: return String(v);
+    default: return valueLabel(String(v));
   }
 }
 
