@@ -39,10 +39,19 @@ export interface NavGuardEntry {
   /** The app shell's automatic gate (components/AutoUnsavedGuard): asked only
    *  when no page's own guard is dirty, since a page's guard knows how to save. */
   fallback?: boolean;
+  /** The page keeps its own draft (useUnsavedGuard with a draftKey): the
+   *  shell's automatic draft keeper stands aside on that screen. */
+  ownsDrafts?: () => boolean;
 }
 
 const entries = new Set<NavGuardEntry>();
 let bypassDepth = 0;
+let lastUnguardedAt = 0;
+
+/** True just after a move the user already confirmed (a Back it set off lands a moment later, as popstate). */
+export function justConfirmedLeave(withinMs = 1500): boolean {
+  return Date.now() - lastUnguardedAt < withinMs;
+}
 
 /** Register a dirty-form guard. Returns the unregister function. */
 export function registerNavGuard(entry: NavGuardEntry): () => void {
@@ -55,6 +64,7 @@ export function registerNavGuard(entry: NavGuardEntry): () => void {
 /** Run a navigation without re-entering the guard (used to resume after confirm). */
 export function runUnguarded<T>(fn: () => T): T {
   bypassDepth++;
+  lastUnguardedAt = Date.now();
   try {
     return fn();
   } finally {
@@ -79,6 +89,18 @@ function ordered(): NavGuardEntry[] {
 /** True when a page's own guard (not the shell fallback) holds unsaved work. */
 export function isPageGuardDirty(): boolean {
   for (const e of entries) if (!e.fallback && dirtyOf(e)) return true;
+  return false;
+}
+
+/** True when a mounted page guard keeps its own drafts (so the shell's automatic drafts stay out). */
+export function pageOwnsDrafts(): boolean {
+  for (const e of entries) {
+    try {
+      if (!e.fallback && e.ownsDrafts?.()) return true;
+    } catch {
+      /* a broken predicate must never wedge drafts */
+    }
+  }
   return false;
 }
 

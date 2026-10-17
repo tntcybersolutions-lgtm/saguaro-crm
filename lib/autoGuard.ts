@@ -96,6 +96,41 @@ export function pickSaveButton(labels: string[], submit: boolean[] = []): number
   return best;
 }
 
+/** Buttons that close a form or dialog without saving it (an explicit "Discard" is the user's answer already). */
+const CLOSE_RE = /^(cancel|close|dismiss|not now|never mind|nevermind|×|✕|✖)$/i;
+
+/** True when a button's label or aria-label says it closes the form without saving. */
+export function isCloseLabel(label: string, ariaLabel?: string | null): boolean {
+  const a = String(ariaLabel || '').replace(/\s+/g, ' ').trim();
+  if (a && /^(close|cancel|dismiss)\b/i.test(a)) return true;
+  const l = String(label || '').replace(/\s+/g, ' ').trim();
+  return !!l && CLOSE_RE.test(l);
+}
+
+/**
+ * The thing a form edits, for the leave prompt: "New RFI" → "RFI",
+ * "Edit Punch Item" → "punch item", "Add a change order" → "change order".
+ * Empty when the title says nothing a sentence can use.
+ */
+export function formNoun(title: string | null | undefined): string {
+  let t = String(title || '').replace(/\s+/g, ' ').replace(/\s*[#:·—–|(].*$/, '').trim();
+  t = t.replace(/^(new|edit|add|create|update)\s+(an?\s+|the\s+)?/i, '').replace(/[.…]+$/, '').trim();
+  if (!t || t.length > 32 || !/[a-z]/i.test(t)) return '';
+  const words = t.split(' ');
+  // "Log a delivery", "Send invite" — a sentence, not a thing; "Edit details" — not "this details".
+  if (/^(log|record|start|request|send|invite|upload|schedule|book|take|choose|pick|set|enter|review|sign|share|move|copy|assign)$/i.test(words[0])) return '';
+  const last = words[words.length - 1];
+  if (/[a-z]s$/.test(last) && !/(ss|us|is)$/i.test(last)) return '';
+  // Title Case words read as ordinary words in a sentence; acronyms (RFI, COI) stay.
+  return words.map((w) => (/^[A-Z][a-z]+$/.test(w) ? w.toLowerCase() : w)).join(' ');
+}
+
+/** The leave prompt's sentence. `noun` is what the form edits ("RFI"), when known. */
+export function leaveMessage(noun: string | undefined, hasDraft: boolean): string {
+  const what = noun ? `Your changes to this ${noun} haven't been saved.` : "Your changes haven't been saved.";
+  return hasDraft ? `${what} A draft is kept on this device.` : what;
+}
+
 /** Background requests that are never a form's save. */
 const BACKGROUND_API = /^\/api\/(sage|ai|analytics|telemetry|log|logs|push|presence|heartbeat|track|events|notifications\/(read|seen))/i;
 

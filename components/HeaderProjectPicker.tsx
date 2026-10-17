@@ -27,7 +27,8 @@
 import React, { useEffect, useId, useMemo, useRef, useState } from 'react';
 import { createPortal } from 'react-dom';
 import Link from 'next/link';
-import { usePathname, useRouter } from 'next/navigation';
+import { usePathname } from 'next/navigation';
+import { useGuardedRouter } from '@/lib/navGuard';
 import { CaretUpDown, MagnifyingGlass, Buildings, Check, Plus, ArrowRight, X, CaretDown } from '@phosphor-icons/react';
 import { useProjects } from '@/lib/hooks/useProjects';
 import { ProjectDot, ProjectTile } from '@/components/ui/ProjectColor';
@@ -119,7 +120,8 @@ type Group = { key: string; label: string; items: Proj[] };
  */
 export default function HeaderProjectPicker({ userId = null, variant = 'crumb', title }: { userId?: string | null; variant?: 'crumb' | 'title'; title?: string } = {}) {
   const pathname = usePathname() ?? '';
-  const router = useRouter();
+  // Switching jobs mid-form asks first (unsaved changes), like every other way out.
+  const router = useGuardedRouter();
   const { projects, loading, error, degraded, revalidate } = useProjects();
   const list = useMemo(() => (projects as Proj[]) ?? [], [projects]);
 

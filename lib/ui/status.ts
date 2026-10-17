@@ -16,6 +16,12 @@
 
 export type StepState = 'running' | 'waiting' | 'done' | 'failed' | 'offline';
 
+/** A button on a settled step: Retry on a failure, Undo / Discard on a restored draft. */
+export interface StepAction {
+  label: string;
+  run: () => void;
+}
+
 export interface StatusStep {
   id: number;
   /** Shown while running / waiting. */
@@ -35,6 +41,8 @@ export interface StatusStep {
   net?: boolean;
   /** Posted by a toast (note()); later toasts never merge into it. */
   note?: boolean;
+  /** Buttons shown under the step once it has settled. */
+  actions?: StepAction[];
   startedAt: number;
 }
 
@@ -46,8 +54,13 @@ export interface StatusGroup {
   dismissed: boolean;
 }
 
+/** The one sentence for a write kept on the phone with no signal (outbox, uploads, photos). */
+export const SAVED_OFFLINE = "Saved on this phone — will send when you're back online";
+
 /** How long a finished box stays up. Failures stay until dismissed. */
 export const DONE_LINGER_MS = 3000;
+/** A finished box with a button on it (Undo, Discard) stays long enough to reach it. */
+export const ACTION_LINGER_MS = 10_000;
 
 let seq = 0;
 let groups: StatusGroup[] = [];
@@ -86,11 +99,22 @@ function recompute(g: StatusGroup) {
   if (closeTimer) clearTimeout(closeTimer);
   const anyFailed = g.steps.some((s) => s.state === 'failed');
   if (settled && !anyFailed) {
+    const linger = g.steps.some((s) => s.actions?.length) ? ACTION_LINGER_MS : DONE_LINGER_MS;
     closeTimer = setTimeout(() => {
       const still = groups.find((x) => x.id === g.id);
       if (still && still.settledAt != null && still.steps.every(isSettled)) dismissGroup(g.id);
-    }, DONE_LINGER_MS);
+    }, linger);
   }
+}
+
+/** Run a step's button, then take the buttons off it (each answers once). */
+export function runAction(stepId: number, a: StepAction) {
+  for (const g of groups) {
+    if (!g.steps.some((y) => y.id === stepId)) continue;
+    g.steps = g.steps.map((y) => (y.id === stepId ? { ...y, actions: undefined } : y));
+    recompute(g);
+  }
+  try { a.run(); } catch (e) { console.error('[status] action failed', e); }
 }
 
 export function dismissGroup(id: number) {
@@ -107,12 +131,14 @@ export interface StepHandle {
   offline(result: string, detail?: string): void;
   /** Take the step away without a result (the person cancelled it). */
   drop(): void;
+  /** Put buttons on the step (Retry, Undo); an empty list takes them off. */
+  setActions(actions: StepAction[]): void;
 }
 
 /** Add a step to the open box (or open one). */
-export function step(label: string, o: { state?: StepState; transient?: boolean; detail?: string; note?: boolean } = {}): StepHandle {
+export function step(label: string, o: { state?: StepState; transient?: boolean; detail?: string; note?: boolean; actions?: StepAction[] } = {}): StepHandle {
   const g = currentGroup();
-  const s: StatusStep = { id: ++seq, label, state: o.state ?? 'running', transient: o.transient, detail: o.detail, note: o.note, startedAt: Date.now() };
+  const s: StatusStep = { id: ++seq, label, state: o.state ?? 'running', transient: o.transient, detail: o.detail, note: o.note, actions: o.actions?.length ? o.actions : undefined, startedAt: Date.now() };
   g.steps = [...g.steps, s];
   recompute(g);
   const set = (p: Partial<StatusStep>) => {
@@ -128,6 +154,7 @@ export function step(label: string, o: { state?: StepState; transient?: boolean;
     fail: (result, detail, net) => set({ state: 'failed', result, detail, net, progress: undefined }),
     offline: (result, detail) => set({ state: 'offline', result, detail, progress: undefined }),
     drop: () => set({ state: 'done', transient: true }),
+    setActions: (actions) => set({ actions: actions.length ? actions : undefined }),
   };
 }
 
@@ -155,17 +182,18 @@ export function hasStatusCenter(): boolean { return centers > 0; }
 /* A toast posted into the status box. If the last step settled a moment ago
    (the request that the toast is announcing), the toast's words become that
    step's result instead of a second line saying the same thing. */
-export function note(message: string, ok = true) {
+export function note(message: string, ok = true, actions?: StepAction[]) {
   const g = groups[groups.length - 1];
   const last = g?.steps[g.steps.length - 1];
   // The request the toast announces has just settled with its generic words
   // ("Activity saved"); the page's own words replace them on that one line.
   if (g && last && !last.note && !last.transient && isSettled(last) && Date.now() - last.startedAt < 8000) {
-    g.steps = g.steps.map((y) => (y.id === last.id ? { ...y, result: message, note: true, state: ok ? y.state : 'failed' } : y));
+    // The request's own buttons (Retry) stay unless the page brought its own.
+    g.steps = g.steps.map((y) => (y.id === last.id ? { ...y, result: message, note: true, state: ok ? y.state : 'failed', actions: actions?.length ? actions : ok ? undefined : y.actions } : y));
     recompute(g);
     return;
   }
-  step(message, { state: ok ? 'done' : 'failed', note: true });
+  step(message, { state: ok ? 'done' : 'failed', note: true, actions });
 }
 
 export function __resetStatus() { groups = []; seq = 0; if (closeTimer) clearTimeout(closeTimer); closeTimer = null; emit(); }
