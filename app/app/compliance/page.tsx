@@ -142,23 +142,23 @@ export default function CompliancePage(){
         paperwork. The compliant / at-risk / non-compliant counts live on the
         filter chips above the table, so they are not repeated here. */}
     {!loading&&subs.length>0&&<StatStrip items={[
-      {href: '/app/compliance', label:'Avg Compliance Score', value:typeof summary?.avg_score==='number'?summary.avg_score+'%':'—',
+      {label:'Avg Compliance Score', value:typeof summary?.avg_score==='number'?summary.avg_score+'%':'—',
        accent:typeof summary?.avg_score!=='number'?undefined:summary.avg_score>=80?GREEN:summary.avg_score>=50?AMBER:RED,
        sub:typeof summary?.avg_score==='number'?'Portfolio average':'No subs scored yet'},
-      {href: '/app/compliance', label:'Contract Exposure', value:fmtMoney(exposure), accent:exposure>0?RED:GREEN, sub:totalContract>0?`Of ${fmtMoney(totalContract)} committed sits with non-compliant subs`:'Held by non-compliant subs'},
-      {href: '/app/compliance', label:'W-9s Missing', value:w9Missing, accent:w9Missing>0?AMBER:GREEN, sub:w9Missing>0?'Blocks 1099 filing at year end':'Every sub is 1099-ready'},
+      {label:'Contract Exposure', value:fmtMoney(exposure), accent:exposure>0?RED:GREEN, sub:totalContract>0?`Of ${fmtMoney(totalContract)} committed sits with non-compliant subs`:'Held by non-compliant subs'},
+      {label:'W-9s Missing', value:w9Missing, accent:w9Missing>0?AMBER:GREEN, sub:w9Missing>0?'Blocks 1099 filing at year end':'Every sub is 1099-ready'},
       /* The sub-line branches on THIS stat's own value, like every other tile
          in the strip. It used to branch on certsExpiring, so a portfolio with
          four uninsured subs and nothing expiring printed "no uninsured subs on
          site" directly under the number 4. A tile that contradicts itself
          teaches people to stop reading the tiles. */
-      {href: '/app/compliance', label:'Insurance Gaps', value:noInsurance, accent:noInsurance>0?RED:GREEN,
+      {label:'Insurance Gaps', value:noInsurance, accent:noInsurance>0?RED:GREEN,
        sub: noInsurance>0
          ? `${noInsurance} sub${noInsurance===1?'':'s'} with no current COI${certsExpiring>0?` · ${certsExpiring} more expiring in 30d`:''}`
          : certsExpiring>0
            ? `${certsExpiring} cert${certsExpiring===1?'':'s'} expiring in 30d`
            : 'No uninsured subs on site'},
-      {href: '/app/compliance', label:'Waivers Pending', value:waiversPending, accent:waiversPending>0?AMBER:GREEN, sub:waiversPending>0?'Unsigned — hold payment until released':'Lien rights fully released'},
+      {label:'Waivers Pending', value:waiversPending, accent:waiversPending>0?AMBER:GREEN, sub:waiversPending>0?'Unsigned — hold payment until released':'Lien rights fully released'},
     ]}/>}
 
     {/* Scorecard + detail split */}
@@ -173,7 +173,6 @@ export default function CompliancePage(){
       <SectionCard
         icon={<ShieldCheck size={17} weight="duotone" color="var(--text-secondary)" />}
         title="Compliance Scorecard"
-        subtitle="Click a subcontractor to view the score breakdown"
       >
         {/* Search + filter toolbar */}
         <div style={{display:'flex',gap:10,alignItems:'center',flexWrap:'wrap',marginBottom:16}}>
