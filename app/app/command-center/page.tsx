@@ -150,11 +150,11 @@ export default function CommandCenterPage() {
 
       {/* Portfolio pulse — live KPIs from the same feeds the subpages run on */}
       <StatStrip items={[
-        {href: '/app/command-center',  label: 'Projects', value: String(summary.total), sub: `${summary.green} on track` },
-        {href: '/app/command-center',  label: 'Watch', value: String(summary.yellow), accent: summary.yellow > 0 ? C.yellow : undefined, sub: 'Yellow health' },
+        {label: 'Projects', value: String(summary.total), sub: `${summary.green} on track` },
+        {label: 'Watch', value: String(summary.yellow), accent: summary.yellow > 0 ? C.yellow : undefined, sub: 'Yellow health' },
         {href: '/app/command-center/escalations',  label: 'Escalate', value: String(summary.red), accent: summary.red > 0 ? C.red : undefined, sub: 'Red — act today' },
-        {href: '/app/command-center',  label: 'Portfolio Value', value: fmtMoney(summary.contract), sub: 'Sum of contracts' },
-        {href: '/app/command-center',  label: 'Avg Complete', value: `${summary.avg}%`, sub: 'Across reporting projects' },
+        {label: 'Portfolio Value', value: fmtMoney(summary.contract), sub: 'Sum of contracts' },
+        {label: 'Avg Complete', value: `${summary.avg}%`, sub: 'Across reporting projects' },
         {href: '/app/command-center/risks',  label: 'Open Risks', value: String(modCounts.openRisks), accent: modCounts.critRisks > 0 ? C.red : undefined, sub: modCounts.critRisks ? `${modCounts.critRisks} critical` : 'Register-wide' },
         {href: '/app/command-center/escalations',  label: 'Escalations', value: String(modCounts.openEsc), accent: modCounts.openEsc > 0 ? C.red : undefined, sub: 'Open now' },
         {href: '/app/command-center/long-lead',  label: 'Long-Lead Risk', value: `${modCounts.llAtRisk}/${modCounts.llTotal}`, accent: modCounts.llAtRisk > 0 ? C.yellow : undefined, sub: 'Items off runway' },

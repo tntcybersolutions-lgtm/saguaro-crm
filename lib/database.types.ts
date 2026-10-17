@@ -31377,6 +31377,7 @@ export type Database = {
           assigned_by: string | null
           created_at: string | null
           id: string
+          permissions: Json | null
           project_id: string | null
           role_id: string | null
           tenant_id: string
@@ -31386,6 +31387,7 @@ export type Database = {
           assigned_by?: string | null
           created_at?: string | null
           id?: string
+          permissions?: Json | null
           project_id?: string | null
           role_id?: string | null
           tenant_id: string
@@ -31395,6 +31397,7 @@ export type Database = {
           assigned_by?: string | null
           created_at?: string | null
           id?: string
+          permissions?: Json | null
           project_id?: string | null
           role_id?: string | null
           tenant_id?: string

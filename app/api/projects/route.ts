@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { createServerClient, getUser } from '@/lib/supabase-server';
 import { apiError } from '@/lib/api-error';
+import { jobsClosedTo } from '@/lib/permissions';
 
 export const dynamic = 'force-dynamic';
 
@@ -79,7 +80,10 @@ export async function GET(req: NextRequest) {
     const { data, error } = await query;
     if (error) throw error;
 
-    return NextResponse.json({ projects: data || [] });
+    // A job this person has "No access" on is not in their picker (job roles).
+    const closed = await jobsClosedTo(db, user.id, user.tenantId);
+    const rows = (data || []) as { id: string }[];
+    return NextResponse.json({ projects: closed.size ? rows.filter((p) => !closed.has(p.id)) : rows });
   } catch (e) {
     /* Was `{ projects: [] }` with a 500 — an empty list is what this endpoint
        returns when a tenant genuinely has no projects, so a failure was shaped

@@ -50,6 +50,8 @@ interface UserAssignment {
   roleId: string;
   projectId: string | null;
   projectName: string | null;
+  /** A job row's display ("Foreman", "No access", "Custom") — lib/job-access. */
+  jobLabel: string | null;
   assignedAt: string;
   assignedBy: string;
 }
@@ -260,6 +262,7 @@ function mapAssignment(a: any, us: TenantUser[], ps: TenantProject[]): UserAssig
     roleId: a.roleId,
     projectId: a.projectId ?? null,
     projectName: a.projectName || p?.name || null,
+    jobLabel: a.jobLabel ?? null,
     assignedAt: a.assignedAt ?? new Date().toISOString(),
     assignedBy: a.assignedBy || 'System',
   };
@@ -1061,13 +1064,21 @@ export function AccessManager({ jump, onChanged }: { jump?: { tab: Tab; n: numbe
                                 </span>
                               );
                             })}
-                            {r.projectGrants.length > 0 && (
-                              <span title={r.projectGrants.map(g => `${roles.find(x => x.id === g.roleId)?.name ?? 'Role'} @ ${g.projectName ?? 'Project'}`).join('\n')}
-                                style={{ display: 'inline-flex', alignItems: 'center', background: 'var(--bg-surface-2)', border: `1px solid ${BORDER}`,
-                                  borderRadius: 999, padding: '2px 9px', fontSize: 12, fontWeight: 700, color: AMBER }}>
-                                {r.projectGrants.length} project-scoped
-                              </span>
-                            )}
+                            {/* Jobs where this person's job role replaces the company
+                                role — one chip per job, straight to that job's access. */}
+                            {r.projectGrants.map(g => {
+                              const label = g.jobLabel ?? roles.find(x => x.id === g.roleId)?.name ?? 'Role';
+                              const none = label === 'No access';
+                              return (
+                                <a key={g.id} href={g.projectId ? `/app/projects/${g.projectId}/team#job-access` : undefined}
+                                  title={`${g.projectName ?? 'Job'}: ${label}`}
+                                  style={{ display: 'inline-flex', alignItems: 'center', gap: 5, maxWidth: 240, background: 'var(--bg-surface-2)', border: `1px solid ${none ? RED : BORDER}`,
+                                    borderRadius: 999, padding: '2px 9px', fontSize: 12, fontWeight: 600, color: TEXT, textDecoration: 'none' }}>
+                                  <span style={{ overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap', minWidth: 0 }}>{g.projectName ?? 'Job'}</span>
+                                  <span style={{ color: none ? RED : 'var(--text-secondary)', fontWeight: 700, flex: 'none' }}>· {label}</span>
+                                </a>
+                              );
+                            })}
                           </span>
                         )}
                       </td>
@@ -1435,7 +1446,7 @@ export function AccessManager({ jump, onChanged }: { jump?: { tab: Tab; n: numbe
                       <td style={{ padding: '10px 12px' }}>
                         <span style={{ display: 'inline-flex', alignItems: 'center', gap: 6 }}>
                           <div style={{ width: 8, height: 8, borderRadius: '50%', background: role?.color ?? BORDER }} />
-                          <span style={{ color: TEXT, fontWeight: 500 }}>{role?.name ?? 'Unknown'}</span>
+                          <span style={{ color: TEXT, fontWeight: 500 }}>{a.jobLabel ?? role?.name ?? 'Unknown'}</span>
                         </span>
                       </td>
                       <td style={{ padding: '10px 12px', color: a.projectName ? AMBER : DIM, fontSize: 12 }}>

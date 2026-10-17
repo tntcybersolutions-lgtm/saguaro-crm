@@ -3,11 +3,11 @@ import React, { useState, useEffect, useCallback } from 'react';
 import { useProjects } from '@/lib/hooks/useProjects';
 import Link from 'next/link';
 import { Skeleton } from '../../../components/ui/Skeleton';
-import { WarningCircle, FileText, CaretRight, Buildings, ShieldCheck } from '@phosphor-icons/react';
+import { WarningCircle, CaretRight, Buildings } from '@phosphor-icons/react';
 import { PremiumSurface, ModuleHero, SectionCard, PremiumEmpty, StatStrip, goldButtonStyle, goldOutlineButtonStyle } from '@/components/ui/premium';
+import { Badge, type BadgeTone } from '@/components/ui/kit';
 
-const GOLD = 'var(--brand-primary)';
-const BORDER = 'rgba(255,255,255,0.12)';
+const LINE = 'var(--border-default)';
 const DIM = 'var(--text-secondary)';
 const TEXT = 'var(--text-primary)';
 const RED = 'var(--danger)';
@@ -21,12 +21,15 @@ interface Project {
   status?: string | null;
 }
 
-const statusStyle = (s: string): { color: string; bg: string } => {
+/* Job status -> the shared badge tones (lib/status-colors). */
+const statusTone = (s: string): BadgeTone => {
   const k = (s || '').toLowerCase();
-  if (k.includes('active') || k.includes('progress')) return { color: 'var(--success)', bg: 'rgba(74,222,128,.12)' };
-  if (k.includes('complete') || k.includes('closed')) return { color: 'var(--warning)', bg: 'rgba(251,191,36,.12)' };
-  return { color: 'var(--warning)', bg: 'color-mix(in srgb, var(--warning) 12%, transparent)' };
+  if (k.includes('active') || k.includes('progress')) return 'ongoing';
+  if (k.includes('complete') || k.includes('closed')) return 'completed';
+  return 'neutral';
 };
+const statusLabel = (s: string) => { const t = (s || '').replace(/_/g, ' '); return t.charAt(0).toUpperCase() + t.slice(1); };
+const weekStr = (iso: string) => { const d = new Date(String(iso).slice(0, 10) + 'T12:00:00'); return isNaN(d.getTime()) ? '' : d.toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' }); };
 
 export default function CertifiedPayrollPage() {
   // W-4: the shared projects cache — revisits paint instantly.
@@ -38,7 +41,7 @@ export default function CertifiedPayrollPage() {
   // Org-wide WH-347 rollup — /api/payroll/list without a projectId returns
   // every certified payroll on the tenant, so the module opens knowing what
   // has been filed, for how much gross, and how recently.
-  const [records, setRecords] = useState<{ id: string; week_ending: string; employee_count: number; total_gross: number; status: string }[]>([]);
+  const [records, setRecords] = useState<{ id: string; project_id: string | null; week_ending: string; employee_count: number; total_gross: number; status: string }[]>([]);
   useEffect(() => {
     fetch('/api/payroll/list')
       .then(r => r.json())
@@ -48,7 +51,15 @@ export default function CertifiedPayrollPage() {
   const grossFiled = records.reduce((s, r) => s + (Number(r.total_gross) || 0), 0);
   const lastFiled = records[0] || null;
   const certifiedCount = records.filter(r => (r.status || '').toLowerCase() === 'certified').length;
-  const fmt0 = (n: number) => '$' + (Number(n) || 0).toLocaleString('en-US', { maximumFractionDigits: 0 });
+  const fmt0 = (n: number) => (Number(n) || 0).toLocaleString('en-US', { style: 'currency', currency: 'USD', minimumFractionDigits: 0, maximumFractionDigits: 0 });
+  /* Each job's own WH-347s: how many, the gross, and the latest week (records arrive newest-first). */
+  const byProject = new Map<string, { count: number; gross: number; last: string }>();
+  for (const r of records) {
+    if (!r.project_id) continue;
+    const m = byProject.get(r.project_id) || { count: 0, gross: 0, last: r.week_ending };
+    m.count++; m.gross += Number(r.total_gross) || 0;
+    byProject.set(r.project_id, m);
+  }
 
   const load = useCallback(() => { revalidate(); }, [revalidate]);
 
@@ -66,43 +77,40 @@ export default function CertifiedPayrollPage() {
       {/* Header */}
       <ModuleHero
         eyebrow="Compliance"
-        eyebrowIcon={<ShieldCheck size={13} weight="fill" color="var(--text-secondary)" />}
         title="Certified"
         accent="Payroll"
-        subtitle="WH-347 certified payroll for Davis-Bacon work, per project."
+        subtitle="WH-347 for Davis-Bacon work, by job"
       />
 
       {/* Org-wide compliance rollup — real filed totals, Number-coerced */}
       {!loading && (
         <StatStrip items={[
-          {href: '/app/certified-payroll',  label: 'Projects', value: String(projects.length), sub: projects.filter(p => ((p.status || '').toLowerCase().includes('active') || (p.status || '').toLowerCase().includes('progress'))).length + ' active' },
-          {href: '/app/certified-payroll',  label: 'WH-347s Filed', value: String(records.length), sub: records.length > 0 ? 'Across all projects' : 'None filed yet' },
-          {href: '/app/certified-payroll',  label: 'Gross Wages Certified', value: fmt0(grossFiled), accent: grossFiled > 0 ? 'var(--success)' : undefined, sub: 'Total across filed payrolls' },
-          {href: '/app/certified-payroll',  label: 'Last Filed Week', value: lastFiled ? lastFiled.week_ending : '—', sub: lastFiled ? (Number(lastFiled.employee_count) || 0) + ' employees · ' + fmt0(Number(lastFiled.total_gross) || 0) : 'Open a project to file' },
-          {href: '/app/certified-payroll',  label: 'Certified', value: String(certifiedCount), sub: (records.length - certifiedCount) + ' submitted / draft' },
+          { label: 'Projects', value: String(projects.length), sub: projects.filter(p => ((p.status || '').toLowerCase().includes('active') || (p.status || '').toLowerCase().includes('progress'))).length + ' active' },
+          { label: 'WH-347s Filed', value: String(records.length) },
+          { label: 'Gross Wages Filed', value: fmt0(grossFiled) },
+          { label: 'Last Filed Week', value: lastFiled ? weekStr(lastFiled.week_ending) : 'None', sub: lastFiled ? (Number(lastFiled.employee_count) || 0) + ' employees · ' + fmt0(Number(lastFiled.total_gross) || 0) : undefined },
+          { label: 'Certified', value: String(certifiedCount), sub: records.length - certifiedCount > 0 ? (records.length - certifiedCount) + ' submitted or draft' : undefined },
         ]} />
       )}
 
       {/* Projects list */}
       <SectionCard
         title="Projects"
-        icon={<Buildings size={17} weight="duotone" color="var(--text-secondary)" />}
         flush
         action={
           <input
+            className="k-input"
             value={search}
             onChange={e => setSearch(e.target.value)}
             placeholder="Search projects…"
-            style={{
-              background: 'rgba(255,255,255,0.04)', border: `1px solid ${BORDER}`, borderRadius: 10,
-              color: TEXT, fontSize: 13, padding: '9px 14px', outline: 'none', minWidth: 220,
-            }}
+            aria-label="Search projects"
+            style={{ minWidth: 0, width: 240, maxWidth: '100%' }}
           />
         }
       >
         {loading ? (
           Array.from({ length: 4 }).map((_, i) => (
-            <div key={i} style={{ padding: '16px 20px', borderBottom: i < 3 ? `1px solid rgba(255,255,255,0.06)` : 'none' }}>
+            <div key={i} style={{ padding: '16px 0', borderBottom: i < 3 ? `1px solid ${LINE}` : 'none' }}>
               <Skeleton height={15} width="40%" />
               <div style={{ height: 6 }} />
               <Skeleton height={11} width="60%" />
@@ -121,47 +129,42 @@ export default function CertifiedPayrollPage() {
             icon={<Buildings size={30} weight="duotone" color="var(--text-secondary)" />}
             title={projects.length === 0 ? 'No projects yet' : 'No projects match your search'}
             description={projects.length === 0
-              ? 'Certified payroll is filed per project — create a project first, then file a WH-347 for every week worked on Davis-Bacon or public jobs.'
-              : 'Try a different search term.'}
+              ? undefined
+              : 'Try a different search'}
             action={projects.length === 0
               ? <Link href="/app/projects" style={goldButtonStyle} className="pmBtn">Go to Projects</Link>
               : undefined}
           />
         ) : (
           filtered.map((p, idx) => {
-            const st = statusStyle(p.status || '');
+            const filed = byProject.get(p.id);
             return (
               <Link
                 key={p.id}
                 href={`/app/projects/${p.id}/payroll`}
                 style={{
-                  display: 'flex', alignItems: 'center', gap: 14, textDecoration: 'none',
-                  padding: '16px 20px',
-                  borderBottom: idx < filtered.length - 1 ? `1px solid rgba(255,255,255,0.06)` : 'none',
+                  display: 'flex', alignItems: 'center', gap: 14, textDecoration: 'none', flexWrap: 'wrap',
+                  padding: '14px 0', minHeight: 56,
+                  borderBottom: idx < filtered.length - 1 ? `1px solid ${LINE}` : 'none',
                 }}
               >
-                <span style={{
-                  width: 38, height: 38, borderRadius: 8, background: 'var(--bg-surface-2)',
-                  display: 'inline-flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0,
-                }}>
-                  <FileText size={18} weight="regular" color="var(--text-secondary)" />
-                </span>
-                <div style={{ flex: 1, minWidth: 0 }}>
+                <div style={{ flex: '1 1 260px', minWidth: 0 }}>
                   <div style={{ fontSize: 14, fontWeight: 700, color: TEXT, whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>
                     {p.name || p.project_number || 'Untitled Project'}
                   </div>
-                  <div style={{ fontSize: 12, color: DIM, marginTop: 2, whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>
-                    {[p.project_number, p.address].filter(Boolean).join(' · ') || 'No address set'}
-                  </div>
+                  {[p.project_number, p.address].filter(Boolean).length > 0 && (
+                    <div style={{ fontSize: 13, color: DIM, marginTop: 2, whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>
+                      {[p.project_number, p.address].filter(Boolean).join(' · ')}
+                    </div>
+                  )}
                 </div>
-                {p.status && (
-                  <span style={{
-                    fontSize: 12, fontWeight: 700, padding: '3px 9px', borderRadius: 4,
-                    background: st.bg, color: st.color, textTransform: 'capitalize', whiteSpace: 'nowrap',
-                  }}>{(p.status || '').replace(/_/g, ' ')}</span>
-                )}
-                <span style={{ fontSize: 12, fontWeight: 700, color: 'var(--text-primary)', whiteSpace: 'nowrap' }}>Open Payroll</span>
-                <CaretRight size={16} weight="bold" color={DIM} />
+                {/* What has been filed on this job: the figure a GC opens this page for. */}
+                <div style={{ textAlign: 'right', fontVariantNumeric: 'tabular-nums', minWidth: 120 }}>
+                  <div style={{ fontSize: 14, fontWeight: 700, color: TEXT }}>{filed ? fmt0(filed.gross) : '$0'}</div>
+                  <div style={{ fontSize: 12, color: DIM }}>{filed ? `${filed.count} WH-347${filed.count === 1 ? '' : 's'} · last ${weekStr(filed.last)}` : 'None filed'}</div>
+                </div>
+                {p.status && <Badge tone={statusTone(p.status)} dot>{statusLabel(p.status)}</Badge>}
+                <CaretRight size={16} weight="bold" color={DIM} aria-hidden />
               </Link>
             );
           })

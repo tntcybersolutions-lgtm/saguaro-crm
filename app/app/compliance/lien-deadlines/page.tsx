@@ -10,7 +10,7 @@ import {
   PremiumSurface,
   ModuleHero,
   SectionCard,
-  StatCard,
+  StatStrip,
   PremiumEmpty,
   goldButtonStyle,
   ghostButtonStyle, secondaryButtonStyle
@@ -264,30 +264,15 @@ export default function LienDeadlinePage() {
         }
       />
 
-      {/* Summary row */}
-      <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(180px, 1fr))', gap: 12, marginBottom: 24 }}>
-        <StatCard
-          icon={<WarningCircle size={19} weight="duotone" color={RED} />}
-          label="Overdue" value={String(overdueCount)} accent={RED}
-          sub={overdueCount === 1 ? '1 past due' : `${overdueCount} past due`}
-          delay={0.02}
-         href="/app/compliance/lien-deadlines"/>
-        <StatCard
-          icon={<Clock size={19} weight="duotone" color={AMBER} />}
-          label="Due in 7 Days" value={String(due7Count)} accent={AMBER}
-          sub="Needs action" delay={0.06}
-         href="/app/compliance/lien-deadlines"/>
-        <StatCard
-          icon={<CalendarCheck size={19} weight="duotone" color="var(--text-secondary)" />}
-          label="Due in 30 Days" value={String(due30Count)} accent={BLUE}
-          sub="Upcoming" delay={0.10}
-         href="/app/compliance/lien-deadlines"/>
-        <StatCard
-          icon={<CalendarDots size={19} weight="duotone" color={GRAY} />}
-          label="Future" value={String(futureCount)} accent={GRAY}
-          sub="Beyond 30 days" delay={0.14}
-         href="/app/compliance/lien-deadlines"/>
-      </div>
+      {/* Summary — one flat strip, once there are deadlines to count */}
+      {sorted.length > 0 && (
+        <StatStrip items={[
+          { label: 'Overdue', value: String(overdueCount), accent: overdueCount > 0 ? RED : undefined },
+          { label: 'Due in 7 Days', value: String(due7Count), accent: due7Count > 0 ? AMBER : undefined },
+          { label: 'Due in 30 Days', value: String(due30Count) },
+          { label: 'Later', value: String(futureCount) },
+        ]} />
+      )}
 
       {/* Add Deadline Form */}
       {showAdd && (
@@ -384,18 +369,18 @@ export default function LienDeadlinePage() {
           Loading deadlines…
         </div>
       ) : sorted.length === 0 ? (
-        <SectionCard>
+        <div>
           <PremiumEmpty
             icon={<CalendarBlank size={30} weight="duotone" color="var(--text-secondary)" />}
             title="No Deadlines"
-            description="Add your first lien deadline to start tracking preliminary notices, mechanic's liens, stop notices, and bond claims."
+            description="Notices, liens and bond claims, each with its due date."
             action={
               <button onClick={() => setShowAdd(true)} className="pmBtn" style={secondaryButtonStyle}>
                 <Plus size={15} weight="bold" /> Add Deadline
               </button>
             }
           />
-        </SectionCard>
+        </div>
       ) : (
         <SectionCard flat
           title="Upcoming Deadlines"

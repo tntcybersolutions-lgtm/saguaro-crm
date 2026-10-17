@@ -123,7 +123,7 @@ export default function ImportPage() {
       subtitle="Bring your jobs, customers and leads over from Buildertrend, JobTread, CoConstruct or a spreadsheet."
     >
       <div className="k-form-col" style={{ display: 'grid', gap: 16 }}>
-        <Card title="1. What are you importing?" subtitle={active.hint}>
+        <Card title="What are you importing?" subtitle={active.hint}>
           <div role="tablist" style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: 8 }}>
             {KINDS.map((k) => (
               <Button key={k.key} variant={k.key === kind ? 'primary' : 'secondary'} onClick={() => switchKind(k.key)} aria-pressed={k.key === kind}>{k.label}</Button>
@@ -131,8 +131,8 @@ export default function ImportPage() {
           </div>
         </Card>
 
-        <Card title="2. Choose the export file" subtitle="CSV or Excel (.xlsx). Up to 1,000 rows at a time.">
-          <label style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 10, minHeight: 64, borderRadius: 12, border: '2px dashed var(--brand-primary)', color: 'var(--text-primary)', fontWeight: 800, cursor: 'pointer', padding: 12, textAlign: 'center' }}>
+        <Card title="Export file" subtitle="CSV or Excel (.xlsx). Up to 1,000 rows at a time.">
+          <label style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 10, minHeight: 64, borderRadius: 12, border: '1.5px dashed var(--border-strong)', color: 'var(--text-primary)', fontWeight: 800, cursor: 'pointer', padding: 12, textAlign: 'center' }}>
             <UploadSimple size={22} weight="bold" color="var(--text-secondary)" />
             {fileName ? `${fileName} — ${dataRows.length} rows. Tap to pick another.` : 'Tap to choose a file'}
             <input type="file" accept=".csv,.xlsx,.xls,text/csv" style={{ display: 'none' }} onChange={(e) => { void choose(e.target.files?.[0]); e.target.value = ''; }} />
@@ -141,7 +141,7 @@ export default function ImportPage() {
         </Card>
 
         {table.length > 0 && (
-          <Card title="3. Check the columns" subtitle="We matched these from your file's headers. Change any that are wrong.">
+          <Card title="Columns" subtitle="Matched from your file. Change any that are wrong.">
             <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(min(100%, 260px), 1fr))', gap: 12 }}>
               {fields.map((f) => (
                 <label key={f.key} style={{ display: 'grid', gap: 4, fontWeight: 700, color: 'var(--text-primary)' }}>
@@ -163,7 +163,7 @@ export default function ImportPage() {
 
         {table.length > 0 && missingRequired.length === 0 && (
           <Card
-            title="4. Import"
+            title="Import"
             subtitle={`${ready} of ${dataRows.length} rows are ready. Anything already in Saguaro is skipped.`}
             actions={<Button variant="primary" onClick={run} disabled={running || ready === 0}>{running ? `Importing ${done} of ${bodies.length}…` : `Import ${ready} ${active.label.toLowerCase()}`}</Button>}
           >

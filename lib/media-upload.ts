@@ -229,24 +229,30 @@ export interface VideoUploadOpts {
   projectId: string;
   folder?: string;
   onProgress?: (fraction: number) => void;
+  /** The phone's id for this video (lib/offline/client-id). Left out: one per File, so a retry of the same pick is never filed twice. */
+  clientId?: string;
 }
 
 /** One video, any size up to the bucket limit, into the project's library. */
 export async function uploadVideo(file: File, o: VideoUploadOpts): Promise<Record<string, unknown>> {
   const h = await getAuthHeaders();
-  const info = await readVideoInfo(file);
-  const sign = async (fileName: string) =>
+  // The video's own sign + record calls carry the phone's id; the poster's sign does not.
+  const withId = { ...h, [CLIENT_ID_HEADER]: o.clientId ?? clientIdFor(file) };
+  const sign = async (fileName: string, headers: Record<string, string> = h) =>
     (await jsonOrThrow(
       await fetch('/api/files/upload-url', {
         method: 'POST',
-        headers: { ...h, 'Content-Type': 'application/json' },
+        headers: { ...headers, 'Content-Type': 'application/json' },
         body: JSON.stringify({ projectId: o.projectId, fileName }),
       }),
       "Couldn't start the upload.",
-    )) as unknown as SignedUpload;
+    )) as unknown as SignedUpload & { existing?: Record<string, unknown> };
 
   const name = file.name || `video-${Date.now()}.mp4`;
-  const up = await sign(name);
+  const up = await sign(name, withId);
+  // Already filed by an earlier send of this same video: nothing to upload.
+  if (up.existing && typeof up.existing === 'object') { o.onProgress?.(1); return up.existing; }
+  const info = await readVideoInfo(file);
   await putSigned(up, file, (f) => o.onProgress?.(f * 0.95));
 
   let posterPath: string | null = null;
@@ -263,7 +269,7 @@ export async function uploadVideo(file: File, o: VideoUploadOpts): Promise<Recor
   const rec = await jsonOrThrow(
     await fetch('/api/files/record', {
       method: 'POST',
-      headers: { ...h, 'Content-Type': 'application/json' },
+      headers: { ...withId, 'Content-Type': 'application/json' },
       body: JSON.stringify({
         path: up.path,
         fileName: name,

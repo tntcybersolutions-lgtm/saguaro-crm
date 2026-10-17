@@ -66,7 +66,8 @@ function billBadge(status: string): { label: string; tone: BadgeTone } {
 }
 
 // Cents when there are cents: a $602.73 bill must not read "$603".
-const fmt = (n: number) => '$' + ((Number(n) || 0).toLocaleString('en-US', { minimumFractionDigits: 0, maximumFractionDigits: 2 }));
+/* Currency style puts the sign first: -$111,256, never $-111,256. */
+const fmt = (n: number) => (Number(n) || 0).toLocaleString('en-US', { style: 'currency', currency: 'USD', minimumFractionDigits: 0, maximumFractionDigits: 2 });
 
 function plus30() {
   const d = new Date(Date.now() + 30 * 86400000);
@@ -75,7 +76,7 @@ function plus30() {
 
 /** Date-only values parse at local noon so they never shift a day under UTC. */
 function fmtDate(iso: string | null | undefined): string {
-  if (!iso) return '—';
+  if (!iso) return '';
   const d = iso.length <= 10 ? new Date(iso + 'T12:00:00') : new Date(iso);
   if (isNaN(d.getTime())) return iso;
   return d.toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' });
@@ -398,7 +399,7 @@ export default function BillsPage() {
   const stats: StatItem[] = [
     { label: 'Bills', value: loading ? '—' : String(bills.length), sub: loading ? undefined : `${paidCount} paid`, icon: <Receipt size={15} />, onClick: () => setStatusFilter('all'), active: statusFilter === 'all' },
     { label: 'Awaiting payment', value: loading ? '—' : fmt(pendingTotal), sub: loading ? undefined : `${unpaid.length} pending or approved`, icon: <Clock size={15} />, onClick: () => toggle('unpaid'), active: statusFilter === 'unpaid' },
-    { label: 'Overdue', value: loading ? '—' : String(overdueBills.length), sub: loading ? undefined : overdueBills.length ? `${fmt(overdueTotal)} past due` : 'None past due', tone: overdueBills.length ? 'bad' : 'default', icon: <WarningCircle size={15} />, onClick: () => toggle('Overdue'), active: statusFilter === 'Overdue' },
+    { label: 'Overdue', value: loading ? '—' : String(overdueBills.length), sub: loading || !overdueBills.length ? undefined : `${fmt(overdueTotal)} past due`, tone: overdueBills.length ? 'bad' : 'default', icon: <WarningCircle size={15} />, onClick: () => toggle('Overdue'), active: statusFilter === 'Overdue' },
     ...(ctx ? [
       { label: 'Actual to date', value: fmt(bActual), sub: `of ${fmt(bOriginal)} budget · ${Number(budget?.lineCount) || budgetLines.length} lines`, icon: <CurrencyDollar size={15} />, href: `${base}/budget` },
       { label: 'Budget remaining', value: fmt(bRemaining), sub: 'Original less actual', tone: bRemaining < 0 ? 'bad' as const : 'good' as const, icon: <Wallet size={15} />, href: `${base}/budget` },
@@ -408,7 +409,7 @@ export default function BillsPage() {
   const columns: Column<Bill>[] = [
     { key: 'bill_number', header: 'Invoice #', width: 120, accessor: b => b.bill_number || '', groupable: false },
     { key: 'vendor_name', header: 'Vendor', primary: true, phone: 'show' },
-    { key: 'description', header: 'Description', render: b => <span title={b.description} style={{ display: 'inline-block', maxWidth: 260, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap', verticalAlign: 'bottom' }}>{b.description || '—'}</span> },
+    { key: 'description', header: 'Description', render: b => <span title={b.description}>{b.description}</span> },
     { key: 'category', header: 'Category', hidden: true },
     { key: 'amount', header: 'Amount', align: 'right', total: 'sum', format: fmt, phone: 'show', accessor: b => Number(b.amount) || 0, render: b => <strong>{fmt(b.amount)}</strong> },
     { key: 'due_date', header: 'Due date', accessor: b => b.due_date || '', render: b => <span style={{ color: effStatus(b) === 'Overdue' ? 'var(--danger)' : undefined, whiteSpace: 'nowrap' }}>{fmtDate(b.due_date)}</span> },
@@ -494,8 +495,7 @@ export default function BillsPage() {
               <EmptyState
                 icon={<Receipt size={22} />}
                 title="No bills yet"
-                text="Log the first vendor invoice, or scan a receipt, to start the payables ledger."
-                action={<Button variant="primary" icon={<Plus size={15} weight="bold" />} onClick={openForm}>New bill</Button>}
+                action={<Button icon={<Plus size={15} weight="bold" />} onClick={openForm}>New bill</Button>}
               />
             ) : (
               <EmptyState title="Nothing matches" text="Change the search or the status filter." action={<Button onClick={() => { setSearch(''); setStatusFilter('all'); }}>Clear filters</Button>} />
@@ -509,7 +509,7 @@ export default function BillsPage() {
         open={showForm}
         onClose={closeForm}
         title="New bill"
-        subtitle="Lands as Pending; the total posts to the cost code's actual."
+        subtitle="Saved as Pending"
         onSubmit={async () => { await handleSave(); }}
         submitLabel="Save bill"
         busy={saving}
@@ -531,13 +531,13 @@ export default function BillsPage() {
           </div>
         )}
         <FormGrid cols={3}>
-          <Field label="Invoice #" required hint="The vendor's invoice number, exactly as printed.">
+          <Field label="Invoice #" required>
             <Input value={form.invoice_num} onChange={e => setForm(p => ({ ...p, invoice_num: e.target.value }))} />
           </Field>
-          <Field label="Vendor" required hint={vendors.length > 0 ? `${vendors.length} known vendor${vendors.length === 1 ? '' : 's'} on this project — start typing.` : 'New vendors are remembered for next time.'}>
+          <Field label="Vendor" required hint={vendors.length > 0 ? `${vendors.length} known vendor${vendors.length === 1 ? '' : 's'} on this job` : undefined}>
             <Suggest type="text" className="k-input" value={form.vendor} onChange={e => setForm(p => ({ ...p, vendor: e.target.value }))} options={vendors} />
           </Field>
-          <Field label="Cost code" hint={costCodeOptions.length > 0 ? "From this project's budget — the total posts to that line's actual." : 'No cost-coded budget yet — file under a CSI division.'}>
+          <Field label="Cost code" hint={costCodeOptions.length > 0 ? undefined : 'No cost-coded budget yet'}>
             {costCodeOptions.length > 0 ? (
               <Select value={form.cost_code} onChange={e => pickCostCode(e.target.value)} placeholder="— Select cost code —"
                 options={costCodeOptions.map((c: any) => ({ value: String(c.costCode), label: c.costCode + ' — ' + (c.description || CSI_DIVISIONS[String(c.division)]?.name || '') }))} />
@@ -546,13 +546,13 @@ export default function BillsPage() {
                 options={Object.entries(CSI_DIVISIONS).map(([dv, d]) => ({ value: dv, label: dv + ' — ' + d.name }))} />
             )}
           </Field>
-          <Field label="Amount ($)" required hint="Pre-tax amount from the invoice.">
+          <Field label="Amount before tax ($)" required>
             <Input type="number" inputMode="decimal" value={form.amount} onChange={e => setForm(p => ({ ...p, amount: Number(e.target.value) }))} />
           </Field>
-          <Field label="Tax ($)" hint="Sales tax as billed — leave 0 if exempt.">
+          <Field label="Tax ($)">
             <Input type="number" inputMode="decimal" value={form.tax} onChange={e => setForm(p => ({ ...p, tax: Number(e.target.value) }))} />
           </Field>
-          <Field label="Due date" hint="Net 30 from today — adjust to the vendor's terms.">
+          <Field label="Due date" hint="Net 30 from today">
             <DateInput value={form.due_date} onChange={e => setForm(p => ({ ...p, due_date: e.target.value }))} />
           </Field>
           <Field label="Description" span>

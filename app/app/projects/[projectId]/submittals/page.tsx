@@ -33,6 +33,7 @@ import {
   FormModal, Field, Input, Textarea, Select, FormGrid, DetailList, Toast, useToast, Callout,
   type Column, type Action, type BadgeTone, type StatItem,
 } from '@/components/ui/kit';
+import { Facts } from '@/lib/ui/filled-facts';
 import { CSI_DIVISIONS, SUB_TRADES } from '@/lib/construction-intelligence';
 import { useUnsavedGuard, useComposerDirty } from '@/lib/useUnsavedGuard';
 import UnsavedGuardModal from '@/components/UnsavedGuardModal';
@@ -56,7 +57,7 @@ const STATUS_LABELS:Record<string,string>={
 function statusBadge(s:string|null|undefined): { label:string; tone:BadgeTone } {
   const k = String(s||'pending');
   if (k==='submitted') return { label:'Submitted', tone:'lead' };
-  if (k==='under_review') return { label:'Under Review', tone:'under_contract' };
+  if (k==='under_review') return { label:'Under Review', tone:'lead' };
   if (k==='approved') return { label:'Approved', tone:'ongoing' };
   if (k==='rejected') return { label:'Rejected', tone:'overdue' };
   if (k==='revise_resubmit') return { label:'Revise & Resubmit', tone:'completed' };
@@ -365,7 +366,7 @@ export default function SubmittalsPage(){
   const isSel = (s:any) => selected?.id===s.id && mode!=='create';
   const numCol: Column<any> = { key:'submittal_number', header:'#', accessor:s=>s.submittal_number||'', width:90, render:s=><span className="sbNum" data-sel={isSel(s)?'true':undefined}>{s.submittal_number||'—'}</span> };
   const titleCol: Column<any> = { key:'title', header:'Title', primary:true, phone:'show', accessor:s=>s.title||'', render:s=><div className="sbTitle"><span title={s.title}>{s.title||'—'}</span>{s.trade&&<span>{s.trade}</span>}</div> };
-  const specCol: Column<any> = { key:'spec_section', phone:'hide', header:'Spec Section', accessor:s=>s.spec_section||'', render:s=>s.spec_section?<span className="sbMuted">{s.spec_section}</span>:<span className="sbMuted">—</span> };
+  const specCol: Column<any> = { key:'spec_section', phone:'hide', header:'Spec Section', accessor:s=>s.spec_section||'', render:s=>s.spec_section?<span className="sbMuted">{s.spec_section}</span>: null };
   const statusCol: Column<any> = { key:'status', phone:'show', header:'Status', accessor:s=>statusBadge(s.status).label, render:s=>{const b=statusBadge(s.status);return <span className="sbBadges"><Badge tone={b.tone}>{b.label}</Badge>{isOverdue(s)&&<Badge tone="overdue">Overdue</Badge>}</span>;} };
   const bicCol: Column<any> = { key:'ball_in_court', phone:'show', header:'Ball in Court', accessor:s=>s.ball_in_court||'', render:s=>{
     const h = ballHolder(s, today);
@@ -380,7 +381,7 @@ export default function SubmittalsPage(){
   const dueCol: Column<any> = { key:'due_date', phone:'show', header:'Required', accessor:s=>s.due_date?String(s.due_date).slice(0,10):'', render:s=><span className={isOverdue(s)?'sbLate':undefined}>{s.due_date?fmtDate(s.due_date):'—'}</span> };
   const revCol: Column<any> = { key:'revision_number', phone:'hide', header:'Rev.', accessor:s=>Number(s.revision_number)||0, align:'right', render:s=><span className="sbMuted">R{s.revision_number??0}</span> };
   const tradeCol: Column<any> = { key:'trade', header:'Trade', hidden:true, phone:'hide', accessor:s=>s.trade||'' };
-  const submittedCol: Column<any> = { key:'submitted_at', header:'Submitted', hidden:true, phone:'hide', accessor:s=>s.submitted_at?String(s.submitted_at).slice(0,10):'', render:s=>s.submitted_at?fmtDate(s.submitted_at):'—' };
+  const submittedCol: Column<any> = { key:'submitted_at', header:'Submitted', hidden:true, phone:'hide', accessor:s=>s.submitted_at?String(s.submitted_at).slice(0,10):'', render:s=>s.submitted_at?fmtDate(s.submitted_at):null };
   const columns: Column<any>[] = detailOpen ? [numCol, titleCol, statusCol, bicCol] : [numCol, titleCol, specCol, statusCol, bicCol, dueCol, revCol, tradeCol, submittedCol];
 
   /** The record's verbs — shared by the row overflow and the rail. */
@@ -426,10 +427,10 @@ export default function SubmittalsPage(){
                   {selected.ball_in_court && <Badge tone="neutral">Ball: {selected.ball_in_court}</Badge>}
                   {isOverdue(selected) && <Badge tone="overdue">Overdue</Badge>}
                 </div>
-                <div className="sbNext">{next ? `Next step: ${next}.` : 'Final state — a resubmittal keeps this number and bumps the revision.'}</div>
+                {next && <div className="sbNext">Next: {next}.</div>}
               </div>
               <div className="sbSection">
-                <DetailList items={[
+                <Facts items={[
                   ['Spec Section', selected.spec_section || ''],
                   ['Trade', selected.trade || ''],
                   ['Ball in Court', selected.ball_in_court || ''],
@@ -468,7 +469,6 @@ export default function SubmittalsPage(){
       <EmptyState
         icon={<Clipboard size={22}/>}
         title="No submittals yet"
-        text="Shop drawings and product data land here. S-001 and a 14-day review window are already set."
         action={<Button icon={<Plus size={15} weight="bold"/>} onClick={openCreate}>New Submittal</Button>}
       />
     );
@@ -485,7 +485,7 @@ export default function SubmittalsPage(){
         tableId="project-submittals"
         bulkEdit={itemBulkEdit('submittals', { allowed: rights.edit, canDelete: rights.full, deleteUrl: r => `/api/submittals/${r.id}`, people: submittals.map((s: any) => String(s.ball_in_court || '')), onDone: () => { void load(); } })}
         exportName="submittals"
-        empty={<EmptyState icon={<Clipboard size={22}/>} title="No submittals match these filters" text="Clear the search, status, or ball-in-court filter to see more." action={<Button onClick={clearFilters}>Clear Filters</Button>}/>}
+        empty={<EmptyState icon={<Clipboard size={22}/>} title="No submittals match these filters" action={<Button onClick={clearFilters}>Clear Filters</Button>}/>}
       />
     );
   }
@@ -502,10 +502,10 @@ export default function SubmittalsPage(){
           { label:'Submittals' },
         ]}
         title="Submittal Log"
-        subtitle="Shop drawings, product data, and the review workflow."
+        subtitle={ctx?.project?.name || undefined}
         actions={<Button variant="primary" icon={<Plus size={15} weight="bold"/>} onClick={openCreate}>New Submittal</Button>}
       >
-        {!loadError && <StatRow items={stats}/>}
+        {!loadError && (loading || submittals.length>0) && <StatRow items={stats}/>}
 
         {!loading && !loadError && submittals.length>0 && (
           <Toolbar
@@ -519,7 +519,6 @@ export default function SubmittalsPage(){
                 {filtersActive && <Button variant="ghost" size="sm" onClick={clearFilters}>Clear</Button>}
               </>
             }
-            actions={<span className="sbMuted" style={{ fontSize:'var(--fs-sm)' }}>{filtered.length} of {total}</span>}
           />
         )}
 

@@ -14,7 +14,7 @@ import { fmtBytes, titleFromFileName } from '@/lib/media-upload';
 
 const CSS = `
 .otp-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(160px, 1fr)); gap: 12px; padding: 16px; }
-.otp-tile { display: flex; flex-direction: column; min-width: 0; border-radius: var(--radius-sm); overflow: hidden; background: var(--bg-surface-2); border: 1px dashed var(--brand-primary-35); }
+.otp-tile { display: flex; flex-direction: column; min-width: 0; border-radius: var(--radius-sm); overflow: hidden; background: var(--bg-surface-2); border: 1px dashed var(--warning-border); }
 .otp-thumb { position: relative; width: 100%; aspect-ratio: 4 / 3; background: var(--bg-solid); display: flex; align-items: center; justify-content: center; color: var(--text-tertiary); }
 .otp-thumb img { width: 100%; height: 100%; object-fit: cover; display: block; opacity: .85; }
 .otp-body { padding: 8px 10px 10px; display: flex; flex-direction: column; gap: 6px; min-width: 0; }
@@ -75,7 +75,7 @@ export default function OnThisPhone({ items, online, syncing, onRetry, onRemove 
                 </div>
                 <div className="otp-body">
                   <div className="otp-name" title={it.name}>{titleFromFileName(it.name)}</div>
-                  <div><Badge tone={failed ? 'overdue' : 'gold'}>{failed ? "Couldn't Send" : 'Waiting for Signal'}</Badge></div>
+                  <div><Badge tone={failed ? 'overdue' : 'pending'}>{failed ? "Couldn't Send" : 'Waiting for Signal'}</Badge></div>
                   <div className="otp-meta" data-tone={failed ? 'bad' : undefined}>
                     {failed ? it.lastError || 'The server refused it.' : `${it.kind === 'video' ? 'Video' : 'Photo'} · ${fmtBytes(it.size)}${it.lastError ? ` · last try: ${it.lastError}` : ''}`}
                   </div>

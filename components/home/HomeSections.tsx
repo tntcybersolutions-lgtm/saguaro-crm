@@ -279,7 +279,7 @@ export function WorkRowsSection({ table, today, onRetry }: { table: WorkTable; t
           <FlatList label={table.title}>
             {rows.map(r => (
               <li key={r.id}>
-                <Row icon={<KindIcon size={18} weight="bold" />} tone="info" title={String(r[first] ?? '—')} meta={<Meta parts={meta(r)} />} right={rightCol && !NIL(r[rightCol.key]) ? String(r[rightCol.key]) : undefined} href={r.href} />
+                <Row icon={<KindIcon size={18} weight="bold" />} tone="neutral" title={String(r[first] ?? '—')} meta={<Meta parts={meta(r)} />} right={rightCol && !NIL(r[rightCol.key]) ? String(r[rightCol.key]) : undefined} href={r.href} />
               </li>
             ))}
           </FlatList>

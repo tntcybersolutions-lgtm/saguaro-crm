@@ -29,7 +29,8 @@ import { CSI_DIVISIONS } from '@/lib/construction-intelligence';
 import { useUnsavedGuard, useComposerDirty } from '@/lib/useUnsavedGuard';
 import UnsavedGuardModal from '@/components/UnsavedGuardModal';
 
-const fmt = (n: number | null | undefined) => '$' + (n ?? 0).toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+/* Currency style puts the sign before the dollar sign: -$2,150.00, never $-2,150.00. */
+const fmt = (n: number | null | undefined) => (Number(n) || 0).toLocaleString('en-US', { style: 'currency', currency: 'USD', minimumFractionDigits: 2, maximumFractionDigits: 2 });
 const fmtSigned = (n: number) => (n >= 0 ? '+' : '') + fmt(n);
 
 interface BudgetLine {
@@ -340,11 +341,12 @@ export default function BudgetPage() {
     });
   }, [lines, search, lineFilter]);
 
-  /* Over budget lines carry a red wash, lines past 90% of revised an amber one. */
-  function rowBg(l: BudgetLine): React.CSSProperties | undefined {
-    if (isOver(l)) return { background: 'color-mix(in srgb, var(--danger) 8%, transparent)' };
-    if (isWatch(l)) return { background: 'color-mix(in srgb, var(--warning) 8%, transparent)' };
-    return undefined;
+  /* Over budget lines carry a red dot on the cost code, lines past 90% of
+     revised an amber one: the row itself stays flat. */
+  function lineDot(l: BudgetLine): React.ReactNode {
+    const tone = isOver(l) ? 'var(--danger)' : isWatch(l) ? 'var(--warning)' : '';
+    if (!tone) return null;
+    return <span role="img" aria-label={isOver(l) ? 'Over budget' : 'Past 90% of revised'} title={isOver(l) ? 'Over budget' : 'Past 90% of revised'} style={{ display: 'inline-block', width: 8, height: 8, borderRadius: 999, background: tone, marginRight: 8, verticalAlign: 'middle' }} />;
   }
 
   const dash = loading ? '—' : null;
@@ -357,8 +359,8 @@ export default function BudgetPage() {
   ];
 
   const columns: Column<BudgetLine>[] = [
-    { key: 'cost_code', header: 'Cost code', primary: true, render: l => <span style={{ fontFamily: 'monospace' }}>{l.cost_code}</span> },
-    { key: 'description', header: 'Description', render: l => <span style={{ display: 'inline-block', maxWidth: 220, overflow: 'hidden', textOverflow: 'ellipsis', verticalAlign: 'bottom' }}>{l.description}</span> },
+    { key: 'cost_code', header: 'Cost code', primary: true, render: l => <span style={{ fontVariantNumeric: 'tabular-nums', whiteSpace: 'nowrap' }}>{lineDot(l)}{l.cost_code}</span> },
+    { key: 'description', header: 'Description' },
     { key: 'division', header: 'Division', accessor: l => { const d = String(l.cost_code || '').trim().slice(0, 2); const name = (CSI_DIVISIONS as Record<string, { name: string }>)[d]?.name; return name ? `${d} · ${name}` : d || '—'; }, hidden: true },
     { key: 'original_budget', header: 'Original', align: 'right', total: 'sum', format: fmt, phone: 'show', render: l => editingId === l.id ? (
       <span style={{ display: 'inline-flex', gap: 6, alignItems: 'center' }} onClick={e => e.stopPropagation()}>
@@ -369,10 +371,10 @@ export default function BudgetPage() {
         <Button size="sm" onClick={() => setEditingId(null)}>Cancel</Button>
       </span>
     ) : fmt(l.original_budget) },
-    { key: 'approved_cos', header: 'Approved changes', align: 'right', total: 'sum', format: fmt, render: l => (l.approved_cos ?? 0) !== 0 ? <span style={{ color: 'var(--warning)' }}>{(l.approved_cos > 0 ? '+' : '') + fmt(l.approved_cos)}</span> : '—' },
+    { key: 'approved_cos', header: 'Approved changes', align: 'right', total: 'sum', format: fmt, render: l => (l.approved_cos ?? 0) !== 0 ? fmtSigned(l.approved_cos) : '' },
     { key: 'revised_budget', header: 'Revised', align: 'right', total: 'sum', format: fmt, phone: 'show', render: l => <strong>{fmt(l.revised_budget)}</strong> },
     { key: 'committed_cost', header: 'Committed', align: 'right', total: 'sum', format: fmt, render: l => <span title={l.committed_source === 'commitments' ? 'From commitments and purchase orders' : 'Entered on the line'}>{fmt(l.committed_cost)}</span> },
-    { key: 'direct_costs', header: 'Direct costs', align: 'right', total: 'sum', format: fmt, render: l => (l.direct_costs ?? 0) > 0 ? fmt(l.direct_costs) : '—' },
+    { key: 'direct_costs', header: 'Direct costs', align: 'right', total: 'sum', format: fmt, render: l => (l.direct_costs ?? 0) > 0 ? fmt(l.direct_costs) : '' },
     { key: 'actual_cost', header: 'Actual', align: 'right', total: 'sum', format: fmt, render: l => <span style={{ color: isOver(l) ? 'var(--danger)' : undefined }}>{fmt(l.actual_cost)}</span> },
     { key: 'pct_complete', header: '% complete', align: 'right', render: l => `${l.pct_complete ?? 0}%` },
     { key: 'projected_cost', header: 'Projected cost', align: 'right', total: 'sum', format: fmt, hidden: true },
@@ -465,7 +467,6 @@ export default function BudgetPage() {
             rows={shown}
             loading={loading}
             rowKey={l => l.id}
-            rowStyle={rowBg}
             defaultSort={{ key: 'cost_code', dir: 'asc' }}
             columns={columns}
             rowActions={l => [

@@ -9,11 +9,12 @@
  *   POST /api/projects/[id]/banner    { photoId } set / clear the cover
  *   GET  /api/projects/[id]/weather   NWS outlook, today + 3 days
  *
- * Words never sit on the photo. The photo is cropped only when it is already
- * a wide band (lib/job-banner photoFit); otherwise it is shown whole over a
- * soft blur of itself.
+ * Words never sit on the photo, and the photo is never cropped and never
+ * sits over a blurred copy of itself (Chad's rule): the picture's box takes
+ * the picture's own shape — full width on a phone, beside the facts on wider
+ * screens — so it fills its area edge to edge, whole.
  */
-import React, { useCallback, useEffect, useRef, useState } from 'react';
+import React, { useState } from 'react';
 import useSWR from 'swr';
 import Link from 'next/link';
 import {
@@ -21,7 +22,7 @@ import {
 } from '@phosphor-icons/react';
 import { getAuthHeaders } from '@/lib/supabase-browser';
 import { humanError } from '@/lib/errors';
-import { stopWorkFlags, trimTeam, initials, photoFit, type WeatherDay, type TeamFace } from '@/lib/job-banner';
+import { stopWorkFlags, trimTeam, initials, type WeatherDay, type TeamFace } from '@/lib/job-banner';
 
 type BannerData = {
   photo: { url: string; source: 'cover' | 'latest'; id: string | null } | null;
@@ -106,29 +107,22 @@ function Faces({ team, href }: { team: TeamFace[]; href: string }) {
   );
 }
 
-/** The picture: whole unless it already is a wide band; never any words on it. */
+/** The picture, whole and edge to edge: its box takes the image's own aspect
+ *  ratio (read when it loads), so nothing is cropped and nothing is padded. */
 function Photo({ url, alt }: { url: string; alt: string }) {
-  const box = useRef<HTMLDivElement>(null);
-  const img = useRef<HTMLImageElement>(null);
-  const [fit, setFit] = useState<'cover' | 'contain'>('contain');
-  const measure = useCallback(() => {
-    const b = box.current?.getBoundingClientRect();
-    const i = img.current;
-    if (!b || !i || !i.naturalWidth) return;
-    setFit(photoFit(i.naturalWidth, i.naturalHeight, b.width, b.height));
-  }, []);
-  useEffect(() => {
-    if (!box.current || typeof ResizeObserver === 'undefined') return;
-    const ro = new ResizeObserver(measure);
-    ro.observe(box.current);
-    return () => ro.disconnect();
-  }, [measure]);
+  const [ratio, setRatio] = useState<number | null>(null);
   return (
-    <div className="jb-photo" ref={box} data-fit={fit}>
+    <div className="jb-photo" data-ready={ratio != null || undefined} style={ratio ? ({ ['--jb-ar' as string]: String(ratio) } as React.CSSProperties) : undefined}>
       {/* eslint-disable-next-line @next/next/no-img-element */}
-      {fit === 'contain' && <img className="jb-photo-bg" src={url} alt="" aria-hidden="true" />}
-      {/* eslint-disable-next-line @next/next/no-img-element */}
-      <img ref={img} className="jb-photo-img" src={url} alt={alt} onLoad={measure} />
+      <img
+        className="jb-photo-img"
+        src={url}
+        alt={alt}
+        onLoad={(e) => {
+          const i = e.currentTarget;
+          if (i.naturalWidth > 0 && i.naturalHeight > 0) setRatio(i.naturalWidth / i.naturalHeight);
+        }}
+      />
     </div>
   );
 }
@@ -231,15 +225,17 @@ export default function JobBanner({ projectId, facts, action }: { projectId: str
 
 /* Injected with dangerouslySetInnerHTML (tools/check-style-escapes.mjs). */
 const CSS = `
-.jb{margin:0 calc(-1 * var(--page-gutter)) 12px;border-top:1px solid var(--fl-line);border-bottom:1px solid var(--fl-line);background:var(--bg-surface)}
+.jb{margin:0 calc(-1 * var(--page-gutter)) 12px;border-bottom:1px solid var(--fl-line);background:none}
 .jb-grid{display:grid;grid-template-columns:minmax(0,1fr);grid-template-areas:"photo" "facts" "wx"}
-.jb-photo{grid-area:photo;position:relative;overflow:hidden;height:200px;background:var(--bg-base)}
+/* Phone: the picture spans the screen at its own shape. --jb-ar is set from
+   the loaded image; 16:9 holds the space until then. */
+.jb-photo{grid-area:photo;position:relative;overflow:hidden;width:100%;aspect-ratio:var(--jb-ar,16/9);background:var(--bg-surface)}
 .jb-photo[data-loading]{animation:jx-pulse 1.2s ease-in-out infinite;background:var(--fl-line)}
-.jb-photo-img{position:relative;display:block;width:100%;height:100%;object-position:center}
-.jb-photo[data-fit=cover] .jb-photo-img{object-fit:cover}
-.jb-photo[data-fit=contain] .jb-photo-img{object-fit:contain}
-.jb-photo-bg{position:absolute;inset:-24px;width:calc(100% + 48px);height:calc(100% + 48px);object-fit:cover;filter:blur(22px) brightness(.5) saturate(1.1)}
-.jb-nophoto{display:flex;flex-direction:column;align-items:center;justify-content:center;gap:12px;color:var(--text-tertiary);background:var(--bg-surface-2)}
+.jb-photo-img{display:block;width:100%;height:100%;object-fit:contain;opacity:0;transition:opacity .2s ease}
+.jb-photo[data-ready] .jb-photo-img{opacity:1}
+.jb-photo[data-ready]{background:none}
+.jb-nophoto{display:flex;flex-direction:row;align-items:center;justify-content:flex-start;gap:12px;aspect-ratio:auto;padding:12px var(--page-gutter);color:var(--text-tertiary);background:none}
+@media (min-width:760px){.jb-nophoto{flex-direction:column;justify-content:center;aspect-ratio:4/3;padding:12px;border-right:1px solid var(--fl-line)}}
 .jb-nophoto .fl-act{min-height:44px;padding:0 18px;font-size:14px;text-decoration:none}
 .jb-facts{grid-area:facts;min-width:0;display:flex;flex-direction:column;gap:8px;padding:14px var(--page-gutter) 12px}
 .jb-title{display:flex;align-items:center;flex-wrap:wrap;gap:6px 10px;min-width:0}
@@ -271,12 +267,10 @@ const CSS = `
 .jb-note{font-size:13px;color:var(--text-secondary)}
 .jb-wxwrap{grid-area:wx;min-width:0;border-top:1px solid var(--fl-line)}
 .jb-wx{list-style:none;margin:0;padding:0;display:grid;grid-template-columns:repeat(4,minmax(0,1fr))}
-.jb-wd{position:relative;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:3px;padding:10px 4px;min-width:0;text-align:center}
+/* Flat columns split by hairlines — no filled tiles, no coloured caps. A
+   stop-work or watch day says so in its own red / amber line. */
+.jb-wd{position:relative;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:3px;padding:10px 4px;min-width:0;text-align:center;background:none}
 .jb-wd+.jb-wd{border-left:1px solid var(--fl-line)}
-.jb-wd::before{content:"";position:absolute;left:0;right:0;top:0;height:3px;background:transparent}
-.jb-wd[data-flag=stop]::before{background:var(--danger)}
-.jb-wd[data-flag=watch]::before{background:var(--warning)}
-.jb-wd[data-flag=stop]{background:var(--danger-bg)}
 .jb-wd-n{font-size:12px;font-weight:700;color:var(--text-secondary)}
 .jb-wi{color:var(--text-secondary)}
 .jb-wi[data-k=sun]{color:var(--warning)}
@@ -295,13 +289,17 @@ const CSS = `
 .jb-thumb[data-on]:hover{border-color:var(--brand-primary)}
 .jb-thumb img{width:100%;height:100%;object-fit:contain;display:block}
 .jb-pick-acts{display:flex;flex-wrap:wrap;align-items:center;gap:4px 18px}
+/* Wider screens: the picture sits beside the facts at its own shape, 240px
+   tall from the left edge of the work area (a very wide one caps at 46% of
+   the screen and gets shorter instead of being cut). */
 @media (min-width:760px){
-  .jb-grid{grid-template-columns:minmax(0,40%) minmax(0,1fr);grid-template-areas:"photo facts" "wx wx"}
-  .jb-photo{height:200px}
+  .jb-grid{grid-template-columns:auto minmax(0,1fr);grid-template-areas:"photo facts" "wx wx";align-items:start}
+  .jb-photo{width:min(calc(240px * var(--jb-ar,4/3)),46vw);aspect-ratio:var(--jb-ar,4/3)}
   .jb-facts{padding:16px var(--page-gutter) 10px 22px;min-height:200px;box-sizing:border-box}
 }
 @media (min-width:1200px){
-  .jb-grid[data-wx]{grid-template-columns:minmax(0,40%) minmax(0,1fr) minmax(280px,340px);grid-template-areas:"photo facts wx"}
+  .jb-grid[data-wx]{grid-template-columns:auto minmax(0,1fr) minmax(280px,340px);grid-template-areas:"photo facts wx"}
+  .jb-grid[data-wx] .jb-wxwrap{align-self:stretch}
   .jb-grid[data-wx] .jb-facts{padding-right:20px}
   .jb-grid[data-wx] .jb-wxwrap{border-top:0;border-left:1px solid var(--fl-line);display:flex;align-items:stretch;margin-right:0}
   .jb-grid[data-wx] .jb-wx{width:100%}

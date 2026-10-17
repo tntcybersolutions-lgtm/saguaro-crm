@@ -450,25 +450,18 @@ export default function ClientPortalPage() {
         <button onClick={() => setBulkOpen(true)} style={btnOutline}>Bulk Invite</button>
       </div>
 
-      {/* The numbers: one flat scoreboard row (no boxed cards). */}
-      <StatStrip items={[
-        { label: 'Total Users', value: users.length },
-        { label: 'Active', value: users.filter(u => u.status === 'active').length, accent: GREEN },
-        { label: 'Pending', value: users.filter(u => u.status === 'pending').length, accent: AMBER },
-        { label: 'Disabled', value: users.filter(u => u.status === 'disabled').length, accent: RED },
-      ]} />
+      {/* The user counts live in the page's one summary strip above. */}
 
       {/* user table — re-housed in the kit's SectionCard */}
       <SectionCard
         title="Portal Users"
-        subtitle={`${filteredUsers.length} of ${users.length} shown`}
-        icon={<UsersThree size={17} weight="duotone" color="var(--text-secondary)" />}
+        subtitle={users.length ? `${filteredUsers.length} of ${users.length} shown` : undefined}
         flush
         bodyStyle={{ overflow: 'auto' }}
       >
         <table className="k-table" style={{ width: '100%', borderCollapse: 'collapse' }}>
-          <thead>
-            <tr style={{ background: BG }}>
+          {filteredUsers.length > 0 && <thead>
+            <tr>
               <th style={thS}>Name / Company</th>
               <th style={thS}>Email</th>
               <th style={thS}>Role</th>
@@ -478,7 +471,7 @@ export default function ClientPortalPage() {
               <th style={thS}>Access Link</th>
               <th style={thS}>Actions</th>
             </tr>
-          </thead>
+          </thead>}
           <tbody>
             {filteredUsers.length === 0 && (
               <tr><td colSpan={8} style={{ ...tdS, borderBottom: 'none', whiteSpace: 'normal' }}>
@@ -488,8 +481,8 @@ export default function ClientPortalPage() {
                   <PremiumEmpty
                     icon={<UsersThree size={30} weight="duotone" color="var(--text-secondary)" />}
                     title="No portal clients yet"
-                    description={`Invite an owner or stakeholder and they get a secure link to a live view of their project${projects.length ? ` — ${projects.length} project${projects.length === 1 ? ' is' : 's are'} ready to share` : ''}. They see only the sections you toggle on (budget, schedule, photos, RFIs, documents, and more), and every login and page view lands in the Activity Log.`}
-                    action={<button onClick={() => { resetInviteForm(); setInviteOpen(true); }} style={btnGold}>+ Invite Your First Client</button>}
+                    description="Owners get a secure link to the parts of their job you share."
+                    action={<button onClick={() => { resetInviteForm(); setInviteOpen(true); }} style={btnOutline}>+ Invite Client</button>}
                   />
                 )}
               </td></tr>
@@ -1148,17 +1141,17 @@ export default function ClientPortalPage() {
         eyebrowIcon={<UsersThree size={13} weight="fill" color="var(--text-secondary)" />}
         title="Client"
         accent="Portal"
-        subtitle="A permission-gated window for owners. You control what they see."
+        subtitle="What owners see of their job."
       />
 
       {/* Portal intelligence strip — what the system already knows */}
       {!loading && (
         <StatStrip items={[
-          {href: '/app/client-portal',  label: 'Portal Users', value: String(users.length), sub: users.length ? `${portalStats.active} active${portalStats.pending ? ` · ${portalStats.pending} pending` : ''}` : 'Invite your first client' },
-          {href: '/app/client-portal',  label: 'Unread From Clients', value: String(portalStats.unread), accent: portalStats.unread > 0 ? GOLD : undefined, sub: portalStats.unread > 0 ? `across ${portalStats.unreadThreads} conversation${portalStats.unreadThreads === 1 ? '' : 's'}` : 'Inbox clear' },
-          {href: '/app/client-portal',  label: 'Projects Shared', value: String(portalStats.sharedProjects), sub: projects.length ? `of ${projects.length} project${projects.length === 1 ? '' : 's'}` : 'No projects yet' },
-          {href: '/app/client-portal',  label: 'Activity (7 Days)', value: String(portalStats.weekActivity), accent: portalStats.weekActivity > 0 ? GREEN : undefined, sub: 'Client actions logged' },
-          {href: '/app/client-portal',  label: 'Last Client Login', value: portalStats.lastLogin ? relTime(portalStats.lastLogin.ts) : 'Never', sub: portalStats.lastLogin ? portalStats.lastLogin.name : 'No logins recorded yet' },
+          {label: 'Portal Users', value: String(users.length), sub: users.length ? `${portalStats.active} active${portalStats.pending ? ` · ${portalStats.pending} pending` : ''}` : 'Invite your first client' },
+          {label: 'Unread From Clients', value: String(portalStats.unread), accent: portalStats.unread > 0 ? GOLD : undefined, sub: portalStats.unread > 0 ? `across ${portalStats.unreadThreads} conversation${portalStats.unreadThreads === 1 ? '' : 's'}` : 'Inbox clear' },
+          {label: 'Projects Shared', value: String(portalStats.sharedProjects), sub: projects.length ? `of ${projects.length} project${projects.length === 1 ? '' : 's'}` : 'No projects yet' },
+          {label: 'Activity (7 Days)', value: String(portalStats.weekActivity), accent: portalStats.weekActivity > 0 ? GREEN : undefined, sub: 'Client actions logged' },
+          {label: 'Last Client Login', value: portalStats.lastLogin ? relTime(portalStats.lastLogin.ts) : 'Never', sub: portalStats.lastLogin ? portalStats.lastLogin.name : 'No logins recorded yet' },
         ]} />
       )}
 

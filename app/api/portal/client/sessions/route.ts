@@ -1,6 +1,7 @@
 import { NextResponse, type NextRequest } from 'next/server';
 import { createServerClient, getUser } from '@/lib/supabase-server';
 import { apiError } from '@/lib/api-error';
+import { liveJobs } from '@/lib/live-jobs';
 
 export const dynamic = 'force-dynamic';
 
@@ -28,14 +29,18 @@ export async function GET(req: NextRequest) {
     let projectMap: Record<string, string> = {};
 
     if (projectIds.length > 0) {
-      const { data: projects } = await db
+      // Tenant-scoped, live jobs only: a portal onto an archived or deleted
+      // job is not access anyone is managing (lib/live-jobs).
+      const { data: projects, error: pErr } = await liveJobs(db
         .from('projects')
         .select('id, name')
-        .in('id', projectIds);
+        .eq('tenant_id', user.tenantId)
+        .in('id', projectIds));
+      if (pErr) throw pErr;
       projectMap = Object.fromEntries((projects || []).map(p => [p.id, p.name]));
     }
 
-    const enriched = (sessions || []).map(s => ({
+    const enriched = (sessions || []).filter(s => !s.project_id || s.project_id in projectMap).map(s => ({
       ...s,
       token: s.token, // include token for link generation
       project_name: projectMap[s.project_id] || null,

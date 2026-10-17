@@ -30,7 +30,7 @@ import { useParams } from 'next/navigation';
 import { getAuthHeaders } from '@/lib/supabase-browser';
 import { sendOrSave, listSaved, updateSaved, removeSaved, savedRowId, savedIdOf, isOffline } from '@/lib/offline/outbox';
 import {
-  ClipboardText, Thermometer, HardHat, WarningCircle, Plus, X, Sparkle, CopySimple, CloudSun,
+  ClipboardText, Thermometer, HardHat, WarningCircle, Plus, X, Sparkle, CopySimple,
   UsersThree, PencilSimple, Trash, ArrowSquareOut, ArrowClockwise, ShieldCheck, Package, Wrench, PaperPlaneTilt,
   CalendarCheck, CalendarBlank, Info,
 } from '@phosphor-icons/react';
@@ -581,18 +581,18 @@ export default function DailyLogsPage(){
   const isSel = (l:any) => selected?.id===l.id && mode!=='create';
   const dateCol: Column<any> = { key:'log_date', header:'Date', primary:true, phone:'show', accessor:l=>l.log_date||'', width:130, render:l=><span className="pdlDate" data-sel={isSel(l)?'true':undefined}>{fmtDate(l.log_date)}</span> };
   const statusCol: Column<any> = { key:'status', header:'Status', phone:'show', accessor:l=>l._offline?'Waiting for Signal':logStatus(l).label, render:l=>{
-    if(l._offline) return <span title={l._offlineError?`Couldn't send: ${l._offlineError}`:"Saved on this phone — it sends when you're back online."}><Badge tone={l._offlineError?'overdue':'gold'}>{l._offlineError?"Couldn't Send":'Waiting for Signal'}</Badge></span>;
+    if(l._offline) return <span title={l._offlineError?`Couldn't send: ${l._offlineError}`:"Saved on this phone — it sends when you're back online."}><Badge tone={l._offlineError?'overdue':'pending'}>{l._offlineError?"Couldn't Send":'Waiting for Signal'}</Badge></span>;
     const s=logStatus(l);return <Badge tone={s.tone}>{s.label}</Badge>;
   } };
-  const weatherCol: Column<any> = { key:'weather', header:'Weather', phone:'hide', accessor:l=>l.weather||'', render:l=>l.weather?<span className="pdlClamp" style={{maxWidth:160}} title={l.weather}>{l.weather}</span>:<span className="pdlMuted">—</span> };
+  const weatherCol: Column<any> = { key:'weather', header:'Weather', phone:'hide', accessor:l=>l.weather||'', render:l=>l.weather?<span className="pdlClamp" style={{maxWidth:160}} title={l.weather}>{l.weather}</span>: null };
   const tempCol: Column<any> = { key:'temp', header:'Temp', phone:'hide', accessor:l=>Number(l.high_temp)||0, align:'right', render:l=><span className="pdlMuted pdlNum">{tempStr(l)}</span> };
   const crewCol: Column<any> = { key:'crew_count', header:'Crew', phone:'show', total:'sum', accessor:l=>Number(l.crew_count)||0, align:'right', render:l=><span className="pdlNum" style={{display:'inline-flex',alignItems:'center',gap:4}}><UsersThree size={14} style={{color:'var(--text-tertiary)'}}/>{Number(l.crew_count)||0}</span> };
-  const superCol: Column<any> = { key:'superintendent', header:'Superintendent', phone:'hide', accessor:l=>l.superintendent||'', render:l=>l.superintendent?<span style={{color:'var(--text-primary)'}}>{l.superintendent}</span>:<span className="pdlMuted">—</span> };
-  const workCol: Column<any> = { key:'work_performed', header:'Work Performed', phone:'hide', accessor:l=>l.work_performed||'', render:l=>l.work_performed?<span className="pdlClamp" title={l.work_performed}>{l.work_performed}</span>:<span className="pdlMuted">—</span> };
+  const superCol: Column<any> = { key:'superintendent', header:'Superintendent', phone:'hide', accessor:l=>l.superintendent||'', render:l=>l.superintendent?<span style={{color:'var(--text-primary)'}}>{l.superintendent}</span>: null };
+  const workCol: Column<any> = { key:'work_performed', header:'Work Performed', phone:'hide', accessor:l=>l.work_performed||'', render:l=>l.work_performed?<span className="pdlClamp" title={l.work_performed}>{l.work_performed}</span>: null };
   const flagsCol: Column<any> = { key:'flags', header:'Flags', phone:'show', groupable:false, accessor:l=>((l.delays||'').trim()?2:0)+((l.safety_notes||'').trim()?1:0), render:l=>{
     const hasDelay=!!(l.delays||'').trim(), hasSafety=!!(l.safety_notes||'').trim();
     if(!hasDelay&&!hasSafety) return <span className="pdlMuted">Clear</span>;
-    return <span className="pdlBadges">{hasDelay&&<Badge tone="overdue">Delays</Badge>}{hasSafety&&<Badge tone="neutral">Safety Note</Badge>}</span>;
+    return <span className="pdlBadges">{hasDelay&&<Badge tone="overdue">Delays</Badge>}{hasSafety&&<Badge tone="neutral">Safety</Badge>}</span>;
   } };
   const columns: Column<any>[] = (selected && mode!=='create')
     ? [dateCol, crewCol, flagsCol, statusCol]
@@ -686,10 +686,9 @@ export default function DailyLogsPage(){
                 {!!(selected.delays||'').trim() && <Badge tone="overdue">Delays</Badge>}
                 {!!(selected.safety_notes||'').trim() && <Badge tone="neutral">Safety Note</Badge>}
               </div>
-              {logStatus(selected).label==='Draft' && <div className="pdlNext">Finish the day&apos;s log — it is the record that settles a claim.</div>}
             </div>
             <div className="pdlSection">
-              <DetailList items={[
+              <DetailList items={([
                 ['Crew on Site', <span key="crew" className="pdlNum">{Number(selected.crew_count)||0}</span>],
                 ['Superintendent', selected.superintendent || ''],
                 ['Weather', selected.weather || ''],
@@ -698,7 +697,7 @@ export default function DailyLogsPage(){
                 ['Wind', selected.wind_conditions || ''],
                 ['Phase of Work', selected.phase_of_work || ''],
                 ['Created', fmtDate(selected.created_at)],
-              ]}/>
+              ] as [string, React.ReactNode][]).filter(([,v])=>v!=null&&v!==''&&v!=='—')}/>
             </div>
             <div className="pdlSection">
               <div className="pdlActions">
@@ -737,8 +736,7 @@ export default function DailyLogsPage(){
       <EmptyState
         icon={<ClipboardText size={22}/>}
         title="No daily logs yet"
-        text="Auto-Fill drafts today from the clocks and NWS."
-        action={<Button icon={<Plus size={15} weight="bold"/>} onClick={openCreate}>Create First Log</Button>}
+        action={<Button icon={<Sparkle size={15} weight="fill"/>} onClick={openAutoFill} disabled={prefilling}>Start Today&apos;s Log</Button>}
       />
     );
   } else {
@@ -759,7 +757,6 @@ export default function DailyLogsPage(){
           <EmptyState
             icon={<ClipboardText size={22}/>}
             title="No logs match these filters"
-            text="Clear the search, month, or flag filter to see more."
             action={<Button onClick={clearFilters}>Clear Filters</Button>}
           />
         }
@@ -780,7 +777,7 @@ export default function DailyLogsPage(){
           { label:'Daily Logs' },
         ]}
         title="Daily Logs"
-        subtitle="Headcount from the clocks, weather from NWS."
+        subtitle={ctx?.project?.name || undefined}
         actions={
           /* Primary last. Auto-fill is the action this screen exists for,
              so it sits on the right where the eye lands, not buried at
@@ -832,7 +829,6 @@ export default function DailyLogsPage(){
                 {filtersActive && <Button variant="ghost" size="sm" onClick={clearFilters}>Clear</Button>}
               </>
             }
-            actions={<span className="pdlMuted" style={{ fontSize:'var(--fs-sm)' }}>{filtered.length} of {logs.length}</span>}
           />
         )}
 
@@ -878,7 +874,6 @@ export default function DailyLogsPage(){
               />
               {/* NOBODY TYPES WEATHER — the create route stamps NWS server-side
                   whenever the fields are left blank. */}
-              <Callout tone="info" icon={<CloudSun size={16} weight="fill"/>} title="Weather stamps itself" text="Leave it blank — NWS fills conditions, temps, wind and rain on save."/>
             </div>
           );
         })()}
@@ -890,7 +885,7 @@ export default function DailyLogsPage(){
           <Field label="Superintendent" hint={mode==='create'&&logs[0]?.superintendent?`Last log: ${logs[0].superintendent}.`:undefined}>
             <Input value={form.superintendent} onChange={e=>setForm(f=>({...f,superintendent:e.target.value}))} placeholder="Who ran the site today"/>
           </Field>
-          <Field label="Weather">
+          <Field label="Weather" hint={mode==='create'?'Blank = stamped from NWS on save.':undefined}>
             <Suggest className="k-input" value={form.weather} onChange={e=>setForm(f=>({...f,weather:e.target.value}))} placeholder={mode==='create'?'Auto (NWS)':'Clear, 10 mph W, dusty…'} options={WEATHER_OPTS} />
           </Field>
           <Field label="Crew Count" hint={mode==='create'&&auto.crew ? 'From clock-ins or your last log.' : undefined}>

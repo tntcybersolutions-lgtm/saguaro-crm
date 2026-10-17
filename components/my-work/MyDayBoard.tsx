@@ -100,9 +100,9 @@ const CSS = `
 .md :focus-visible{outline:2px solid var(--md-neon);outline-offset:2px;border-radius:8px}
 
 /* Start band */
-.md-start{position:relative;display:grid;grid-template-columns:minmax(0,1fr) auto;grid-template-areas:'id side' 'score score';gap:22px 28px;align-items:center;padding:26px 0 26px;border-bottom:1px solid var(--md-line);background:radial-gradient(70% 140% at 0% 0%,rgba(232,255,42,.07),transparent 62%),radial-gradient(40% 120% at 100% 0%,rgba(244,114,182,.05),transparent 70%)}
+.md-start{position:relative;display:grid;grid-template-columns:minmax(0,1fr) auto;grid-template-areas:'id side' 'score score';gap:22px 28px;align-items:center;padding:18px 0 22px;border-bottom:1px solid var(--md-line)}
 .md-id{grid-area:id;min-width:0}
-.md-dow{font-size:12px;font-weight:800;letter-spacing:.14em;text-transform:uppercase;color:var(--md-neon)}
+.md-dow{font-size:12px;font-weight:800;letter-spacing:.14em;text-transform:uppercase;color:var(--md-3)}
 .md-date{margin:4px 0 0;font-size:clamp(30px,4.4cqi,48px);line-height:1.02;font-weight:900;letter-spacing:-.02em;color:var(--md-text)}
 .md-sub{margin-top:10px;display:flex;flex-wrap:wrap;gap:6px;align-items:center}
 .md-role{display:inline-flex;align-items:center;height:26px;padding:0 10px;border-radius:999px;font-size:12px;font-weight:700;color:var(--md-2);border:1px solid var(--md-line)}
@@ -114,12 +114,12 @@ const CSS = `
 .md-ring{flex:none;position:relative;width:118px;height:118px;border:0;background:none;padding:0;cursor:pointer;border-radius:50%}
 .md-ring svg{display:block;transform:rotate(-90deg)}
 .md-ring b{position:absolute;inset:0;display:grid;place-items:center;align-content:center;font-size:28px;font-weight:900;font-variant-numeric:tabular-nums;letter-spacing:-.02em}
-.md-ring b small{display:block;margin-top:2px;font-size:10px;font-weight:800;letter-spacing:.12em;text-transform:uppercase;color:var(--md-3)}
+.md-ring b small{display:block;margin-top:2px;font-size:12px;font-weight:800;letter-spacing:.12em;text-transform:uppercase;color:var(--md-3)}
 .md-nums{flex:1;min-width:0;display:grid;grid-template-columns:repeat(5,minmax(0,1fr));gap:0}
 .md-num{position:relative;display:flex;flex-direction:column;align-items:flex-start;gap:6px;min-width:0;padding:10px 18px;border:0;border-left:1px solid var(--md-line);background:none;color:inherit;text-align:left;cursor:pointer;border-radius:0;transition:background .15s}
 .md-num:hover{background:rgba(255,255,255,.035)}
 .md-num b{font-size:clamp(26px,3.2cqi,40px);font-weight:900;line-height:1;font-variant-numeric:tabular-nums;letter-spacing:-.02em;white-space:nowrap}
-.md-num span{font-size:11px;font-weight:800;letter-spacing:.1em;text-transform:uppercase;color:var(--md-3);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;max-width:100%}
+.md-num span{font-size:12px;font-weight:800;letter-spacing:.06em;text-transform:uppercase;color:var(--md-3);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;max-width:100%}
 .md-num span em{font-style:normal}
 .md-short{display:none}
 .md-num[data-tone=red] b{color:var(--md-red)}
@@ -151,7 +151,7 @@ const CSS = `
 .md-search input::placeholder{color:var(--md-3)}
 .md-search svg{position:absolute;left:11px;top:50%;transform:translateY(-50%);color:var(--md-3)}
 .md-kinds{display:flex;gap:6px;flex-wrap:wrap}
-.md-kind{display:inline-flex;align-items:center;gap:6px;height:34px;padding:0 10px;border-radius:999px;border:1px solid var(--md-line);background:none;color:var(--md-2);font-size:12.5px;font-weight:700;cursor:pointer}
+.md-kind{display:inline-flex;align-items:center;gap:6px;height:40px;padding:0 10px;border-radius:999px;border:1px solid var(--md-line);background:none;color:var(--md-2);font-size:12.5px;font-weight:700;cursor:pointer}
 .md-kind i{font-style:normal;font-variant-numeric:tabular-nums;color:var(--md-3);font-weight:800}
 .md-kind[aria-pressed=true]{border-color:var(--k);color:var(--md-text);background:color-mix(in srgb,var(--k) 14%,transparent)}
 .md-chip{display:inline-flex;align-items:center;gap:6px;height:34px;padding:0 6px 0 12px;border-radius:999px;background:rgba(232,255,42,.12);color:var(--md-neon);font-size:12.5px;font-weight:800}
@@ -164,7 +164,7 @@ const CSS = `
 .md-sec + .md-sec{border-top:1px solid var(--md-line)}
 .md-sec-h{display:flex;align-items:baseline;gap:12px;margin:0 0 10px}
 .md-sec-h .md-h2{margin:0;font-size:21px;font-weight:900;letter-spacing:-.015em;color:var(--title-section)}
-.md-sec-h .md-when{font-size:11px;font-weight:800;letter-spacing:.12em;text-transform:uppercase;color:var(--md-3)}
+.md-sec-h .md-when{font-size:12px;font-weight:800;letter-spacing:.12em;text-transform:uppercase;color:var(--md-3)}
 .md-sec-h .md-count{margin-left:auto;font-size:13px;font-weight:800;color:var(--md-2);font-variant-numeric:tabular-nums}
 .md-empty{display:flex;align-items:center;gap:10px;padding:14px 0;color:var(--md-2);font-size:14.5px}
 .md-empty svg{color:var(--md-green)}
@@ -174,15 +174,15 @@ const CSS = `
 .md-row{position:relative;display:grid;grid-template-columns:4px 40px minmax(0,1fr) auto auto auto;align-items:center;gap:0 14px;padding:var(--md-pad) 6px var(--md-pad) 0;border-bottom:1px solid color-mix(in srgb,var(--md-line) 70%,transparent);transition:background .15s}
 .md-row:hover,.md-row:focus-within{background:rgba(255,255,255,.025)}
 .md-rail{align-self:stretch;border-radius:3px;background:var(--md-3);opacity:.35}
-.md-row[data-tone=red] .md-rail{background:var(--md-red);opacity:1;box-shadow:0 0 12px rgba(248,113,113,.45)}
+.md-row[data-tone=red] .md-rail{background:var(--md-red);opacity:1}
 .md-row[data-tone=amber] .md-rail{background:var(--md-amber);opacity:1}
 .md-row[data-tone=gold] .md-rail{background:var(--md-gold);opacity:.9}
-.md-ic{display:grid;place-items:center;width:40px;height:40px;border-radius:12px;color:var(--k);background:color-mix(in srgb,var(--k) 14%,transparent);box-shadow:inset 0 0 0 1px color-mix(in srgb,var(--k) 30%,transparent)}
+.md-ic{display:grid;place-items:center;width:40px;height:40px;color:var(--k)}
 .md[data-density=compact] .md-ic{width:32px;height:32px;border-radius:10px}
 .md-what{min-width:0}
 .md-tl{display:block;color:var(--md-text);font-size:15px;font-weight:750;text-decoration:none;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
 .md-tl::after{content:'';position:absolute;inset:0;z-index:0}
-.md-meta{display:flex;align-items:center;gap:8px;min-width:0;margin-top:3px;font-size:12.5px;color:var(--md-3)}
+.md-meta{display:flex;align-items:center;gap:8px;min-width:0;margin-top:3px;font-size:13px;color:var(--md-3)}
 .md-meta span{white-space:nowrap;overflow:hidden;text-overflow:ellipsis;min-width:0}
 .md-job{display:inline-flex;align-items:center;gap:6px;flex:none;max-width:200px;font-weight:700;color:var(--md-2)}
 .md-job i{width:8px;height:8px;border-radius:50%;flex:none;background:var(--j)}
@@ -194,8 +194,8 @@ const CSS = `
 .md-acts{position:relative;z-index:1;display:flex;align-items:center;gap:6px;justify-content:flex-end}
 .md-act{display:inline-flex;align-items:center;justify-content:center;gap:6px;min-height:36px;min-width:44px;padding:0 12px;border-radius:9px;border:1px solid var(--md-line);background:transparent;color:var(--md-text);font-size:13px;font-weight:800;text-decoration:none;cursor:pointer;white-space:nowrap;transition:border-color .15s,color .15s,background .15s}
 .md-act:hover{border-color:var(--md-neon);color:var(--md-neon)}
-.md-act[data-k=primary]{background:var(--md-neon);border-color:var(--md-neon);color:var(--bg-base)}
-.md-act[data-k=primary]:hover{background:color-mix(in srgb,var(--md-neon) 88%,var(--text-primary));color:var(--bg-base)}
+/* A row's action is outlined: the one yellow on this screen is Clock in. */
+.md-act[data-k=primary]{border-color:var(--border-strong);color:var(--md-text)}
 .md-act[data-k=quiet]{border-color:transparent;color:var(--md-3);padding:0 8px}
 .md-act[data-k=quiet]:hover{color:var(--md-green);border-color:transparent}
 .md-act[disabled]{opacity:.5;cursor:default}
@@ -211,17 +211,17 @@ const CSS = `
 .md-agenda{position:relative}
 .md-tline{position:relative;height:var(--h,96px);margin:4px 0 0;border-top:1px solid var(--md-line);border-bottom:1px solid var(--md-line);background:repeating-linear-gradient(90deg,transparent 0,transparent calc(var(--hw) - 1px),rgba(255,255,255,.05) calc(var(--hw) - 1px),rgba(255,255,255,.05) var(--hw))}
 .md-hours{position:relative;height:22px;margin-top:6px}
-.md-hours span{position:absolute;top:0;transform:translateX(-50%);font-size:11px;font-weight:800;color:var(--md-3);white-space:nowrap}
+.md-hours span{position:absolute;top:0;transform:translateX(-50%);font-size:12px;font-weight:800;color:var(--md-3);white-space:nowrap}
 .md-ev{position:absolute;display:flex;flex-direction:column;justify-content:center;gap:1px;height:38px;padding:0 10px;border-radius:9px;background:color-mix(in srgb,var(--j) 22%,var(--bg-surface));box-shadow:inset 3px 0 0 var(--j);color:var(--md-text);text-decoration:none;overflow:hidden;min-width:56px;transition:transform .15s}
 .md-ev:hover{transform:translateY(-1px);background:color-mix(in srgb,var(--j) 30%,var(--bg-surface))}
 .md-ev b{font-size:12.5px;font-weight:800;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
-.md-ev span{font-size:11px;color:var(--md-2);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.md-ev span{font-size:12px;color:var(--md-2);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
 .md-ev[data-past=true]{opacity:.5}
-.md-now{position:absolute;top:-6px;bottom:-6px;width:2px;background:var(--md-neon);box-shadow:0 0 12px var(--md-neon);z-index:2}
-.md-now::before{content:attr(data-t);position:absolute;top:-20px;left:50%;transform:translateX(-50%);padding:1px 6px;border-radius:6px;background:var(--md-neon);color:var(--bg-base);font-size:10.5px;font-weight:900;white-space:nowrap}
+.md-now{position:absolute;top:-6px;bottom:-6px;width:2px;background:var(--md-text);z-index:2}
+.md-now::before{content:attr(data-t);position:absolute;top:-20px;left:50%;transform:translateX(-50%);padding:1px 6px;border-radius:6px;background:var(--md-text);color:var(--bg-base);font-size:12px;font-weight:900;white-space:nowrap}
 .md-tline-empty{position:absolute;inset:0;display:grid;place-items:center;color:var(--md-3);font-size:13px;font-weight:700}
 .md-anytime{display:flex;flex-wrap:wrap;align-items:center;gap:8px;margin-top:10px}
-.md-anytime > em{font-style:normal;font-size:11px;font-weight:800;letter-spacing:.12em;text-transform:uppercase;color:var(--md-3);margin-right:4px}
+.md-anytime > em{font-style:normal;font-size:12px;font-weight:800;letter-spacing:.12em;text-transform:uppercase;color:var(--md-3);margin-right:4px}
 .md-pill{display:inline-flex;align-items:center;gap:8px;min-height:36px;padding:0 12px;border-radius:999px;border:1px solid color-mix(in srgb,var(--k) 40%,transparent);background:color-mix(in srgb,var(--k) 10%,transparent);color:var(--md-text);font-size:13px;font-weight:700;text-decoration:none;max-width:100%}
 .md-pill svg{color:var(--k);flex:none}
 .md-pill span{white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
@@ -240,11 +240,11 @@ const CSS = `
 .md-stack i[data-t=gold]{background:var(--md-gold)}
 .md-stack i[data-t=grey]{background:var(--md-planned)}
 .md-dl{display:flex;flex-direction:column;align-items:center;line-height:1.1;padding:4px 2px;border-radius:8px;width:100%}
-.md-dl small{font-size:10px;font-weight:800;letter-spacing:.08em;text-transform:uppercase;color:var(--md-3)}
+.md-dl small{font-size:12px;font-weight:800;letter-spacing:.02em;text-transform:uppercase;color:var(--md-3)}
 .md-dl span{font-size:13px;font-weight:800;color:var(--md-2);font-variant-numeric:tabular-nums}
 .md-day[data-weekend=true] .md-dl{opacity:.55}
-.md-day[data-today=true] .md-dl{background:var(--md-neon)}
-.md-day[data-today=true] .md-dl small,.md-day[data-today=true] .md-dl span{color:var(--bg-base)}
+.md-day[data-today=true] .md-dl{background:var(--bg-surface-2)}
+.md-day[data-today=true] .md-dl small,.md-day[data-today=true] .md-dl span{color:var(--md-text)}
 .md-day[data-late=true] .md-dl small,.md-day[data-late=true] .md-dl span{color:var(--md-red)}
 .md-day[aria-pressed=true] .md-stack{box-shadow:0 0 0 2px var(--md-neon)}
 .md-day[aria-pressed=true] .md-dl{outline:2px solid var(--md-neon)}
@@ -279,7 +279,8 @@ const CSS = `
 /* Phone */
 @container md (max-width: 720px){
   .md-start{grid-template-columns:minmax(0,1fr);grid-template-areas:'id' 'side' 'score';padding-top:14px}
-  .md-side{justify-content:space-between;flex-wrap:wrap}
+  .md-side{justify-content:space-between;gap:10px}
+  .md-side .md-btn{padding:0 12px}
   .md-press{flex-direction:column;align-items:stretch;gap:14px}
   .md-ring{align-self:center}
   .md-nums{grid-template-columns:repeat(3,minmax(0,1fr));row-gap:8px}
@@ -300,7 +301,7 @@ const CSS = `
   .md-search{max-width:none}
 }
 .md-alist li{display:grid;grid-template-columns:72px minmax(0,1fr);gap:10px;align-items:center;padding:10px 0;border-bottom:1px solid color-mix(in srgb,var(--md-line) 70%,transparent)}
-.md-alist time{font-size:13px;font-weight:900;color:var(--md-neon);font-variant-numeric:tabular-nums}
+.md-alist time{font-size:13px;font-weight:900;color:var(--md-text);font-variant-numeric:tabular-nums}
 .md-alist a{color:var(--md-text);text-decoration:none;font-weight:750;min-width:0;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
 @media (prefers-reduced-motion: reduce){.md *{animation:none!important;transition:none!important}}
 `;
@@ -315,7 +316,7 @@ function Ring({ pct, onClick, active }: { pct: number; onClick: () => void; acti
       <svg width="118" height="118" viewBox="0 0 118 118" aria-hidden="true">
         <circle cx="59" cy="59" r={r} fill="none" stroke="rgba(255,255,255,.07)" strokeWidth="11" />
         <circle cx="59" cy="59" r={r} fill="none" stroke={color} strokeWidth="11" strokeLinecap="round"
-          strokeDasharray={`${(pct / 100) * c} ${c}`} style={{ transition: 'stroke-dasharray .6s cubic-bezier(.2,.8,.2,1)', filter: `drop-shadow(0 0 6px ${color})` }} />
+          strokeDasharray={`${(pct / 100) * c} ${c}`} style={{ transition: 'stroke-dasharray .6s cubic-bezier(.2,.8,.2,1)' }} />
       </svg>
       <b>{pct}%<small>On time</small></b>
     </button>
@@ -504,7 +505,7 @@ export default function MyDayBoard(props: MyDayBoardProps) {
       </div>
       <div className="md-side">
         <Clock_ clock={props.clock} />
-        <button type="button" className="md-btn" onClick={props.onCustomize}><SlidersHorizontal size={18} weight="bold" />Customize</button>
+        <button type="button" className="md-btn" onClick={props.onCustomize} aria-label="Customize My Day"><SlidersHorizontal size={18} weight="bold" /><span className="md-long">Customize</span></button>
       </div>
     </section>
   );

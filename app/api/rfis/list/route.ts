@@ -27,7 +27,7 @@ export async function GET(req: NextRequest) {
          back, so nothing in any list could show it and that promise was not
          kept anywhere the user could see. Two more narrow columns; the cap
          below is what keeps this query cheap, not the column count. */
-      .select('id, rfi_number, subject, question, spec_section, status, priority, is_urgent, submitted_by, due_date, answer, answered_by, ball_in_court, assigned_to_name, project_id, created_at')
+      .select('id, rfi_number, subject, question, spec_section, status, priority, is_urgent, submitted_by, due_date, answer, answered_by, ball_in_court, assigned_to_name, project_id, created_at, answered_at, closed_at')
       .eq('tenant_id', user.tenantId)
       .order('rfi_number', { ascending: false })
       .limit(limit);

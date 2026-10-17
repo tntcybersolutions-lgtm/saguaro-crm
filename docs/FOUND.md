@@ -466,3 +466,30 @@ the ungated proposal_signatures / _events (20261017c, applied). Found on the way
   `rfis.answer` / status — the RFI stays open after an official answer posted there.
 - `onRFICreated` emails only the job's architect; an RFI's `assigned_to_email` (set by `/api/rfis/[id]/reassign`) is
   never emailed.
+
+## 17 Oct 2026 — permissions per job (feat/project-permissions) — found, NOT fixed
+
+- `lib/job-page.sanity.test.ts` fails on main before this branch: "every tool page
+  under the job has a row — commitments, meetings" (the tools registry lacks rows for
+  those two pages). Not in `test:sanity`, so nothing runs it.
+- Line-item tables with no `project_id` (`change_order_line_items`,
+  `invoice_line_items`, `pay_application_lines`, `proposal_lines`,
+  `cash_flow_line_items`, `portal_sub_pay_app_line_items`) keep the company-role
+  RLS gate; a job role does not reach them from the browser. The server routes that
+  read them are guarded by the parent's job through `requirePermission`.
+- Cross-job list routes (`/api/rfis/list`, `/api/daily-logs/list`, the dashboard
+  rollups) still read with the company role and service client: a person with
+  "No access" on one job can see that job's rows in a company-wide list. Project
+  pickers (`/api/projects`, `/api/projects/list`) already drop the job.
+- `app/api/roles/assignments/[id]/route.ts` PATCH can move a grant onto a job where
+  the person already has one; the new one-job-row index turns that into a 500
+  instead of a 409.
+- A PATCH that moves a record to another job (`project_id` in the body) is checked
+  against the job the record is on now, not the one it is moving to.
+- FIXED (fix/offline-leftovers): "Waiting for Signal" badges now use the amber `pending` Badge tone; videos carry
+  the phone's client id (`project_files.client_id`, migration 20261017f) and are filed once.
+- `lib/status-colors.ts` `under_contract` is #E8FF2A (neon yellow-green) — every `Badge tone="under_contract"`
+  (e.g. `app/app/settings/page.tsx:475` "Trial") paints a yellow label, against DESIGN_SYSTEM §4. The comment
+  above STATUS_COLORS says under contract is blue. Needs a ruling on the color.
+- `--title-section` is `var(--c-yellow-hi)` (`app/globals.css:217`): every Card / section heading is yellow text,
+  against DESIGN_SYSTEM §4 ("yellow never labels"). Needs a ruling.

@@ -77,7 +77,7 @@ export default function PlatformIntegrationsPage() {
           <IconChip size={64}><ShieldCheck size={30} weight="duotone" color="var(--text-secondary)" /></IconChip>
           <div style={{ fontSize: 18, fontWeight: 800, color: WHITE, margin: '18px 0 8px' }}>Platform Owners Only</div>
           <div style={{ fontSize: 14, color: MUTED, maxWidth: 380, lineHeight: 1.55 }}>
-            This page configures OAuth apps for every tenant on the platform and is limited to platform administrator accounts.
+            Only Saguaro platform admins can open this page.
           </div>
         </div>
       </PremiumSurface>
@@ -100,9 +100,9 @@ export default function PlatformIntegrationsPage() {
       {/* Live figures — provider states come straight from the API. */}
       {apps !== null && (
         <StatStrip items={[
-          {href: '/app/settings/platform-integrations', label: 'Providers', value: String(apps.length), sub: 'Supported OAuth apps' },
-          {href: '/app/settings/platform-integrations', label: 'Configured', value: String(configured.length), accent: configured.length > 0 ? GREEN : undefined, sub: 'Live for all tenants' },
-          {href: '/app/settings/platform-integrations', label: 'Not Configured', value: String(pending.length), accent: pending.length > 0 ? GOLD : undefined, sub: pending.length ? 'Tenants can’t connect these yet' : 'Everything is live' },
+          {label: 'Providers', value: String(apps.length), sub: 'Supported OAuth apps' },
+          {label: 'Configured', value: String(configured.length), accent: configured.length > 0 ? GREEN : undefined, sub: 'Live for all tenants' },
+          {label: 'Not Configured', value: String(pending.length), accent: pending.length > 0 ? GOLD : undefined, sub: pending.length ? 'Tenants can’t connect these yet' : 'Everything is live' },
         ]} />
       )}
 

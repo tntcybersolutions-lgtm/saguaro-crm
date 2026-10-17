@@ -7,7 +7,7 @@
 import React, { useEffect, useState } from 'react';
 import { Button, EmptyState } from '@/components/ui/kit';
 import { Printer, ArrowLeft, WarningCircle, Database } from '@phosphor-icons/react';
-import { isItemOverdue, statusLabel, typeLabel, TABLE_MISSING_CODE, TABLE_MISSING_MESSAGE } from '@/lib/meetings';
+import { isItemOverdue, statusLabel, typeLabel, TABLE_MISSING_CODE } from '@/lib/meetings';
 
 type Meeting = {
   title: string; meeting_type: string; meeting_number: number | null; meeting_date: string; start_time: string | null;
@@ -18,6 +18,21 @@ type Attendee = { id: string; name: string; company: string | null; email: strin
 type Item = { id: string; number: string | null; topic: string; discussion: string | null; status: string; assignee_name: string | null; due_date: string | null; carried_from_item_id: string | null };
 
 const PRINT_CSS = `
+.mm-tbl { width: 100%; border-collapse: collapse; }
+.mm-tbl th { text-align: left; padding: 8px 10px; font-size: 12px; font-weight: 800; color: var(--text-secondary); border-bottom: 1px solid var(--border-default); }
+.mm-tbl td { padding: 10px; font-size: 14px; color: var(--text-primary); border-bottom: 1px solid var(--border-default); vertical-align: top; }
+.mm-tbl td.mm-num { font-weight: 800; font-variant-numeric: tabular-nums; width: 56px; }
+.mm-tbl td[data-late="true"] { color: var(--danger); }
+.mm-sub { color: var(--text-secondary); white-space: pre-wrap; margin-top: 4px; }
+/* A phone: each item is a stacked row — no sideways scroll. */
+@media screen and (max-width: 640px) {
+  .mm-tbl thead { display: none; }
+  .mm-tbl, .mm-tbl tbody, .mm-tbl tr, .mm-tbl td { display: block; width: auto; }
+  .mm-tbl tr { padding: 12px 0; border-bottom: 1px solid var(--border-default); }
+  .mm-tbl td { border: 0; padding: 2px 0; }
+  .mm-tbl td:empty { display: none; }
+  .mm-tbl td[data-l]::before { content: attr(data-l) ': '; color: var(--text-tertiary); font-weight: 600; }
+}
 @media print {
   @page { margin: 14mm; }
   html, body { background: #fff !important; }
@@ -41,8 +56,6 @@ const fmtTime = (t: string | null) => {
   return new Date(2000, 0, 1, h, m).toLocaleTimeString('en-US', { hour: 'numeric', minute: '2-digit' });
 };
 
-const th: React.CSSProperties = { textAlign: 'left', padding: '8px 10px', fontSize: 12, fontWeight: 800, color: 'var(--text-secondary)', borderBottom: '1px solid var(--border-default)' };
-const td: React.CSSProperties = { padding: '8px 10px', fontSize: 13, color: 'var(--text-primary)', borderBottom: '1px solid var(--border-default)', verticalAlign: 'top' };
 const h2: React.CSSProperties = { fontSize: 15, fontWeight: 800, margin: '22px 0 8px', color: 'var(--text-primary)' };
 
 export default function MeetingMinutesPrint({ projectId, meetingId, projectName }: { projectId: string; meetingId: string; projectName: string }) {
@@ -68,7 +81,7 @@ export default function MeetingMinutesPrint({ projectId, meetingId, projectName 
   }, [projectId, meetingId]);
 
   const back = `/app/projects/${projectId}/meetings/${meetingId}`;
-  if (missing) return <EmptyState icon={<Database size={22} />} title={TABLE_MISSING_MESSAGE} text="supabase/migrations/20261015c_meetings.sql" />;
+  if (missing) return <EmptyState icon={<Database size={22} />} title="Meetings aren't switched on for this company yet" text="Ask your Saguaro admin to turn them on." />;
   if (error) return <EmptyState icon={<WarningCircle size={22} />} title="Couldn't load the minutes" text={error} action={<Button href={back}>Back to meeting</Button>} />;
   if (!data) return <div className="k-skel" style={{ height: 320 }} />;
 
@@ -86,7 +99,7 @@ export default function MeetingMinutesPrint({ projectId, meetingId, projectName 
 
       <article className="mm-sheet" style={{ color: 'var(--text-primary)' }}>
         <div style={{ fontSize: 12, fontWeight: 700, color: 'var(--text-secondary)', textTransform: 'uppercase', letterSpacing: '0.06em' }}>{projectName} · Meeting minutes</div>
-        <h1 style={{ fontSize: 24, fontWeight: 800, margin: '4px 0 6px' }}>#{m.meeting_number ?? ''} {m.title}</h1>
+        <h2 style={{ fontSize: 22, fontWeight: 800, margin: '4px 0 6px', color: 'var(--text-primary)' }}>{m.meeting_number ? `#${m.meeting_number} ` : ''}{m.title}</h2>
         <div style={{ fontSize: 14, color: 'var(--text-secondary)', display: 'flex', flexWrap: 'wrap', gap: '4px 16px' }}>
           <span>{typeLabel(m.meeting_type)}</span>
           {when && <span>{when}</span>}
@@ -95,48 +108,48 @@ export default function MeetingMinutesPrint({ projectId, meetingId, projectName 
           <span>{statusLabel(m.status)}{m.distributed_at ? ` ${fmtShort(m.distributed_at)}` : ''}</span>
         </div>
 
-        <h2 style={h2}>Attendees ({attendees.filter((a) => a.attended).length} of {attendees.length} present)</h2>
+        <h3 style={h2}>Attendees{attendees.length ? ` (${attendees.filter((a) => a.attended).length} of ${attendees.length} present)` : ''}</h3>
         {attendees.length ? (
-          <table className="k-table-skin" style={{ width: '100%', borderCollapse: 'collapse' }}>
-            <thead><tr><th style={th}>Present</th><th style={th}>Name</th><th style={th}>Company</th><th style={th}>Role</th><th style={th}>Email</th></tr></thead>
+          <table className="k-table-skin mm-tbl">
+            <thead><tr><th>Name</th><th>Present</th><th>Company</th><th>Role</th><th>Email</th></tr></thead>
             <tbody>
               {attendees.map((a) => (
                 <tr key={a.id}>
-                  <td style={td}>{a.attended ? 'Yes' : 'No'}</td>
-                  <td style={td}>{a.name}</td>
-                  <td style={td}>{a.company || ''}</td>
-                  <td style={td}>{a.role || ''}</td>
-                  <td style={td}>{a.email || ''}</td>
+                  <td style={{ fontWeight: 700 }}>{a.name}</td>
+                  <td data-l="Present">{a.attended ? 'Yes' : 'No'}</td>
+                  <td data-l="Company">{a.company || ''}</td>
+                  <td data-l="Role">{a.role || ''}</td>
+                  <td data-l="Email">{a.email || ''}</td>
                 </tr>
               ))}
             </tbody>
           </table>
-        ) : <p style={{ fontSize: 13, color: 'var(--text-secondary)' }}>None recorded.</p>}
+        ) : <p style={{ fontSize: 14, color: 'var(--text-secondary)' }}>None recorded.</p>}
 
-        <h2 style={h2}>Items ({open.length} open of {items.length})</h2>
+        <h3 style={h2}>Items{items.length ? ` (${open.length} open of ${items.length})` : ''}</h3>
         {items.length ? (
-          <table className="k-table-skin" style={{ width: '100%', borderCollapse: 'collapse' }}>
-            <thead><tr><th style={{ ...th, width: 56 }}>#</th><th style={th}>Item / discussion</th><th style={th}>Ball in court</th><th style={th}>Due</th><th style={th}>Status</th></tr></thead>
+          <table className="k-table-skin mm-tbl">
+            <thead><tr><th style={{ width: 56 }}>#</th><th>Item / discussion</th><th>Ball in court</th><th>Due</th><th>Status</th></tr></thead>
             <tbody>
               {items.map((i) => {
                 const from = i.carried_from_item_id ? carriedFrom[i.carried_from_item_id] : undefined;
                 const late = today ? isItemOverdue(i, today) : false;
                 return (
                   <tr key={i.id}>
-                    <td style={{ ...td, fontWeight: 800, fontVariantNumeric: 'tabular-nums' }}>{i.number || ''}</td>
-                    <td style={td}>
+                    <td className="mm-num">{i.number || ''}</td>
+                    <td>
                       <div style={{ fontWeight: 700 }}>{i.topic}{i.carried_from_item_id ? ` (carried${from ? ` from #${from}` : ''})` : ''}</div>
-                      {i.discussion && <div style={{ whiteSpace: 'pre-wrap', marginTop: 4, color: 'var(--text-secondary)' }}>{i.discussion}</div>}
+                      {i.discussion && <div className="mm-sub">{i.discussion}</div>}
                     </td>
-                    <td style={td}>{i.assignee_name || ''}</td>
-                    <td style={{ ...td, color: late ? 'var(--danger)' : td.color }}>{fmtShort(i.due_date)}{late ? ' (overdue)' : ''}</td>
-                    <td style={td}>{i.status === 'closed' ? 'Closed' : 'Open'}</td>
+                    <td data-l="Ball in court">{i.assignee_name || ''}</td>
+                    <td data-l="Due" data-late={late ? 'true' : undefined}>{i.due_date ? `${fmtShort(i.due_date)}${late ? ' (overdue)' : ''}` : ''}</td>
+                    <td data-l="Status">{i.status === 'closed' ? 'Closed' : 'Open'}</td>
                   </tr>
                 );
               })}
             </tbody>
           </table>
-        ) : <p style={{ fontSize: 13, color: 'var(--text-secondary)' }}>No items.</p>}
+        ) : <p style={{ fontSize: 14, color: 'var(--text-secondary)' }}>No items.</p>}
 
         {m.notes && (<><h2 style={h2}>Notes</h2><p style={{ whiteSpace: 'pre-wrap', fontSize: 14, lineHeight: 1.55 }}>{m.notes}</p></>)}
       </article>
