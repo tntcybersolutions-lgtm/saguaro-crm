@@ -15,6 +15,7 @@ import {
   FormGrid, FormModal, DetailList, Toast, useToast,
   type Column, type BadgeTone, type StatItem,
 } from '@/components/ui/kit';
+import { Facts } from '@/lib/ui/filled-facts';
 import {
   Globe, ArrowsLeftRight, Shield, WifiHigh, Printer, VideoCamera, HardDrives, Laptop, Phone, Plug,
   CellSignalFull, BatteryFull, Package, Plus, X, CheckCircle, WarningCircle, Clock, type Icon as PhosphorIcon,
@@ -260,7 +261,7 @@ function DeviceInventoryPage() {
           icon={<DeviceTypeIcon type={selectedDevice.device_type} size={18} />}
           actions={<Button variant="ghost" size="sm" icon={<X size={16} />} aria-label="Close details" onClick={() => setSelectedDevice(null)} />}
         >
-          <DetailList items={[
+          <Facts items={[
             ['IP Address', selectedDevice.ip_address || 'N/A'],
             ['MAC Address', selectedDevice.mac_address || 'N/A'],
             ['Location', selectedDevice.location || 'N/A'],

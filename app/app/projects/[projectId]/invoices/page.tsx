@@ -51,7 +51,7 @@ interface Invoice {
 /** Lowercase-normalized status — kills the 'Sent' vs 'sent' split-brain. */
 const statusKey = (s?: string | null) => (s || 'draft').toLowerCase();
 
-const TONE: Record<string, BadgeTone> = { draft: 'neutral', waiting: 'under_contract', good: 'ongoing', done: 'completed', bad: 'overdue', warn: 'lead', active: 'ongoing' };
+const TONE: Record<string, BadgeTone> = { draft: 'neutral', waiting: 'lead', good: 'ongoing', done: 'completed', bad: 'overdue', warn: 'lead', active: 'ongoing' };
 function invBadge(key: string): { label: string; tone: BadgeTone } {
   const def = MODULES.invoices?.statuses?.[key];
   return { label: def?.label || (key.charAt(0).toUpperCase() + key.slice(1)), tone: (def && TONE[def.tone]) || 'neutral' };

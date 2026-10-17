@@ -18,6 +18,7 @@ import {
   Callout, DetailList, Timeline, Toast, useToast,
   type Column, type Action, type StatItem,
 } from '@/components/ui/kit';
+import { Facts } from '@/lib/ui/filled-facts';
 import {
   CheckCircle, Check, ListChecks, FilePdf, Package, Wallet, Scales, Wrench, UsersThree,
   WarningCircle, ArrowCounterClockwise, Circle, Export,
@@ -378,7 +379,7 @@ export default function CloseoutPage() {
           <span className="coBadges">
             <Badge tone={r.status === 'complete' ? 'ongoing' : 'neutral'} dot>{r.status === 'complete' ? 'Complete' : 'Incomplete'}</Badge>
             {sig?.ready && <Badge tone="ongoing">Ready</Badge>}
-            {sig?.warn && <Badge tone="under_contract">Attention</Badge>}
+            {sig?.warn && <Badge tone="lead">Attention</Badge>}
           </span>
         );
       },
@@ -521,7 +522,7 @@ export default function CloseoutPage() {
               </Card>
               {ctx && (
                 <Card title="Contract" icon={<Wallet size={16} />}>
-                  <DetailList items={[
+                  <Facts items={[
                     ['Revised Contract', fmtM(revised)],
                     ['Billed to Date', `${fmtM(billed)} · ${billedPct}%`],
                     ['Balance to Finish', fmtM(balanceToFinish)],

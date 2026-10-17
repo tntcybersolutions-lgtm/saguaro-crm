@@ -33,6 +33,7 @@ import {
   FormModal, Field, Input, Textarea, Select, FormGrid, DetailList, Toast, useToast, Callout,
   type Column, type Action, type BadgeTone, type StatItem,
 } from '@/components/ui/kit';
+import { Facts } from '@/lib/ui/filled-facts';
 import { CSI_DIVISIONS, SUB_TRADES } from '@/lib/construction-intelligence';
 import { useUnsavedGuard, useComposerDirty } from '@/lib/useUnsavedGuard';
 import UnsavedGuardModal from '@/components/UnsavedGuardModal';
@@ -56,7 +57,7 @@ const STATUS_LABELS:Record<string,string>={
 function statusBadge(s:string|null|undefined): { label:string; tone:BadgeTone } {
   const k = String(s||'pending');
   if (k==='submitted') return { label:'Submitted', tone:'lead' };
-  if (k==='under_review') return { label:'Under Review', tone:'under_contract' };
+  if (k==='under_review') return { label:'Under Review', tone:'lead' };
   if (k==='approved') return { label:'Approved', tone:'ongoing' };
   if (k==='rejected') return { label:'Rejected', tone:'overdue' };
   if (k==='revise_resubmit') return { label:'Revise & Resubmit', tone:'completed' };
@@ -426,10 +427,10 @@ export default function SubmittalsPage(){
                   {selected.ball_in_court && <Badge tone="neutral">Ball: {selected.ball_in_court}</Badge>}
                   {isOverdue(selected) && <Badge tone="overdue">Overdue</Badge>}
                 </div>
-                <div className="sbNext">{next ? `Next step: ${next}.` : 'Final state — a resubmittal keeps this number and bumps the revision.'}</div>
+                {next && <div className="sbNext">Next: {next}.</div>}
               </div>
               <div className="sbSection">
-                <DetailList items={[
+                <Facts items={[
                   ['Spec Section', selected.spec_section || ''],
                   ['Trade', selected.trade || ''],
                   ['Ball in Court', selected.ball_in_court || ''],
@@ -504,7 +505,7 @@ export default function SubmittalsPage(){
         subtitle={ctx?.project?.name || undefined}
         actions={<Button variant="primary" icon={<Plus size={15} weight="bold"/>} onClick={openCreate}>New Submittal</Button>}
       >
-        {!loadError && <StatRow items={stats}/>}
+        {!loadError && (loading || submittals.length>0) && <StatRow items={stats}/>}
 
         {!loading && !loadError && submittals.length>0 && (
           <Toolbar

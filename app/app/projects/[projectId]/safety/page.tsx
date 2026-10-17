@@ -85,7 +85,7 @@ interface ToolboxTalk {
 
 const SEVERITY_BADGE: Record<string, BadgeTone> = {
   'Near Miss': 'lead',
-  'First Aid': 'under_contract',
+  'First Aid': 'lead',
   'Recordable': 'overdue',
   'Lost Time': 'overdue',
 };
@@ -98,7 +98,7 @@ const STATUS_BADGE: Record<string, BadgeTone> = {
 const CA_STATUS_BADGE: Record<string, BadgeTone> = {
   open: 'neutral',
   in_progress: 'lead',
-  verified: 'under_contract',
+  verified: 'completed',
   closed: 'completed',
 };
 
@@ -270,11 +270,15 @@ export default function SafetyPage() {
   const lastIncident = incidents
     .filter(i => i.severity !== 'Near Miss')
     .sort((a, b) => b.date.localeCompare(a.date))[0];
-  const daysSinceLast = lastIncident
-    ? Math.floor((Date.now() - new Date(lastIncident.date).getTime()) / 86400000)
-    : incidents.length > 0
-      ? Math.floor((Date.now() - new Date(incidents[0].date).getTime()) / 86400000)
-      : 0;
+  /* With nothing recordable on file the clock runs from the job's start (to its
+     closeout once the job is closed) — a clean job is not "0 days" incident-free. */
+  const jobStart = (ctx?.project?.startDate as string | null) || null;
+  const jobClosed = /closed|complete/i.test(String(ctx?.project?.status || ''));
+  const jobEnd = jobClosed ? ((ctx?.project?.closeoutDate as string | null) || (ctx?.project?.endDate as string | null) || null) : null;
+  const dayDiff = (from: string, to?: string | null) => Math.max(0, Math.floor(((to ? new Date(`${to.slice(0, 10)}T12:00:00`).getTime() : Date.now()) - new Date(`${from.slice(0, 10)}T12:00:00`).getTime()) / 86400000));
+  const daysSinceLast: number | null = lastIncident
+    ? dayDiff(lastIncident.date, jobEnd)
+    : jobStart ? dayDiff(jobStart, jobEnd) : null;
 
   const recordables = incidents.filter(isOshaRecordable).length;
   const nearMisses = incidents.filter(i => i.type === 'Near Miss' || i.severity === 'Near Miss').length;
@@ -518,9 +522,9 @@ export default function SafetyPage() {
       active: tab === 'actions' && (caFilter === 'overdue' || caFilter === 'open'),
     },
     {
-      label: 'Days Incident-Free', value: unknown ? '—' : daysSinceLast, icon: <Timer size={15} />,
-      tone: !unknown && daysSinceLast > 30 ? 'good' : 'default',
-      sub: loading ? 'Loading…' : lastIncident ? `Since ${fmtDate(lastIncident.date)}` : 'No recordable incidents',
+      label: 'Days Incident-Free', value: unknown || daysSinceLast === null ? '—' : daysSinceLast, icon: <Timer size={15} />,
+      tone: !unknown && daysSinceLast !== null && daysSinceLast > 30 ? 'good' : 'default',
+      sub: loading ? 'Loading…' : lastIncident ? `Since ${fmtDate(lastIncident.date)}` : jobStart ? (jobEnd ? 'Start to closeout' : 'Since the job started') : 'No start date on the job',
     },
   ];
 

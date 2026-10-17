@@ -36,8 +36,8 @@ interface Spec {
 
 const STATUS_TONE: Record<string, BadgeTone> = {
   draft: 'neutral',
-  issued: 'under_contract',
-  revised: 'under_contract',
+  issued: 'neutral',
+  revised: 'lead',
   approved: 'ongoing',
 };
 const cap = (s: string) => (s ? s.charAt(0).toUpperCase() + s.slice(1) : '—');

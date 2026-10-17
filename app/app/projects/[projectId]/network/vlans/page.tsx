@@ -14,6 +14,7 @@ import {
   FormSection, DetailList, Toast, useToast,
   type Column, type BadgeTone, type StatItem,
 } from '@/components/ui/kit';
+import { Facts } from '@/lib/ui/filled-facts';
 import { Network, Plus, Stack, Devices, Cpu, WarningCircle } from '@phosphor-icons/react';
 import { useUnsavedGuard, useComposerDirty } from '@/lib/useUnsavedGuard';
 import UnsavedGuardModal from '@/components/UnsavedGuardModal';
@@ -36,7 +37,7 @@ interface Vlan {
 
 const PURPOSES = ['data', 'voice', 'security', 'guest', 'iot', 'management', 'server', 'dmz'];
 const PURPOSE_TONE: Record<string, BadgeTone> = {
-  data: 'neutral', voice: 'lead', security: 'overdue', guest: 'under_contract',
+  data: 'neutral', voice: 'lead', security: 'overdue', guest: 'neutral',
   iot: 'ongoing', management: 'closed', server: 'completed', dmz: 'lead',
 };
 
@@ -274,7 +275,7 @@ export default function VlanManagerPage() {
             <>
               <FormSection>Subnet calculator</FormSection>
               <div className="k-span-all">
-                <DetailList items={[
+                <Facts items={[
                   ['Network', <span key="n" style={mono}>{subnetInfo.network}</span>],
                   ['Broadcast', <span key="b" style={mono}>{subnetInfo.broadcast}</span>],
                   ['First usable', <span key="f" style={mono}>{subnetInfo.firstUsable}</span>],

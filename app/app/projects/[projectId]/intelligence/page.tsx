@@ -14,6 +14,7 @@ import {
   Brain, ArrowRight, FileText, Receipt, Wallet, Question, Swap, ListChecks, Stack, CalendarCheck, ChatCircleText, Sparkle,
 } from '@phosphor-icons/react';
 import { PageShell, StatRow, Button, Card, Input, ItemList, ItemRow, DetailList, type StatItem } from '@/components/ui/kit';
+import { Facts } from '@/lib/ui/filled-facts';
 
 const fmtMoney = (n: number) => '$' + (Number(n) || 0).toLocaleString('en-US', { maximumFractionDigits: 0 });
 
@@ -391,7 +392,7 @@ function IntelligenceChat() {
 
           {ctx && (
             <Card title="Context loaded">
-              <DetailList items={[
+              <Facts items={[
                 ['Project', ctx.project?.name || '—'],
                 ['Complete', `${Number(ctx.project?.percentComplete) || 0}%`],
                 ['Budget lines', String(Number(ctx.budget?.lineCount) || 0)],

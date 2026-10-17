@@ -32,6 +32,7 @@ import {
   FormModal, Field, Input, Textarea, Select, FormGrid, DetailList, Toast, useToast,
   type Column, type Action, type BadgeTone, type StatItem,
 } from '@/components/ui/kit';
+import { Facts } from '@/lib/ui/filled-facts';
 import { useUnsavedGuard, useComposerDirty } from '@/lib/useUnsavedGuard';
 import UnsavedGuardModal from '@/components/UnsavedGuardModal';
 import Suggest from '@/components/ui/Suggest';
@@ -52,7 +53,7 @@ function statusBadge(status: string | null | undefined, archived = false): { lab
   if (archived) return { label: 'Archived', tone: 'closed' };
   switch ((status ?? '').toLowerCase()) {
     case 'active':   return { label: 'Active', tone: 'ongoing' };
-    case 'standby':  return { label: 'Standby', tone: 'under_contract' };
+    case 'standby':  return { label: 'Standby', tone: 'lead' };
     case 'inactive': return { label: 'Inactive', tone: 'closed' };
     default:         return { label: status ? cap(status) : '—', tone: 'neutral' };
   }
@@ -351,10 +352,9 @@ export default function CrewsPage() {
               <div className="crBadges">
                 <Badge tone={statusBadge(selected.status, !!selected.deleted_at).tone} dot>{statusBadge(selected.status, !!selected.deleted_at).label}</Badge>
               </div>
-              <div className="crNext"><ClipboardText size={14} /> This roster feeds the manpower prefill on new daily logs.</div>
             </div>
             <div className="crSection">
-              <DetailList items={[
+              <Facts items={[
                 ['Foreman', selected.foreman_name || ''],
                 ['Trade', selected.trade || ''],
                 ['Members', String(selected.memberCount || 0)],

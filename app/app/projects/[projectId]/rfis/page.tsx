@@ -29,6 +29,7 @@ import {
   FormModal, Field, Input, Textarea, Select, FormGrid, DetailList, Toast, useToast,
   type Column, type Action, type BadgeTone, type StatItem,
 } from '@/components/ui/kit';
+import { Facts } from '@/lib/ui/filled-facts';
 import {
   Question, WarningCircle, Plus, Lightning, X, ChatText, UserSwitch, CheckCircle,
   Trash, FilePdf, Waveform, ArrowClockwise, ArrowSquareOut,
@@ -106,9 +107,9 @@ function rfiStatus(r: RFI): { label: string; tone: BadgeTone } {
   const s = r.status || 'open';
   if (s === 'answered') return { label: 'Answered', tone: 'ongoing' };
   if (s === 'closed') return { label: 'Closed', tone: 'closed' };
-  if (s === 'under_review') return { label: 'In Review', tone: 'under_contract' };
-  if (s === 'submitted') return { label: 'Submitted', tone: 'under_contract' };
-  if (s === 'pending') return { label: 'Pending', tone: 'under_contract' };
+  if (s === 'under_review') return { label: 'In Review', tone: 'lead' };
+  if (s === 'submitted') return { label: 'Submitted', tone: 'lead' };
+  if (s === 'pending') return { label: 'Pending', tone: 'lead' };
   if (s === 'draft') return { label: 'Draft', tone: 'neutral' };
   return { label: 'Open', tone: 'neutral' };
 }
@@ -797,7 +798,7 @@ export default function RFIsPage() {
               {selDef?.action && <div className="rfiNext">{selDef.action}.</div>}
             </div>
             <div className="rfiSection">
-              <DetailList items={[
+              <Facts items={[
                 ['Ball in Court', ballInCourt(selected) || (selStatus === 'closed' ? '' : 'Unassigned')],
                 ['Due', <span key="due" className={selected.is_overdue ? 'rfiLate' : undefined}>{fmtDate(selected.due_date)}</span>],
                 ['Days Open', `${daysOpen(selected)}d`],

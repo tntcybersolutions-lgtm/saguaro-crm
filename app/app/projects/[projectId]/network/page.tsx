@@ -16,6 +16,7 @@ import {
   DetailList, ItemList, ItemRow, Callout, Toast, useToast,
   type Column, type BadgeTone, type StatItem,
 } from '@/components/ui/kit';
+import { Facts } from '@/lib/ui/filled-facts';
 import {
   Globe, ArrowsLeftRight, Shield, WifiHigh, Printer, VideoCamera, HardDrives, Laptop, Phone, Plug,
   CellSignalFull, BatteryFull, Package, Robot, Devices, Shuffle, ChartBar, Plus, CheckCircle, Warning,
@@ -300,7 +301,7 @@ export default function NetworkDashboard() {
                 </ItemList>
               </Card>
               <Card title="Site profile" icon={<Globe size={16} />}>
-                <DetailList items={[
+                <Facts items={[
                   ['Site type', cap(siteType)],
                   ['Square footage', `${sqFt} SF`],
                   ['Floors', String(floors)],

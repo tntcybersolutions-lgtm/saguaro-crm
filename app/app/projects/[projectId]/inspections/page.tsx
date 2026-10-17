@@ -35,6 +35,7 @@ import {
   FormModal, Field, Input, Select, Textarea, FormGrid, DetailList, Toast, useToast, Callout,
   type Column, type Action, type BadgeTone, type StatItem,
 } from '@/components/ui/kit';
+import { Facts } from '@/lib/ui/filled-facts';
 import { useUnsavedGuard, useComposerDirty } from '@/lib/useUnsavedGuard';
 import UnsavedGuardModal from '@/components/UnsavedGuardModal';
 import Suggest from '@/components/ui/Suggest';
@@ -99,7 +100,7 @@ function resultBadge(result: string): { label: string; tone: BadgeTone } {
   const k = canonResult(result);
   if (k === 'passed') return { label: 'Passed', tone: 'ongoing' };
   if (k === 'failed') return { label: 'Failed', tone: 'overdue' };
-  if (k === 'conditional pass') return { label: 'Conditional Pass', tone: 'under_contract' };
+  if (k === 'conditional pass') return { label: 'Conditional Pass', tone: 'lead' };
   if (k === 'pending' || !k) return { label: 'Pending', tone: 'neutral' };
   return { label: result, tone: 'neutral' };
 }
@@ -451,12 +452,10 @@ export default function InspectionsPage() {
               <Badge tone={sb.tone}>{sb.label}</Badge>
               {needsReinspect(selected) && <Badge tone="overdue">Re-Inspect</Badge>}
             </div>
-            <div className="inNext">
-              {needsReinspect(selected) ? `Failed — stays flagged until a later ${selected.type} inspection passes.` : canonResult(selected.result) === 'passed' ? 'Passed — part of the permanent project record.' : /sched/i.test(selected.status) ? 'Booked — waiting on the inspector. Record the result once it is held.' : 'Result recorded on the inspection checklist.'}
-            </div>
+            {needsReinspect(selected) && <div className="inNext">Book a {selected.type || 're-'} inspection to clear it.</div>}
           </div>
           <div className="inSection">
-            <DetailList items={[
+            <Facts items={[
               ['Inspector', selected.inspector || ''],
               ['Agency', selected.agency || ''],
               ['Date', fmtDate(selected.date)],
@@ -496,12 +495,10 @@ export default function InspectionsPage() {
         <EmptyState
           icon={<ClipboardText size={22} />}
           title="No inspections on record"
-          text={pctComplete > 0
-            ? `${ctx?.project?.name || 'This project'} is ${pctComplete}% complete. ${suggestedType} is next.`
-            : `${suggestedType} is next.`}
+          text={pctComplete >= 100 ? undefined : `${suggestedType} is next.`}
           action={<Button icon={<Plus size={15} weight="bold" />} onClick={() => openCreate()}>Schedule {suggestedType}</Button>}
         />
-        {ctx && (
+        {ctx && pctComplete < 100 && (
           <div className="inEmptyRail">
             <div className="inSectionTitle" style={{ marginBottom: 10 }}>The Typical Sequence</div>
             <div className="inSeq">
@@ -545,7 +542,7 @@ export default function InspectionsPage() {
         subtitle={ctx?.project?.name || undefined}
         actions={<Button variant="primary" icon={<Plus size={15} weight="bold" />} onClick={() => openCreate()}>Schedule Inspection</Button>}
       >
-        {!loadError && <StatRow items={stats} />}
+        {!loadError && (loading || inspections.length > 0) && <StatRow items={stats} />}
 
         {!loading && !loadError && inspections.length > 0 && (
           <Toolbar
