@@ -20,7 +20,22 @@ export async function GET(req: NextRequest, { params }: { params: Promise<{ id: 
       .single();
 
     if (error || !data) return NextResponse.json({ error: 'Not found' }, { status: 404 });
-    return NextResponse.json({ invoice: data });
+
+    /* The job's name rides along, so the page never has to show a raw id —
+       the job list the page also reads leaves archived jobs out. */
+    let projectName: string | null = null;
+    const pid = (data as { project_id?: string | null }).project_id;
+    if (pid) {
+      const { data: proj, error: projErr } = await db
+        .from('projects')
+        .select('name')
+        .eq('id', pid)
+        .eq('tenant_id', user.tenantId)
+        .maybeSingle();
+      if (projErr) console.error('[invoices/[id] GET] project name', projErr);
+      projectName = (proj as { name?: string | null } | null)?.name ?? null;
+    }
+    return NextResponse.json({ invoice: data, project_name: projectName });
   } catch (e) {
     return apiError('invoices/[id] GET', e);
   }

@@ -95,7 +95,7 @@ export default function SearchPage() {
   const loadingFirst = !!term && view.loading && !view.data;
 
   return (
-    <PageShell title="Search" subtitle="Every job, RFI, submittal, change order, punch item, drawing, log, file, photo, sub and person you can see.">
+    <PageShell title="Search">
       <style dangerouslySetInnerHTML={{ __html: SEARCH_CSS + PAGE_CSS }} />
 
       <div className="srp-box">

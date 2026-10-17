@@ -87,7 +87,7 @@ function statusBadge(status: string): { label: string; tone: BadgeTone } {
 const CSS = `
 .blWs > .k-page { max-width: none; }
 .blStack { display: flex; flex-direction: column; gap: 16px; }
-.blSuccess { display: flex; align-items: center; gap: 12px; padding: 12px 16px; border-radius: var(--radius-sm); border: 1px solid rgba(74,222,128,.35); background: rgba(74,222,128,.08); color: var(--text-primary); font-size: var(--fs-sm); }
+.blSuccess { display: flex; align-items: center; gap: 12px; padding: 8px 0 8px 12px; border-left: 2px solid var(--success); color: var(--text-primary); font-size: var(--fs-sm); }
 .blSuccess > svg { color: var(--status-ongoing); flex-shrink: 0; }
 .blSuccess b { display: block; color: var(--status-ongoing); }
 .blPlanHead { display: flex; align-items: center; gap: 12px; flex-wrap: wrap; }
@@ -95,16 +95,20 @@ const CSS = `
 .blNote { font-size: var(--fs-sm); color: var(--text-tertiary); line-height: 1.6; margin-top: 6px; }
 .blNote[data-tone="bad"] { color: var(--status-overdue); font-weight: 600; }
 .blNote[data-tone="warn"] { color: var(--status-under-contract); font-weight: 600; }
-.blTrack { height: 6px; border-radius: 3px; background: rgba(255,255,255,0.08); overflow: hidden; margin-top: 16px; }
+.blTrack { height: 6px; border-radius: 3px; background: var(--bg-surface-2); overflow: hidden; margin-top: 16px; }
 .blFill { height: 100%; border-radius: 3px; background: var(--status-under-contract); }
 .blTrackLabel { display: flex; justify-content: space-between; margin-top: 6px; font-size: var(--fs-xs); color: var(--text-tertiary); }
-.blPlans { display: grid; grid-template-columns: repeat(auto-fit, minmax(260px, 1fr)); gap: 16px; }
-.blPlan { position: relative; display: flex; flex-direction: column; border-radius: 10px; border: 1px solid var(--sg-border); background: none; overflow: hidden; }
-.blPlan[data-popular="true"] { border-color: var(--brand-primary-35); }
-.blPlan[data-current="true"] { border-color: rgba(74,222,128,.5); }
-.blPlanRibbon { text-align: center; padding: 5px 0; font-size: var(--fs-xs); font-weight: 800; background: var(--info-bg); color: var(--info-fg); border-bottom: 1px solid var(--info-border); }
-.blPlanRibbon[data-current="true"] { background: rgba(74,222,128,.15); color: var(--status-ongoing); border-bottom: 1px solid rgba(74,222,128,.25); }
-.blPlanBody { padding: 16px; display: flex; flex-direction: column; gap: 12px; flex: 1; }
+/* Plans sit on the page as columns split by a hairline — no boxed tiles. */
+.blPlans { display: grid; grid-template-columns: repeat(auto-fit, minmax(240px, 1fr)); gap: 0; }
+.blPlan { position: relative; display: flex; flex-direction: column; padding: 4px 20px 16px; border-left: 1px solid var(--border-default); }
+.blPlan:first-child { border-left: 0; padding-left: 0; }
+.blPlanRibbon { padding: 4px 0 0; font-size: var(--fs-xs); font-weight: 700; color: var(--text-secondary); }
+.blPlanRibbon[data-current="true"] { color: var(--status-ongoing); }
+.blPlanBody { padding: 8px 0 0; display: flex; flex-direction: column; gap: 12px; flex: 1; }
+@media (max-width: 767px) {
+  .blPlan { border-left: 0; padding: 16px 0; border-top: 1px solid var(--border-default); }
+  .blPlan:first-child { border-top: 0; }
+}
 .blPlanTitle { font-size: var(--fs-md); font-weight: 800; color: var(--text-primary); }
 .blPlanTag { font-size: var(--fs-xs); color: var(--text-tertiary); margin-top: 2px; }
 .blPrice { display: flex; align-items: flex-end; gap: 3px; }
@@ -121,11 +125,10 @@ const CSS = `
 .blLabel { font-size: var(--fs-xs); font-weight: 700; color: var(--text-tertiary); margin-bottom: 4px; }
 .blAddons { display: grid; grid-template-columns: repeat(auto-fit, minmax(250px, 1fr)); column-gap: 24px; }
 .blAddon { display: flex; flex-direction: column; gap: 8px; padding: 12px 0; border-bottom: 1px solid var(--sg-border); }
-.blAddon[data-on="true"] { border-color: rgba(74,222,128,.35); }
 .blAddonHead { display: flex; align-items: flex-start; justify-content: space-between; gap: 8px; }
 .blAddonName { font-size: var(--fs-md); font-weight: 800; color: var(--text-primary); line-height: 1.3; }
 .blAddonMeta { display: flex; align-items: center; gap: 8px; font-size: var(--fs-sm); font-weight: 700; color: var(--text-primary); }
-.blAddonMeta > small { font-size: var(--fs-xs); font-weight: 700; color: var(--text-tertiary); text-transform: capitalize; padding: 1px 7px; border-radius: 999px; border: 1px solid var(--border-subtle); background: var(--bg-surface); }
+.blAddonMeta > small { font-size: var(--fs-xs); font-weight: 700; color: var(--text-tertiary); text-transform: capitalize; }
 .blAddonDesc { font-size: var(--fs-xs); color: var(--text-tertiary); line-height: 1.55; flex: 1; }
 .blAddonState { font-size: var(--fs-xs); color: var(--text-secondary); font-weight: 600; line-height: 1.5; }
 .blSkel { height: 14px; border-radius: 4px; background: var(--border-subtle); }
@@ -143,9 +146,9 @@ const CSS = `
 .blFaqItem:last-child { border-bottom: 0; }
 .blFaqQ { font-size: var(--fs-md); font-weight: 700; color: var(--text-primary); margin-bottom: 6px; }
 .blFaqA { font-size: var(--fs-sm); color: var(--text-tertiary); line-height: 1.65; }
-.blOffer { padding: 12px 16px; border-radius: var(--radius-sm); border: 1px solid var(--brand-primary-18); background: var(--brand-primary-08); font-size: var(--fs-sm); color: var(--text-primary); }
+.blOffer { padding: 8px 0 8px 12px; border-left: 2px solid var(--border-strong); font-size: var(--fs-sm); color: var(--text-primary); }
 .blProse { font-size: var(--fs-sm); color: var(--text-secondary); line-height: 1.65; }
-.blCheckoutOff { display: flex; gap: 10px; align-items: flex-start; margin-bottom: 16px; padding: 12px 16px; border-radius: var(--radius-sm); border: 1px solid var(--brand-primary-35); background: var(--brand-primary-08); font-size: var(--fs-sm); color: var(--text-primary); line-height: 1.55; }
+.blCheckoutOff { display: flex; gap: 10px; align-items: flex-start; margin-bottom: 16px; padding: 8px 0 8px 12px; border-left: 2px solid var(--border-strong); font-size: var(--fs-sm); color: var(--text-primary); line-height: 1.55; }
 .blCheckoutOff > svg { color: var(--text-secondary); flex-shrink: 0; margin-top: 2px; }
 .blCheckoutOff b { display: block; }
 @media (max-width: 640px) {
@@ -474,7 +477,7 @@ export default function BillingPage() {
       <PageShell
         crumbs={[{ label: 'Home', href: '/app' }, { label: 'Billing' }]}
         title="Billing & Subscription"
-        subtitle={inApp ? "Your company's plan and its status." : 'Your plan, payment method, and invoices. Plan changes run in the secure Stripe billing portal.'}
+        subtitle={inApp ? "Your company's plan" : 'Plan, payment method and invoices'}
         actions={canPortal && !inApp ? (
           sub!.status === 'past_due'
             ? <Button variant="danger" icon={<CreditCard size={15} />} onClick={handlePortal} disabled={portalLoading}>{portalLoading ? 'Opening…' : 'Update Payment Method'}</Button>
@@ -552,7 +555,7 @@ export default function BillingPage() {
           {/* Plan Selection */}
           {!inApp && <Card
             title={sub?.status === 'trialing' ? 'Upgrade Your Plan' : 'Change Plan'}
-            subtitle={annual ? 'Annual billing — about 17% less than monthly.' : 'Monthly billing. Switch to annual to save about 17%.'}
+            subtitle={annual ? 'Annual · about 17% less than monthly' : 'Monthly · annual saves about 17%'}
             actions={
               <Tabs value={annual ? 'annual' : 'monthly'} onChange={k => setAnnual(k === 'annual')} tabs={[{ key: 'monthly', label: 'Monthly' }, { key: 'annual', label: 'Annual' }]} />
             }
@@ -561,8 +564,7 @@ export default function BillingPage() {
               <div className="blCheckoutOff" role="status">
                 <CreditCard size={18} weight="bold" />
                 <div>
-                  <b>Online checkout isn&apos;t switched on yet.</b>
-                  Pick a plan and tap Request Plan — we set it up and email you an invoice within 1 business day. Nothing is charged here.
+                  <b>Request a plan — we email the invoice within 1 business day.</b>
                   {requestedPlan && <> You asked for <strong>{PLANS.find(p => p.id === requestedPlan.planId)?.name || requestedPlan.planId}</strong> ({requestedPlan.interval}).</>}
                 </div>
               </div>

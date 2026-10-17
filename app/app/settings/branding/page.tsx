@@ -28,10 +28,15 @@
 import React, { useEffect, useMemo, useState } from 'react';
 import { CheckCircle, Warning, UploadSimple, ArrowCounterClockwise } from '@phosphor-icons/react';
 import { deriveTheme, contrast, parseHex, AA_TEXT } from '@/lib/brand-theme';
+import { paletteHex } from '@/lib/design-tokens';
 import { PageShell, Card, Badge, Button, Field, Input } from '@/components/ui/kit';
 import { layout } from '@/lib/design-tokens';
 
-const SAGUARO_GOLD = 'var(--brand-primary)'; // Saguaro default brand: neon yellow
+/* Saguaro's default brand colour as a real hex: the colour picker, the
+   contrast maths and the save all need a hex, never a CSS variable (a
+   variable here showed a black swatch and the text "var(--brand-primary)"). */
+const SAGUARO_GOLD: string = paletteHex.yellow;
+const isHex = (v: unknown): v is string => typeof v === 'string' && /^#[0-9a-fA-F]{6}$/.test(v);
 const PLATFORM_BASE = '#0d1117';
 
 /* Grounds that are known-good starting points, so nobody has to guess a hex. */
@@ -106,7 +111,7 @@ export default function BrandingPage() {
       .then((d) => {
         if (!d) return;
         const cn = d.company_name ?? '';
-        const pc = d.primary_color || SAGUARO_GOLD;
+        const pc = isHex(d.primary_color) ? d.primary_color : SAGUARO_GOLD;
         const sc = d.surface_color ?? '';
         const cr = d.show_saguaro_credit !== false;
         setCompanyName(cn);
@@ -146,7 +151,8 @@ export default function BrandingPage() {
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
           company_name: companyName,
-          primary_color: primary,
+          // The default is stored as "no custom colour", so a platform change still reaches this tenant.
+          primary_color: primary.toLowerCase() === SAGUARO_GOLD.toLowerCase() ? '' : primary,
           surface_color: surface,
           show_saguaro_credit: showCredit,
         }),
@@ -169,10 +175,10 @@ export default function BrandingPage() {
       <PageShell
         crumbs={[{ label: 'Home', href: '/app' }, { label: 'Settings', href: '/app/settings' }, { label: 'Branding' }]}
         title="Branding"
-        subtitle="Your logo and colors, everywhere customers see you — pick any color and we keep it readable."
+        subtitle="Your logo and colors, everywhere customers see you."
         actions={
           <>
-            {saved && <Badge tone={dirty ? 'under_contract' : 'ongoing'} dot>{dirty ? 'Unsaved changes' : 'Saved'}</Badge>}
+            {saved && <Badge tone={dirty ? 'lead' : 'ongoing'} dot>{dirty ? 'Unsaved changes' : 'Saved'}</Badge>}
             <Button variant="primary" onClick={save} disabled={saving || loading || (!!saved && !dirty)}>{saving ? 'Saving…' : 'Save Branding'}</Button>
           </>
         }
@@ -188,24 +194,19 @@ export default function BrandingPage() {
           <div className="brSplit">
             {/* ── the controls ─────────────────────────────────────────── */}
             <div className="brStack">
-              <Card title="Step 1 · Your Company">
-                <Field label="Company Name" hint="This is the name on your contracts, pay applications and lien waivers, and the one your customers see on a portal invite.">
+              <Card title="Company">
+                <Field label="Company Name" hint="On contracts, pay apps, lien waivers and portal invites.">
                   <Input value={companyName} onChange={(e) => setCompanyName(e.target.value)} placeholder="Acme General Contractors" />
                 </Field>
               </Card>
 
-              <Card title="Step 2 · Your Logo" actions={logoUrl ? <Badge tone="ongoing">Uploaded</Badge> : <Badge tone="neutral">Not set</Badge>}>
-                <p className="brProse">Upload it on the main settings page. A wide logo works best — it sits in the top-left of every screen and at the head of every PDF.</p>
-                <ul className="brList">
-                  <li>PNG or SVG with a transparent background looks best</li>
-                  <li>At least 400px wide so it stays sharp on a big screen</li>
-                  <li>A dark logo is fine — we put a light plate behind it automatically</li>
-                </ul>
+              <Card title="Logo" actions={logoUrl ? <Badge tone="ongoing">Uploaded</Badge> : <Badge tone="neutral">Not set</Badge>}>
+                <p className="brProse">Wide PNG or SVG, 400px or more.</p>
                 <Button icon={<UploadSimple size={15} weight="bold" />} href="/app/settings#branding">{logoUrl ? 'Replace Logo' : 'Upload a Logo'}</Button>
               </Card>
 
-              <Card title="Step 3 · Your Color">
-                <Field label="Brand Color" hint="Buttons, links and highlights use this. Take it from your logo or your letterhead — anything you like. We will keep it readable.">
+              <Card title="Color">
+                <Field label="Brand Color" hint="Buttons, links and highlights.">
                   <div className="brColor">
                     <input type="color" value={primary} onChange={(e) => setPrimary(e.target.value)} aria-label="Brand color" />
                     <Input value={primary} onChange={(e) => setPrimary(e.target.value)} spellCheck={false} aria-label="Brand color hex" />
@@ -214,8 +215,7 @@ export default function BrandingPage() {
                 </Field>
               </Card>
 
-              <Card title="Step 4 · Your Background (Optional)">
-                <p className="brProse" style={{ marginBottom: 12 }}>Most companies leave this alone — the dark background is easy on the eyes for a full day. Change it only if your brand really needs it.</p>
+              <Card title="Background">
                 <div className="brChips" role="group" aria-label="Background">
                   {GROUND_PRESETS.map((g) => (
                     <button key={g.label} type="button" className="brChip" aria-pressed={surface === g.value} onClick={() => setSurface(g.value)}>
@@ -226,25 +226,24 @@ export default function BrandingPage() {
                 </div>
               </Card>
 
-              <Card title="Step 5 · The Saguaro Credit">
+              <Card title="Saguaro Credit">
                 <label className="brCheck">
                   <input type="checkbox" checked={showCredit} onChange={(e) => setShowCredit(e.target.checked)} />
                   <span>
                     <span className="brCheckTitle">Show “Powered by Saguaro”</span>
-                    <span className="brCheckSub">A small line in the footer linking to saguarocontrol.net. Turn it off and the Saguaro name appears nowhere your customers can see.</span>
+                    <span className="brCheckSub">A small footer line on customer pages.</span>
                   </span>
                 </label>
               </Card>
 
               <div className="brFoot">
                 <Button variant="primary" onClick={save} disabled={saving || loading || (!!saved && !dirty)}>{saving ? 'Saving…' : 'Save Branding'}</Button>
-                <span>Applies to everyone on your account.</span>
               </div>
             </div>
 
             {/* ── the preview + the honesty panel ──────────────────────── */}
             <aside className="brRail" aria-label="Preview and readability">
-              <Card title="What It Will Look Like" subtitle="The real thing, not swatches — a color that reads fine as a square can still be unreadable as a label.">
+              <Card title="Preview">
                 <div style={{ background: theme.base, borderRadius: 12, padding: 16, border: `1px solid ${theme.border}` }}>
                   <div style={{ background: theme.surface2, border: `1px solid ${theme.border}`, borderRadius: 10, padding: 14 }}>
                     <div style={{ fontSize: 15, fontWeight: 800, color: theme.text, marginBottom: 5 }}>{companyName || 'Your Company'}</div>
@@ -267,13 +266,13 @@ export default function BrandingPage() {
                */}
               <Card
                 title={theme.fixes.length ? 'We Adjusted a Few Things' : 'Everything Is Readable'}
-                actions={theme.fixes.length ? <Badge tone="under_contract" dot>{theme.fixes.length} adjusted</Badge> : <Badge tone="ongoing" dot>Passes AA</Badge>}
+                actions={theme.fixes.length ? <Badge tone="lead" dot>{theme.fixes.length} adjusted</Badge> : <Badge tone="ongoing" dot>Passes AA</Badge>}
               >
                 {theme.fixes.length === 0 ? (
-                  <p className="brProse">Your colors passed every readability check on their own — nothing was changed. Text, labels and buttons all clear the accessibility standard for normal sight and for anyone using your system in bright sun on a jobsite.</p>
+                  <p className="brProse">Nothing needed changing.</p>
                 ) : (
                   <>
-                    <p className="brProse" style={{ marginBottom: 12 }}>Your colors are used as you chose them wherever they work. In these places they would have been hard or impossible to read, so we shifted them just far enough — the color is still yours, only lighter or darker.</p>
+                    <p className="brProse" style={{ marginBottom: 12 }}>Shifted just enough to stay readable.</p>
                     <div style={{ display: 'grid', gap: 9 }}>
                       {theme.fixes.map((f) => (
                         <div key={f.what} className="brFix">
@@ -286,7 +285,7 @@ export default function BrandingPage() {
                   </>
                 )}
                 {rawRisk !== null && rawRisk < 2 && (
-                  <div className="brRisk">Your brand color and your background are very close to each other. We can keep the text readable, but buttons will be hard to pick out. Try a lighter or darker background above.</div>
+                  <div className="brRisk">Your color and background are too close — buttons will be hard to pick out. Try a lighter or darker background.</div>
                 )}
               </Card>
             </aside>

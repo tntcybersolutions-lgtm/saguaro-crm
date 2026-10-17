@@ -26,8 +26,9 @@ import { SUB_TRADES_BY_DIVISION } from '@/lib/construction-intelligence';
 import { leaveOf } from '@/lib/leave-entry';
 import { inAppFileClick } from '@/lib/media-save';
 
-const fmt = (n: number) => '$' + (Number(n) || 0).toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
-const fmt0 = (n: number) => '$' + (Number(n) || 0).toLocaleString('en-US', { maximumFractionDigits: 0 });
+/* Currency style puts the sign first: -$1.00, never $-1.00. */
+const fmt = (n: number) => (Number(n) || 0).toLocaleString('en-US', { style: 'currency', currency: 'USD', minimumFractionDigits: 2, maximumFractionDigits: 2 });
+const fmt0 = (n: number) => (Number(n) || 0).toLocaleString('en-US', { style: 'currency', currency: 'USD', minimumFractionDigits: 0, maximumFractionDigits: 0 });
 const hrs = (n: number) => String(Math.round((Number(n) || 0) * 100) / 100);
 
 const DAYS = ['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun'] as const;
@@ -140,7 +141,7 @@ const STATUS_TONE: Record<string, BadgeTone> = { submitted: 'under_contract', dr
 const statusLabel = (s: string) => { const t = s || 'draft'; return t.charAt(0).toUpperCase() + t.slice(1); };
 const fileUrl = (u: string) => `/api/files/open?u=${encodeURIComponent(u || '')}`;
 const shortDate = (iso: string) => {
-  if (!iso) return '—';
+  if (!iso) return '';
   const d = new Date(String(iso).slice(0, 10) + 'T12:00:00');
   return Number.isNaN(d.getTime()) ? iso : d.toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' });
 };
@@ -412,7 +413,7 @@ export default function PayrollPage() {
   const base = `/app/projects/${pid}`;
 
   const stats: StatItem[] = [
-    { label: 'Filed to date', value: recordsLoading ? '—' : String(records.length), sub: grossFiled > 0 ? fmt0(grossFiled) + ' gross certified' : 'No WH-347s yet', icon: <ClockCounterClockwise size={15} /> },
+    { label: 'Filed to date', value: recordsLoading ? '—' : String(records.length), sub: grossFiled > 0 ? fmt0(grossFiled) + ' gross certified' : undefined, icon: <ClockCounterClockwise size={15} /> },
     { label: 'This week', value: totalWeekHours.toFixed(1) + ' hrs', sub: `${employees.length} employee${employees.length === 1 ? '' : 's'}`, icon: <CalendarBlank size={15} /> },
     {
       label: 'Field time clock',
@@ -423,7 +424,7 @@ export default function PayrollPage() {
       href: `${base}/timesheets`,
     },
     { label: 'Gross wages', value: fmt(totalWeekGross), sub: `${fmt(totalWeekDeductions)} withheld`, icon: <CurrencyDollar size={15} /> },
-    { label: 'Net wages', value: fmt(totalWeekNet), sub: 'After deductions', tone: totalWeekNet > 0 ? 'good' : 'default', icon: <Wallet size={15} /> },
+    { label: 'Net wages', value: fmt(totalWeekNet), tone: totalWeekNet > 0 ? 'good' : 'default', icon: <Wallet size={15} /> },
   ];
 
   const numCell = (emp: Employee, field: 'hourlyRate' | 'otRate' | 'fica' | 'fedWH' | 'stateWH' | 'deductions', label: string, step = 0.01) => (
@@ -443,11 +444,11 @@ export default function PayrollPage() {
 
   const weekColumns: Column<Employee>[] = [
     {
-      key: 'name', header: 'Employee', primary: true, phone: 'show', sortable: false, groupable: false, accessor: (e) => e.name,
+      key: 'name', header: 'Employee', primary: true, phone: 'show', sortable: false, groupable: false, fit: 'full', accessor: (e) => e.name,
       render: (e) => <Input value={e.name} onChange={ev => updateEmp(e.id, 'name', ev.target.value)} placeholder="Name" aria-label="Employee name" style={{ minWidth: 150 }} {...keepKeys} />,
     },
     {
-      key: 'classification', header: 'Class', sortable: false, phone: 'hide', accessor: (e) => e.classification,
+      key: 'classification', header: 'Class', sortable: false, phone: 'hide', fit: 'full', accessor: (e) => e.classification,
       render: (e) => (
         <select className="k-select" value={e.classification} onChange={ev => updateEmp(e.id, 'classification', ev.target.value)} aria-label={`${e.name || 'Employee'} classification`} style={{ minWidth: 150 }} {...keepKeys}>
           <ClassificationOptions current={e.classification} />
@@ -502,7 +503,7 @@ export default function PayrollPage() {
         >
           <FileText size={14} />PDF
         </a>
-      ) : <span style={{ color: 'var(--text-tertiary)' }}>—</span>,
+      ) : null,
     },
   ];
 
@@ -516,7 +517,7 @@ export default function PayrollPage() {
         { label: 'Certified Payroll' },
       ]}
       title="Certified Payroll"
-      subtitle="DOL WH-347 for Davis-Bacon and prevailing wage work."
+      subtitle="DOL WH-347 · Davis-Bacon and prevailing wage"
       actions={
         <>
           <Button icon={<UserPlus size={15} />} onClick={openAddEmployee}>Add employee</Button>
@@ -558,9 +559,9 @@ export default function PayrollPage() {
           title={`Prevailing wage project · ${pwPlace}`}
           text={pwRates.length > 0 ? (
             <>
-              {pwRates.length} classifications available. These are sample reference rates, not an official determination — verify against the official{' '}
+              {pwRates.length} classifications · sample rates, verify on{' '}
               <a className="k-link" href="https://sam.gov/content/wage-determinations" target="_blank" rel="noopener noreferrer">SAM.gov (WDOL)</a>{' '}
-              determination before certifying.
+              before certifying
             </>
           ) : 'No determination on file for this state/county.'}
           actions={pwRates.length > 0 ? <Button size="sm" icon={<Scales size={14} />} onClick={applyPwRateAll}>Apply prevailing rates</Button> : undefined}
@@ -582,13 +583,13 @@ export default function PayrollPage() {
           tone="info"
           icon={<Clock size={18} />}
           title={`No field time in the 7 days ending ${shortDate(weekEndingDate)}`}
-          text={`${timeEntries.length} ${timeEntries.length === 1 ? 'entry exists' : 'entries exist'} on this job overall. Enter hours in the grid.`}
+          text={`${timeEntries.length} ${timeEntries.length === 1 ? 'entry' : 'entries'} on this job overall`}
         />
       )}
 
       <Card
         title="Week's hours and wages"
-        subtitle="Regular rate to 40 hrs, then the OT rate (1.5× when blank)."
+        subtitle="OT after 40 hrs · 1.5× when the OT rate is blank"
         flush
         actions={
           <Toolbar
@@ -616,7 +617,6 @@ export default function PayrollPage() {
             <EmptyState
               icon={<UserPlus size={22} />}
               title="No employees on this week"
-              text={weekEntries.length > 0 ? 'Import the clocked hours or add a line.' : 'Add a line for each worker on the job.'}
               action={<Button icon={<UserPlus size={15} />} onClick={openAddEmployee}>Add employee</Button>}
             />
           }
@@ -626,7 +626,6 @@ export default function PayrollPage() {
       {/* Statement of Compliance — the certification the WH-347 carries */}
       <Card
         title="Statement of Compliance"
-        icon={<ShieldCheck size={17} color={complianceAgreed ? 'var(--success)' : undefined} />}
         actions={complianceAgreed ? <Badge tone="completed" dot>Certified</Badge> : <Badge tone="lead" dot>Not certified</Badge>}
       >
         <div style={{ display: 'flex', flexDirection: 'column', gap: 14 }}>
@@ -645,7 +644,7 @@ export default function PayrollPage() {
         </div>
       </Card>
 
-      <Card title="Filed WH-347s" icon={<ClockCounterClockwise size={17} />} flush>
+      <Card title="Filed WH-347s" flush>
         <DataTable<PayrollRecord>
           tableId="project-payroll-history"
           exportName="certified-payroll-history"
@@ -658,11 +657,7 @@ export default function PayrollPage() {
             <EmptyState
               icon={<FileText size={22} />}
               title="No WH-347s filed yet"
-              text={pw
-                ? `This job is prevailing wage (${pw.state}${pw.county ? ' · ' + pw.county + ' County' : ''}) — one is due for every week the crew works.`
-                : timeEntries.length > 0
-                  ? `The crew has ${timeEntries.length} field time ${timeEntries.length === 1 ? 'entry' : 'entries'} on this job — pick a week ending and import them.`
-                  : 'Weekly certified payroll is required on Davis-Bacon and most public work.'}
+              text={pw ? `Prevailing wage · ${pw.state}${pw.county ? ' · ' + pw.county + ' County' : ''}` : undefined}
               primary={{ label: 'Start a WH-347', icon: <FileText size={15} weight="bold" />, onClick: () => {
                 const el = document.getElementById('payroll-week-ending');
                 el?.scrollIntoView({ behavior: 'smooth', block: 'center' });

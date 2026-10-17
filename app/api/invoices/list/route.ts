@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from 'next/server';
 import { createServerClient, getUser } from '@/lib/supabase-server';
 import { requirePermission } from '@/lib/permissions';
 import { apiError } from '@/lib/api-error';
+import { hiddenProjectIds } from '@/lib/hidden-projects';
 
 export async function GET(req: NextRequest) {
   const g = await requirePermission(req, 'Budget', 'View');
@@ -24,7 +25,16 @@ export async function GET(req: NextRequest) {
     const { data, error } = await query;
     if (error) throw error;
 
-    return NextResponse.json({ invoices: data || [] });
+    // Company-wide list: an archived or deleted job's invoices stay out of the
+    // register and its totals. One job's own list, or ?include_archived=1 (an
+    // explicit archive view), keeps them.
+    let rows = data || [];
+    if (!projectId && searchParams.get('include_archived') !== '1') {
+      const hidden = await hiddenProjectIds(db, user.tenantId);
+      if (hidden.size) rows = rows.filter((r: { project_id?: string | null }) => !r.project_id || !hidden.has(r.project_id));
+    }
+
+    return NextResponse.json({ invoices: rows });
   } catch (e) {
     return apiError('invoices/list GET', e);
   }

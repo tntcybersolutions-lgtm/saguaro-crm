@@ -222,6 +222,7 @@ export default function InvoiceDetailPage() {
       const data = await res.json();
       const inv: Invoice = data.invoice ?? data;
       setInvoice(inv);
+      if (typeof data.project_name === 'string' && data.project_name) setProjectName(data.project_name);
       if (inv?.project_id) {
         fetch(`/api/projects?limit=200&fields=id,name`)
           .then(r => r.ok ? r.json() : null)
@@ -374,7 +375,7 @@ export default function InvoiceDetailPage() {
     return (
       <div className="idWs">
         <style dangerouslySetInnerHTML={{ __html: CSS }} />
-        <PageShell crumbs={[{ label: 'Invoicing', href: '/app/invoicing' }, { label: 'Loading…' }]} title="Invoice" subtitle="Loading the invoice…">
+        <PageShell crumbs={[{ label: 'Invoicing', href: '/app/invoicing' }, { label: 'Loading…' }]} title="Invoice">
           <Card flush><div style={{ padding: 16 }}><ModuleSkeleton hero={false} kpis={4} rows={4} /></div></Card>
         </PageShell>
       </div>
@@ -424,10 +425,10 @@ export default function InvoiceDetailPage() {
   const paidKey = (inv.status || 'draft').toLowerCase() === 'paid';
 
   const stats: StatItem[] = [
-    { label: 'Amount', value: money(inv.amount), sub: 'Pre-tax' },
-    { label: 'Tax', value: money(inv.tax), sub: inv.amount != null && inv.tax != null && Number(inv.amount) > 0 ? `${((Number(inv.tax) / Number(inv.amount)) * 100).toFixed(2)}% of amount` : 'As recorded' },
+    { label: 'Amount', value: money(inv.amount), sub: 'Before tax' },
+    { label: 'Tax', value: money(inv.tax), sub: inv.amount != null && inv.tax != null && Number(inv.amount) > 0 ? `${((Number(inv.tax) / Number(inv.amount)) * 100).toFixed(2)}% of amount` : undefined },
     { label: 'Total', value: money(computedTotal), sub: 'Amount + tax' },
-    { label: 'Due Date', value: dateOnlyStr(inv.due_date), tone: overdue ? 'bad' : 'default', sub: overdue ? 'Past due' : paidKey ? 'Paid' : 'Overdue flags itself from this date' },
+    { label: 'Due Date', value: inv.due_date ? dateOnlyStr(inv.due_date) : 'Not set', tone: overdue ? 'bad' : 'default', sub: overdue ? 'Past due' : paidKey ? 'Paid' : undefined },
   ];
 
   return (
@@ -437,7 +438,7 @@ export default function InvoiceDetailPage() {
         crumbs={crumbs}
         title={inv.invoice_number || 'Invoice'}
         badge={<span className="idBadges"><Badge tone={status.tone} dot>{status.label}</Badge>{overdue && <Badge tone="overdue">Overdue</Badge>}</span>}
-        subtitle={`${inv.vendor_name || 'Unknown vendor'}${projectName || inv.project_id ? ` · ${projectName || 'Project'}` : ''}`}
+        subtitle={[inv.vendor_name, projectName].filter(Boolean).join(' · ') || undefined}
         actions={
           <>
             <Button icon={<PencilSimple size={15} />} onClick={openEdit} disabled={editing}>Edit</Button>
@@ -457,7 +458,7 @@ export default function InvoiceDetailPage() {
         <div className="idCq">
           <div className="idSplit">
             <div className="idMain">
-              <Card title="Invoice Details" subtitle="One line — the server computes the total from amount + tax." flush>
+              <Card title="Invoice Details" flush>
                 <div className="idTableWrap">
                   <table className="idTable k-table-skin">
                     <thead>
@@ -472,9 +473,9 @@ export default function InvoiceDetailPage() {
                     </thead>
                     <tbody>
                       <tr>
-                        <td data-desc="true">{inv.description || <span className="idMuted">—</span>}</td>
-                        <td>{inv.category || <span className="idMuted">—</span>}</td>
-                        <td>{inv.cost_code || <span className="idMuted">—</span>}</td>
+                        <td data-desc="true">{inv.description || ''}</td>
+                        <td>{inv.category || ''}</td>
+                        <td>{inv.cost_code || ''}</td>
                         <td data-align="right">{money(inv.amount)}</td>
                         <td data-align="right">{money(inv.tax)}</td>
                         <td data-align="right" style={{ color: 'var(--text-primary)', fontWeight: 700 }}>{money(computedTotal)}</td>
@@ -490,13 +491,12 @@ export default function InvoiceDetailPage() {
                 </div>
               </Card>
 
-              <Card title="Document" subtitle={inv.pdf_url ? 'Generated invoice document' : 'No PDF yet'}>
+              <Card title="Document">
                 {inv.pdf_url ? (
                   <div className="idDoc">
                     <span className="idDocIcon"><FilePdf size={20} /></span>
                     <div className="idDocMeta">
                       <div>{(inv.invoice_number || 'Invoice')}.pdf</div>
-                      <div>Open it, attach it, or send it — regenerate after an edit.</div>
                     </div>
                     <div className="idBtns">
                       <Button icon={<ArrowSquareOut size={14} />} onClick={() => openPdf({ url: `/api/files/open?u=${encodeURIComponent(inv.pdf_url || '')}`, title: 'Invoice' })}>Open PDF</Button>
@@ -505,14 +505,14 @@ export default function InvoiceDetailPage() {
                   </div>
                 ) : (
                   <div className="idDoc">
-                    <div className="idDocMeta"><div style={{ fontWeight: 500, color: 'var(--text-secondary)', whiteSpace: 'normal' }}>No PDF yet — generate one to get a document you can open, attach, or send.</div></div>
+                    <div className="idDocMeta"><div style={{ fontWeight: 500, color: 'var(--text-secondary)', whiteSpace: 'normal' }}>No PDF yet</div></div>
                     <Button icon={<FilePdf size={14} />} onClick={() => handlePdf()} disabled={busy === 'pdf'}>{busy === 'pdf' ? 'Generating…' : 'Generate PDF'}</Button>
                   </div>
                 )}
               </Card>
 
               {inv.notes && (
-                <Card title="Notes" subtitle="Internal — never printed on the invoice.">
+                <Card title="Internal notes">
                   <div className="idProse">{inv.notes}</div>
                 </Card>
               )}
@@ -522,34 +522,36 @@ export default function InvoiceDetailPage() {
               <Card title="Details">
                 <div className="idSection">
                   <div className="idNext">
-                    {status.label === 'Draft' && 'Draft — generate the PDF and send it to put it on the clock.'}
-                    {status.label === 'Pending' && 'Pending — waiting to go out.'}
-                    {status.label === 'Sent' && (overdue ? 'Sent and past due.' : 'Sent — overdue flags itself from the due date.')}
-                    {status.label === 'Approved' && 'Approved by the customer — awaiting payment.'}
-                    {status.label === 'Paid' && 'Paid — this invoice is settled.'}
+                    {status.label === 'Draft' && 'Not sent yet'}
+                    {status.label === 'Pending' && 'Waiting to go out'}
+                    {status.label === 'Sent' && (overdue ? 'Sent · past due' : 'Sent · awaiting payment')}
+                    {status.label === 'Approved' && 'Approved · awaiting payment'}
+                    {status.label === 'Paid' && 'Paid in full'}
                   </div>
                 </div>
                 <div className="idSection">
-                  <DetailList items={[
+                  {/* Only facts that exist: an empty field is left off, and a job
+                      is named, never shown as its id. */}
+                  <DetailList items={([
                     ['Vendor', inv.vendor_name || ''],
-                    ['Vendor Email', inv.vendor_email || ''],
-                    ['Project', projectName || inv.project_id || ''],
+                    ['Email', inv.vendor_email || ''],
+                    ['Project', projectName || ''],
                     ['Category', inv.category || ''],
                     ['Cost Code', inv.cost_code || ''],
-                    ['Due', <span key="d" style={{ color: overdue ? 'var(--status-overdue)' : undefined }}>{dateOnlyStr(inv.due_date)}</span>],
-                    ['Created', dateStr(inv.created_at)],
-                    ['Updated', dateStr(inv.updated_at)],
-                  ]} />
+                    ['Due', inv.due_date ? <span key="d" style={{ color: overdue ? 'var(--status-overdue)' : undefined }}>{dateOnlyStr(inv.due_date)}</span> : ''],
+                    ['Created', inv.created_at ? dateStr(inv.created_at) : ''],
+                    ['Updated', inv.updated_at ? dateStr(inv.updated_at) : ''],
+                  ] as [string, React.ReactNode][]).filter(([, v]) => v !== '')} />
                 </div>
                 {(inv.paid_at || inv.paid_amount != null || inv.payment_method || inv.check_number) && (
                   <div className="idSection">
                     <div className="idSectionTitle">Payment</div>
-                    <DetailList items={[
-                      ['Paid Amount', money(inv.paid_amount)],
-                      ['Paid At', dateStr(inv.paid_at)],
+                    <DetailList items={([
+                      ['Paid Amount', inv.paid_amount != null ? money(inv.paid_amount) : ''],
+                      ['Paid At', inv.paid_at ? dateStr(inv.paid_at) : ''],
                       ['Method', inv.payment_method || ''],
                       ['Check #', inv.check_number || ''],
-                    ]} />
+                    ] as [string, React.ReactNode][]).filter(([, v]) => v !== '')} />
                   </div>
                 )}
                 <div className="idSection">

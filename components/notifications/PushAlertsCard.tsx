@@ -8,31 +8,31 @@ import React, { useCallback, useEffect, useState } from 'react';
 import { BellRinging, BellSlash, CheckCircle, DeviceMobile, PaperPlaneTilt, Warning } from '@phosphor-icons/react';
 import { loadPushConfig, pushState, sendTestPush, turnOffPush, turnOnPush, type PushConfig, type PushState } from '@/lib/push-client';
 
+/* One slim line on the page — icon, state, the action — never a boxed card. */
 const CSS = `
-.pac { display: flex; gap: 14px; align-items: flex-start; padding: 16px; margin-bottom: 18px; border-radius: 16px; border: 1px solid var(--border-subtle); background: linear-gradient(180deg, var(--c-raised), var(--c-card)); }
-.pac[data-state="on"] { border-color: color-mix(in srgb, var(--c-green) 40%, transparent); }
-.pacIcon { flex: 0 0 auto; width: 42px; height: 42px; border-radius: 12px; display: flex; align-items: center; justify-content: center; background: var(--bg-surface-2); color: var(--text-secondary); }
-.pac[data-state="on"] .pacIcon { background: color-mix(in srgb, var(--c-green) 14%, transparent); color: var(--c-green); }
-.pac[data-state="blocked"] .pacIcon { background: color-mix(in srgb, var(--c-red) 14%, transparent); color: var(--c-red); }
-.pacBody { flex: 1; min-width: 0; }
-.pacBody h3 { margin: 0; font-size: 15px; font-weight: 800; color: var(--text-primary); }
-.pacBody p { margin: 4px 0 0; font-size: 13px; line-height: 1.45; color: var(--text-secondary); }
-.pacRow { display: flex; flex-wrap: wrap; gap: 8px; margin-top: 12px; }
-.pacBtn { min-height: 44px; padding: 0 16px; border-radius: 12px; border: 1px solid var(--border-default); background: rgba(255,255,255,0.04); color: var(--text-primary); font: inherit; font-size: 14px; font-weight: 800; display: inline-flex; align-items: center; gap: 8px; cursor: pointer; }
-.pacBtn[data-primary="true"] { border: 0; background: var(--brand-primary); color: var(--on-brand); }
+.pac { display: flex; gap: 10px 12px; align-items: center; flex-wrap: wrap; padding: 10px 0; margin-bottom: 14px; border-top: 1px solid var(--border-default); border-bottom: 1px solid var(--border-default); }
+.pacIcon { flex: 0 0 auto; display: flex; color: var(--text-secondary); }
+.pac[data-state="on"] .pacIcon { color: var(--c-green); }
+.pac[data-state="blocked"] .pacIcon { color: var(--c-red); }
+.pacBody { flex: 1 1 220px; min-width: 0; }
+.pacBody h3 { margin: 0; font-size: 14px; font-weight: 700; color: var(--text-primary); }
+.pacBody p { margin: 2px 0 0; font-size: 13px; line-height: 1.4; color: var(--text-secondary); }
+.pacRow { display: flex; flex-wrap: wrap; gap: 8px; }
+.pacBtn { min-height: 40px; padding: 0 14px; border-radius: 10px; border: 1px solid var(--border-strong); background: transparent; color: var(--text-primary); font: inherit; font-size: 14px; font-weight: 700; display: inline-flex; align-items: center; gap: 8px; cursor: pointer; }
+.pacBtn[data-primary="true"] { border-color: var(--brand-primary); background: var(--brand-primary); color: var(--on-brand); }
 .pacBtn:disabled { opacity: .55; cursor: default; }
 .pacBtn:focus-visible { outline: 2px solid var(--focus-ring); outline-offset: 2px; }
-.pacMsg { display: flex; align-items: center; gap: 6px; margin-top: 10px; font-size: 13px; font-weight: 700; }
+.pacMsg { flex: 1 1 100%; display: flex; align-items: center; gap: 6px; font-size: 13px; font-weight: 700; }
 .pacMsg[data-tone="good"] { color: var(--c-green); }
 .pacMsg[data-tone="bad"] { color: var(--c-red); }
-@media (max-width: 520px) { .pacBtn { flex: 1 1 100%; justify-content: center; } }
+@media (max-width: 767px) { .pacBtn { min-height: 44px; } }
 `;
 
 const COPY: Record<PushState, { title: string; body: string }> = {
-  on: { title: 'Alerts are on for this device', body: 'New sub photos and video, pay apps and approvals buzz this device the moment they happen.' },
-  off: { title: 'Get alerts on this device', body: 'Get a buzz the moment a sub sends end-of-day photos, a pay app needs you, or an RFI is answered — even with Saguaro closed.' },
-  blocked: { title: 'Alerts are blocked on this device', body: 'Notifications for Saguaro are turned off in this device’s settings. Allow them there (for a browser: the lock icon next to the address), then come back and reload.' },
-  'needs-home-screen': { title: 'Alerts on iPhone', body: 'In Safari, tap Share → Add to Home Screen, open Saguaro from your Home Screen, then turn alerts on here. Or use the Saguaro iPhone app.' },
+  on: { title: 'Alerts are on for this device', body: '' },
+  off: { title: 'Alerts are off on this device', body: '' },
+  blocked: { title: 'Alerts are blocked on this device', body: 'Allow Saguaro in this device’s settings, then reload.' },
+  'needs-home-screen': { title: 'Alerts on iPhone', body: 'Share → Add to Home Screen, then open Saguaro from there.' },
   unsupported: { title: '', body: '' },
 };
 
@@ -94,11 +94,12 @@ export default function PushAlertsCard() {
     <section className="pac" data-state={state} aria-label="Alerts on this device">
       <style dangerouslySetInnerHTML={{ __html: CSS }} />
       <span className="pacIcon" aria-hidden>
-        {state === 'on' ? <BellRinging size={22} weight="fill" /> : state === 'blocked' ? <BellSlash size={22} weight="fill" /> : state === 'needs-home-screen' ? <DeviceMobile size={22} weight="fill" /> : <BellRinging size={22} />}
+        {state === 'on' ? <BellRinging size={20} weight="fill" /> : state === 'blocked' ? <BellSlash size={20} weight="fill" /> : state === 'needs-home-screen' ? <DeviceMobile size={20} weight="fill" /> : <BellRinging size={20} />}
       </span>
       <div className="pacBody">
         <h3>{c.title}</h3>
-        <p>{c.body}</p>
+        {c.body && <p>{c.body}</p>}
+      </div>
         {(state === 'on' || state === 'off') && (
           <div className="pacRow">
             {state === 'off' && (
@@ -108,7 +109,7 @@ export default function PushAlertsCard() {
             )}
             {state === 'on' && (
               <>
-                <button type="button" className="pacBtn" data-primary="true" onClick={test} disabled={!!busy}>
+                <button type="button" className="pacBtn" onClick={test} disabled={!!busy}>
                   <PaperPlaneTilt size={16} weight="fill" /> {busy === 'test' ? 'Sending…' : 'Send a test alert'}
                 </button>
                 <button type="button" className="pacBtn" onClick={off} disabled={!!busy}>
@@ -123,7 +124,6 @@ export default function PushAlertsCard() {
             {msg.tone === 'good' ? <CheckCircle size={15} weight="fill" /> : <Warning size={15} weight="fill" />} {msg.text}
           </div>
         )}
-      </div>
     </section>
   );
 }

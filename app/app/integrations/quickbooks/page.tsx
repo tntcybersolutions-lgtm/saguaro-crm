@@ -283,8 +283,8 @@ export default function QuickBooksPage() {
       {!loading && st && !st.configured && !connected && (
         <SectionCard>
           <PremiumEmpty
-            title="QuickBooks isn't set up on this server yet."
-            description="The Intuit app keys have not been added to the hosting settings. Once they are, this page connects in one step."
+            title="QuickBooks isn't turned on yet."
+            description="Once Saguaro support switches it on, this page connects in one step."
             action={<Link href="/app/integrations" className="pmBtn" style={{ ...ghostButtonStyle, ...btn44 }}>Back to integrations</Link>}
           />
         </SectionCard>

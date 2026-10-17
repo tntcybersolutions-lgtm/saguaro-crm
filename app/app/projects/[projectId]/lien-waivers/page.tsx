@@ -25,7 +25,8 @@ import {
   CheckCircle, Hourglass, Lightning, FileText, DownloadSimple, Plus, WarningCircle, Lock, CurrencyDollar, X,
 } from '@phosphor-icons/react';
 
-const fmt = (n: number) => '$' + ((Number(n) || 0).toLocaleString('en-US', { minimumFractionDigits: 0, maximumFractionDigits: 0 }));
+/* Currency style puts the sign first: -$2,150, never $-2,150. */
+const fmt = (n: number) => (Number(n) || 0).toLocaleString('en-US', { style: 'currency', currency: 'USD', minimumFractionDigits: 0, maximumFractionDigits: 0 });
 
 const WAIVER_TYPES = [
   { key: 'conditional_partial', label: 'Conditional Progress' },
@@ -45,7 +46,7 @@ const TYPE_ALIAS: Record<string, string> = {
 const normalizeType = (t: string) => TYPE_ALIAS[t] || t;
 const typeLabel = (t: string) => WAIVER_TYPES.find(x => x.key === normalizeType(t))?.label || t;
 
-const fmtDate = (d?: string | null) => d ? new Date(d + 'T00:00:00').toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' }) : '—';
+const fmtDate = (d?: string | null) => d ? new Date(d + 'T00:00:00').toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' }) : '';
 
 const TONE: Record<string, BadgeTone> = { draft: 'neutral', waiting: 'under_contract', good: 'ongoing', done: 'completed', bad: 'overdue', warn: 'lead', active: 'ongoing' };
 function waiverBadge(status: string): { label: string; tone: BadgeTone } {
@@ -274,15 +275,15 @@ export default function LienWaiversPage() {
   /** A stat tile that shows the list filtered to one status. */
   const showList = (f: string) => { setView('list'); setWStatusFilter(p => (p === f ? 'all' : f)); };
   const stats: StatItem[] = [
-    { label: 'Total waivers', value: loading ? '—' : String(waivers.length), icon: <FileText size={15} />, sub: loading ? undefined : subs.length > 0 ? `${matrix.length} of ${subs.length} subs covered` : 'Generated on this project', onClick: () => setView('matrix'), active: view === 'matrix' },
-    { label: 'Signed', value: loading ? '—' : String(signed), icon: <CheckCircle size={15} />, tone: signed > 0 ? 'good' : 'default', sub: 'Fully executed', onClick: () => showList('signed'), active: view === 'list' && wStatusFilter === 'signed' },
-    { label: 'Pending', value: loading ? '—' : String(pending), icon: <Hourglass size={15} />, tone: pending > 0 ? 'warn' : 'default', sub: 'Awaiting signature', onClick: () => showList('pending'), active: view === 'list' && wStatusFilter === 'pending' },
-    { label: 'Blocking payment', value: loading ? '—' : String(blocking), icon: <Lock size={15} />, tone: loading ? 'default' : blocking > 0 ? 'bad' : 'good', sub: blocking > 0 ? 'Unsigned — mark-paid is held' : 'Nothing holds mark-paid', onClick: () => showList('blocking'), active: view === 'list' && wStatusFilter === 'blocking' },
-    { label: 'Waiver value', value: loading ? '—' : fmt(waiverTotal), icon: <CurrencyDollar size={15} />, sub: lastApp ? `Pay App #${lastApp.appNumber}: ${String(lastApp.status || '—').replace(/_/g, ' ')} · certified ${fmt(Number(lastApp.currentPaymentDue) || 0)}` : 'Released across all waivers', href: lastApp ? `${base}/pay-apps` : undefined },
+    { label: 'Total waivers', value: loading ? '—' : String(waivers.length), icon: <FileText size={15} />, sub: loading || subs.length === 0 ? undefined : `${matrix.length} of ${subs.length} subs covered`, onClick: () => setView('matrix'), active: view === 'matrix' },
+    { label: 'Signed', value: loading ? '—' : String(signed), icon: <CheckCircle size={15} />, tone: signed > 0 ? 'good' : 'default', onClick: () => showList('signed'), active: view === 'list' && wStatusFilter === 'signed' },
+    { label: 'Pending', value: loading ? '—' : String(pending), icon: <Hourglass size={15} />, tone: pending > 0 ? 'warn' : 'default', onClick: () => showList('pending'), active: view === 'list' && wStatusFilter === 'pending' },
+    { label: 'Blocking payment', value: loading ? '—' : String(blocking), icon: <Lock size={15} />, tone: loading ? 'default' : blocking > 0 ? 'bad' : 'good', sub: blocking > 0 ? 'Mark-paid is held' : undefined, onClick: () => showList('blocking'), active: view === 'list' && wStatusFilter === 'blocking' },
+    { label: 'Waiver value', value: loading ? '—' : fmt(waiverTotal), icon: <CurrencyDollar size={15} />, sub: lastApp ? `Pay App #${lastApp.appNumber} certified ${fmt(Number(lastApp.currentPaymentDue) || 0)}` : undefined, href: lastApp ? `${base}/pay-apps` : undefined },
   ];
 
   const columns: Column<any>[] = [
-    { key: 'claimant', header: 'Claimant', primary: true, phone: 'show', accessor: w => claimantOf(w), render: w => claimantOf(w) || '—' },
+    { key: 'claimant', header: 'Claimant', primary: true, phone: 'show', accessor: w => claimantOf(w), render: w => claimantOf(w) },
     { key: 'type', header: 'Type', accessor: w => typeLabel(w.waiver_type), render: w => (
       <span style={{ display: 'inline-flex', alignItems: 'center', gap: 6, whiteSpace: 'nowrap' }}>
         {typeLabel(w.waiver_type)}{w.converted_from_id ? <Badge tone="completed">Auto</Badge> : null}
@@ -292,11 +293,11 @@ export default function LienWaiversPage() {
       const appNo = w.pay_application_id ? appNoById[w.pay_application_id] : undefined;
       return (
         <span style={{ display: 'inline-flex', alignItems: 'center', gap: 6, whiteSpace: 'nowrap' }}>
-          {appNo ? `App #${appNo}` : '—'}{gatesPaid(w) ? <Badge tone="overdue">Gates paid</Badge> : null}
+          {appNo ? `App #${appNo}` : ''}{gatesPaid(w) ? <Badge tone="overdue">Gates paid</Badge> : null}
         </span>
       );
     } },
-    { key: 'state', header: 'State', render: w => w.state || '—' },
+    { key: 'state', header: 'State', render: w => w.state || '' },
     { key: 'amount', header: 'Amount', align: 'right', total: 'sum', format: fmt, phone: 'show', accessor: w => Number(w.amount) || 0, render: w => <strong>{fmt(Number(w.amount) || 0)}</strong> },
     { key: 'through', header: 'Through date', accessor: w => (w.through_date ? String(w.through_date).slice(0, 10) : ''), render: w => fmtDate(w.through_date ? String(w.through_date).slice(0, 10) : null) },
     { key: 'status', header: 'Status', phone: 'show', accessor: w => (w.status === 'sent' ? 'pending' : (w.status || 'pending')), render: w => { const st = waiverBadge(w.status || 'pending'); return <Badge tone={st.tone} dot>{st.label}</Badge>; } },
@@ -312,7 +313,7 @@ export default function LienWaiversPage() {
       subtitle={<span style={{ display: 'inline-flex', flexWrap: 'wrap', gap: 14, alignItems: 'center' }}>
         <span style={{ display: 'inline-flex', alignItems: 'center', gap: 5 }}><CheckCircle size={14} weight="fill" color="var(--success)" /> Signed</span>
         <span style={{ display: 'inline-flex', alignItems: 'center', gap: 5 }}><Hourglass size={14} weight="fill" color="var(--warning)" /> Pending</span>
-        <span style={{ display: 'inline-flex', alignItems: 'center', gap: 5 }}><Plus size={14} weight="bold" /> Not generated — tap to create</span>
+        <span style={{ display: 'inline-flex', alignItems: 'center', gap: 5 }}><Plus size={14} weight="bold" /> Not generated</span>
       </span>}
       flush
     >
@@ -352,7 +353,7 @@ export default function LienWaiversPage() {
         { label: 'Lien waivers' },
       ]}
       title="Lien waivers"
-      subtitle="Conditional and unconditional waivers by sub — signed before you pay."
+      subtitle="Conditional and unconditional, by sub"
       actions={
         <>
           <Button icon={<Lightning size={15} weight="fill" />} onClick={generateAll} disabled={genAll}>{genAll ? 'Generating…' : 'Generate all'}</Button>
@@ -378,10 +379,8 @@ export default function LienWaiversPage() {
           <EmptyState
             icon={<FileText size={22} />}
             title="No lien waivers yet"
-            text={subs.length > 0
-              ? `Approving a pay app generates a conditional waiver for each of the ${subs.length} sub${subs.length === 1 ? '' : 's'} on the roster, sized to their share, and holds mark-paid until they are signed.${lastApp ? ` App #${lastApp.appNumber} is ${String(lastApp.status || 'draft').replace(/_/g, ' ')}.` : ''}`
-              : 'Approving a pay app generates a conditional waiver for every sub on the roster and holds mark-paid until signed. AZ, CA and TX statutory forms included.'}
-            action={<Button variant="primary" icon={<Plus size={15} weight="bold" />} onClick={openGenerate}>Generate a waiver</Button>}
+            text={subs.length > 0 ? `${subs.length} sub${subs.length === 1 ? '' : 's'} on the roster` : undefined}
+            action={<Button icon={<Plus size={15} weight="bold" />} onClick={openGenerate}>Generate a waiver</Button>}
           />
         </Card>
       ) : (
@@ -430,20 +429,20 @@ export default function LienWaiversPage() {
         open={showForm}
         onClose={closeGenerate}
         title="Generate lien waiver"
-        subtitle={lastApp ? `Pay App #${lastApp.appNumber} · ${String(lastApp.status || '—').replace(/_/g, ' ')} · certified ${fmt(Number(lastApp.currentPaymentDue) || 0)} through ${fmtDate(lastApp.periodTo)}` : 'State-specific statutory form, generated as a PDF.'}
+        subtitle={lastApp ? `Pay App #${lastApp.appNumber} · ${String(lastApp.status || 'draft').replace(/_/g, ' ')} · certified ${fmt(Number(lastApp.currentPaymentDue) || 0)} through ${fmtDate(lastApp.periodTo)}` : 'State-specific statutory form, generated as a PDF.'}
         onSubmit={generate}
         submitLabel="Generate PDF"
         busy={generating}
         error={formError}
       >
         <FormGrid cols={2}>
-          <Field label="Waiver type" hint={fType.startsWith('conditional') ? 'Conditional — effective only once payment clears. Safe to sign before the check.' : 'Unconditional — effective the moment it is signed. Collect only after payment.'}>
+          <Field label="Waiver type" hint={fType.startsWith('conditional') ? 'Effective once payment clears' : 'Effective when signed — collect after payment'}>
             <Select value={fType} onChange={e => setFType(e.target.value)} options={WAIVER_TYPES.map(t => ({ value: t.key, label: t.label }))} />
           </Field>
           <Field label="State" hint="Statutory language: AZ ARS §33-1008 · CA Civil Code §8132 · TX Prop. Code Ch. 53.">
             <Select value={fState} onChange={e => setFState(e.target.value)} options={STATES} />
           </Field>
-          <Field label="Claimant" required hint={subs.length > 0 ? `${subs.length} sub${subs.length === 1 ? '' : 's'} on the project roster — picking one links the waiver to their record and the matrix.` : 'Subs added to the project roster appear here for one-click selection.'}>
+          <Field label="Claimant" required hint={subs.length > 0 ? `${subs.length} sub${subs.length === 1 ? '' : 's'} on the roster` : undefined}>
             {subs.length > 0 ? (
               <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
                 <Select

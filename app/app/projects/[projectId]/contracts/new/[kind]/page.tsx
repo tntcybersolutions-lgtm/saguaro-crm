@@ -23,10 +23,9 @@ import { openPdf } from '@/components/PdfViewer';
  * and not in the form.
  */
 
-const GOLD = 'var(--brand-primary)';
 const TEXT = 'var(--text-primary)';
 const DIM = 'var(--text-tertiary)';
-const BORDER = 'var(--surface-raised)';
+const BORDER = 'var(--border-default)';
 const BASE = 'var(--bg-base)';
 
 /** What the signature tables call each kind. */
@@ -132,7 +131,7 @@ export default function NewContractFromTemplate() {
           <ArrowLeft size={15} weight="bold" color={DIM} /> Contracts
         </Link>
 
-        <div style={{ display: 'flex', alignItems: 'center', gap: 10, margin: '6px 0 22px' }}>
+        <div style={{ display: 'flex', alignItems: 'center', gap: 10, margin: '6px 0 12px' }}>
           <FileText size={20} weight="duotone" color="var(--text-secondary)" />
           <h1 className="k-title" style={{ margin: 0 }}>
             New {spec.title}
@@ -154,21 +153,17 @@ export default function NewContractFromTemplate() {
               style={{ width: '100%', height: '72vh', border: `1px solid ${BORDER}`, borderRadius: 12, background: 'var(--text-primary)' }}
             />
 
-            <div style={{ display: 'flex', gap: 12, flexWrap: 'wrap' }}>
-              <button type="button" onClick={() => openPdf({ url: pdfUrl, title: 'Contract' })}
-                style={{ display: 'inline-flex', alignItems: 'center', gap: 8, minHeight: 44, padding: '0 22px', borderRadius: 9, background: GOLD, color: 'var(--on-brand)', fontWeight: 800, fontSize: 14, textDecoration: 'none' }}>
-                <DownloadSimple size={16} weight="bold" color="var(--on-brand)" /> Open the PDF
+            <div style={{ display: 'flex', gap: 10, flexWrap: 'wrap' }}>
+              <button type="button" className="k-btn k-btn-primary" style={{ minHeight: 44 }} onClick={() => openPdf({ url: pdfUrl, title: 'Contract' })}>
+                <DownloadSimple size={16} weight="bold" /> Open the PDF
               </button>
-              <button onClick={() => setSigning((v) => !v)}
-                style={{ minHeight: 44, padding: '0 22px', borderRadius: 9, background: 'transparent', border: `1px solid ${GOLD}`, color: 'var(--text-primary)', fontSize: 14, fontWeight: 700, cursor: 'pointer' }}>
+              <button type="button" className="k-btn k-btn-secondary" style={{ minHeight: 44 }} onClick={() => setSigning((v) => !v)}>
                 {signing ? 'Hide Signing' : 'Send for Signature'}
               </button>
-              <button onClick={() => setPdfUrl('')}
-                style={{ minHeight: 44, padding: '0 20px', borderRadius: 9, background: 'transparent', border: `1px solid ${BORDER}`, color: DIM, fontSize: 14, fontWeight: 600, cursor: 'pointer' }}>
-                Change Something and Regenerate
+              <button type="button" className="k-btn k-btn-ghost" style={{ minHeight: 44 }} onClick={() => setPdfUrl('')}>
+                Edit and Regenerate
               </button>
-              <button onClick={() => router.push(base)}
-                style={{ minHeight: 44, padding: '0 20px', borderRadius: 9, background: 'transparent', border: `1px solid ${BORDER}`, color: DIM, fontSize: 14, fontWeight: 600, cursor: 'pointer' }}>
+              <button type="button" className="k-btn k-btn-ghost" style={{ minHeight: 44 }} onClick={() => router.push(base)}>
                 Done
               </button>
             </div>
@@ -186,7 +181,7 @@ export default function NewContractFromTemplate() {
             <ContractVersions projectId={projectId} kind={kind} refreshKey={generation} />
 
             {signing && (
-              <div style={{ border: `1px solid ${BORDER}`, borderRadius: 12, padding: '16px 18px' }}>
+              <div style={{ borderTop: `1px solid ${BORDER}`, paddingTop: 16 }}>
                 <ESignatureFlow
                   projectId={projectId}
                   docType={SIGN_DOC_TYPE[kind]}

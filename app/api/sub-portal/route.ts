@@ -4,6 +4,7 @@ import { LOCAL_DAY_HEADER, daysUntilDay, plausibleToday } from '@/lib/calendar-d
 import { requestDay } from '@/lib/time-zone';
 import { fileNameFromUrl } from '@/lib/sub-portal-view';
 import { apiError } from '@/lib/api-error';
+import { isLiveJob } from '@/lib/live-jobs';
 
 export const dynamic = 'force-dynamic';
 
@@ -158,12 +159,15 @@ export async function GET(req: NextRequest) {
 
   // ── project-name lookup for documents ──
   const projMap = new Map<string, string>();
+  // Pickers list live jobs only; archived names still label old rows.
+  const liveJobNames = new Set<string>();
   try {
-    const { data, error } = await db.from('projects').select('id, name').eq('tenant_id', tenantId);
+    const { data, error } = await db.from('projects').select('id, name, is_archived, archived_at, is_deleted, deleted_at').eq('tenant_id', tenantId);
     if (error) throw error;
     for (const p of data || []) {
       const row = p as Record<string, unknown>;
       projMap.set(String(row.id), (row.name as string) || '');
+      if (isLiveJob(row as Parameters<typeof isLiveJob>[0]) && row.name) liveJobNames.add(row.name as string);
     }
   } catch (e) {
     // Names only label rows ('--' below) — but the job pickers need them too.
@@ -263,8 +267,7 @@ export async function GET(req: NextRequest) {
 
   // Real tenant project names for the roster filters / invite project-access
   // pickers (the UI used to hard-code a fake Arizona project list here).
-  const projects = Array.from(projMap.values())
-    .filter((n): n is string => !!n)
+  const projects = Array.from(liveJobNames)
     .sort((a, b) => a.localeCompare(b));
 
   return NextResponse.json({ data: roster, activity, documents, compliance, announcements, projects, unavailable });

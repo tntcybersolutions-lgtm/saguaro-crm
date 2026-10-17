@@ -16,6 +16,7 @@ import Link from 'next/link';
 import { CreditCard, DeviceMobile, Bell, Users, Clipboard, FileText, Gear, Rocket, GraduationCap, Books, ChatCircle, Clock, ArrowRight, CloudArrowUp, ShieldCheck, Plugs, Palette, Lifebuoy, UploadSimple, CheckCircle, WarningCircle, CaretRight, SignOut } from '@phosphor-icons/react';
 import { PageShell, Card, StatRow, Badge, Button, Field, Input, FormGrid, type StatItem } from '@/components/ui/kit';
 import TimeZoneCard from '@/components/settings/TimeZoneCard';
+import { paletteHex } from '@/lib/design-tokens';
 import { useInApp } from '@/lib/use-in-app';
 
 interface SubInfo {
@@ -117,8 +118,8 @@ const CSS = `
 .stDrop:focus-visible { outline: 2px solid var(--focus-ring); }
 .stDropTitle { font-size: var(--fs-sm); font-weight: 700; color: var(--text-primary); }
 .stDropSub { font-size: var(--fs-xs); color: var(--text-tertiary); }
-.stShape { margin-top: 10px; padding: 10px 12px; border-radius: var(--radius-sm); font-size: var(--fs-xs); line-height: 1.5; border: 1px solid var(--border-subtle); background: var(--bg-surface-2); color: var(--text-tertiary); }
-.stShape[data-portrait="true"] { border-color: var(--brand-primary-35); background: var(--brand-primary-08); color: var(--text-primary); }
+.stShape { margin-top: 8px; font-size: 13px; line-height: 1.5; color: var(--text-tertiary); }
+.stShape[data-portrait="true"] { color: var(--text-secondary); }
 .stShape b { color: var(--text-primary); }
 .stColor { display: flex; align-items: center; gap: 12px; flex-wrap: wrap; }
 .stColor input[type="color"] { width: 48px; height: 40px; border: 1px solid var(--border-default); border-radius: var(--radius-sm); background: none; cursor: pointer; padding: 2px; }
@@ -137,8 +138,8 @@ const CSS = `
 .stRow:last-child { border-bottom: 0; }
 .stRow:hover { background: rgba(255,255,255,0.03); }
 .stRow:focus-visible { outline: 2px solid var(--focus-ring); outline-offset: -2px; }
-.stRow[data-hi="true"] { background: var(--brand-primary-08); }
-.stRowIcon { width: 40px; height: 40px; border-radius: 10px; flex-shrink: 0; display: grid; place-items: center; background: var(--bg-surface-2); border: 1px solid var(--glass-border); color: var(--text-primary); }
+.stRow[data-hi="true"] { background: var(--bg-row-hover); }
+.stRowIcon { width: 40px; height: 40px; flex-shrink: 0; display: grid; place-items: center; color: var(--text-secondary); }
 .stRow[data-hi="true"] .stRowIcon { color: var(--text-primary); border-color: var(--brand-primary-35); }
 .stRowLabel { font-size: var(--fs-md); font-weight: 600; color: var(--text-primary); margin-bottom: 2px; }
 .stRow[data-hi="true"] .stRowLabel { color: var(--text-primary); }
@@ -304,8 +305,8 @@ export default function SettingsPage() {
         ? [{ label: 'Renews', value: new Date(sub.current_period_end).toLocaleDateString('en-US', { month: 'short', day: 'numeric' }), sub: 'Next billing date', href: '/app/billing' } as StatItem]
         : []),
     { label: 'Branding', value: (branding.logo_url || branding.company_name) ? 'Custom' : 'Default', tone: (branding.logo_url || branding.company_name) ? 'good' : 'default', sub: branding.company_name || 'Set a name + logo below', href: '#branding' },
-    { label: 'Brand Color', value: branding.primary_color || 'Saguaro Gold', sub: branding.primary_color ? 'White-label accent' : 'Default accent', href: '/app/settings/branding' },
-    { label: 'Signed In As', value: me?.name || '—', sub: me?.email || undefined },
+    { label: 'Brand Color', value: branding.primary_color ? branding.primary_color.toUpperCase() : 'Saguaro', sub: branding.primary_color ? 'White-label accent' : 'Default accent', href: '/app/settings/branding' },
+    ...(me?.name || me?.email ? [{ label: 'Signed In As', value: me?.name || me?.email || '', sub: me?.name ? me?.email || undefined : undefined } as StatItem] : []),
   ];
 
   return (
@@ -314,7 +315,6 @@ export default function SettingsPage() {
       <PageShell
         crumbs={[{ label: 'Home', href: '/app' }, { label: 'Settings' }]}
         title="Settings"
-        subtitle="Your account, team, billing, and app preferences — every control here saves for real."
         width="form"
       >
         {(me || sub) && <StatRow items={stats} />}
@@ -405,7 +405,11 @@ export default function SettingsPage() {
                     />
                     {/* Advanced: paste a hosted URL instead */}
                     <div style={{ marginTop: 10 }}>
-                      <Input type="url" value={branding.logo_url} onChange={e => setBranding(b => ({ ...b, logo_url: e.target.value }))} placeholder="…or paste a public logo URL (https://yoursite.com/logo.png)" />
+                      {/* An uploaded logo lives in our storage: its long internal address is not shown, only a URL someone pasted. */}
+                      <Input type="url" value={branding.logo_url.includes('/storage/v1/') ? '' : branding.logo_url} onChange={e => setBranding(b => ({ ...b, logo_url: e.target.value }))} placeholder={branding.logo_url.includes('/storage/v1/') ? 'Logo uploaded · or paste a public logo URL' : '…or paste a public logo URL'} />
+                      {branding.logo_url && (
+                        <button type="button" className="stLink" style={{ marginTop: 6 }} onClick={() => { setBranding(b => ({ ...b, logo_url: '' })); setLogoDims(null); }}>Remove logo</button>
+                      )}
                     </div>
 
                     {/* Honest shape feedback. A tall logo is not "wrong", but it WILL
@@ -419,9 +423,9 @@ export default function SettingsPage() {
                         <div className="stShape" data-portrait={portrait ? 'true' : 'false'}>
                           <b>{logoDims.w} x {logoDims.h}px</b>
                           {portrait ? (
-                            <> — this logo is taller than it is wide, so the sidebar renders it about <b>{rendered}px wide</b>. A horizontal (landscape) version of your mark will read far better here and on report letterheads.</>
+                            <> · tall logo — shows about <b>{rendered}px wide</b> in the sidebar. A wide version reads better.</>
                           ) : (
-                            <> — good shape for the sidebar and report letterheads.</>
+                            <> · good shape</>
                           )}
                         </div>
                       );
@@ -429,15 +433,15 @@ export default function SettingsPage() {
                   </Field>
 
                   {/* Brand color */}
-                  <Field label="Brand Color" hint="Applies across your dashboard, portals, and document letterheads on the white-label plan.">
+                  <Field label="Brand Color">
                     <div className="stColor">
                       <input
                         type="color"
-                        value={previewColor === GOLD && !branding.primary_color ? 'var(--warning)' : previewColor}
+                        value={/^#[0-9a-fA-F]{6}$/.test(branding.primary_color) ? branding.primary_color : paletteHex.yellow}
                         onChange={e => setBranding(b => ({ ...b, primary_color: e.target.value }))}
                         aria-label="Brand color"
                       />
-                      <Input type="text" value={branding.primary_color} onChange={e => setBranding(b => ({ ...b, primary_color: e.target.value }))} placeholder="var(--warning)" style={{ width: 130 }} aria-label="Brand color hex" />
+                      <Input type="text" value={branding.primary_color} onChange={e => setBranding(b => ({ ...b, primary_color: e.target.value }))} placeholder={paletteHex.yellow} style={{ width: 130 }} aria-label="Brand color hex" />
                       {branding.primary_color
                         ? <button type="button" className="stLink" onClick={() => setBranding(b => ({ ...b, primary_color: '' }))}>Reset to Saguaro Default</button>
                         : <span className="stHint" style={{ marginTop: 0 }}>Defaults to the Saguaro brand color</span>}
@@ -452,7 +456,7 @@ export default function SettingsPage() {
 
                 {/* ── Right: live sidebar preview — exactly what the lockup renders ── */}
                 <div>
-                  <Field label="Live Sidebar Preview" hint="Updates in the real sidebar the moment you upload or save — no reload needed.">
+                  <Field label="Live Sidebar Preview">
                     <div className="stPreview">
                       <div className="stPreviewHead">
                         <div className="stLockup">

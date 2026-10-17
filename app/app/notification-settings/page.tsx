@@ -1,7 +1,7 @@
 'use client';
 import React, { useState, useEffect, useMemo, useCallback } from 'react';
 import { humanError } from '@/lib/errors';
-import { PremiumSurface, ModuleHero, StatCard, SectionCard, PremiumEmpty, goldButtonStyle, ghostButtonStyle, secondaryButtonStyle } from '@/components/ui/premium';
+import { PremiumSurface, ModuleHero, StatStrip, SectionCard, PremiumEmpty, goldButtonStyle, ghostButtonStyle, secondaryButtonStyle } from '@/components/ui/premium';
 import { Question, Package, Clipboard, ArrowsClockwise, CurrencyDollar, CalendarBlank, HardHat, Folder, ChartBar, CheckCircle, MagnifyingGlass, Scroll, Bell, Envelope, DeviceMobile, CaretRight, Check, Minus, Moon, ArrowCounterClockwise, FloppyDisk } from '@phosphor-icons/react';
 
 /* ── palette ── */
@@ -628,48 +628,13 @@ export default function NotificationSettingsPage() {
         </div>
       )}
 
-      {/* Stats overview */}
-      <div style={{
-        display: 'grid',
-        gridTemplateColumns: 'repeat(auto-fit, minmax(180px, 1fr))',
-        gap: 14,
-        marginBottom: 28,
-      }}>
-        <StatCard
-          icon={<Bell size={19} weight="duotone" color={prefs.globalEnabled ? GREEN : RED} />}
-          label="Global Status"
-          value={prefs.globalEnabled ? 'On' : 'Off'}
-          accent={prefs.globalEnabled ? GREEN : RED}
-          sub={prefs.globalEnabled ? 'Notifications on' : 'All muted'}
-         href="/app/notification-settings"/>
-        <StatCard
-          icon={<CheckCircle size={19} weight="duotone" color="var(--text-secondary)" />}
-          label="Active"
-          value={totalEnabled}
-          accent={GOLD}
-          sub={`of ${totalPossible} possible`}
-         href="/app/notification-settings"/>
-        {CHANNELS.map(ch => {
-          const ChIcon = ch.icon;
-          return (
-            <StatCard
-              key={ch.key}
-              icon={<ChIcon size={19} weight="duotone" color="var(--text-secondary)" />}
-              label={`${ch.label} Active`}
-              value={channelCounts[ch.key].enabled}
-              accent={GOLD}
-              sub={`of ${channelCounts[ch.key].total}`}
-             href="/app/notification-settings"/>
-          );
-        })}
-        <StatCard
-          icon={<Moon size={19} weight="duotone" color={prefs.quietHours.enabled ? AMBER : DIM} />}
-          label="Quiet Hours"
-          value={prefs.quietHours.enabled ? 'On' : 'Off'}
-          accent={prefs.quietHours.enabled ? AMBER : undefined}
-          sub={prefs.quietHours.enabled ? `${prefs.quietHours.start}–${prefs.quietHours.end}` : 'Disabled'}
-         href="/app/notification-settings"/>
-      </div>
+      {/* Stats overview — one flat strip */}
+      <StatStrip items={[
+        { label: 'Notifications', value: prefs.globalEnabled ? 'On' : 'Off', accent: prefs.globalEnabled ? GREEN : RED },
+        { label: 'Events On', value: totalEnabled, sub: `of ${totalPossible}` },
+        ...CHANNELS.map(ch => ({ label: ch.label, value: channelCounts[ch.key].enabled, sub: `of ${channelCounts[ch.key].total}` })),
+        { label: 'Quiet Hours', value: prefs.quietHours.enabled ? 'On' : 'Off', accent: prefs.quietHours.enabled ? AMBER : undefined, sub: prefs.quietHours.enabled ? `${prefs.quietHours.start}–${prefs.quietHours.end}` : undefined },
+      ]} />
 
       {/* Global toggle */}
       <SectionCard flat style={{ marginBottom: 20 }}>
@@ -684,9 +649,7 @@ export default function NotificationSettingsPage() {
               Global Notifications
             </div>
             <div style={{ fontSize: 13, color: DIM }}>
-              {prefs.globalEnabled
-                ? 'All notifications are enabled. Toggle individual events below.'
-                : 'All notifications are currently disabled. Enable to start receiving alerts.'}
+              {prefs.globalEnabled ? 'On — set each event below.' : 'Everything is muted.'}
             </div>
           </div>
           <Toggle on={prefs.globalEnabled} onToggle={toggleGlobal} />
@@ -696,43 +659,38 @@ export default function NotificationSettingsPage() {
       {/* Frequency selector */}
       <SectionCard
         title="Delivery Frequency"
-        subtitle="Immediately, or bundled into a digest."
         icon={<CalendarBlank size={17} weight="duotone" color="var(--text-secondary)" />}
         style={{ marginBottom: 20 }}
       >
-        <div style={{
-          display: 'grid',
-          gridTemplateColumns: 'repeat(auto-fill, minmax(210px, 1fr))',
-          gap: 12,
-        }}>
+        <div role="radiogroup" aria-label="Delivery frequency" style={{ display: 'flex', flexWrap: 'wrap', gap: 6 }}>
           {FREQUENCIES.map(f => {
             const active = prefs.frequency === f.key;
             return (
-              <div
+              <button
                 key={f.key}
+                type="button"
+                role="radio"
+                aria-checked={active}
+                title={f.desc}
                 onClick={() => setFrequency(f.key)}
                 style={{
-                  padding: '14px 18px',
-                  borderRadius: 8,
+                  minHeight: 44,
+                  padding: '0 16px',
+                  borderRadius: 10,
                   cursor: 'pointer',
-                  border: `2px solid ${active ? GOLD : BORDER}`,
-                  background: active ? `color-mix(in srgb, ${GOLD} 8%, transparent)` : 'transparent',
-                  transition: 'all 0.2s',
+                  border: `1px solid ${active ? GOLD : BORDER}`,
+                  background: active ? GOLD : 'transparent',
+                  color: active ? 'var(--on-brand)' : TEXT,
+                  fontSize: 14,
+                  fontWeight: 600,
                 }}
               >
-                <div style={{
-                  fontWeight: 600,
-                  fontSize: 14,
-                  color: active ? GOLD : TEXT,
-                  marginBottom: 4,
-                }}>
-                  {f.label}
-                </div>
-                <div style={{ fontSize: 12, color: DIM }}>{f.desc}</div>
-              </div>
+                {f.label}
+              </button>
             );
           })}
         </div>
+        <div style={{ fontSize: 13, color: DIM, marginTop: 8 }}>{FREQUENCIES.find(f => f.key === prefs.frequency)?.desc}</div>
       </SectionCard>
 
       {/* Quiet Hours */}
@@ -790,7 +748,7 @@ export default function NotificationSettingsPage() {
       {/* Module notification matrix */}
       <SectionCard
         title="Module Notification Matrix"
-        subtitle="Choose how each event reaches you — in-app, email, or push."
+        subtitle="In-app, email or push, per event."
         icon={<Bell size={17} weight="duotone" color="var(--text-secondary)" />}
         style={{ marginBottom: 20 }}
       >
