@@ -19,6 +19,9 @@ import { Check } from '@phosphor-icons/react';
 import { moduleAccent } from '@/lib/ui/app-accent';
 import { STATUS_COLORS } from '@/lib/status-colors';
 import { EmptyActions, hasEmptyActions, type EmptyActionProps } from './empty-actions';
+import { Figure } from './figure';
+import { HeadActions } from './head-actions';
+import { ListHubProvider, useScrollFade } from './list-hub';
 
 // Brand hooks (white-label re-themes these via WhiteLabelProvider) ------------
 const GOLD = 'var(--brand-primary)';        // #E8FF2A — the primary action / selected item
@@ -136,12 +139,14 @@ export function PremiumSurface({
   soft?: boolean;
 }) {
   return (
+    <ListHubProvider>
     <div className="pmRoot" style={{ position: 'relative', overflow: 'hidden', minHeight: 'calc(100vh - 56px)' }}>
       <PremiumFX />
       <div className="k-frame pmPage" data-width={width} style={{ position: 'relative' }}>
         {children}
       </div>
     </div>
+    </ListHubProvider>
   );
 }
 
@@ -195,7 +200,7 @@ export function ModuleHero({
         {aux && <div className="pmHeadAux">{aux}</div>}
       </div>
       </div>
-      {actions && <div className="pmHeadActs">{actions}</div>}
+      {actions && <HeadActions className="pmHeadActs">{actions}</HeadActions>}
     </div>
   );
 }
@@ -276,7 +281,7 @@ export function StatCard({
   const valueColor = toneColor || figureColor(accent);
   const body = (
     <span className="pmFigIn">
-      <span className="pmFigV" style={valueColor ? { color: valueColor } : undefined}>{value}</span>
+      <span className="pmFigV" style={valueColor ? { color: valueColor } : undefined}><Figure value={value} /></span>
       <span className="pmFigText">
         <span className="pmFigL">
           <span>{label}</span>
@@ -509,6 +514,8 @@ function MachinedButton({ cls, children, onClick, icon, size = 'lg', disabled, h
 export function GoldButton(props: MachinedButtonProps) {
   return <MachinedButton cls="pmGold" {...props} />;
 }
+// Named for HeadActions, which keeps the one primary action out of the phone's ⋯ menu.
+GoldButton.displayName = 'GoldButton';
 
 /** Frosted glass secondary — barely-there machined part, dims a step on press. */
 export function GhostButton(props: MachinedButtonProps) {
@@ -577,14 +584,15 @@ export function AutoChip({ label = 'Auto' }: { label?: string }) {
 export function StatStrip({ items }: {
   items: { label: string; value: React.ReactNode; sub?: React.ReactNode; accent?: string; icon?: React.ReactNode; href?: string; onClick?: () => void; active?: boolean }[];
 }) {
+  const fade = useScrollFade<HTMLDivElement>();
   return (
     <div className="pmStrip">
-      <div className="pmStripGrid">
+      <div className="pmStripGrid" ref={fade}>
         {items.map((it, i) => {
           const clickable = !!(it.href || it.onClick);
           const body = (
             <>
-              <span className="pmFigV" style={figureColor(it.accent) ? { color: figureColor(it.accent) } : undefined}>{it.value}</span>
+              <span className="pmFigV" style={figureColor(it.accent) ? { color: figureColor(it.accent) } : undefined}><Figure value={it.value} /></span>
               <span className="pmFigL">
                 <span>{it.label}</span>
                 {clickable && <span className="pmFigGo" aria-hidden>{it.active ? '✓' : '›'}</span>}
@@ -851,6 +859,15 @@ export function DataTable<T>({
   );
   const sorted = useSortedRows(rows, sort, getValue);
 
+  // Nothing to list: the message sits on the page — no header row, no box.
+  if (sorted.length === 0) {
+    return (
+      <div className="pmTable" data-none="true" style={style}>
+        <div style={{ padding: '12px 0', color: MUTED, fontSize: 14 }}>{emptyMessage}</div>
+      </div>
+    );
+  }
+
   return (
     <div className="pmTable" style={style}>
       <div style={{ overflowX: 'auto' }}>
@@ -867,15 +884,16 @@ export function DataTable<T>({
                     aria-sort={sortable ? (active === 'asc' ? 'ascending' : active === 'desc' ? 'descending' : 'none') : undefined}
                     onClick={sortable ? () => cycleSort(col.key) : undefined}
                     style={{
-                      padding: `9px ${i === columns.length - 1 ? 16 : 12}px 9px ${i === 0 ? 16 : 12}px`,
-                      background: 'rgba(255,255,255,0.05)',
+                      // A hairline and small caps — no filled header bar.
+                      padding: `8px ${i === columns.length - 1 ? 0 : 12}px 8px ${i === 0 ? 0 : 12}px`,
+                      background: 'none',
                       borderBottom: `1px solid ${BORDER}`,
-                      boxShadow: 'inset 0 1px 0 rgba(255,255,255,0.05)',
                       textAlign: col.align || 'left',
                       fontSize: 12,
                       fontWeight: 700,
                       color: FAINT,
-                      letterSpacing: 'normal',
+                      letterSpacing: '.05em',
+                      textTransform: 'uppercase',
                       userSelect: 'none',
                       whiteSpace: 'nowrap',
                       width: col.width,
@@ -916,7 +934,7 @@ export function DataTable<T>({
           <tbody>
             {sorted.length === 0 ? (
               <tr>
-                <td colSpan={columns.length} style={{ padding: '32px 16px', textAlign: 'center', color: MUTED, fontSize: 13 }}>
+                <td colSpan={columns.length} style={{ padding: '14px 0', textAlign: 'left', color: MUTED, fontSize: 14 }}>
                   {emptyMessage}
                 </td>
               </tr>
@@ -928,18 +946,18 @@ export function DataTable<T>({
                     key={rowKey ? rowKey(row, rowIndex) : rowIndex}
                     onClick={onRowClick ? () => onRowClick(row) : undefined}
                     style={{ cursor: onRowClick ? 'pointer' : 'default', background: 'transparent', transition: 'background .12s' }}
-                    onMouseEnter={(e) => (e.currentTarget.style.background = 'var(--brand-primary-08)')}
+                    onMouseEnter={(e) => (e.currentTarget.style.background = 'var(--bg-row-hover)')}
                     onMouseLeave={(e) => (e.currentTarget.style.background = 'transparent')}
                   >
                     {columns.map((col, cIdx) => (
                       <td
                         key={col.key}
                         style={{
-                          padding: `9px ${cIdx === columns.length - 1 ? 16 : 12}px 9px ${cIdx === 0 ? 16 : 12}px`,
+                          padding: `9px ${cIdx === columns.length - 1 ? 0 : 12}px 9px ${cIdx === 0 ? 0 : 12}px`,
                           borderBottom: isLast ? 'none' : `1px solid rgba(255,255,255,0.05)`,
                           fontSize: 13,
                           // Row title = first column, in the one title color (owner 2026-10-03).
-                          color: cIdx === 0 ? 'var(--title-color, var(--brand-primary))' : 'var(--text-primary)',
+                          color: 'var(--text-primary)',
                           fontWeight: cIdx === 0 ? 700 : undefined,
                           whiteSpace: 'nowrap',
                           fontVariantNumeric: 'tabular-nums',

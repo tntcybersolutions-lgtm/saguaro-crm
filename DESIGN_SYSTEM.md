@@ -25,7 +25,7 @@ jet-black era), **this file wins**. Copy rules stay in `docs/COPY-STYLE.md`.
 | Card edge | `--border-card` + `--card-highlight` | `#3D4F68` + a 1px top highlight |
 | Module accent (the page's) | `--acc` (set per route by the app shell) | one of the eight `--mod-*` hues below |
 | Primary action, selected navigation | `--brand-primary` + `--on-brand` | `#FFE000` on `#101722` |
-| Informational links | `--link` / `--link-hover` | `#38BDF8` / `#7DD3FC` |
+| Informational links | `--link` / `--link-hover` | `--text-primary` / `--text-secondary`, underlined in text (16 Oct 2026: never yellow, never blue) |
 | Status | `--success` / `--warning` / `--danger` / `--info` | `#4ADE80` / `#FBBF24` / `#F87171` / `#CBD5E1` (info is slate since 16 Oct 2026 — never yellow, never blue) |
 
 `lib/design-tokens.ts` and `lib/status-colors.ts` mirror these for TypeScript.
@@ -61,7 +61,7 @@ states are mixes of approved values (no new hex). The status values
 | Primary action | #FFE000 | #FFE000 | `--brand-primary`, `--action-primary-bg` | `.k-btn-primary`, `goldButtonStyle` |
 | Primary hover / pressed | — (derived) | mix #FFE000 90% / 80% + #101722 | `--action-primary-hover`, `--action-primary-pressed` | primary buttons |
 | Selected navigation / tab / control | #FFE000 + dark text | #FFE000 on #101722 | `--nav-active-*`, `--tab-selected-*`, `--selected-control-*` | sidebar, job tabs, `.k-tab`, `StagePicker` |
-| Links | #38BDF8 → #E8FF2A (no blue: Chad) | #E8FF2A | `--link` | real links only |
+| Links | #38BDF8 → #E8FF2A → white (16 Oct 2026: no yellow, no blue) | `--text-primary`, `.k-link` underlined | `--link` | real links only |
 | Information, focus, first chart series (16 Oct 2026) | — | #CBD5E1 info · #F8FAFC focus ring · #CBD5E1 chart-1 / progress bars | `--info*`, `--focus-ring`, `--chart-1/2` | info callouts, focus rings, progress bars, charts — never the action yellow |
 | Link hover | — (derived) | mix #38BDF8 72% + #F8FAFC | `--link-hover` | links |
 | Selected row | — (derived) | mix #38BDF8 10% + #1B2636 | `--selected-row-bg`, `--selected-row-indicator` | tables, lists |
@@ -172,13 +172,52 @@ date, delete): each row goes through the record's own route
   from the app shell.
 - **Back:** the top bar's Back always names the screen's real parent
   (`lib/topbar-crumbs`), never an earlier, unrelated screen.
-- **Phones:** every button in the work area is at least 44 × 44 (switches,
+- **Phones:** every button in the work area is a 44 × 44 touch (switches,
   checkboxes and radios excepted), and so are links drawn as buttons
-  (`.pmBtn`, `.fl-act`, `.k-chip`, `.k-btn`, `.k-tap`). The 12px text floor
-  includes `font.size.xs` and SVG file glyphs.
+  (`.pmBtn`, `.fl-act`, `.k-chip`, `.k-btn`, `.k-tap`) — since the second pass
+  as an invisible hit area, not a 44px drawing (see "Phone density"). The
+  12px text floor includes `font.size.xs` and SVG file glyphs.
 - **Job photo:** the job banner shows the cover photo whole at its own aspect
   ratio — full width on a phone, beside the facts on wider screens — never
   cropped and never over a blurred copy. Weather days are flat columns.
+
+### Phone density (16 Oct 2026, second shared pass)
+
+The phone shows the list, not a screen of controls before it.
+
+- **Summary strip:** `StatRow`, `StatStrip`, `StatGrid`, a caller's grid of
+  `StatCard`s and `NumberStrip` are ONE row on a phone — value (17px) over its
+  label, hairlines between, no caption under the number; more than fits
+  scrolls sideways inside the strip, its edge fading only while there is more
+  (`useScrollFade`). A dollar amount is never cut to "…": on a phone a long one
+  reads short (`$2.54M`, `components/ui/figure.tsx`) with the exact value as
+  its title and on a tap; desktop shows it exact.
+- **List toolbar:** on a phone the kit `Toolbar` and `ListToolbar` are one
+  row — search, the page's quiet count, and one Filter button whose dot counts
+  the filters that are on. The page's filters and the table's Sort, Group,
+  Filter by column, Views, Fields, Select and Export live in the bottom sheet
+  behind it (`components/ui/list-hub.tsx`; `PageShell` / `PremiumSurface`
+  provide the hub, and the screen's one toolbar takes its one table's tools).
+  A `DataTable` with no toolbar gets the same row and sheet. Desktop keeps the
+  inline toolbar and grid bar. The table draws no "N rows" line — a count
+  shows only when its own column filters cut the list.
+- **Touch targets:** 44px is the size of the touch, not of the drawing. Every
+  button keeps its drawn size and gets an invisible 44 × 44 hit area (a
+  centred `::after`, zero specificity); the one primary action, inputs and
+  selects stay a full 44px.
+- **Header actions:** on a phone `PageShell` / `ModuleHero` show the one
+  primary action and a "⋯" menu for the rest (`components/ui/head-actions.tsx`)
+  — never two or three full-size buttons stacked over the content.
+- **Details:** `DetailList` leaves out any fact nobody filled in (no "—" rows)
+  and draws label / value only — no icon per row. `isBlankValue` is exported.
+- **Tables:** no filled header bar anywhere (`DataTable`, premium
+  `DataTable`, `.k-table-skin`, bare `<table>`): small caps labels over a
+  hairline. An empty list is the empty line on the page — no header row, no box.
+- **Tab strips:** no track. Plain labels; the selected one is the yellow pill;
+  36px drawn, 44px to the touch; a long strip scrolls with a fade edge (kit
+  `Tabs`, flat `Tabs`, the job's phase bar).
+- **Upload:** `FileDropzone` is one slim line — icon + "Drop files or browse";
+  a hairline outline appears only while a file is dragged over it.
 
 ## 2. Type, spacing, shape, depth
 
@@ -269,10 +308,10 @@ marketing pages.
 | Card / section | `Card` (`.k-card`) or `SectionCard` (`.pmSec`); `flush` for a table | kit / premium |
 | Summary figures | `StatRow` (kit) or `StatStrip` / `StatCard` (premium) — one summary per screen, never repeated. Figures sit straight on the page: no box, fill or rule above/below, a hairline between figures only, the first figure on the title's left edge; a stat icon is a plain slate glyph, never a tinted tile | kit / premium |
 | Tables | `DataTable` (`.k-table`); fits its container — text columns end in "…" (`.k-cell`, or `fit` on the column) before the row overflows, money / numbers / status badges stay whole, and only `.k-table-scroll` (never the page) scrolls when even that cannot fit. Phones stack rows, a lone "…" stays in the corner, labelled actions get their own line | kit |
-| Tabs / segmented | `.k-tabs` / `.k-tab` (segmented, yellow selected) | globals |
+| Tabs / segmented | `.k-tabs` / `.k-tab` (no track; plain labels, yellow selected pill) | globals |
 | Status | `Badge` with a tone from `lib/status-colors.ts` | kit |
 | Empty / error | `EmptyState` (kit) or `PremiumEmpty` — one compact line + action | kit / premium |
-| Upload | `FileDropzone` — one compact row | `components/FileDropzone.tsx` |
+| Upload | `FileDropzone` — one slim line, no box | `components/FileDropzone.tsx` |
 | System-filled value | `AutoChip` — quiet "· auto-filled" text | premium |
 | How-it-works strip | `FlowStrip` / `FlowSteps` — only in empty states | premium |
 

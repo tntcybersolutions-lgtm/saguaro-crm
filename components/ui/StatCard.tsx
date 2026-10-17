@@ -17,6 +17,7 @@
  */
 
 import React from 'react';
+import { Figure } from './figure';
 
 type TrendDir = 'up' | 'down' | 'flat';
 
@@ -50,7 +51,7 @@ export function StatCard({ label, value, sub, trend, accent, onClick, href, styl
   const body = (
     <span className="pmFigIn">
       <span className="pmFigV" style={accent ? { color: accent } : undefined}>
-        {value}
+        <Figure value={value} />
         {trend && (
           <span style={{ marginLeft: 6, fontSize: 12, fontWeight: 700, color: trendColor }}>
             <span aria-hidden>{glyph}</span> {trend.value}

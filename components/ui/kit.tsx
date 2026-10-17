@@ -18,9 +18,12 @@
 
 import React from 'react';
 import { createPortal } from 'react-dom';
-import { type Icon as PhosphorIcon, CaretRight, CaretDown, CaretUp, CaretLeft, DotsSixVertical, Funnel, CheckSquare, Star, UsersThree, Trash, ArrowCounterClockwise, FloppyDisk, BookmarkSimple, Rows, Columns, DownloadSimple, DotsThree, MagnifyingGlass, X, EnvelopeSimple, Phone, User, Buildings, MapPin, CalendarBlank, CurrencyDollar, Flag, Tag, Hash, Note, Info } from '@phosphor-icons/react';
+import { CaretRight, CaretDown, CaretUp, CaretLeft, DotsSixVertical, Funnel, CheckSquare, Star, UsersThree, Trash, ArrowCounterClockwise, FloppyDisk, BookmarkSimple, Rows, Columns, DownloadSimple, DotsThree, MagnifyingGlass, X, User, CalendarBlank, Flag } from '@phosphor-icons/react';
 import { useSortedRows, type SortState, type SortDir } from './premium';
 import { SortBar } from './sort';
+import { Figure } from './figure';
+import { HeadActions } from './head-actions';
+import { ListHubProvider, useListHub, usePhone, ListSheet, ToolsButton, countSetSelects, useScrollFade } from './list-hub';
 import { EmptyActions, hasEmptyActions, type EmptyActionProps } from './empty-actions';
 import { STATUS_COLORS, type StatusKind } from '@/lib/status-colors';
 import { initialsOf, monoToken } from '@/lib/directory-view';
@@ -62,6 +65,7 @@ export function PageShell({
   children: React.ReactNode;
 }) {
   return (
+    <ListHubProvider>
     <div className="k-page" data-width={width}>
       {crumbs && crumbs.length > 0 && (
         <nav className="k-crumbs" aria-label="Breadcrumb">
@@ -82,10 +86,11 @@ export function PageShell({
           {subtitle && <p className="k-sub">{subtitle}</p>}
           {meta && <div className="k-meta">{meta}</div>}
         </div>
-        {actions && <div className="k-head-actions">{actions}</div>}
+        {actions && <HeadActions className="k-head-actions">{actions}</HeadActions>}
       </header>
       {children}
     </div>
+    </ListHubProvider>
   );
 }
 
@@ -299,7 +304,7 @@ export function StatTile({ label, value, sub, tone = 'default', href, onClick, a
         {icon && <span className="k-stat-icon" aria-hidden>{icon}</span>}
         <span className="k-stat-label">{label}</span>
       </span>
-      <span className="k-stat-value" style={{ color: TONE_COLOR[tone] }}>{value}</span>
+      <span className="k-stat-value" style={{ color: TONE_COLOR[tone] }}><Figure value={value} /></span>
       {sub && <span className="k-stat-sub">{sub}</span>}
     </>
   );
@@ -309,8 +314,9 @@ export function StatTile({ label, value, sub, tone = 'default', href, onClick, a
 }
 
 export function StatRow({ items }: { items: StatItem[] }) {
+  const fade = useScrollFade<HTMLDivElement>();
   return (
-    <div className="k-stats">
+    <div className="k-stats" ref={fade}>
       {items.map((it, i) => <StatTile key={i} {...it} />)}
     </div>
   );
@@ -345,8 +351,9 @@ export function Badge({ tone = 'neutral', dot, children }: { tone?: BadgeTone; d
 export type TabItem = { key: string; label: React.ReactNode; count?: number };
 
 export function Tabs({ tabs, value, onChange }: { tabs: TabItem[]; value: string; onChange: (key: string) => void }) {
+  const fade = useScrollFade<HTMLDivElement>();
   return (
-    <div className="k-tabs" role="tablist">
+    <div className="k-tabs" role="tablist" ref={fade}>
       {tabs.map((t) => (
         <button key={t.key} type="button" role="tab" className="k-tab" aria-selected={t.key === value} onClick={() => onChange(t.key)}>
           {t.label}
@@ -369,23 +376,53 @@ export function Toolbar({
   search?: string;
   onSearch?: (v: string) => void;
   placeholder?: string;
-  /** Selects / segmented filters, left side after search. */
+  /** Selects / segmented filters, left side after search. On a phone they
+   *  move into the Filter sheet (components/ui/list-hub). */
   filters?: React.ReactNode;
-  /** Right-aligned controls (export, view toggle). */
+  /** Right-aligned controls (a quiet count, export, view toggle). */
   actions?: React.ReactNode;
 }) {
+  const hub = useListHub();
+  const phone = usePhone();
+  const [ownOpen, setOwnOpen] = React.useState(false);
+  // Paired with the screen's one table: the sheet's open state is shared with it.
+  const shared = !!hub?.paired;
+  const open = shared && hub ? hub.sheetOpen : ownOpen;
+  const setOpen = shared && hub ? hub.setSheetOpen : setOwnOpen;
+  const addToolbar = hub?.addToolbar;
+  React.useEffect(() => addToolbar?.(), [addToolbar]);
+  // The dot on the Filter button: page filters set away from "All …", plus the table's own.
+  const filtersRef = React.useRef<HTMLDivElement>(null);
+  const [setCount, setSetCount] = React.useState(0);
+  React.useEffect(() => {
+    const n = countSetSelects(filtersRef.current);
+    if (n !== setCount) setSetCount(n);
+  });
+  const tableTools = !!hub?.paired;
+  const hasTools = !!filters || tableTools;
+  const active = setCount + (tableTools && hub ? hub.tableActive : 0);
+  const filtersBlock = filters ? <div className="k-toolbar-filters" ref={filtersRef}>{filters}</div> : null;
   return (
-    <div className="k-toolbar">
-      {onSearch && (
-        <div className="k-search">
-          <MagnifyingGlass size={15} />
-          <input className="k-input" type="search" value={search ?? ''} placeholder={placeholder} onChange={(e) => onSearch(e.target.value)} aria-label={placeholder} />
-        </div>
+    <>
+      <div className="k-toolbar" data-tools={hasTools ? 'true' : undefined}>
+        {onSearch && (
+          <div className="k-search">
+            <MagnifyingGlass size={15} />
+            <input className="k-input" type="search" value={search ?? ''} placeholder={placeholder} onChange={(e) => onSearch(e.target.value)} aria-label={placeholder} />
+          </div>
+        )}
+        {!phone && filtersBlock}
+        <div className="k-toolbar-spacer" />
+        {actions && <div className="k-toolbar-acts">{actions}</div>}
+        {hasTools && <ToolsButton active={active} open={open} onClick={() => setOpen(!open)} />}
+      </div>
+      {phone && hasTools && (
+        <ListSheet open={open} onClose={() => setOpen(false)}>
+          {filtersBlock}
+          {tableTools && hub && <div className="k-lsheet-slot" ref={hub.setSlot} />}
+        </ListSheet>
       )}
-      {filters}
-      <div className="k-toolbar-spacer" />
-      {actions}
-    </div>
+    </>
   );
 }
 
@@ -841,6 +878,11 @@ export function DataTable<T>({
   /** Show the grid bar (views, filter, group, columns, export). Defaults on for tables with 4+ columns or bulk actions. */
   toolbar?: boolean;
 }) {
+  // Phone: the list tools live in one sheet (components/ui/list-hub). With the
+  // page's one Toolbar beside this one table, they go in the Toolbar's sheet.
+  const hub = useListHub();
+  const phone = usePhone();
+  const [ownSheet, setOwnSheet] = React.useState(false);
   const keys = React.useMemo(() => columns.map((c) => c.key), [columns]);
   const keySig = keys.join(',');
   const defaultHidden = React.useMemo(() => columns.filter((c) => c.hidden).map((c) => c.key), [columns]);
@@ -919,6 +961,11 @@ export function DataTable<T>({
   }, [byKey]);
   const activeFilters = React.useMemo(() => cleanFilters(filters, keys), [filters, keys]);
   const filterCount = Object.keys(activeFilters).length;
+  const setTableActive = hub?.setTableActive;
+  React.useEffect(() => {
+    setTableActive?.(filterCount);
+    return () => setTableActive?.(0);
+  }, [setTableActive, filterCount]);
   const filtered = React.useMemo(
     () => (filterCount ? rows.filter((r) => rowMatches(activeFilters, (k) => getValue(r, k))) : rows),
     [rows, activeFilters, filterCount, getValue],
@@ -931,6 +978,8 @@ export function DataTable<T>({
   const editAllowed = !!bulkEdit?.allowed && !!(bulkEdit.status || bulkEdit.assignee || bulkEdit.due || (bulkEdit.remove && bulkEdit.remove.allowed !== false));
   const bulk = !!bulkActions || editAllowed;
   const showBar = toolbar ?? (columns.length >= 4 || bulk);
+  const addTable = hub?.addTable;
+  React.useEffect(() => (showBar ? addTable?.() : undefined), [addTable, showBar]);
   const colCount = visible.length + (rowActions ? 1 : 0) + (bulk ? 1 : 0);
   const sortCols = visible.filter((c) => c.sortable !== false && typeof c.header === 'string').map((c) => ({ key: c.key, label: c.header as string }));
   const autoPickable = (c: Column<T>) => !c.primary && c.align !== 'right' && typeof c.header === 'string';
@@ -1254,81 +1303,156 @@ export function DataTable<T>({
     </div>
   );
 
+  // ── The list tools, drawn once: inline on desktop, in the Filter sheet on a phone ──
+  const inHub = !!hub?.paired;
+  const closeSheet = () => { if (inHub && hub) hub.setSheetOpen(false); else setOwnSheet(false); };
+  // One quiet count, only when this table's own filters cut the list (the page's toolbar carries the total).
+  const countLine = filterCount || activeView ? (
+    <>
+      {filterCount ? `${sorted.length.toLocaleString('en-US')} of ${rows.length.toLocaleString('en-US')}` : null}
+      {activeView ? <span className="k-grid-view">{filterCount ? ' · ' : ''}{activeView.name}{modified ? ' (changed)' : ''}</span> : null}
+    </>
+  ) : null;
+  const viewsPop = gridId ? (
+    <GridPop label="Views" icon={<BookmarkSimple size={14} />} onOpen={() => { setViewMsg(''); void loadViews(); }}>
+      {() => {
+        if (views === null) return <div className="k-grid-note">Loading…</div>;
+        return (
+          <div className="k-grid-list">
+            {myViews.length > 0 && <div className="k-grid-sub">My views</div>}
+            {myViews.map(viewItem)}
+            {teamViews.length > 0 && <div className="k-grid-sub">Shared with the company</div>}
+            {teamViews.map(viewItem)}
+            {views.length === 0 && <div className="k-grid-note">No saved views yet.</div>}
+            {activeView?.mine && modified && (
+              <button type="button" className="k-grid-foot" onClick={() => void updateView(activeView)}><FloppyDisk size={14} />Update &quot;{activeView.name}&quot;</button>
+            )}
+            <button type="button" className="k-grid-foot" onClick={() => void saveView(false)}><BookmarkSimple size={14} />Save current view…</button>
+            {canShare && <button type="button" className="k-grid-foot" onClick={() => void saveView(true)}><UsersThree size={14} />Save and share with the company…</button>}
+            {(active || customized || filterCount > 0) && <button type="button" className="k-grid-foot" onClick={resetAll}><ArrowCounterClockwise size={14} />Standard list</button>}
+            {viewMsg && <div className="k-grid-note" role="status">{viewMsg}</div>}
+          </div>
+        );
+      }}
+    </GridPop>
+  ) : null;
+  const filterPop = filterCols.length > 0 ? (
+    <GridPop label="Filter" phoneLabel="Filter by column" icon={<Funnel size={14} />} count={filterCount || undefined}>
+      {() => (
+        <FilterPanel
+          cols={filterCols}
+          filters={activeFilters}
+          valuesFor={(k) => { const col = byKey.get(k); return col ? distinctValues(rows.map((r) => valueOf(col, r))) : []; }}
+          onChange={(k, vals) => setFilters((p) => { const n = { ...p }; if (vals.length) n[k] = vals; else delete n[k]; return n; })}
+        />
+      )}
+    </GridPop>
+  ) : null;
+  const groupPop = groupCols.length > 0 ? (
+    <GridPop label={groupBy ? `Grouped: ${labelOf(groupBy)}` : 'Group'} icon={<Rows size={14} />}>
+      {(close) => (
+        <div className="k-grid-list">
+          <button type="button" data-on={!groupBy} onClick={() => { setGroupBy(null); close(); }}>No grouping</button>
+          {groupCols.map((c) => (
+            <button type="button" key={c.key} data-on={groupBy === c.key} onClick={() => { setGroupBy(c.key); close(); }}>{headerText(c.header, c.key)}</button>
+          ))}
+        </div>
+      )}
+    </GridPop>
+  ) : null;
+  const columnsPop = (
+    <GridPop label="Columns" phoneLabel="Fields" icon={<Columns size={14} />} count={hidden.size || undefined}>
+      {() => (
+        <ColumnPanel
+          order={ordered}
+          hidden={hidden}
+          label={labelOf}
+          onToggle={(k, on) => setHidden((p) => { const n = new Set(p); if (on) n.delete(k); else n.add(k); return n; })}
+          onMove={(k, d) => setOrder(moveColumn(ordered, k, d))}
+          onDrop={(k, t) => setOrder(dropColumn(ordered, k, t))}
+          onReset={() => { setOrder(keys); setHidden(new Set(defaultHidden)); setWidths({}); }}
+        />
+      )}
+    </GridPop>
+  );
+  const exportBtn = (
+    <button type="button" className="k-grid-btn" onClick={() => exportCsv(sorted)} disabled={sorted.length === 0}><DownloadSimple size={14} />Export</button>
+  );
+  const phoneTools = (
+    <div className="k-ptools">
+      <SortBar columns={sortCols} sort={sort} onChange={setSort} />
+      {groupCols.length > 0 && (
+        <label className="k-ptools-row">
+          <span className="k-ptools-label">Group</span>
+          <select className="k-select" value={groupBy ?? ''} onChange={(e) => setGroupBy(e.target.value || null)} aria-label="Group by">
+            <option value="">No grouping</option>
+            {groupCols.map((c) => <option key={c.key} value={c.key}>{headerText(c.header, c.key)}</option>)}
+          </select>
+        </label>
+      )}
+      <div className="k-ptools-btns">
+        {filterPop}
+        {viewsPop}
+        {columnsPop}
+      </div>
+      <div className="k-ptools-btns">
+        {bulk && (
+          <button type="button" className="k-grid-btn" aria-pressed={selecting} onClick={() => { if (selecting) endSelecting(); else setSelecting(true); closeSheet(); }}>
+            <CheckSquare size={14} />{selecting ? 'Stop selecting' : 'Select rows'}
+          </button>
+        )}
+        {exportBtn}
+      </div>
+    </div>
+  );
+
   return (
     <div className="k-table-wrap" data-selecting={selecting ? 'true' : undefined} data-bulkbar={bulk && checkedRows.length > 0 ? 'true' : undefined}>
-      {showBar && !loading && (
-        <div className="k-grid-bar">
-          <span className="k-grid-n" role="status">
-            {filterCount ? `${sorted.length.toLocaleString('en-US')} of ${rows.length.toLocaleString('en-US')}` : sorted.length.toLocaleString('en-US')} {rows.length === 1 && !filterCount ? 'row' : 'rows'}
-            {activeView ? <span className="k-grid-view"> · {activeView.name}{modified ? ' (changed)' : ''}</span> : null}
-          </span>
+      {showBar && !loading && !phone && (
+        <div className="k-grid-bar" data-desk="true">
+          {countLine && <span className="k-grid-n" role="status">{countLine}</span>}
           <div className="k-toolbar-spacer" />
           {bulk && (
             <button type="button" className="k-grid-btn k-grid-select" aria-pressed={selecting} onClick={() => (selecting ? endSelecting() : setSelecting(true))}>
               <CheckSquare size={14} />{selecting ? 'Done' : 'Select'}
             </button>
           )}
-          {gridId && (
-            <GridPop label="Views" icon={<BookmarkSimple size={14} />} onOpen={() => { setViewMsg(''); void loadViews(); }}>
-              {() => {
-                if (views === null) return <div className="k-grid-note">Loading…</div>;
-                return (
-                  <div className="k-grid-list">
-                    {myViews.length > 0 && <div className="k-grid-sub">My views</div>}
-                    {myViews.map(viewItem)}
-                    {teamViews.length > 0 && <div className="k-grid-sub">Shared with the company</div>}
-                    {teamViews.map(viewItem)}
-                    {views.length === 0 && <div className="k-grid-note">No saved views yet.</div>}
-                    {activeView?.mine && modified && (
-                      <button type="button" className="k-grid-foot" onClick={() => void updateView(activeView)}><FloppyDisk size={14} />Update &quot;{activeView.name}&quot;</button>
-                    )}
-                    <button type="button" className="k-grid-foot" onClick={() => void saveView(false)}><BookmarkSimple size={14} />Save current view…</button>
-                    {canShare && <button type="button" className="k-grid-foot" onClick={() => void saveView(true)}><UsersThree size={14} />Save and share with the company…</button>}
-                    {(active || customized || filterCount > 0) && <button type="button" className="k-grid-foot" onClick={resetAll}><ArrowCounterClockwise size={14} />Standard list</button>}
-                    {viewMsg && <div className="k-grid-note" role="status">{viewMsg}</div>}
-                  </div>
-                );
-              }}
-            </GridPop>
-          )}
-          {filterCols.length > 0 && (
-            <GridPop label="Filter" icon={<Funnel size={14} />} count={filterCount || undefined}>
-              {() => (
-                <FilterPanel
-                  cols={filterCols}
-                  filters={activeFilters}
-                  valuesFor={(k) => { const col = byKey.get(k); return col ? distinctValues(rows.map((r) => valueOf(col, r))) : []; }}
-                  onChange={(k, vals) => setFilters((p) => { const n = { ...p }; if (vals.length) n[k] = vals; else delete n[k]; return n; })}
-                />
-              )}
-            </GridPop>
-          )}
-          {groupCols.length > 0 && (
-            <GridPop label={groupBy ? `Grouped: ${labelOf(groupBy)}` : 'Group'} icon={<Rows size={14} />}>
-              {(close) => (
-                <div className="k-grid-list">
-                  <button type="button" data-on={!groupBy} onClick={() => { setGroupBy(null); close(); }}>No grouping</button>
-                  {groupCols.map((c) => (
-                    <button type="button" key={c.key} data-on={groupBy === c.key} onClick={() => { setGroupBy(c.key); close(); }}>{headerText(c.header, c.key)}</button>
-                  ))}
-                </div>
-              )}
-            </GridPop>
-          )}
-          <GridPop label="Columns" phoneLabel="Fields" icon={<Columns size={14} />} count={hidden.size || undefined}>
-            {() => (
-              <ColumnPanel
-                order={ordered}
-                hidden={hidden}
-                label={labelOf}
-                onToggle={(k, on) => setHidden((p) => { const n = new Set(p); if (on) n.delete(k); else n.add(k); return n; })}
-                onMove={(k, d) => setOrder(moveColumn(ordered, k, d))}
-                onDrop={(k, t) => setOrder(dropColumn(ordered, k, t))}
-                onReset={() => { setOrder(keys); setHidden(new Set(defaultHidden)); setWidths({}); }}
-              />
-            )}
-          </GridPop>
-          <button type="button" className="k-grid-btn" onClick={() => exportCsv(sorted)} disabled={sorted.length === 0}><DownloadSimple size={14} />Export</button>
+          {viewsPop}
+          {filterPop}
+          {groupPop}
+          {columnsPop}
+          {exportBtn}
+        </div>
+      )}
+      {showBar && !loading && phone && (inHub
+        ? (hub?.slot ? createPortal(phoneTools, hub.slot) : null)
+        : (
+          <>
+            <div className="k-grid-phone">
+              {countLine && <span className="k-grid-n" role="status">{countLine}</span>}
+              <div className="k-toolbar-spacer" />
+              <ToolsButton active={filterCount} open={ownSheet} onClick={() => setOwnSheet((o) => !o)} />
+            </div>
+            <ListSheet open={ownSheet} onClose={() => setOwnSheet(false)}>{phoneTools}</ListSheet>
+          </>
+        ))}
+      {/* A small table (no list tools) still sorts on a phone, from the same one button. */}
+      {!showBar && !loading && phone && sortCols.length > 1 && sorted.length > 1 && (
+        <>
+          <div className="k-grid-phone">
+            <div className="k-toolbar-spacer" />
+            <ToolsButton active={0} open={ownSheet} onClick={() => setOwnSheet((o) => !o)} label="Sort" />
+          </div>
+          <ListSheet open={ownSheet} onClose={() => setOwnSheet(false)} title="Sort">
+            <div className="k-ptools"><SortBar columns={sortCols} sort={sort} onChange={setSort} /></div>
+          </ListSheet>
+        </>
+      )}
+      {phone && bulk && selecting && checkedRows.length === 0 && (
+        <div className="k-grid-phone" role="status">
+          <span className="k-grid-n">Tap rows to select them</span>
+          <div className="k-toolbar-spacer" />
+          <button type="button" className="k-grid-btn" onClick={endSelecting}>Done</button>
         </div>
       )}
       {showBar && !loading && filterCount > 0 && (
@@ -1360,9 +1484,16 @@ export function DataTable<T>({
           <button type="button" className="k-grid-x" aria-label="Dismiss" onClick={() => setBulkMsg(null)}><X size={12} /></button>
         </div>
       )}
-      <SortBar columns={sortCols} sort={sort} onChange={setSort} />
       {/* Only the table scrolls sideways (when it truly cannot fit) — the list
           tools above it and the page around it stay put. */}
+      {!loading && sorted.length === 0 ? (
+        // Nothing to list: the empty line sits on the page — no header row, no box.
+        <div className="k-table-none">
+          {filterCount > 0 && rows.length > 0
+            ? <EmptyState title="No rows match these filters" action={<Button onClick={() => setFilters({})}>Clear filters</Button>} />
+            : (empty ?? <EmptyState title="Nothing here yet" />)}
+        </div>
+      ) : (
       <div className="k-table-scroll">
       <table className="k-table">
         <thead>
@@ -1436,33 +1567,35 @@ export function DataTable<T>({
         {hasTotals && !loading && sorted.length > 0 && <tfoot>{totalsRow(sorted, 'Total', 'k-total-row')}</tfoot>}
       </table>
       </div>
+      )}
     </div>
   );
 }
 
 // ─── DetailList ──────────────────────────────────────────────────────────────
 
-/** Label / value rows for a record's details panel. Empty values show "—". */
-/* A detail row's icon, chosen from its label so every DetailList in the app gets
-   the concept's icon-led rows without each caller listing icons. */
-const DETAIL_ICONS: [RegExp, PhosphorIcon][] = [
-  [/e-?mail/i, EnvelopeSimple], [/phone|mobile|cell/i, Phone], [/contact|person|owner|assignee|assigned|by$|manager|inspector|foreman|super/i, User],
-  [/company|vendor|sub(contractor)?\b|customer|client|gc\b/i, Buildings], [/address|location|site|city/i, MapPin],
-  [/date|due|created|updated|submitted|received|sent|issued|approved|expires?|period|week|day/i, CalendarBlank],
-  [/amount|value|total|cost|price|budget|paid|billed|retainage|contract|\$/i, CurrencyDollar],
-  [/status|stage|phase|result|priority/i, Flag], [/source|channel|type|trade|category|discipline/i, Tag],
-  [/number|#|no\.|ref|code|id\b/i, Hash], [/note|description|scope|reason|summary|comment/i, Note],
-];
-function detailIcon(label: string) {
-  const hit = DETAIL_ICONS.find(([re]) => re.test(label));
-  const Ic = hit ? hit[1] : Info;
-  return <Ic size={15} />;
-}
 const EMAIL_RE = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
 const PHONE_RE = /^\+?[\d\s().-]{7,}$/;
-/** A plain string that is an email or phone number becomes a blue link. */
+const BLANK_TEXT = /^\s*(—|–|-|n\/a|null|undefined)?\s*$/i;
+
+/** A value nobody filled in: nothing, blank, a lone dash, or an element that
+ *  only wraps one of those. An element with no text child (an icon, a link
+ *  built elsewhere) counts as a value. */
+export function isBlankValue(v: React.ReactNode): boolean {
+  if (v == null || v === false || v === true) return true;
+  if (typeof v === 'string') return BLANK_TEXT.test(v);
+  if (typeof v === 'number') return false;
+  if (Array.isArray(v)) return v.every(isBlankValue);
+  if (React.isValidElement(v)) {
+    const kids = (v.props as { children?: React.ReactNode }).children;
+    if (kids === undefined) return false;
+    return isBlankValue(kids);
+  }
+  return false;
+}
+
+/** A plain string that is an email or phone number becomes a link. */
 function detailValue(v: React.ReactNode): React.ReactNode {
-  if (v == null || v === '') return '—';
   if (typeof v === 'string') {
     const t = v.trim();
     if (EMAIL_RE.test(t)) return <a className="k-link" href={`mailto:${t}`}>{t}</a>;
@@ -1472,13 +1605,17 @@ function detailValue(v: React.ReactNode): React.ReactNode {
   return v;
 }
 
-/** Label / value facts, as concept rows: an icon tile, the label, the value. */
+/** Label / value facts for a record: the label, then the value. A fact nobody
+ *  filled in is left out — never a column of "—" rows — and a list with
+ *  nothing filled renders nothing. */
 export function DetailList({ items }: { items: [string, React.ReactNode][] }) {
+  const rows = items.filter(([, v]) => !isBlankValue(v));
+  if (rows.length === 0) return null;
   return (
     <dl className="k-dl">
-      {items.map(([k, v]) => (
+      {rows.map(([k, v]) => (
         <div key={k} className="k-dl-row">
-          <dt><IconTile size={30}>{detailIcon(k)}</IconTile><span>{k}</span></dt>
+          <dt>{k}</dt>
           <dd>{detailValue(v)}</dd>
         </div>
       ))}

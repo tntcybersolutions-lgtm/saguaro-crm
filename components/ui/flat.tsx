@@ -27,6 +27,8 @@
 import React, { useRef, useState } from 'react';
 import Link from 'next/link';
 import { CheckCircle, Circle, Clock, Info, Sparkle, Star, WarningCircle } from '@phosphor-icons/react';
+import { Figure } from './figure';
+import { useScrollFade } from './list-hub';
 
 const CSS = `
 :root{--fl-line:var(--border-default);--fl-line-strong:var(--border-strong);--fl-text:var(--text-primary);--fl-text-2:var(--text-secondary);--fl-text-3:var(--text-tertiary);--fl-surface:var(--surface-card);--fl-neutral:var(--c-gray)}
@@ -53,7 +55,9 @@ const CSS = `
 .fl-strip>div:first-child{padding-left:0}
 .fl-strip>div:last-child{border-right:0}
 .fl-strip b{display:block;font-size:18px;font-weight:700;font-variant-numeric:tabular-nums;color:var(--fl-text);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
-.fl-strip span{display:block;font-size:12px;color:var(--fl-text-3);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.fl-strip>div>span{display:block;font-size:12px;color:var(--fl-text-3);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+/* Phone: the figures stay one row; more than fits scrolls sideways — a value is never cut to "…". */
+@media (max-width:767px){.fl-strip{display:flex;overflow-x:auto;scrollbar-width:none;overscroll-behavior-x:contain}.fl-strip::-webkit-scrollbar{display:none}.fl-strip>div{flex:1 0 auto;padding:6px 14px}.fl-strip>div:first-child{padding-left:0}.fl-strip b{font-size:17px;overflow:visible;text-overflow:clip}.fl-strip>div>span{overflow:visible}}
 .fl-strip [data-tone=bad] b{color:var(--danger)}
 .fl-strip [data-tone=warn] b{color:var(--warning)}
 .fl-strip [data-tone=good] b{color:var(--success)}
@@ -97,14 +101,13 @@ button.fl-row{width:100%;border:0;font:inherit;text-align:left;cursor:pointer}
 .fl-act:focus-visible{outline:2px solid var(--focus-ring);outline-offset:2px}
 .fl-act[disabled]:not([aria-busy=true]){background:var(--disabled-bg);color:var(--disabled-fg);border-color:var(--disabled-border);cursor:default}
 .fl-act[aria-busy=true]{opacity:.8;cursor:progress}
-.fl-tabs{display:flex;margin:10px 0 4px;background:var(--fl-surface);border:1px solid var(--fl-line);border-radius:10px;padding:2px}
-.fl-tabs{gap:2px}
-.fl-tabs button{flex:1 1 auto;min-width:0;min-height:36px;padding:0 10px;border:0;background:none;font:inherit;font-size:14px;font-weight:600;color:var(--tab-fg);border-radius:8px;cursor:pointer;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
-@media (max-width:420px){.fl-tabs button{padding:0 6px;font-size:13px}}
+.fl-tabs{display:flex;margin:6px 0 2px;background:none;border:0;border-radius:0;padding:4px 0;gap:4px;overflow-x:auto;scrollbar-width:none;overscroll-behavior-x:contain}
+.fl-tabs::-webkit-scrollbar{display:none}
+.fl-tabs button{position:relative;flex:0 0 auto;min-height:36px;padding:0 12px;border:0;background:none;font:inherit;font-size:14px;font-weight:600;color:var(--tab-fg);border-radius:10px;cursor:pointer;white-space:nowrap}
 .fl-tabs button:hover:not([aria-selected=true]){background:var(--tab-hover-bg)}
 .fl-tabs button[aria-selected=true]{background:var(--tab-selected-bg);color:var(--tab-selected-fg);font-weight:700}
 .fl-tabs button:focus-visible{outline:2px solid var(--focus-ring);outline-offset:1px}
-@media (pointer:coarse){.fl-tabs button{min-height:44px}}
+
 .fl-tool{display:flex;align-items:center;gap:12px;padding:0 8px;min-height:56px;color:var(--fl-text);text-decoration:none;-webkit-tap-highlight-color:transparent}
 a.fl-tool:hover{background:var(--bg-row-hover)}
 a.fl-tool:active{background:var(--fl-line)}
@@ -177,10 +180,11 @@ export type StripItem = { value: React.ReactNode; label: React.ReactNode; tone?:
 
 /** 3–4 figures in one thin row. */
 export function NumberStrip({ items }: { items: StripItem[] }) {
+  const fade = useScrollFade<HTMLDivElement>();
   return (
-    <div className="fl-strip">
+    <div className="fl-strip" ref={fade}>
       {items.map((it, i) => (
-        <div key={i} data-tone={it.tone}><b>{it.value}</b><span>{it.label}</span></div>
+        <div key={i} data-tone={it.tone}><b><Figure value={it.value} /></b><span>{it.label}</span></div>
       ))}
     </div>
   );
@@ -327,8 +331,9 @@ export type TabOption<K extends string> = { key: K; label: string; count?: numbe
 
 /** Segmented tabs that switch content in place. Never scrolls the page. */
 export function Tabs<K extends string>({ value, options, onChange, label }: { value: K; options: TabOption<K>[]; onChange: (k: K) => void; label: string }) {
+  const fade = useScrollFade<HTMLDivElement>();
   return (
-    <div className="fl-tabs" role="tablist" aria-label={label}>
+    <div className="fl-tabs" role="tablist" aria-label={label} ref={fade}>
       {options.map((o) => (
         <button key={o.key} type="button" role="tab" aria-selected={o.key === value} onClick={() => o.key !== value && onChange(o.key)}>
           {o.label}{o.count != null ? ` · ${o.count}` : ''}

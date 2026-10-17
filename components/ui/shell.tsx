@@ -1,4 +1,5 @@
 import React from 'react';
+import { Figure } from './figure';
 
 // ─── Design Tokens ────────────────────────────────────────────────────────────
 // Jet black + glass + neon yellow (docs/COPY-STYLE.md §6–§7). Status hues are
@@ -142,7 +143,7 @@ export function StatCard({ label, value, sub }: { icon?: React.ReactNode; label:
   return (
     <div className="pmFig pmFigSolo">
       <span className="pmFigIn">
-        <span className="pmFigV">{value}</span>
+        <span className="pmFigV"><Figure value={value} /></span>
         <span className="pmFigText">
           <span className="pmFigL"><span>{label}</span></span>
           {sub && <span className="pmFigS">{sub}</span>}
