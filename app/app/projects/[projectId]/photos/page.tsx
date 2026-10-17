@@ -512,6 +512,13 @@ export default function PhotosPage(){
 
   // Project intelligence — one snapshot; the gallery walks in knowing the job.
   const { ctx } = useProjectContext(projectId);
+  /* The project's name comes from the shared SWR cache, which can already hold
+     it when this page hydrates (the job shell fetched it first) while the
+     server rendered without it — a text mismatch, React #423 on phones. Read it
+     only after mount so the first client render matches the server's. */
+  const [mounted,setMounted]=useState(false);
+  useEffect(()=>{ setMounted(true); },[]);
+  const projectName:string|undefined = mounted ? (ctx?.project?.name || undefined) : undefined;
   const [auto,setAuto]=useState<{date?:boolean;album?:boolean}>({});
 
   /** The by-link composer — for a photo that already lives on the web. */
@@ -1289,7 +1296,7 @@ export default function PhotosPage(){
         open={uploadOpen}
         onClose={()=>setUploadOpen(false)}
         title="Add Photos & Video"
-        subtitle={ctx?.project?.name ? <>Filed to <strong style={{color:'var(--text-secondary)'}}>{ctx.project.name}</strong>. Pick as many as you like.</> : 'Pick as many as you like.'}
+        subtitle={projectName ? <>Filed to <strong style={{color:'var(--text-secondary)'}}>{projectName}</strong>.</> : undefined}
         items={queue.items}
         onFiles={addFiles}
         onRetry={queue.retry}
@@ -1367,13 +1374,13 @@ export default function PhotosPage(){
       <PageShell
         crumbs={[
           { label:'Projects', href:'/app/projects' },
-          { label: ctx?.project?.name || 'Project', href:`/app/projects/${projectId}/overview` },
+          { label: projectName || 'Project', href:`/app/projects/${projectId}/overview` },
           { label:'Photos' },
         ]}
         title="Site Photos & Video"
         /* Always name the job on screen — never a bare "Photos" that leaves a GC
            guessing which project they are filing into. */
-        subtitle={ctx?.project?.name || (loading ? 'Loading project…' : undefined)}
+        subtitle={projectName}
         actions={
           <>
             {queue.busy && !uploadOpen && (
@@ -1543,7 +1550,7 @@ export default function PhotosPage(){
         open={composerOpen}
         onClose={closeComposer}
         title={mode==='create' ? 'Add Photo' : 'Edit Photo'}
-        subtitle={ctx?.project?.name ? `Filed to ${ctx.project.name}.` : undefined}
+        subtitle={projectName ? `Filed to ${projectName}.` : undefined}
         onSubmit={async()=>{ await save(); }}
         submitLabel={mode==='create'?'Add Photo':'Save Changes'}
         busy={saving}

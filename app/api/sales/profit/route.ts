@@ -4,6 +4,7 @@ import { requirePermission } from '@/lib/permissions';
 import { apiError } from '@/lib/api-error';
 import { costControl, type CostLine } from '@/lib/finance';
 import { isClosedStatus } from '@/lib/project-lifecycle';
+import { onlyLiveProjects } from '@/lib/live-projects';
 
 /**
  * GET /api/sales/profit — booked profit across the tenant's active jobs.
@@ -35,7 +36,7 @@ export async function GET(req: NextRequest) {
     const t = user.tenantId;
 
     const [projRes, budgetRes, poRes, invRes] = await Promise.all([
-      db.from('projects').select('id, name, status, contract_value').eq('tenant_id', t),
+      onlyLiveProjects(db.from('projects').select('id, name, status, contract_value').eq('tenant_id', t)),
       db.from('budget_lines').select('project_id, cost_code, original_budget, approved_changes').eq('tenant_id', t),
       db.from('purchase_orders').select('project_id, cost_code, total, subtotal, status').eq('tenant_id', t),
       db.from('invoices').select('project_id, cost_code, amount, total, status').eq('tenant_id', t),

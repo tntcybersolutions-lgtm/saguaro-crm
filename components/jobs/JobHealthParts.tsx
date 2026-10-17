@@ -117,13 +117,13 @@ export function ItemDots({ health }: { health: JobHealth | null | undefined }) {
 /** Budget less cost at completion: green when under, red when over, exact to the cent. */
 export function OverUnder({ health }: { health: JobHealth | null | undefined }) {
   const b = health?.budget;
-  if (!b || b.revised <= 0 || b.forecast <= 0) return <span className="jh-ou" data-tone="na"><b>—</b><small>No budget yet</small></span>;
+  if (!b || b.revised <= 0 || b.forecast <= 0) return <span className="jh-ou" data-tone="na"><small>No budget yet</small></span>;
   const diff = Math.round((b.revised - b.forecast) * 100) / 100;
   const tone = diff < 0 ? 'bad' : 'good';
   const pct = Math.abs(b.overPct ?? 0);
   return (
     <span className="jh-ou" data-tone={tone} title={`Budget ${fmtMoneyExact(b.revised)} · cost at completion ${fmtMoneyExact(b.forecast)}`}>
-      <b>{diff < 0 ? '−' : '+'}{fmtMoneyExact(Math.abs(diff))}</b>
+      <b>{diff < 0 ? '−' : '+'}{fmtMoneyWhole(Math.abs(diff))}</b>
       <small>{diff < 0 ? `${pct}% over` : diff === 0 ? 'On budget' : `${pct}% under`}</small>
     </span>
   );
@@ -194,19 +194,21 @@ export function PortfolioBand({ jobs }: { jobs: PortfolioJob[] }) {
         </ul>
       </div>
       <dl className="pf-kpis">
-        <div><dt>Contract value</dt><dd>{fmtMoneyExact(contract)}</dd></div>
+        <div><dt>Contract value</dt><dd>{fmtMoneyWhole(contract)}</dd></div>
         <div>
-          <dt>Billed to date</dt><dd>{fmtMoneyExact(billed)}</dd>
+          <dt>Billed to date</dt><dd>{fmtMoneyWhole(billed)}</dd>
           <span className="pf-bar" aria-label={`${billedPctAll}% of contract billed`}><span style={{ width: `${billedPctAll}%` }} /></span>
           <small>{billedPctAll}% of contract</small>
         </div>
-        <div data-tone={budget > 0 ? (diff < 0 ? 'bad' : 'good') : 'na'}>
-          <dt>Over / under</dt>
-          <dd>{budget > 0 ? `${diff < 0 ? '−' : '+'}${fmtMoneyExact(Math.abs(diff))}` : '—'}</dd>
-          {budget > 0 && <small>{diff < 0 ? `${diffPct}% over budget` : `${diffPct}% under budget`}</small>}
-        </div>
-        <div><dt>Projected budget</dt><dd>{budget > 0 ? fmtMoneyExact(budget) : '—'}</dd></div>
-        <div><dt>Cost at completion</dt><dd>{forecast > 0 ? fmtMoneyExact(forecast) : '—'}</dd></div>
+        {budget > 0 && (
+          <div data-tone={diff < 0 ? 'bad' : 'good'}>
+            <dt>Over / under</dt>
+            <dd>{`${diff < 0 ? '−' : '+'}${fmtMoneyWhole(Math.abs(diff))}`}</dd>
+            <small>{diff < 0 ? `${diffPct}% over budget` : `${diffPct}% under budget`}</small>
+          </div>
+        )}
+        {budget > 0 && <div><dt>Budget</dt><dd>{fmtMoneyWhole(budget)}</dd></div>}
+        {forecast > 0 && <div><dt>Cost at completion</dt><dd>{fmtMoneyWhole(forecast)}</dd></div>}
       </dl>
       <div className="pf-chart">
         <h2 className="pf-h">Projects by budget</h2>
@@ -234,6 +236,11 @@ export function PortfolioBand({ jobs }: { jobs: PortfolioJob[] }) {
 }
 
 /** Exact money with cents, e.g. $447,932.00. */
+/** Whole dollars — summary figures read faster without cents. */
+export function fmtMoneyWhole(v: number): string {
+  return v.toLocaleString('en-US', { style: 'currency', currency: 'USD', minimumFractionDigits: 0, maximumFractionDigits: 0 });
+}
+
 export function fmtMoneyExact(v: number): string {
   return v.toLocaleString('en-US', { style: 'currency', currency: 'USD', minimumFractionDigits: 2, maximumFractionDigits: 2 });
 }

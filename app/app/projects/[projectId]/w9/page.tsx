@@ -15,7 +15,7 @@ import {
   FormModal, Field, Input, FormGrid, ItemList, ItemRow, Toast, useToast,
   type Column, type Action, type BadgeTone, type StatItem,
 } from '@/components/ui/kit';
-import { FileText, PaperPlaneTilt, Plus, SealCheck, UsersThree, Hourglass, WarningCircle, Handshake } from '@phosphor-icons/react';
+import { FileText, PaperPlaneTilt, Plus, SealCheck, UsersThree, Hourglass, WarningCircle } from '@phosphor-icons/react';
 import { localDay } from '@/lib/calendar-day';
 
 interface W9Sub {
@@ -30,7 +30,7 @@ interface W9Sub {
 const STATUS_TONE: Record<string, BadgeTone> = {
   received: 'ongoing',
   submitted: 'ongoing',
-  pending: 'under_contract',
+  pending: 'lead',
   not_requested: 'overdue',
 };
 
@@ -158,7 +158,6 @@ export default function W9Page() {
   const ctxSubs = (ctx?.subs || []) as any[];
   const trackedKeys = new Set(subs.flatMap(s => [rosterNorm(s.email), rosterNorm(s.name)]).filter(Boolean));
   const untrackedRoster = ctxSubs.filter(s => !trackedKeys.has(rosterNorm(s.email)) && !trackedKeys.has(rosterNorm(s.companyName)));
-  const subCommitted = ctxSubs.reduce((t, s) => t + (Number(s.contractAmount) || 0), 0);
   const fmt = (n: number) => '$' + ((Number(n) || 0).toLocaleString('en-US', { maximumFractionDigits: 0 }));
 
   async function requestW9(subId: string, subName: string, subEmail: string) {
@@ -204,19 +203,18 @@ export default function W9Page() {
   }
 
   const stats: StatItem[] = [
-    { label: 'Total subs', value: loading ? '—' : totalSubs, icon: <UsersThree size={15} />, active: filter === 'all', onClick: () => setFilter('all') },
-    { label: 'W-9 received', value: loading ? '—' : receivedCount, tone: receivedCount > 0 ? 'good' : 'default', icon: <SealCheck size={15} />, active: filter === 'received', onClick: () => toggleFilter('received') },
-    { label: 'W-9 pending', value: loading ? '—' : pendingCount, tone: pendingCount > 0 ? 'warn' : 'default', icon: <Hourglass size={15} />, active: filter === 'pending', onClick: () => toggleFilter('pending') },
-    { label: 'W-9 missing', value: loading ? '—' : missingCount, tone: missingCount > 0 ? 'bad' : 'default', icon: <WarningCircle size={15} />, sub: missingCount > 0 ? 'Blocks bid award' : undefined, active: filter === 'missing', onClick: () => toggleFilter('missing') },
-    ...(ctx ? [{ label: 'Sub commitments', value: fmt(subCommitted), sub: 'Awarded value — open budget', href: `${base}/budget`, icon: <Handshake size={15} /> } as StatItem] : []),
+    { label: 'Subs', value: totalSubs, icon: <UsersThree size={15} />, active: filter === 'all', onClick: () => setFilter('all') },
+    { label: 'W-9 received', value: receivedCount, tone: receivedCount > 0 ? 'good' : 'default', icon: <SealCheck size={15} />, active: filter === 'received', onClick: () => toggleFilter('received') },
+    { label: 'W-9 pending', value: pendingCount, tone: pendingCount > 0 ? 'warn' : 'default', icon: <Hourglass size={15} />, active: filter === 'pending', onClick: () => toggleFilter('pending') },
+    { label: 'W-9 missing', value: missingCount, tone: missingCount > 0 ? 'bad' : 'default', icon: <WarningCircle size={15} />, sub: missingCount > 0 ? 'Blocks bid award' : undefined, active: filter === 'missing', onClick: () => toggleFilter('missing') },
   ];
 
   const columns: Column<W9Sub>[] = [
-    { key: 'name', header: 'Sub name', primary: true, render: (s) => s.name || '—' },
-    { key: 'email', header: 'Email', render: (s) => s.email ? <a className="k-link" href={`mailto:${s.email}`} onClick={(e) => e.stopPropagation()}>{s.email}</a> : '—' },
+    { key: 'name', header: 'Sub name', primary: true, render: (s) => s.name || 'Unnamed sub' },
+    { key: 'email', header: 'Email', render: (s) => s.email ? <a className="k-link" href={`mailto:${s.email}`} onClick={(e) => e.stopPropagation()}>{s.email}</a> : '' },
     { key: 'w9_status', header: 'W-9 status', phone: 'show', accessor: (s) => STATUS_LABEL[s.w9_status] || s.w9_status, render: (s) => <Badge tone={STATUS_TONE[s.w9_status] || 'neutral'} dot>{STATUS_LABEL[s.w9_status] || s.w9_status}</Badge> },
     { key: 'requested_date', header: 'Requested', accessor: (s) => s.requested_date || '', render: (s) => fmtDay(s.requested_date) },
-    { key: 'received_date', header: 'Received', phone: 'show', accessor: (s) => s.received_date || '', render: (s) => s.received_date ? <span style={{ color: 'var(--success)' }}>{fmtDay(s.received_date)}</span> : '—' },
+    { key: 'received_date', header: 'Received', phone: 'show', accessor: (s) => s.received_date || '', render: (s) => s.received_date ? <span style={{ color: 'var(--success)' }}>{fmtDay(s.received_date)}</span> : '' },
   ];
 
   const rowActions = (s: W9Sub): Action[] => [
@@ -242,14 +240,13 @@ export default function W9Page() {
           { label: 'W-9 Requests' },
         ]}
         title="W-9 requests"
-        subtitle="Collect W-9 forms from vendors and subcontractors."
         actions={<Button variant="primary" icon={<Plus size={15} weight="bold" />} onClick={openForm}>Send W-9 request</Button>}
       >
-        <StatRow items={stats} />
+        {!loading && (totalSubs > 0 || untrackedRoster.length > 0) && <StatRow items={stats} />}
 
         {/* Roster gaps — subs on the project with no W-9 trail at all */}
         {!loading && untrackedRoster.length > 0 && (
-          <Card title="On the roster, never asked" subtitle={`${untrackedRoster.length} sub${untrackedRoster.length === 1 ? '' : 's'} with no W-9 on record — the award gate will flag ${untrackedRoster.length === 1 ? 'it' : 'them'}.`} icon={<WarningCircle size={16} />}>
+          <Card title="On the roster, never asked" subtitle={`${untrackedRoster.length} sub${untrackedRoster.length === 1 ? '' : 's'} with no W-9 · blocks award`} icon={<WarningCircle size={16} />}>
             <ItemList>
               {untrackedRoster.map((s: any) => (
                 <ItemRow
@@ -304,13 +301,10 @@ export default function W9Page() {
               <EmptyState
                 icon={<FileText size={22} />}
                 title="No W-9s tracked yet"
-                text={ctxSubs.length > 0
-                  ? `${ctxSubs.length} sub${ctxSubs.length === 1 ? '' : 's'} on the roster and none asked yet — a missing W-9 blocks bid award.`
-                  : 'Vendors appear here as you award bid packages and sign contracts.'}
-                action={<Button variant="primary" icon={<Plus size={15} weight="bold" />} onClick={openForm}>Send first W-9 request</Button>}
+                action={<Button icon={<Plus size={15} weight="bold" />} onClick={openForm}>Send a W-9 request</Button>}
               />
             ) : (
-              <EmptyState title={`No subs are ${FILTER_LABEL[filter].toLowerCase()}`} text="Change the search or the filter." action={<Button onClick={() => { setFilter('all'); setSearch(''); }}>Show all {subs.length}</Button>} />
+              <EmptyState title={`No subs are ${FILTER_LABEL[filter].toLowerCase()}`} action={<Button onClick={() => { setFilter('all'); setSearch(''); }}>Show all {subs.length}</Button>} />
             )}
           />
         </Card>
@@ -320,7 +314,7 @@ export default function W9Page() {
         open={showForm}
         onClose={() => setShowForm(false)}
         title="Send W-9 request"
-        subtitle="The vendor gets a secure link to submit their W-9 — no account needed."
+        subtitle="They get a secure link. No account needed."
         footer={
           <>
             <Button variant="ghost" onClick={() => setShowForm(false)} disabled={sending}>Cancel</Button>

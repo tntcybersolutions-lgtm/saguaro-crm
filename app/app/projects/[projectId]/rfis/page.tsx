@@ -76,6 +76,8 @@ interface RFIDetail {
   drawing_reference?: string | null;
   pdf_url?: string | null;
   answered_at?: string | null;
+  /** 'email' when the official answer came in by replying to the RFI email. */
+  answer_source?: string | null;
   closed_at?: string | null;
   [k: string]: unknown;
 }
@@ -759,7 +761,7 @@ export default function RFIsPage() {
 
           {selected.answer && (
             <div className="rfiSection">
-              <div className="rfiSectionTitle">Answer{selected.answered_by ? ` — ${selected.answered_by}` : ''}</div>
+              <div className="rfiSectionTitle">Answer{selected.answered_by ? ` — ${selected.answered_by}` : ''}{detail?.answer_source === 'email' ? ' · via email' : ''}</div>
               <div className="rfiProse">{selected.answer}</div>
             </div>
           )}

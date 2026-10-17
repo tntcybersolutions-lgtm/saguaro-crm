@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { createServerClient, getUser } from '@/lib/supabase-server';
 import { apiError } from '@/lib/api-error';
+import { onlyLiveProjects } from '@/lib/live-projects';
 import { jobsClosedTo } from '@/lib/permissions';
 
 export const dynamic = 'force-dynamic';
@@ -65,9 +66,8 @@ export async function GET(req: NextRequest) {
       .order('created_at', { ascending: false })
       .limit(limit);
 
-    // Exclude soft-deleted / archived rows (columns exist on the projects table).
-    query = query.or('is_deleted.is.null,is_deleted.eq.false');
-    query = query.or('is_archived.is.null,is_archived.eq.false');
+    // Archived and deleted jobs stay out of every list (lib/live-projects).
+    query = onlyLiveProjects(query);
 
     if (status) query = query.eq('status', status);
     if (search) {

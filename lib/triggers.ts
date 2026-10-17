@@ -13,6 +13,7 @@ import {
   sendBidAwarded, sendBidNotAwarded,
   sendRFISubmitted, sendRFIAnswered,
   sendChangeOrderApproved,
+  sendSubmittalForReview,
   sendInsuranceExpiring,
   sendW9Request,
 } from './email';
@@ -25,6 +26,7 @@ import { orValue } from '@/lib/pg-filter';
 import { coAmount } from '@/lib/change-order-amount';
 import { applyChangeOrderMoney } from '@/lib/change-order-cascade';
 import { ownerContact, architectContact, gcContact } from '@/lib/project-parties';
+import { SUBMITTAL_REVIEW_STATUSES } from '@/lib/submittal-workflow';
 
 /* Fallback is the live domain. It used to be a Vercel preview URL that no
    longer resolves, so any email sent without NEXT_PUBLIC_APP_URL set carried
@@ -792,7 +794,8 @@ export async function onRFICreated(rfiId: string): Promise<void> {
 
     const architectEmail = architectContact(project).email;
     if (architectEmail) {
-      await sendRFISubmitted(architectEmail, project.name, r.rfi_number, r.subject, r.submitted_by_name || 'GC');
+      await sendRFISubmitted(architectEmail, project.name, r.rfi_number, r.subject, r.submitted_by_name || 'GC',
+        { tenantId: project.tenant_id, type: 'rfis', id: rfiId });
     }
 
     await createNotification(
@@ -826,7 +829,8 @@ export async function onRFIAnswered(rfiId: string): Promise<void> {
 
     const submitterEmail = gcContact(project).email;
     if (submitterEmail) {
-      await sendRFIAnswered(submitterEmail, 'Project Team', project.name, r.rfi_number, r.answer || '');
+      await sendRFIAnswered(submitterEmail, 'Project Team', project.name, r.rfi_number, r.answer || '',
+        { tenantId: project.tenant_id, type: 'rfis', id: rfiId });
     }
 
     await createNotification(
@@ -845,6 +849,48 @@ export async function onRFIAnswered(rfiId: string): Promise<void> {
     });
   } catch (err) {
     console.error('[onRFIAnswered]', err);
+  }
+}
+
+// ─── Submittals ───────────────────────────────────────────────────────────────
+
+/**
+ * A submittal moved into review: email the reviewer — the "Reviewer" field
+ * when it holds an address, otherwise the job's architect. Callers pass the
+ * status it had before, so a save that leaves it in review does not re-send.
+ */
+export async function onSubmittalSentForReview(submittalId: string, previousStatus: string | null): Promise<void> {
+  try {
+    if (previousStatus && SUBMITTAL_REVIEW_STATUSES.has(previousStatus)) return;
+    const db = adminClient();
+    const { data: sub, error } = await db.from('submittals').select('*').eq('id', submittalId).single();
+    if (error) throw error;
+    const s = sub as any;
+    if (!s || !SUBMITTAL_REVIEW_STATUSES.has(String(s.status || ''))) return;
+    const { data: projectRow, error: projErr } = await db.from('projects').select('*').eq('id', s.project_id).eq('tenant_id', s.tenant_id).single();
+    if (projErr) throw projErr;
+    const project = projectRow as any;
+    if (!project) return;
+    const named = String(s.submitted_to || '').match(/[a-z0-9._%+'-]+@[a-z0-9.-]+\.[a-z]{2,}/i)?.[0] || null;
+    const to = named || architectContact(project).email;
+    if (!to) return;
+    const res = await withComm(
+      { tenantId: s.tenant_id, projectId: project.id, relatedType: 'submittal_review', relatedId: submittalId },
+      () => sendSubmittalForReview({
+        to,
+        projectName: project.name,
+        submittalNumber: s.submittal_number || null,
+        title: s.title || 'Submittal',
+        specSection: s.spec_section || null,
+        dueDate: s.due_date || null,
+        submittedBy: s.subcontractor || s.submitted_by || null,
+        link: `${APP_URL}/app/projects/${project.id}/items/submittals/${submittalId}`,
+        reply: { tenantId: s.tenant_id, type: 'submittals', id: submittalId },
+      }),
+    );
+    if (!res.sent) console.error('[onSubmittalSentForReview] not sent:', res.error);
+  } catch (err) {
+    console.error('[onSubmittalSentForReview]', err);
   }
 }
 
@@ -881,7 +927,8 @@ export async function onChangeOrderApproved(changeOrderId: string, opts: { money
 
     const ownerEmail = ownerContact(project).email;
     if (ownerEmail) {
-      await sendChangeOrderApproved(ownerEmail, project.name, c.co_number, impact);
+      await sendChangeOrderApproved(ownerEmail, project.name, c.co_number, impact,
+        { tenantId: String(c.tenant_id || project.tenant_id), type: 'change_orders', id: changeOrderId });
     }
 
     await createNotification(
