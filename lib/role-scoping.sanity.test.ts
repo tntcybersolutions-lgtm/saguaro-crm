@@ -275,6 +275,27 @@ describe('D4 — money and rates are hidden on the server', () => {
     expect(stripGuardedColumns('projects', { name: 'x', contract_value: 0 }, { money: false, rates: false })).toEqual({ name: 'x' });
   });
 
+  test('an update by someone who never saw the figure cannot overwrite it; their PM job can', async () => {
+    const s = foremanScope();
+    const plan = planScopedRequest('https://db.test/rest/v1/budget_lines?id=eq.7', 'PATCH', s, 'PATCH');
+    expect(plan.strip).toMatchObject({ rates: false, update: true });
+    // Inserts keep what they carry; time entries (rates) are never stripped in a write request.
+    expect(planScopedRequest('https://db.test/rest/v1/tm_tickets', 'POST', s, 'POST').strip).toBeNull();
+    expect(planScopedRequest('https://db.test/rest/v1/time_entries?id=eq.1', 'PATCH', s, 'POST').strip).toBeNull();
+    const calls: Array<{ url: string; method: string; body?: string }> = [];
+    const doFetch = (rowJob: string) => async (url: string, init?: RequestInit) => {
+      calls.push({ url, method: String(init?.method), body: init?.body as string | undefined });
+      if (init?.method === 'GET') return new Response(JSON.stringify([{ project_id: rowJob }]), { status: 200, headers: { 'content-type': 'application/json' } });
+      return new Response('[]', { status: 200, headers: { 'content-type': 'application/json' } });
+    };
+    const body = JSON.stringify({ description: 'Concrete', original_budget: 0 });
+    await fetchWithScope(doFetch(JOB_A), 'https://db.test/rest/v1/budget_lines?id=eq.7', { method: 'PATCH', body }, s, 'PATCH');
+    expect(JSON.parse(calls.find((c) => c.method === 'PATCH')!.body!)).toEqual({ description: 'Concrete' });
+    calls.length = 0;
+    await fetchWithScope(doFetch(JOB_B), 'https://db.test/rest/v1/budget_lines?id=eq.7', { method: 'PATCH', body }, s, 'PATCH');
+    expect(JSON.parse(calls.find((c) => c.method === 'PATCH')!.body!)).toEqual({ description: 'Concrete', original_budget: 0 });
+  });
+
   test('end to end through the database fetch', async () => {
     const s = foremanScope();
     let asked = '';

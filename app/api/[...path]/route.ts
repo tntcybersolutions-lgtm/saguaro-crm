@@ -16,6 +16,7 @@ import { buildBidHistoryContext } from '@/lib/construction-intelligence';
 
 import { apiError } from '@/lib/api-error';
 import { requirePermission } from '@/lib/permissions';
+import { getUser, createServerClient } from '@/lib/supabase-server';
 import { writeChangeOrder, coWriteFailure } from '@/lib/change-order-status';
 import { liveJobs } from '@/lib/live-jobs';
 // ─── CORS helpers ─────────────────────────────────────────────────────────────
@@ -30,38 +31,14 @@ function corsHeaders() {
   };
 }
 
-/** Extract authenticated user from request using token or cookies. */
+/**
+ * The signed-in person — the app's one getUser() (lib/supabase-server), so this
+ * catch-all's reads carry the same viewer scope as every other route (closed
+ * jobs left out, money hidden without the rights). Its own copy verified the
+ * token but never told the database layer whose request it was.
+ */
 async function getUserFromRequest(req: NextRequest): Promise<{ id: string; tenantId: string; email: string } | null> {
-  try {
-    const token = req.headers.get('authorization')?.replace('Bearer ', '').trim()
-      || req.cookies.get('sb-access-token')?.value;
-    if (!token) return null;
-
-    const supabase = createClient(
-      process.env.NEXT_PUBLIC_SUPABASE_URL!,
-      process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY || process.env.SUPABASE_SERVICE_ROLE_KEY!,
-      { auth: { persistSession: false } },
-    );
-    const { data: { user }, error } = await supabase.auth.getUser(token);
-    if (error || !user) return null;
-
-    // profiles is keyed by `id` (= auth user id), NOT `user_id` (matches the
-    // canonical getTenant in lib/supabase-server). Querying the wrong column
-    // silently returned no row, so tenantId fell back to user.id (wrong tenant).
-    const { data: profile } = await supabaseAdmin
-      .from('profiles')
-      .select('tenant_id')
-      .eq('id', user.id)
-      .maybeSingle();
-
-    return {
-      id: user.id,
-      tenantId: (profile as any)?.tenant_id || user.id,
-      email: user.email || '',
-    };
-  } catch {
-    return null;
-  }
+  return getUser(req);
 }
 
 /**
@@ -245,7 +222,7 @@ export async function GET(
       const outcome = searchParams.get('outcome') ?? undefined;
       const projectType = searchParams.get('projectType') ?? undefined;
       const limit = Math.min(parseInt(searchParams.get('limit') ?? '20', 10), 100);
-      const supabase = createClient(process.env.NEXT_PUBLIC_SUPABASE_URL!, process.env.SUPABASE_SERVICE_ROLE_KEY!);
+      const supabase = createServerClient() as unknown as ReturnType<typeof createClient>; // the app's scoped server client (lib/viewer-scope)
       const token = req.headers.get('authorization')?.replace('Bearer ', '');
       let tenantId: string | null = null;
       if (token) { const { data: { user } } = await supabase.auth.getUser(token); tenantId = user?.id ?? null; }
@@ -495,7 +472,7 @@ export async function POST(
       const { projectName, projectType, estimatedValue, trade, location, competitorCount, ourMargin } = body;
       if (!projectName || typeof estimatedValue !== 'number' || typeof ourMargin !== 'number') return NextResponse.json({ error: 'projectName, estimatedValue, and ourMargin are required.' }, { status: 400 });
       if (!process.env.ANTHROPIC_API_KEY) return NextResponse.json({ error: 'AI bid scoring is not configured. Please set ANTHROPIC_API_KEY.' }, { status: 503 });
-      const supabase = createClient(process.env.NEXT_PUBLIC_SUPABASE_URL!, process.env.SUPABASE_SERVICE_ROLE_KEY!);
+      const supabase = createServerClient() as unknown as ReturnType<typeof createClient>; // the app's scoped server client (lib/viewer-scope)
       const token = req.headers.get('authorization')?.replace('Bearer ', '');
       let tenantId: string | null = null;
       if (token) { const { data: { user } } = await supabase.auth.getUser(token); tenantId = user?.id ?? null; }

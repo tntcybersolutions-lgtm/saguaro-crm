@@ -36,7 +36,7 @@ import {
   resolvePermissions, hasAnyPermission, isAdminBaseRole, isJobScoped, roleScopeOf, MONEY_VIEW, RATE_VIEW,
   type AssignmentRow,
 } from './permission-resolve';
-import { parseAliases, parseEmbeds, redactRow, stripGuardedColumns, touchesGuardedColumns, hasGuardedColumns } from './money-fields';
+import { MONEY_COLUMNS, parseAliases, parseEmbeds, redactRow, stripGuardedColumns, touchesGuardedColumns, hasGuardedColumns } from './money-fields';
 
 export type JobVisibility =
   | { mode: 'all' }
@@ -233,8 +233,16 @@ export type ScopePlan = {
   url: string;
   /** Redact the response body (a read during a read request). */
   redact: null | { table: string; select: string | null; pinned: string | null };
-  /** Drop guarded columns from the request body (a write during a read request). */
-  strip: null | { table: string; pinned: string | null };
+  /**
+   * Drop guarded columns from the request body.
+   *  - during a READ request: money and rates (a read never saves money);
+   *  - an UPDATE during a write request by someone without money rights on
+   *    the row's job: money only. A screen that never received a figure (it
+   *    arrived null) must not save that null — or a 0 — over the real one.
+   *    Inserts keep what they carry, and rates are never stripped from a write
+   *    request (the server computes labor cost from them on clock-out).
+   */
+  strip: null | { table: string; pinned: string | null; rates: boolean; update: boolean; url: string };
 };
 
 /**
@@ -274,8 +282,11 @@ export function planScopedRequest(rawUrl: string, method: string, scope: ViewerS
     plan.redact = { table, select, pinned };
   }
   // A read request never saves money: whatever it writes goes without those columns.
+  const isUpdate = verb === 'PATCH' || verb === 'PUT' || (verb === 'POST' && u.searchParams.has('on_conflict'));
   if (WRITE.has(verb) && verb !== 'DELETE' && !inWrite && hasGuardedColumns(table)) {
-    plan.strip = { table, pinned };
+    plan.strip = { table, pinned, rates: true, update: isUpdate, url: plan.url };
+  } else if (inWrite && isUpdate && MONEY_TABLES.has(table) && !allTrue(scope.money)) {
+    plan.strip = { table, pinned, rates: false, update: true, url: plan.url };
   }
   return plan;
 }
@@ -294,12 +305,53 @@ export function redactBody(body: unknown, plan: NonNullable<ScopePlan['redact']>
   return Array.isArray(body) ? body.map(one) : one(body);
 }
 
-/** Strip a write body per the plan. */
-export function stripBody(body: unknown, plan: NonNullable<ScopePlan['strip']>, scope: ViewerScope): unknown {
-  const job = (!Array.isArray(body) && body && typeof body === 'object' && typeof (body as Record<string, unknown>).project_id === 'string')
+const MONEY_TABLES: ReadonlySet<string> = new Set(Object.keys(MONEY_COLUMNS));
+
+/**
+ * Strip a write body per the plan. `rowJobs` are the jobs of the rows an
+ * update will touch (looked up when the request does not say); money stays
+ * only when the person may see money on every one of them.
+ */
+export function stripBody(body: unknown, plan: NonNullable<ScopePlan['strip']>, scope: ViewerScope, rowJobs?: ReadonlyArray<string | null>): unknown {
+  const own = (!Array.isArray(body) && body && typeof body === 'object' && typeof (body as Record<string, unknown>).project_id === 'string')
     ? (body as Record<string, string>).project_id
     : plan.pinned;
-  return stripGuardedColumns(plan.table, body, { money: moneyOn(scope, job), rates: ratesOn(scope, job) });
+  const jobs: Array<string | null> = rowJobs && rowJobs.length ? [...rowJobs] : [own];
+  if (own && !jobs.includes(own)) jobs.push(own);
+  const money = jobs.every((j) => moneyOn(scope, j));
+  const rates = plan.rates ? jobs.every((j) => ratesOn(scope, j)) : true;
+  return stripGuardedColumns(plan.table, body, { money, rates });
+}
+
+/** Does deciding the strip need the rows' jobs (money differs by job, and the request does not pin one)? */
+function needsRowJobs(plan: NonNullable<ScopePlan['strip']>, scope: ViewerScope): boolean {
+  if (!plan.update || plan.pinned) return false;
+  return scope.money.jobs.size > 0 || (plan.rates && scope.rates.jobs.size > 0);
+}
+
+/** The jobs of the rows an update's filters match (one extra read, only when needed). */
+async function jobsOfRows(
+  doFetch: (input: string, init?: RequestInit) => Promise<Response>,
+  plan: NonNullable<ScopePlan['strip']>,
+  headers: HeadersInit | undefined,
+): Promise<Array<string | null> | null> {
+  try {
+    const u = new URL(plan.url);
+    u.searchParams.set('select', plan.table === 'projects' ? 'id' : 'project_id');
+    u.searchParams.delete('on_conflict');
+    u.searchParams.delete('columns');
+    const h = new Headers(headers);
+    h.delete('prefer');
+    h.delete('content-type');
+    h.set('accept', 'application/json');
+    const res = await doFetch(u.toString(), { method: 'GET', headers: h });
+    if (!res.ok) return null;
+    const rows = (await res.json()) as Array<{ id?: string; project_id?: string | null }>;
+    return rows.map((r) => (plan.table === 'projects' ? r.id ?? null : r.project_id ?? null));
+  } catch (e) {
+    void e;
+    return null;
+  }
 }
 
 /**
@@ -318,8 +370,10 @@ export async function fetchWithScope(
   const plan = planScopedRequest(input, method, scope, incomingMethod);
   let nextInit = init;
   if (plan.strip && typeof init?.body === 'string') {
+    // Unknown rows' jobs (the lookup failed) count as no money: never overwrite a figure blind.
+    const rowJobs = needsRowJobs(plan.strip, scope) ? ((await jobsOfRows(doFetch, plan.strip, init.headers)) ?? [null]) : undefined;
     try {
-      nextInit = { ...init, body: JSON.stringify(stripBody(JSON.parse(init.body), plan.strip, scope)) };
+      nextInit = { ...init, body: JSON.stringify(stripBody(JSON.parse(init.body), plan.strip, scope, rowJobs)) };
     } catch (e) {
       void e; // not JSON (a file upload) — nothing to strip
     }
