@@ -537,3 +537,16 @@ the ungated proposal_signatures / _events (20261017c, applied). Found on the way
 - `app/api/reports/[id]/export/route.ts:189` returns `apiError('reports/id/export', e)` for a ReportRunError, so the
   engine's own plain message ("Unknown or unsupported entity") reaches the person as the generic line.
 - Change orders on the ZZ audit job both carry CO # "1" (seen in the builder: "Audit CO 903279" and "Audit CO 424170").
+
+## 2026-10-17 — found while fixing the Vercel build memory (not fixed)
+
+- Every build logs two red stack traces during "Generating static pages":
+  `app/api/design/styles/route.ts` (reads `nextUrl.searchParams`) and `app/api/discovery/questions/route.ts`
+  (reads `request.url`) have no `export const dynamic = 'force-dynamic'`, so Next tries to prerender them, they
+  throw DYNAMIC_SERVER_USAGE and the catch hands it to `apiError`, which logs it as an error. Present on main
+  (production build 441cf26d) too. The routes still work at run time.
+- `vercel.json` `functions["app/api/takeoff/[...path]/route.ts"].memory: 3009` — every deploy warns "Provided
+  `memory` setting is ignored on Active CPU billing".
+- Vercel's build image sets `NODE_OPTIONS=--max_old_space_size=8192` on an 8 GB box (seen in the build-memory
+  log), so V8 never limits itself before the container does. Not changed: with the memory-only webpack cache the
+  peak is 3.2-3.7 GB.

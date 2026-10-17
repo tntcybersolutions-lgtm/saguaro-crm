@@ -12,8 +12,27 @@ const nextConfig = {
   typescript: {
     ignoreBuildErrors: true,
   },
+  /* Production builds keep webpack's cache in memory only.
+     The memory log (tools/build-memory.mjs) showed the build worker restoring
+     the persistent cache that Vercel carries between deployments: 2.3 GB of
+     raw cache buffers outside the JS heap, plus their decoded copies inside
+     it, before compiling anything. Heap 3.4 GB + buffers 2.3 GB + native code
+     reached the 8 GB box limit at about a minute and the worker was SIGKILLed.
+     Without the disk cache the compiler never loads or re-serializes those
+     buffers. The output is identical; only reuse between builds is lost.
+     `next dev` keeps its normal cache. */
+  webpack: (config, { dev }) => {
+    if (!dev && config.cache) {
+      config.cache = Object.freeze({ type: 'memory' });
+    }
+    return config;
+  },
   experimental: {
     largePageDataBytes: 10 * 1024 * 1024,
+    // A custom `webpack` function above turns Next's separate build worker off
+    // by default; keep it on so the server, edge and client compilers each run
+    // in a fresh process that frees its memory when it finishes.
+    webpackBuildWorker: true,
     // 258 files import icons from the @phosphor-icons/react barrel (~9,000
     // modules). Without this every chunk drags the whole barrel through
     // webpack, which is what put the Vercel build box at its memory ceiling.
@@ -23,7 +42,30 @@ const nextConfig = {
     // /api/heatmap/parse-vector). Keep it external so it's require()'d at
     // runtime instead of bundled — avoids webpack mangling its in-process
     // worker + dynamic imports. Client-side pdfjs usage is unaffected.
-    serverComponentsExternalPackages: ['pdfjs-dist'],
+    //
+    // The rest are server-only libraries (API routes and lib/ helpers; none is
+    // imported by a client component except xlsx, whose browser bundle is
+    // unaffected). Left external they are require()'d from node_modules at run
+    // time, exactly as plain Node would load them, instead of being parsed,
+    // bundled and minified by webpack into the server build for every route
+    // that reaches them — about 1,400 modules and 10 MB of source the server
+    // compiler no longer holds in memory. Vercel's file tracing ships them
+    // with each function, as it already does for pdfjs-dist, sharp and
+    // @aws-sdk/client-s3 (external by default).
+    serverComponentsExternalPackages: [
+      'pdfjs-dist',
+      '@anthropic-ai/sdk',
+      '@aws-sdk/s3-request-presigner',
+      'docx',
+      'exceljs',
+      'heic-convert',
+      'pdf-lib',
+      'posthog-node',
+      'resend',
+      'stripe',
+      'web-push',
+      'xlsx',
+    ],
   },
   compress: true,
   generateEtags: true,
