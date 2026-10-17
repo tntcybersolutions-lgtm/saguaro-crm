@@ -62,6 +62,8 @@ interface RFI {
   is_urgent: boolean | null;
   is_overdue: boolean;
   created_at: string;
+  answered_at?: string | null;
+  closed_at?: string | null;
 }
 
 /** Fields only the single-record read carries (the list route is narrow). */
@@ -113,14 +115,27 @@ function rfiStatus(r: RFI): { label: string; tone: BadgeTone } {
 
 const isUrgent = (r: RFI) => !!(r.is_urgent || r.priority === 'high' || r.priority === 'critical');
 
+/** Days the RFI was (or still is) open: a closed or answered RFI stops its
+ *  clock on the day it was answered / closed, so the column stays true. */
 function daysOpen(rfi: RFI): number {
   const created = new Date(rfi.created_at || Date.now());
-  return Math.max(0, Math.floor((Date.now() - created.getTime()) / 86400000));
+  const done = rfi.status === 'closed' || rfi.status === 'answered';
+  const endIso = done ? (rfi.answered_at || rfi.closed_at) : null;
+  const end = endIso ? new Date(endIso).getTime() : Date.now();
+  return Math.max(0, Math.floor((end - created.getTime()) / 86400000));
 }
 
+/** Who owes the next move. A closed RFI is in nobody's court — and an old
+ *  import that stored a status word there ("closed") is not a person. */
 function ballInCourt(rfi: RFI): string {
-  return (rfi.ball_in_court || rfi.assigned_to_name || '').trim();
+  if (rfi.status === 'closed') return '';
+  const v = (rfi.ball_in_court || rfi.assigned_to_name || '').trim();
+  return /^(open|closed|answered|draft|submitted|pending|under_review|n\/a|none)$/i.test(v) ? '' : v;
 }
+
+/** "RFI-004" stays as stored; a bare number reads "#4". */
+const rfiNo = (n: unknown) => (/^\d+$/.test(String(n ?? '')) ? `#${n}` : String(n ?? ''));
+const rfiRef = (n: unknown) => (/^\d+$/.test(String(n ?? '')) ? `RFI #${n}` : String(n ?? 'RFI'));
 
 const money = new Intl.NumberFormat('en-US', { style: 'currency', currency: 'USD', maximumFractionDigits: 2 });
 
@@ -324,6 +339,9 @@ export default function RFIsPage() {
   const answeredCount = rfis.filter(r => r.status === 'answered').length;
   const inReviewCount = rfis.filter(r => IN_REVIEW.has(r.status)).length;
   const overdueCount = rfis.filter(r => r.is_overdue).length;
+  const closedRfis = rfis.filter(r => r.status === 'closed');
+  const timedClosed = closedRfis.filter(r => r.answered_at || r.closed_at);
+  const avgTurnaround = timedClosed.length ? Math.round(timedClosed.reduce((s, r) => s + daysOpen(r), 0) / timedClosed.length) : 0;
 
   // SmartCreate intelligence — ctx snapshot + the live log
   const subs: any[] = ctx?.subs || [];
@@ -441,7 +459,7 @@ export default function RFIsPage() {
         setSelectedId(prev => (prev === tempId ? d.rfi.id : prev));
       }
       guard.clearDraft();
-      show(`RFI #${d.rfi?.rfi_number ?? nextRfiNumber} created.`);
+      show(`${rfiRef(d.rfi?.rfi_number ?? nextRfiNumber)} created.`);
       revalidate();
       return true;
     } catch (e: unknown) {
@@ -533,7 +551,7 @@ export default function RFIsPage() {
   /** Close out an RFI through the same PATCH route reassign uses. */
   async function closeRfi(rfi: RFI) {
     const ok = await confirmDialog({
-      title: `Close RFI #${rfi.rfi_number}?`,
+      title: `Close ${rfiRef(rfi.rfi_number)}?`,
       message: 'It moves to Closed and drops out of overdue tracking.',
       confirmLabel: 'Close RFI',
     });
@@ -550,7 +568,7 @@ export default function RFIsPage() {
       });
       const d = await r.json();
       if (!r.ok || d.error) throw new Error(d.error || 'Could not close the RFI.');
-      show(`RFI #${rfi.rfi_number} closed.`);
+      show(`${rfiRef(rfi.rfi_number)} closed.`);
       revalidate();
     } catch (e: unknown) {
       setRfis(prev => prev.map(x => (x.id === rfi.id ? prevRfi : x)));
@@ -559,13 +577,13 @@ export default function RFIsPage() {
   }
 
   async function deleteRfi(rfi: RFI) {
-    if (!(await confirmDialog({ title: 'Please confirm', message: `Delete RFI #${rfi.rfi_number}? This cannot be undone.`, confirmLabel: 'Delete', danger: true }))) return;
+    if (!(await confirmDialog({ title: 'Please confirm', message: `Delete ${rfiRef(rfi.rfi_number)}? This cannot be undone.`, confirmLabel: 'Delete', danger: true }))) return;
     setRfis(prev => prev.filter(r => r.id !== rfi.id));
     if (selectedId === rfi.id) setSelectedId(null);
     try {
       const res = await fetch(`/api/rfis/${rfi.id}`, { method: 'DELETE' });
       if (!res.ok) throw new Error('delete failed');
-      show(`RFI #${rfi.rfi_number} deleted.`);
+      show(`${rfiRef(rfi.rfi_number)} deleted.`);
     } catch {
       show('Could not delete the RFI. Please try again.', 'bad');
       load();
@@ -607,20 +625,20 @@ export default function RFIsPage() {
     ? [
         { label: 'Open', value: '—', sub: 'Loading…' },
         { label: 'Overdue', value: '—', sub: 'Loading…' },
-        { label: 'In Review', value: '—', sub: 'Loading…' },
         { label: 'Answered', value: '—', sub: 'Loading…' },
+        { label: 'Closed', value: '—', sub: 'Loading…' },
       ]
     : [
-        { label: 'Open', value: openCount, sub: statusFilter === 'open' ? 'Filtered — click to clear' : oldestOpenDays > 0 ? `Oldest ${oldestOpenDays}d` : 'Awaiting a response', onClick: () => toggleStatus('open') },
-        { label: 'Overdue', value: overdueCount, tone: overdueCount > 0 ? 'bad' : 'default', sub: statusFilter === 'overdue' ? 'Filtered — click to clear' : overdueCount > 0 ? 'Past the response date' : 'All on time', onClick: () => toggleStatus('overdue') },
-        { label: 'In Review', value: inReviewCount, tone: inReviewCount > 0 ? 'warn' : 'default', sub: statusFilter === 'in_review' ? 'Filtered — click to clear' : 'Submitted or being answered', onClick: () => toggleStatus('in_review') },
-        { label: 'Answered', value: answeredCount, tone: answeredCount > 0 ? 'good' : 'default', sub: statusFilter === 'answered' ? 'Filtered — click to clear' : 'Ready to close out', onClick: () => toggleStatus('answered') },
+        { label: 'Open', value: openCount, sub: statusFilter === 'open' ? 'Filtered — tap to clear' : oldestOpenDays > 0 ? `Oldest ${oldestOpenDays}d${inReviewCount > 0 ? ` · ${inReviewCount} in review` : ''}` : inReviewCount > 0 ? `${inReviewCount} in review` : 'None waiting', onClick: () => toggleStatus('open'), active: statusFilter === 'open' },
+        { label: 'Overdue', value: overdueCount, tone: overdueCount > 0 ? 'bad' : 'default', sub: statusFilter === 'overdue' ? 'Filtered — tap to clear' : overdueCount > 0 ? 'Past the response date' : 'All on time', onClick: () => toggleStatus('overdue'), active: statusFilter === 'overdue' },
+        { label: 'Answered', value: answeredCount, tone: answeredCount > 0 ? 'good' : 'default', sub: statusFilter === 'answered' ? 'Filtered — tap to clear' : answeredCount > 0 ? 'Ready to close' : 'None waiting to close', onClick: () => toggleStatus('answered'), active: statusFilter === 'answered' },
+        { label: 'Closed', value: closedRfis.length, sub: statusFilter === 'closed' ? 'Filtered — tap to clear' : avgTurnaround > 0 ? `Avg ${avgTurnaround}d to answer` : `of ${totalCount} total`, onClick: () => toggleStatus('closed'), active: statusFilter === 'closed' },
       ];
 
   // ── List columns: full log, or a compact log beside the detail workspace ──
   const numberCol: Column<RFI> = {
-    key: 'rfi_number', header: 'RFI #', accessor: r => r.rfi_number, width: 72,
-    render: r => <span className="rfiNum" data-sel={r.id === selectedId ? 'true' : undefined}>#{r.rfi_number}</span>,
+    key: 'rfi_number', header: 'RFI #', accessor: r => r.rfi_number, width: 96,
+    render: r => <span className="rfiNum" data-sel={r.id === selectedId ? 'true' : undefined}>{rfiNo(r.rfi_number)}</span>,
   };
   const subjectCol: Column<RFI> = {
     key: 'subject', header: 'Subject', accessor: r => (r.subject || '').toLowerCase(),
@@ -635,11 +653,11 @@ export default function RFIsPage() {
   };
   const bicCol: Column<RFI> = {
     key: 'bic', header: 'Ball in Court', accessor: r => ballInCourt(r).toLowerCase(),
-    render: r => { const b = ballInCourt(r); return b ? <span style={{ color: 'var(--text-primary)' }}>{b}</span> : <span className="rfiMuted">Unassigned</span>; },
+    render: r => { const b = ballInCourt(r); return b ? <span style={{ color: 'var(--text-primary)' }}>{b}</span> : r.status === 'closed' ? null : <span className="rfiMuted">Unassigned</span>; },
   };
   const dueCol: Column<RFI> = {
-    key: 'due_date', header: 'Due Date', accessor: r => r.due_date || '',
-    render: r => <span className={r.is_overdue ? 'rfiLate' : undefined}>{fmtDate(r.due_date)}</span>,
+    key: 'due_date', header: 'Due Date', accessor: r => r.due_date || '', width: 124,
+    render: r => <span className={r.is_overdue ? 'rfiLate' : undefined} style={{ whiteSpace: 'nowrap' }}>{r.due_date ? fmtDate(r.due_date) : null}</span>,
   };
   const daysCol: Column<RFI> = {
     key: 'days', header: 'Days Open', accessor: r => daysOpen(r), align: 'right',
@@ -727,7 +745,7 @@ export default function RFIsPage() {
     <div ref={detailRef} className="rfiDetailCq">
       <div className="rfiDetail">
         <Card
-          title={<>RFI #{selected.rfi_number} — {selected.subject || 'Untitled RFI'}</>}
+          title={<>{rfiRef(selected.rfi_number)} — {selected.subject || 'Untitled RFI'}</>}
           subtitle={selected.spec_section ? `Spec ${selected.spec_section}` : undefined}
           actions={<Button variant="ghost" size="sm" icon={<X size={16} />} aria-label="Close details" title="Close details" onClick={() => setSelectedId(null)} />}
         >
@@ -780,7 +798,7 @@ export default function RFIsPage() {
             </div>
             <div className="rfiSection">
               <DetailList items={[
-                ['Ball in Court', ballInCourt(selected) || 'Unassigned'],
+                ['Ball in Court', ballInCourt(selected) || (selStatus === 'closed' ? '' : 'Unassigned')],
                 ['Due', <span key="due" className={selected.is_overdue ? 'rfiLate' : undefined}>{fmtDate(selected.due_date)}</span>],
                 ['Days Open', `${daysOpen(selected)}d`],
                 ['Cost Impact', detailValue(costImpact ?? '—')],
@@ -789,7 +807,7 @@ export default function RFIsPage() {
                 ['Drawing', detailValue(detail?.drawing_reference ? String(detail.drawing_reference) : '—')],
                 ['Submitted By', selected.submitted_by || ''],
                 ['Created', fmtDate(selected.created_at)],
-              ]} />
+              ].filter(([, v]) => v != null && v !== '' && v !== '—') as [string, React.ReactNode][]} />
               {detailError && (
                 <div className="rfiInlineErr" role="alert">
                   <WarningCircle size={15} /> {detailError}
@@ -868,7 +886,6 @@ export default function RFIsPage() {
           <EmptyState
             icon={<Question size={22} />}
             title="No RFIs match these filters"
-            text="Clear the search, status, or ball-in-court filter to see more."
             action={<Button onClick={clearFilters}>Clear Filters</Button>}
           />
         }
@@ -886,7 +903,7 @@ export default function RFIsPage() {
           { label: 'RFIs' },
         ]}
         title="RFIs"
-        subtitle="Questions, ball-in-court, and close-out."
+        subtitle={ctx?.project?.name || undefined}
         actions={
           <Button variant="primary" data-tour="create-rfi" icon={<Plus size={15} weight="bold" />} onClick={openCreate}>
             New RFI
@@ -928,7 +945,6 @@ export default function RFIsPage() {
                 {filtersActive && <Button variant="ghost" size="sm" onClick={clearFilters}>Clear</Button>}
               </>
             }
-            actions={<span className="rfiMuted" style={{ fontSize: 'var(--fs-sm)' }}>{filteredRfis.length} of {rfis.length}</span>}
           />
         )}
 

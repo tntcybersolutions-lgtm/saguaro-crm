@@ -627,7 +627,6 @@ export default function PunchListPage(){
       <EmptyState
         icon={<CheckCircle size={22}/>}
         title="Punch list is empty"
-        text="Add deficiencies and correction items to track closeout."
         action={<Button icon={<Plus size={15} weight="bold"/>} onClick={openCreate}>Add First Item</Button>}
       />
     );
@@ -658,7 +657,7 @@ export default function PunchListPage(){
             <EmptyState
               icon={<CheckCircle size={22}/>}
               title="No items match these filters"
-              text="Clear the search, status, priority, or trade filter to see more."
+             
               action={<Button onClick={clearFilters}>Clear Filters</Button>}
             />
           }
@@ -679,7 +678,7 @@ export default function PunchListPage(){
           { label:'Punch List' },
         ]}
         title="Punch List"
-        subtitle="Deficiencies and closeout items, tracked to completion."
+        subtitle={ctx?.project?.name || undefined}
         actions={
           <Button variant="primary" icon={<Plus size={15} weight="bold"/>} onClick={openCreate}>
             Add Item
@@ -721,7 +720,6 @@ export default function PunchListPage(){
                 {filtersActive && <Button variant="ghost" size="sm" onClick={clearFilters}>Clear</Button>}
               </>
             }
-            actions={<span className="plMuted" style={{ fontSize:'var(--fs-sm)' }}>{filtered.length} of {items.length}</span>}
           />
         )}
 

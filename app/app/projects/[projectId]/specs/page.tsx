@@ -287,7 +287,6 @@ export default function SpecsPage() {
                 <Select aria-label="Status" value={statusFilter} onChange={e => setStatusFilter(e.target.value)} style={{ width: 'auto', minWidth: 150 }}
                   options={[{ value: 'all', label: 'All statuses' }, { value: 'draft', label: 'Draft' }, { value: 'issued', label: 'Issued' }, { value: 'revised', label: 'Revised' }, { value: 'approved', label: 'Approved' }]} />
               }
-              actions={<span style={{ fontSize: 'var(--fs-sm)', color: 'var(--text-tertiary)' }}>{filtered.length} of {specs.length}</span>}
             />
           </>
         )}

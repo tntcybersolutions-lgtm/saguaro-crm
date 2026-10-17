@@ -313,7 +313,7 @@ export default function FilesPage() {
           { label: 'Files' },
         ]}
         title="Files & media"
-        subtitle="Plans, permits, contracts, photos and video in one place."
+        subtitle={ctx?.project?.name || undefined}
         actions={
           <>
             <Button icon={<CloudArrowDown size={15} weight="bold" />} onClick={() => setShowImport(true)}>Import from cloud</Button>

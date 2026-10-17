@@ -565,7 +565,7 @@ export default function SafetyPage() {
         rowKey={i => i.id}
         loading={loading}
         defaultSort={{ key: 'date', dir: 'desc' }}
-        empty={<EmptyState title="No incidents match these filters" text="Clear the search or filters to see more." action={<Button onClick={clearIncidentFilters}>Clear filters</Button>} />}
+        empty={<EmptyState title="No incidents match these filters" action={<Button onClick={clearIncidentFilters}>Clear filters</Button>} />}
       />
     );
   }
@@ -613,7 +613,7 @@ export default function SafetyPage() {
           { label: 'Safety' },
         ]}
         title="Safety"
-        subtitle="Incidents, toolbox talks and OSHA records."
+        subtitle={ctx?.project?.name || undefined}
         actions={
           <>
             <Button variant="ghost" icon={<FilePdf size={15} weight="bold" />} onClick={handleGenerateJHA}>Generate JHA</Button>
@@ -649,7 +649,6 @@ export default function SafetyPage() {
                     {incidentFiltersActive && <Button variant="ghost" size="sm" onClick={clearIncidentFilters}>Clear</Button>}
                   </>
                 }
-                actions={<span className="sfMuted" style={{ fontSize: 'var(--fs-sm)' }}>{filteredIncidents.length} of {incidents.length}</span>}
               />
             )}
             <Card flush>{incidentBody}</Card>
@@ -703,7 +702,6 @@ export default function SafetyPage() {
                     ]}
                   />
                 }
-                actions={<span className="sfMuted" style={{ fontSize: 'var(--fs-sm)' }}>{filteredActions.length} of {actions.length}</span>}
               />
             )}
             <Card
@@ -726,7 +724,6 @@ export default function SafetyPage() {
                   <EmptyState
                     icon={<Wrench size={22} />}
                     title="No corrective actions"
-                    text="Incidents create them, or add one directly."
                     action={<Button icon={<Plus size={15} weight="bold" />} onClick={openCA}>Add Corrective Action</Button>}
                   />
                 ) : (

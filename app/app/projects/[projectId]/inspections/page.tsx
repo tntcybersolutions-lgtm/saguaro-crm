@@ -527,7 +527,7 @@ export default function InspectionsPage() {
         bulkEdit={itemBulkEdit('inspections', { allowed: rights.edit, canDelete: rights.full, deleteUrl: r => `/api/inspections/${r.id}`, onDone: () => { void fetchInspections(); } })}
         exportName="inspections"
         isSelected={isSel}
-        empty={<EmptyState icon={<ClipboardText size={22} />} title="No inspections match these filters" text="Clear the search, result, or type filter to see more." action={<Button onClick={clearFilters}>Clear Filters</Button>} />}
+        empty={<EmptyState icon={<ClipboardText size={22} />} title="No inspections match these filters" action={<Button onClick={clearFilters}>Clear Filters</Button>} />}
       />
     );
   }
@@ -542,7 +542,7 @@ export default function InspectionsPage() {
           { label: 'Inspections' },
         ]}
         title="Inspections"
-        subtitle="Inspections, results and re-inspections."
+        subtitle={ctx?.project?.name || undefined}
         actions={<Button variant="primary" icon={<Plus size={15} weight="bold" />} onClick={() => openCreate()}>Schedule Inspection</Button>}
       >
         {!loadError && <StatRow items={stats} />}
@@ -561,7 +561,6 @@ export default function InspectionsPage() {
                 {filtersActive && <Button variant="ghost" size="sm" onClick={clearFilters}>Clear</Button>}
               </>
             }
-            actions={<span className="inMuted" style={{ fontSize: 'var(--fs-sm)' }}>{filteredInspections.length} of {inspections.length}</span>}
           />
         )}
 

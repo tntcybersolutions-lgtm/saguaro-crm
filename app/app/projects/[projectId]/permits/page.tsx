@@ -405,7 +405,7 @@ export default function PermitsPage() {
         defaultSort={{ key: 'expiry_date', dir: 'asc' }}
         onRowClick={p => setSelectedId(p.id)}
         rowActions={permitActions}
-        empty={<EmptyState icon={<Clipboard size={22} />} title="No permits match these filters" text="Clear the search, status, or type filter to see more." action={<Button onClick={clearFilters}>Clear Filters</Button>} />}
+        empty={<EmptyState icon={<Clipboard size={22} />} title="No permits match these filters" action={<Button onClick={clearFilters}>Clear Filters</Button>} />}
       />
     );
   }
@@ -449,7 +449,6 @@ export default function PermitsPage() {
                 {filtersActive && <Button variant="ghost" size="sm" onClick={clearFilters}>Clear</Button>}
               </>
             }
-            actions={<span className="peMuted" style={{ fontSize: 'var(--fs-sm)' }}>{filteredPermits.length} of {permits.length}</span>}
           />
         )}
 

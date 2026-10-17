@@ -374,7 +374,7 @@ export default function InvoicesPage() {
         { label: 'Client invoices' },
       ]}
       title="Client invoices"
-      subtitle="Owner billing and payment tracking."
+      subtitle={ctx?.project?.name || undefined}
       actions={<Button variant="primary" icon={<Plus size={15} weight="bold" />} onClick={() => openCreate()}>New invoice</Button>}
     >
       {!loadError && <StatRow items={stats} />}

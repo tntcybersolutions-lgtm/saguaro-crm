@@ -286,7 +286,7 @@ function IntelligenceChat() {
         { label: 'Intelligence' },
       ]}
       title="Intelligence"
-      subtitle="Ask about this job — answers come from its own records."
+      subtitle={ctx?.project?.name || undefined}
       actions={
         <Button icon={<Sparkle size={15} />} onClick={() => sendMessage(QUICK_QUESTIONS[0])} disabled={isLoading}>
           What needs my attention?

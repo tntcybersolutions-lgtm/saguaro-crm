@@ -487,7 +487,6 @@ export default function CloseoutPage() {
             <Select aria-label="Status" value={statusFilter} onChange={e => setStatusFilter(e.target.value)} style={{ width: 'auto', minWidth: 150 }}
               options={[{ value: 'all', label: 'All items' }, { value: 'incomplete', label: 'Incomplete' }, { value: 'complete', label: 'Complete' }]} />
           }
-          actions={<span style={{ fontSize: 'var(--fs-sm)', color: 'var(--text-tertiary)' }}>{visibleItems.length} of {items.length}</span>}
         />
 
         <div className="coCq">

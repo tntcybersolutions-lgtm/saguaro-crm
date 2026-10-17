@@ -418,7 +418,7 @@ export default function CrewsPage() {
           <EmptyState
             icon={<UsersThree size={22} />}
             title="No crews match these filters"
-            text="Clear the search or status filter to see more."
+           
             action={<Button onClick={clearFilters}>Clear Filters</Button>}
           />
         }
@@ -439,7 +439,7 @@ export default function CrewsPage() {
           { label: 'Crews' },
         ]}
         title="Crews & Rosters"
-        subtitle="Build a crew once; every daily log's manpower fills itself."
+        subtitle={ctx?.project?.name || undefined}
         actions={
           <>
             <Button icon={<Archive size={15} />} aria-pressed={showArchived} onClick={() => { setShowArchived(v => !v); setPanel(null); }}>
@@ -470,7 +470,6 @@ export default function CrewsPage() {
                 {filtersActive && <Button variant="ghost" size="sm" onClick={clearFilters}>Clear</Button>}
               </>
             }
-            actions={<span className="crMuted" style={{ fontSize: 'var(--fs-sm)' }}>{filtered.length} of {crews.length}</span>}
           />
         )}
 

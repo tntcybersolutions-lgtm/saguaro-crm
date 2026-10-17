@@ -468,7 +468,6 @@ export default function SubmittalsPage(){
       <EmptyState
         icon={<Clipboard size={22}/>}
         title="No submittals yet"
-        text="Shop drawings and product data land here. S-001 and a 14-day review window are already set."
         action={<Button icon={<Plus size={15} weight="bold"/>} onClick={openCreate}>New Submittal</Button>}
       />
     );
@@ -485,7 +484,7 @@ export default function SubmittalsPage(){
         tableId="project-submittals"
         bulkEdit={itemBulkEdit('submittals', { allowed: rights.edit, canDelete: rights.full, deleteUrl: r => `/api/submittals/${r.id}`, people: submittals.map((s: any) => String(s.ball_in_court || '')), onDone: () => { void load(); } })}
         exportName="submittals"
-        empty={<EmptyState icon={<Clipboard size={22}/>} title="No submittals match these filters" text="Clear the search, status, or ball-in-court filter to see more." action={<Button onClick={clearFilters}>Clear Filters</Button>}/>}
+        empty={<EmptyState icon={<Clipboard size={22}/>} title="No submittals match these filters" action={<Button onClick={clearFilters}>Clear Filters</Button>}/>}
       />
     );
   }
@@ -502,7 +501,7 @@ export default function SubmittalsPage(){
           { label:'Submittals' },
         ]}
         title="Submittal Log"
-        subtitle="Shop drawings, product data, and the review workflow."
+        subtitle={ctx?.project?.name || undefined}
         actions={<Button variant="primary" icon={<Plus size={15} weight="bold"/>} onClick={openCreate}>New Submittal</Button>}
       >
         {!loadError && <StatRow items={stats}/>}
@@ -519,7 +518,6 @@ export default function SubmittalsPage(){
                 {filtersActive && <Button variant="ghost" size="sm" onClick={clearFilters}>Clear</Button>}
               </>
             }
-            actions={<span className="sbMuted" style={{ fontSize:'var(--fs-sm)' }}>{filtered.length} of {total}</span>}
           />
         )}
 
