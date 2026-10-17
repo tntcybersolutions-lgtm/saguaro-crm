@@ -4,7 +4,7 @@ import { useEditRights } from '@/lib/hooks/usePermissions';
 import React, { useState, useEffect, useMemo, useCallback, useRef } from 'react';
 import { createPortal } from 'react-dom';
 import { useRouter } from 'next/navigation';
-import { DataTable, FormModal, FormGrid, Field, Input, Select, type Column } from '@/components/ui/kit';
+import { DataTable, FormModal, FormGrid, Field, Input, Select, StatRow, Tabs, type Column } from '@/components/ui/kit';
 import { StatusPill } from '@/components/ui/Status';
 import { useProjects } from '@/lib/hooks/useProjects';
 import UserPicker from '@/components/UserPicker';
@@ -12,7 +12,7 @@ import { SkeletonRow } from '../../../components/ui/Skeleton';
 import { UsersThree, WarningCircle, Buildings, CurrencyDollar, Target, CalendarBlank, Robot, Clipboard, CheckCircle, XCircle, Hourglass, House, Cactus, ArrowLeft, Gauge, MapPin, Lightning, Package, DownloadSimple, Plus, PencilSimple, Trash } from '@phosphor-icons/react';
 import { useToast } from '@/components/Toast';
 import { getAuthHeaders } from '@/lib/supabase-browser';
-import { PremiumSurface, ModuleHero, StatCard, SectionCard, PremiumEmpty, goldButtonStyle, ghostButtonStyle, goldOutlineButtonStyle } from '@/components/ui/premium';
+import { PremiumSurface, ModuleHero, SectionCard, PremiumEmpty, goldButtonStyle, ghostButtonStyle, goldOutlineButtonStyle } from '@/components/ui/premium';
 import { ListToolbar } from '@/components/ui/ListToolbar';
 import { useEscapeClose } from '@/lib/ui/use-escape-close';
 import { confirmDialog } from '@/lib/ui/async-dialog';
@@ -301,8 +301,8 @@ export default function CustomersPage() {
     { key: 'status', header: 'Status', phone: 'show', accessor: c => c.status, render: c => <StatusPill module="customers" status={c.status} size="sm" /> },
     { key: 'lead_score', header: 'Score', phone: 'show', accessor: c => Number(c.lead_score) || 0, render: c => <span style={{ fontWeight: 800, color: scoreColor(c.lead_score) }}>{c.lead_score}</span> },
     { key: 'projects', header: 'Projects', phone: 'hide', accessor: c => projectRollup.get(c.id)?.count || 0, render: c => { const n = projectRollup.get(c.id)?.count || 0; return <span style={{ color: n > 0 ? TEXT : DIM, fontWeight: 600 }}>{n}</span>; } },
-    { key: 'ltv', header: 'Lifetime Value', align: 'right', phone: 'show', accessor: c => (projectRollup.get(c.id)?.value || 0) > 0 ? projectRollup.get(c.id)?.value : null, render: c => { const v = projectRollup.get(c.id)?.value || 0; return v > 0 ? <span style={{ color: 'var(--text-primary)', fontWeight: 700 }}>{fmt(v)}</span> : '—'; } },
-    { key: 'source', header: 'Source', phone: 'hide', accessor: c => c.source, render: c => c.source || '—' },
+    { key: 'ltv', header: 'Lifetime Value', align: 'right', phone: 'show', accessor: c => (projectRollup.get(c.id)?.value || 0) > 0 ? projectRollup.get(c.id)?.value : null, render: c => { const v = projectRollup.get(c.id)?.value || 0; return v > 0 ? <span style={{ color: 'var(--text-primary)', fontWeight: 700 }}>{fmt(v)}</span> : ''; } },
+    { key: 'source', header: 'Source', phone: 'hide', accessor: c => c.source, render: c => c.source || '' },
     { key: 'created_at', header: 'Created', phone: 'hide', accessor: c => c.created_at, render: c => fmtDate(c.created_at) },
   ], [projectRollup]);
 
@@ -634,6 +634,14 @@ export default function CustomersPage() {
     const c = selected;
     // No breakdown on file is said as such — not drawn as four zero bars.
     const sb = c.score_breakdown || null;
+    const detailTabs: { key: typeof detailTab; label: string; count?: number }[] = [
+      { key: 'overview', label: 'Overview' },
+      ...(c.discovery_answers && Object.keys(c.discovery_answers).length ? [{ key: 'discovery' as const, label: 'Discovery', count: Object.keys(c.discovery_answers).length }] : []),
+      ...(c.recommendations?.length ? [{ key: 'recommendations' as const, label: 'Recommendations', count: c.recommendations.length }] : []),
+      ...(c.design_sessions?.length ? [{ key: 'designs' as const, label: 'Designs', count: c.design_sessions.length }] : []),
+      ...(c.material_selections?.length ? [{ key: 'materials' as const, label: 'Materials', count: c.material_selections.length }] : []),
+      ...(c.conversations?.length ? [{ key: 'conversations' as const, label: 'Conversations', count: c.conversations.length }] : []),
+    ];
     return (
       <PremiumSurface>
         {/* Back button */}
@@ -643,10 +651,8 @@ export default function CustomersPage() {
 
         {/* Identity Hero */}
         <ModuleHero
-          eyebrow="Customer Profile"
-          eyebrowIcon={<UsersThree size={13} weight="fill" color="var(--text-secondary)" />}
           title={c.name}
-          subtitle={[c.email, c.phone].filter(Boolean).join(' · ') || 'No email or phone on file'}
+          subtitle={[c.email, c.phone].filter(Boolean).join(' · ') || undefined}
           actions={
             <div style={{ display: 'flex', gap: 12, alignItems: 'center', flexWrap: 'wrap' }}>
               <button type="button" onClick={() => openEdit(c)} className="pmBtn" style={{ ...goldOutlineButtonStyle, minHeight: 44 }}>
@@ -670,19 +676,16 @@ export default function CustomersPage() {
           }
         />
 
-        {/* Tabs */}
-        <div role="tablist" aria-label="Customer details" style={{ display: 'flex', gap: 6, marginBottom: 20, overflowX: 'auto', paddingBottom: 4 }}>
-          {(['overview', 'discovery', 'recommendations', 'designs', 'materials', 'conversations'] as const).map(tab => (
-            <button key={tab} type="button" role="tab" aria-selected={detailTab === tab} onClick={() => setDetailTab(tab)} className="pmBtn" style={{
-              padding: '8px 16px', borderRadius: 8, fontSize: 13, fontWeight: 600,
-              border: `1px solid ${detailTab === tab ? GOLD : BORDER}`,
-              background: detailTab === tab ? mix(GOLD, 9) : 'transparent',
-              color: detailTab === tab ? GOLD : DIM,
-              cursor: 'pointer', textTransform: 'capitalize', whiteSpace: 'nowrap',
-              transition: 'background .15s ease, color .15s ease, border-color .15s ease',
-            }}>{tab}</button>
-          ))}
-        </div>
+        {/* Tabs — only the ones this customer has something in. */}
+        {detailTabs.length > 1 && (
+          <div style={{ marginBottom: 16 }}>
+            <Tabs
+              value={detailTab}
+              onChange={(k) => setDetailTab(k as typeof detailTab)}
+              tabs={detailTabs.map((t) => ({ key: t.key, label: t.label, count: t.count }))}
+            />
+          </div>
+        )}
 
         {customerForm}
 
@@ -690,19 +693,19 @@ export default function CustomersPage() {
         {detailTab === 'overview' && (
           <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(280px, 1fr))', gap: 16 }}>
             {/* Geo Info */}
-            <SectionCard flat title="Location & Geo" icon={<MapPin size={17} weight="duotone" color="var(--text-secondary)" />}>
+            <SectionCard flat title="Details" icon={<MapPin size={17} weight="duotone" color="var(--text-secondary)" />}>
               <div style={{ display: 'grid', gap: 10 }}>
-                {[
-                  ['City', c.city || '—'],
-                  ['State', c.state || '—'],
-                  ['ZIP', c.zip_code || '—'],
-                  ['Email', c.email || '—'],
-                  ['Phone', c.phone || '—'],
-                  ['Climate Zone', c.climate_zone || '—'],
-                  ['Utility Rate', c.utility_rate ? `$${c.utility_rate}/kWh` : '—'],
-                  ['Source', c.source || '—'],
-                  ['Created', fmtDate(c.created_at)],
-                ].map(([label, val]) => (
+                {([
+                  ['City', c.city],
+                  ['State', c.state],
+                  ['ZIP', c.zip_code],
+                  ['Email', c.email],
+                  ['Phone', c.phone],
+                  ['Climate zone', c.climate_zone],
+                  ['Utility rate', c.utility_rate ? `$${c.utility_rate}/kWh` : ''],
+                  ['Source', c.source],
+                  ['Added', c.created_at ? fmtDate(c.created_at) : ''],
+                ] as [string, string][]).filter(([, val]) => !!val).map(([label, val]) => (
                   <div key={label as string} style={{ display: 'flex', justifyContent: 'space-between' }}>
                     <span style={{ fontSize: 13, color: DIM }}>{label}</span>
                     <span style={{ fontSize: 13, fontWeight: 600 }}>{val}</span>
@@ -715,7 +718,7 @@ export default function CustomersPage() {
             <SectionCard flat title="Lead Score Breakdown" icon={<Gauge size={17} weight="duotone" color="var(--text-secondary)" />}>
               {!sb && (
                 <div style={{ fontSize: 13, color: DIM, lineHeight: 1.6 }}>
-                  Lead score {c.lead_score}. No breakdown on file yet — it fills in as this customer answers discovery questions.
+                  Score {c.lead_score} · no breakdown yet
                 </div>
               )}
               {sb && Object.entries(sb).map(([key, val]) => (
@@ -822,18 +825,15 @@ export default function CustomersPage() {
                       <div key={p.id} style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', gap: 10, padding: '8px 12px', background: mix(BG, 38), borderRadius: 8, border: `1px solid ${BORDER}` }}>
                         <div style={{ minWidth: 0 }}>
                           <div style={{ fontSize: 13, fontWeight: 600, whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>{p.name}</div>
-                          {p.status && <div style={{ fontSize: 12, color: DIM, textTransform: 'capitalize' }}>{p.status}</div>}
+                          {p.status && <div style={{ fontSize: 12, color: DIM, textTransform: 'capitalize' }}>{p.status.replace(/_/g, ' ')}</div>}
                         </div>
-                        <div style={{ fontSize: 13, fontWeight: 700, color: p.value > 0 ? 'var(--text-primary)' : DIM, whiteSpace: 'nowrap' }}>{p.value > 0 ? fmt(p.value) : '—'}</div>
+                        {p.value > 0 && <div style={{ fontSize: 13, fontWeight: 700, color: 'var(--text-primary)', whiteSpace: 'nowrap' }}>{fmt(p.value)}</div>}
                       </div>
                     ))}
                   </div>
                 </>
               ) : (
-                <div style={{ fontSize: 13, color: DIM, lineHeight: 1.6 }}>
-                  No projects linked yet. Use Assign to Project and the new job is created under this
-                  customer&apos;s name — its contract value rolls up here as lifetime value automatically.
-                </div>
+                <div style={{ fontSize: 13, color: DIM, lineHeight: 1.6 }}>No projects linked yet.</div>
               )}
             </SectionCard>
           </div>
@@ -1004,18 +1004,15 @@ export default function CustomersPage() {
     <PremiumSurface>
       {/* Header */}
       <ModuleHero
-        eyebrow="Customer Relationships"
-        eyebrowIcon={<UsersThree size={13} weight="fill" color="var(--text-secondary)" />}
-        title="Customer"
-        accent="CRM"
-        subtitle={loading ? 'Loading profiles…' : error ? 'Unable to load profiles' : `${customers.length} total profiles in your pipeline${lifetimeTotals.value > 0 ? ` · ${fmt(lifetimeTotals.value)} lifetime contract value` : ''}`}
+        title="Customers"
+        subtitle={loading || error ? undefined : `${customers.length} customer${customers.length === 1 ? '' : 's'}${lifetimeTotals.value > 0 ? ` · ${fmt(lifetimeTotals.value)} in contracts` : ''}`}
         actions={
           <>
             <button type="button" onClick={openAdd} className="pmBtn" style={{ ...goldButtonStyle, minHeight: 44 }}>
-              <Plus size={15} weight="bold" /> New Customer
+              <Plus size={15} weight="bold" /> New customer
             </button>
-            <button type="button" onClick={exportCSV} className="pmBtn" style={{ ...goldOutlineButtonStyle, minHeight: 44 }}>
-              <DownloadSimple size={15} weight="bold" /> Export Leads (CSV)
+            <button type="button" onClick={exportCSV} disabled={!filtered.length} className="pmBtn" style={{ ...ghostButtonStyle, minHeight: 44 }}>
+              <DownloadSimple size={15} weight="bold" /> Export CSV
             </button>
           </>
         }
@@ -1023,36 +1020,18 @@ export default function CustomersPage() {
 
       {customerForm}
 
-      {/* KPI Row */}
-      {!loading && !error && (
-        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(190px, 1fr))', gap: 16, marginBottom: 24 }}>
-          <StatCard
-            icon={<UsersThree size={19} weight="duotone" color="var(--text-secondary)" />}
-            label="Total Profiles" value={String(customers.length)} accent={GOLD}
-            sub="In pipeline" delay={0.02}
-          />
-          <StatCard
-            icon={<Target size={19} weight="duotone" color="var(--text-secondary)" />}
-            label="Active Pipeline"
-            value={String((statusCounts.lead || 0) + (statusCounts.qualified || 0) + (statusCounts.proposal || 0))}
-            sub="Lead · Qualified · Proposal" accent={GOLD} delay={0.06}
-          />
-          <StatCard
-            icon={<CheckCircle size={19} weight="duotone" color={GREEN} />}
-            label="Customers Won" value={String(statusCounts.customer || 0)} accent={GREEN}
-            sub="Converted" delay={0.10}
-          />
-          <StatCard
-            icon={<CurrencyDollar size={19} weight="duotone" color="var(--text-secondary)" />}
-            label="Lifetime Value" value={fmt(lifetimeTotals.value)} accent={GOLD}
-            sub={lifetimeTotals.withProjects > 0 ? `${lifetimeTotals.withProjects} customer${lifetimeTotals.withProjects === 1 ? '' : 's'} with projects` : 'Assign customers to projects'} delay={0.14}
-          />
-          <StatCard
-            icon={<Gauge size={19} weight="duotone" color="var(--text-secondary)" />}
-            label="Avg Lead Score" value={String(avgScore)} accent={scoreColor(avgScore)}
-            sub="Across all leads" delay={0.18}
-          />
-        </div>
+      {/* One flat summary row; each figure filters the list below. */}
+      {!loading && !error && customers.length > 0 && (
+        <StatRow items={[
+          { label: 'In pipeline', value: (statusCounts.lead || 0) + (statusCounts.qualified || 0) + (statusCounts.proposal || 0), icon: <Target size={15} />,
+            sub: 'Lead · qualified · proposal', onClick: () => setFilterStatus('all'), active: filterStatus === 'all' },
+          { label: 'Customers', value: statusCounts.customer || 0, icon: <CheckCircle size={15} />, tone: (statusCounts.customer || 0) > 0 ? 'good' : 'default',
+            sub: 'Won', onClick: () => setFilterStatus(filterStatus === 'customer' ? 'all' : 'customer'), active: filterStatus === 'customer' },
+          { label: 'Lifetime value', value: fmt(lifetimeTotals.value), icon: <CurrencyDollar size={15} />,
+            sub: lifetimeTotals.withProjects > 0 ? `${lifetimeTotals.withProjects} with projects` : 'No projects linked' },
+          ...((statusCounts.lost || 0) > 0 ? [{ label: 'Lost', value: statusCounts.lost || 0, icon: <XCircle size={15} />,
+            onClick: () => setFilterStatus(filterStatus === 'lost' ? 'all' : 'lost'), active: filterStatus === 'lost' }] : []),
+        ]} />
       )}
 
       {/* List toolbar — search + status/source/state filters (replaces pills + selects) */}
@@ -1067,7 +1046,7 @@ export default function CustomersPage() {
           { key: 'state', label: 'State', value: filterState, onChange: setFilterState, allLabel: 'All States', options: [...US_STATES] },
         ]}
         count={{ shown: filtered.length, total: customers.length }}
-        style={{ marginBottom: 20 }}
+        style={{ margin: '16px 0 12px' }}
       />
 
       {/* Table */}
@@ -1077,7 +1056,7 @@ export default function CustomersPage() {
             tone="error"
             icon={<WarningCircle size={30} weight="duotone" color={RED} />}
             title="Couldn't load customers"
-            description="Something went wrong while loading customer profiles. Check your connection and try again."
+            description="Check your connection and try again."
             action={<button onClick={load} className="pmBtn" style={goldOutlineButtonStyle}>Retry</button>}
           />
         </SectionCard>
@@ -1086,21 +1065,15 @@ export default function CustomersPage() {
           <PremiumEmpty
             icon={<UsersThree size={30} weight="duotone" color="var(--text-secondary)" />}
             title="No customers yet"
-            description="Add the people you build for, or let leads arrive from your design studio, Sage chat and other sources. Each one tracks lead score, project count and lifetime contract value once you assign them to projects."
             action={
-              <button type="button" onClick={openAdd} className="pmBtn" style={{ ...goldButtonStyle, minHeight: 44 }}>
-                <Plus size={15} weight="bold" /> New Customer
+              <button type="button" onClick={openAdd} className="pmBtn" style={{ ...goldOutlineButtonStyle, minHeight: 44 }}>
+                <Plus size={15} weight="bold" /> Add a customer
               </button>
             }
           />
         </SectionCard>
       ) : (
-        <SectionCard
-          flush
-          icon={<UsersThree size={17} weight="duotone" color="var(--text-secondary)" />}
-          title="Customer Profiles"
-          action={!loading ? <span style={{ fontSize: 13, fontWeight: 700, color: DIM }}>{filtered.length} shown</span> : undefined}
-        >
+        <section aria-label="Customers">
           {loading ? (
             <div style={{ padding: 8 }}>
               {Array.from({ length: 6 }).map((_, i) => <SkeletonRow key={i} />)}
@@ -1132,7 +1105,7 @@ export default function CustomersPage() {
               empty="No customers match your filters."
             />
           )}
-        </SectionCard>
+        </section>
       )}
     </PremiumSurface>
   );

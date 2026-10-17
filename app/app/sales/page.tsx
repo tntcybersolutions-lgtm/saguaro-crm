@@ -19,15 +19,19 @@
 import React from 'react';
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
-import { ArrowRight, Kanban, FolderSimple, AddressBook, ChartBar, Users, MagnifyingGlass } from '@phosphor-icons/react';
+import { ArrowRight, FolderSimple, AddressBook, ChartBar, Users, MagnifyingGlass } from '@phosphor-icons/react';
 import { usePermissions } from '@/lib/hooks/usePermissions';
 import SalesOverview from '@/components/SalesOverview';
-import { PageShell, Card, StatRow, Button, Badge, DataTable, EmptyState, type Column, type BadgeTone } from '@/components/ui/kit';
+import { PageShell, Card, Button, Badge, DataTable, EmptyState, type Column, type BadgeTone } from '@/components/ui/kit';
 
-const usd = (cents: number) => '$' + Math.round((cents || 0) / 100).toLocaleString('en-US');
+const usd = (cents: number) => {
+  const d = Math.round((cents || 0) / 100);
+  return `${d < 0 ? '−' : ''}$${Math.abs(d).toLocaleString('en-US')}`;
+};
 
 type SearchHit = { type: string; id: string; label: string; sub?: string; href: string };
-const HIT_TONE: Record<string, BadgeTone> = { lead: 'lead', job: 'under_contract', customer: 'lead' };
+const HIT_TONE: Record<string, BadgeTone> = { lead: 'lead', job: 'ongoing', customer: 'closed' };
+const HIT_LABEL: Record<string, string> = { lead: 'Lead', job: 'Job', customer: 'Customer', photo: 'Photo' };
 
 /** Universal search — one box across leads, jobs, customers, photos (/api/search). */
 function UniversalSearch() {
@@ -80,7 +84,7 @@ function UniversalSearch() {
               <span style={{ overflow: 'hidden', textOverflow: 'ellipsis' }}>{h.label}</span>
               <span style={{ display: 'inline-flex', gap: 8, alignItems: 'center' }}>
                 {h.sub ? <span className="k-hint">{h.sub}</span> : null}
-                <Badge tone={HIT_TONE[h.type] ?? 'neutral'}>{h.type}</Badge>
+                <Badge tone={HIT_TONE[h.type] ?? 'neutral'}>{HIT_LABEL[h.type] ?? h.type}</Badge>
               </span>
             </Link>
           ))}
@@ -115,9 +119,9 @@ function ProfitPanel() {
   }, []);
 
   const columns: Column<ProfitJob>[] = [
-    { key: 'name', header: 'Job', primary: true, accessor: (j) => j.name || 'Untitled Job' },
+    { key: 'name', header: 'Job', primary: true, accessor: (j) => j.name || 'Untitled job' },
     { key: 'revenueCents', header: 'Contract', align: 'right', render: (j) => usd(j.revenueCents) },
-    { key: 'costCents', header: 'Projected Cost', align: 'right', render: (j) => usd(j.costCents ?? 0) },
+    { key: 'costCents', header: 'Projected cost', align: 'right', render: (j) => usd(j.costCents ?? 0) },
     {
       key: 'marginCents', header: 'Margin', align: 'right', accessor: (j) => j.marginCents ?? 0,
       render: (j) => (
@@ -130,8 +134,8 @@ function ProfitPanel() {
 
   if (state === 'error') {
     return (
-      <Card title="Booked Profit · Active Jobs">
-        <EmptyState title="Couldn’t load profit right now" text="Check your connection and reload the page." />
+      <Card title="Booked profit">
+        <EmptyState title="Couldn't load profit right now" />
       </Card>
     );
   }
@@ -140,20 +144,18 @@ function ProfitPanel() {
   const costed = (data?.jobs ?? []).filter((j) => j.hasCostData).slice(0, 6);
   const uncosted = t ? t.jobCount - t.costedJobCount : 0;
 
+  /* One summary per screen: the pipeline figures lead (SalesOverview); the
+     margin totals ride on this section's own line. */
+  const totalsLine = t && t.costedJobCount > 0
+    ? `${usd(t.totalMarginCents)} margin${t.marginPct != null ? ` (${t.marginPct}%)` : ''} on ${usd(t.totalRevenueCents)}${uncosted > 0 ? ` · ${uncosted} job${uncosted === 1 ? '' : 's'} without a budget` : ''}`
+    : uncosted > 0 ? `${uncosted} active job${uncosted === 1 ? '' : 's'} without a budget` : undefined;
   return (
     <>
-      {t && (
-        <StatRow items={[
-          { label: 'Booked Margin', value: usd(t.totalMarginCents), tone: t.totalMarginCents >= 0 ? 'good' : 'bad', sub: t.marginPct != null ? `${t.marginPct}% of contract` : undefined },
-          { label: 'Contract Revenue', value: usd(t.totalRevenueCents), sub: `${t.costedJobCount} job${t.costedJobCount === 1 ? '' : 's'} with costs` },
-          { label: 'Projected Cost', value: usd(t.totalCostCents), sub: 'Worst of budget / committed / actual' },
-        ]} />
-      )}
       <Card
         flush
-        title="Booked Profit · Active Jobs"
-        subtitle={uncosted > 0 ? `${uncosted} active job${uncosted === 1 ? ' has' : 's have'} no budget or cost yet — add a budget to see the margin.` : undefined}
-        actions={<Button size="sm" variant="ghost" href="/app/billing/cost-control" icon={<ArrowRight size={13} />}>Cost Control</Button>}
+        title="Booked profit"
+        subtitle={totalsLine}
+        actions={<Button size="sm" variant="ghost" href="/app/billing/cost-control" icon={<ArrowRight size={13} />}>Cost control</Button>}
       >
         <DataTable
           columns={columns}
@@ -161,12 +163,20 @@ function ProfitPanel() {
           rowKey={(j) => j.projectId}
           loading={state === 'loading'}
           onRowClick={(j) => router.push(`/app/projects/${j.projectId}`)}
-          empty={<EmptyState title="No costed jobs yet" text="Add a budget to an active job to see its booked margin here." />}
+          empty={<EmptyState title="No job has a budget yet" action={<Button href="/app/billing/cost-control">Open cost control</Button>} />}
         />
       </Card>
     </>
   );
 }
+
+const SALES_CSS = `
+.slHops { display: flex; flex-wrap: wrap; gap: 4px; }
+@media (max-width: 767px) {
+  .slHops { width: 100%; display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); }
+  .slHops .k-btn { justify-content: center; min-height: 44px; padding-left: 4px; padding-right: 4px; }
+}
+`;
 
 export default function SalesHomePage() {
   const { can, resolved, name } = usePermissions();
@@ -180,26 +190,27 @@ export default function SalesHomePage() {
 
   return (
     <PageShell
-      title={name ? `${name.split(' ')[0]}'s Pipeline` : 'Your Pipeline'}
-      subtitle="What you're chasing, what it's worth, and what's gone quiet — first thing, every day."
-      actions={<Button variant="primary" href="/app/leads" icon={<ArrowRight size={15} />}>Open the Pipeline</Button>}
+      title={name ? `${name.split(' ')[0]}'s pipeline` : 'Your pipeline'}
+      actions={<Button variant="primary" href="/app/leads" icon={<ArrowRight size={15} />}>Open leads</Button>}
     >
+      <style dangerouslySetInnerHTML={{ __html: SALES_CSS }} />
       {/* Universal search + the rep's quick hops, one row. */}
       <div className="k-toolbar">
         <UniversalSearch />
         <div className="k-toolbar-spacer" />
-        <Button href="/app/leads" icon={<Kanban size={15} />} title="The stage board — move a deal, open its page">Leads & Deals</Button>
-        <Button href="/app/projects" icon={<FolderSimple size={15} />} title="Everything won and running">Jobs</Button>
-        <Button href="/app/customers" icon={<AddressBook size={15} />} title="Who you're working with">Customers</Button>
-        <Button href="/app/reports" icon={<ChartBar size={15} />} title="Win rate, revenue, activity">Reports</Button>
-        <Button href="/app/people" icon={<Users size={15} />} title="Add a rep, set what each role can touch">Reps & Access</Button>
+        <nav className="slHops" aria-label="Sales shortcuts">
+          <Button size="sm" variant="ghost" href="/app/projects" icon={<FolderSimple size={15} />} title="Everything won and running">Jobs</Button>
+          <Button size="sm" variant="ghost" href="/app/customers" icon={<AddressBook size={15} />} title="Who you're working with">Customers</Button>
+          <Button size="sm" variant="ghost" href="/app/reports" icon={<ChartBar size={15} />} title="Win rate, revenue, activity">Reports</Button>
+          <Button size="sm" variant="ghost" href="/app/people" icon={<Users size={15} />} title="Add a rep, set what each role can touch">Reps</Button>
+        </nav>
       </div>
-
-      {/* Booked profit across active jobs (same cost engine as Cost Control). */}
-      <ProfitPanel />
 
       {/* Pipeline + follow-ups, self-fetched from /api/sales/overview (shared with the dashboard). */}
       <SalesOverview />
+
+      {/* Booked profit across active jobs (same cost engine as Cost Control). */}
+      <ProfitPanel />
     </PageShell>
   );
 }

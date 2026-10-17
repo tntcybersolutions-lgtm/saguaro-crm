@@ -11,7 +11,7 @@ import { useProjectContext } from '@/lib/hooks/useProjectContext';
 import React, { useState, useEffect, useCallback, useRef } from 'react';
 import SaguaroDatePicker from '@/components/SaguaroDatePicker';
 import { useParams } from 'next/navigation';
-import { Clock, Plus, ListNumbers, HourglassMedium, CheckCircle, XCircle, CurrencyDollar, WarningCircle } from '@phosphor-icons/react';
+import { Clock, Plus, HourglassMedium, CheckCircle, XCircle, WarningCircle } from '@phosphor-icons/react';
 import {
   PageShell, Card, StatRow, Badge, Button, Tabs, Toolbar, DataTable, EmptyState,
   FormModal, FormGrid, Field, Input, Select, Toast, useToast,
@@ -71,8 +71,8 @@ function statusBadge(s: string): { label: string; tone: BadgeTone } {
   if (k === 'rejected') return { label: 'Rejected', tone: 'overdue' };
   if (k === 'paid') return { label: 'Paid', tone: 'completed' };
   if (k === 'draft') return { label: 'Draft', tone: 'neutral' };
-  if (k === 'submitted') return { label: 'Submitted', tone: 'under_contract' };
-  return { label: 'Pending', tone: 'under_contract' };
+  if (k === 'submitted') return { label: 'Submitted', tone: 'lead' };
+  return { label: 'Pending', tone: 'lead' };
 }
 
 const DATE_INPUT_STYLE: React.CSSProperties = {
@@ -238,11 +238,9 @@ export default function TimesheetsPage() {
 
   const base = `/app/projects/${projectId}`;
   const stats: StatItem[] = [
-    { label: 'Total Entries', value: loading ? '—' : String(totalEntries), sub: 'Logged this period', icon: <ListNumbers size={15} />, onClick: clearFilters, active: !filtersActive },
-    { label: 'Total Hours', value: loading ? '—' : fmtHrs(totalHours), sub: 'Regular + overtime', icon: <Clock size={15} /> },
-    { label: 'Pending Approval', value: loading ? '—' : String(pendingCount), tone: pendingCount > 0 ? 'warn' : 'default', sub: 'Awaiting review', icon: <HourglassMedium size={15} />, onClick: () => toggleStatus('pending'), active: statusFilter === 'pending' },
-    { label: 'Approved', value: loading ? '—' : String(approvedCount), tone: approvedCount > 0 ? 'good' : 'default', sub: 'This period', icon: <CheckCircle size={15} />, onClick: () => toggleStatus('approved'), active: statusFilter === 'approved' },
-    ...(ctx ? [{ label: 'Budget Actuals', value: fmt(Number(ctx.budget?.actual) || 0), sub: 'Approved labor posts here', icon: <CurrencyDollar size={15} />, href: `${base}/budget` } as StatItem] : []),
+    { label: 'Hours', value: fmtHrs(totalHours), sub: `${totalEntries} entr${totalEntries === 1 ? 'y' : 'ies'} this period`, icon: <Clock size={15} />, onClick: clearFilters, active: !filtersActive },
+    { label: 'Pending', value: String(pendingCount), tone: pendingCount > 0 ? 'warn' : 'default', sub: pendingCount > 0 ? 'To approve' : 'Nothing waiting', icon: <HourglassMedium size={15} />, onClick: () => toggleStatus('pending'), active: statusFilter === 'pending' },
+    { label: 'Approved', value: String(approvedCount), tone: approvedCount > 0 ? 'good' : 'default', sub: 'This period', icon: <CheckCircle size={15} />, onClick: () => toggleStatus('approved'), active: statusFilter === 'approved' },
   ];
 
   const columns: Column<TimeEntry>[] = [
@@ -274,14 +272,13 @@ export default function TimesheetsPage() {
 
   let body: React.ReactNode;
   if (!loading && loadError) {
-    body = <EmptyState icon={<WarningCircle size={22} />} title="Couldn’t load time entries" text="Nothing has been lost — try again." action={<Button onClick={fetchEntries}>Try Again</Button>} />;
+    body = <EmptyState icon={<WarningCircle size={22} />} title="Couldn't load time entries" action={<Button onClick={fetchEntries}>Try Again</Button>} />;
   } else if (!loading && filtered.length === 0) {
     body = (
       <EmptyState
         icon={<Clock size={22} />}
         title={entries.length === 0 ? 'No time entries yet' : 'No entries in this period'}
-        text={entries.length === 0 ? 'Log the first crew entry — the roster builds as you go.' : 'Switch the week, or add one for this period.'}
-        action={<Button icon={<Plus size={15} weight="bold" />} onClick={openForm}>Add Entry</Button>}
+        action={<Button icon={<Plus size={15} weight="bold" />} onClick={openForm}>Add entry</Button>}
       />
     );
   } else {
@@ -295,7 +292,7 @@ export default function TimesheetsPage() {
         rowKey={e => e.id}
         defaultSort={{ key: 'date', dir: 'desc' }}
         rowActions={entryActions}
-        empty={<EmptyState title="No entries match" text="Change the search or the status filter." action={<Button onClick={clearFilters}>Clear Filters</Button>} />}
+        empty={<EmptyState title="No entries match" onClearFilters={clearFilters} />}
       />
     );
   }
@@ -312,10 +309,10 @@ export default function TimesheetsPage() {
           { label: 'Timesheets' },
         ]}
         title="Crew Timesheets"
-        subtitle="Weekly crew hours — approve to post labor to job cost."
-        actions={<Button variant="primary" icon={<Plus size={15} weight="bold" />} onClick={openForm}>Add Entry</Button>}
+        actions={<Button variant="primary" icon={<Plus size={15} weight="bold" />} onClick={openForm}>Add entry</Button>}
       >
-        <StatRow items={stats} />
+        {/* Figures once there is time on the job — never a row of zeros. */}
+        {!loading && !loadError && entries.length > 0 && <StatRow items={stats} />}
 
         <Tabs
           tabs={[{ key: 'current', label: 'Current Week' }, { key: 'last', label: 'Last Week' }, { key: 'all', label: 'All' }]}

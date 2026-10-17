@@ -9,7 +9,7 @@ import {
   type Column, type Action, type BadgeTone, type StatItem,
 } from '@/components/ui/kit';
 import {
-  FileText, ClockCounterClockwise, SealCheck, Plus, Receipt, Handshake, Wallet, WarningCircle,
+  FileText, ClockCounterClockwise, SealCheck, Plus, Handshake, Wallet, WarningCircle,
   X, PaperPlaneTilt, FilePdf, UploadSimple, ThumbsUp, ThumbsDown,
 } from '@phosphor-icons/react';
 import { useUnsavedGuard, useComposerDirty } from '@/lib/useUnsavedGuard';
@@ -44,7 +44,7 @@ const EMPTY_FORM = { amount: 0, notes: '' };
    recognised as accepted. Stored values are left untouched. */
 const statusKey = (s: string | null | undefined) => String(s || '').trim().toLowerCase().replace(/\s+/g, '_');
 const statusLabel = (s: string | null | undefined) =>
-  statusKey(s).split('_').filter(Boolean).map(w => w.charAt(0).toUpperCase() + w.slice(1)).join(' ') || '—';
+  statusKey(s).split('_').filter(Boolean).map(w => w.charAt(0).toUpperCase() + w.slice(1)).join(' ') || 'Draft';
 /** One status → one badge: draft neutral, out with the client amber, accepted green, declined red, superseded grey. */
 function statusTone(s: string | null | undefined): BadgeTone {
   const k = statusKey(s);
@@ -243,24 +243,26 @@ export default function ProposalPage() {
   const uploadForRef = useRef<string | null>(null);
   const pickUpload = (id: string) => { uploadForRef.current = id; fileRef.current?.click(); };
 
+  /* Contract position, then the proposal's own figures once there is one.
+     A missing value is left out, never shown as a dash. */
+  const coCount = Number(money?.approvedCoCount) || 0;
   const stats: StatItem[] = [
-    ...(ctx ? [
-      { label: 'Approved COs', value: (coTotal >= 0 ? '+' : '') + fmt(coTotal), sub: `${Number(money?.approvedCoCount) || 0} approved${Number(money?.pendingCoCount) ? ` · ${money.pendingCoCount} pending` : ''}`, icon: <Receipt size={15} />, href: `${base}/change-orders` } as StatItem,
-      { label: 'Contract to Date', value: fmt(revised), sub: `${fmt(original)} original + approved COs`, icon: <Handshake size={15} />, href: `${base}/contracts` } as StatItem,
+    ...(ctx && revised > 0 ? [
+      { label: 'Contract to date', value: fmt(revised), sub: coCount ? `${fmt(original)} + ${coCount} CO${coCount === 1 ? '' : 's'} (${(coTotal >= 0 ? '+' : '−') + fmt(Math.abs(coTotal))})` : undefined, icon: <Handshake size={15} />, href: `${base}/contracts` } as StatItem,
     ] : []),
-    { label: 'Versions', value: loading && proposals.length === 0 ? '—' : String(proposals.length), sub: lastProposal ? `Latest ${lastProposal.version} — ${statusLabel(lastProposal.status)}` : 'None yet', icon: <ClockCounterClockwise size={15} /> },
-    {
-      label: 'Accepted', value: accepted ? fmt(Number(accepted.amount) || 0) : '—', tone: accepted ? 'good' : 'default', icon: <SealCheck size={15} />,
-      sub: accepted ? (() => { const d = revised > 0 ? (Number(accepted.amount) || 0) - revised : 0; const b = accepted.notes ? `${accepted.version} — ${accepted.notes}` : accepted.version; return d !== 0 ? `${b} · ${d > 0 ? '+' : '-'}${fmt(Math.abs(d))} vs contract to date` : b; })() : 'No accepted version yet',
-    },
-    ...(ctx ? [
-      { label: 'Billed to Date', value: fmt(Number(money?.billedToDate) || 0), sub: `${Number(money?.billedPct) || 0}% of contract`, icon: <Wallet size={15} /> } as StatItem,
+    ...(accepted ? [{
+      label: 'Accepted', value: fmt(Number(accepted.amount) || 0), tone: 'good' as const, icon: <SealCheck size={15} />,
+      sub: (() => { const d = revised > 0 ? (Number(accepted.amount) || 0) - revised : 0; const b = accepted.notes ? `${accepted.version} — ${accepted.notes}` : accepted.version; return d !== 0 ? `${b} · ${d > 0 ? '+' : '−'}${fmt(Math.abs(d))} vs contract` : b; })(),
+    }] : []),
+    ...(proposals.length ? [{ label: 'Versions', value: String(proposals.length), sub: lastProposal ? `Latest ${lastProposal.version} · ${statusLabel(lastProposal.status)}` : undefined, icon: <ClockCounterClockwise size={15} /> }] : []),
+    ...(ctx && Number(money?.billedToDate) > 0 ? [
+      { label: 'Billed to date', value: fmt(Number(money?.billedToDate) || 0), sub: `${Number(money?.billedPct) || 0}% of contract`, icon: <Wallet size={15} /> } as StatItem,
     ] : []),
   ];
 
   const columns: Column<Proposal>[] = [
     { key: 'version', header: 'Version', primary: true, phone: 'show', width: 96 },
-    { key: 'created_date', header: 'Created', render: p => p.created_date || '—' },
+    { key: 'created_date', header: 'Created', render: p => p.created_date || '' },
     { key: 'amount', header: 'Amount', align: 'right', phone: 'show', accessor: p => Number(p.amount) || 0, render: p => <strong style={{ fontVariantNumeric: 'tabular-nums' }}>${(Number(p.amount) || 0).toLocaleString()}</strong> },
     {
       key: 'status', header: 'Status', phone: 'show', accessor: p => statusLabel(p.status),
@@ -274,7 +276,7 @@ export default function ProposalPage() {
         </div>
       ),
     },
-    { key: 'notes', header: 'Notes', render: p => p.notes || '—' },
+    { key: 'notes', header: 'Notes', render: p => p.notes || '' },
   ];
 
   const rowActions = (p: Proposal): Action[] => {
@@ -300,10 +302,9 @@ export default function ProposalPage() {
           { label: 'Proposals' },
         ]}
         title="Proposals"
-        subtitle="Versions, contract amounts and win/loss outcomes."
         actions={<Button variant="primary" icon={<Plus size={15} weight="bold" />} onClick={() => { if (showForm) closeForm(); else openCreate(); }}>New Version</Button>}
       >
-        <StatRow items={stats} />
+        {stats.length > 0 && <StatRow items={stats} />}
 
         {errorMsg && !showForm && (
           <div style={{ marginBottom: 16 }}>
@@ -337,7 +338,14 @@ export default function ProposalPage() {
           </div>
         )}
 
-        {/* Version history */}
+        {/* Version history — an empty history is one line and one button */}
+        {!loading && proposals.length === 0 ? (
+          <EmptyState
+            icon={<FileText size={20} />}
+            title="No proposals yet"
+            action={<Button icon={<Plus size={15} weight="bold" />} onClick={openCreate}>{revised > 0 ? `Start v1.0 at ${fmt(revised)}` : 'New version'}</Button>}
+          />
+        ) : (
         <Card title="Proposal Versions" icon={<ClockCounterClockwise size={17} />} flush>
           <DataTable<Proposal>
             tableId="project-proposals"
@@ -348,16 +356,9 @@ export default function ProposalPage() {
             loading={loading && proposals.length === 0}
             rowStyle={p => (statusKey(p.status) === 'accepted' ? { background: 'color-mix(in srgb, var(--success) 6%, transparent)' } : undefined)}
             rowActions={rowActions}
-            empty={
-              <EmptyState
-                icon={<FileText size={22} />}
-                title="No proposals yet"
-                text={revised > 0 ? `The contract sum to date is ${fmt(revised)}.` : 'Create the first version to track contract amounts and outcomes.'}
-                action={<Button icon={<Plus size={15} weight="bold" />} onClick={openCreate}>{revised > 0 ? `Start v1.0 at ${fmt(revised)}` : 'New Version'}</Button>}
-              />
-            }
           />
         </Card>
+        )}
         <input
           ref={fileRef}
           type="file"

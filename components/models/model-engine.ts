@@ -410,7 +410,13 @@ export class ModelEngine {
     if (box.isEmpty()) return;
     const sphere = box.getBoundingSphere(new THREE.Sphere());
     const r = Math.max(sphere.radius, 0.1);
-    const dist = (r / Math.sin(THREE.MathUtils.degToRad(this.camera.fov / 2))) * 1.08;
+    // Fit the tighter of the two angles. `fov` is vertical; on a canvas taller
+    // than it is wide (a phone, or the viewer beside its side panel) the
+    // horizontal angle is the smaller one, and fitting only the vertical cut the
+    // model off at the sides.
+    const half = THREE.MathUtils.degToRad(this.camera.fov / 2);
+    const halfH = Math.atan(Math.tan(half) * Math.max(this.camera.aspect, 0.01));
+    const dist = (r / Math.sin(Math.min(half, halfH))) * 1.08;
     const dirs: Record<ViewName, THREE.Vector3> = {
       iso: new THREE.Vector3(1, 0.75, 1),
       front: new THREE.Vector3(0, 0, 1),

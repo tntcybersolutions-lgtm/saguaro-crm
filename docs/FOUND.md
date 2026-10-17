@@ -497,11 +497,26 @@ the ungated proposal_signatures / _events (20261017c, applied). Found on the way
   - `app/app/projects/[projectId]/compliance/page.tsx` License column shows "Pending" for every sub — no
     license data source is read (the scorecard API does not return `subcontractors.license_number` /
     `license_expiry`), so the badge is a made-up status. Missing licenses stat is always 0 for the same reason.
-  - `lib/sub-invoice-posting.ts` (approve → subcontract billed / budget actual) is on
-    `origin/fix/verify-procore-features`, not on main. The billing cap (`lib/sub-billing-cap.ts`) counts
-    approved / paid portal invoices as `max(recorded billed, approved+paid gross)` so it is right before and
-    after that branch lands; when it lands, `pickSubCommitment` and `subContracts` should become one picker.
+  - Two subcontract pickers now exist: `lib/sub-invoice-posting.ts` `pickSubCommitment` (posting, one
+    subcontract or nothing) and `lib/sub-billing-cap.ts` `subContracts` (cap, all of the sub's live
+    subcontracts summed). They agree on a job with one subcontract per sub; worth one shared picker.
   - `app/api/projects/[projectId]/route.ts` maps a contract's `name` from `party_name` (the contact person,
     "Hector Alvarado") before `party_company`, so any screen listing contracts as "subs" names a person.
   - `/api/compliance` reads all of the tenant's `w9_requests` to match by email or company name (no sub id on
     that table); fine at today's volume, worth a `sub_id` column if requests grow.
+
+## 2026-10-16 — found while driving drawings / schedule / reports / models / sub billing (not fixed)
+
+- RFI numbers count every RFI in the tenant, not the job: `app/api/rfis/create/route.ts:34-39` and
+  `app/api/projects/[projectId]/rfis/route.ts:70-75` (`count … eq('tenant_id')` + 1). The first RFI on a new job
+  came out as RFI-007; a delete then makes the next number repeat one already used. Needs a ruling (per job, like
+  Procore) and a sequence, not count+1.
+- Sub portal invoice lines are typed free-hand (`components/portal/SubInvoiceForm.tsx`): "Scheduled" is whatever the
+  sub types, not their subcontract's schedule of values, and nothing stops billing past the contract. The GC inbox
+  now shows how far past it goes; the portal form itself still allows it.
+- Report builder `SectionCard`s and the yellow-tinted selected column tiles (`app/app/reports/builder/page.tsx`
+  ~600, `--brand-primary-12` background) — boxed panels and yellow as a tint, against DESIGN_SYSTEM §4 and the
+  no-cards rule.
+- `app/api/reports/[id]/export/route.ts:189` returns `apiError('reports/id/export', e)` for a ReportRunError, so the
+  engine's own plain message ("Unknown or unsupported entity") reaches the person as the generic line.
+- Change orders on the ZZ audit job both carry CO # "1" (seen in the builder: "Audit CO 903279" and "Audit CO 424170").

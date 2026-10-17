@@ -1,121 +1,234 @@
 'use client';
 /**
- * Cost Catalog — the GC's learning rates. Edit unit costs (manual) or press
+ * Cost rates — the GC's learning unit costs. Edit a unit cost (manual) or press
  * "Learn from my jobs" to compute quantity-weighted rates from past takeoffs.
  * These override the book everywhere the takeoff engine prices.
+ *
+ *   list     GET    /api/takeoff/cost-rates
+ *   set      POST   /api/takeoff/cost-rates          { costKey, materialCents }
+ *   revert   DELETE /api/takeoff/cost-rates?costKey=
+ *   learn    POST   /api/takeoff/cost-rates/learn
  */
-import { useEffect, useState } from 'react';
-import { Sparkle, PencilSimple, CheckCircle, Coins, BookOpen } from '@phosphor-icons/react';
-import { PremiumSurface, ModuleHero, SectionCard, StatCard, PremiumEmpty, goldButtonStyle } from '@/components/ui/premium';
+import React, { useCallback, useEffect, useMemo, useState } from 'react';
+import { Sparkle, PencilSimple, BookOpen, Coins, ArrowClockwise, WarningCircle } from '@phosphor-icons/react';
+import {
+  PageShell, StatRow, Button, Badge, Toolbar, DataTable, EmptyState, Toast, useToast,
+  type Column, type StatItem,
+} from '@/components/ui/kit';
+import { costKeyLabel } from '@/lib/takeoff/cost';
 
-const PANEL = 'var(--bg-surface)', LINE = 'rgba(255,255,255,0.09)', GOLD = 'var(--brand-primary)';
-const TEXT = 'var(--text-secondary)', DIM = 'var(--text-tertiary)', GREEN = 'var(--success)', BLUE = 'var(--brand-primary-strong)';
 type Row = { cost_key: string; unit: string; note: string; bookCents: number; ownCents: number | null; source: string | null; samples: number };
+type Show = 'all' | 'learned' | 'manual' | 'book';
 
-export default function CostCatalogPage() {
+const money = (c: number) => '$' + (c / 100).toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+
+const CSS = `
+.crRate { display: flex; align-items: center; gap: 8px; flex-wrap: wrap; justify-content: flex-end; }
+.crRateVal { font-weight: 700; color: var(--text-primary); font-variant-numeric: tabular-nums; }
+.crRateVal[data-own="false"] { font-weight: 500; color: var(--text-secondary); }
+.crDiff { font-size: 12px; color: var(--text-tertiary); font-variant-numeric: tabular-nums; }
+.crDiff[data-dir="up"] { color: var(--warning); }
+.crDiff[data-dir="down"] { color: var(--success); }
+.crInput { width: 104px; }
+.crName { display: flex; flex-direction: column; gap: 2px; min-width: 0; }
+.crName small { font-size: 12px; color: var(--text-tertiary); overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+`;
+
+export default function CostRatesPage() {
   const [list, setList] = useState<Row[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [loadError, setLoadError] = useState('');
   const [edit, setEdit] = useState<Record<string, string>>({});
-  const [msg, setMsg] = useState(''); const [busy, setBusy] = useState(false);
+  const [savingKey, setSavingKey] = useState<string | null>(null);
+  const [busy, setBusy] = useState(false);
+  const [search, setSearch] = useState('');
+  const [show, setShow] = useState<Show>('all');
+  const { toast, show: showToast } = useToast(4200);
 
-  const load = () => fetch('/api/takeoff/cost-rates').then((r) => r.json()).then((d) => setList(d.list || [])).catch(() => {});
-  useEffect(() => { load(); }, []);
+  const load = useCallback(async () => {
+    try {
+      const r = await fetch('/api/takeoff/cost-rates');
+      const d = await r.json().catch(() => ({}));
+      if (!r.ok) throw new Error(d.error || 'Could not load your cost rates.');
+      setList(d.list || []);
+      setLoadError('');
+    } catch (e) {
+      setLoadError(e instanceof Error ? e.message : 'Could not load your cost rates.');
+    } finally {
+      setLoading(false);
+    }
+  }, []);
+  useEffect(() => { void load(); }, [load]);
 
   const saveRate = async (k: string) => {
-    const dollars = parseFloat(edit[k]); if (!(dollars >= 0)) return;
-    await fetch('/api/takeoff/cost-rates', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ costKey: k, materialCents: Math.round(dollars * 100) }) });
-    setEdit((e) => { const n = { ...e }; delete n[k]; return n; }); load();
+    const dollars = parseFloat(String(edit[k] ?? '').replace(/[$,\s]/g, ''));
+    if (!(dollars >= 0)) { showToast('Enter a dollar amount.', 'bad'); return; }
+    setSavingKey(k);
+    try {
+      const r = await fetch('/api/takeoff/cost-rates', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ costKey: k, materialCents: Math.round(dollars * 100) }) });
+      const d = await r.json().catch(() => ({}));
+      if (!r.ok) throw new Error(d.error || 'Could not save this rate.');
+      setEdit((e) => { const n = { ...e }; delete n[k]; return n; });
+      showToast(`${costKeyLabel(k)} set to ${money(Math.round(dollars * 100))}.`);
+      await load();
+    } catch (e) {
+      showToast(e instanceof Error ? e.message : 'Could not save this rate.', 'bad');
+    } finally {
+      setSavingKey(null);
+    }
   };
-  const revert = async (k: string) => { await fetch(`/api/takeoff/cost-rates?costKey=${k}`, { method: 'DELETE' }); load(); };
+  const revert = async (k: string) => {
+    setSavingKey(k);
+    try {
+      const r = await fetch(`/api/takeoff/cost-rates?costKey=${encodeURIComponent(k)}`, { method: 'DELETE' });
+      const d = await r.json().catch(() => ({}));
+      if (!r.ok) throw new Error(d.error || 'Could not reset this rate.');
+      showToast(`${costKeyLabel(k)} is back on the book rate.`);
+      await load();
+    } catch (e) {
+      showToast(e instanceof Error ? e.message : 'Could not reset this rate.', 'bad');
+    } finally {
+      setSavingKey(null);
+    }
+  };
   const learn = async () => {
-    setBusy(true); setMsg('Learning from your past takeoffs…');
-    const d = await fetch('/api/takeoff/cost-rates/learn', { method: 'POST' }).then((r) => r.json());
-    setMsg(d.error ? `Error: ${d.error}` : d.learned ? `✓ Learned ${d.learned} rates from ${d.fromLines} historical line items${d.skippedManual ? ` (kept ${d.skippedManual} manual)` : ''}` : (d.message || 'No history yet.'));
-    setBusy(false); load();
+    setBusy(true);
+    try {
+      const r = await fetch('/api/takeoff/cost-rates/learn', { method: 'POST' });
+      const d = await r.json().catch(() => ({}));
+      if (!r.ok || d.error) throw new Error(d.error || 'Could not learn from your jobs.');
+      showToast(d.learned
+        ? `Learned ${d.learned} rates from ${d.fromLines} line items${d.skippedManual ? ` · kept ${d.skippedManual} of yours` : ''}.`
+        : (d.message || 'No past takeoffs to learn from yet.'));
+      await load();
+    } catch (e) {
+      showToast(e instanceof Error ? e.message : 'Could not learn from your jobs.', 'bad');
+    } finally {
+      setBusy(false);
+    }
   };
-  const money = (c: number) => '$' + (c / 100).toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 });
-  const inp: React.CSSProperties = { background: 'var(--bg-surface-2)', border: `1px solid ${LINE}`, borderRadius: 6, color: TEXT, padding: '6px 8px', width: 90, fontSize: 13 };
-  const learnedCount = list.filter((r) => r.source === 'learned').length, manualCount = list.filter((r) => r.source === 'manual').length;
+
+  const learnedCount = list.filter((r) => r.source === 'learned').length;
+  const manualCount = list.filter((r) => r.source === 'manual').length;
   const bookCount = list.length - learnedCount - manualCount;
 
-  const isError = msg.startsWith('Error');
-  const isDone = msg.startsWith('✓');
+  const rows = useMemo(() => {
+    const q = search.trim().toLowerCase();
+    return list.filter((r) => {
+      const src = r.source === 'learned' ? 'learned' : r.source === 'manual' ? 'manual' : 'book';
+      if (show !== 'all' && src !== show) return false;
+      if (!q) return true;
+      return `${costKeyLabel(r.cost_key)} ${r.unit} ${r.note}`.toLowerCase().includes(q);
+    });
+  }, [list, search, show]);
+
+  const pick = (s: Show) => setShow((cur) => (cur === s ? 'all' : s));
+  const stats: StatItem[] = [
+    { label: 'Learned', value: learnedCount, sub: 'From your jobs', icon: <Sparkle size={15} />, tone: learnedCount ? 'good' : 'default', onClick: () => pick('learned'), active: show === 'learned' },
+    { label: 'Set by you', value: manualCount, sub: 'Manual rates', icon: <PencilSimple size={15} />, onClick: () => pick('manual'), active: show === 'manual' },
+    { label: 'Book', value: bookCount, sub: 'National average', icon: <BookOpen size={15} />, onClick: () => pick('book'), active: show === 'book' },
+  ];
+
+  const columns: Column<Row>[] = [
+    {
+      key: 'item', header: 'Item', primary: true, sortable: true,
+      accessor: (r) => costKeyLabel(r.cost_key),
+      render: (r) => (
+        <span className="crName">
+          <span>{costKeyLabel(r.cost_key)}</span>
+          {r.note && <small>{r.note}</small>}
+        </span>
+      ),
+    },
+    { key: 'unit', header: 'Unit', accessor: (r) => r.unit, width: 70, phone: 'show' },
+    { key: 'book', header: 'Book', align: 'right', sortable: true, accessor: (r) => r.bookCents, render: (r) => money(r.bookCents), phone: 'hide' },
+    {
+      key: 'rate', header: 'Your rate', align: 'right', sortable: true, phone: 'show',
+      accessor: (r) => r.ownCents ?? r.bookCents,
+      render: (r) => {
+        const editing = edit[r.cost_key] != null;
+        const eff = r.ownCents ?? r.bookCents;
+        const diff = r.ownCents != null && r.bookCents > 0 ? Math.round(((r.ownCents - r.bookCents) / r.bookCents) * 100) : 0;
+        const busyRow = savingKey === r.cost_key;
+        if (editing) {
+          return (
+            <span className="crRate" onClick={(e) => e.stopPropagation()}>
+              <input
+                className="k-input crInput"
+                inputMode="decimal"
+                aria-label={`${costKeyLabel(r.cost_key)} rate per ${r.unit}`}
+                value={edit[r.cost_key]}
+                autoFocus
+                onChange={(e) => setEdit((x) => ({ ...x, [r.cost_key]: e.target.value }))}
+                onKeyDown={(e) => {
+                  if (e.key === 'Enter') void saveRate(r.cost_key);
+                  if (e.key === 'Escape') setEdit((x) => { const n = { ...x }; delete n[r.cost_key]; return n; });
+                }}
+              />
+              <Button size="sm" variant="primary" disabled={busyRow} onClick={() => saveRate(r.cost_key)}>{busyRow ? 'Saving…' : 'Save'}</Button>
+              <Button size="sm" variant="ghost" onClick={() => setEdit((x) => { const n = { ...x }; delete n[r.cost_key]; return n; })}>Cancel</Button>
+            </span>
+          );
+        }
+        return (
+          <span className="crRate">
+            <span className="crRateVal" data-own={String(r.ownCents != null)}>{money(eff)}</span>
+            {diff !== 0 && <span className="crDiff" data-dir={diff > 0 ? 'up' : 'down'}>{diff > 0 ? '+' : ''}{diff}%</span>}
+          </span>
+        );
+      },
+    },
+    {
+      key: 'source', header: 'Source', phone: 'show',
+      accessor: (r) => (r.source === 'learned' ? 'Learned' : r.source === 'manual' ? 'Set by you' : 'Book'),
+      render: (r) => r.source === 'learned'
+        ? <Badge tone="ongoing">Learned · {r.samples} job{r.samples === 1 ? '' : 's'}</Badge>
+        : r.source === 'manual' ? <Badge tone="closed">Set by you</Badge> : <Badge>Book</Badge>,
+    },
+  ];
 
   return (
-    <PremiumSurface>
-      {/* Header */}
-      <ModuleHero
-        eyebrow="Learning Cost Database"
-        eyebrowIcon={<Sparkle size={13} weight="fill" color="var(--text-secondary)" />}
-        title="Your Cost"
-        accent="Catalog"
-        subtitle={<>Your rates override the book everywhere the takeoff prices — so every estimate reflects <b style={{ color: TEXT }}>your</b> real numbers.</>}
-        actions={
-          <button onClick={learn} disabled={busy} className="pmBtn" style={{ ...goldButtonStyle, padding: '11px 22px', fontSize: 14.5, cursor: busy ? 'wait' : 'pointer', opacity: busy ? 0.85 : 1 }}>
-            {busy ? 'Learning…' : <><Sparkle size={16} weight="fill" color="var(--on-brand)" /> Learn from My Jobs</>}
-          </button>
-        }
-      />
+    <PageShell
+      crumbs={[{ label: 'Takeoff', href: '/app/takeoff' }, { label: 'Cost rates' }]}
+      title="Cost rates"
+      subtitle="Your rates price every takeoff."
+      actions={
+        <Button variant="primary" icon={<Sparkle size={15} weight="fill" />} disabled={busy} onClick={learn}>
+          {busy ? 'Learning…' : 'Learn from my jobs'}
+        </Button>
+      }
+    >
+      <style dangerouslySetInnerHTML={{ __html: CSS }} />
+      {!loading && !loadError && list.length > 0 && <StatRow items={stats} />}
 
-      {/* Learn status banner */}
-      {msg && (
-        <div style={{
-          display: 'inline-flex', alignItems: 'center', gap: 8, marginBottom: 20,
-          padding: '9px 15px', borderRadius: 10, fontSize: 13,
-          background: isDone ? 'rgba(74,222,128,0.10)' : isError ? 'rgba(248,113,113,0.10)' : 'rgba(255,255,255,0.04)',
-          border: `1px solid ${isDone ? 'rgba(74,222,128,0.3)' : isError ? 'rgba(248,113,113,0.3)' : LINE}`,
-          color: isDone ? GREEN : isError ? 'var(--danger)' : DIM,
-        }}>
-          {isDone && <CheckCircle size={15} weight="fill" color={GREEN} />}
-          {msg.replace(/^✓ /, '')}
-        </div>
+      {loadError ? (
+        <EmptyState
+          icon={<WarningCircle size={20} />}
+          title="Couldn't load your cost rates"
+          text={loadError}
+          action={<Button icon={<ArrowClockwise size={15} />} onClick={() => { setLoading(true); void load(); }}>Try again</Button>}
+        />
+      ) : (
+        <>
+          {list.length > 0 && <Toolbar search={search} onSearch={setSearch} placeholder="Search items…" />}
+          <DataTable
+            tableId="takeoff-cost-rates"
+            columns={columns}
+            rows={rows}
+            loading={loading}
+            rowKey={(r) => r.cost_key}
+            exportName="cost-rates"
+            rowActions={(r) => [
+              { label: 'Edit', inline: true, icon: <PencilSimple size={14} />, onClick: () => setEdit((x) => ({ ...x, [r.cost_key]: ((r.ownCents ?? r.bookCents) / 100).toFixed(2) })) },
+              ...(r.ownCents != null ? [{ label: 'Use book rate', icon: <BookOpen size={14} />, onClick: () => { void revert(r.cost_key); } }] : []),
+            ]}
+            empty={list.length === 0
+              ? <EmptyState icon={<Coins size={20} />} title="No cost rates yet" action={<Button icon={<Sparkle size={15} />} disabled={busy} onClick={learn}>Learn from my jobs</Button>} />
+              : <EmptyState icon={<Coins size={20} />} title="No items match" onClearFilters={() => { setSearch(''); setShow('all'); }} />}
+          />
+        </>
       )}
-
-      {/* Source breakdown */}
-      <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(180px, 1fr))', gap: 12, marginBottom: 24 }}>
-        <StatCard icon={<Sparkle size={19} weight="duotone" color={GREEN} />} label="Learned" value={String(learnedCount)} accent={GREEN} sub="Computed from your jobs" delay={0.02}  href="/app/takeoff/rates"/>
-        <StatCard icon={<PencilSimple size={19} weight="duotone" color="var(--text-secondary)" />} label="Manual" value={String(manualCount)} accent={BLUE} sub="Rates you set" delay={0.06}  href="/app/takeoff/rates"/>
-        <StatCard icon={<BookOpen size={19} weight="duotone" color="var(--text-secondary)" />} label="On Book" value={String(bookCount)} sub="Default book rates" delay={0.10}  href="/app/takeoff/rates"/>
-      </div>
-
-      {/* Rates table */}
-      <SectionCard title="Cost Rates" subtitle="Effective unit cost applied by the takeoff engine" icon={<Coins size={17} weight="duotone" color="var(--text-secondary)" />} flush>
-        {/* Column header */}
-        <div style={{ display: 'grid', gridTemplateColumns: '2fr 1fr 1.4fr 1fr', background: PANEL, padding: '10px 20px', fontSize: 12, color: DIM, fontWeight: 700}}>
-          <span>Item</span><span>Book</span><span>Your Rate</span><span>Source</span>
-        </div>
-        {list.length === 0 ? (
-          <PremiumEmpty
-            compact
-            icon={<Coins size={30} weight="duotone" color="var(--text-secondary)" />}
-            title="No cost rates yet"
-            description="Rates learn from your past takeoffs."
-            primary={busy ? undefined : { label: 'Learn from My Jobs', icon: <Sparkle size={15} weight="fill" />, onClick: () => { void learn(); } }} perm={['Projects', 'Edit']} />
-        ) : list.map((r) => {
-          const eff = r.ownCents ?? r.bookCents;
-          const editing = edit[r.cost_key] != null;
-          return (
-            <div key={r.cost_key} style={{ display: 'grid', gridTemplateColumns: '2fr 1fr 1.4fr 1fr', padding: '10px 20px', borderTop: `1px solid ${LINE}`, alignItems: 'center', fontSize: 14 }}>
-              <span><b style={{ fontWeight: 600, color: TEXT }}>{r.cost_key}</b> <span style={{ color: DIM, fontSize: 12 }}>/{r.unit} {r.note ? `· ${r.note}` : ''}</span></span>
-              <span style={{ color: DIM }}>{money(r.bookCents)}</span>
-              <span style={{ display: 'flex', gap: 6, alignItems: 'center' }}>
-                {editing ? (
-                  <>
-                    <input value={edit[r.cost_key]} onChange={(e) => setEdit((x) => ({ ...x, [r.cost_key]: e.target.value }))} style={inp} autoFocus />
-                    <button onClick={() => saveRate(r.cost_key)} style={{ background: GREEN, color: 'var(--bg-base)', border: 'none', borderRadius: 6, padding: '5px 10px', cursor: 'pointer', fontWeight: 700, fontSize: 12 }}>Save</button>
-                  </>
-                ) : (
-                  <>
-                    <span style={{ color: r.ownCents != null ? (r.source === 'learned' ? GREEN : BLUE) : TEXT, fontWeight: r.ownCents != null ? 700 : 400 }}>{money(eff)}</span>
-                    <button onClick={() => setEdit((x) => ({ ...x, [r.cost_key]: (eff / 100).toFixed(2) }))} style={{ background: 'transparent', color: DIM, border: `1px solid ${LINE}`, borderRadius: 6, padding: '4px 8px', cursor: 'pointer', fontSize: 12 }}>Edit</button>
-                    {r.ownCents != null && <button onClick={() => revert(r.cost_key)} style={{ background: 'transparent', color: DIM, border: 'none', cursor: 'pointer', fontSize: 12 }}>Revert</button>}
-                  </>
-                )}
-              </span>
-              <span>{r.source === 'learned' ? <span style={{ color: GREEN, fontSize: 12, display: 'inline-flex', alignItems: 'center', gap: 4 }}><Sparkle size={12} weight="fill" color={GREEN} /> Learned ({r.samples})</span> : r.source === 'manual' ? <span style={{ color: 'var(--text-primary)', fontSize: 12, display: 'inline-flex', alignItems: 'center', gap: 4 }}><PencilSimple size={12} weight="fill" color="var(--text-secondary)" /> Manual</span> : <span style={{ color: DIM, fontSize: 12 }}>Book</span>}</span>
-            </div>
-          );
-        })}
-      </SectionCard>
-    </PremiumSurface>
+      <Toast message={toast?.message ?? null} tone={toast?.tone} />
+    </PageShell>
   );
 }

@@ -34,7 +34,7 @@ interface ComplianceSub {
 
 const STATUS_TONE: Record<string, BadgeTone> = {
   active: 'ongoing', on_file: 'ongoing', current: 'ongoing', valid: 'ongoing',
-  expiring: 'under_contract', pending: 'under_contract',
+  expiring: 'lead', pending: 'lead',
   expired: 'overdue', missing: 'overdue', invalid: 'overdue',
   not_requested: 'neutral',
 };
@@ -46,7 +46,7 @@ const STATUS_LABEL: Record<string, string> = {
   not_requested: 'Not Requested',
 };
 
-const VERDICT_TONE: Record<string, BadgeTone> = { pass: 'ongoing', flag: 'under_contract', fail: 'overdue' };
+const VERDICT_TONE: Record<string, BadgeTone> = { pass: 'ongoing', flag: 'lead', fail: 'overdue' };
 const cap = (s: string) => s.charAt(0).toUpperCase() + s.slice(1);
 const money = (n: number) => '$' + (Number(n) || 0).toLocaleString('en-US', { maximumFractionDigits: 0 });
 
@@ -268,39 +268,39 @@ export default function CompliancePage() {
   const atRisk = Number(scoredSummary?.at_risk) || 0;
   const nonCompliant = Number(scoredSummary?.non_compliant) || 0;
   const stats: StatItem[] = [
-    { label: 'Compliant', value: loading ? '—' : compliantCount, tone: 'good', sub: scoredSummary ? 'Score 80+ — cleared to work' : undefined, icon: <SealCheck size={15} /> },
+    { label: 'Compliant', value: compliantCount, tone: 'good', sub: scoredSummary ? 'Score 80+ — cleared to work' : undefined, icon: <SealCheck size={15} /> },
     ...(scoredSummary ? [
       { label: 'At risk', value: atRisk, tone: atRisk > 0 ? 'warn' : 'default', sub: 'Gaps to close this month', icon: <Warning size={15} /> } as StatItem,
       { label: 'Non-compliant', value: nonCompliant, tone: nonCompliant > 0 ? 'bad' : 'good', sub: 'Hold payment and site access', icon: <Prohibit size={15} /> } as StatItem,
     ] : []),
-    { label: 'COI gaps', value: loading ? '—' : expiredCOIs, tone: expiredCOIs > 0 ? 'bad' : 'default', sub: 'Expired, expiring or missing', icon: <ShieldWarning size={15} />, onClick: () => setCoiFilter(coiFilter === 'gaps' ? 'all' : 'gaps'), active: coiFilter === 'gaps' },
-    { label: 'Missing licenses', value: loading ? '—' : missingLicenses, tone: missingLicenses > 0 ? 'warn' : 'default', icon: <IdentificationCard size={15} /> },
+    { label: 'COI gaps', value: expiredCOIs, tone: expiredCOIs > 0 ? 'bad' : 'default', sub: 'Expired, expiring or missing', icon: <ShieldWarning size={15} />, onClick: () => setCoiFilter(coiFilter === 'gaps' ? 'all' : 'gaps'), active: coiFilter === 'gaps' },
+    { label: 'Missing licenses', value: missingLicenses, tone: missingLicenses > 0 ? 'warn' : 'default', icon: <IdentificationCard size={15} /> },
   ];
 
   const scoreTone = (n: number) => (n >= 80 ? 'good' : n >= 50 ? 'warn' : 'bad');
   const columns: Column<MatrixRow>[] = [
-    { key: 'name', header: 'Subcontractor', primary: true, render: (s) => s.name || '—' },
-    { key: 'trade', header: 'Trade', render: (s) => s.trade || '—' },
+    { key: 'name', header: 'Subcontractor', primary: true, render: (s) => s.name || 'Unnamed sub' },
+    { key: 'trade', header: 'Trade', render: (s) => s.trade || '' },
     { key: 'contract_amount', header: 'Contract', align: 'right', total: 'sum', format: money, accessor: (s) => Number(s.contract_amount) || 0, render: (s) => money(s.contract_amount) },
-    { key: 'coi', header: 'COI', phone: 'show', accessor: (s) => STATUS_LABEL[coiStateOf(s)] || coiStateOf(s), render: (s) => { const c = coiStateOf(s); return <Badge tone={STATUS_TONE[c] || 'neutral'} dot>{STATUS_LABEL[c] || c}</Badge>; } },
+    { key: 'coi', header: 'COI', phone: 'show', fit: 'full', accessor: (s) => STATUS_LABEL[coiStateOf(s)] || coiStateOf(s), render: (s) => { const c = coiStateOf(s); return <Badge tone={STATUS_TONE[c] || 'neutral'} dot>{STATUS_LABEL[c] || c}</Badge>; } },
     {
       key: 'coi_expiry', header: 'COI expiry', accessor: (s) => s.coi_expiry || '',
       render: (s) => {
         const c = coiStateOf(s);
-        const text = s.coi_expiry || (s.live ? ((Number(s.live.insurance?.active_certs) || 0) > 0 ? `${s.live.insurance.active_certs} active cert${Number(s.live.insurance.active_certs) === 1 ? '' : 's'}` : 'None on file') : '—');
+        const text = s.coi_expiry || (s.live ? ((Number(s.live.insurance?.active_certs) || 0) > 0 ? `${s.live.insurance.active_certs} active cert${Number(s.live.insurance.active_certs) === 1 ? '' : 's'}` : 'None on file') : '');
         return <span className={c === 'expired' || c === 'missing' ? 'cmpLate' : c === 'expiring' ? 'cmpSoon' : 'cmpMuted'}>{text}</span>;
       },
     },
-    { key: 'license', header: 'License', accessor: (s) => STATUS_LABEL[s.license_status] || s.license_status, render: (s) => <Badge tone={STATUS_TONE[s.license_status] || 'neutral'}>{STATUS_LABEL[s.license_status] || s.license_status}</Badge> },
-    { key: 'w9', header: 'W-9', accessor: (s) => STATUS_LABEL[w9StateOf(s)] || w9StateOf(s), render: (s) => { const w = w9StateOf(s); return <Badge tone={STATUS_TONE[w] || 'neutral'}>{STATUS_LABEL[w] || w}</Badge>; } },
+    { key: 'license', header: 'License', fit: 'full', accessor: (s) => STATUS_LABEL[s.license_status] || s.license_status, render: (s) => <Badge tone={STATUS_TONE[s.license_status] || 'neutral'}>{STATUS_LABEL[s.license_status] || s.license_status}</Badge> },
+    { key: 'w9', header: 'W-9', fit: 'full', accessor: (s) => STATUS_LABEL[w9StateOf(s)] || w9StateOf(s), render: (s) => { const w = w9StateOf(s); return <Badge tone={STATUS_TONE[w] || 'neutral'}>{STATUS_LABEL[w] || w}</Badge>; } },
     {
       key: 'waivers', header: 'Waivers', accessor: (s) => (s.live?.lien_waivers ? Number(s.live.lien_waivers.signed) || 0 : -1),
-      render: (s) => { const lw = s.live?.lien_waivers; if (!lw) return '—'; return <span className={Number(lw.pending) > 0 ? 'cmpSoon' : 'cmpOk'}>{Number(lw.total) > 0 ? `${lw.signed}/${lw.total} signed` : 'None yet'}</span>; },
+      render: (s) => { const lw = s.live?.lien_waivers; if (!lw) return ''; return <span className={Number(lw.pending) > 0 ? 'cmpSoon' : 'cmpOk'}>{Number(lw.total) > 0 ? `${lw.signed}/${lw.total} signed` : 'None yet'}</span>; },
     },
-    { key: 'score', header: 'Score', align: 'right', phone: 'show', accessor: (s) => (s.live ? Number(s.live.score) || 0 : -1), render: (s) => s.live ? <span className="cmpScore" data-tone={scoreTone(Number(s.live.score))}>{s.live.score}/100</span> : <span className="cmpMuted">—</span> },
+    { key: 'score', header: 'Score', align: 'right', phone: 'show', accessor: (s) => (s.live ? Number(s.live.score) || 0 : -1), render: (s) => s.live ? <span className="cmpScore" data-tone={scoreTone(Number(s.live.score))}>{s.live.score}/100</span> : null },
     {
       key: 'prequal', header: 'AI prequal', accessor: (s) => prequals[s.id]?.score ?? -1,
-      render: (s) => { const p = prequals[s.id]; return p ? <Badge tone={VERDICT_TONE[p.verdict] || 'neutral'} dot>{cap(p.verdict)} {p.score}/100</Badge> : '—'; },
+      render: (s) => { const p = prequals[s.id]; return p ? <Badge tone={VERDICT_TONE[p.verdict] || 'neutral'} dot>{cap(p.verdict)} {p.score}/100</Badge> : ''; },
     },
   ];
 
@@ -323,8 +323,8 @@ export default function CompliancePage() {
           { label: 'Compliance' },
         ]}
         title="Compliance"
-        badge={isPublicProject ? <Badge tone="under_contract" dot>Public project</Badge> : undefined}
-        subtitle={`Insurance, licensing, W-9 and lien waivers · ${merged.length} subcontractor${merged.length === 1 ? '' : 's'} tracked`}
+        badge={isPublicProject ? <Badge tone="closed" dot>Public project</Badge> : undefined}
+        subtitle={`${merged.length} subcontractor${merged.length === 1 ? '' : 's'}`}
         actions={
           <>
             {isPublicProject && <Button icon={<FileText size={15} />} onClick={generatePrevailingWage}>Prevailing wage rate sheet</Button>}

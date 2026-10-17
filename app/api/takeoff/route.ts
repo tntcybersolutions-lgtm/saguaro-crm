@@ -3,6 +3,7 @@ import { createServerClient, getUser } from '@/lib/supabase-server';
 import { signFields } from '@/lib/storage-signing';
 import { ok, serverError, unauthorized } from '@/lib/api-response';
 import { withTakeoffState } from '@/lib/takeoff-status';
+import { hiddenProjectIds } from '@/lib/live-projects';
 
 export const dynamic = 'force-dynamic';
 
@@ -35,11 +36,16 @@ export async function GET(req: NextRequest) {
 /* Blueprints are a private bucket. The row still stores the object's public-form
    URL — signStoredUrl parses the path back out of it — so nothing had to be
    migrated in the database; the link is minted per request and expires. */
+    /* The company-wide takeoff list leaves out archived or deleted jobs'
+       takeoffs; one job's own list (projectId) still shows them. */
+    const hidden = projectId ? new Set<string>() : await hiddenProjectIds(supabase, user.tenantId);
+    const visible = ((data || []) as Record<string, unknown>[])
+      .filter((t) => !t.project_id || !hidden.has(String(t.project_id)));
     /* status is read from what is in the takeoff (lib/takeoff-status): one
        marked complete with nothing measured reads 'empty', never Complete.
        stored_status and item_count ride along. */
     const rows = await signFields(
-      await withTakeoffState(supabase, user.tenantId, (data || []) as Record<string, unknown>[]),
+      await withTakeoffState(supabase, user.tenantId, visible),
       ['file_url', 'thumbnail_url'],
       3600,
       { strict: false },

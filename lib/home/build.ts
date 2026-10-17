@@ -22,6 +22,7 @@ import {
 } from './rank';
 import { buildTicker, zonedMidnightIso, type ReviewGroup, type TickerItem, type TickerSummary } from './ticker';
 import { inspectionOutcome } from '@/lib/inspection-result';
+import { isLiveJob } from '@/lib/live-jobs';
 
 type ServerDb = ReturnType<typeof createServerClient>;
 /* The generated Database type makes some of these selects blow the TS
@@ -127,7 +128,7 @@ const day = (v: unknown): string | null => (typeof v === 'string' && /^\d{4}-\d{
 export async function loadProjects(ctx: BuildCtx): Promise<Map<string, ProjectInfo>> {
   const r = await rows(
     loose(ctx.db).from('projects')
-      .select('id, name, status, phase, pm_name, project_manager, assigned_to_name, address, city, revised_contract_value, contract_amount, contract_value, is_archived, deleted_at, bid_due_date, percent_complete, start_date, actual_start_date, projected_start_date, end_date, target_finish_date, substantial_completion_date, projected_end_date, actual_end_date')
+      .select('id, name, status, phase, pm_name, project_manager, assigned_to_name, address, city, revised_contract_value, contract_amount, contract_value, is_archived, archived_at, is_deleted, deleted_at, bid_due_date, percent_complete, start_date, actual_start_date, projected_start_date, end_date, target_finish_date, substantial_completion_date, projected_end_date, actual_end_date')
       .eq('tenant_id', ctx.tenantId)
       .is('deleted_at', null)
       .limit(1000),
@@ -142,7 +143,7 @@ export async function loadProjects(ctx: BuildCtx): Promise<Map<string, ProjectIn
       pm: p.pm_name || p.project_manager || p.assigned_to_name || null,
       address: [p.address, p.city].filter(Boolean).join(', ') || null,
       contract: Number(p.revised_contract_value || p.contract_amount || p.contract_value || 0),
-      closed: isClosedProject(p.status) || p.is_archived === true,
+      closed: isClosedProject(p.status) || !isLiveJob(p),
       bidDue: p.bid_due_date || null,
       // 0 is the column default, not a measurement: same rule as the job picker.
       pct: progressOf({ percent_complete: p.percent_complete }),
@@ -151,7 +152,7 @@ export async function loadProjects(ctx: BuildCtx): Promise<Map<string, ProjectIn
       start: day(p.start_date) || day(p.actual_start_date) || day(p.projected_start_date),
       finish: day(p.end_date) || day(p.target_finish_date) || day(p.substantial_completion_date) || day(p.projected_end_date),
       actualFinish: day(p.actual_end_date),
-      archived: p.is_archived === true,
+      archived: !isLiveJob(p),
     });
   }
   return m;

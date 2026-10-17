@@ -15,7 +15,7 @@ import {
   PageShell, StatRow, Button, Card, Badge, Toolbar, Select, DataTable, EmptyState, ItemList, ItemRow, DetailList,
   Toast, useToast, type Column, type StatItem, type BadgeTone,
 } from '@/components/ui/kit';
-import { Bell, CheckCircle, Lightning, WarningOctagon, Warning, Question, ShieldWarning, Signature, Swap, UsersThree, X } from '@phosphor-icons/react';
+import { Bell, CheckCircle, Lightning, WarningOctagon, Warning, Question, ShieldWarning, Signature, Swap, X } from '@phosphor-icons/react';
 
 interface Alert {
   id: string;
@@ -29,7 +29,7 @@ interface Alert {
 const SEVERITY_TONE: Record<string, BadgeTone> = {
   critical: 'overdue',
   high: 'lead',
-  medium: 'under_contract',
+  medium: 'closed',
   low: 'neutral',
   info: 'closed',
 };
@@ -161,20 +161,16 @@ export default function AutopilotPage() {
   const clearFilters = () => { setSearch(''); setSev('all'); setRule('all'); };
 
   const stats: StatItem[] = [
-    { label: 'Active alerts', value: loading ? '—' : String(activeAlerts.length), sub: 'Open on this job', icon: <Bell size={15} />, onClick: clearFilters, active: !filtered },
-    { label: 'Critical', value: loading ? '—' : String(criticalCount), sub: 'Need immediate action', tone: criticalCount ? 'bad' : 'default', icon: <WarningOctagon size={15} />, onClick: () => { setRule('all'); setSev('critical'); }, active: sev === 'critical' && rule === 'all' },
-    { label: 'High', value: loading ? '—' : String(highCount), sub: 'Review soon', tone: highCount ? 'warn' : 'default', icon: <Warning size={15} />, onClick: () => { setRule('all'); setSev('high'); }, active: sev === 'high' && rule === 'all' },
-    ...(ctx ? [
-      { label: 'Open RFIs', value: String(Number(counts?.openRfis) || 0), sub: 'Checked for overdue responses', icon: <Question size={15} />, href: `${base}/rfis` },
-      { label: 'Subs on the job', value: String((ctx?.subs || []).length), sub: 'Insurance + waivers tracked', icon: <UsersThree size={15} />, href: `${base}/subs` },
-    ] as StatItem[] : []),
+    { label: 'Active alerts', value: String(activeAlerts.length), sub: 'Open on this job', icon: <Bell size={15} />, onClick: clearFilters, active: !filtered },
+    { label: 'Critical', value: String(criticalCount), sub: 'Need immediate action', tone: criticalCount ? 'bad' : 'default', icon: <WarningOctagon size={15} />, onClick: () => { setRule('all'); setSev('critical'); }, active: sev === 'critical' && rule === 'all' },
+    { label: 'High', value: String(highCount), sub: 'Review soon', tone: highCount ? 'warn' : 'default', icon: <Warning size={15} />, onClick: () => { setRule('all'); setSev('high'); }, active: sev === 'high' && rule === 'all' },
   ];
 
   const columns: Column<Alert>[] = [
     { key: 'severity', header: 'Severity', phone: 'show', groupable: false, width: 120, accessor: (a) => SEVERITY_RANK[a.severity] ?? 9, render: (a) => <Badge tone={SEVERITY_TONE[a.severity] || 'neutral'} dot>{cap(a.severity)}</Badge> },
     { key: 'alert_type', header: 'Check', primary: true, phone: 'show' },
-    { key: 'message', header: 'Message', phone: 'show', render: (a) => <span style={{ color: 'var(--text-secondary)' }}>{a.message || '—'}</span> },
-    { key: 'date', header: 'Date', groupable: false, accessor: (a) => a.date || '', render: (a) => (a.date ? new Date(a.date).toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' }) : '—') },
+    { key: 'message', header: 'Message', phone: 'show', render: (a) => <span style={{ color: 'var(--text-secondary)' }}>{a.message || ''}</span> },
+    { key: 'date', header: 'Date', groupable: false, accessor: (a) => a.date || '', render: (a) => (a.date ? new Date(a.date).toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' }) : '') },
     { key: 'status', header: 'Status', render: (a) => <Badge tone={a.status === 'resolved' ? 'completed' : 'lead'} dot>{cap(a.status || 'active')}</Badge> },
   ];
 
@@ -186,7 +182,6 @@ export default function AutopilotPage() {
         { label: 'Autopilot' },
       ]}
       title="Autopilot"
-      subtitle="Deterministic checks on live job data. Re-scans every 6 hours."
       actions={
         <Button variant="primary" icon={<Lightning size={15} weight="fill" />} onClick={runScan} disabled={running}>
           {running ? 'Scanning…' : 'Run Autopilot scan'}
@@ -194,7 +189,7 @@ export default function AutopilotPage() {
       }
     >
       <style>{PAGE_CSS}</style>
-      <StatRow items={stats} />
+      {!loading && <StatRow items={stats} />}
 
       <div className="apGrid">
         <div style={{ display: 'flex', flexDirection: 'column', gap: 'var(--sp-3)', minWidth: 0 }}>

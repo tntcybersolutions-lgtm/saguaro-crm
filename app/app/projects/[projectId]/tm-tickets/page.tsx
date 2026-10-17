@@ -60,7 +60,7 @@ function displayStatus(s?: string | null): string {
  *  Approved green, Rejected red, Billed orange — all from lib/status-colors. */
 function statusBadge(s?: string | null): { label: string; tone: BadgeTone } {
   const k = displayStatus(s);
-  if (k === 'submitted') return { label: 'Submitted', tone: 'under_contract' };
+  if (k === 'submitted') return { label: 'Submitted', tone: 'lead' };
   if (k === 'approved') return { label: 'Approved', tone: 'ongoing' };
   if (k === 'rejected') return { label: 'Rejected', tone: 'overdue' };
   if (k === 'billed') return { label: 'Billed', tone: 'completed' };
@@ -644,7 +644,7 @@ export default function TmTicketsPage() {
   const dateCol: Column<TmTicketRow> = { key: 'date', header: 'Work Date', accessor: t => String(t.work_date || t.created_at || '').slice(0, 10), render: t => <span className="tmMuted">{fmtDate(t.work_date || t.created_at)}</span> };
   const descCol: Column<TmTicketRow> = { key: 'desc', phone: 'hide', header: 'Description', accessor: t => (t.description || '').toLowerCase(), render: t => (
     <div className="tmDesc">
-      <span title={t.description || ''}>{t.description || '—'}</span>
+      <span title={t.description || ''}>{t.description || ''}</span>
       {(t.contractor_signature || t.owner_signature) && (
         <small><Signature size={11} /> {t.contractor_signature && t.owner_signature ? 'Both signatures' : t.contractor_signature ? 'Contractor signed' : 'Owner signed'}</small>
       )}
@@ -810,7 +810,6 @@ export default function TmTicketsPage() {
       <EmptyState
         icon={<Receipt size={22} />}
         title="No T&M tickets yet"
-        text="Capture extra work with labor, materials, equipment and signatures."
         action={<Button icon={<Plus size={15} weight="bold" />} onClick={() => setShowForm(true)}>New T&M Ticket</Button>}
       />
     );
@@ -856,7 +855,6 @@ export default function TmTicketsPage() {
           { label: 'T&M Tickets' },
         ]}
         title="T&M Tickets"
-        subtitle="Signed extras — approved, then billed or escalated."
         actions={
           <>
             {tickets.length > 0 && <Menu actions={exportActions} triggerLabel={exporting ? 'Exporting…' : 'Export'} triggerIcon={<DownloadSimple size={15} />} label="Export tickets" />}
@@ -866,7 +864,7 @@ export default function TmTicketsPage() {
           </>
         }
       >
-        {!loadError && <StatRow items={stats} />}
+        {!loadError && !loading && tickets.length > 0 && <StatRow items={stats} />}
 
         {!loading && !loadError && tickets.length > 0 && (
           <Toolbar

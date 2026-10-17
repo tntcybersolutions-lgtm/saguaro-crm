@@ -334,7 +334,9 @@ const CSS = `
 .mv-wrap { display: flex; flex-direction: column; gap: 10px; min-width: 0; }
 .mv-toolbar { display: flex; flex-wrap: wrap; align-items: center; gap: 6px; }
 .mv-toolbar .k-btn[aria-pressed="true"] { border-color: var(--border-strong); }
-.mv-select { width: auto; min-width: 92px; height: 32px; font-size: 13px; padding-top: 0; padding-bottom: 0; }
+/* select.k-select (kit) is width:100% and outranks a bare class — without the
+   element + parent here View and Units each took a full row above the model. */
+.mv-toolbar select.mv-select { width: auto; min-width: 92px; min-height: 32px; height: 32px; font-size: 13px; padding-top: 0; padding-bottom: 0; }
 .mv-range { width: 140px; accent-color: var(--text-secondary); }
 .mv-sep { width: 1px; height: 22px; background: var(--border-default); margin: 0 2px; }
 .mv-body { display: grid; grid-template-columns: minmax(0, 1fr) 300px; gap: 14px; min-width: 0; }
@@ -372,6 +374,7 @@ const CSS = `
 @media (max-width: 900px) {
   .mv-body { grid-template-columns: minmax(0, 1fr); }
   .mv-stage { height: 58vh; min-height: 300px; }
+  .mv-toolbar select.mv-select { min-height: 44px; height: 44px; }
   .mv-side { max-height: none; }
 }
 `;

@@ -445,10 +445,10 @@ export default function BidJacketView({
                       {lineItems.map((li, i) => (
                         <tr key={li.id} style={{ borderBottom: `1px solid ${HAIR}` }}>
                           <td style={{ padding: '10px 14px', color: DIM, fontVariantNumeric: 'tabular-nums' }}>{i + 1}</td>
-                          <td style={{ padding: '10px 14px', color: DIM, fontVariantNumeric: 'tabular-nums', whiteSpace: 'nowrap' }}>{li.code || '—'}</td>
-                          <td style={{ padding: '10px 14px', color: TEXT, overflowWrap: 'anywhere' }}>{li.description || '—'}</td>
-                          <td style={{ padding: '10px 14px', color: TEXT, fontVariantNumeric: 'tabular-nums' }}>{li.quantity ?? '—'}</td>
-                          <td style={{ padding: '10px 14px', color: DIM }}>{li.unit || '—'}</td>
+                          <td style={{ padding: '10px 14px', color: DIM, fontVariantNumeric: 'tabular-nums', whiteSpace: 'nowrap' }}>{li.code || ''}</td>
+                          <td style={{ padding: '10px 14px', color: TEXT, overflowWrap: 'anywhere' }}>{li.description || ''}</td>
+                          <td style={{ padding: '10px 14px', color: TEXT, fontVariantNumeric: 'tabular-nums' }}>{li.quantity ?? ''}</td>
+                          <td style={{ padding: '10px 14px', color: DIM }}>{li.unit || ''}</td>
                         </tr>
                       ))}
                     </tbody>

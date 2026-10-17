@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from 'next/server';
 import { createServerClient, getUser } from '@/lib/supabase-server';
 import { apiError } from '@/lib/api-error';
 import { invoiceStatus } from '@/lib/sub-invoice-status';
+import { commitmentSummary, loadSubCommitments, pickSubCommitment } from '@/lib/sub-invoice-posting';
 
 export const dynamic = 'force-dynamic';
 
@@ -76,8 +77,18 @@ export async function GET(req: NextRequest) {
     const linesBy = new Map<string, Record<string, any>[]>();
     for (const l of lines) linesBy.set(l.pay_app_id, [...(linesBy.get(l.pay_app_id) || []), l]);
 
+    // Each invoice beside its subcontract: billed so far, and what this one would bring it to.
+    const invProjects = [...new Set(invoices.map((i) => i.project_id).filter(Boolean))] as string[];
+    const jobMoney = new Map(await Promise.all(invProjects.map(async (pid) => [pid, await loadSubCommitments(db, t, pid)] as const)));
+    const against = (i: Record<string, any>) => {
+      const job = jobMoney.get(i.project_id);
+      if (!job) return null;
+      const c = pickSubCommitment({ subId: String(i.sub_id || ''), subName: subName.get(i.sub_id) || '', contracts: job.contracts, legacy: job.legacy });
+      return commitmentSummary(c, i, invoiceStatus(i.status));
+    };
+
     const out = {
-      invoices: invoices.map((i) => ({ ...named(i), status: invoiceStatus(i.status), lines: linesBy.get(i.id) || [] })),
+      invoices: invoices.map((i) => ({ ...named(i), status: invoiceStatus(i.status), lines: linesBy.get(i.id) || [], commitment: against(i) })),
       rfis: rfis.map(named),
       dailyLogs: dailyLogs.map(named),
       messages: messages.map(named),

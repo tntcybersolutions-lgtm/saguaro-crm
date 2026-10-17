@@ -3,6 +3,7 @@ import { createServerClient, getUser } from '@/lib/supabase-server';
 import { requirePermission } from '@/lib/permissions';
 import { apiError } from '@/lib/api-error';
 import { hasFeature } from '@/lib/entitlements-server';
+import { liveJobs } from '@/lib/live-jobs';
 
 const n = (v: any): number => { if (v == null || v === '') return 0; const x = typeof v === 'number' ? v : parseFloat(String(v).replace(/[$,]/g, '')); return isNaN(x) ? 0 : x; };
 
@@ -20,7 +21,7 @@ export async function GET(req: NextRequest) {
 
     const db = createServerClient();
     const [{ data: projs }, todosRes, lienRes] = await Promise.all([
-      db.from('projects').select('id,name,city,state,contract_value,cost_to_date,percent_complete').eq('tenant_id', user.tenantId).or('is_archived.is.null,is_archived.eq.false'),
+      liveJobs(db.from('projects').select('id,name,city,state,contract_value,cost_to_date,percent_complete').eq('tenant_id', user.tenantId)),
       db.from('project_todos').select('project_id,description,status,completed_at').eq('tenant_id', user.tenantId).eq('linked_module', 'phase_checklist'),
       db.from('lien_waivers').select('id,project_id,status').eq('tenant_id', user.tenantId).is('deleted_at', null).then((r: any) => r, () => ({ data: [] })),
     ]);
