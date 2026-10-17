@@ -73,7 +73,7 @@ const SPECS: Spec[] = [
     type: 'job', table: 'projects',
     select: 'id, name, project_number, status, city, state, address, created_at',
     text: ['name', 'project_number', 'address', 'city', 'owner_name'], textNumber: 'project_number', softDelete: true,
-    scope: (q) => q.not('is_deleted', 'is', true),
+    scope: (q) => q.not('is_deleted', 'is', true).not('is_archived', 'is', true),
     build: (r) => ({
       number: r.project_number, label: r.name || 'Job',
       sub: join(r.project_number && `Job ${r.project_number}`, human(r.status), [r.city, r.state].filter(Boolean).join(', ')),

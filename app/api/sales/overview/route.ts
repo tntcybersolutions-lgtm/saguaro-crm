@@ -5,6 +5,7 @@ import { apiError } from '@/lib/api-error';
 import { isClosedStatus, isDoneStatus } from '@/lib/project-lifecycle';
 import { summariseByStage, isWon, isLost, isUndecided } from '@/lib/lead-stages';
 import { requestDay, addDays } from '@/lib/time-zone';
+import { isLiveProject, LIVE_PROJECT_COLUMNS } from '@/lib/live-projects';
 
 export const dynamic = 'force-dynamic';
 
@@ -42,7 +43,7 @@ export async function GET(req: NextRequest) {
         .select('id, company_name, contact_name, stage, estimated_value, probability, next_action, next_action_date, won_at, lost_at, created_at')
         .eq('tenant_id', t),
       db.from('projects')
-        .select('id, name, status, contract_value, created_at')
+        .select(`id, name, status, contract_value, created_at, ${LIVE_PROJECT_COLUMNS}`)
         .eq('tenant_id', t),
       db.from('project_todos')
         .select('id, title, due_date, status, completed_at, project_id')
@@ -54,8 +55,12 @@ export async function GET(req: NextRequest) {
     if (leadsRes.error) throw leadsRes.error;
 
     const leads = leadsRes.data || [];
-    const projects = projectsRes.error ? [] : (projectsRes.data || []);
-    const todos = todosRes.error ? [] : (todosRes.data || []);
+    /* Archived and deleted jobs (and their to-dos) are out of every figure. */
+    const allProjects = projectsRes.error ? [] : (projectsRes.data || []);
+    const hiddenJobs = new Set(allProjects.filter(p => !isLiveProject(p)).map(p => String(p.id)));
+    const projects = allProjects.filter(p => isLiveProject(p));
+    const todos = (todosRes.error ? [] : (todosRes.data || []))
+      .filter(td => !td.project_id || !hiddenJobs.has(String(td.project_id)));
 
     const num = (v: unknown) => Number(v) || 0;
     /* Today is the PERSON's calendar day (device zone, else the company's),

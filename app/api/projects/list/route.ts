@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { createServerClient, getUser } from '@/lib/supabase-server';
 import { apiError } from '@/lib/api-error';
+import { onlyLiveProjects } from '@/lib/live-projects';
 import { jobHealth } from '@/lib/job-health';
 import { jobStage, billedPct } from '@/lib/job-page';
 import { isDoneStatus } from '@/lib/project-lifecycle';
@@ -12,14 +13,11 @@ export async function GET(req: NextRequest) {
       return NextResponse.json({ projects: [], source: 'unauth' }, { status: 401 });
     }
     const db = createServerClient();
-    const { data, error } = await db
+    // Archived and deleted jobs stay out of the list (lib/live-projects).
+    const { data, error } = await onlyLiveProjects(db
       .from('projects')
       .select('*')
-      .eq('tenant_id', user.tenantId)
-      // Exclude soft-deleted / archived projects. Legacy rows have NULL flags,
-      // so keep NULL (treated as not-archived) and drop only explicit `true`.
-      .or('is_archived.is.null,is_archived.eq.false')
-      .or('is_deleted.is.null,is_deleted.eq.false')
+      .eq('tenant_id', user.tenantId))
       .order('created_at', { ascending: false });
     if (error) throw error;
     const projects = data || [];

@@ -275,7 +275,7 @@ export const TOURS: Tour[] = [
         title: 'Create it and go straight to the drawings',
         body: 'This creates the project, its folders, its CSI budget structure and its document set — then takes you into the takeoff. There is a "Create without drawings" beside it if you are not ready.',
         route: '/app/projects/new',
-        anchor: ['[data-tour="create-project-submit"]'],
+        anchor: ['[data-tour="create-project-submit-foot"]', '[data-tour="create-project-submit"]'],
         anchorText: ['Create & add drawings →', 'Create & add drawings'],
         advance: 'click',
       },

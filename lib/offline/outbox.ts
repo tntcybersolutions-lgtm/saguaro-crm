@@ -277,7 +277,11 @@ function set(p: Partial<NetState>) {
   subs.forEach((f) => f());
 }
 export function getNetState(): NetState { return state; }
-export function getServerNetState(): NetState { return state; }
+/* The server rendered with the starting state, so hydration must read that
+   same state — not the live one, which the app shell may already have moved
+   (pending items, offline) before a page further down hydrates. */
+const SERVER_STATE: NetState = { online: true, pending: 0, syncing: false, synced: 0, changedAt: 0, failed: 0 };
+export function getServerNetState(): NetState { return SERVER_STATE; }
 export function subscribeNet(fn: () => void): () => void { subs.add(fn); return () => { subs.delete(fn); }; }
 
 export function isOffline(): boolean {

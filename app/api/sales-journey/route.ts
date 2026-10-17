@@ -21,6 +21,7 @@ import { requirePermission } from '@/lib/permissions';
 import { createServerClient, getUser } from '@/lib/supabase-server';
 import { apiError } from '@/lib/api-error';
 import { summariseByStage, qualifiedValue } from '@/lib/lead-stages';
+import { onlyLiveProjects } from '@/lib/live-projects';
 
 export async function GET(req: NextRequest) {
   const g = await requirePermission(req, 'Sales', 'View');
@@ -43,7 +44,7 @@ export async function GET(req: NextRequest) {
       db.from('lead_pipeline').select('stage').eq('tenant_id', t).limit(10000),
       db.from('customer_profiles').select('id', head).eq('tenant_id', t),
       db.from('bid_packages').select('id', head).eq('tenant_id', t),
-      db.from('projects').select('id', head).eq('tenant_id', t),
+      onlyLiveProjects(db.from('projects').select('id', head).eq('tenant_id', t)),
     ]);
 
     /** A failed count is omitted, not zeroed — see the header. */
