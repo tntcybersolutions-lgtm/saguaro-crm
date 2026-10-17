@@ -58,7 +58,7 @@ function blankLine(n:number):SovLine{
 
 const DATE_INPUT_STYLE: React.CSSProperties = {
   width:'100%', minHeight:40, padding:'8px 12px', fontSize:14,
-  background:'var(--bg-surface-2)', border:'1px solid var(--border-default)',
+  background:'var(--bg-input)', border:'1px solid var(--border-default)',
   borderRadius:'var(--radius-sm)', color:'var(--text-primary)',
 };
 
@@ -68,19 +68,19 @@ const CSS = `
 .pnSplit { display: grid; grid-template-columns: minmax(0, 1fr); gap: 16px; align-items: start; min-width: 0; }
 .pnSplit > * { min-width: 0; }
 .pnMain { display: flex; flex-direction: column; gap: 16px; min-width: 0; }
-.pnRail { order: -1; display: flex; flex-direction: column; gap: 16px; }
+.pnRail { display: flex; flex-direction: column; gap: 16px; }
 @container pnws (min-width: 960px) {
   .pnSplit { grid-template-columns: minmax(0, 1fr) clamp(${layout.detailRailMin}px, 28%, ${layout.detailRailMax}px); }
-  .pnRail { order: 0; position: sticky; top: 16px; }
+  .pnRail { position: sticky; top: 16px; }
 }
 .pnForm { max-width: ${layout.formMaxWidth}px; }
 .pnBarLabel { display: flex; justify-content: space-between; font-size: var(--fs-xs); color: var(--text-tertiary); margin: 10px 0 6px; }
 .pnBarLabel b { color: var(--text-primary); font-variant-numeric: tabular-nums; }
-.pnBarTrack { height: 6px; border-radius: 3px; background: rgba(255,255,255,0.08); overflow: hidden; }
+.pnBarTrack { height: 6px; border-radius: 3px; background: var(--bg-surface-2); overflow: hidden; }
 .pnBarFill { height: 100%; border-radius: 3px; background: var(--status-ongoing); }
 .pnTableWrap { overflow-x: auto; }
 .pnTable { width: 100%; border-collapse: collapse; font-size: var(--fs-sm); }
-.pnTable th { position: sticky; top: 0; z-index: 1; background: rgba(21,23,28,0.88); text-align: left; padding: 8px 10px; font-size: 12px; font-weight: 700; color: var(--text-tertiary); border-bottom: 1px solid var(--border-default); white-space: nowrap; }
+.pnTable th { position: sticky; top: 0; z-index: 1; background: var(--bg-base); text-align: left; padding: 8px 10px; font-size: 12px; font-weight: 700; color: var(--text-tertiary); border-bottom: 1px solid var(--border-default); white-space: nowrap; }
 .pnTable td { padding: 6px 10px; height: 44px; border-bottom: 1px solid var(--border-subtle); color: var(--text-secondary); white-space: nowrap; font-variant-numeric: tabular-nums; vertical-align: middle; }
 .pnTable th:first-child, .pnTable td:first-child { padding-left: var(--sp-4); position: sticky; left: 0; z-index: 1; background: var(--bg-solid); }
 .pnTable th:first-child { background: var(--bg-solid-2); z-index: 3; }
@@ -324,7 +324,7 @@ export default function NewPayAppPage() {
   ];
 
   const liveSummary = (
-    <Card title="Live G702 summary" subtitle="Matches the saved application to the cent." flush>
+    <Card title="G702 summary" flush>
       <ItemList>
         <ItemRow title="Original contract" value={fmt(contractSumNum)}/>
         {coTotal!==0 && <ItemRow title="Approved COs" value={fmtSigned(coTotal)}/>}
@@ -352,7 +352,7 @@ export default function NewPayAppPage() {
           { label:'New' },
         ]}
         title={`Application #${appLabel}`}
-        subtitle="AIA G702/G703 — Application and Certificate for Payment."
+        subtitle="AIA G702 / G703"
         actions={
           step===1
             ? <Button variant="primary" icon={<ArrowRight size={15} weight="bold"/>} onClick={()=>setStep(2)}>Next: Schedule of Values</Button>
@@ -372,7 +372,7 @@ export default function NewPayAppPage() {
             <div className="pnMain">
               {step===1 && (
                 <>
-                  <Card title="Billing Period" subtitle="The dates and contract figures that print on the G702.">
+                  <Card title="Billing Period">
                     <div className="pnForm">
                       <FormGrid cols={2}>
                         <Field label="Period From" required hint={lastApp ? `App #${lastApp.appNumber} billed through ${fmtDate(lastApp.periodTo)}.` : auto.period ? 'Defaulted to the first of the month.' : undefined}>
@@ -393,7 +393,7 @@ export default function NewPayAppPage() {
                     </div>
                   </Card>
 
-                  <Card title="Schedule of Values" subtitle={rolledForward ? `${lines.length} lines rolled forward from App #${lastApp?.appNumber ?? '—'}` : 'First application — built in step 2.'}>
+                  <Card title="Schedule of Values" subtitle={rolledForward ? `${lines.length} lines rolled forward${lastApp?.appNumber ? ` from App #${lastApp.appNumber}` : ''}` : undefined}>
                     {rolledForward ? (
                       <>
                         <div className="pnBarLabel"><span>Billed {fmt(prevTotal)} of {fmt(sovScheduled)} scheduled</span><b>{sovScheduled>0?Math.round((prevTotal/sovScheduled)*100):0}%</b></div>
@@ -409,7 +409,7 @@ export default function NewPayAppPage() {
 
               {step===2 && (
                 <>
-                  <Card title="Schedule of Values (G703)" subtitle={rolledForward ? `Rolled forward from App #${lastApp?.appNumber ?? '—'} — enter this period's work.` : 'Retainage and payment due compute themselves.'} flush actions={<Button size="sm" icon={<Plus size={13} weight="bold"/>} onClick={addLine}>Add Row</Button>}>
+                  <Card title="Schedule of Values (G703)" subtitle={rolledForward && lastApp?.appNumber ? `Rolled forward from App #${lastApp.appNumber}` : undefined} flush actions={<Button size="sm" icon={<Plus size={13} weight="bold"/>} onClick={addLine}>Add Row</Button>}>
                     <div className="pnTableWrap">
                       <table className="pnTable k-table-skin">
                         <thead>
@@ -475,7 +475,7 @@ export default function NewPayAppPage() {
                 {lastApp ? (
                   <ItemList>
                     <ItemRow title="Period" value={`${fmtDate(lastApp.periodFrom)} – ${fmtDate(lastApp.periodTo)}`}/>
-                    <ItemRow title="Status" value={String(lastApp.status||'—').replace(/_/g,' ').replace(/\b\w/g,(c:string)=>c.toUpperCase())}/>
+                    <ItemRow title="Status" value={String(lastApp.status||'draft').replace(/_/g,' ').replace(/\b\w/g,(c:string)=>c.toUpperCase())}/>
                     <ItemRow title="Completed & stored" value={fmt(lastApp.totalCompletedStored)}/>
                     <ItemRow title="Payment certified" value={<strong>{fmt(lastApp.currentPaymentDue)}</strong>}/>
                   </ItemList>

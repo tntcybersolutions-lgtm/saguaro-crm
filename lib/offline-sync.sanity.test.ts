@@ -2,7 +2,7 @@
  * @jest-environment node
  *
  * Offline field work, end to end through the real outbox (lib/offline/outbox)
- * and the real route handlers: a daily log, a clock-in/out and a photo written
+ * and the real route handlers: a daily log, a clock-in/out, a photo and a video written
  * with no signal are kept on the phone, sent when the signal is back, and —
  * when a send reaches the server but its answer is lost — sent again with the
  * same client id and accepted exactly once. Only IndexedDB, the database, file
@@ -26,7 +26,17 @@ jest.mock('@/lib/supabase-browser', () => ({ getAuthHeaders: async () => ({}), g
 jest.mock('@/lib/ui/status', () => ({ step: () => ({ done() {}, fail() {}, offline() {}, update() {} }), getStatusGroups: () => [] }));
 jest.mock('@/lib/ui/status-labels', () => ({ describeRequest: () => null }));
 jest.mock('@/lib/ui/status-fetch', () => ({ STATUS_HEADER: 'x-saguaro-status', reasonFromResponse: async () => '' }));
-jest.mock('@/lib/media-upload', () => ({ uploadPhoto: async () => ({}), uploadVideo: async () => ({}) }));
+// uploadVideo stands in for the phone's upload: it notes what it was sent with,
+// and `globalThis.videoLoseAnswers` makes the next sends die after reaching the server.
+jest.mock('@/lib/media-upload', () => ({
+  uploadPhoto: async () => ({}),
+  uploadVideo: async (_f: unknown, o: { projectId: string; clientId?: string }) => {
+    const g = globalThis as unknown as { videoSends: Array<{ projectId: string; clientId?: string }>; videoLoseAnswers: number };
+    g.videoSends.push(o);
+    if (g.videoLoseAnswers > 0) { g.videoLoseAnswers--; throw new TypeError('Failed to fetch'); }
+    return {};
+  },
+}));
 jest.mock('@/lib/learning', () => ({ recordLearning: () => undefined }));
 jest.mock('@/lib/storage-signing', () => ({ signFields: async (rows: Record<string, unknown>[]) => rows, signStoredUrl: async (_b: string, p: string) => p }));
 jest.mock('@/lib/image-thumb', () => ({ UnsupportedImageError: class extends Error {} }));
@@ -53,7 +63,9 @@ import { POST as clockIn } from '@/app/api/timeclock/in/route';
 import { POST as clockOut } from '@/app/api/timeclock/out/route';
 import { POST as photoUploadUrl } from '@/app/api/photos/upload-url/route';
 import { POST as photoIngest } from '@/app/api/photos/ingest/route';
-import { sendOrSave, drainOutbox, listSaved, refreshPending, getNetState, retryAllStuck, MAX_ATTEMPTS } from '@/lib/offline/outbox';
+import { POST as fileUploadUrl } from '@/app/api/files/upload-url/route';
+import { POST as fileRecord } from '@/app/api/files/record/route';
+import { addToOutbox, listOutbox, sendOrSave, drainOutbox, listSaved, refreshPending, getNetState, retryAllStuck, MAX_ATTEMPTS } from '@/lib/offline/outbox';
 import { CLIENT_ID_HEADER } from '@/lib/offline/client-id';
 
 /* ── the phone ─────────────────────────────────────────────────────────── */
@@ -83,7 +95,13 @@ const sent: Array<{ url: string; clientId: string | null }> = [];
 const req = (url: string, body: unknown, headers: Record<string, string> = {}) =>
   new NextRequest(`https://app.test${url}`, { method: 'POST', headers: { 'Content-Type': 'application/json', ...headers }, body: JSON.stringify(body) });
 
+const vg = globalThis as unknown as { videoSends: Array<{ projectId: string; clientId?: string }>; videoLoseAnswers: number };
+vg.videoSends = [];
+vg.videoLoseAnswers = 0;
+
 beforeEach(() => {
+  vg.videoSends.length = 0;
+  vg.videoLoseAnswers = 0;
   fake.reset();
   idb.reset();
   online = true;
@@ -186,6 +204,61 @@ describe('photo kept on the phone', () => {
 
     const other = await photoUploadUrl(req('/api/photos/upload-url', { projectId: JOB, fileName: 'photo.jpg' }, { [CLIENT_ID_HEADER]: 'photo-0002-cccc' }));
     expect((await other.json()).existing).toBeUndefined();
+  });
+});
+
+describe('video kept on the phone', () => {
+  test('outbox: a lost answer is sent again with the same client id, then the clip leaves the phone', async () => {
+    online = false;
+    await addToOutbox({ projectId: JOB, kind: 'video', album: null, name: 'pour.mov', type: 'video/quicktime', size: 4, file: new Blob(['clip']) });
+    const [kept] = await listOutbox(JOB);
+    expect(kept.clientId).toBeTruthy();
+
+    online = true;
+    vg.videoLoseAnswers = 1; // filed on the server, the phone never heard
+    await drainOutbox();
+    expect(await listOutbox()).toHaveLength(1);
+    await drainOutbox();
+    expect(await listOutbox()).toHaveLength(0);
+    expect(vg.videoSends).toHaveLength(2);
+    expect(vg.videoSends.map((v) => v.clientId)).toEqual([kept.clientId, kept.clientId]);
+  });
+
+  test('route: upload-url and record answer with the video already filed for that client id — one row, the stray copy removed', async () => {
+    const removed: string[][] = [];
+    (fake.db as unknown as { storage: unknown }).storage = {
+      from: () => ({
+        createSignedUploadUrl: async (p: string) => ({ data: { token: 't', signedUrl: `s/${p}` }, error: null }),
+        getPublicUrl: (p: string) => ({ data: { publicUrl: `https://store.test/object/public/project-files/${p}` } }),
+        remove: async (paths: string[]) => { removed.push(paths); return { error: null }; },
+      }),
+    };
+    const h = { [CLIENT_ID_HEADER]: 'video-0001-dddd' };
+    const rec = (path: string) => fileRecord(req('/api/files/record', { path, fileName: 'pour.mov', fileSize: 4, contentType: 'video/quicktime', projectId: JOB, category: 'video' }, h));
+    const p1 = `${TENANT}/projects/${JOB}/files/1-pour.mov`;
+    const first = await rec(p1);
+    expect(first.status).toBe(200);
+    const firstFile = (await first.json()).file;
+    expect(fake.T('project_files')).toHaveLength(1);
+    expect(fake.T('project_files')[0].client_id).toBe('video-0001-dddd');
+
+    const start = await fileUploadUrl(req('/api/files/upload-url', { projectId: JOB, fileName: 'pour.mov' }, h));
+    expect((await start.json()).existing?.id).toBe(firstFile.id); // the phone skips the upload
+
+    const p2 = `${TENANT}/projects/${JOB}/files/2-pour.mov`;
+    const second = await rec(p2);
+    const j2 = await second.json();
+    expect(j2.replayed).toBe(true);
+    expect(j2.file.id).toBe(firstFile.id);
+    expect(fake.T('project_files')).toHaveLength(1);
+    expect(removed).toEqual([[p2]]); // the second copy of the bytes, never the first
+
+    // A document upload (no client id) and a different clip still file normally.
+    const doc = await fileUploadUrl(req('/api/files/upload-url', { projectId: JOB, fileName: 'spec.pdf' }));
+    expect((await doc.json()).existing).toBeUndefined();
+    const other = await fileRecord(req('/api/files/record', { path: `${TENANT}/projects/${JOB}/files/3-b.mov`, fileName: 'b.mov', contentType: 'video/quicktime', projectId: JOB }, { [CLIENT_ID_HEADER]: 'video-0002-eeee' }));
+    expect(other.status).toBe(200);
+    expect(fake.T('project_files')).toHaveLength(2);
   });
 });
 

@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from 'next/server';
 import { createServerClient, getUser } from '@/lib/supabase-server';
 import { apiError } from '@/lib/api-error';
 import { CLOSED_PROJECT_STATUSES } from '@/lib/project-lifecycle';
+import { liveJobs } from '@/lib/live-jobs';
 import { buildJobDocs, type JobRow, type PayAppRow, type WaiverRow, type PayrollRow, type CloseoutRow } from '@/lib/documents-by-job';
 
 export const dynamic = 'force-dynamic';
@@ -14,7 +15,7 @@ export const dynamic = 'force-dynamic';
  * contract, pay apps, lien waivers, certified payroll, closeout, a red /
  * yellow / green tone and why) plus which pay apps have a waiver on file.
  * Every query is tenant-scoped. Active jobs always appear; a closed job only
- * when it still has paperwork.
+ * when it still has paperwork; an archived or deleted job never (lib/live-jobs).
  */
 export async function GET(req: NextRequest) {
   const user = await getUser(req);
@@ -34,7 +35,7 @@ export async function GET(req: NextRequest) {
     const [projects, payApps, waivers, payroll, closeout] = await Promise.all([
       rows(projectId
         ? db.from('projects').select('*').eq('tenant_id', t).eq('id', projectId)
-        : db.from('projects').select('*').eq('tenant_id', t).limit(500)),
+        : liveJobs(db.from('projects').select('*').eq('tenant_id', t)).limit(500)),
       rows(scoped(db.from('pay_applications')
         .select('id, project_id, app_number, status, current_payment_due, net_payment_due, total_completed_stored, conditional_waiver_signed, unconditional_waiver_signed')
         .eq('tenant_id', t).is('deleted_at', null)).limit(2000)),

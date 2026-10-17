@@ -12,7 +12,7 @@ import { FlatStyles, RowSkeleton } from '@/components/ui/flat';
 type VStatus = 'pending' | 'verified' | 'rejected';
 const STATUS_COLOR: Record<VStatus, string> = { pending: C.gold, verified: C.green, rejected: C.red };
 const STATUS_LABEL: Record<VStatus, string> = { pending: 'Pending', verified: 'Verified', rejected: 'Rejected' };
-const STATUS_TONE: Record<VStatus, 'gold' | 'green' | 'red'> = { pending: 'gold', verified: 'green', rejected: 'red' };
+const STATUS_TONE: Record<VStatus, 'amber' | 'green' | 'red'> = { pending: 'amber', verified: 'green', rejected: 'red' };
 
 // Verification methods — remote evidence types plus a physical on-site visit.
 const METHOD_META: Record<string, { label: string; linkLabel: string }> = {

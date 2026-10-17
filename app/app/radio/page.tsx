@@ -3409,7 +3409,6 @@ export default function RadioDispatchPage() {
       <PageShell
         crumbs={[{ label: 'Home', href: '/app' }, { label: 'Radio' }]}
         title="Radio"
-        subtitle="Dispatch console — push-to-talk for the crew, with English and Spanish transcripts. Connection state is real: transmissions only show once they arrive."
         actions={
           <>
             {/* Assistance queue toggle — badge counts the live queue */}
@@ -4277,10 +4276,6 @@ export default function RadioDispatchPage() {
             </button>
           </div>
 
-          {/* The honest line about what this transport actually is. */}
-          <div style={{ fontSize: 12, color: FAINT, marginTop: 9, lineHeight: 1.45 }}>
-            Push-to-talk clips: your key-down records, your release delivers, and every member&apos;s console plays it back — typically in about a second. {streamStatus}
-          </div>
         </div>
       </div>
 

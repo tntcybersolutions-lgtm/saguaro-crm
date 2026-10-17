@@ -23,6 +23,7 @@ import {
   CHART,
   CARD_SURFACE,
   cardShadow,
+  CHART_FRAME,
   microLabel,
   accentColors,
   computeDelta,
@@ -94,27 +95,12 @@ export function TrendArea({
         position: 'relative',
         overflow: 'hidden',
         background: CARD_SURFACE,
-        border: `1px solid ${CHART.border}`,
-        borderRadius: 16,
-        padding: '14px 16px 8px',
+        ...CHART_FRAME,
+        padding: '14px 0 8px',
         boxShadow: cardShadow,
         ...style,
       }}
     >
-      {/* left accent bar — StatCard signature */}
-      <div
-        aria-hidden
-        style={{
-          position: 'absolute',
-          left: 0,
-          top: 0,
-          bottom: 0,
-          width: 3,
-          background: `linear-gradient(180deg, ${main}, transparent)`,
-          opacity: 0.85,
-        }}
-      />
-
       {showHeader && (
         <div
           style={{

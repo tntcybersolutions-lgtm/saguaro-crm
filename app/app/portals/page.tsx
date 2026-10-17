@@ -24,7 +24,7 @@ import {
   FormModal, Field, Input, Select, FormGrid, Toast, useToast,
   type Column, type Action, type BadgeTone, type StatItem,
 } from '@/components/ui/kit';
-import { FlowStrip, AutoChip } from '@/components/ui/premium';
+import { AutoChip } from '@/components/ui/premium';
 import { useUnsavedGuard, useComposerDirty } from '@/lib/useUnsavedGuard';
 import UnsavedGuardModal from '@/components/UnsavedGuardModal';
 
@@ -79,7 +79,7 @@ const CSS = `
 .poMuted { color: var(--text-tertiary); }
 .poSoon { color: var(--status-under-contract); font-weight: 700; }
 .poLate { color: var(--status-overdue); font-weight: 700; }
-.poNever { color: var(--status-under-contract); font-weight: 600; }
+.poNever { color: var(--warning); font-weight: 600; }
 .poTabs { padding: 0 16px; }
 .poFlow { padding: 0; }
 .poSuccess { text-align: center; }
@@ -270,10 +270,12 @@ export default function PortalsPage() {
   const activeSubSessions = subSessions.filter(s => s.status === 'active');
   const clientActive = activeClientSessions.length;
   const subActive = activeSubSessions.length;
+  // Covered = live jobs with an active portal (never more than the jobs on the books).
+  const liveIds = new Set(projects.map(p => p.id));
   const coveredProjects = new Set([
     ...activeClientSessions.map(s => s.project_id),
     ...activeSubSessions.map(s => s.project_id),
-  ]).size;
+  ].filter(id => !!id && liveIds.has(id))).size;
   const neverOpened = activeClientSessions.filter(s => !lastSeen(s)).length
     + activeSubSessions.filter(s => !s.last_login_at).length;
   const expiring30 = activeClientSessions.filter(s => {
@@ -350,7 +352,7 @@ export default function PortalsPage() {
       <PageShell
         crumbs={[{ label: 'Home', href: '/app' }, { label: 'Portals' }]}
         title="Portal Access"
-        subtitle="Secure, no-password links for owners and subs — each portal shows one project, and you can revoke any link at any time."
+        subtitle="No-password links for owners and subs, one job each."
         actions={
           <>
             <Button icon={<Plus size={15} weight="bold" />} onClick={() => openInvite('sub')}>Invite Subcontractor</Button>
@@ -360,14 +362,6 @@ export default function PortalsPage() {
       >
         {!loadError && <StatRow items={stats} />}
 
-        <Card title="How Portal Access Works" subtitle="Four steps — no accounts to create on their side.">
-          <FlowStrip steps={[
-            { title: 'Create Access', desc: 'Invite a client or subcontractor above' },
-            { title: 'Copy the Link', desc: 'The portal URL appears the moment access is created' },
-            { title: 'Send to Them', desc: 'Email or text the link — no password needed' },
-            { title: 'They Log In', desc: 'Open the link, or enter their email at the portal login' },
-          ]} />
-        </Card>
 
         <Card flush>
           <div className="poTabs">

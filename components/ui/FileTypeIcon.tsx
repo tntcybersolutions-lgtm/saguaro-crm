@@ -8,17 +8,19 @@
  */
 import React from 'react';
 
+/* The format reads from the colour and the glyph's lines; the type name is
+   the icon's accessible title. (The 5.6px "PDF" text that used to sit inside
+   the 18px glyph was below the 12px text floor and unreadable on a phone.) */
 function FileGlyph({ color, label, size = 18 }: { color: string; label: string; size?: number }) {
   const w = size, h = Math.round(size * 1.18);
   return (
-    <svg width={w} height={h} viewBox="0 0 20 24" fill="none" aria-hidden focusable="false">
+    <svg width={w} height={h} viewBox="0 0 20 24" fill="none" role="img" aria-label={`${label} file`} focusable="false">
+      <title>{`${label} file`}</title>
       <path d="M2 3a2 2 0 0 1 2-2h8.5L18 6.5V21a2 2 0 0 1-2 2H4a2 2 0 0 1-2-2V3z" fill={color} />
       <path d="M12.5 1 18 6.5h-4.5a1 1 0 0 1-1-1V1z" fill="rgba(255,255,255,0.45)" />
-      <rect x="2" y="12.5" width="16" height="7.5" rx="1.2" fill="rgba(0,0,0,0.28)" />
-      <text x="10" y="18.4" textAnchor="middle" fontSize="5.6" fontWeight="800" fill="var(--text-primary)"
-        fontFamily="-apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif" letterSpacing="0.4">
-        {label}
-      </text>
+      <rect x="5" y="11" width="10" height="1.6" rx="0.8" fill="rgba(255,255,255,0.85)" />
+      <rect x="5" y="14.5" width="10" height="1.6" rx="0.8" fill="rgba(255,255,255,0.85)" />
+      <rect x="5" y="18" width="6.5" height="1.6" rx="0.8" fill="rgba(255,255,255,0.85)" />
     </svg>
   );
 }

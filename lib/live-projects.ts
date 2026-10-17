@@ -1,4 +1,7 @@
+import { liveJobs, isLiveJob } from '@/lib/live-jobs';
+
 /**
+ * Same rule as lib/live-jobs (this file delegates to it).
  * Live jobs — one rule for every job list, count and rollup.
  *
  * A job is live unless it was archived (projects.is_archived, set with
@@ -8,19 +11,14 @@
  * archived jobs; every other list, picker, count and rollup goes through here.
  */
 
-type ProjectFlags = {
-  is_archived?: boolean | null;
-  is_deleted?: boolean | null;
-  deleted_at?: string | null;
-};
+type ProjectFlags = Parameters<typeof isLiveJob>[0];
 
 /** The columns isLiveProject reads — add them to a select that filters in memory. */
-export const LIVE_PROJECT_COLUMNS = 'is_archived, is_deleted, deleted_at';
+export const LIVE_PROJECT_COLUMNS = 'is_archived, archived_at, is_deleted, deleted_at';
 
 /** In-memory form of the rule, for rows that were already read. */
-export function isLiveProject(p: ProjectFlags | null | undefined): boolean {
-  if (!p) return false;
-  return p.is_archived !== true && p.is_deleted !== true && !p.deleted_at;
+export function isLiveProject(p: ProjectFlags): boolean {
+  return isLiveJob(p);
 }
 
 /**
@@ -29,11 +27,7 @@ export function isLiveProject(p: ProjectFlags | null | undefined): boolean {
  */
 export function onlyLiveProjects<Q>(query: Q): Q {
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  const q = query as any;
-  return q
-    .or('is_archived.is.null,is_archived.eq.false')
-    .or('is_deleted.is.null,is_deleted.eq.false')
-    .is('deleted_at', null) as Q;
+  return liveJobs(query as any) as Q;
 }
 
 /**
@@ -47,7 +41,7 @@ export async function hiddenProjectIds(db: any, tenantId: string): Promise<Set<s
     .from('projects')
     .select('id')
     .eq('tenant_id', tenantId)
-    .or('is_archived.eq.true,is_deleted.eq.true,deleted_at.not.is.null');
+    .or('is_archived.eq.true,archived_at.not.is.null,is_deleted.eq.true,deleted_at.not.is.null');
   if (error) throw error;
   return new Set(((data || []) as { id: string }[]).map((r) => r.id));
 }

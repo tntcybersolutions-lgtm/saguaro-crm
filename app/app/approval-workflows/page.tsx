@@ -134,10 +134,9 @@ const btnBase = (bg: string, fg: string, outlined = false): React.CSSProperties 
   transition: 'opacity .15s, filter .15s',
   display: 'inline-flex', alignItems: 'center', gap: 6, whiteSpace: 'nowrap',
 });
+/* Flat: a block on the page under a hairline, not a filled card. */
 const card: React.CSSProperties = {
-  background: 'linear-gradient(160deg, rgba(255,255,255,0.045), rgba(255,255,255,0.012))',
-  border: '1px solid rgba(255,255,255,0.08)', borderRadius: 16, padding: 20, marginBottom: 12,
-  boxShadow: '0 10px 30px -20px rgba(0,0,0,0.6), inset 0 1px 0 rgba(255,255,255,0.04)',
+  borderTop: '1px solid var(--border-default)', padding: '16px 0', marginBottom: 12,
 };
 const inputStyle: React.CSSProperties = {
   width: '100%', padding: '8px 12px', borderRadius: 'var(--radius-sm)', border: '1px solid var(--border-default)',
@@ -441,16 +440,15 @@ export default function ApprovalWorkflowsPage() {
   const tabButton = (t: Tab, label: string, Icon: React.ElementType, count?: number) => (
     <button key={t} onClick={() => setTab(t)} style={{
       ...btnBase(t === tab ? GOLD : BORDER, t === tab ? 'var(--on-brand)' : DIM, t !== tab),
-      background: t === tab
-        ? 'var(--brand-primary)'
-        : 'linear-gradient(180deg, rgba(255,255,255,0.05), rgba(255,255,255,0.02))',
+      background: t === tab ? 'var(--brand-primary)' : 'transparent',
+      minHeight: 40,
       color: t === tab ? 'var(--on-brand)' : DIM,
       border: `1px solid ${t === tab ? 'transparent' : 'var(--border-default)'}`, position: 'relative',
-      boxShadow: t === tab ? '0 4px 14px var(--brand-primary-25), inset 0 1px 0 rgba(255,255,255,0.35)' : 'none',
+      boxShadow: 'none',
     }}>
       <Icon size={15} weight={t === tab ? 'fill' : 'bold'} />{label}
       {count !== undefined && count > 0 && (
-        <span style={{ marginLeft: 2, background: t === tab ? '#00000022' : RED, color: t === tab ? 'var(--bg-base)' : 'var(--text-primary)', borderRadius: 10, minWidth: 18, height: 18, padding: '0 5px', fontSize: 12, fontWeight: 800, display: 'inline-flex', alignItems: 'center', justifyContent: 'center' }}>{count}</span>
+        <span style={{ marginLeft: 2, background: t === tab ? 'color-mix(in srgb, var(--bg-base) 14%, transparent)' : RED, color: t === tab ? 'var(--bg-base)' : 'var(--text-primary)', borderRadius: 10, minWidth: 18, height: 18, padding: '0 5px', fontSize: 12, fontWeight: 800, display: 'inline-flex', alignItems: 'center', justifyContent: 'center' }}>{count}</span>
       )}
     </button>
   );
@@ -519,11 +517,11 @@ export default function ApprovalWorkflowsPage() {
 
         {/* summary */}
         <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(180px, 1fr))', gap: 12, marginBottom: 24 }}>
-          <StatCard icon={<TreeStructure size={19} weight="duotone" color={GREEN} />} label="Active Workflows" value={String(activeCount)} accent={GREEN} delay={0.02}  href="/app/approval-workflows"/>
-          <StatCard icon={<Power size={19} weight="duotone" color={DIM} />} label="Disabled" value={String(workflows.length - activeCount)} delay={0.06}  href="/app/approval-workflows"/>
-          <StatCard icon={<Clock size={19} weight="duotone" color={AMBER} />} label="Pending Approvals" value={String(pending.length)} accent={AMBER} delay={0.10}  href="/app/approval-workflows"/>
-          <StatCard icon={<CheckCircle size={19} weight="duotone" color={GREEN} />} label="Approved" value={String(approvedCount)} accent={GREEN} delay={0.14}  href="/app/approval-workflows"/>
-          <StatCard icon={<XCircle size={19} weight="duotone" color={RED} />} label="Rejected" value={String(rejectedCount)} accent={RED} delay={0.18}  href="/app/approval-workflows"/>
+          <StatCard icon={<TreeStructure size={19} weight="duotone" color={GREEN} />} label="Active Workflows" value={String(activeCount)} accent={GREEN} delay={0.02}/>
+          <StatCard icon={<Power size={19} weight="duotone" color={DIM} />} label="Disabled" value={String(workflows.length - activeCount)} delay={0.06}/>
+          <StatCard icon={<Clock size={19} weight="duotone" color={AMBER} />} label="Pending Approvals" value={String(pending.length)} accent={AMBER} delay={0.10}/>
+          <StatCard icon={<CheckCircle size={19} weight="duotone" color={GREEN} />} label="Approved" value={String(approvedCount)} accent={GREEN} delay={0.14}/>
+          <StatCard icon={<XCircle size={19} weight="duotone" color={RED} />} label="Rejected" value={String(rejectedCount)} accent={RED} delay={0.18}/>
         </div>
 
         {/* tabs */}

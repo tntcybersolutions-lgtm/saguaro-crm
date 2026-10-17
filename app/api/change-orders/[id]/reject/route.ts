@@ -2,7 +2,7 @@ import { NextRequest, NextResponse } from 'next/server';
 import { requirePermission } from '@/lib/permissions';
 import { createNotification } from '@/lib/notifications';
 import { apiError } from '@/lib/api-error';
-import { writeChangeOrder } from '@/lib/change-order-status';
+import { writeChangeOrder, coWriteFailure } from '@/lib/change-order-status';
 
 export async function PUT(req: NextRequest, { params }: { params: Promise<{ id: string }> }) {
   const { id } = await params;
@@ -23,7 +23,7 @@ export async function PUT(req: NextRequest, { params }: { params: Promise<{ id: 
     // change_orders has two identical FKs to projects; name the *_fkey one (see lib/db-embeds).
     const w = await writeChangeOrder(db, user.tenantId, id, { status: 'rejected', rejection_reason: body.reason || null },
       { actorId: user.id, before: before as Record<string, unknown>, select: '*, projects!change_orders_project_id_fkey(*)' });
-    if (!w.ok) return NextResponse.json({ error: w.error }, { status: w.status });
+    if (!w.ok) { const f = coWriteFailure(w); return NextResponse.json(f.body, { status: f.status }); }
     const co = w.after;
 
     const c = co as Record<string, unknown>;

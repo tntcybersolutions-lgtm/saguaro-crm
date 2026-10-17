@@ -232,6 +232,7 @@ export default function IntegrationsHubPage() {
 
   const market = MARKETPLACE.filter((m) => m.key !== 'quickbooks' || qbListed);
   const liveKeys = keys.filter((k) => !k.revoked_at);
+  const [showRevoked, setShowRevoked] = useState(false);
   const activeHooks = hooks.filter((h) => h.active);
 
   const compactGhost: React.CSSProperties = { ...ghostButtonStyle, padding: '7px 12px', fontSize: 12 };
@@ -259,10 +260,10 @@ export default function IntegrationsHubPage() {
       {/* Live figures — keys and webhooks come straight from the API. */}
       {!loading && (
         <StatStrip items={[
-          {href: '/app/settings/integrations-hub', label: 'Marketplace', value: String(market.length), sub: 'Live integrations' },
-          {href: '/app/settings/integrations-hub', label: 'Active API Keys', value: String(liveKeys.length), sub: keys.length > liveKeys.length ? `${keys.length - liveKeys.length} revoked` : 'None revoked' },
-          {href: '/app/settings/integrations-hub', label: 'Webhooks', value: String(hooks.length), sub: hooks.length ? `${activeHooks.length} active` : 'None configured' },
-          {href: '/app/settings/integrations-hub', label: 'Events Emitted', value: String(WEBHOOK_EVENTS.length), sub: 'Subscribable event types' },
+          {label: 'Marketplace', value: String(market.length), sub: 'Live integrations' },
+          {label: 'Active API Keys', value: String(liveKeys.length), sub: keys.length > liveKeys.length ? `${keys.length - liveKeys.length} revoked` : 'None revoked' },
+          {label: 'Webhooks', value: String(hooks.length), sub: hooks.length ? `${activeHooks.length} active` : 'None configured' },
+          {label: 'Events Emitted', value: String(WEBHOOK_EVENTS.length), sub: 'Subscribable event types' },
         ]} />
       )}
 
@@ -276,19 +277,19 @@ export default function IntegrationsHubPage() {
         }}
       >
         {market.map((m) => (
-          <SectionCard key={m.key} bodyStyle={{ display: 'flex', flexDirection: 'column', gap: 10, height: '100%' }}>
+          <SectionCard flat key={m.key} bodyStyle={{ display: 'flex', flexDirection: 'column', gap: 10, height: '100%' }}>
             <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
-              <IconChip size={40}><Plugs size={20} color="var(--text-secondary)" weight="duotone" /></IconChip>
+              <Plugs size={22} color="var(--text-secondary)" weight="duotone" />
               <div style={{ fontSize: 15, fontWeight: 700, color: WHITE }}>{m.name}</div>
             </div>
             <p style={{ margin: 0, fontSize: 13, color: MUTED, lineHeight: 1.5, flex: 1 }}>{m.desc}</p>
             <div style={{ marginTop: 6 }}>
               {m.state === 'connect' ? (
-                <Link href={m.href} style={{ ...secondaryButtonStyle, width: '100%', padding: '9px 16px', fontSize: 13, boxSizing: 'border-box' }} className="pmBtn">
+                <Link href={m.href} style={{ ...secondaryButtonStyle, padding: '0 16px', minHeight: 44, fontSize: 13, boxSizing: 'border-box' }} className="pmBtn">
                   <LinkSimple size={14} weight="bold" /> Connect
                 </Link>
               ) : (
-                <a href={m.href} style={{ ...ghostButtonStyle, width: '100%', padding: '9px 16px', fontSize: 13, boxSizing: 'border-box' }} className="pmBtn">
+                <a href={m.href} style={{ ...ghostButtonStyle, padding: '0 16px', minHeight: 44, fontSize: 13, boxSizing: 'border-box' }} className="pmBtn">
                   <ArrowSquareOut size={14} weight="bold" /> Request Access
                 </a>
               )}
@@ -301,8 +302,8 @@ export default function IntegrationsHubPage() {
       <div id="api-keys" style={{ scrollMarginTop: 72 }} />
       <SectionCard
         title="API Keys"
-        subtitle="REST API keys. The full key is shown once and never again."
-        icon={<Key size={17} color="var(--text-secondary)" weight="duotone" />}
+        subtitle="A new key is shown once."
+        flat
         style={{ marginBottom: 24 }}
       >
         <div style={{ display: 'flex', flexDirection: 'column', gap: 18 }}>
@@ -326,7 +327,7 @@ export default function IntegrationsHubPage() {
           )}
 
           {/* Create form */}
-          <div style={{ display: 'flex', flexDirection: 'column', gap: 12, padding: 16, background: 'linear-gradient(180deg, rgba(255,255,255,0.04), rgba(255,255,255,0.015))', borderRadius: 12, border: `1px solid ${BORDER}` }}>
+          <div style={{ display: 'flex', flexDirection: 'column', gap: 12 }}>
             <div>
               <label style={labelStyle}>Key Name</label>
               <input style={inputStyle} placeholder="e.g. Reporting pipeline" value={keyName} onChange={(e) => setKeyName(e.target.value)} />
@@ -342,10 +343,10 @@ export default function IntegrationsHubPage() {
                       onClick={() => toggleScope(s)}
                       className="pmTile"
                       style={{
-                        padding: '6px 14px', borderRadius: 20, fontSize: 12, fontWeight: 700, cursor: 'pointer',
-                        border: `1px solid ${on ? 'var(--brand-primary-35)' : BORDER}`,
-                        background: on ? 'var(--brand-primary-12)' : 'rgba(255,255,255,0.04)',
-                        color: on ? GOLD_HI : MUTED,
+                        padding: '0 16px', minHeight: 40, borderRadius: 10, fontSize: 13, fontWeight: 700, cursor: 'pointer',
+                        border: `1px solid ${on ? 'var(--brand-primary)' : BORDER}`,
+                        background: on ? 'var(--brand-primary)' : 'transparent',
+                        color: on ? 'var(--on-brand)' : MUTED,
                       }}
                     >
                       {s.charAt(0).toUpperCase() + s.slice(1)}
@@ -366,11 +367,11 @@ export default function IntegrationsHubPage() {
             {loading && <><SkeletonRow /><SkeletonRow /></>}
             {!loading && keys.length === 0 && (
               <div style={{ fontSize: 13, color: FAINT, lineHeight: 1.5 }}>
-                No API keys yet. Create one above to call the Saguaro REST API — see the API Docs for endpoints and auth.
+                No API keys yet.
               </div>
             )}
-            {!loading && keys.map((k) => (
-              <div key={k.id} style={{ display: 'flex', alignItems: 'center', gap: 12, padding: '12px 14px', background: 'linear-gradient(180deg, rgba(255,255,255,0.04), rgba(255,255,255,0.015))', borderRadius: 10, border: `1px solid ${BORDER}`, flexWrap: 'wrap' }}>
+            {!loading && keys.filter((k) => showRevoked || !k.revoked_at).map((k) => (
+              <div key={k.id} style={{ display: 'flex', alignItems: 'center', gap: 12, padding: '12px 0', borderTop: `1px solid ${BORDER}`, flexWrap: 'wrap', opacity: k.revoked_at ? 0.7 : 1 }}>
                 <div style={{ flex: 1, minWidth: 160 }}>
                   <div style={{ fontSize: 14, fontWeight: 600, color: WHITE }}>{k.name}</div>
                   <div style={{ fontSize: 12, color: FAINT, fontFamily: 'monospace', marginTop: 2 }}>{k.key_prefix}••••••••</div>
@@ -383,6 +384,12 @@ export default function IntegrationsHubPage() {
                   : <button onClick={() => revokeKey(k.id)} style={compactDanger} className="pmBtn"><Trash size={14} weight="bold" /> Revoke</button>}
               </div>
             ))}
+            {/* Revoked keys are history, not work: tucked behind one toggle. */}
+            {!loading && keys.some((k) => k.revoked_at) && (
+              <button type="button" onClick={() => setShowRevoked((v) => !v)} style={{ ...compactGhost, alignSelf: 'flex-start' }} className="pmBtn">
+                {showRevoked ? 'Hide revoked' : `Show revoked (${keys.filter((k) => k.revoked_at).length})`}
+              </button>
+            )}
           </div>
         </div>
       </SectionCard>

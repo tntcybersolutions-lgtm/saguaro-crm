@@ -74,7 +74,7 @@ export default function PaymentsSettingsPage() {
     : !status.configured ? {
       tone: 'neutral' as const,
       title: "Online payments aren't available yet",
-      text: "Saguaro's payment connection isn't switched on for this site. Invoices still go out by email and can be marked paid by hand.",
+      text: "Invoices still go out by email and can be marked paid by hand.",
     }
     : status.ready ? {
       tone: 'good' as const,
@@ -130,7 +130,7 @@ export default function PaymentsSettingsPage() {
                   <WarningCircle size={18} weight="fill" /> {actionError}
                 </p>
               )}
-              <div style={{ display: 'grid', gap: 10 }}>
+              <div style={{ display: 'flex', flexWrap: 'wrap', gap: 10 }}>
                 {status.configured && canSetUp && (
                   <Button variant={status.ready ? 'secondary' : 'primary'} icon={status.ready ? <ArrowSquareOut size={16} /> : <CreditCard size={16} weight="bold" />} onClick={connect} disabled={opening}>
                     {setupLabel}

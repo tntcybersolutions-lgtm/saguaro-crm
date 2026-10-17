@@ -3,6 +3,7 @@ import { createServerClient, getUser } from '@/lib/supabase-server';
 import { signUrl } from '@/lib/storage-signing';
 import { addDays, requestDay } from '@/lib/time-zone';
 import { apiError } from '@/lib/api-error';
+import { liveJobs } from '@/lib/live-jobs';
 import { getEffectivePermissions, hasPermission, type PermCategory } from '@/lib/permissions';
 
 export const dynamic = 'force-dynamic';
@@ -61,7 +62,7 @@ export async function GET(req: NextRequest) {
   ] = await Promise.all([
     /* project-summary */
     guard(async () => {
-      const { data } = await db.from('projects').select('status').eq('tenant_id', t);
+      const { data } = await liveJobs(db.from('projects').select('status').eq('tenant_id', t));
       const rows = data || [];
       const has = (s: string) => rows.filter(r => (r.status || '') === s).length;
       return {
@@ -76,7 +77,7 @@ export async function GET(req: NextRequest) {
     /* budget-overview */
     guard(skip('budget-overview', async () => {
       const [{ data: proj }, { data: pay }, { data: cos }] = await Promise.all([
-        db.from('projects').select('contract_value').eq('tenant_id', t).eq('status', 'active'),
+        liveJobs(db.from('projects').select('contract_value').eq('tenant_id', t).eq('status', 'active')),
         db.from('pay_applications').select('current_payment_due').eq('tenant_id', t).in('status', ['submitted', 'approved']),
         db.from('change_orders').select('amount').eq('tenant_id', t).eq('status', 'approved'),
       ]);
@@ -218,7 +219,7 @@ export async function GET(req: NextRequest) {
 
     /* weather (location echo — no live feed server-side) */
     guard(async () => {
-      const { data } = await db.from('projects').select('city, state').eq('tenant_id', t).eq('status', 'active').limit(1);
+      const { data } = await liveJobs(db.from('projects').select('city, state').eq('tenant_id', t).eq('status', 'active')).limit(1);
       const p = (data || [])[0] as any;
       const location = p && (p.city || p.state) ? [p.city, p.state].filter(Boolean).join(', ') : null;
       return { location };

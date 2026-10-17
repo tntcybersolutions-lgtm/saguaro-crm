@@ -17,8 +17,15 @@ export async function POST(req: NextRequest) {
       return NextResponse.json({ error: 'projectId and title are required' }, { status: 400 });
     }
 
+    /* stage 'pco': a potential change — an event with a rough estimate (a low
+       and a high), no money. Its amount is the midpoint until it is priced
+       (lib/change-order-stages promoteToRequest). Anything else is a request. */
+    const isPco = body.stage === 'pco';
+    const estMin = Number(body.estimatedMin ?? body.estimated_min ?? 0) || 0;
+    const estMax = Number(body.estimatedMax ?? body.estimated_max ?? 0) || 0;
     // Accept both camelCase and snake_case for every field the clients send.
-    const amount = Number(body.amount ?? body.costImpact ?? body.cost_impact ?? 0) || 0;
+    const explicit = Number(body.amount ?? body.costImpact ?? body.cost_impact ?? 0) || 0;
+    const amount = explicit || (isPco && (estMin || estMax) ? Math.round(((estMin + (estMax || estMin)) / 2) * 100) / 100 : 0);
     const scheduleImpactDays = body.scheduleImpact ?? body.schedule_impact_days ?? body.scheduleImpactDays ?? body.schedule_impact ?? null;
     const scheduleImpact = scheduleImpactDays != null ? Number(scheduleImpactDays) || 0 : 0;
 
@@ -44,7 +51,9 @@ export async function POST(req: NextRequest) {
       title,
       description: body.description ?? null,
       reason: body.reason ?? null,
-      status: 'pending',
+      status: isPco ? 'draft' : 'pending',
+      stage: isPco ? 'pco' : 'cor',
+      ...(isPco ? { estimated_min: estMin ? String(estMin) : null, estimated_max: estMax ? String(estMax) : null } : { submitted_at: new Date().toISOString() }),
       // Lists & detail screens read `amount`; keep `cost_impact` in sync for callers that read it.
       amount,
       cost_impact: amount,

@@ -596,6 +596,10 @@ export type Database = {
         Row: {
           decided_at: string
           decided_by: string | null
+          amount: number | null
+          approver_level: string | null
+          approver_role: string | null
+          decided_by_id: string | null
           decision: string
           entity_id: string
           entity_type: string
@@ -608,6 +612,10 @@ export type Database = {
         Insert: {
           decided_at?: string
           decided_by?: string | null
+          amount?: number | null
+          approver_level?: string | null
+          approver_role?: string | null
+          decided_by_id?: string | null
           decision: string
           entity_id: string
           entity_type: string
@@ -620,6 +628,10 @@ export type Database = {
         Update: {
           decided_at?: string
           decided_by?: string | null
+          amount?: number | null
+          approver_level?: string | null
+          approver_role?: string | null
+          decided_by_id?: string | null
           decision?: string
           entity_id?: string
           entity_type?: string
@@ -4073,6 +4085,8 @@ export type Database = {
           billable_to: string | null
           change_type: string | null
           co_number: number
+          stage: string | null
+          cor_id: string | null
           contract_reference: string | null
           contractor_signature: string | null
           contractor_signed_at: string | null
@@ -4152,6 +4166,8 @@ export type Database = {
           billable_to?: string | null
           change_type?: string | null
           co_number?: number
+          stage?: string | null
+          cor_id?: string | null
           contract_reference?: string | null
           contractor_signature?: string | null
           contractor_signed_at?: string | null
@@ -4231,6 +4247,8 @@ export type Database = {
           billable_to?: string | null
           change_type?: string | null
           co_number?: number
+          stage?: string | null
+          cor_id?: string | null
           contract_reference?: string | null
           contractor_signature?: string | null
           contractor_signed_at?: string | null
@@ -30073,6 +30091,7 @@ export type Database = {
           company_city: string | null
           company_dba: string | null
           company_email: string | null
+          co_approval_tiers: Json | null
           company_name: string | null
           company_phone: string | null
           company_state: string | null
@@ -30106,6 +30125,7 @@ export type Database = {
           company_city?: string | null
           company_dba?: string | null
           company_email?: string | null
+          co_approval_tiers?: Json | null
           company_name?: string | null
           company_phone?: string | null
           company_state?: string | null
@@ -30139,6 +30159,7 @@ export type Database = {
           company_city?: string | null
           company_dba?: string | null
           company_email?: string | null
+          co_approval_tiers?: Json | null
           company_name?: string | null
           company_phone?: string | null
           company_state?: string | null
@@ -31377,6 +31398,7 @@ export type Database = {
           assigned_by: string | null
           created_at: string | null
           id: string
+          permissions: Json | null
           project_id: string | null
           role_id: string | null
           tenant_id: string
@@ -31386,6 +31408,7 @@ export type Database = {
           assigned_by?: string | null
           created_at?: string | null
           id?: string
+          permissions?: Json | null
           project_id?: string | null
           role_id?: string | null
           tenant_id: string
@@ -31395,6 +31418,7 @@ export type Database = {
           assigned_by?: string | null
           created_at?: string | null
           id?: string
+          permissions?: Json | null
           project_id?: string | null
           role_id?: string | null
           tenant_id?: string

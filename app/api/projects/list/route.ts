@@ -5,6 +5,7 @@ import { onlyLiveProjects } from '@/lib/live-projects';
 import { jobHealth } from '@/lib/job-health';
 import { jobStage, billedPct } from '@/lib/job-page';
 import { isDoneStatus } from '@/lib/project-lifecycle';
+import { jobsClosedTo } from '@/lib/permissions';
 
 export async function GET(req: NextRequest) {
   try {
@@ -20,7 +21,9 @@ export async function GET(req: NextRequest) {
       .eq('tenant_id', user.tenantId))
       .order('created_at', { ascending: false });
     if (error) throw error;
-    const projects = data || [];
+    // A job this person has "No access" on is not in their list (job roles).
+    const closed = await jobsClosedTo(db, user.id, user.tenantId);
+    const projects = (data || []).filter((p) => !closed.has(p.id));
 
     /* LIVE OPEN-ITEM COUNTS.
      *

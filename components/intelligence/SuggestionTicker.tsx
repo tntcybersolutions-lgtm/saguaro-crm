@@ -127,7 +127,7 @@ const TICKER_FX = `
 .sgTickerTrack{display:inline-flex;align-items:center;will-change:transform}
 .sgTickerViewport:hover .sgTickerTrack{animation-play-state:paused}
 .sgTickerItem{transition:background .15s ease,border-color .15s ease}
-.sgTickerItem:hover{background:rgba(255,255,255,0.07)!important;border-color:rgba(255,255,255,0.18)!important}
+.sgTickerItem:hover{background:var(--bg-row-hover)!important}
 .sgTickerX{position:relative;opacity:.35;transition:opacity .15s ease,color .15s ease}
 .sgTickerX::after{content:'';position:absolute;inset:-14px -10px}
 .sgTickerItem:hover .sgTickerX{opacity:.75}
@@ -170,8 +170,7 @@ function TickerItem({
       onClick={() => onAccept(s)}
       style={{
         display: 'inline-flex', alignItems: 'center', gap: 9, flexShrink: 0,
-        margin: '0 5px', padding: '6px 13px 6px 10px', borderRadius: 999,
-        background: 'rgba(255,255,255,0.035)', border: `1px solid ${BORDER}`,
+        margin: '0 4px', padding: '6px 10px', borderRadius: 8, minHeight: 36,
         textDecoration: 'none', whiteSpace: 'nowrap',
       }}
     >
@@ -179,7 +178,7 @@ function TickerItem({
         aria-hidden
         style={{
           width: 7, height: 7, borderRadius: 999, flexShrink: 0,
-          background: c, boxShadow: `0 0 8px ${c}`,
+          background: c,
         }}
       />
       <span style={{
@@ -237,9 +236,8 @@ export default function SuggestionTicker({ style }: { style?: React.CSSPropertie
       aria-label={`${suggestions.length} live suggestions`}
       style={{
         position: 'relative', display: 'flex', alignItems: 'stretch',
-        background: 'linear-gradient(160deg, rgba(255,255,255,0.045), rgba(255,255,255,0.012))',
-        border: `1px solid ${BORDER}`, borderRadius: 14, overflow: 'hidden',
-        boxShadow: 'inset 0 1px 0 rgba(255,255,255,0.06), inset 0 0 0 1px rgba(255,255,255,0.03)',
+        // Flat: a strip between two hairlines, not a boxed card.
+        borderTop: '1px solid var(--border-default)', borderBottom: '1px solid var(--border-default)', overflow: 'hidden',
         ...style,
       }}
     >
@@ -248,12 +246,12 @@ export default function SuggestionTicker({ style }: { style?: React.CSSPropertie
       {/* Left cap — live pulse + counts + honest total $ at stake */}
       <div style={{
         display: 'flex', alignItems: 'center', gap: 10, flexShrink: 0,
-        padding: '10px 16px', borderRight: `1px solid ${BORDER}`,
-        background: 'rgba(20,20,22,0.6)', position: 'relative', zIndex: 1,
+        padding: '10px 14px 10px 0', borderRight: '1px solid var(--border-default)',
+        background: 'var(--bg-base)', position: 'relative', zIndex: 1,
       }}>
         <span aria-hidden style={{
           width: 8, height: 8, borderRadius: 999, background: worst,
-          boxShadow: `0 0 10px ${worst}`, animation: 'sgTickerDot 2s ease-in-out infinite',
+          animation: 'sgTickerDot 2s ease-in-out infinite',
         }} />
         <span style={{
           fontSize: 12, fontWeight: 900, color: 'var(--c-text-2)',

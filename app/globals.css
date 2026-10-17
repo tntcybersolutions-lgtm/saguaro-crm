@@ -79,11 +79,11 @@
      slate closed (lib/status-colors.ts). A status always carries its word. */
   --status-overdue: #F87171;
   --status-lead: #FBBF24;
-  --status-under-contract: #E8FF2A;
+  --status-under-contract: #FBBF24; /* amber: "soon / watch" — never the brand yellow */
   --status-ongoing: #4ADE80;
   --status-completed: #4ADE80;
   --status-closed: #94A3B8;
-  --info: #E8FF2A;
+  --info: #CBD5E1; /* informational = slate: not the action yellow, not blue */
   --success: #4ADE80;
   --danger: #F87171;
   --warning: #FBBF24;
@@ -156,7 +156,7 @@
   --surface-popover: #243247;
   --text-inverse: #101722;
   --border-interactive: color-mix(in srgb, #334155 72%, #94A3B8);
-  --focus-ring: #E8FF2A;
+  --focus-ring: #F8FAFC; /* white ring: visible on navy, never the action yellow */
   --action-primary-bg: #E8FF2A;
   --action-primary-fg: #101722;
   --action-primary-hover: color-mix(in srgb, #E8FF2A 90%, #101722);
@@ -198,11 +198,13 @@
   --danger-fg: var(--danger);
   --danger-bg: color-mix(in srgb, var(--danger) 12%, #1B2636);
   --danger-border: color-mix(in srgb, var(--danger) 40%, #334155);
-  --info-fg: #E8FF2A;
-  --info-bg: color-mix(in srgb, #E8FF2A 12%, #1B2636);
-  --info-border: color-mix(in srgb, #E8FF2A 40%, #334155);
-  --chart-1: #E8FF2A;
-  --chart-2: color-mix(in srgb, #E8FF2A 45%, #F8FAFC);
+  --info-fg: #CBD5E1;
+  --info-bg: color-mix(in srgb, #CBD5E1 10%, #1B2636);
+  --info-border: color-mix(in srgb, #CBD5E1 36%, #334155);
+  /* Progress bars and the first chart series: light slate. Yellow is the one
+     primary action and the selected item, never a bar (DESIGN_SYSTEM.md). */
+  --chart-1: #CBD5E1;
+  --chart-2: color-mix(in srgb, #CBD5E1 55%, #334155);
   --chart-3: var(--success);
   --chart-4: var(--warning);
   --chart-5: #94A3B8;
@@ -281,7 +283,7 @@ input:-webkit-autofill:active {
 .sr-only { position: absolute; width: 1px; height: 1px; padding: 0; margin: -1px; overflow: hidden; clip: rect(0,0,0,0); white-space: nowrap; border: 0; }
 
 /* ── Focus ring: the brand ring on every control ── */
-*:focus-visible { outline: 2px solid var(--gold-ring); outline-offset: 2px; border-radius: 6px; }
+*:focus-visible { outline: 2px solid var(--focus-ring); outline-offset: 2px; border-radius: 6px; }
 
 /* ── Smooth transitions on interactive elements only ── */
 a, button, input, textarea, select, [role="button"] { transition: color .18s ease, background .18s ease, border-color .18s ease, box-shadow .18s ease, transform .12s ease, opacity .18s ease; }
@@ -590,8 +592,8 @@ input::placeholder, textarea::placeholder {
 .badge-green { background: rgba(74,222,128,0.12); color: #4ADE80; border: 1px solid rgba(74,222,128,0.40); }
 .badge-gold { background: rgba(251,191,36,0.12); color: #FBBF24; border: 1px solid rgba(251,191,36,0.40); }
 .badge-red { background: rgba(248,113,113,0.12); color: #F87171; border: 1px solid rgba(248,113,113,0.40); }
-.badge-blue { background: rgba(232,255,42,0.12); color: #E8FF2A; border: 1px solid rgba(232,255,42,0.40); }
-.badge-purple { background: rgba(232,255,42,0.12); color: #E8FF2A; border: 1px solid rgba(232,255,42,0.40); }
+.badge-blue { background: rgba(148,163,184,0.12); color: #CBD5E1; border: 1px solid rgba(148,163,184,0.40); }
+.badge-purple { background: rgba(148,163,184,0.12); color: #CBD5E1; border: 1px solid rgba(148,163,184,0.40); }
 .badge-gray { background: rgba(148,163,184,0.12); color: #CBD5E1; border: 1px solid rgba(148,163,184,0.40); }
 [class^="badge-"] {
   display: inline-flex; align-items: center; padding: 2px 10px;
@@ -906,14 +908,16 @@ input:-webkit-autofill:focus {
 :where(table) th:first-child, :where(table) td:first-child { padding-left: 16px; }
 :where(table) th:last-child, :where(table) td:last-child { padding-right: 16px; }
 :where(table) td.num, :where(table) td[data-num] { text-align: right; font-variant-numeric: tabular-nums; }
-/* .pmTable — milled-plate wrapper: put it on the element wrapping a table (or
-   the table's own container) and the whole thing becomes a machined panel:
-   glass surface, full-perimeter inset ring, radius + overflow clip. */
+/* .pmTable — the wrapper around a table: flat on the page (Chad, 16 Oct 2026:
+   no big rounded filled box around a list). A hairline above and below, the
+   rows divided by hairlines, and it scrolls sideways inside itself only. */
 .pmTable {
-  border-radius: var(--radius-lg);
-  border: 1px solid var(--border-subtle);
-  background: var(--bg-surface);
-  box-shadow: var(--shadow-sm);
+  border-radius: 0;
+  border: 0;
+  border-top: 1px solid var(--border-subtle);
+  border-bottom: 1px solid var(--border-subtle);
+  background: none;
+  box-shadow: none;
   overflow: hidden;
   overflow-x: auto;
 }
@@ -1205,7 +1209,7 @@ button.k-stat[aria-pressed="true"] { box-shadow: inset 0 -2px 0 var(--brand-prim
 .k-grid-btn { display: inline-flex; align-items: center; gap: 6px; min-height: 34px; padding: 0 10px; border-radius: 8px; border: 1px solid var(--border-default); background: transparent; color: var(--text-secondary); font-size: 13px; font-weight: 600; cursor: pointer; }
 .k-grid-btn:hover:not(:disabled), .k-grid-btn[aria-expanded="true"] { color: var(--text-primary); border-color: var(--text-tertiary); }
 .k-grid-btn:disabled { opacity: .45; cursor: default; }
-.k-grid-count { display: inline-flex; min-width: 18px; height: 18px; padding: 0 5px; align-items: center; justify-content: center; border-radius: 9px; background: var(--bg-surface-2); color: var(--text-secondary); font-size: 11px; font-weight: 700; margin-left: 6px; }
+.k-grid-count { display: inline-flex; min-width: 18px; height: 18px; padding: 0 5px; align-items: center; justify-content: center; border-radius: 9px; background: var(--bg-surface-2); color: var(--text-secondary); font-size: 12px; font-weight: 700; margin-left: 6px; }
 .k-grid-menu { z-index: 1000; min-width: 220px; max-height: 360px; overflow: auto; padding: 6px; border-radius: 10px; border: 1px solid var(--border-default); background: var(--bg-surface); box-shadow: 0 12px 32px rgba(0,0,0,.45); }
 .k-grid-list { display: flex; flex-direction: column; }
 .k-grid-list > button, .k-grid-item > button:first-child { text-align: left; min-height: 36px; padding: 0 10px; border: 0; border-radius: 6px; background: transparent; color: var(--text-secondary); font-size: 14px; cursor: pointer; }
@@ -1272,7 +1276,11 @@ button.k-stat[aria-pressed="true"] { box-shadow: inset 0 -2px 0 var(--brand-prim
   .k-lbl-phone { display: inline; }
   .k-grid-select { display: inline-flex; }
   .k-grid-btn { min-height: 44px; }
-  .k-grid-bar { padding: 8px 12px; gap: 6px; }
+  /* The list tools sit on the page's left edge, wrapping left to right — the
+     spacer that right-aligns them on desktop would push a wrapped row to the
+     right edge on a phone. */
+  .k-grid-bar { padding: 8px 0; gap: 6px; }
+  .k-grid-bar > .k-toolbar-spacer { display: none; }
   .k-grid-bar .k-grid-n { width: 100%; }
   .k-col-resize { display: none; }
   .k-table td, .k-table th { max-width: none !important; min-width: 0 !important; }
@@ -1283,7 +1291,7 @@ button.k-stat[aria-pressed="true"] { box-shadow: inset 0 -2px 0 var(--brand-prim
   .k-grid-list > button, .k-grid-item > button:first-child, .k-grid-check, .k-grid-foot { min-height: 44px; }
   .k-grid-x, .k-col-move { width: 44px; height: 44px; }
   .k-col-grip { display: none; }
-  .k-fchips { padding: 8px 12px; }
+  .k-fchips { padding: 8px 0; }
   .k-fchip { min-height: 36px; }
   .k-fchip button { width: 36px; height: 36px; }
   /* Selecting: checkboxes only while selecting; the bar docks above the tab bar. */
@@ -1311,7 +1319,7 @@ button.k-stat[aria-pressed="true"] { box-shadow: inset 0 -2px 0 var(--brand-prim
 .k-menu-sep { height: 1px; margin: 4px 2px; background: var(--border-subtle); }
 
 /* Action bar — the detail-page counterpart of RowActions */
-.k-actionbar { display: flex; flex-wrap: wrap; align-items: center; gap: var(--sp-2); padding: var(--sp-2) var(--sp-3); background: var(--bg-surface); border: 1px solid var(--border-subtle); border-radius: var(--radius-lg); }
+.k-actionbar { display: flex; flex-wrap: wrap; align-items: center; gap: var(--sp-2); padding: var(--sp-2) 0; background: none; border: 0; border-bottom: 1px solid var(--border-subtle); border-radius: 0; }
 
 /* Form fields */
 .k-field { display: flex; flex-direction: column; gap: 6px; min-width: 0; }
@@ -1543,7 +1551,7 @@ li[data-done="true"] .pj-next-step strong { color: var(--text-tertiary); text-de
   /* ⋯ overflow menus (kit Menu): each item a 44px target on a phone. */
   .k-menu-item { min-height: 44px; }
   .pj-metrics { grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 10px; }
-  .k-sortbar { display: flex; align-items: center; gap: 8px; padding: 8px 12px 4px; }
+  .k-sortbar { display: flex; align-items: center; gap: 8px; padding: 8px 0 4px; }
   /* A desktop side panel (fixed 460px flex sibling — schedule task composer and
      the like) becomes a full-screen sheet on a phone instead of pushing the
      page 460px past the right edge. */
@@ -1652,31 +1660,8 @@ li[data-done="true"] .pj-next-step strong { color: var(--text-tertiary); text-de
   /* A toast sits above the tab bar, not on it. */
   .k-toast { bottom: calc(var(--sag-tabbar-h) + 12px) !important; }
 
-  /* "You Are Here" and the phase strip: one short line, tap for the details. */
-  .sag-nsb .sag-nsb-detail { display: none !important; }
-  .sag-nsb[data-open="true"] .sag-nsb-detail { display: flex !important; }
-  /* Open on a phone: row 1 is the label and the chevron, then the step and
-     its explanation at full width, then the stage line, then the button. The
-     text span carries an inline flex: 1, so the full-width basis needs weight. */
-  .sag-nsb { padding: 8px 12px !important; gap: 10px !important; }
-  .sag-nsb > span:first-child { order: 0; }
-  .sag-nsb > span:nth-of-type(3) { order: 1; }
-  .sag-nsb-toggle { order: 2; }
-  .sag-nsb[data-open="true"] { row-gap: 8px; }
-  .sag-nsb[data-open="true"] > span:nth-of-type(3) { flex: 1 1 100% !important; order: 3; flex-direction: column; align-items: flex-start; gap: 4px; }
-  .sag-nsb[data-open="true"] > span:nth-of-type(3) > span { white-space: normal !important; overflow: visible !important; line-height: 1.45; }
-  .sag-nsb[data-open="true"] .sag-nsb-toggle { margin-left: auto !important; }
-  .sag-nsb[data-open="true"] > span[title] { order: 4; flex: 1 1 100%; max-width: none !important; }
-  .sag-nsb[data-open="true"] > a { order: 5; }
-  .sag-nsb[data-open="true"] .sag-nsb-detail[title] { max-width: none; }
-  .sag-nsb-toggle { display: inline-flex !important; }
-  /* Inside a job the phone has ProjectNav (Modules + the seven destinations);
-     the next-step bar returns null there (NextAction on the overview is the
-     one guidance surface). */
-  .sag-nsb[data-in-project="true"] { display: none !important; }
   /* Every control in the menu drawer's tool block is a thumb target. */
   .sag-menu-tools button, .sag-menu-tools a, .sag-menu-tools select { min-height: 44px !important; }
-  .sag-nsb-toggle { min-height: 44px; min-width: 44px; }
   .k-crumbs { display: none !important; }
 
   /* The menu drawer: the tools block first, then the rail in flow (the rail
@@ -1725,10 +1710,15 @@ li[data-done="true"] .pj-next-step strong { color: var(--text-tertiary); text-de
      button left on older screens (radio console, budget Actions, document
      titles, review stars, …) in one place instead of page by page. An
      icon-only button is also 44px wide. A text link that is a control
-     (.k-tap) gets the same box. */
-  .main-content-area :is(button, [role="button"], select) { min-height: 44px; }
-  .main-content-area :is(button, [role="button"]):has(> svg:only-child) { min-width: 44px; }
-  .main-content-area a.k-tap { display: inline-flex; align-items: center; min-height: 44px; }
+     (.k-tap, and the shared button classes on an <a>) gets the same box.
+     !important is deliberate here, like the 16px input rule: hundreds of
+     older buttons carry an inline height / minHeight (28, 32, 36px), and an
+     inline size always beats a stylesheet. Desktop is untouched. Switches,
+     checkboxes and radios keep their own drawn size. */
+  .main-content-area select { min-height: 44px; }
+  .main-content-area :is(button, [role="button"]):not([role="switch"]):not([role="checkbox"]):not([role="radio"]):not(.sr-only) { min-height: 44px !important; min-width: 44px !important; }
+  .main-content-area :is(a.k-tap, a.pmBtn, a.fl-act, a.k-chip, a.k-btn, a.jb-link) { display: inline-flex; align-items: center; min-height: 44px !important; }
+  .fl-act, .k-chip, .k-grid-btn { min-height: 44px; }
 
   /* Tables become stacked cards: name, status, amount, one action. Columns past
      the fourth are dropped on phones — the row opens the full record. A hand-built
@@ -1736,7 +1726,7 @@ li[data-done="true"] .pj-next-step strong { color: var(--text-tertiary); text-de
      on its cells and gets the same cards (desktop is untouched). */
   :is(.k-table,.k-stack) thead { display: none; }
   :is(.k-table,.k-stack), :is(.k-table,.k-stack) tbody, :is(.k-table,.k-stack) tr { display: block; width: 100%; }
-  :is(.k-table,.k-stack) tr { position: relative; margin: 0; width: auto; border: 0; border-bottom: 1px solid var(--border-subtle); border-radius: 0; background: none; padding: 12px 12px; }
+  :is(.k-table,.k-stack) tr { position: relative; margin: 0; width: auto; border: 0; border-bottom: 1px solid var(--border-subtle); border-radius: 0; background: none; padding: 12px 0; }
   :is(.k-table,.k-stack) tbody tr:hover td { background: none; }
   :is(.k-table,.k-stack) td { display: flex; justify-content: space-between; align-items: center; gap: 12px; height: auto !important; min-height: 28px; padding: 3px 0 !important; border-bottom: none; white-space: normal; text-align: left !important; position: static !important; box-shadow: none !important; background: none !important; }
   :is(.k-table,.k-stack) td::before { content: attr(data-label); flex-shrink: 0; font-size: var(--fs-xs); font-weight: 700; color: var(--text-tertiary); }
@@ -1760,14 +1750,14 @@ li[data-done="true"] .pj-next-step strong { color: var(--text-tertiary); text-de
      with room held beside the record's name. A labelled action ("Open Deal
      Page") is too wide for the corner — it covered the name — so it gets its
      own line under the record, right-aligned. */
-  .k-table td.k-td-actions { position: absolute !important; top: 6px; right: 6px; width: auto; padding: 0 !important; }
+  .k-table td.k-td-actions { position: absolute !important; top: 6px; right: 0; width: auto; padding: 0 !important; }
   .k-table tr:has(> td.k-td-actions) > td:first-child { padding-right: 52px !important; }
   .k-table td.k-td-actions:has(.k-btn:not(.k-icon-btn)) { position: static !important; justify-content: flex-end; flex-wrap: wrap; gap: 8px; margin-top: 6px; padding: 8px 0 0 !important; border-top: 1px solid var(--border-subtle); }
   .k-table tr:has(> td.k-td-actions .k-btn:not(.k-icon-btn)) > td:first-child { padding-right: 0 !important; }
   /* Inside a card the rows are a divided list, not cards inside a card. */
   :is(.k-card, .pmSec, .fl-list) :is(.k-table,.k-stack) tr { margin: 0; border: 0; border-bottom: 1px solid var(--border-subtle); border-radius: 0; background: none; padding: 12px 0; }
   :is(.k-card, .pmSec, .fl-list) :is(.k-table,.k-stack) tbody tr:last-child { border-bottom: 0; }
-  .k-card-flush :is(.k-table,.k-stack) tr { padding: 12px; }
+  .k-card-flush :is(.k-table,.k-stack) tr { padding: 12px 0; }
   .k-table td.k-td-actions::before { content: none; }
   .k-table td.k-table-empty { display: block; padding: 32px 12px !important; }
   .k-table .k-skel { display: block; height: 12px; }
@@ -2037,11 +2027,14 @@ a.k-meta-item:hover, .k-link:hover { color: var(--link-hover); }
 .k-chip:hover:not([aria-pressed="true"]) { background: var(--bg-row-hover); color: var(--text-primary); }
 .k-chip[aria-pressed="true"] { background: var(--selected-control-bg); border-color: var(--selected-control-bg); color: var(--selected-control-fg); }
 .k-chip:focus-visible { outline: 2px solid var(--focus-ring); outline-offset: 2px; }
-.k-tile { display: inline-grid; place-items: center; flex: none; border-radius: 10px; background: color-mix(in srgb, var(--acc) 14%, var(--bg-surface-2)); border: 1px solid color-mix(in srgb, var(--acc) 38%, var(--bg-surface-2)); color: var(--acc); }
-.k-tile[data-tone="info"] { background: var(--info-bg); border-color: var(--info-border); color: var(--info-fg); }
-.k-tile[data-tone="success"] { background: var(--success-bg); border-color: var(--success-border); color: var(--success-fg); }
-.k-tile[data-tone="warning"] { background: var(--warning-bg); border-color: var(--warning-border); color: var(--warning-fg); }
-.k-tile[data-tone="danger"] { background: var(--danger-bg); border-color: var(--danger-border); color: var(--danger-fg); }
+/* An icon beside a row, section or empty line: the glyph alone in its
+   module hue (or its status colour), no tinted square around it (Chad,
+   16 Oct 2026: no boxed tiles). The box keeps its size so rows still align. */
+.k-tile { display: inline-grid; place-items: center; flex: none; border-radius: 0; background: none; border: 0; color: var(--acc); }
+.k-tile[data-tone="info"] { color: var(--info-fg); }
+.k-tile[data-tone="success"] { color: var(--success-fg); }
+.k-tile[data-tone="warning"] { color: var(--warning-fg); }
+.k-tile[data-tone="danger"] { color: var(--danger-fg); }
 .k-card-head .k-tile { margin-right: 2px; }
 .k-items { display: flex; flex-direction: column; }
 .k-item { display: flex; align-items: center; gap: 12px; min-height: 56px; padding: 10px 0; border-bottom: 1px solid var(--border-subtle); color: inherit; text-decoration: none; text-align: left; background: none; border-left: 0; border-right: 0; border-top: 0; width: 100%; font: inherit; }
@@ -2083,7 +2076,7 @@ a.k-meta-item:hover, .k-link:hover { color: var(--link-hover); }
 .k-tl { list-style: none; margin: 0; padding: 0; }
 .k-tl-item { position: relative; display: flex; gap: 12px; padding: 0 0 16px; }
 .k-tl-item:not(:last-child)::before { content: ''; position: absolute; left: 15px; top: 34px; bottom: 2px; width: 1px; background: var(--border-default); }
-.k-tl-dot { display: inline-grid; place-items: center; flex: none; width: 32px; height: 32px; border-radius: 50%; background: color-mix(in srgb, var(--acc) 14%, var(--bg-surface-2)); border: 1px solid color-mix(in srgb, var(--acc) 38%, var(--bg-surface-2)); color: var(--acc); }
+.k-tl-dot { display: inline-grid; place-items: center; flex: none; width: 32px; height: 32px; border-radius: 50%; background: var(--bg-base); border: 1px solid var(--border-default); color: var(--acc); }
 .k-tl-dot[data-tone="info"] { color: var(--info-fg); }
 .k-tl-dot[data-tone="success"] { color: var(--success-fg); }
 .k-tl-dot[data-tone="warning"] { color: var(--warning-fg); }
@@ -2101,9 +2094,6 @@ a.k-meta-item:hover, .k-link:hover { color: var(--link-hover); }
 .k-prog > span { display: block; height: 100%; border-radius: 6px; background: var(--info); }
 /* Premium header (ModuleHero): module icon tile + record line + title. */
 .pmHeadLead { display: flex; align-items: center; gap: 14px; min-width: 0; flex: 1 1 420px; }
-.pmHeadTile { width: 48px; height: 48px; border-radius: 12px; }
-.pmEyebrow { font-size: 13px; font-weight: 600; color: var(--text-tertiary); margin-bottom: 2px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
-@media (max-width: 639px) { .pmHeadTile { width: 40px; height: 40px; border-radius: 10px; } }
 
 /* My Day — one accent per kind of work and a job palette (no blue: Chad's rule).
    Used by components/my-work/MyDayBoard + MyDayCustomize. */

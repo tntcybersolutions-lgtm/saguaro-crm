@@ -1,8 +1,14 @@
 'use client';
 /**
- * The quiet line above the phone tab bar that says what is still on this phone:
- * "3 waiting for signal", "Sending…", or — for anything the server refused
- * five times — "2 couldn't send" with Retry. Hidden when nothing is waiting.
+ * The quiet line above the phone tab bar for what is still on this phone while
+ * there IS signal: "Sending…", "2 waiting to send" (signal bars but no data
+ * yet), or — for anything the server refused five times — "2 couldn't send"
+ * with Retry. Hidden when nothing is waiting.
+ *
+ * The signal state is said ONCE. With no signal the top line (OfflineBar —
+ * "No signal · 1 waiting to send") covers it, so this line hides. While the
+ * top line says "Back online · sending…" this line drops its own "Sending…"
+ * and only keeps a "couldn't send" + Retry, which the top line never shows.
  * Phone only; on a desktop the screens' own badges carry the same news.
  */
 import React, { useEffect, useState, useSyncExternalStore } from 'react';
@@ -30,7 +36,8 @@ const CSS = `
 
 const n = (k: number, one: string, many: string) => `${k} ${k === 1 ? one : many}`;
 
-export default function SyncLine() {
+/** `covered`: the top line is up and already says the sending state. */
+export default function SyncLine({ covered = false }: { covered?: boolean }) {
   const net = useSyncExternalStore(subscribeNet, getNetState, getServerNetState);
   const [why, setWhy] = useState('');
   const [busy, setBusy] = useState(false);
@@ -43,10 +50,14 @@ export default function SyncLine() {
     return () => { alive = false; };
   }, [net.failed]);
 
+  // No signal: the top line says it. Nothing here.
+  if (!net.online) return null;
   let tone = '';
   let text = '';
-  if (net.syncing) { tone = 'send'; text = net.synced ? `Sending… ${net.synced} sent` : 'Sending…'; }
-  else if (net.pending) { tone = 'wait'; text = `${n(net.pending, 'item', 'items')} waiting for signal`; }
+  if (!covered) {
+    if (net.syncing) { tone = 'send'; text = net.synced ? `Sending… ${net.synced} sent` : 'Sending…'; }
+    else if (net.pending) { tone = 'wait'; text = `${n(net.pending, 'item', 'items')} waiting to send`; }
+  }
   if (net.failed) {
     tone = tone || 'stuck';
     const stuck = `${net.failed} couldn't send`;
@@ -65,7 +76,7 @@ export default function SyncLine() {
       <style dangerouslySetInnerHTML={{ __html: CSS }} />
       <i aria-hidden />
       <span>{text}</span>
-      {net.failed ? <button type="button" onClick={retry} disabled={busy || !net.online}>{net.online ? 'Retry' : 'Retry when online'}</button> : null}
+      {net.failed ? <button type="button" onClick={retry} disabled={busy}>Retry</button> : null}
     </div>
   );
 }

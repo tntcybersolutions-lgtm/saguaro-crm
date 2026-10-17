@@ -23,8 +23,8 @@ export const T = {
   greenDim: 'rgba(74,222,128,0.16)',
   red: 'var(--danger)',
   redDim: 'rgba(248,113,113,0.16)',
-  amber: 'var(--brand-primary)',
-  amberDim: 'rgba(232,255,42,0.16)',
+  amber: 'var(--warning)',
+  amberDim: 'rgba(251,191,36,0.16)',
   blue: 'var(--warning)',
   blueDim: 'rgba(251,191,36,0.16)',
   shadowSm: '0 1px 2px rgba(0,0,0,0.4), inset 0 1px 0 rgba(255,255,255,0.06)',
@@ -98,10 +98,10 @@ export function CardBody({ children, style }: { children: React.ReactNode; style
 type BadgeColor = 'gold' | 'green' | 'red' | 'amber' | 'blue' | 'muted';
 
 const badgeStyles: Record<BadgeColor, { bg: string; color: string; border: string }> = {
-  gold:  { bg: T.goldDim,  color: 'var(--text-primary)',  border: T.borderGold },
+  gold:  { bg: 'rgba(148,163,184,0.16)',  color: 'var(--text-primary)',  border: 'rgba(148,163,184,0.45)' },
   green: { bg: T.greenDim, color: T.green, border: 'rgba(74,222,128,0.50)' },
   red:   { bg: T.redDim,   color: T.red,   border: 'rgba(248,113,113,0.50)' },
-  amber: { bg: T.amberDim, color: T.amber, border: 'rgba(232,255,42,0.50)' },
+  amber: { bg: T.amberDim, color: T.amber, border: 'rgba(251,191,36,0.50)' },
   blue:  { bg: T.blueDim,  color: T.blue,  border: 'rgba(251,191,36,0.50)' },
   muted: { bg: 'rgba(148,163,184,0.16)', color: T.muted, border: 'rgba(148,163,184,0.45)' },
 };

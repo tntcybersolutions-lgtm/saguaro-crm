@@ -318,14 +318,20 @@ export function StatRow({ items }: { items: StatItem[] }) {
 
 // ─── Badge ───────────────────────────────────────────────────────────────────
 
-export type BadgeTone = StatusKind | 'neutral' | 'gold';
+/** 'pending' — waiting on something (no signal yet, awaiting a reply): amber, the
+ *  warning tone. 'plain' — a quiet label with no status meaning (a role, a plan
+ *  name). There is no brand-yellow badge: yellow is the one primary action.
+ *  'gold' is the old name for 'plain' (it never meant yellow); kept so older
+ *  screens still compile — new code says 'plain' or 'pending'. */
+export type BadgeTone = StatusKind | 'neutral' | 'plain' | 'pending' | 'gold';
 
 const BADGE_NEUTRAL = { color: 'var(--text-secondary)', bg: 'rgba(148,163,184,0.12)', border: 'rgba(148,163,184,0.40)' };
-const BADGE_GOLD = { color: 'var(--text-primary)', bg: 'var(--bg-surface-2)', border: 'var(--border-default)' };
+const BADGE_PLAIN = { color: 'var(--text-primary)', bg: 'var(--bg-surface-2)', border: 'var(--border-default)' };
+const BADGE_PENDING = { color: 'var(--warning-fg)', bg: 'var(--warning-bg)', border: 'var(--warning-border)' };
 
 /** Status badge. Tones are the six fixed status colors (lib/status-colors). */
 export function Badge({ tone = 'neutral', dot, children }: { tone?: BadgeTone; dot?: boolean; children: React.ReactNode }) {
-  const c = tone === 'neutral' ? BADGE_NEUTRAL : tone === 'gold' ? BADGE_GOLD : STATUS_COLORS[tone];
+  const c = tone === 'neutral' ? BADGE_NEUTRAL : tone === 'plain' || tone === 'gold' ? BADGE_PLAIN : tone === 'pending' ? BADGE_PENDING : STATUS_COLORS[tone];
   return (
     <span className="k-badge" style={{ color: c.color, background: c.bg, borderColor: c.border }}>
       {dot && <span className="k-badge-dot" />}

@@ -550,7 +550,7 @@ export default function SubPortalPage() {
         eyebrowIcon={<UsersThree size={13} weight="fill" color="var(--text-secondary)" />}
         title="Sub Portal"
         accent="Management"
-        subtitle="Manage subcontractor portal access, compliance, and communications"
+        subtitle="What your subs send in, and what they can see."
         actions={<>
           <button onClick={() => setBulkInviteModal(true)} style={ghostButtonStyle} className="pmBtn"><UploadSimple size={15} weight="bold" /> Bulk Invite</button>
           <button onClick={() => setInviteModal(true)} style={goldButtonStyle} className="pmBtn"><Plus size={15} weight="bold" /> Invite Sub</button>
@@ -569,17 +569,15 @@ export default function SubPortalPage() {
 
       {/* ── one summary — roster status, engagement, compliance health ── */}
       <StatStrip items={[
-        { href: '/app/sub-portal', label: 'Total Subs', value: String(stats.total) },
-        { href: '/app/sub-portal', label: 'Active', value: String(stats.active), accent: GREEN },
-        { href: '/app/sub-portal', label: 'Pending', value: String(stats.pending), accent: AMBER },
+        { label: 'Total Subs', value: String(stats.total) },
+        { label: 'Active', value: String(stats.active), accent: GREEN },
+        { label: 'Pending', value: String(stats.pending), accent: AMBER },
         ...(users.length > 0 ? [
-          {href: '/app/sub-portal',
-            label: 'Never Logged In', value: String(intel.neverLogged),
+          {label: 'Never Logged In', value: String(intel.neverLogged),
             accent: intel.neverLogged > 0 ? AMBER : GREEN,
             sub: intel.neverLogged > 0 ? 'Active accounts, zero visits — resend the link' : 'Every active sub has visited',
           },
-          {href: '/app/sub-portal',
-            label: 'Compliance Health', value: compliance.length > 0 ? `${intel.compPct}%` : '—',
+          {label: 'Compliance Health', value: compliance.length > 0 ? `${intel.compPct}%` : '—',
             accent: compliance.length === 0 ? undefined : intel.compPct >= 80 ? GREEN : intel.needAttention > 0 ? RED : AMBER,
             sub: compliance.length > 0 ? `${intel.needAttention} document${intel.needAttention === 1 ? '' : 's'} need attention` : 'No compliance docs tracked yet',
           },
@@ -946,7 +944,7 @@ export default function SubPortalPage() {
               { label: 'Expired', count: compliance.filter(c => c.status === 'expired').length, color: RED, icon: <XCircle size={19} weight="duotone" color={RED} /> },
               { label: 'Missing', count: compliance.filter(c => c.status === 'missing').length, color: DIM, icon: <FileX size={19} weight="duotone" color={DIM} /> },
             ].map((s, i) => (
-              <StatCard key={i} icon={s.icon} label={s.label} value={String(s.count)} accent={s.color} delay={i * 0.04}  href="/app/sub-portal"/>
+              <StatCard key={i} icon={s.icon} label={s.label} value={String(s.count)} accent={s.color} delay={i * 0.04}/>
             ))}
           </div>
 

@@ -196,7 +196,7 @@ const CSS = `
 .igBurnDelta[data-ahead="false"] { color: var(--status-overdue); }
 .igBurnTrack { position: relative; height: 12px; }
 .igBurnBg { position: absolute; inset: 0; background: rgba(255,255,255,0.08); border-radius: 6px; overflow: hidden; }
-.igBurnFill { height: 100%; border-radius: 6px; background: var(--chart-1); }
+.igBurnFill { height: 100%; border-radius: 6px; background: var(--text-secondary); }
 .igBurnMark { position: absolute; top: -3px; bottom: -3px; width: 2px; background: var(--text-primary); opacity: .9; border-radius: 1px; box-shadow: 0 0 6px rgba(255,255,255,.55); }
 .igBurnFoot { display: flex; justify-content: space-between; margin-top: 5px; font-size: var(--fs-xs); color: var(--text-tertiary); font-variant-numeric: tabular-nums; }
 .igRule { font-size: var(--fs-xs); color: var(--text-tertiary); font-weight: 800; margin: 14px 0 4px; padding-top: 12px; border-top: 1px solid var(--border-subtle); }
@@ -256,8 +256,8 @@ function BurnBar({ actual, expected, delta }: { actual: number | null; expected:
         {ew != null && <div className="igBurnMark" title={`Expected ${expected!.toFixed(1)}% burned by today (share of schedule elapsed)`} style={{ left: `calc(${ew}% - 1px)` }} />}
       </div>
       <div className="igBurnFoot">
-        <span>Actual {actual == null ? '— no billing data' : `${actual.toFixed(1)}%`}</span>
-        <span>Expected {expected == null ? '—' : `${expected.toFixed(1)}%`}</span>
+        <span>{actual == null ? 'No billing yet' : `Actual ${actual.toFixed(1)}%`}</span>
+        {expected != null && <span>Expected {expected.toFixed(1)}%</span>}
       </div>
     </div>
   );
@@ -266,13 +266,13 @@ function BurnBar({ actual, expected, delta }: { actual: number | null; expected:
 // Money row — value bright when real, em-dash when the API had nothing.
 function moneyVal(v: number | null, suffix?: React.ReactNode): { value: React.ReactNode; accent?: string } {
   if (v == null) return { value: '—', accent: 'var(--text-tertiary)' };
-  return { value: <>{fmt(v)}{suffix}</>, accent: 'var(--brand-primary)' };
+  return { value: <>{fmt(v)}{suffix}</>, accent: 'var(--text-primary)' };
 }
 
 // ─── Per-project comparison card ─────────────────────────────────────────────
 function ProjectCard({ r }: { r: Row }) {
   const co = moneyVal(r.coValue, r.coCount != null ? <span className="igMuted" style={{ fontWeight: 600, fontSize: 'var(--fs-xs)' }}> ({r.coCount})</span> : undefined);
-  const marginAccent = r.margin == null ? 'var(--text-tertiary)' : r.margin < 0 ? 'var(--status-overdue)' : 'var(--brand-primary)';
+  const marginAccent = r.margin == null ? 'var(--text-tertiary)' : r.margin < 0 ? 'var(--status-overdue)' : 'var(--success)';
   // Overdue = the oldest open RFI has aged past 14 days — that age reads red.
   const rfiOverdue = r.openRfis != null && r.openRfis > 0 && r.oldestRfiDays != null && r.oldestRfiDays > 14;
   const noField = r.openRfis == null && r.openPunch == null && r.logStreak == null && r.lastActivityDays == null;
@@ -286,7 +286,7 @@ function ProjectCard({ r }: { r: Row }) {
             {r.status
               ? <Badge tone={r.status === 'active' ? 'ongoing' : 'neutral'}>{r.status.replace(/_/g, ' ').replace(/\b\w/g, (c) => c.toUpperCase())}</Badge>
               : <span className="igMuted" style={{ fontSize: 'var(--fs-xs)' }}>Status unknown</span>}
-            <Badge tone={g.tone}>{g.verdict}</Badge>
+            {r.health != null && <Badge tone={g.tone}>{g.verdict}</Badge>}
           </div>
         </div>
         <HealthRing score={r.health} components={r.components} />
@@ -295,23 +295,26 @@ function ProjectCard({ r }: { r: Row }) {
       <BurnBar actual={r.actual} expected={r.expected} delta={r.delta} />
 
       <div className="igRule">Money</div>
-      <InsightRow label="Contract" {...moneyVal(r.contract)} />
-      <InsightRow label="Billed to Date" {...moneyVal(r.billed)} />
-      <InsightRow label="Invoiced Costs" {...moneyVal(r.invoiced)} />
-      <InsightRow label="Approved COs" value={co.value} accent={co.accent} />
-      <InsightRow label="Margin" value={r.margin == null ? '—' : fmt(r.margin)} accent={marginAccent} strong />
+      {r.contract != null && <InsightRow label="Contract" {...moneyVal(r.contract)} />}
+      {r.billed != null && <InsightRow label="Billed to Date" {...moneyVal(r.billed)} />}
+      {r.invoiced != null && <InsightRow label="Invoiced Costs" {...moneyVal(r.invoiced)} />}
+      {r.coValue != null && <InsightRow label="Approved COs" value={co.value} accent={co.accent} />}
+      {r.margin != null && <InsightRow label="Margin" value={fmt(r.margin)} accent={marginAccent} strong />}
+      {r.contract == null && r.billed == null && r.invoiced == null && r.coValue == null && r.margin == null && (
+        <div className="igMuted" style={{ fontSize: 'var(--fs-xs)', padding: '4px 0' }}>No money recorded yet</div>
+      )}
 
       <div className="igRule">Field</div>
       {noField ? (
-        <div className="igMuted" style={{ fontSize: 'var(--fs-xs)', padding: '4px 0' }}>— No field telemetry yet</div>
+        <div className="igMuted" style={{ fontSize: 'var(--fs-xs)', padding: '4px 0' }}>No field activity yet</div>
       ) : (
         <div className="igPills">
           {r.openRfis != null && (
-            <Badge tone={rfiOverdue ? 'overdue' : r.openRfis > 0 ? 'under_contract' : 'ongoing'}>
+            <Badge tone={rfiOverdue ? 'overdue' : r.openRfis > 0 ? 'lead' : 'ongoing'}>
               {r.openRfis} Open RFI{r.openRfis === 1 ? '' : 's'}{r.openRfis > 0 && r.oldestRfiDays != null ? ` · Oldest ${r.oldestRfiDays}d` : ''}
             </Badge>
           )}
-          {r.openPunch != null && <Badge tone={r.openPunch > 0 ? 'under_contract' : 'ongoing'}>{r.openPunch} Punch Open</Badge>}
+          {r.openPunch != null && <Badge tone={r.openPunch > 0 ? 'lead' : 'ongoing'}>{r.openPunch} Punch Open</Badge>}
           {r.logStreak != null && <Badge tone={r.logStreak >= 3 ? 'ongoing' : 'neutral'}>{r.logStreak}d Log Streak</Badge>}
           {r.lastActivityDays != null && <Badge tone="neutral">{r.lastActivityDays === 0 ? 'Active Today' : `Active ${r.lastActivityDays}d Ago`}</Badge>}
         </div>
@@ -469,7 +472,7 @@ export default function IntelligencePage() {
       <PageShell
         crumbs={[{ label: 'Home', href: '/app' }, { label: 'Intelligence' }]}
         title="Project Intelligence"
-        subtitle={`Health, burn, money, and field signals for ${ids.length} selected project${ids.length !== 1 ? 's' : ''} — every figure real or absent.`}
+        subtitle={`${ids.length} project${ids.length !== 1 ? 's' : ''} compared`}
         actions={selector}
       >
         {/* Live suggestion ticker — the same feed the module NudgeRings sync to:
@@ -522,7 +525,7 @@ export default function IntelligencePage() {
         {rows.length > 0 && (
           <div className="igStack">
             {/* 1 — INSIGHTS: the honest sentences, severity first */}
-            <Card title="Portfolio Insights" subtitle="What the numbers say across your selected projects — computed from the records, not guessed.">
+            <Card title="Portfolio Insights">
               {insights.length === 0 ? (
                 <div className="igMuted" style={{ fontSize: 'var(--fs-sm)' }}>All projects tracking clean — nothing needs your attention right now.</div>
               ) : (

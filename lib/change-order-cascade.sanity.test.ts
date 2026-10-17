@@ -33,6 +33,8 @@ function fakeDb(tables: Record<string, Row[]>) {
       eq: (k: string, v: unknown) => { filters.push((r) => String(r[k]) === String(v)); return b; },
       neq: (k: string, v: unknown) => { filters.push((r) => String(r[k]) !== String(v)); return b; },
       is: (k: string, v: unknown) => { filters.push((r) => (r[k] ?? null) === v); return b; },
+      in: (k: string, vs: unknown[]) => { filters.push((r) => vs.map(String).includes(String(r[k]))); return b; },
+      order: () => b,
       limit: () => b,
       update: (p: Row) => { op = 'update'; payload = p; return b; },
       insert: (p: Row | Row[]) => { op = 'insert'; payload = p; return b; },
@@ -132,6 +134,35 @@ const budgetChanges = (t: ReturnType<typeof pima>) => t.budget_lines.reduce((s, 
     const gone = t.change_orders.splice(1, 1)[0];
     await applyChangeOrderMoney(fakeDb(t), T, gone, null);
     check('delete: contract $2,498,400', t.projects[0].contract_amount === 2498400);
+  }
+  // 9. Through the shared step (lib/change-order-status) with the company's tiers:
+  //    a $30,000 CO under a two-approver tier is held on the first approval and
+  //    books on the second — the contract moves by exactly $30,000, once.
+  {
+    process.env.NEXT_PUBLIC_SUPABASE_URL ||= 'https://cascade.invalid';
+    process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY ||= 'cascade';
+    process.env.SUPABASE_SERVICE_ROLE_KEY ||= 'cascade';
+    const { writeChangeOrder } = await import('./change-order-status');
+    const { SUGGESTED_TIERS } = await import('./change-order-tiers');
+    const t = pima() as ReturnType<typeof pima> & Record<string, Row[]>;
+    t.tenant_settings = [{ id: 'ts', tenant_id: T, co_approval_tiers: SUGGESTED_TIERS }];
+    t.profiles = [{ id: 'pm1', role: 'member', full_name: 'Pat' }, { id: 'pm2', role: 'member', full_name: 'Quinn' }];
+    t.role_definitions = [{ id: 'r-pm', tenant_id: T, permissions: { 'Change Orders': 'Full' } }];
+    t.user_role_assignments = [{ user_id: 'pm1', tenant_id: T, role_id: 'r-pm', project_id: null }, { user_id: 'pm2', tenant_id: T, role_id: 'r-pm', project_id: null }];
+    t.approval_decisions = [];
+    t.change_orders.push({ id: 'co9', tenant_id: T, project_id: P, status: 'pending', stage: 'cor', amount: 30000, cost_impact: '30000', deleted_at: null });
+    const db = fakeDb(t);
+    const first = await writeChangeOrder(db, T, 'co9', { status: 'approved' }, { actorId: 'pm1', notify: false });
+    check('tiers: first approver is held (202), nothing booked', !first.ok && first.status === 202 && t.projects[0].contract_amount === 2539650);
+    check('tiers: status stays pending while held', t.change_orders.find((c) => c.id === 'co9')!.status === 'pending');
+    const again = await writeChangeOrder(db, T, 'co9', { status: 'approved' }, { actorId: 'pm1', notify: false });
+    check('tiers: the same approver twice is still held', !again.ok && again.status === 202 && t.projects[0].contract_amount === 2539650);
+    const second = await writeChangeOrder(db, T, 'co9', { status: 'approved' }, { actorId: 'pm2', notify: false });
+    check('tiers: second approver books it: +$30,000', second.ok && t.projects[0].contract_amount === 2569650);
+    check('tiers: budget approved changes +$30,000 (= approved COs $157,650)', budgetChanges(t) === 157650);
+    await writeChangeOrder(db, T, 'co9', { status: 'approved' }, { actorId: 'pm2', notify: false });
+    check('tiers: approving again moves nothing', t.projects[0].contract_amount === 2569650 && budgetChanges(t) === 157650);
+    check('tiers: two approvals on the record', t.approval_decisions.filter((d) => d.decision === 'approved').length === 2);
   }
   console.log(failed ? `\n${failed} FAILED` : '\nall passed');
   process.exit(failed ? 1 : 0);

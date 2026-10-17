@@ -17,7 +17,7 @@ import { costControl, usd, type CostLine } from '@/lib/finance';
 import { humanError } from '@/lib/errors';
 import { PremiumSurface, ModuleHero, StatCard, SectionCard, PremiumEmpty, goldButtonStyle, ghostButtonStyle } from '@/components/ui/premium';
 
-const BG = 'var(--bg-base)', PANEL = 'var(--bg-surface-2)', LINE = 'rgba(255,255,255,0.09)', GOLD = 'var(--brand-primary)', TEXT = 'var(--text-secondary)', DIM = 'var(--text-tertiary)', GREEN = 'var(--success)', RED = 'var(--danger)';
+const BG = 'var(--bg-base)', PANEL = 'var(--bg-surface-2)', LINE = 'var(--border-default)', GOLD = 'var(--brand-primary)', TEXT = 'var(--text-secondary)', DIM = 'var(--text-tertiary)', GREEN = 'var(--success)', RED = 'var(--danger)';
 const uid = () => Math.random().toString(36).slice(2, 9);
 const c = (s: string) => Math.round((parseFloat(s) || 0) * 100);   // dollars string → cents
 const d = (cents: number) => (cents / 100).toFixed(2);             // cents → dollars string
@@ -175,7 +175,6 @@ export default function CostControlPage() {
       {/* Header */}
       <ModuleHero
         eyebrow="Cost Control · Budget vs. Committed vs. Actual"
-        eyebrowIcon={<ChartLineUp size={13} weight="fill" color="var(--text-secondary)" />}
         title="Cost"
         accent="Control"
         subtitle="Committed, actual, and projected final cost per code."
@@ -188,10 +187,10 @@ export default function CostControlPage() {
           <button onClick={() => loadLive(projectId)} style={{ ...toolBtn, opacity: loading ? 0.6 : 1 }} className="pmBtn" disabled={loading}><ArrowClockwise size={14} weight="bold" />{loading ? 'Loading…' : viewingId ? 'Back to Live' : 'Refresh'}</button>
           <select onChange={(e) => { seedFromTakeoff(e.target.value); e.currentTarget.selectedIndex = 0; }} defaultValue="" style={{ ...inp, textAlign: 'left', width: 'auto' }}><option value="">Merge budget from takeoff…</option>{takeoffs.map((t) => <option key={t.id} value={t.id}>{t.name}</option>)}</select>
           <div style={{ flex: 1 }} />
-          <label style={{ display: 'inline-flex', alignItems: 'center', gap: 6, fontSize: 12, color: DIM }}>Report Date
+          <label style={{ display: 'inline-flex', alignItems: 'center', gap: 6, fontSize: 13, color: TEXT, fontWeight: 600 }}>Report Date
             <SaguaroDatePicker value={reportDate} onChange={(v) => setReportDate(v)} style={{ ...inp, width: 'auto', textAlign: 'left' }} />
           </label>
-          <button onClick={saveReport} style={{ ...toolGold, opacity: (saving || !rows.length) ? 0.55 : 1 }} className="pmBtn" disabled={saving || !rows.length}><FloppyDisk size={14} weight="fill" />{saving ? 'Saving…' : 'Save Cost Report'}</button>
+          <button onClick={saveReport} style={!rows.length ? { ...toolGold, background: 'var(--disabled-bg)', color: 'var(--disabled-fg)', borderColor: 'var(--disabled-border, var(--border-default))', cursor: 'not-allowed' } : { ...toolGold, opacity: saving ? 0.6 : 1 }} className="pmBtn" disabled={saving || !rows.length}><FloppyDisk size={14} weight="fill" />{saving ? 'Saving…' : 'Save Cost Report'}</button>
           <button onClick={() => setShowHistory((s) => !s)} style={toolBtn} className="pmBtn"><ClockCounterClockwise size={14} weight="bold" />History{reports.length ? ` (${reports.length})` : ''}</button>
         </div>
       </SectionCard>
@@ -201,22 +200,22 @@ export default function CostControlPage() {
           {err ? <X size={14} weight="bold" /> : <CheckCircle size={14} weight="fill" />}{err || msg}
         </div>
       )}
-      {viewingId && <div style={{ marginBottom: 12, fontSize: 13, color: 'var(--text-primary)', display: 'inline-flex', alignItems: 'center', gap: 6 }}><ClockCounterClockwise size={14} weight="bold" />Viewing a saved snapshot — read-only figures. Press &ldquo;Back to Live&rdquo; to edit.</div>}
+      {viewingId && <div style={{ marginBottom: 12, fontSize: 13, color: 'var(--text-primary)', display: 'inline-flex', alignItems: 'center', gap: 6 }}><ClockCounterClockwise size={14} weight="bold" />Saved snapshot · read-only</div>}
 
       {/* history panel */}
       {showHistory && (
-        <SectionCard title="Saved Cost Reports" icon={<ClockCounterClockwise size={17} weight="duotone" color="var(--text-secondary)" />} flush style={{ marginBottom: 16 }}>
+        <SectionCard title="Saved Cost Reports" flush style={{ marginBottom: 16 }}>
           {reports.length === 0 ? (
             <PremiumEmpty compact icon={<ClockCounterClockwise size={30} weight="duotone" color="var(--text-secondary)" />} title="No saved reports yet" primary={rows.length && !viewingId ? { label: 'Save Cost Report', onClick: () => { void saveReport(); } } : undefined} perm={['Budget', 'Edit']} />
           ) : (
             reports.map((rep) => (
               <div key={rep.id} style={{ display: 'flex', alignItems: 'center', gap: 12, padding: '12px 20px', borderTop: `1px solid ${LINE}`, cursor: 'pointer' }} onClick={() => viewReport(rep)}>
                 <ClockCounterClockwise size={16} color="var(--text-secondary)" />
-                <span style={{ fontWeight: 600, fontSize: 13, color: TEXT }}>{rep.report_date}</span>
+                <span style={{ fontWeight: 600, fontSize: 13, color: TEXT }}>{new Date(String(rep.report_date).slice(0, 10) + 'T12:00:00').toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' })}</span>
                 <span style={{ color: DIM, fontSize: 12 }}>{rep.title || `${(rep.lines || []).length} lines`}</span>
                 <div style={{ flex: 1 }} />
-                <span style={{ fontSize: 13, color: DIM }}>Budget {usd(rep.totals?.revisedBudgetCents || 0)}</span>
-                <span style={{ fontSize: 13, color: (rep.totals?.varianceCents ?? 0) < 0 ? RED : GREEN, fontWeight: 700 }}>Var {usd(rep.totals?.varianceCents || 0)}</span>
+                <span style={{ fontSize: 13, color: DIM, fontVariantNumeric: 'tabular-nums' }}>Budget {usd(rep.totals?.revisedBudgetCents || 0)}</span>
+                <span style={{ fontSize: 13, color: (rep.totals?.varianceCents ?? 0) < 0 ? RED : GREEN, fontWeight: 700, fontVariantNumeric: 'tabular-nums' }}>Variance {usd(rep.totals?.varianceCents || 0)}</span>
               </div>
             ))
           )}
@@ -225,10 +224,10 @@ export default function CostControlPage() {
 
       {/* summary */}
       <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(180px, 1fr))', gap: 12, marginBottom: 18 }}>
-        <StatCard icon={<Wallet size={19} weight="duotone" color="var(--text-secondary)" />} label="Revised Budget" value={usd(r.revisedBudgetCents)} delay={0.02}  href="/app/billing/cost-control"/>
-        <StatCard icon={<Handshake size={19} weight="duotone" color="var(--text-secondary)" />} label="Committed" value={usd(r.committedCents)} delay={0.06}  href="/app/billing/cost-control"/>
-        <StatCard icon={<Receipt size={19} weight="duotone" color="var(--text-secondary)" />} label="Spent to Date" value={usd(r.actualCents)} delay={0.10}  href="/app/billing/cost-control"/>
-        <StatCard icon={<TrendUp size={19} weight="duotone" color="var(--text-secondary)" />} label="Projected Final" value={usd(r.projectedFinalCents)} delay={0.14}  href="/app/billing/cost-control"/>
+        <StatCard icon={<Wallet size={19} weight="duotone" color="var(--text-secondary)" />} label="Revised Budget" value={usd(r.revisedBudgetCents)} delay={0.02} />
+        <StatCard icon={<Handshake size={19} weight="duotone" color="var(--text-secondary)" />} label="Committed" value={usd(r.committedCents)} delay={0.06} />
+        <StatCard icon={<Receipt size={19} weight="duotone" color="var(--text-secondary)" />} label="Spent to Date" value={usd(r.actualCents)} delay={0.10} />
+        <StatCard icon={<TrendUp size={19} weight="duotone" color="var(--text-secondary)" />} label="Projected Final" value={usd(r.projectedFinalCents)} delay={0.14} />
         <StatCard
           icon={<Scales size={19} weight="duotone" color={r.varianceCents < 0 ? RED : GREEN} />}
           label="Variance"
@@ -236,11 +235,11 @@ export default function CostControlPage() {
           accent={r.varianceCents < 0 ? RED : GREEN}
           sub={<span style={{ color: r.varianceCents < 0 ? RED : GREEN, fontWeight: 700 }}>{r.varianceCents < 0 ? 'Over budget' : 'Under budget'}</span>}
           delay={0.18}
-         href="/app/billing/cost-control"/>
+        />
       </div>
 
       {/* table */}
-      <SectionCard title="Cost Breakdown" subtitle="Budget vs. committed vs. actual — per cost code" icon={<Table size={17} weight="duotone" color="var(--text-secondary)" />} flush>
+      <SectionCard title="Cost Breakdown" flush>
         <div style={{ overflow: 'auto' }}>
           <div style={{ display: 'grid', gridTemplateColumns: GRID, background: PANEL, padding: '10px 16px', fontSize: 12, color: DIM, fontWeight: 700, minWidth: 980, gap: 6 }}>
             <span>Cost Code / Description</span><span style={{ textAlign: 'right' }}>Budget</span><span style={{ textAlign: 'right' }}>Changes</span><span style={{ textAlign: 'right' }}>Committed</span><span style={{ textAlign: 'right' }}>Actual</span><span style={{ textAlign: 'right' }}>Projected</span><span style={{ textAlign: 'right' }}>Variance</span><span />
@@ -259,7 +258,7 @@ export default function CostControlPage() {
                 {/* Committed — auto from POs, optional override */}
                 <div>
                   <input value={l.comOv !== null ? l.comOv : d(l.comAuto)} onChange={(e) => upd(l.id, { comOv: e.target.value })} disabled={ro}
-                    style={{ ...inp, borderColor: l.comOv !== null ? GOLD : LINE }} />
+                    style={{ ...inp, borderColor: l.comOv !== null ? 'var(--border-strong)' : LINE, color: l.comOv !== null ? 'var(--text-primary)' : TEXT }} />
                   {!ro && (l.comOv !== null
                     ? <button onClick={() => upd(l.id, { comOv: null })} title="Reset to auto" style={{ background: 'none', border: 'none', color: 'var(--text-primary)', cursor: 'pointer', fontSize: 12, display: 'inline-flex', alignItems: 'center', gap: 3, padding: '2px 0' }}><ArrowUUpLeft size={11} weight="bold" />Override · auto {usd(l.comAuto)}</button>
                     : <span style={{ fontSize: 12, color: DIM }}>{l.manual ? 'Manual line' : 'Auto · POs'}</span>)}
@@ -267,7 +266,7 @@ export default function CostControlPage() {
                 {/* Actual — auto from invoices, optional override */}
                 <div>
                   <input value={l.actOv !== null ? l.actOv : d(l.actAuto)} onChange={(e) => upd(l.id, { actOv: e.target.value })} disabled={ro}
-                    style={{ ...inp, borderColor: l.actOv !== null ? GOLD : LINE }} />
+                    style={{ ...inp, borderColor: l.actOv !== null ? 'var(--border-strong)' : LINE, color: l.actOv !== null ? 'var(--text-primary)' : TEXT }} />
                   {!ro && (l.actOv !== null
                     ? <button onClick={() => upd(l.id, { actOv: null })} title="Reset to auto" style={{ background: 'none', border: 'none', color: 'var(--text-primary)', cursor: 'pointer', fontSize: 12, display: 'inline-flex', alignItems: 'center', gap: 3, padding: '2px 0' }}><ArrowUUpLeft size={11} weight="bold" />Override · auto {usd(l.actAuto)}</button>
                     : <span style={{ fontSize: 12, color: DIM }}>{l.manual ? 'Manual line' : 'Auto · invoices'}</span>)}
@@ -277,17 +276,13 @@ export default function CostControlPage() {
               </div>
             );
           })}
-          {!viewingId && <div style={{ padding: '10px 16px' }}><button onClick={addRow} style={toolBtn} className="pmBtn"><Plus size={13} weight="bold" />Add Cost Code</button></div>}
+          {!viewingId && rows.length > 0 && <div style={{ padding: '10px 16px' }}><button onClick={addRow} style={toolBtn} className="pmBtn"><Plus size={13} weight="bold" />Add Cost Code</button></div>}
         </div>
       </SectionCard>
 
-      {/* sources footnote */}
-      {(sources.committed || sources.actual) && !viewingId && (
-        <div style={{ marginTop: 12, fontSize: 12, color: DIM, display: 'flex', gap: 6, alignItems: 'center', flexWrap: 'wrap' }}>
-          <Sparkle size={12} color="var(--text-secondary)" weight="fill" />
-          <span>Committed: {sources.committed}. Actual: {sources.actual}. Budget: {sources.budget}.</span>
-        </div>
-      )}
+      {/* The data-source note (table and column names) is no longer shown:
+          it read as database text. Each cell already says "Auto · POs" /
+          "Auto · invoices" under its figure. */}
     </PremiumSurface>
   );
 }

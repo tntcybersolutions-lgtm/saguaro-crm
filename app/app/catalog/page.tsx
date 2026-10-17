@@ -268,7 +268,6 @@ const VERTICAL_VISUAL: Record<string, { icon: React.ElementType; hue: string }> 
  *  lightbox), else the vertical-accent monogram chip. */
 function ItemVisual({ item, onOpen }: { item: CatalogItem; onOpen: (item: CatalogItem) => void }) {
   const vis = VERTICAL_VISUAL[item.vertical];
-  const hue = vis?.hue || 'var(--text-secondary)';
   const MonoIcon = vis?.icon || Package;
   if (item.imageUrl) {
     return (
@@ -285,16 +284,9 @@ function ItemVisual({ item, onOpen }: { item: CatalogItem; onOpen: (item: Catalo
   return (
     <div
       title={`${titleCase(item.vertical)} — no product image yet`}
-      style={{
-        width: 40, height: 40, borderRadius: 10, position: 'relative', overflow: 'hidden', flex: 'none',
-        display: 'flex', alignItems: 'center', justifyContent: 'center',
-        background: `color-mix(in srgb, ${hue} 10%, transparent)`,
-        border: `1px solid color-mix(in srgb, ${hue} 24%, transparent)`,
-        boxShadow: 'inset 0 1px 0 rgba(255,255,255,0.07)',
-      }}
+      style={{ width: 40, height: 40, flex: 'none', display: 'flex', alignItems: 'center', justifyContent: 'center' }}
     >
-      <span style={{ position: 'absolute', left: 0, top: 0, bottom: 0, width: 3, background: hue }} />
-      <MonoIcon size={17} weight="duotone" color={hue} />
+      <MonoIcon size={22} weight="duotone" color="var(--text-tertiary)" />
     </div>
   );
 }
@@ -325,7 +317,6 @@ export default function CatalogPage() {
   const [imgErr, setImgErr] = useState('');
   const [imgUrlDraft, setImgUrlDraft] = useState('');
   const [placeErr, setPlaceErr] = useState('');
-  const [pricingInfo, setPricingInfo] = useState(false);
 
   useEffect(() => {
     (async () => {
@@ -612,33 +603,6 @@ export default function CatalogPage() {
               <option value="price">Sort: Best Price</option>
               <option value="category">Sort: Category</option>
             </select>
-            <div style={{ position: 'relative' }}>
-              <button
-                onClick={() => setPricingInfo((v) => !v)}
-                className="pmBtn"
-                style={{ ...ghostButtonStyle, display: 'inline-flex', alignItems: 'center', gap: 6, padding: '8px 12px', fontSize: 12 }}
-                aria-expanded={pricingInfo}
-              >
-                <Info size={13} weight="bold" /> How Pricing Works
-              </button>
-              {pricingInfo && (
-                <div style={{ position: 'absolute', right: 0, top: 'calc(100% + 8px)', zIndex: 80, width: 304, background: 'var(--bg-solid-2)', border: '1px solid var(--border-default)', borderRadius: 12, padding: '14px 16px', boxShadow: '0 12px 32px rgba(0,0,0,0.5), inset 0 1px 0 rgba(255,255,255,0.06)', textAlign: 'left' }}>
-                  <div style={{ fontSize: 12, fontWeight: 900, color: 'var(--text-primary)', marginBottom: 8 }}>How Pricing and Ordering Work</div>
-                  {[
-                    ['1. Reference Snapshot', 'Every price is seeded reference data stamped with its capture date — never a live quote.'],
-                    ['2. No Stock Claims', 'Availability is not tracked. A stock badge appears only on rows fed by a connected vendor feed, stamped with that vendor and date.'],
-                    ['3. Check Availability', 'The Check Availability link on any offer searches that exact SKU and vendor, so you confirm today\'s price and stock yourself.'],
-                    ['4. Draft the PO', 'Adding items creates draft POs grouped by vendor, with the reference-pricing note written onto each PO.'],
-                    ['5. Your Vendor Confirms', 'The vendor confirms price and stock before the PO is issued. Vendor API feeds connect here when accounts are linked.'],
-                  ].map(([h, b]) => (
-                    <div key={h} style={{ marginBottom: 8 }}>
-                      <div style={{ fontSize: 12, fontWeight: 800, color: TEXT }}>{h}</div>
-                      <div style={{ fontSize: 12, color: DIM, lineHeight: 1.45 }}>{b}</div>
-                    </div>
-                  ))}
-                </div>
-              )}
-            </div>
           </div>
         }
       />
@@ -678,7 +642,6 @@ export default function CatalogPage() {
           ...(stats.items > 0 && stats.coverage < 100 ? [`${stats.coverage}% priced`] : []),
           `reference pricing as of ${fmtDate(data.asOfMax)}`,
         ].join(' · ')}
-        icon={<Package size={17} weight="duotone" color="var(--text-secondary)" />}
         flush
       >
         {/* ── One line, not three.
@@ -691,7 +654,7 @@ export default function CatalogPage() {
              The honesty is not negotiable, so it stays — as one sentence. The
              long version lives behind "How pricing works" in the header, where
              someone who wants it can go and get it. ── */}
-        <div style={{ display: 'flex', gap: 9, alignItems: 'center', flexWrap: 'wrap' as const, padding: '9px 16px', borderBottom: `1px solid ${BORDER}`, background: 'var(--bg-surface-2)' }}>
+        <div style={{ display: 'flex', gap: 9, alignItems: 'center', flexWrap: 'wrap' as const, padding: '9px 0', borderBottom: `1px solid ${BORDER}` }}>
           <Info size={13} weight="bold" color="var(--text-secondary)" style={{ flex: 'none' }} />
           <span style={{ fontSize: 12, color: DIM, lineHeight: 1.45, minWidth: 0 }}>
             {data?.hasLiveStockFeed
@@ -703,7 +666,7 @@ export default function CatalogPage() {
               type="button"
               onClick={() => setShowVendorSites((v) => !v)}
               className="pmBtn"
-              style={{ marginLeft: 'auto', fontSize: 12, fontWeight: 800, color: DIM, background: 'transparent', border: `1px solid ${BORDER}`, borderRadius: 6, padding: '3px 9px', cursor: 'pointer', whiteSpace: 'nowrap' as const }}
+              style={{ marginLeft: 'auto', minHeight: 40, fontSize: 13, fontWeight: 700, color: 'var(--link)', background: 'transparent', border: 0, padding: '0 4px', cursor: 'pointer', whiteSpace: 'nowrap' as const }}
             >
               {showVendorSites ? 'Hide Vendor Sites' : `${vendorLinks.length} Vendor Sites`}
             </button>
@@ -751,11 +714,11 @@ export default function CatalogPage() {
             <table className="k-table" style={{ width: '100%', borderCollapse: 'collapse' as const }}>
               <thead>
                 <tr>
-                  <SortableTh label="Add to Order" sort={colSort} onSort={cycleSort} style={{ padding: '9px 12px', minWidth: 132 }} />
+                  <SortableTh label="Order" sort={colSort} onSort={cycleSort} style={{ padding: '9px 12px', minWidth: 112 }} />
                   <SortableTh label="Item" sortKey="item" sort={colSort} onSort={cycleSort} style={{ padding: '9px 12px', minWidth: 260 }} />
                   <SortableTh label="Unit" sortKey="unit" sort={colSort} onSort={cycleSort} style={{ padding: '9px 12px', minWidth: 58 }} />
                   <SortableTh label="Best Price" sortKey="best" sort={colSort} onSort={cycleSort} align="right" style={{ padding: '9px 12px', minWidth: 132 }} />
-                  <SortableTh label="Other Quotes" sortKey="quotes" sort={colSort} onSort={cycleSort} style={{ padding: '9px 12px', minWidth: 300 }} />
+                  <SortableTh label="Other Quotes" sortKey="quotes" sort={colSort} onSort={cycleSort} style={{ padding: '9px 12px', minWidth: 220 }} />
                   <SortableTh label="Verify" sort={colSort} onSort={cycleSort} style={{ padding: '9px 12px', minWidth: 148 }} />
                 </tr>
               </thead>
@@ -804,10 +767,10 @@ export default function CatalogPage() {
                               disabled={it.prices.length === 0}
                               className="pmBtn catAdd"
                               style={{
-                                display: 'inline-flex', alignItems: 'center', gap: 6, padding: '6px 13px',
-                                background: 'var(--bg-surface-2)',
+                                display: 'inline-flex', alignItems: 'center', gap: 6, minHeight: 40, padding: '0 14px',
+                                background: 'transparent',
                                 border: '1px solid var(--border-default)', borderRadius: 8, color: it.prices.length ? 'var(--text-primary)' : 'var(--text-tertiary)',
-                                fontSize: 12, fontWeight: 700, cursor: it.prices.length ? 'pointer' : 'not-allowed',
+                                fontSize: 13, fontWeight: 700, cursor: it.prices.length ? 'pointer' : 'not-allowed',
                                 boxShadow: 'none',
                               }}
                             >
@@ -882,7 +845,7 @@ export default function CatalogPage() {
                             </div>
                           </div>
                         </td>
-                        <td style={{ padding: '9px 12px', color: DIM, whiteSpace: 'nowrap' as const }}>{it.unit || '—'}</td>
+                        <td style={{ padding: '9px 12px', color: DIM, whiteSpace: 'nowrap' as const }}>{it.unit || ''}</td>
                         {/* BEST PRICE — the number, who quoted it, nothing else. */}
                         <td style={{ padding: '9px 12px', textAlign: 'right' as const, whiteSpace: 'nowrap' as const, verticalAlign: 'middle' }}>
                           {best ? (
@@ -931,14 +894,12 @@ export default function CatalogPage() {
                               {best ? 'Only quote on file' : '—'}
                             </span>
                           ) : (
-                            <div style={{ display: 'flex', flexWrap: 'wrap' as const, gap: 5, alignItems: 'center' }}>
+                            <div style={{ display: 'flex', flexWrap: 'wrap' as const, gap: '4px 14px', alignItems: 'center' }}>
                               {others.map((o, i) => (
                                 <span key={`${o.vendor}-${i}`} className="catProv" tabIndex={0}>
                                   <ProvPop offer={o} item={it} />
                                   <span style={{
                                     display: 'inline-flex', alignItems: 'baseline', gap: 6,
-                                    padding: '3px 8px', borderRadius: 7,
-                                    border: `1px solid ${BORDER}`, background: 'rgba(255,255,255,0.03)',
                                     whiteSpace: 'nowrap' as const,
                                   }}>
                                     <span style={{ fontSize: 12, color: DIM }}>{o.vendor}</span>
@@ -1020,7 +981,7 @@ export default function CatalogPage() {
             <ShoppingCartSimple size={20} weight="fill" color="var(--text-secondary)" />
             <div>
               <div style={{ fontWeight: 800, color: TEXT, fontSize: 14, fontVariantNumeric: 'tabular-nums' }}>{cartCount} item{cartCount === 1 ? '' : 's'} · {fmtMoney(cartTotal)}</div>
-              <div style={{ fontSize: 12, color: DIM }}>Best reference offer per item · availability not tracked · POs grouped by vendor · your vendor confirms price and stock before issue</div>
+              <div style={{ fontSize: 12, color: DIM }}>Best reference price per item · one PO per vendor</div>
             </div>
           </div>
           <div style={{ flex: 1 }} />
