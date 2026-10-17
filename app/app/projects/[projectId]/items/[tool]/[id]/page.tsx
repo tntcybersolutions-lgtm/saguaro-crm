@@ -27,7 +27,7 @@ import { itemTool, itemNumber, nounInSentence, statusLabel, valueLabel, type Ite
 
 type Item = Record<string, unknown>;
 type FileRow = { id: string; name: string; size: number | null; kind: string | null; by: string | null; at: string; url: string | null };
-type Comment = { id: string; body: string; author_name: string | null; created_at: string; attachments?: { id: string; name: string }[]; is_official?: boolean; mine?: boolean };
+type Comment = { id: string; body: string; author_name: string | null; created_at: string; attachments?: { id: string; name: string }[]; is_official?: boolean; mine?: boolean; source?: string | null };
 
 const money = new Intl.NumberFormat('en-US', { style: 'currency', currency: 'USD', minimumFractionDigits: 2 });
 
@@ -363,6 +363,7 @@ function CommentsTab({ type, id, projectId, tool, comments, reload, show }: {
               <div className="ip-comment-head">
                 <strong>{c.author_name || 'Someone'}</strong>
                 {c.is_official && <span className="ip-official">Official answer</span>}
+                {c.source === 'email' && <span className="ip-via">via email</span>}
                 <time dateTime={c.created_at}>{new Date(c.created_at).toLocaleString('en-US', { month: 'short', day: 'numeric', hour: 'numeric', minute: '2-digit' })}</time>
                 {c.mine && <button type="button" className="ip-icon-btn" aria-label="Remove my comment" onClick={() => void remove(c)}><Trash size={14} /></button>}
               </div>
@@ -464,6 +465,7 @@ const CSS = `
 .ip-comment-head{display:flex;align-items:center;gap:8px;font-size:14px;color:var(--text-primary)}
 .ip-comment-head time{margin-left:auto;color:var(--text-tertiary);font-size:12px}
 .ip-official{font-size:12px;font-weight:700;color:var(--success)}
+.ip-via{font-size:12px;color:var(--text-tertiary)}
 .ip-comment-body{margin:6px 0 0;font-size:15px;color:var(--text-primary);white-space:pre-wrap;overflow-wrap:anywhere}
 .ip-attach{list-style:none;margin:8px 0 0;padding:0;display:flex;flex-wrap:wrap;gap:12px;font-size:13px;color:var(--text-secondary)}
 .ip-compose{display:flex;flex-direction:column;gap:8px}
