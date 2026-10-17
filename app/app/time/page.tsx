@@ -25,6 +25,7 @@ import SaguaroDatePicker from '@/components/SaguaroDatePicker';
 import { humanError } from '@/lib/errors';
 import { confirmDialog } from '@/lib/ui/async-dialog';
 import { sendOrSave, listSaved, isOffline, drainOutbox } from '@/lib/offline/outbox';
+import { loadJobs } from '@/lib/offline/last-known';
 import { getSupabaseBrowser, ensureBrowserSession, getAuthHeaders } from '@/lib/supabase-browser';
 import { computeTimesheet, weekKey, fmtHours, liveElapsed, type TimeEntry } from '@/lib/timeclock';
 import { CSI_DIVISIONS } from '@/lib/construction-intelligence';
@@ -251,18 +252,12 @@ export default function TimeClockPage() {
         if (asked && data.some((p) => p.id === asked)) setProjectId(asked);
         else if (data.length === 1) setProjectId(data[0].id);
       };
-      fetch('/api/projects?limit=500&fields=id,name', { credentials: 'same-origin', cache: 'no-store' })
-        .then((r) => (r.ok ? r.json() : Promise.reject(new Error(`projects ${r.status}`))))
-        .then((d) => {
-          const data: { id: string; name: string }[] = (Array.isArray(d) ? d : d?.projects ?? [])
-            .slice()
-            .sort((a: { name?: string }, b: { name?: string }) => String(a.name || '').localeCompare(String(b.name || '')));
-          try { window.localStorage.setItem(JOBS_KEY, JSON.stringify(data)); } catch (err) { console.debug('[time] job list not kept on this device', err); }
-          applyJobs(data);
-        })
+      // No signal on site is normal: loadJobs falls back to the last job list this phone saw (IndexedDB).
+      loadJobs('/api/projects?limit=500&fields=id,name')
+        .then(({ jobs }) => applyJobs(jobs))
         .catch((err) => {
           console.error(err);
-          // No signal on site is normal: fall back to the last job list this phone saw.
+          // A phone that only ever kept the list the old way (before IndexedDB).
           let kept: { id: string; name: string }[] | null = null;
           try { kept = JSON.parse(window.localStorage.getItem(JOBS_KEY) || 'null'); } catch (readErr) { console.debug('[time] no kept job list', readErr); }
           if (Array.isArray(kept) && kept.length) applyJobs(kept);

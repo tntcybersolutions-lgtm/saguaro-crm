@@ -12,8 +12,12 @@
  *     here — the app's outbox (lib/offline/outbox.ts) owns offline saves.
  * Sign-out sends 'saguaro:clear-cache' so the next person on this phone never
  * sees the last one's data offline.
+ *
+ * V is the cache version. Bump it (and WORKER_V in lib/offline/worker.ts) when
+ * the caching rules change: activate drops every older sag-* cache, and the app
+ * warms the field screens again straight away.
  */
-const V = 'v1';
+const V = 'v2';
 const PAGES = `sag-pages-${V}`;
 const STATIC = `sag-static-${V}`;
 const DATA = `sag-data-${V}`;
@@ -64,7 +68,7 @@ const OFFLINE_HTML = `<!doctype html><html lang="en"><head><meta charset="utf-8"
 main{min-height:100%;display:flex;flex-direction:column;justify-content:center;gap:14px;padding:32px 24px;box-sizing:border-box;max-width:520px;margin:0 auto}
 h1{margin:0;font-size:26px;color:#ffe600}p{margin:0;color:#c9c4b4;font-weight:500}button{margin-top:8px;min-height:48px;border:0;border-radius:12px;background:#ffe600;color:#111;font:800 16px system-ui}</style></head>
 <body><main><h1>You're offline</h1><p>This screen hasn't been opened on this phone yet, so there's no saved copy. Screens you've opened before still work — go back, or try again when you have signal.</p>
-<p>Photos and video you add while offline are kept on this phone and upload when you're back.</p>
+<p>Daily logs, clock in and out, and photos you add while offline are kept on this phone and send when you're back.</p>
 <button onclick="history.length>1?history.back():location.assign('/app')">Go back</button></main></body></html>`;
 
 self.addEventListener('fetch', (e) => {
@@ -101,7 +105,9 @@ self.addEventListener('fetch', (e) => {
       return res;
     } catch (err) {
       const c = await caches.open(cacheName);
-      const hit = await c.match(req, { ignoreVary: true });
+      // A page opened with a query (/app?media=1 from the Photo button) falls
+      // back to the saved copy of the same screen without it.
+      const hit = (await c.match(req, { ignoreVary: true })) || (isPage ? await c.match(req, { ignoreVary: true, ignoreSearch: true }) : undefined);
       if (hit) return hit;
       if (isPage) return new Response(OFFLINE_HTML, { status: 200, headers: { 'Content-Type': 'text/html; charset=utf-8' } });
       return new Response(JSON.stringify({ error: "You're offline and this hasn't been loaded on this phone yet.", offline: true }), {

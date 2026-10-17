@@ -5,6 +5,7 @@ import { requirePermission } from '@/lib/permissions';
 import { recordLearning } from '@/lib/learning';
 import { apiError } from '@/lib/api-error';
 import { requestDay } from '@/lib/time-zone';
+import { readClientId, isUniqueViolation } from '@/lib/offline/client-id';
 
 export async function POST(req: NextRequest) {
   const g = await requirePermission(req, 'Projects', 'Edit');
@@ -56,8 +57,22 @@ export async function POST(req: NextRequest) {
   const sentHigh = num(pick('temperatureHigh', 'high_temp'));
   const sentLow = num(pick('temperatureLow', 'low_temp'));
   let pickedLogDate: string = pick('logDate', 'log_date') || '';
+  /* A log written on a phone with no signal is sent again until the phone hears
+     back. The id the phone gave it finds the row an earlier send already made,
+     so a second send returns that log instead of a 409 or a second row. */
+  const clientId = readClientId(req.headers, body);
+  const alreadySent = async () => {
+    if (!clientId) return null;
+    const { data, error: findErr } = await db.from('daily_logs').select('*')
+      .eq('tenant_id', tenantId).eq('client_id', clientId).limit(1);
+    if (findErr) throw findErr;
+    return ((data as Record<string, unknown>[] | null) || [])[0] ?? null;
+  };
 
   try {
+    const earlier = await alreadySent();
+    if (earlier) return NextResponse.json({ success: true, log: earlier, replayed: true });
+
     // No date sent: the logger's day (device, else company zone) — not the UTC day, which is tomorrow by 7 PM in Iowa.
     if (!pickedLogDate) pickedLogDate = (await requestDay(req.headers, db, tenantId, 'daily-logs/create')).today;
 
@@ -121,6 +136,7 @@ export async function POST(req: NextRequest) {
       materials_received: body.materialsReceived ?? body.materials_received ?? null,
       subcontractors_on_site: Array.isArray(body.subcontractorsOnSite ?? body.subcontractors_on_site) ? (body.subcontractorsOnSite ?? body.subcontractors_on_site) : null,
       created_by: user?.id,
+      ...(clientId ? { client_id: clientId } : {}),
     } as never).select().single();
 
     if (error) throw error;
@@ -157,6 +173,11 @@ export async function POST(req: NextRequest) {
        to open it instead of making them hunt. */
     const code = (err as { code?: string })?.code;
     const detail = String((err as { message?: string })?.message ?? '');
+    // Two sends of the same offline log raced: the other one wrote it.
+    if (clientId && isUniqueViolation(err)) {
+      const earlier = await alreadySent().catch(() => null);
+      if (earlier) return NextResponse.json({ success: true, log: earlier, replayed: true });
+    }
     if (code === '23505' && detail.includes('daily_logs_project_date_tenant')) {
       const { data: existing } = await db
         .from('daily_logs')

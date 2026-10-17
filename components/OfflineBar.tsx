@@ -9,6 +9,7 @@ import React, { useEffect, useState, useSyncExternalStore } from 'react';
 import { CloudSlash, CloudCheck, ArrowsClockwise } from '@phosphor-icons/react';
 import { getNetState, getServerNetState, subscribeNet, startOfflineWatch } from '@/lib/offline/outbox';
 import { startAppWorker } from '@/lib/offline/worker';
+import SyncLine from '@/components/offline/SyncLine';
 
 const CSS = `
 .offb { position: fixed; left: 50%; transform: translateX(-50%); top: var(--offb-top, 12px); z-index: 10050;
@@ -44,7 +45,7 @@ export default function OfflineBar({ top }: { top?: string }) {
   let tone = '';
   if (!net.online) {
     tone = 'off';
-    body = (<><CloudSlash size={20} weight="bold" /><span>You&apos;re offline<small>{net.pending ? `${net.pending} item${net.pending === 1 ? '' : 's'} saved on this phone — ${net.pending === 1 ? 'it sends' : 'they send'} when you're back.` : 'Photos, daily logs and punch items you add are saved on this phone and send when you\'re back.'}</small></span></>);
+    body = (<><CloudSlash size={20} weight="bold" /><span>You&apos;re offline<small>{net.pending ? `${net.pending} item${net.pending === 1 ? '' : 's'} waiting for signal — ${net.pending === 1 ? 'it sends by itself' : 'they send by themselves'} when you're back.` : 'Daily logs, clock in and out, and photos you add are saved on this phone and send when you\'re back.'}</small></span></>);
   } else if (showBack && net.syncing) {
     tone = 'sync';
     body = (<><ArrowsClockwise size={20} weight="bold" /><span>Back online<small>Sending what you saved offline… {net.synced ? `${net.synced} done` : ''}</small></span></>);
@@ -52,11 +53,14 @@ export default function OfflineBar({ top }: { top?: string }) {
     tone = 'on';
     body = (<><CloudCheck size={20} weight="bold" /><span>Back online{net.synced ? <small>{net.synced} item{net.synced === 1 ? '' : 's'} sent from this phone.</small> : null}</span></>);
   }
-  if (!body) return null;
+  if (!body) return <SyncLine />;
   return (
+    <>
+    <SyncLine />
     <div className="offb" data-tone={tone} role="status" aria-live="polite" style={top ? ({ ['--offb-top' as string]: top } as React.CSSProperties) : undefined}>
       <style dangerouslySetInnerHTML={{ __html: CSS }} />
       {body}
     </div>
+    </>
   );
 }

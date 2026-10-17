@@ -14,6 +14,7 @@ import { getAuthHeaders, getSupabaseBrowser } from '@/lib/supabase-browser';
 import { classifyKind } from '@/lib/filekind';
 import { shrinkForUpload } from '@/lib/image-shrink';
 import { photoFix, type PhotoFix } from '@/lib/photo-gps';
+import { CLIENT_ID_HEADER, clientIdFor } from '@/lib/offline/client-id';
 
 export type MediaKind = 'image' | 'video';
 
@@ -179,6 +180,8 @@ export interface PhotoUploadOpts {
    *  a photo kept offline brings the fix from when it was taken. */
   location?: PhotoFix | null;
   onProgress?: (fraction: number) => void;
+  /** The phone's id for this photo (lib/offline/client-id). Left out: one per File, so a retry of the same pick is never filed twice. */
+  clientId?: string;
 }
 
 /** One photo, any size, into the project's gallery. Returns the signed photos row. */
@@ -187,7 +190,7 @@ export async function uploadPhoto(original: File, o: PhotoUploadOpts): Promise<R
   const fixing = o.location !== undefined ? Promise.resolve(o.location) : photoFix();
   // Send ~a fifth of the bytes: the server only keeps a 2000 px copy anyway.
   const file = await shrinkForUpload(original);
-  const h = await getAuthHeaders();
+  const h = { ...(await getAuthHeaders()), [CLIENT_ID_HEADER]: o.clientId ?? clientIdFor(original) };
   const start = await jsonOrThrow(
     await fetch('/api/photos/upload-url', {
       method: 'POST',
@@ -196,6 +199,8 @@ export async function uploadPhoto(original: File, o: PhotoUploadOpts): Promise<R
     }),
     "Couldn't start the upload.",
   );
+  // Already filed by an earlier send of this same photo: nothing to upload.
+  if (start.existing && typeof start.existing === 'object') { o.onProgress?.(1); return start.existing as Record<string, unknown>; }
   await putSigned(start as unknown as SignedUpload, file, (f) => o.onProgress?.(f * 0.9));
   const location = await fixing;
   const done = await jsonOrThrow(

@@ -19,6 +19,7 @@ import {
 import { must } from '@/lib/db-write';
 import { TIME_ZONE_HEADER } from '@/lib/time-zone';
 import { apiError } from '@/lib/api-error';
+import { readClientId, isUniqueViolation } from '@/lib/offline/client-id';
 
 /**
  * POST /api/timeclock/in
@@ -44,6 +45,20 @@ export async function POST(req: NextRequest) {
   try {
     const body = await req.json().catch(() => ({} as Record<string, unknown>));
     const employee = await resolveEmployee(db, g.user);
+
+    // 0) A clock-in kept on the phone and sent again (the first send landed, the
+    //    answer was lost). The shift it opened is the answer — even if it has
+    //    since been closed, this tap must never open a second one.
+    const clientId = readClientId(req.headers, body);
+    const shiftFromThisTap = async (): Promise<ShiftRow | null> => {
+      if (!clientId) return null;
+      const { data, error } = await db.from('time_entries').select(SHIFT_COLUMNS)
+        .eq('tenant_id', t).eq('employee_id', employee.id).eq('client_id' as never, clientId as never).limit(1);
+      if (error) throw error;
+      return ((data as ShiftRow[] | null) || [])[0] ?? null;
+    };
+    const earlier = await shiftFromThisTap();
+    if (earlier) return NextResponse.json({ ok: true, shift: toShift(earlier), alreadyOpen: true, replayed: true });
 
     // 1) SERVER-SIDE open-shift check — the dupe guard.
     const existing = await findOpenShift(db, t, employee.id);
@@ -91,9 +106,15 @@ export async function POST(req: NextRequest) {
         cost_code_description: csiDivision ? CSI_DIVISIONS[csiDivision]?.name ?? null : null,
         gps_clock_in: gpsPayload(body.lat, body.lng, body.address, body.clientTime, nowIso, savedOffline),
         created_by: await resolveCreatedBy(db, g.user.id),
+        ...(clientId ? { client_id: clientId } : {}),
       } as never)
       .select(SHIFT_COLUMNS)
       .single();
+    if (insErr && clientId && isUniqueViolation(insErr)) {
+      // Two sends of the same tap raced; the other one opened the shift.
+      const raced = await shiftFromThisTap();
+      if (raced) return NextResponse.json({ ok: true, shift: toShift(raced), alreadyOpen: true, replayed: true });
+    }
     if (insErr || !inserted) throw insErr ?? new Error('clock-in insert returned no row');
 
     let shiftRow = inserted as ShiftRow;

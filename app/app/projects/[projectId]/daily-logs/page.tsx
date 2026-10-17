@@ -580,8 +580,8 @@ export default function DailyLogsPage(){
   // ── Register columns: full register, or a compact one beside the day's record ──
   const isSel = (l:any) => selected?.id===l.id && mode!=='create';
   const dateCol: Column<any> = { key:'log_date', header:'Date', primary:true, phone:'show', accessor:l=>l.log_date||'', width:130, render:l=><span className="pdlDate" data-sel={isSel(l)?'true':undefined}>{fmtDate(l.log_date)}</span> };
-  const statusCol: Column<any> = { key:'status', header:'Status', phone:'show', accessor:l=>l._offline?'On This Phone':logStatus(l).label, render:l=>{
-    if(l._offline) return <span title={l._offlineError?`Couldn't send: ${l._offlineError}`:"Saved on this phone — it sends when you're back online."}><Badge tone={l._offlineError?'overdue':'gold'}>{l._offlineError?"Couldn't Send":'On This Phone'}</Badge></span>;
+  const statusCol: Column<any> = { key:'status', header:'Status', phone:'show', accessor:l=>l._offline?'Waiting for Signal':logStatus(l).label, render:l=>{
+    if(l._offline) return <span title={l._offlineError?`Couldn't send: ${l._offlineError}`:"Saved on this phone — it sends when you're back online."}><Badge tone={l._offlineError?'overdue':'gold'}>{l._offlineError?"Couldn't Send":'Waiting for Signal'}</Badge></span>;
     const s=logStatus(l);return <Badge tone={s.tone}>{s.label}</Badge>;
   } };
   const weatherCol: Column<any> = { key:'weather', header:'Weather', phone:'hide', accessor:l=>l.weather||'', render:l=>l.weather?<span className="pdlClamp" style={{maxWidth:160}} title={l.weather}>{l.weather}</span>:<span className="pdlMuted">—</span> };

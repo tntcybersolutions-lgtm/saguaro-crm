@@ -450,3 +450,11 @@ the ungated proposal_signatures / _events (20261017c, applied). Found on the way
   on which figure is the original.
 - `projects/[projectId]/resource-planning/[id]` PATCH allows `trade` and `certifications`, which are not columns —
   a body with either fails.
+- `public/push-sw.js` (fetch handler, `isData`) caches `/api` GETs network-first (served only when the network
+  fails, wiped on sign-out). The offline-field brief said "never cache /api"; left as is because removing it takes
+  away offline reading on every screen opened before (punch list, RFIs, drawings, daily-log lists). Needs a ruling.
+- `public/sw.js` ("Saguaro Field v7", precaches `/field/*`) is registered by nothing — `/field` does not exist; dead file.
+- Offline badges ("Waiting for Signal") use `Badge tone="gold"` — yellow on a label, against DESIGN_SYSTEM §4
+  (`app/app/daily-logs/page.tsx:470`, `app/app/projects/[projectId]/daily-logs/page.tsx:584`,
+  `components/media/OnThisPhone.tsx:78`, `app/app/projects/[projectId]/punch-list/page.tsx:497`).
+- Videos kept on the phone (`/api/files/record`) carry no client id yet — a lost answer can still file a video twice.

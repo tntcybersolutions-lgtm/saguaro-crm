@@ -75,7 +75,7 @@ export default function OnThisPhone({ items, online, syncing, onRetry, onRemove 
                 </div>
                 <div className="otp-body">
                   <div className="otp-name" title={it.name}>{titleFromFileName(it.name)}</div>
-                  <div><Badge tone={failed ? 'overdue' : 'gold'}>{failed ? "Couldn't Send" : 'On This Phone'}</Badge></div>
+                  <div><Badge tone={failed ? 'overdue' : 'gold'}>{failed ? "Couldn't Send" : 'Waiting for Signal'}</Badge></div>
                   <div className="otp-meta" data-tone={failed ? 'bad' : undefined}>
                     {failed ? it.lastError || 'The server refused it.' : `${it.kind === 'video' ? 'Video' : 'Photo'} · ${fmtBytes(it.size)}${it.lastError ? ` · last try: ${it.lastError}` : ''}`}
                   </div>
