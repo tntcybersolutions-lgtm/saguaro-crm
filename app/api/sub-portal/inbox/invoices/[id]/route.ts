@@ -3,7 +3,8 @@ import { createServerClient } from '@/lib/supabase-server';
 import { apiError } from '@/lib/api-error';
 import { requirePermission } from '@/lib/permissions';
 import { must } from '@/lib/db-write';
-import { INVOICE_STATUS_LABEL, invoiceTransition, isSubInvoiceAction } from '@/lib/sub-invoice-status';
+import { INVOICE_STATUS_LABEL, invoiceStatus, invoiceTransition, isSubInvoiceAction } from '@/lib/sub-invoice-status';
+import { postSubInvoice, type PostResult } from '@/lib/sub-invoice-posting';
 import { gcSenderName } from '@/lib/sub-inbox';
 
 const UUID = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
@@ -15,6 +16,10 @@ const UUID = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
  * and paid unlock the sub's lien waiver in the portal. Sending one back needs
  * a reason, which goes to the sub as a message on the job so they know what
  * to fix. Money decisions: Pay Apps · Full.
+ *
+ * Approving bills the sub's subcontract and the budget line's actual cost;
+ * sending back an approved invoice takes it off again; paid adds to the
+ * subcontract's paid (lib/sub-invoice-posting). The answer says where it went.
  */
 export async function PATCH(req: NextRequest, { params }: { params: Promise<{ id: string }> }) {
   const g = await requirePermission(req, 'Pay Apps', 'Full');
@@ -51,6 +56,17 @@ export async function PATCH(req: NextRequest, { params }: { params: Promise<{ id
     if (uErr) throw uErr;
     if (!updated) return NextResponse.json({ error: 'Someone else just changed this invoice. Reload to see it.' }, { status: 409 });
 
+    // The money follows the status. If it can't be written, the status goes back
+    // so the invoice and the subcontract never disagree.
+    let posted: PostResult;
+    try {
+      posted = await postSubInvoice(db, user.tenantId, row, invoiceStatus(row.status), step.to);
+    } catch (postErr) {
+      const { error: undoErr } = await db.from('portal_sub_pay_apps').update({ status: row.status ?? null, updated_at: now }).eq('id', id).eq('tenant_id', user.tenantId);
+      if (undoErr) console.error('[sub-portal/inbox/invoices] status undo failed', undoErr);
+      return apiError('sub-portal/inbox/invoices post', postErr, "Couldn't post the invoice to the subcontract and budget, so nothing changed. Please try again.");
+    }
+
     const who = await gcSenderName(db, user);
     const money = Number(row.net_amount ?? row.amount ?? 0).toLocaleString('en-US', { style: 'currency', currency: 'USD' });
     if (body.action === 'reject' || (note && body.action !== 'review')) {
@@ -66,10 +82,10 @@ export async function PATCH(req: NextRequest, { params }: { params: Promise<{ id
       tenant_id: user.tenantId, project_id: row.project_id,
       action: `invoice_${step.to}`,
       description: `${who} marked the ${money} invoice ${INVOICE_STATUS_LABEL[step.to].toLowerCase()}`,
-      metadata: { pay_app_id: id, from: row.status ?? null, to: step.to, note: note || null, by: user.id },
+      metadata: { pay_app_id: id, from: row.status ?? null, to: step.to, note: note || null, by: user.id, commitment: posted.commitment, budget_line: posted.budgetLine },
     } as never), 'portal_activity insert');
 
-    return NextResponse.json({ invoice: updated });
+    return NextResponse.json({ invoice: updated, posted });
   } catch (e) {
     return apiError('sub-portal/inbox/invoices', e, "Couldn't update the invoice. Please try again.");
   }

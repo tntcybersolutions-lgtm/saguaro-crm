@@ -13,7 +13,9 @@
 // applied as an eq('tenant_id', …) filter on every read.
 // ─────────────────────────────────────────────────────────────────────────────
 import type { SupabaseClient } from '@supabase/supabase-js';
-import { ENTITY_MAP, FILTER_OP_SET, MAX_ROWS, type ReportColumnDef } from '@/lib/report-entities';
+import { ENTITY_MAP, FILTER_OP_SET, MAX_ROWS, PROJECT_COLUMN, PROJECT_FILTER_OPS, type ReportColumnDef } from '@/lib/report-entities';
+
+const UUID = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
 
 export interface RunFilterInput {
   field?: unknown;
@@ -91,6 +93,9 @@ export async function runReport(
     const field = typeof f.field === 'string' ? f.field : '';
     const op = typeof f.op === 'string' ? f.op : '';
     if (!allowed.has(field) || !FILTER_OP_SET.has(op)) continue; // skip anything not whitelisted
+    // The Project column holds a job id: only "is / is not / empty" apply, and
+    // only to a real id (anything else would be a database error, not a filter).
+    if (field === PROJECT_COLUMN && (!PROJECT_FILTER_OPS.has(op) || (op !== 'is_null' && op !== 'not_null' && !UUID.test(String(f.value ?? ''))))) continue;
 
     if (op === 'is_null') {
       query = query.is(field, null);
@@ -148,7 +153,27 @@ export async function runReport(
   query = query.limit(limit);
 
   const { data, error } = await query;
-  if (error) throw new ReportRunError(error.message || 'Failed to run report', 500);
+  if (error) {
+    // The database's words name tables and columns — log them, never return them.
+    console.error('[reports/run]', entity.table, error);
+    throw new ReportRunError("We couldn't run that report. Try fewer filters, or try again in a moment.", 500);
+  }
+  const rows = (data || []) as Record<string, unknown>[];
+
+  // Job ids → job names (tenant-scoped), so every reader sees the job, not a uuid.
+  if (requested.includes(PROJECT_COLUMN) && rows.length) {
+    const ids = Array.from(new Set(rows.map((r) => r[PROJECT_COLUMN]).filter((v): v is string => typeof v === 'string' && UUID.test(v))));
+    const names = new Map<string, string>();
+    if (ids.length) {
+      const { data: jobs, error: jobsErr } = await db.from('projects').select('id, name').eq('tenant_id', tenantId).in('id', ids);
+      if (jobsErr) console.error('[reports/run] project names', jobsErr);
+      for (const j of (jobs || []) as { id: string; name: string | null }[]) names.set(j.id, j.name || 'Untitled job');
+    }
+    for (const r of rows) {
+      const id = r[PROJECT_COLUMN];
+      r[PROJECT_COLUMN] = typeof id === 'string' ? names.get(id) ?? null : null;
+    }
+  }
 
   const columns = requested.map((k) => allowed.get(k)!);
   return {
@@ -156,7 +181,7 @@ export async function runReport(
     columns,
     groupBy,
     sort: { field: sortField, dir: sortDir },
-    rowCount: (data || []).length,
-    rows: (data || []) as Record<string, unknown>[],
+    rowCount: rows.length,
+    rows,
   };
 }

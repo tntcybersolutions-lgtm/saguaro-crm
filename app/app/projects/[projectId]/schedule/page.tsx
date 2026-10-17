@@ -47,6 +47,7 @@ import Suggest from '@/components/ui/Suggest';
 import { localDay } from '@/lib/calendar-day';
 import { baselineSummary, finishVariance, varianceLabel } from '@/lib/schedule-baseline';
 import { computeCpm, lookahead, type CpmOutput } from '@/lib/schedule-cpm';
+import { spanDays, finishFor, type CascadeMove } from '@/lib/schedule-cascade';
 import { SCHEDULE_STATUSES, SCHEDULE_STATUS_LABELS, normalizeScheduleStatus, reconcileScheduleProgress, isScheduleDone } from '@/lib/schedule-status';
 
 /* One status vocabulary for every schedule screen and route (lib/schedule-status).
@@ -259,11 +260,18 @@ function GanttChart({ tasks, jobHex, selectedId, onSelect, cpm, critOnly, zoom }
   const pct = (date: string) => Math.max(0, Math.min(100, daysBetween(ymd(minDate), date) / totalDays * 100));
   const gridMin = zoom === 'fit' ? undefined : Math.max(700, 212 + totalDays * ZOOM_PX[zoom]);
 
+  /* One label per week only when a week is wide enough to hold one. On a long
+     job in Fit the weekly labels ran into each other ("Apr 18pr 25May 2…");
+     the step widens to every 2, 4, 8… weeks so each label has ~60px. */
+  const trackPx = Math.max(200, (gridMin ?? (box.w || 900)) - 212);
+  const weekPx = trackPx / Math.max(1, totalDays) * 7;
+  let stepWeeks = 1;
+  while (weekPx * stepWeeks < 60 && stepWeeks < 64) stepWeeks *= 2;
   const markers: Date[] = [];
   const cur = new Date(minDate);
   while (cur <= maxDate) {
     markers.push(new Date(cur));
-    cur.setUTCDate(cur.getUTCDate() + 7);
+    cur.setUTCDate(cur.getUTCDate() + 7 * stepWeeks);
   }
 
   const today = localDay();
@@ -465,7 +473,7 @@ export default function SchedulePage() {
       predecessor: task.predecessor || '', predecessor_id: task.predecessor_id || '',
       assigned_to: task.assigned_to || '', notes: task.notes || '',
     });
-    setDuration(task.start_date && task.end_date ? String(daysBetween(task.start_date, task.end_date)) : '');
+    setDuration(task.start_date && task.end_date ? String(spanDays(task.start_date, task.end_date)) : '');
     setAuto({});
     setSelected(task); setMode('edit');
   }
@@ -487,7 +495,7 @@ export default function SchedulePage() {
   // SmartCreate wiring: duration drives the end date; a predecessor drives the start.
   function setStartDate(v: string) {
     const d = Number(duration) || 0;
-    const end = v && d > 0 ? addDaysISO(v, d) : form.end_date;
+    const end = v && d > 0 ? finishFor(v, d) : form.end_date;
     setForm(f => ({ ...f, start_date: v, end_date: end }));
     setAuto(a => ({ ...a, start: false, end: !!(v && d > 0) }));
   }
@@ -495,12 +503,12 @@ export default function SchedulePage() {
     setDuration(v);
     const d = Number(v) || 0;
     if (form.start_date && d > 0) {
-      setForm(f => ({ ...f, end_date: addDaysISO(f.start_date, d) }));
+      setForm(f => ({ ...f, end_date: finishFor(f.start_date, d) }));
       setAuto(a => ({ ...a, end: true }));
     }
   }
   function setEndDate(v: string) {
-    if (form.start_date && v) setDuration(String(daysBetween(form.start_date, v)));
+    if (form.start_date && v) setDuration(String(spanDays(form.start_date, v)));
     setForm(f => ({ ...f, end_date: v }));
     setAuto(a => ({ ...a, end: false }));
   }
@@ -511,7 +519,7 @@ export default function SchedulePage() {
       // A task follows its predecessor — default to starting the day after it ends.
       patch.start_date = addDaysISO(pred.end_date, 1);
       const d = Number(duration) || 0;
-      if (d > 0) patch.end_date = addDaysISO(patch.start_date, d);
+      if (d > 0) patch.end_date = finishFor(patch.start_date, d);
       setAuto({ start: true, end: d > 0 });
     }
     setForm(f => ({ ...f, ...patch }));
@@ -552,6 +560,14 @@ export default function SchedulePage() {
           body: JSON.stringify(snapshot),
         });
         if (!r.ok) { setTasks(prev => prev.map((t: any) => t.id === prevTask.id ? prevTask : t)); throw new Error(await r.text()); }
+        // Followers the server slid along with this task (lib/schedule-cascade).
+        const moved: CascadeMove[] = (await r.json().catch(() => ({})))?.moved || [];
+        if (moved.length) {
+          const by = new Map(moved.map(m => [m.id, m]));
+          setTasks(prev => prev.map((t: any) => by.has(String(t.id)) ? { ...t, start_date: by.get(String(t.id))!.start_date, end_date: by.get(String(t.id))!.end_date } : t));
+          const first = tasks.find((t: any) => String(t.id) === moved[0].id);
+          showToast(moved.length === 1 && first ? `Task updated — ${first.name} moved to ${fmtShort(moved[0].start_date)}.` : `Task updated — ${moved.length} following tasks moved with it.`);
+        }
         revalidate();
       }
       guard.clearDraft();
@@ -689,7 +705,7 @@ export default function SchedulePage() {
     { key: 'phase', header: 'Phase', render: t => t.phase || '—' },
     { key: 'start_date', header: 'Start', accessor: t => t.start_date || '', render: t => fmtDate(t.start_date) },
     { key: 'end_date', header: 'End', phone: 'show', accessor: t => t.end_date || '', render: t => fmtDate(t.end_date) },
-    { key: 'duration', header: 'Duration', align: 'right', accessor: t => (t.start_date && t.end_date ? daysBetween(t.start_date, t.end_date) : null), render: t => (t.start_date && t.end_date ? `${daysBetween(t.start_date, t.end_date)}d` : '—'), groupable: false },
+    { key: 'duration', header: 'Duration', align: 'right', accessor: t => (t.start_date && t.end_date ? spanDays(t.start_date, t.end_date) : null), render: t => (t.start_date && t.end_date ? `${spanDays(t.start_date, t.end_date)}d` : '—'), groupable: false },
     { key: 'status', header: 'Status', phone: 'show', accessor: t => STATUS_LABELS[t.status] || t.status || '', render: t => <Badge tone={STATUS_TONE[t.status] || 'neutral'} dot>{STATUS_LABELS[t.status] || t.status}</Badge> },
     {
       key: 'pct_complete', header: '% Done', accessor: t => Number(t.pct_complete) || 0, groupable: false,
@@ -865,7 +881,7 @@ export default function SchedulePage() {
             ['Start Date', viewing.start_date ? fmtDate(viewing.start_date) : null],
             ['End Date', viewing.end_date ? fmtDate(viewing.end_date) : null],
             ['Baseline', viewing.baseline_start && viewing.baseline_end ? `${fmtShort(viewing.baseline_start)} – ${fmtShort(viewing.baseline_end)}${finishVariance(viewing) ? ` (${varianceLabel(finishVariance(viewing))})` : ' (on plan)'}` : null],
-            ['Duration', viewing.start_date && viewing.end_date ? `${daysBetween(viewing.start_date, viewing.end_date)} days` : null],
+            ['Duration', viewing.start_date && viewing.end_date ? (n => `${n} day${n === 1 ? '' : 's'}`)(spanDays(viewing.start_date, viewing.end_date)) : null],
             ['Total Float', vCpm ? <span className="schFloat" data-crit={vCpm.critical ? 'true' : undefined}>{vCpm.critical ? `${vCpm.float} days · critical path` : `${vCpm.float} day${vCpm.float === 1 ? '' : 's'}`}</span> : null],
             ['Late Finish', vCpm && !vCpm.critical ? fmtDate(vCpm.lf) : null],
             ['Trade', viewing.trade],
@@ -989,7 +1005,7 @@ export default function SchedulePage() {
             <Field label="Duration (days)">
               <Input type="number" min={1} value={duration} placeholder="10" onChange={e => setDurationDays(e.target.value)} />
             </Field>
-            <Field label="End" hint={auto.end && form.start_date ? `Start + ${Number(duration) || 0}d — editing either re-syncs.` : undefined}>
+            <Field label="End" hint={auto.end && form.start_date ? `${Number(duration) || 0} day${Number(duration) === 1 ? '' : 's'}, start day included.` : undefined}>
               <div><SaguaroDatePicker value={form.end_date} onChange={v => setEndDate(v)} style={DATE_INPUT_STYLE} /></div>
             </Field>
           </FormGrid>

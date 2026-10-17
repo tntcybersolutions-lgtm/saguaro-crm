@@ -30,6 +30,7 @@ import { useParams, useRouter } from 'next/navigation';
 import { Badge, Button, EmptyState, type BadgeTone } from '@/components/ui/kit';
 import { sheetKey } from '@/lib/drawing-revisions';
 import RelatedItems from '@/components/related/RelatedItems';
+import { STATUS_HEADER } from '@/lib/ui/status-fetch';
 import { buildSheetIndex, computeAutoLinks, autoLinkLabel, type AutoLink, type Box, type TextItemLite } from '@/lib/drawing-autolinks';
 import {
   Cursor, Hand, PencilSimple, Highlighter, LineSegment, ArrowUpRight, Square, Circle, Cloud, TextT,
@@ -67,6 +68,10 @@ const SWATCHES = [
   { c: 'rgb(217,70,239)', n: 'Magenta' }, { c: 'rgb(232,255,42)', n: 'Neon' }, { c: 'rgb(15,23,42)', n: 'Ink' },
 ];
 const WEIGHTS = [{ w: 2, n: 'Fine' }, { w: 4, n: 'Medium' }, { w: 7, n: 'Bold' }];
+// This screen reports every save itself (the toast and the "All changes saved"
+// line), so its writes stay out of the shared status box — one message, not two.
+const QUIET = { [STATUS_HEADER]: 'off' };
+const JSON_QUIET = { 'content-type': 'application/json', ...QUIET };
 const REF_W = 1000;
 
 const TOOL_GROUPS: { tools: { k: Tool; label: string; key?: string; icon: React.ReactNode }[] }[] = [
@@ -479,7 +484,7 @@ export default function DrawingWorkspace() {
     setMarkups((m) => [...m, temp]);
     setSaveState('saving');
     const r = await fetch(`/api/projects/${projectId}/drawings/markups`, {
-      method: 'POST', headers: { 'content-type': 'application/json' },
+      method: 'POST', headers: JSON_QUIET,
       body: JSON.stringify({ drawing_id: drawingId, markup_type: type, data, page_number: page, color: st.color, ...(entity ? { entity_type: entity.type, entity_id: entity.id } : {}) }),
     }).catch(() => null);
     const j = r ? await r.json().catch(() => ({})) : {};
@@ -498,7 +503,7 @@ export default function DrawingWorkspace() {
     if (id.startsWith('tmp-')) return;
     const keep = markups;
     setMarkups((m) => m.filter((x) => x.id !== id)); setSelMarkup(null); setSaveState('saving');
-    const r = await fetch(`/api/projects/${projectId}/drawings/markups/${id}`, { method: 'DELETE' }).catch(() => null);
+    const r = await fetch(`/api/projects/${projectId}/drawings/markups/${id}`, { method: 'DELETE', headers: QUIET }).catch(() => null);
     if (!r || !r.ok) {
       setMarkups(keep); setSaveState('failed');
       const j = r ? await r.json().catch(() => ({})) : {};
@@ -510,7 +515,7 @@ export default function DrawingWorkspace() {
   const publish = async (m: Markup) => {
     const data = { ...m.data, private: false };
     setMarkups((all) => all.map((x) => (x.id === m.id ? { ...x, data } : x)));
-    const r = await fetch(`/api/projects/${projectId}/drawings/markups/${m.id}`, { method: 'PATCH', headers: { 'content-type': 'application/json' }, body: JSON.stringify({ data }) }).catch(() => null);
+    const r = await fetch(`/api/projects/${projectId}/drawings/markups/${m.id}`, { method: 'PATCH', headers: JSON_QUIET, body: JSON.stringify({ data }) }).catch(() => null);
     if (!r || !r.ok) { setMarkups((all) => all.map((x) => (x.id === m.id ? m : x))); setMsg({ text: "Couldn't publish that markup." }); return; }
     setMsg({ text: 'Published — everyone on the job can see it now.', ok: true });
   };
@@ -518,7 +523,7 @@ export default function DrawingWorkspace() {
     const content = commentText.trim();
     if (!content) return;
     setCommentText('');
-    const r = await fetch(`/api/projects/${projectId}/drawings/markups/${m.id}`, { method: 'POST', headers: { 'content-type': 'application/json' }, body: JSON.stringify({ content }) }).catch(() => null);
+    const r = await fetch(`/api/projects/${projectId}/drawings/markups/${m.id}`, { method: 'POST', headers: JSON_QUIET, body: JSON.stringify({ content }) }).catch(() => null);
     const j = r ? await r.json().catch(() => ({})) : {};
     if (!r || !r.ok || !j.comment) { setCommentText(content); setMsg({ text: j.error || "Couldn't post the comment." }); return; }
     setMarkups((all) => all.map((x) => (x.id === m.id ? { ...x, comments: [...(x.comments || []), j.comment as MComment] } : x)));
@@ -529,6 +534,11 @@ export default function DrawingWorkspace() {
   const onDown = (e: React.PointerEvent<SVGSVGElement>) => {
     if (tool === 'pan') { drag.current = { x: e.clientX, y: e.clientY, sl: scrollRef.current!.scrollLeft, st: scrollRef.current!.scrollTop }; return; }
     if (tool === 'select' || tool === 'erase') { setSelMarkup(null); setActivePin(null); return; }
+    // Every tool below opens a box with a focused input (text, pins, scale, link) or
+    // draws. Without this the browser's own mousedown that follows the pointerdown
+    // moves focus to the page, which blurred the new text box the instant it opened
+    // — the Text tool never let anyone type.
+    e.preventDefault();
     const p = toRef(e);
     if (PIN_TOOLS.includes(tool)) { setPinDraft({ x: p[0] / REF_W, y: p[1] / REF_H, kind: tool as 'rfi' | 'punch' | 'note' }); setPinTitle(''); setQ(''); return; }
     if (tool === 'text') { setTextAt(p); setTextVal(''); return; }
@@ -597,7 +607,7 @@ export default function DrawingWorkspace() {
 
   /* pins */
   const postPin = async (body: Record<string, unknown>) => {
-    const r = await fetch(`/api/drawings/${drawingId}/pins`, { method: 'POST', headers: { 'content-type': 'application/json' }, body: JSON.stringify({ x_pct: pinDraft!.x, y_pct: pinDraft!.y, page_number: page, ...body }) });
+    const r = await fetch(`/api/drawings/${drawingId}/pins`, { method: 'POST', headers: JSON_QUIET, body: JSON.stringify({ x_pct: pinDraft!.x, y_pct: pinDraft!.y, page_number: page, ...body }) });
     const j = await r.json().catch(() => ({}));
     if (!r.ok) throw new Error(j.error || "Couldn't save the pin.");
     return j.pin?.id as string | undefined;
@@ -612,7 +622,7 @@ export default function DrawingWorkspace() {
       if (pinDraft.kind === 'note') { await pinDone(await postPin({ title: title.slice(0, 120), description: title }), 'Note pinned.'); return; }
       const isRfi = pinDraft.kind === 'rfi';
       const r = await fetch(isRfi ? '/api/rfis/create' : '/api/punch-list/create', {
-        method: 'POST', headers: { 'content-type': 'application/json' },
+        method: 'POST', headers: JSON_QUIET,
         body: JSON.stringify(isRfi ? { projectId, subject: title, question: title, drawing_reference: where } : { projectId, title, location: where }),
       });
       const j = await r.json().catch(() => ({}));
@@ -627,7 +637,7 @@ export default function DrawingWorkspace() {
     catch (e) { setMsg({ text: (e as Error).message }); } finally { setBusy(false); }
   };
   const removePin = async (p: Pin) => {
-    const r = await fetch(`/api/drawings/${drawingId}/pins?pinId=${p.id}`, { method: 'DELETE' });
+    const r = await fetch(`/api/drawings/${drawingId}/pins?pinId=${p.id}`, { method: 'DELETE', headers: QUIET });
     if (r.ok) { setActivePin(null); await loadSheet(); } else setMsg({ text: "Couldn't remove the pin." });
   };
 
@@ -638,7 +648,7 @@ export default function DrawingWorkspace() {
       const fd = new FormData();
       fd.append('file', f); fd.append('projectId', projectId); fd.append('sheet_number', sheet.drawing.sheet_number); fd.append('title', sheet.drawing.name);
       if (sheet.drawing.discipline) fd.append('discipline', sheet.drawing.discipline);
-      const r = await fetch('/api/drawings/upload', { method: 'POST', body: fd });
+      const r = await fetch('/api/drawings/upload', { method: 'POST', headers: QUIET, body: fd });
       const j = await r.json().catch(() => ({}));
       if (!r.ok || !j.drawing?.id) throw new Error(j.error || "Couldn't upload the revision.");
       router.push(`${base}/drawings/${j.drawing.id}`);
@@ -1012,11 +1022,10 @@ export default function DrawingWorkspace() {
                 </div>
               );
             }))}
-            {tab === 'related' && (
-              <div className="dz-related">
-                <RelatedItems key={`related-${(sheet?.pins || []).map((p) => p.id).join(',')}`} type="drawing" id={drawingId} projectId={projectId} heading={null} onCount={setRelatedCount} />
-              </div>
-            )}
+            {/* Always mounted so the Related count is right before the tab is opened. */}
+            <div className="dz-related" hidden={tab !== 'related'}>
+              <RelatedItems key={`related-${(sheet?.pins || []).map((p) => p.id).join(',')}`} type="drawing" id={drawingId} projectId={projectId} heading={null} onCount={setRelatedCount} />
+            </div>
             {tab === 'revs' && (
               <ol className="dz-tl">
                 {(sheet?.revisions || []).map((r) => (
@@ -1046,10 +1055,6 @@ export default function DrawingWorkspace() {
         <span className="dz-save" data-s={saveState}>{saveState === 'saving' ? 'Saving…' : saveState === 'saved' ? 'All changes saved' : saveState === 'failed' ? 'Not saved' : 'Up to date'}</span>
         <span className="dz-showhide">{showMarkups ? <Eye size={13} /> : <EyeSlash size={13} />}</span>
       </footer>
-    </div>
-    {/* Narrow screens hide the side panel: the sheet's related records sit under the workspace. */}
-    <div className="dz-related-m">
-      <RelatedItems key={`related-${(sheet?.pins || []).map((p) => p.id).join(',')}`} type="drawing" id={drawingId} projectId={projectId} onCount={setRelatedCount} />
     </div>
     </>
   );
@@ -1090,10 +1095,8 @@ const CSS = `
 .dz-toggle{display:inline-flex;align-items:center;gap:6px;color:var(--dz-dim);white-space:nowrap;cursor:pointer}
 .dz-toggle input{accent-color:var(--dz-hot)}
 .dz-body{flex:1;min-height:0;min-width:0;display:grid;grid-template-columns:88px minmax(0,1fr) minmax(240px,300px)}
-@media (max-width:1100px){.dz-body{grid-template-columns:88px minmax(0,1fr)}.dz-side{display:none}.dz-props{padding-left:12px}}
+@media (max-width:1100px){.dz-body{grid-template-columns:88px minmax(0,1fr)}.dz-props{padding-left:12px}}
 .dz-related{padding:4px 6px}
-.dz-related-m{display:none}
-@media (max-width:1100px){.dz-related-m{display:block;padding:20px 0 8px}}
 .dz-tools{display:flex;flex-direction:column;align-items:center;gap:2px;padding:8px 6px;background:var(--dz-chrome);border-right:1px solid var(--dz-line);overflow:visible;position:relative;z-index:3}
 .dz-tgroup{display:grid;grid-template-columns:repeat(2,36px);gap:3px;padding-bottom:6px;margin-bottom:6px;border-bottom:1px solid var(--dz-line)}
 .dz-tgroup-end{border:0;margin-top:auto}
@@ -1205,4 +1208,12 @@ const CSS = `
 .dz-al-n{min-width:18px;height:18px;padding:0 5px;border-radius:9px;background:var(--dz-chrome);color:var(--dz-ink);font:700 11px/18px inherit;text-align:center}
 .dz-al-tip{position:absolute;z-index:4;transform:translate(0,calc(-100% - 6px));display:inline-flex;align-items:center;gap:6px;padding:6px 9px;border-radius:6px;background:var(--dz-chrome);border:1px solid var(--link);color:var(--dz-ink);font:600 12px/1.2 system-ui,sans-serif;white-space:nowrap;pointer-events:none;box-shadow:0 8px 24px rgba(0,0,0,.5)}
 .dz-save[data-s=saved]{color:rgb(74,222,128)}.dz-save[data-s=failed]{color:rgb(248,113,113)}.dz-save[data-s=saving]{color:var(--dz-ink)}
+/* Phone: the bar scrolls instead of squeezing its pieces on top of each other
+   (the sheet number used to sit over the status chip), the rail is one 44px
+   column, and the sheet gets the width back. */
+.dz-top>*,.dz-props>*{flex-shrink:0}
+/* Under 1100px the markups / pins / revisions panel sits full width under the
+   sheet (it used to fall into the narrow tool-rail column on a second row). */
+@media (max-width:1100px){.dz-body{grid-template-rows:minmax(0,1fr) auto}.dz-side{grid-column:1/-1;max-height:34vh;border-left:0;border-top:1px solid var(--dz-line)}}
+@media (max-width:640px){.dz-sel-v span{display:none}.dz-body{grid-template-columns:54px minmax(0,1fr)}.dz-tools{padding:6px 4px;overflow-y:auto}.dz-tgroup{grid-template-columns:44px}.dz-tool{width:44px;height:44px}.dz-tip{display:none !important}.dz-scroll{padding:12px}.dz-hint{display:none}.dz-tool-name{min-width:0}}
 `;
