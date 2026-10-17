@@ -25,27 +25,29 @@ type View = 'invoices' | 'rfis' | 'messages' | 'logs' | 'waivers';
 
 const CSS = `
 .sbx { display: grid; gap: 16px; min-width: 0; }
-.sbx-kpis { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 10px; }
-.sbx-kpi { text-align: left; min-height: 76px; padding: 12px 14px; border-radius: 14px; border: 1px solid var(--border-default); background: var(--bg-surface); color: var(--text-primary); cursor: pointer; display: grid; gap: 2px; align-content: start; }
-.sbx-kpi[aria-pressed="true"] { border-color: var(--brand-primary); box-shadow: 0 0 0 2px var(--brand-primary-25); }
+.sbx-kpis { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 0; border-top: 1px solid var(--border-default); border-bottom: 1px solid var(--border-default); }
+.sbx-kpi { text-align: left; min-height: 76px; padding: 12px 14px; border: 0; border-left: 1px solid var(--border-default); background: transparent; color: var(--text-primary); cursor: pointer; display: grid; gap: 2px; align-content: start; }
+.sbx-kpi:first-child { border-left: 0; padding-left: 2px; }
+.sbx-kpi:hover { background: var(--bg-row-hover); }
+.sbx-kpi[aria-pressed="true"] { box-shadow: inset 0 -3px 0 var(--brand-primary); }
 .sbx-kpi b { font-size: 24px; line-height: 1.1; }
 .sbx-kpi span { font-size: 13px; color: var(--text-secondary); font-weight: 600; }
 .sbx-kpi small { font-size: 12px; color: var(--text-tertiary); }
 .sbx-kpi[data-hot="true"] b { color: var(--warning); }
 .sbx-bar { display: flex; flex-wrap: wrap; gap: 8px; align-items: center; }
 .sbx-bar select, .sbx-bar input { min-height: 44px; font-size: 16px; padding: 0 12px; border-radius: 10px; border: 1px solid var(--border-default); background: var(--bg-surface-2); color: var(--text-primary); min-width: 0; }
-.sbx-list { display: grid; gap: 10px; }
-.sbx-card { border: 1px solid var(--border-default); background: var(--bg-surface); border-radius: 14px; padding: 14px; display: grid; gap: 10px; min-width: 0; }
-.sbx-card[data-hot="true"] { border-color: color-mix(in srgb, var(--brand-primary) 45%, transparent); }
+.sbx-list { display: grid; gap: 0; border-bottom: 1px solid var(--border-default); }
+.sbx-card { border-top: 1px solid var(--border-default); padding: 14px 0; display: grid; gap: 10px; min-width: 0; }
+.sbx-card[data-hot="true"] { box-shadow: inset 3px 0 0 var(--warning); padding-left: 12px; }
 .sbx-head { display: flex; gap: 10px; align-items: flex-start; justify-content: space-between; flex-wrap: wrap; }
 .sbx-title { font-weight: 800; font-size: 15.5px; color: var(--text-primary); overflow-wrap: anywhere; }
 .sbx-sub { font-size: 13px; color: var(--text-secondary); overflow-wrap: anywhere; }
 .sbx-money { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 8px; }
-.sbx-money div { background: var(--bg-surface-2); border-radius: 10px; padding: 8px 10px; }
+.sbx-money div { padding: 4px 0; }
 .sbx-money small { display: block; font-size: 12px; color: var(--text-tertiary); font-weight: 700; }
 .sbx-money b { font-size: 15px; }
 .sbx-actions { display: flex; flex-wrap: wrap; gap: 8px; }
-.sbx-btn { min-height: 44px; padding: 0 16px; border-radius: 10px; font-weight: 800; font-size: 14px; cursor: pointer; border: 1px solid var(--border-default); background: var(--bg-surface-2); color: var(--text-primary); display: inline-flex; align-items: center; gap: 6px; }
+.sbx-btn { min-height: 44px; padding: 0 16px; border-radius: 10px; font-weight: 800; font-size: 14px; cursor: pointer; border: 1px solid var(--border-default); background: transparent; color: var(--text-primary); display: inline-flex; align-items: center; gap: 6px; }
 .sbx-btn[data-kind="go"] { background: var(--brand-primary); color: var(--on-brand); border-color: transparent; }
 .sbx-btn[data-kind="bad"] { color: var(--c-red); border-color: color-mix(in srgb, var(--c-red) 45%, transparent); }
 .sbx-btn:disabled { opacity: .55; cursor: wait; }
@@ -59,22 +61,24 @@ const CSS = `
 .sbx-q { white-space: pre-wrap; font-size: 14px; color: var(--text-primary); }
 .sbx-threads { display: grid; grid-template-columns: minmax(240px, 340px) minmax(0, 1fr); gap: 12px; min-height: 420px; }
 .sbx-tlist { display: grid; gap: 8px; align-content: start; }
-.sbx-titem { text-align: left; border: 1px solid var(--border-default); background: var(--bg-surface); border-radius: 12px; padding: 10px 12px; cursor: pointer; color: var(--text-primary); min-height: 64px; display: grid; gap: 2px; }
-.sbx-titem[aria-current="true"] { border-color: var(--brand-primary); }
+.sbx-titem { text-align: left; border: 0; border-bottom: 1px solid var(--border-default); background: transparent; border-radius: 0; padding: 10px 4px; cursor: pointer; color: var(--text-primary); min-height: 64px; display: grid; gap: 2px; }
+.sbx-titem[aria-current="true"] { box-shadow: inset 3px 0 0 var(--brand-primary); padding-left: 12px; }
 .sbx-titem .sbx-snip { font-size: 13px; color: var(--text-secondary); overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
-.sbx-dot { display: inline-grid; place-items: center; min-width: 20px; height: 20px; padding: 0 6px; border-radius: 999px; background: var(--info-fg); color: var(--on-brand); font-size: 12px; font-weight: 800; margin-left: 6px; }
+.sbx-dot { display: inline-grid; place-items: center; min-width: 20px; height: 20px; padding: 0 6px; border-radius: 999px; background: var(--text-primary); color: var(--bg-base); font-size: 12px; font-weight: 800; margin-left: 6px; }
 .sbx-chat { border: 1px solid var(--border-default); background: var(--bg-surface); border-radius: 14px; display: grid; grid-template-rows: auto minmax(0, 1fr) auto; min-height: 420px; max-height: 70vh; min-width: 0; }
 .sbx-chat-head { padding: 12px 14px; border-bottom: 1px solid var(--border-default); display: flex; gap: 8px; align-items: center; }
 .sbx-chat-body { overflow-y: auto; padding: 12px 14px; display: grid; gap: 8px; align-content: start; }
 .sbx-bubble { max-width: 82%; padding: 9px 12px; border-radius: 14px; font-size: 14px; white-space: pre-wrap; overflow-wrap: anywhere; }
-.sbx-bubble[data-me="true"] { justify-self: end; background: color-mix(in srgb, var(--brand-primary) 18%, transparent); border: 1px solid color-mix(in srgb, var(--brand-primary) 35%, transparent); }
-.sbx-bubble[data-me="false"] { justify-self: start; background: var(--bg-surface-2); border: 1px solid var(--border-default); }
+.sbx-bubble[data-me="true"] { justify-self: end; background: var(--bg-surface-2); border: 1px solid var(--border-strong); }
+.sbx-bubble[data-me="false"] { justify-self: start; background: transparent; border: 1px solid var(--border-default); }
 .sbx-bubble small { display: block; font-size: 12px; color: var(--text-tertiary); margin-top: 3px; }
 .sbx-compose { display: flex; gap: 8px; padding: 10px; border-top: 1px solid var(--border-default); }
 .sbx-compose textarea { min-height: 44px; height: 44px; }
 .sbx-back { display: none; }
 @media (max-width: 900px) {
   .sbx-kpis { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+  .sbx-kpi:nth-child(2n+1) { border-left: 0; padding-left: 2px; }
+  .sbx-kpi:nth-child(n+3) { border-top: 1px solid var(--border-default); }
   .sbx-threads { grid-template-columns: minmax(0, 1fr); }
   .sbx-threads[data-open="true"] .sbx-tlist { display: none; }
   .sbx-threads[data-open="false"] .sbx-chat { display: none; }
@@ -197,7 +201,7 @@ function Empty({ icon, title, text }: { icon: React.ReactNode; title: string; te
 function Invoices({ rows, reload }: { rows: Row[]; reload: () => Promise<void> }) {
   const order = (r: Row) => ({ submitted: 0, under_review: 1, approved: 2, rejected: 3, paid: 4 } as Record<string, number>)[r.status] ?? 5;
   const sorted = [...rows].sort((a, b) => order(a) - order(b) || String(b.created_at).localeCompare(String(a.created_at)));
-  if (!sorted.length) return <Empty icon={<CurrencyDollar size={30} weight="duotone" />} title="No sub invoices yet" text="When a sub submits an invoice from their portal link it lands here to approve, send back or mark paid." />;
+  if (!sorted.length) return <Empty icon={<CurrencyDollar size={30} weight="duotone" />} title="No sub invoices yet" text="Invoices subs send from their portal land here." />;
   return <div className="sbx-list">{sorted.map((r) => <InvoiceCard key={r.id} r={r} reload={reload} />)}</div>;
 }
 
@@ -279,7 +283,7 @@ function InvoiceCard({ r, reload }: { r: Row; reload: () => Promise<void> }) {
 /* ── RFIs ───────────────────────────────────────────────────────────────── */
 function Rfis({ rows, reload }: { rows: Row[]; reload: () => Promise<void> }) {
   const sorted = [...rows].sort((a, b) => Number(!!a.answer) - Number(!!b.answer) || String(b.created_at).localeCompare(String(a.created_at)));
-  if (!sorted.length) return <Empty icon={<Question size={30} weight="duotone" />} title="No RFIs from subs" text="Questions subs send from their portal land here. Your answer shows on their RFIs tab." />;
+  if (!sorted.length) return <Empty icon={<Question size={30} weight="duotone" />} title="No RFIs from subs" text="Questions subs send from their portal land here." />;
   return <div className="sbx-list">{sorted.map((r) => <RfiCard key={r.id} r={r} reload={reload} />)}</div>;
 }
 
@@ -352,7 +356,7 @@ function Messages({ rows, reload }: { rows: InboxMessage[]; reload: () => Promis
     finally { setBusy(false); }
   };
 
-  if (!threads.length) return <Empty icon={<ChatCircleText size={30} weight="duotone" />} title="No messages from subs" text="Messages subs send from their portal land here, one conversation per sub per job. Your replies show in their portal." />;
+  if (!threads.length) return <Empty icon={<ChatCircleText size={30} weight="duotone" />} title="No messages from subs" text="Messages subs send from their portal land here." />;
   return (
     <div className="sbx-threads" data-open={!!thread}>
       <div className="sbx-tlist" role="list" aria-label="Conversations">
@@ -397,7 +401,7 @@ function Messages({ rows, reload }: { rows: InboxMessage[]; reload: () => Promis
 
 /* ── Daily logs ─────────────────────────────────────────────────────────── */
 function Logs({ rows }: { rows: Row[] }) {
-  if (!rows.length) return <Empty icon={<Notebook size={30} weight="duotone" />} title="No daily logs from subs" text="Daily logs subs file from their portal land here — crew, hours and work done." />;
+  if (!rows.length) return <Empty icon={<Notebook size={30} weight="duotone" />} title="No daily logs from subs" text="Logs subs file from their portal land here." />;
   return (
     <div className="sbx-list">
       {rows.map((r) => (
@@ -418,7 +422,7 @@ function Logs({ rows }: { rows: Row[] }) {
 
 /* ── Waivers waiting on subs ────────────────────────────────────────────── */
 function Waivers({ rows }: { rows: Row[] }) {
-  if (!rows.length) return <Empty icon={<FileText size={30} weight="duotone" />} title="No waivers waiting on subs" text="Lien waivers a sub still has to sign show here. Subs sign them in their portal." />;
+  if (!rows.length) return <Empty icon={<FileText size={30} weight="duotone" />} title="No waivers waiting on subs" text="Waivers a sub still has to sign show here." />;
   return (
     <div className="sbx-list">
       {rows.map((r) => (

@@ -34,7 +34,9 @@ export async function GET(req: NextRequest) {
       // service_tickets.assigned_tech_id references public.users (not profiles),
       // so only offer people who exist there and are active.
       db.from('users').select('id, full_name, email, is_active').eq('tenant_id', user.tenantId).order('full_name').limit(500),
-      db.from('projects').select('id, name, address, city, status').eq('tenant_id', user.tenantId).is('deleted_at', null).order('name').limit(1000),
+      // Archived jobs come back too, so an old call still shows its job's name;
+      // the job picker offers live jobs only (isLiveJob on the page).
+      db.from('projects').select('id, name, address, city, status, is_archived, archived_at, is_deleted, deleted_at').eq('tenant_id', user.tenantId).is('deleted_at', null).order('name').limit(1000),
     ]);
     if (tickets.error) throw tickets.error;
     if (techs.error) throw techs.error;

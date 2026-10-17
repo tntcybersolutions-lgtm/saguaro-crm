@@ -45,14 +45,14 @@ function ProjectPicker({ onPick, onSkip }: { onPick: (id: string) => void; onSki
       <PageShell
         crumbs={[{ label: 'Home', href: '/app' }, { label: 'Signal Studio' }]}
         title="Signal Studio"
-        subtitle="Wireless coverage designer. Coverage designs, bids and reports attach to the project you pick — so the whole team finds them where the job lives. You can retarget later from the Save dialog."
+        subtitle="Wireless coverage designer."
         actions={!loading ? <Button onClick={onSkip}>Start Without a Project</Button> : undefined}
       >
         {!loading && degraded && (
           <div className="ssWarn" role="status"><WarningCircle size={16} weight="fill" /> Project list is temporarily unavailable — you can start without a project and attach it when you save.</div>
         )}
 
-        <Card title="Which project is this design for?" subtitle={loading ? 'Loading your projects…' : projects.length > 0 ? `${projects.length} project${projects.length === 1 ? '' : 's'} — pick one to open the designer bound to it.` : undefined} flush>
+        <Card title="Which project is this design for?" subtitle={loading ? 'Loading your projects…' : projects.length > 0 ? `${projects.length} project${projects.length === 1 ? '' : 's'}` : undefined} flush>
           {loading && (
             <div className="ssList" aria-busy="true" aria-label="Loading projects">
               {[0, 1, 2].map((i) => <div key={i} className="ssSkel" style={{ opacity: 0.8 - i * 0.2 }} />)}

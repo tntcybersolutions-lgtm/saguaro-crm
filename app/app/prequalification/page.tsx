@@ -580,7 +580,7 @@ export default function PrequalificationPage() {
               <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(min(100%, 320px), 1fr))', gap: 20 }}>
                 {/* Recent activity */}
                 <SectionCard title="Recent Submissions" icon={<Clipboard size={17} weight="duotone" color="var(--text-secondary)" />}>
-                  {submissions.length === 0 && <EmptyState title="No submissions yet" text="Answers land here." primary={{ label: 'Send Prequal Form', icon: <Envelope size={15} weight="fill" />, onClick: () => setShowInviteModal(true) }} perm={['Projects', 'Edit']} />}
+                  {submissions.length === 0 && <EmptyState title="No submissions yet" text="Answers land here." secondary={{ label: 'Send Prequal Form', icon: <Envelope size={15} weight="fill" />, onClick: () => setShowInviteModal(true) }} perm={['Projects', 'Edit']} />}
                   {submissions.slice(0, 5).map(s => (
                     <div key={s.id} style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', padding: '8px 0', borderBottom: `1px solid color-mix(in srgb, ${BORDER} 13%, transparent)`, cursor: 'pointer' }} onClick={() => { setShowDetail(s.id); }}>
                       <div>
@@ -736,7 +736,7 @@ export default function PrequalificationPage() {
 
               {filtered.length === 0 ? (
                 <SectionCard>
-                  <PremiumEmpty icon={<Clipboard size={30} weight="duotone" color="var(--text-secondary)" />} title="No Submissions Found" description={search || statusFilter !== 'all' || tradeFilter !== 'all' ? 'Try adjusting your filters.' : 'Invite subcontractors to complete a scored questionnaire — answers grade automatically against your pass threshold, required documents are tracked with expiry dates, and every submission lands here for review.'} action={search || statusFilter !== 'all' || tradeFilter !== 'all' ? undefined : <button style={goldOutlineButtonStyle} className="pmBtn" onClick={() => setShowInviteModal(true)}><Envelope size={15} weight="fill" /> Send Prequal Form</button>} />
+                  <PremiumEmpty icon={<Clipboard size={30} weight="duotone" color="var(--text-secondary)" />} title="No Submissions Found" description={search || statusFilter !== 'all' || tradeFilter !== 'all' ? 'Try adjusting your filters.' : 'Scored answers and documents land here.'} action={search || statusFilter !== 'all' || tradeFilter !== 'all' ? undefined : <button style={goldOutlineButtonStyle} className="pmBtn" onClick={() => setShowInviteModal(true)}><Envelope size={15} weight="fill" /> Send Prequal Form</button>} />
                 </SectionCard>
               ) : (
                 <SectionCard flush>

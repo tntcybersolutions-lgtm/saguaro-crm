@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from 'next/server';
 import { createServerClient, getUser } from '@/lib/supabase-server';
 import { requirePermission } from '@/lib/permissions';
 import { apiError } from '@/lib/api-error';
+import { liveJobs } from '@/lib/live-jobs';
 import { isClosedStatus, isDoneStatus } from '@/lib/project-lifecycle';
 import { summariseByStage, isWon, isLost, isUndecided } from '@/lib/lead-stages';
 import { requestDay, addDays } from '@/lib/time-zone';
@@ -41,9 +42,9 @@ export async function GET(req: NextRequest) {
       db.from('lead_pipeline')
         .select('id, company_name, contact_name, stage, estimated_value, probability, next_action, next_action_date, won_at, lost_at, created_at')
         .eq('tenant_id', t),
-      db.from('projects')
+      liveJobs(db.from('projects')
         .select('id, name, status, contract_value, created_at')
-        .eq('tenant_id', t),
+        .eq('tenant_id', t)),
       db.from('project_todos')
         .select('id, title, due_date, status, completed_at, project_id')
         .eq('tenant_id', t),
