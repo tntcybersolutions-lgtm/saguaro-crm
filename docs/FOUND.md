@@ -454,7 +454,10 @@ the ungated proposal_signatures / _events (20261017c, applied). Found on the way
   fails, wiped on sign-out). The offline-field brief said "never cache /api"; left as is because removing it takes
   away offline reading on every screen opened before (punch list, RFIs, drawings, daily-log lists). Needs a ruling.
 - `public/sw.js` ("Saguaro Field v7", precaches `/field/*`) is registered by nothing — `/field` does not exist; dead file.
-- Offline badges ("Waiting for Signal") use `Badge tone="gold"` — yellow on a label, against DESIGN_SYSTEM §4
-  (`app/app/daily-logs/page.tsx:470`, `app/app/projects/[projectId]/daily-logs/page.tsx:584`,
-  `components/media/OnThisPhone.tsx:78`, `app/app/projects/[projectId]/punch-list/page.tsx:497`).
-- Videos kept on the phone (`/api/files/record`) carry no client id yet — a lost answer can still file a video twice.
+- FIXED (fix/offline-leftovers): "Waiting for Signal" badges now use the amber `pending` Badge tone; videos carry
+  the phone's client id (`project_files.client_id`, migration 20261017f) and are filed once.
+- `lib/status-colors.ts` `under_contract` is #E8FF2A (neon yellow-green) — every `Badge tone="under_contract"`
+  (e.g. `app/app/settings/page.tsx:475` "Trial") paints a yellow label, against DESIGN_SYSTEM §4. The comment
+  above STATUS_COLORS says under contract is blue. Needs a ruling on the color.
+- `--title-section` is `var(--c-yellow-hi)` (`app/globals.css:217`): every Card / section heading is yellow text,
+  against DESIGN_SYSTEM §4 ("yellow never labels"). Needs a ruling.

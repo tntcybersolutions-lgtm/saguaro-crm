@@ -4,6 +4,8 @@ import { requirePermission } from '@/lib/permissions';
 import { signStoredUrl } from '@/lib/storage-signing';
 import { classifyKind } from '@/lib/filekind';
 import { apiError } from '@/lib/api-error';
+import { readClientId, isUniqueViolation } from '@/lib/offline/client-id';
+import { fileFiledByClient, signedFileRow } from '@/lib/project-file-replay';
 
 export const runtime = 'nodejs';
 /* eslint-disable @typescript-eslint/no-explicit-any */
@@ -41,6 +43,26 @@ export async function POST(req: NextRequest) {
     const kind = classifyKind(contentType, fileName);
 
     const admin = createServerClient() as any;
+
+    // Sent again from the phone's outbox after the first send already filed it:
+    // return that video, drop the second copy of the bytes, write nothing.
+    const clientId = readClientId(req.headers, b);
+    const replay = async (row: Record<string, any>) => {
+      const stray = [path, typeof b.posterPath === 'string' ? b.posterPath.trim() : '']
+        .filter((p) => p && p.startsWith(`${user.tenantId}/`) && p !== row.storage_path && !String(row.poster_url || '').includes(p));
+      if (stray.length) {
+        try {
+          const { error: rmErr } = await admin.storage.from(BUCKET).remove(stray);
+          if (rmErr) console.error('[files/record] duplicate cleanup failed:', rmErr.message);
+        } catch (rm: unknown) {
+          console.error('[files/record] duplicate cleanup threw:', rm instanceof Error ? rm.message : rm);
+        }
+      }
+      return NextResponse.json({ success: true, file: await signedFileRow(row), replayed: true });
+    };
+    const earlier = await fileFiledByClient(admin, user.tenantId, clientId);
+    if (earlier) return replay(earlier);
+
     const publicUrl = admin.storage.from(BUCKET).getPublicUrl(path).data.publicUrl;
 
     // Optional poster frame + metadata the browser read off a video before
@@ -76,8 +98,16 @@ export async function POST(req: NextRequest) {
       ...(num(b.durationSeconds) ? { duration_seconds: num(b.durationSeconds) } : {}),
       ...(num(b.width) ? { width: Math.round(num(b.width) as number) } : {}),
       ...(num(b.height) ? { height: Math.round(num(b.height) as number) } : {}),
+      ...(clientId ? { client_id: clientId } : {}),
     }).select('*').single();
-    if (rowErr) throw rowErr;
+    if (rowErr) {
+      // Two sends of the same video raced; the other one filed it.
+      if (clientId && isUniqueViolation(rowErr)) {
+        const raced = await fileFiledByClient(admin, user.tenantId, clientId);
+        if (raced) return replay(raced);
+      }
+      throw rowErr;
+    }
 
     const signed = await signStoredUrl(BUCKET, path, 3600);
     const poster = posterPath ? await signStoredUrl(BUCKET, posterPath, 3600).catch(() => null) : null;

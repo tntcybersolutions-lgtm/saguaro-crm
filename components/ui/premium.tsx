@@ -529,7 +529,8 @@ export function DangerButton(props: MachinedButtonProps) {
 
 // ─── Pill (mobile port) ──────────────────────────────────────────────────────
 /** Ringed status pill. Tones read the ONE status palette (lib/status-colors):
- *  green = Ongoing, amber = Under Contract, red = Overdue; gold = the brand.
+ *  green = Ongoing / done, amber = pending (the warning tone), red = Overdue;
+ *  gold is a quiet plain label (the name is historic — it is not brand yellow).
  *  `caps` is kept for callers but no longer forces capitals (COPY-STYLE §2) —
  *  it only selects the slightly smaller eyebrow size. */
 export function Pill({ children, tone = 'neutral', caps, style }: {
@@ -541,7 +542,7 @@ export function Pill({ children, tone = 'neutral', caps, style }: {
   const map = {
     neutral: { bg: STATUS_COLORS.closed.bg, fg: 'var(--text-secondary)', bd: STATUS_COLORS.closed.border },
     green:   { bg: STATUS_COLORS.ongoing.bg, fg: STATUS_COLORS.ongoing.color, bd: STATUS_COLORS.ongoing.border },
-    amber:   { bg: STATUS_COLORS.under_contract.bg, fg: STATUS_COLORS.under_contract.color, bd: STATUS_COLORS.under_contract.border },
+    amber:   { bg: STATUS_COLORS.lead.bg, fg: STATUS_COLORS.lead.color, bd: STATUS_COLORS.lead.border },
     red:     { bg: STATUS_COLORS.overdue.bg, fg: STATUS_COLORS.overdue.color, bd: STATUS_COLORS.overdue.border },
     gold:    { bg: 'var(--bg-surface-2)', fg: 'var(--text-primary)', bd: 'var(--border-default)' },
   } as const;
