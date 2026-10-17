@@ -283,9 +283,11 @@ const HF_CSS = `
 /* Flat (no boxed cards): figures sit on the page as one scoreboard, divided
    by hairlines; panels are a title over a hairline, then the content. */
 .hf-card{position:relative;display:block;border-radius:0;text-decoration:none;color:inherit;overflow:hidden;
-  background:none;border:0;transition:background-color .15s ease}
-a.hf-card:hover{background:var(--bg-row-hover)}
-a.hf-card:hover .hf-k-label{color:var(--text-primary)}
+  background:none;border:0}
+/* Every figure sits on the page alike: no fill on hover/tap (a phone keeps
+   :hover after a tap, which left one tile lit). Hover brightens the label. */
+a.hf-card:hover{background:none;color:inherit}
+@media (hover:hover){a.hf-card:hover .hf-k-label{color:var(--text-primary)}}
 a.hf-card:focus-visible{outline:2px solid var(--focus-ring);outline-offset:2px}
 
 .hf-kpis{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:0;border-top:1px solid var(--border-subtle);border-bottom:1px solid var(--border-subtle)}
@@ -361,5 +363,4 @@ a.hf-card:focus-visible{outline:2px solid var(--focus-ring);outline-offset:2px}
   .hf-grid{grid-template-columns:minmax(0,1.7fr) minmax(0,1fr);gap:30px 40px}
   .hf-chart{height:240px}
 }
-@media (prefers-reduced-motion:reduce){.hf-card{transition:none}}
 `;

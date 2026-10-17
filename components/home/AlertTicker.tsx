@@ -58,16 +58,18 @@ button.atkN[aria-pressed="true"] { background: var(--bg-surface-2); box-shadow: 
 .atkSet { display: flex; align-items: center; gap: 10px; min-width: 0; }
 .atkOne { flex: 1 1 auto; min-width: 0; display: flex; }
 .atkMeasure { position: absolute; left: 0; top: 0; visibility: hidden; pointer-events: none; display: flex; gap: 10px; width: max-content; }
-.atkItem { display: inline-flex; align-items: center; gap: 8px; min-height: 36px; padding: 0 12px; border-radius: 999px; border: 1px solid var(--border-default); background: none; color: var(--c-text); font-size: 14px; font-weight: 650; text-decoration: none; white-space: nowrap; transition: background-color .15s ease, border-color .15s ease; }
-.atkOne .atkItem { white-space: normal; max-width: 100%; min-width: 0; padding: 7px 12px; border-radius: 12px; line-height: 1.35; animation: atk-in .35s ease both; }
+/* An alert sits on the page: a coloured status icon and the words — no pill,
+   no fill, no border box. Several in a row are split by a hairline. */
+.atkItem { display: inline-flex; align-items: center; gap: 8px; min-height: 36px; padding: 0 12px; border-radius: 0; border: 0; background: none; color: var(--c-text); font-size: 14px; font-weight: 650; text-decoration: none; white-space: nowrap; }
+.atkSet > :first-child > .atkItem { padding-left: 0; }
+.atkSet > * + * > .atkItem { border-left: 1px solid var(--border-subtle); }
+.atkOne .atkItem { white-space: normal; max-width: 100%; min-width: 0; padding: 7px 0; line-height: 1.35; animation: atk-in .35s ease both; }
 .atkOne .atkItem > span { min-width: 0; overflow-wrap: break-word; }
 @keyframes atk-in { from { opacity: 0; transform: translateY(3px); } to { opacity: 1; transform: none; } }
-.atkItem:hover { background: var(--bg-hover); border-color: var(--border-strong); }
+.atkItem:hover > span { text-decoration: underline; text-underline-offset: 3px; }
 .atkItem:focus-visible { outline: 2px solid var(--focus-ring); outline-offset: 2px; }
 .atkItem > svg { flex: 0 0 auto; }
-.atkItem[data-tone="red"] { border-color: rgba(248,113,113,0.45); background: rgba(248,113,113,0.08); }
 .atkItem[data-tone="red"] > svg:first-child { color: var(--c-red); }
-.atkItem[data-tone="review"] { border-color: rgba(251,191,36,0.45); background: rgba(251,191,36,0.08); }
 .atkItem[data-tone="review"] > svg:first-child { color: var(--c-orange); }
 .atkItem[data-tone="yellow"] > svg:first-child { color: var(--warning); }
 .atkItem[data-tone="green"] > svg:first-child { color: var(--c-green); }

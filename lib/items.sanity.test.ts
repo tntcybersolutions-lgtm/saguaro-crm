@@ -282,3 +282,16 @@ describe('item page — change orders and inspections', () => {
   });
 });
 
+
+describe('record page values read in plain English', () => {
+  test('stored code words are humanized; free text is left exactly as typed', async () => {
+    const { valueLabel } = await import('./value-label');
+    expect(valueLabel('owner_request')).toBe('Owner request');
+    expect(valueLabel('approved_as_noted')).toBe('Approved as noted');
+    expect(valueLabel('Owner')).toBe('Owner');
+    expect(valueLabel('Smith Electric')).toBe('Smith Electric');
+    expect(valueLabel('pm@acme.com')).toBe('pm@acme.com');
+    expect(valueLabel('09 21 00')).toBe('09 21 00');
+    expect(valueLabel('Has_Caps')).toBe('Has_Caps');
+  });
+});
