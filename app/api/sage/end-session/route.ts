@@ -7,6 +7,7 @@ import {
   type ProjectSnapshot,
 } from '@/lib/sage-intelligence-v6';
 import { apiError } from '@/lib/api-error';
+import { liveJobs } from '@/lib/live-jobs';
 
 interface SessionMessage {
   role: string;
@@ -49,11 +50,11 @@ export async function POST(req: NextRequest) {
     await updateUserProfile(user.id, summary);
 
     const supabase = createServerClient();
-    const { data: activeProjects } = await supabase
+    const { data: activeProjects } = await liveJobs(supabase
       .from('projects')
       .select('*')
       .eq('tenant_id', user.tenantId)
-      .in('status', ['active', 'in_progress'])
+      .in('status', ['active', 'in_progress']))
       .limit(10);
 
     await generateProactiveInsights(

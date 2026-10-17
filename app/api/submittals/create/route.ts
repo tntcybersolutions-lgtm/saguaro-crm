@@ -3,6 +3,8 @@ import { createServerClient, getUser } from '@/lib/supabase-server';
 import { assertProjectInTenant } from '@/lib/assert-project';
 import { requirePermission } from '@/lib/permissions';
 import { apiError } from '@/lib/api-error';
+import { SUBMITTAL_REVIEW_STATUSES } from '@/lib/submittal-workflow';
+import { runInBackground } from '@/lib/background';
 
 export async function POST(req: NextRequest) {
   const g = await requirePermission(req, 'Submittals', 'Edit');
@@ -48,6 +50,12 @@ export async function POST(req: NextRequest) {
       notes: body.notes || null,
     }).select().single();
     if (error) throw error;
+    // Created straight into review: the reviewer hears about it now.
+    const created = data as { id?: string; status?: string | null } | null;
+    const createdId = created?.id;
+    if (createdId && SUBMITTAL_REVIEW_STATUSES.has(String(created?.status || ''))) {
+      runInBackground(async () => (await import('@/lib/triggers')).onSubmittalSentForReview(createdId, null), 'onSubmittalSentForReview');
+    }
     return NextResponse.json({ success: true, submittal: data });
   } catch (e) {
     return apiError('submittals/create POST', e);

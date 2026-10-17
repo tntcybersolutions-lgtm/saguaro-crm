@@ -3,9 +3,11 @@ import { requirePermission, hasAnyPermission, PROPOSAL_MONEY } from '@/lib/permi
 import { applyMarkupStack } from '@/lib/takeoff/engine';
 import { requestDay } from '@/lib/time-zone';
 import { apiError } from '@/lib/api-error';
+import { loadBudgetRollup, budgetTotals } from '@/lib/budget-rollup';
 import { contractMoney } from '@/lib/job-contract';
 import { retainageRate } from '@/lib/retainage';
 import { isScheduleDone } from '@/lib/schedule-status';
+import { receivableOnly } from '@/lib/invoice-direction';
 
 /**
  * GET ?projectId= — the project intelligence snapshot every add/create screen
@@ -44,10 +46,11 @@ export async function GET(req: NextRequest) {
     safe(db.from('contracts').select('id, contract_type, title, party_name, vendor_name, amount, contract_amount, original_amount, approved_changes, invoiced_amount, paid_amount, status, retainage_pct, trade').eq('project_id', projectId).eq('tenant_id', t)),
     safe(db.from('change_orders').select('id, co_number, title, status, cost_impact, amount').eq('project_id', projectId).eq('tenant_id', t)),
     safe(db.from('pay_applications').select('id, app_number, period_from, period_to, status, current_payment_due, total_completed_stored, retainage_percent, contract_sum').eq('project_id', projectId).eq('tenant_id', t).order('app_number', { ascending: false }).limit(12)),
-    safe(db.from('budget_lines').select('id, division, cost_code, description, original_budget, committed, actual').eq('project_id', projectId).eq('tenant_id', t).order('cost_code')),
+    // The Budget screen's own roll-up (lib/budget-rollup), so PO / bill create flows read the same numbers.
+    safe(loadBudgetRollup(db, t, projectId)),
     safe(db.from('project_subcontractors').select('id, subcontractor_id, contract_amount, status, subcontractors(company_name, trade, email, contact_email)').eq('project_id', projectId).eq('tenant_id', t)),
     safe(db.from('bid_packages').select('id, name, trade, status, awarded_amount, awarded_to, budget_estimate, csi_division, csi_codes').eq('project_id', projectId).eq('tenant_id', t)),
-    safe(db.from('invoices').select('id, total, amount, paid_amount, status, vendor_name, invoice_number').eq('project_id', projectId).eq('tenant_id', t)),
+    safe(receivableOnly(db.from('invoices').select('id, total, amount, paid_amount, status, vendor_name, invoice_number').eq('project_id', projectId).eq('tenant_id', t))),
     safe(db.from('bills').select('id, total, amount, status, vendor_name').eq('project_id', projectId).eq('tenant_id', t)),
     safe(db.from('purchase_orders').select('id, total, status, vendor_name, po_number').eq('project_id', projectId).eq('tenant_id', t)),
     safe(db.from('rfis').select('id, status').eq('project_id', projectId).eq('tenant_id', t)),
@@ -92,7 +95,9 @@ export async function GET(req: NextRequest) {
   const contracts = ((contractsQ as any)?.data ?? []) as any[];
   const cos       = ((cosQ as any)?.data ?? []) as any[];
   const payApps   = ((payAppsQ as any)?.data ?? []) as any[];
-  const budget    = ((budgetQ as any)?.data ?? []) as any[];
+  const budgetRollup = budgetQ as Awaited<ReturnType<typeof loadBudgetRollup>> | null;
+  const budget    = budgetRollup?.lines ?? [];
+  const bt        = budgetRollup?.totals ?? budgetTotals([]);
   const subRows   = ((subsQ as any)?.data ?? []) as any[];
   const packages  = ((packagesQ as any)?.data ?? []) as any[];
   const invoices  = ((invoicesQ as any)?.data ?? []) as any[];
@@ -225,11 +230,18 @@ export async function GET(req: NextRequest) {
       latest: latestProposal ? { id: latestProposal.id, version: latestProposal.proposal_number, status: latestProposal.status, amount: showProposalMoney ? propAmount(latestProposal) : null } : null,
     },
     budget: {
-      original: budget.reduce((s, b) => s + N(b.original_budget), 0),
-      committed: budget.reduce((s, b) => s + N(b.committed), 0),
-      actual: budget.reduce((s, b) => s + N(b.actual), 0),
-      lineCount: budget.length,
-      lines: budget.map((b) => ({ id: b.id, division: b.division, costCode: b.cost_code, description: b.description, original: N(b.original_budget), committed: N(b.committed), actual: N(b.actual) })),
+      original: bt.original,
+      approvedChanges: bt.approvedChanges,
+      /** original + approved changes — what Uncommitted and Remaining are measured against. */
+      revised: bt.revised,
+      committed: bt.committed,
+      actual: bt.actual,
+      /** revised − committed */
+      uncommitted: bt.uncommitted,
+      /** revised − actual */
+      remaining: bt.remaining,
+      lineCount: bt.lineCount,
+      lines: budget.map((b) => ({ id: b.id, division: b.division, costCode: b.cost_code, description: b.description, original: b.original_budget, revised: b.revised_budget, committed: b.committed_cost, actual: b.actual_cost })),
     },
     subs: subRows.map((r) => ({
       membershipId: r.id, id: r.subcontractor_id, contractAmount: N(r.contract_amount), status: r.status,

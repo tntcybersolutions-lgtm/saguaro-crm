@@ -40,7 +40,7 @@ export interface ReportEntityDef {
 
 const C = (key: string, label: string, type: ColType = 'text'): ReportColumnDef => ({ key, label, type });
 
-export const REPORT_ENTITIES: ReportEntityDef[] = [
+const ENTITY_DEFS: ReportEntityDef[] = [
   {
     key: 'rfis',
     label: 'RFIs',
@@ -288,6 +288,22 @@ export const REPORT_ENTITIES: ReportEntityDef[] = [
     ],
   },
 ];
+
+/**
+ * Every source is per-job, so every report can show and filter by the job.
+ * The column is the row's project_id; lib/reports/run turns it into the job's
+ * name before the rows leave the server (so the table, the exports and the
+ * scheduled emails all read "Pima County…", never a uuid). It is the first
+ * column, so a new report shows the job by default.
+ */
+export const PROJECT_COLUMN = 'project_id';
+export const REPORT_ENTITIES: ReportEntityDef[] = ENTITY_DEFS.map((e) => ({
+  ...e,
+  columns: [C(PROJECT_COLUMN, 'Project'), ...e.columns.filter((c) => c.key !== PROJECT_COLUMN)],
+}));
+
+/** Operators that make sense on the Project column (it holds a job id). */
+export const PROJECT_FILTER_OPS = new Set(['eq', 'neq', 'is_null', 'not_null']);
 
 export const ENTITY_MAP: Record<string, ReportEntityDef> = Object.fromEntries(
   REPORT_ENTITIES.map((e) => [e.key, e]),

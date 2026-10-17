@@ -55,6 +55,7 @@ import {
   UsersThree,
   CaretDown,
   Check,
+  House,
 } from '@phosphor-icons/react';
 import { colors, font, radius, shadow, sidebar as sidebarTokens, z } from '../lib/design-tokens';
 import { useWhiteLabel } from './WhiteLabelProvider';
@@ -131,7 +132,8 @@ function companyInitials(name: string): string {
  * The upper-left identity block. When the tenant has ANY branding (uploaded
  * logo or company name) it renders a proper lockup: the logo at a real size
  * with graceful aspect handling, company name + plan pill beneath, hover
- * state, and a click-through to Settings → Branding. When there is no logo
+ * state, and a click-through to Home (17 Oct 2026: the company's mark is the
+ * way home, as everywhere else on the web; branding lives in Settings). When there is no logo
  * it falls back to a clean typographic monogram — never a tiny box, never a
  * fake logo. No tenant branding at all → the Saguaro lockup (unchanged). */
 function BrandLockup({ collapsed }: { collapsed: boolean }) {
@@ -222,8 +224,9 @@ function BrandLockup({ collapsed }: { collapsed: boolean }) {
     return (
       <div style={{ borderBottom: `1px solid ${colors.border}`, flexShrink: 0, padding: '10px 8px', display: 'flex', justifyContent: 'center' }}>
         <Link
-          href="/app/settings#branding"
-          title={`${wl.companyName || 'Company branding'} — brand settings`}
+          href="/app"
+          title={`${wl.companyName || 'Company'} — Home`}
+          aria-label={`${wl.companyName || 'Company'} — Home`}
           onMouseEnter={() => setHover(true)}
           onMouseLeave={() => setHover(false)}
           style={{
@@ -255,14 +258,14 @@ function BrandLockup({ collapsed }: { collapsed: boolean }) {
     );
   }
 
-  /* ── Expanded: compact identity row — small thumbnail + company name. The
-     full photo stays in Settings → Branding, where this row links. ── */
+  /* ── Expanded: compact identity row — small thumbnail + company name.
+     It goes Home; the full photo stays in Settings → Branding. ── */
   return (
     <div style={{ borderBottom: `1px solid ${colors.border}`, flexShrink: 0, padding: '10px 10px 9px' }}>
       <Link
-        href="/app/settings#branding"
-        title="Company branding — open Settings"
-        aria-label={`${wl.companyName || 'Company'} — brand settings`}
+        href="/app"
+        title={`${wl.companyName || 'Company'} — Home`}
+        aria-label={`${wl.companyName || 'Company'} — Home`}
         onMouseEnter={() => setHover(true)}
         onMouseLeave={() => setHover(false)}
         style={{
@@ -832,6 +835,52 @@ export default function AppSidebar({
             : undefined,
         }}
       >
+        {/* ── Out of the job ──────────────────────────────────────────
+            Inside a job the rail is that job's tools, so the company level
+            needs a door at the top of it (Chad, 17 Oct 2026: "give users a
+            way to exit out of the project … to get back to home page easy").
+            Home and the full job list, first thing in the rail — on desktop
+            and in the phone's More menu alike. */}
+        {inProject && (
+          <div style={{ marginBottom: 10, paddingBottom: 8, borderBottom: '1px solid var(--border-subtle)' }}>
+            {([
+              { label: 'Home', href: '/app', icon: House },
+              { label: 'All Jobs', href: '/app/projects', icon: FolderSimple },
+            ] as const).map((item) => {
+              const Icon = item.icon;
+              return (
+                <Link
+                  key={item.href}
+                  href={item.href}
+                  title={collapsed ? item.label : undefined}
+                  aria-label={collapsed ? item.label : undefined}
+                  className="sg-nav-item"
+                  style={{
+                    display: 'flex',
+                    alignItems: 'center',
+                    justifyContent: collapsed ? 'center' : 'flex-start',
+                    gap: 11,
+                    height: sidebarTokens.itemHeight,
+                    padding: collapsed ? '0' : '0 12px 0 16px',
+                    margin: '2px 8px',
+                    borderRadius: radius.lg,
+                    fontSize: font.size.md,
+                    fontWeight: font.weight.medium,
+                    color: 'var(--c-text-2)',
+                    textDecoration: 'none',
+                    transition: 'background .15s ease, color .15s ease',
+                    whiteSpace: 'nowrap',
+                    overflow: 'hidden',
+                  }}
+                >
+                  <Icon size={collapsed ? 20 : 18} weight="regular" color="currentColor" style={{ flexShrink: 0 }} />
+                  {!collapsed && <span className="sg-nav-label" style={{ overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{item.label}</span>}
+                </Link>
+              );
+            })}
+          </div>
+        )}
+
         {/* The phase pill, "We Won It" and the numbered steps now live in ONE place:
             NextAction on the job overview (components/project/NextAction). The rail is
             a toolbox again — grouped, unnumbered, in one fixed place. */}

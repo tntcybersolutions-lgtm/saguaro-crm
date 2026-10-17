@@ -134,6 +134,27 @@ describe('GET /api/reports/summary', () => {
     fake.T('change_orders').push({ id: 'c1', tenant_id: A, project_id: J1, amount: 5000, status: 'pending', deleted_at: null });
   });
 
+  test('company-wide: an archived or deleted job and its paper are left out', async () => {
+    const JA = 'aaaaaaaa-0000-4000-8000-0000000000a9';
+    const JD = 'aaaaaaaa-0000-4000-8000-0000000000d9';
+    fake.T('projects').push(
+      { id: JA, tenant_id: A, name: 'Archived', contract_amount: 5_000_000, is_archived: true, deleted_at: null },
+      { id: JD, tenant_id: A, name: 'Deleted', contract_amount: 7_000_000, deleted_at: '2026-09-01' },
+    );
+    fake.T('rfis').push(
+      { id: 'r4', tenant_id: A, project_id: JA, status: 'open', created_at: '2026-10-03', deleted_at: null },
+      { id: 'r5', tenant_id: A, project_id: JD, status: 'open', created_at: '2026-10-03', deleted_at: null },
+    );
+    fake.T('change_orders').push({ id: 'c2', tenant_id: A, project_id: JA, amount: 90_000, status: 'pending', deleted_at: null });
+    const { body } = await get();
+    expect(body.rfis.openNow).toBe(2);
+    expect(body.contract.totals.contract).toBe(1_200_000);
+    expect(body.changeOrders.pendingTotal).toBe(5000);
+    // One job's own report still opens an archived job.
+    const one = await get(`?projectId=${JA}`);
+    expect(one.body.rfis.openNow).toBe(1);
+  });
+
   test('company-wide: own company only; empty modules null', async () => {
     const { status, body } = await get();
     expect(status).toBe(200);

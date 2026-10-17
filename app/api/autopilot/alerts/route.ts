@@ -34,6 +34,15 @@ export async function GET(req: NextRequest) {
     if (error) throw error;
     let alerts = (data || []) as Array<Record<string, unknown>>;
 
+    /* The table stores the sentence in body (summary on older rows) and the
+       time in last_detected_at / created_at. Readers ask for message and date,
+       so name them here once — the Autopilot page showed a dash for both. */
+    alerts = alerts.map((a) => ({
+      ...a,
+      message: a.message ?? a.body ?? a.summary ?? null,
+      date: a.date ?? a.last_detected_at ?? a.created_at ?? null,
+    }));
+
     // Company-wide list: an alert on an archived or deleted job is not open
     // work for anyone (lib/live-jobs). A job's own page still shows its own.
     if (!projectId) {

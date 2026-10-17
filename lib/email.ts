@@ -5,6 +5,8 @@
  */
 import { Resend } from 'resend';
 import { currentComm, htmlToText, logComm } from '@/lib/comm-log';
+import { buildReplyAddress, type ReplyItemType } from '@/lib/inbound-reply/token';
+import { REPLY_MARKER } from '@/lib/inbound-reply/quote-strip';
 
 // Fallbacks use the VERIFIED Resend domain (saguarocontrol.net). Prod sets EMAIL_FROM
 // explicitly; these defaults just keep sends valid if the env var is ever missing.
@@ -279,31 +281,105 @@ export async function sendBidNotAwarded(to: string, subName: string, projectName
   `));
 }
 
-export async function sendRFISubmitted(to: string, projectName: string, rfiNumber: number, subject: string, submittedBy: string) {
+/** Which item an email is about, so a reply to it can be posted on that item (lib/inbound-reply). */
+export type ReplyRef = { tenantId: string; type: ReplyItemType; id: string };
+
+function escHtml(t: string): string {
+  return String(t ?? '').replace(/[&<>"]/g, (c) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' }[c] as string));
+}
+
+/**
+ * The reply-by-email pieces for one recipient: a Reply-To that carries a
+ * signed token for this item and this person, the "reply above this line"
+ * marker (so the inbound side can cut quoted history with certainty) and one
+ * line telling them they can just reply. When INBOUND_REPLY_SECRET /
+ * INBOUND_REPLY_DOMAIN are not set, nothing changes: no Reply-To override, no
+ * marker, no promise the inbox cannot keep.
+ */
+function replyBits(to: string, ref: ReplyRef | null | undefined, what: string): { replyTo?: string; top: string; hint: string } {
+  if (!ref) return { top: '', hint: '' };
+  const addr = buildReplyAddress({ tenantId: ref.tenantId, type: ref.type, itemId: ref.id, recipient: to });
+  if (!addr) return { top: '', hint: '' };
+  return {
+    replyTo: addr,
+    top: `<p style="margin:0 0 16px;font-size:12px;color:#9ca3af;">${REPLY_MARKER}</p>`,
+    hint: p(`<strong>Reply to this email</strong> to ${what} — your reply and any files you attach go straight onto the record. No login needed.`),
+  };
+}
+
+export async function sendRFISubmitted(to: string, projectName: string, rfiNumber: number | string, subject: string, submittedBy: string, reply?: ReplyRef | null) {
+  const r = replyBits(to, reply, 'answer it');
   return send(to, `RFI #${rfiNumber} Submitted — ${projectName}`, layout(`
+    ${r.top}
     ${h(`RFI #${rfiNumber} Submitted`)}
     ${p(`A new Request for Information has been submitted and requires your response.`)}
     ${table(row('Project', projectName) + row('RFI Number', `#${rfiNumber}`) + row('Subject', subject) + row('Submitted By', submittedBy))}
+    ${r.hint}
     ${btn('View & Answer RFI', `${APP_URL}/app`)}
-  `));
+  `), { replyTo: r.replyTo });
 }
 
-export async function sendRFIAnswered(to: string, submitterName: string, projectName: string, rfiNumber: number, answer: string) {
+export async function sendRFIAnswered(to: string, submitterName: string, projectName: string, rfiNumber: number | string, answer: string, reply?: ReplyRef | null) {
+  const r = replyBits(to, reply, 'follow up');
   return send(to, `RFI #${rfiNumber} Answered — ${projectName}`, layout(`
+    ${r.top}
     ${h(`RFI #${rfiNumber} Answered`)}
     ${p(`Dear ${submitterName}, your RFI on <strong>${projectName}</strong> has been answered.`)}
     ${table(row('Project', projectName) + row('RFI Number', `#${rfiNumber}`) + row('Answer', answer.slice(0, 200)))}
+    ${r.hint}
     ${btn('View Full RFI Response', `${APP_URL}/app`)}
-  `));
+  `), { replyTo: r.replyTo });
 }
 
-export async function sendChangeOrderApproved(to: string, projectName: string, coNumber: number, amount: number) {
+export async function sendChangeOrderApproved(to: string, projectName: string, coNumber: number, amount: number, reply?: ReplyRef | null) {
+  const r = replyBits(to, reply, 'comment on it');
   return send(to, `Change Order #${coNumber} Approved — ${projectName}`, layout(`
+    ${r.top}
     ${h(`Change Order #${coNumber} Approved`)}
     ${p(`Change Order #${coNumber} has been approved. The contract sum has been updated accordingly.`)}
     ${table(row('Project', projectName) + row('CO Number', `#${coNumber}`) + row('Amount', fmt(amount)))}
+    ${r.hint}
     ${btn('View Change Order', `${APP_URL}/app`)}
-  `));
+  `), { replyTo: r.replyTo });
+}
+
+/**
+ * A submittal is in the reviewer's court. Before this nothing told the
+ * architect / engineer a submittal was waiting — they found out when the GC
+ * called. With reply-by-email on, starting the reply with a review stamp
+ * ("Approved as noted", "Revise and resubmit"…) returns it with that action.
+ */
+export async function sendSubmittalForReview(opts: {
+  to: string;
+  projectName: string;
+  submittalNumber: string | null;
+  title: string;
+  specSection?: string | null;
+  dueDate?: string | null;
+  submittedBy?: string | null;
+  link: string;
+  reply?: ReplyRef | null;
+}) {
+  const r = replyBits(opts.to, opts.reply, 'review it');
+  const num = opts.submittalNumber ? `#${escHtml(opts.submittalNumber)}` : '';
+  const stamps = r.replyTo
+    ? p('Start your reply with <strong>Approved</strong>, <strong>Approved as noted</strong>, <strong>Revise and resubmit</strong> or <strong>Rejected</strong> to return it with that action. Anything else is added as a reviewer comment.')
+    : '';
+  return send(opts.to, `Submittal ${num ? num + ' ' : ''}for Review — ${opts.projectName}`, layout(`
+    ${r.top}
+    ${h(`Submittal ${num} for Review`)}
+    ${p('A submittal has been sent to you for review.')}
+    ${table(
+      row('Project', escHtml(opts.projectName)) +
+      row('Submittal', `${num ? num + ' — ' : ''}${escHtml(opts.title)}`) +
+      (opts.specSection ? row('Spec Section', escHtml(opts.specSection)) : '') +
+      (opts.dueDate ? row('Required By', escHtml(opts.dueDate)) : '') +
+      (opts.submittedBy ? row('Submitted By', escHtml(opts.submittedBy)) : '')
+    )}
+    ${r.hint}
+    ${stamps}
+    ${btn('View Submittal', opts.link)}
+  `), { replyTo: r.replyTo });
 }
 
 export async function sendInsuranceExpiring(to: string, subName: string, projectName: string, policyType: string, expiryDate: string, daysLeft: number) {

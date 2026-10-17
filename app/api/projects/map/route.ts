@@ -22,6 +22,7 @@ import { geocode } from '@/lib/jobsite-weather';
 import { signFields } from '@/lib/storage-signing';
 import { isMappableJob, jobAddressLine, jobGeo, jobPin, billedByJob, type JobPin } from '@/lib/job-map';
 import type { GeoFix } from '@/lib/photo-views';
+import { liveJobs } from '@/lib/live-jobs';
 
 export const dynamic = 'force-dynamic';
 
@@ -46,12 +47,10 @@ export async function GET(req: NextRequest) {
 
   try {
     const db = createServerClient();
-    const { data, error } = await db
+    const { data, error } = await liveJobs(db
       .from('projects')
       .select('*')
-      .eq('tenant_id', user.tenantId)
-      .or('is_archived.is.null,is_archived.eq.false')
-      .or('is_deleted.is.null,is_deleted.eq.false')
+      .eq('tenant_id', user.tenantId))
       .order('created_at', { ascending: false })
       .limit(500);
     if (error) throw error;

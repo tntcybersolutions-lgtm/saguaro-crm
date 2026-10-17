@@ -37,7 +37,7 @@ const CATEGORIES=['Flooring','Countertops','Cabinets','Plumbing Fixtures','Light
   'Appliances','Tile','Paint','Hardware','Other'];
 const STATUSES=['pending','selected','ordered','delivered','installed'];
 const STATUS_TONE:Record<string,BadgeTone>={
-  pending:'under_contract',selected:'neutral',ordered:'neutral',delivered:'under_contract',installed:'ongoing',
+  pending:'lead',selected:'neutral',ordered:'neutral',delivered:'closed',installed:'ongoing',
 };
 const STATUS_LABELS:Record<string,string>={
   pending:'Pending',selected:'Selected',ordered:'Ordered',
@@ -243,33 +243,33 @@ export default function SelectionsPage(){
   const clearFilters=()=>{setSearch('');setFilterCat('all');setFilterStatus('all');};
 
   const stats:StatItem[]=[
-    {label:'Total items',value:loading?'—':items.length,sub:loading?undefined:`${cats.length} ${cats.length===1?'category':'categories'}`,icon:<Package size={15}/>,onClick:()=>setFilterStatus('all'),active:filterStatus==='all'},
-    {label:'Pending decision',value:loading?'—':pendingCount,tone:pendingCount>0?'warn':'default',sub:loading?undefined:pendingCount>0?'Waiting on the owner':'None waiting',icon:<Hourglass size={15}/>,onClick:()=>setFilterStatus('pending'),active:filterStatus==='pending'},
-    {label:'Owner approved',value:loading?'—':approvedCount,tone:approvedCount>0?'good':'default',sub:loading?undefined:`of ${items.length}`,icon:<SealCheck size={15}/>,onClick:()=>setFilterStatus('approved'),active:filterStatus==='approved'},
-    {label:overage>0?'Over allowance':'Under allowance',value:loading?'—':(overage>=0?`+${fmt(overage)}`:fmt(overage)),tone:overage>0?'bad':'good',sub:loading?undefined:`${fmt(totalCost)} of ${fmt(totalAllowance)}`,icon:<Scales size={15}/>},
+    {label:'Total items',value:items.length,sub:loading?undefined:`${cats.length} ${cats.length===1?'category':'categories'}`,icon:<Package size={15}/>,onClick:()=>setFilterStatus('all'),active:filterStatus==='all'},
+    {label:'Pending decision',value:pendingCount,tone:pendingCount>0?'warn':'default',sub:loading?undefined:pendingCount>0?'Waiting on the owner':'None waiting',icon:<Hourglass size={15}/>,onClick:()=>setFilterStatus('pending'),active:filterStatus==='pending'},
+    {label:'Owner approved',value:approvedCount,tone:approvedCount>0?'good':'default',sub:loading?undefined:`of ${items.length}`,icon:<SealCheck size={15}/>,onClick:()=>setFilterStatus('approved'),active:filterStatus==='approved'},
+    ...(totalAllowance>0?[{label:overage>0?'Over allowance':'Under allowance',value:fmt(Math.abs(overage)),tone:(overage>0?'bad':'good') as 'bad'|'good',sub:`${fmt(totalCost)} of ${fmt(totalAllowance)}`,icon:<Scales size={15}/>}]:[]),
   ];
 
   const columns:Column<any>[]=[
     {key:'item',header:'Item',primary:true,accessor:(r)=>(r.item||'').toLowerCase(),render:(r)=>r.item||'Untitled'},
     {key:'category',header:'Category',render:(r)=>r.category||'Other'},
-    {key:'manufacturer',header:'Manufacturer',render:(r)=>r.manufacturer||'—'},
-    {key:'model',header:'Model / SKU',hidden:true,render:(r)=>r.model||'—'},
-    {key:'color',header:'Color',hidden:true,render:(r)=>r.color||'—'},
-    {key:'finish',header:'Finish',hidden:true,render:(r)=>r.finish||'—'},
+    {key:'manufacturer',header:'Manufacturer',render:(r)=>r.manufacturer||''},
+    {key:'model',header:'Model / SKU',hidden:true,render:(r)=>r.model||''},
+    {key:'color',header:'Color',hidden:true,render:(r)=>r.color||''},
+    {key:'finish',header:'Finish',hidden:true,render:(r)=>r.finish||''},
     {key:'status',header:'Status',phone:'show',accessor:(r)=>STATUS_LABELS[r.status]||r.status||'',render:(r)=>(
       <span className="selBadges">
         <Badge tone={STATUS_TONE[r.status]||'neutral'} dot>{STATUS_LABELS[r.status]||r.status}</Badge>
         {r.owner_approved&&<Badge tone="ongoing">Owner approved</Badge>}
       </span>
     )},
-    {key:'cost',header:'Price',align:'right',phone:'show',total:'sum',format:fmt,accessor:(r)=>Number(r.cost)||0,render:(r)=><span className="selMoney">{r.cost>0?fmt(r.cost):'—'}</span>},
-    {key:'allowance',header:'Allowance',align:'right',total:'sum',format:fmt,accessor:(r)=>Number(r.allowance)||0,render:(r)=><span className="selMoney">{r.allowance>0?fmt(r.allowance):'—'}</span>},
+    {key:'cost',header:'Price',align:'right',phone:'show',total:'sum',format:fmt,accessor:(r)=>Number(r.cost)||0,render:(r)=><span className="selMoney">{r.cost>0?fmt(r.cost):''}</span>},
+    {key:'allowance',header:'Allowance',align:'right',total:'sum',format:fmt,accessor:(r)=>Number(r.allowance)||0,render:(r)=><span className="selMoney">{r.allowance>0?fmt(r.allowance):''}</span>},
     {key:'variance',header:'Variance',align:'right',phone:'show',total:'sum',format:signed,accessor:(r)=>(Number(r.cost)||0)-(Number(r.allowance)||0),render:(r)=>{
       const v=(Number(r.cost)||0)-(Number(r.allowance)||0);
-      if(!(r.cost>0)&&!(r.allowance>0)) return '—';
+      if(!(r.cost>0)&&!(r.allowance>0)) return '';
       return <span className={`selMoney ${v>0?'selOver':v<0?'selUnder':''}`}>{signed(v)}</span>;
     }},
-    {key:'selected_by',header:'Selected by',hidden:true,render:(r)=>r.selected_by||'—'},
+    {key:'selected_by',header:'Selected by',hidden:true,render:(r)=>r.selected_by||''},
     {key:'due_date',header:'Decision due',accessor:(r)=>r.due_date||'',render:(r)=>fmtDate(r.due_date)},
   ];
 
@@ -369,6 +369,11 @@ export default function SelectionsPage(){
       <EmptyState icon={<WarningCircle size={22}/>} title="Couldn't load selections" text={loadError}
         action={<Button icon={<ArrowClockwise size={15}/>} onClick={()=>load()}>Try again</Button>}/>
     );
+  }else if(!loading&&items.length===0){
+    listBody=(
+      <EmptyState icon={<Palette size={22}/>} title="No selections yet"
+        action={<Button icon={<Plus size={15} weight="bold"/>} onClick={openCreate}>Add selection</Button>}/>
+    );
   }else{
     listBody=(
       <DataTable<any>
@@ -384,11 +389,9 @@ export default function SelectionsPage(){
         rowActions={rowActions}
         empty={items.length===0?(
           <EmptyState icon={<Palette size={22}/>} title="No selections yet"
-            text="Track material selections, finishes and owner approvals."
-            action={<Button variant="primary" icon={<Plus size={15} weight="bold"/>} onClick={openCreate}>Add selection</Button>}/>
+            action={<Button icon={<Plus size={15} weight="bold"/>} onClick={openCreate}>Add selection</Button>}/>
         ):(
-          <EmptyState title="Nothing matches" text="Change the search or the filters."
-            action={<Button onClick={clearFilters}>Clear filters</Button>}/>
+          <EmptyState title="Nothing matches" onClearFilters={clearFilters}/>
         )}
       />
     );
@@ -404,12 +407,11 @@ export default function SelectionsPage(){
           {label:'Selections'},
         ]}
         title="Selections"
-        subtitle="Materials, finishes and owner approvals."
         actions={
           <Button variant="primary" icon={<Plus size={15} weight="bold"/>} onClick={openCreate}>Add selection</Button>
         }
       >
-        {!loadError&&<StatRow items={stats}/>}
+        {!loadError&&!loading&&items.length>0&&<StatRow items={stats}/>}
 
         {!loading&&!loadError&&totalAllowance>0&&(
           <Card>
@@ -437,13 +439,13 @@ export default function SelectionsPage(){
                 {filtersActive&&<Button variant="ghost" size="sm" onClick={clearFilters}>Clear</Button>}
               </>
             }
-            actions={<span className="selMuted" style={{fontSize:'var(--fs-sm)'}}>{filtered.length} of {items.length}</span>}
+            actions={filtersActive?<span className="selMuted" style={{fontSize:'var(--fs-sm)'}}>{filtered.length} of {items.length}</span>:undefined}
           />
         )}
 
         <div className="selCq">
           <div className="selSplit" data-open={showRail?'true':'false'}>
-            <Card flush>{listBody}</Card>
+            {!loading&&items.length===0&&!loadError?listBody:<Card flush>{listBody}</Card>}
             {rail}
           </div>
         </div>

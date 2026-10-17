@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from 'next/server';
 import { createServerClient } from '@/lib/supabase-server';
 import { getEffectivePermissions, hasPermission } from '@/lib/permissions';
 import { buildIcs, type CalEvent } from '@/lib/calendar/ics';
+import { liveJobs } from '@/lib/live-jobs';
 
 export const dynamic = 'force-dynamic';
 
@@ -35,7 +36,7 @@ export async function GET(_req: NextRequest, { params }: { params: { token: stri
     const from = new Date(Date.now() - 30 * 86400000).toISOString().slice(0, 10);
     const to = new Date(Date.now() + 180 * 86400000).toISOString().slice(0, 10);
     const [{ data: projs }, { data: tasks }, { data: insp }, { data: meets }] = await Promise.all([
-      db.from('projects').select('id, name, address').eq('tenant_id', t),
+      liveJobs(db.from('projects').select('id, name, address').eq('tenant_id', t)),
       db.from('schedule_tasks').select('id, project_id, name, start_date, end_date, status')
         .eq('tenant_id', t).not('start_date', 'is', null).lte('start_date', to).or(`end_date.gte.${from},end_date.is.null`).limit(2000),
       db.from('inspections').select('id, project_id, inspection_type, scheduled_date, status, inspector_name')
@@ -45,14 +46,16 @@ export async function GET(_req: NextRequest, { params }: { params: { token: stri
     ]);
     const job = new Map<string, { name: string; address: string | null }>(((projs || []) as any[]).map((p) => [p.id, { name: p.name, address: p.address ?? null }]));
     const jobName = (id: string | null) => (id && job.get(id)?.name) || 'Job';
-    for (const k of (tasks || []) as any[]) {
+    // An archived or deleted job's dates leave the feed with the job.
+    const onLiveJob = (r: { project_id?: string | null }) => !r.project_id || job.has(r.project_id);
+    for (const k of ((tasks || []) as any[]).filter(onLiveJob)) {
       events.push({ uid: `task-${k.id}`, title: `${k.name} · ${jobName(k.project_id)}`, allDay: true, start: k.start_date, end: k.end_date, location: job.get(k.project_id)?.address, description: k.status ? `Status: ${k.status}` : null });
     }
-    for (const i of (insp || []) as any[]) {
+    for (const i of ((insp || []) as any[]).filter(onLiveJob)) {
       const start = new Date(i.scheduled_date);
       events.push({ uid: `insp-${i.id}`, title: `Inspection: ${i.inspection_type || 'inspection'} · ${jobName(i.project_id)}`, allDay: false, startUtc: start.toISOString(), endUtc: new Date(start.getTime() + 3600000).toISOString(), location: job.get(i.project_id)?.address, description: i.inspector_name ? `Inspector: ${i.inspector_name}` : null });
     }
-    for (const m of (meets || []) as any[]) {
+    for (const m of ((meets || []) as any[]).filter(onLiveJob)) {
       const title = `${m.title || 'Meeting'} · ${jobName(m.project_id)}`;
       if (m.start_time) {
         const end = m.end_time || m.start_time.replace(/^(\d{2})/, (h: string) => String(Math.min(23, Number(h) + 1)).padStart(2, '0'));

@@ -375,7 +375,7 @@ export default function AppLayout({ children }: { children: React.ReactNode }) {
               >
                 <MagnifyingGlass size={16} /> Search
               </button>
-              <HeaderProjectPicker />
+              <HeaderProjectPicker userId={sageUserId} />
               <div style={{ display: 'flex', gap: 8, alignItems: 'center', flexWrap: 'wrap' }}>
                 <HelpModeButton />
                 <Link href="/app/notifications" onClick={() => setMobileSidebarOpen(false)} style={{ display: 'inline-flex', alignItems: 'center', gap: 8, minHeight: 44, padding: '0 12px', background: 'var(--bg-surface)', border: '1px solid var(--border-default)', borderRadius: 10, color: 'var(--text-primary)', fontSize: 14, fontWeight: 600, textDecoration: 'none' }}>
@@ -412,6 +412,7 @@ export default function AppLayout({ children }: { children: React.ReactNode }) {
           onLogout={handleLogout}
           userInitials={userInitials}
           companyName={companyName}
+          userId={sageUserId}
         />
         {/* Anything the GC must see lands here — one strip, same place, every
             screen. It sits inside the fixed header and publishes its height so
