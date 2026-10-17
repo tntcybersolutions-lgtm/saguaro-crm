@@ -37,7 +37,7 @@ type Item = {
 };
 
 const STATUS_TONE: Record<MeetingStatus, BadgeTone> = {
-  scheduled: 'under_contract', in_progress: 'ongoing', minutes_draft: 'lead', distributed: 'completed',
+  scheduled: 'lead', in_progress: 'ongoing', minutes_draft: 'neutral', distributed: 'completed',
 };
 const fmtDate = (d: string | null) =>
   d ? new Date(`${d.slice(0, 10)}T12:00:00`).toLocaleDateString('en-US', { weekday: 'short', month: 'short', day: 'numeric', year: 'numeric' }) : '';
@@ -216,7 +216,7 @@ export default function MeetingPage() {
   ];
 
   if (tableMissing) {
-    return <PageShell crumbs={crumbs} title="Meeting"><EmptyState icon={<Database size={22} />} title={TABLE_MISSING_MESSAGE} text="supabase/migrations/20261015c_meetings.sql" /></PageShell>;
+    return <PageShell crumbs={crumbs} title="Meeting"><EmptyState icon={<Database size={22} />} title="Meetings aren't switched on for this company yet" text="Ask your Saguaro admin to turn them on." /></PageShell>;
   }
   if (error || (!loading && !m)) {
     return (
@@ -235,7 +235,7 @@ export default function MeetingPage() {
   return (
     <PageShell
       crumbs={crumbs}
-      title={`#${m.meeting_number ?? ''} ${m.title}`}
+      title={`${m.meeting_number ? `#${m.meeting_number} ` : ''}${m.title}`}
       badge={<Badge tone={STATUS_TONE[st]} dot>{statusLabel(st)}</Badge>}
       meta={
         <>
@@ -321,7 +321,7 @@ export default function MeetingPage() {
           <h2 style={h2}>Items · {openCount} open of {items.length}</h2>
         </div>
         {itemsMissing ? (
-          <EmptyState icon={<Database size={22} />} title={TABLE_MISSING_MESSAGE} text="supabase/migrations/20261015c_meetings.sql" />
+          <EmptyState icon={<Database size={22} />} title="Action items aren't switched on yet" text="Ask your Saguaro admin to turn them on." />
         ) : (
           <>
             {items.map((it) => {
@@ -330,7 +330,7 @@ export default function MeetingPage() {
               return (
                 <div key={it.id} style={{ ...rowLine, display: 'grid', gap: 10, opacity: it.status === 'closed' ? 0.72 : 1 }}>
                   <div style={{ display: 'flex', flexWrap: 'wrap', gap: 10, alignItems: 'center' }}>
-                    <span style={{ fontSize: 16, fontWeight: 800, color: 'var(--text-primary)', fontVariantNumeric: 'tabular-nums', minWidth: 44 }}>{it.number || '—'}</span>
+                    <span style={{ fontSize: 16, fontWeight: 800, color: 'var(--text-primary)', fontVariantNumeric: 'tabular-nums', minWidth: 44 }}>{it.number || ''}</span>
                     <Input aria-label={`Item ${it.number} topic`} value={it.topic} onChange={(e) => editItem(it.id, { topic: e.target.value })} style={{ flex: '1 1 260px', fontWeight: 700 }} />
                     {it.carried_from_item_id && <Badge tone="neutral">{fromNo ? `From #${fromNo}` : 'Carried forward'}</Badge>}
                     {overdue && <Badge tone="overdue" dot>Overdue</Badge>}

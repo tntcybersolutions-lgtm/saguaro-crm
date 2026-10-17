@@ -19,7 +19,7 @@ import {
   type StatItem,
 } from '@/components/ui/kit';
 import { Gear, Stack, Terminal, Copy, DownloadSimple, Devices, Factory, WarningCircle, Lightning } from '@phosphor-icons/react';
-import NetworkTabs, { networkCrumbs, networkHref } from '../_components/NetworkTabs';
+import NetworkTabs, { networkCrumbs, networkHref, NetworkNotSetUp } from '../_components/NetworkTabs';
 
 interface ConfigTemplate {
   id: string;
@@ -162,11 +162,20 @@ export default function ConfigGeneratorPage() {
     { label: 'Selected', value: selectedTemplate ? selectedTemplate.name : '—', sub: selectedTemplate ? selectedTemplate.manufacturer : 'Pick a template', icon: <Gear size={15} /> },
   ];
 
+  if (!loading && !loadError && !networkProjectId) {
+    return (
+      <PageShell crumbs={networkCrumbs(projectId, ctx?.project?.name, 'Config')} title="Config generator" subtitle={ctx?.project?.name || undefined}>
+        <NetworkTabs projectId={projectId} value="config" />
+        <NetworkNotSetUp projectId={projectId} />
+      </PageShell>
+    );
+  }
+
   return (
     <PageShell
       crumbs={networkCrumbs(projectId, ctx?.project?.name, 'Config')}
       title="Config generator"
-      subtitle="Device-ready config from manufacturer templates."
+      subtitle={ctx?.project?.name || undefined}
     >
       <style>{CSS}</style>
       <NetworkTabs projectId={projectId} value="config" />
@@ -184,7 +193,7 @@ export default function ConfigGeneratorPage() {
               {loading ? (
                 <EmptyState title="Loading templates…" />
               ) : filteredTemplates.length === 0 ? (
-                <EmptyState icon={<Stack size={22} />} title="No templates found" text="No configuration templates match this manufacturer." onClearFilters={activeTab !== 'All' ? () => setActiveTab('All') : undefined} />
+                <EmptyState icon={<Stack size={22} />} title="No templates found" onClearFilters={activeTab !== 'All' ? () => setActiveTab('All') : undefined} />
               ) : (
                 <ItemList>
                   {filteredTemplates.map(tmpl => (
@@ -207,7 +216,7 @@ export default function ConfigGeneratorPage() {
               icon={<Terminal size={16} />}
             >
               {!selectedTemplate ? (
-                <EmptyState icon={<Gear size={22} />} title="Select a template to begin" text="Pick one from the library to generate device-ready config." />
+                <EmptyState icon={<Gear size={22} />} title="Select a template to begin" />
               ) : (
                 <div style={{ display: 'flex', flexDirection: 'column', gap: 16 }}>
                   {selectedTemplate.variables && Object.keys(selectedTemplate.variables).length > 0 && (

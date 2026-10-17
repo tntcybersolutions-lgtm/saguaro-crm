@@ -37,9 +37,9 @@ type Row = {
 type Stats = { upcoming: number; openItems: number; overdueItems: number; distributed: number };
 
 const STATUS_TONE: Record<MeetingStatus, BadgeTone> = {
-  scheduled: 'under_contract',
+  scheduled: 'lead',
   in_progress: 'ongoing',
-  minutes_draft: 'lead',
+  minutes_draft: 'neutral',
   distributed: 'completed',
 };
 
@@ -116,14 +116,14 @@ export default function MeetingsPage() {
   ];
 
   const columns: Column<Row>[] = [
-    { key: 'meeting_number', header: '#', width: 70, align: 'right', accessor: (r) => r.meeting_number ?? 0, render: (r) => (r.meeting_number ? `#${r.meeting_number}` : '—'), groupable: false },
+    { key: 'meeting_number', header: '#', width: 70, align: 'right', accessor: (r) => r.meeting_number ?? 0, render: (r) => (r.meeting_number ? `#${r.meeting_number}` : null), groupable: false },
     { key: 'title', header: 'Meeting', primary: true, phone: 'show' },
     { key: 'meeting_type', header: 'Type', accessor: (r) => typeLabel(r.meeting_type), render: (r) => typeLabel(r.meeting_type) },
     { key: 'meeting_date', header: 'Date', phone: 'show', accessor: (r) => r.meeting_date, render: (r) => <span>{fmtDate(r.meeting_date)}{r.start_time ? ` · ${fmtTime(r.start_time)}` : ''}</span> },
-    { key: 'location', header: 'Location', render: (r) => r.location || '—' },
+    { key: 'location', header: 'Location', render: (r) => r.location || null },
     { key: 'status', header: 'Status', phone: 'show', accessor: (r) => statusLabel(r.status), render: (r) => <Badge tone={STATUS_TONE[normalizeStatus(r.status)]} dot>{statusLabel(r.status)}</Badge> },
-    { key: 'open_items', header: 'Open items', align: 'right', total: 'sum', render: (r) => (r.open_items ? String(r.open_items) : '—') },
-    { key: 'overdue_items', header: 'Overdue', align: 'right', total: 'sum', render: (r) => (r.overdue_items ? <span style={{ color: 'var(--danger)' }}>{r.overdue_items}</span> : '—') },
+    { key: 'open_items', header: 'Open items', align: 'right', total: 'sum', render: (r) => (r.open_items ? String(r.open_items) : null) },
+    { key: 'overdue_items', header: 'Overdue', align: 'right', total: 'sum', render: (r) => (r.overdue_items ? <span style={{ color: 'var(--danger)' }}>{r.overdue_items}</span> : null) },
   ];
 
   async function create() {
@@ -158,15 +158,16 @@ export default function MeetingsPage() {
         { label: 'Meetings' },
       ]}
       title="Meetings"
+      subtitle={ctx?.project?.name || undefined}
       actions={tableMissing ? undefined : newBtn}
     >
       {tableMissing ? (
-        <EmptyState icon={<Database size={22} />} title={TABLE_MISSING_MESSAGE} text="supabase/migrations/20261015c_meetings.sql" />
+        <EmptyState icon={<Database size={22} />} title="Meetings aren't switched on for this company yet" text="Ask your Saguaro admin to turn them on." />
       ) : (
         <>
           {!error && <StatRow items={items} />}
           {itemsMissing && !loading && (
-            <EmptyState icon={<Database size={22} />} title={TABLE_MISSING_MESSAGE} text="Meeting items need supabase/migrations/20261015c_meetings.sql." />
+            <EmptyState icon={<Database size={22} />} title="Action items aren't switched on yet" text="Ask your Saguaro admin to turn them on." />
           )}
 
           {!loading && !error && rows.length > 0 && (
