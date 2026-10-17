@@ -217,7 +217,6 @@ export default function MessagesPage() {
           { label: 'Messages' },
         ]}
         title="Messages"
-        subtitle="The project's running record, timestamped."
       >
         {!loading && messages.length > 0 && <StatRow items={stats} />}
 
@@ -226,7 +225,7 @@ export default function MessagesPage() {
             search={search}
             onSearch={setSearch}
             placeholder="Search messages…"
-            actions={<span style={{ fontSize: 'var(--fs-sm)', color: 'var(--text-tertiary)' }}>{visibleMessages.length} of {messages.length}</span>}
+            actions={search ? <span style={{ fontSize: 'var(--fs-sm)', color: 'var(--text-tertiary)' }}>{visibleMessages.length} of {messages.length}</span> : undefined}
           />
         )}
 
@@ -234,7 +233,7 @@ export default function MessagesPage() {
           flush
           title="Team thread"
           icon={<ChatCircleText size={16} />}
-          subtitle={messages.length > 0 ? `${messages.length} message${messages.length === 1 ? '' : 's'} · ${contributors.length} contributor${contributors.length === 1 ? '' : 's'} · refreshes every 15s` : 'Live conversation for this project — refreshes every 15s'}
+          subtitle={messages.length > 0 ? `${messages.length} message${messages.length === 1 ? '' : 's'} · ${contributors.length} contributor${contributors.length === 1 ? '' : 's'}` : undefined}
         >
           <div className="msgThread">
             <div ref={scrollRef} className="msgScroll" aria-live="polite">
@@ -246,7 +245,6 @@ export default function MessagesPage() {
                 <EmptyState
                   icon={<ChatsCircle size={22} />}
                   title="No messages yet"
-                  text={`Posts here become the ${ctx?.project?.name ? `${ctx.project.name} ` : 'project '}running record${subCount > 0 ? ` — ${subCount} sub${subCount === 1 ? '' : 's'} on the roster` : ''}. Start with one:`}
                   action={
                     <div className="msgStarters">
                       {starters.map(p => (
@@ -256,7 +254,7 @@ export default function MessagesPage() {
                   }
                 />
               ) : visibleMessages.length === 0 ? (
-                <EmptyState title="No messages match" text="Change the search." action={<Button onClick={() => setSearch('')}>Clear search</Button>} />
+                <EmptyState title="No messages match" onClearFilters={() => setSearch('')} />
               ) : (
                 <div className="msgList">
                   {visibleMessages.map((msg, idx) => {

@@ -32,7 +32,7 @@ function daysUntilExpiry(expiryDate:string):number{
 function certStatus(expiryDate:string):{label:string,tone:BadgeTone}{
   const days = daysUntilExpiry(expiryDate);
   if(days<0)   return {label:'Expired',tone:'overdue'};
-  if(days<30)  return {label:`Exp. in ${days}d`,tone:'under_contract'};
+  if(days<30)  return {label:`Exp. in ${days}d`,tone:'lead'};
   return {label:'Active',tone:'ongoing'};
 }
 
@@ -203,24 +203,24 @@ export default function InsurancePage() {
 
   const stats:StatItem[] = [
     ...(ctx && subs.length>0 ? [
-      {label:'COI on file',value:`${coveredSubs} of ${subs.length}`,tone:coveredSubs===subs.length?'good':'warn',sub:'Subs holding a current certificate',icon:<UsersThree size={15}/>} as StatItem,
-      {label:'No COI',value:missingSubs.length,tone:missingSubs.length>0?'bad':'good',sub:missingSubs.length>0?'Uninsured exposure on site':'Every sub is covered',icon:<ShieldWarning size={15}/>} as StatItem,
+      {label:'COI on file',value:`${coveredSubs} of ${subs.length}`,tone:coveredSubs===subs.length?'good':'warn',sub:'Subs covered',icon:<UsersThree size={15}/>} as StatItem,
+      ...(missingSubs.length>0 ? [{label:'No COI',value:missingSubs.length,tone:'bad',sub:'Uninsured on site',icon:<ShieldWarning size={15}/>} as StatItem] : []),
     ] : [
-      {label:'Active',value:loading?'—':activeCount,tone:'good',sub:'30+ days out',icon:<CheckCircle size={15}/>,onClick:()=>toggleStatus('active'),active:certStatusFilter==='active'} as StatItem,
+      {label:'Active',value:activeCount,tone:'good',sub:'30+ days out',icon:<CheckCircle size={15}/>,onClick:()=>toggleStatus('active'),active:certStatusFilter==='active'} as StatItem,
     ]),
-    {label:'Expiring ≤30d',value:loading?'—':expiringCount,tone:expiringCount>0?'warn':'default',sub:'Renewal window open',icon:<Hourglass size={15}/>,onClick:()=>toggleStatus('expiring'),active:certStatusFilter==='expiring'},
-    {label:'Expired',value:loading?'—':expiredCount,tone:expiredCount>0?'bad':'default',sub:'Past expiry — request renewal',icon:<WarningCircle size={15}/>,onClick:()=>toggleStatus('expired'),active:certStatusFilter==='expired'},
-    {label:'Coverage tracked',value:loading?'—':fmt(totalCoverage),sub:`Across ${totalCount} certificate${totalCount===1?'':'s'}`,icon:<CurrencyDollar size={15}/>},
+    {label:'Expiring ≤30d',value:expiringCount,tone:expiringCount>0?'warn':'default',sub:'Within 30 days',icon:<Hourglass size={15}/>,onClick:()=>toggleStatus('expiring'),active:certStatusFilter==='expiring'},
+    {label:'Expired',value:expiredCount,tone:expiredCount>0?'bad':'default',sub:'Request renewal',icon:<WarningCircle size={15}/>,onClick:()=>toggleStatus('expired'),active:certStatusFilter==='expired'},
+    {label:'Coverage tracked',value:fmt(totalCoverage),sub:`Across ${totalCount} certificate${totalCount===1?'':'s'}`,icon:<CurrencyDollar size={15}/>},
   ];
 
   const columns:Column<any>[] = [
-    {key:'sub',header:'Sub name',primary:true,accessor:(c)=>subOf(c),render:(c)=>subOf(c)||'—'},
-    {key:'type',header:'Policy type',accessor:(c)=>typeOf(c),render:(c)=>typeOf(c)?<Badge tone="neutral">{typeOf(c)}</Badge>:'—'},
-    {key:'carrier',header:'Carrier',render:(c)=>c.carrier||'—'},
-    {key:'policy',header:'Policy #',accessor:(c)=>policyOf(c),render:(c)=>policyOf(c)?<span className="insMono">{policyOf(c)}</span>:'—'},
-    {key:'coverage',header:'Coverage',align:'right',total:'sum',format:fmt,accessor:(c)=>amtOf(c),render:(c)=>amtOf(c)?fmt(amtOf(c)):'—'},
+    {key:'sub',header:'Sub name',primary:true,accessor:(c)=>subOf(c),render:(c)=>subOf(c)||'Unnamed sub'},
+    {key:'type',header:'Policy type',fit:'full',accessor:(c)=>typeOf(c),render:(c)=>typeOf(c)?<Badge tone="neutral">{typeOf(c)}</Badge>:''},
+    {key:'carrier',header:'Carrier',render:(c)=>c.carrier||''},
+    {key:'policy',header:'Policy #',accessor:(c)=>policyOf(c),render:(c)=>policyOf(c)?<span className="insMono">{policyOf(c)}</span>:''},
+    {key:'coverage',header:'Coverage',align:'right',total:'sum',format:fmt,accessor:(c)=>amtOf(c),render:(c)=>amtOf(c)?fmt(amtOf(c)):''},
     {key:'expiry',header:'Expiry date',phone:'show',accessor:(c)=>expOf(c),render:(c)=>{
-      const exp=expOf(c); if(!exp) return '—';
+      const exp=expOf(c); if(!exp) return '';
       const days=daysUntilExpiry(exp);
       if(days<0) return <span className="insLate">{fmtDay(exp)} (expired)</span>;
       if(days<30) return <span className="insSoon">{fmtDay(exp)} ({days}d)</span>;
@@ -250,10 +250,9 @@ export default function InsurancePage() {
           {label:'Insurance'},
         ]}
         title="Insurance certificates"
-        subtitle="COIs for all subcontractors, with expiration alerts."
         actions={<Button variant="primary" icon={<Plus size={15} weight="bold"/>} onClick={()=>openForm()}>Add certificate</Button>}
       >
-        <StatRow items={stats}/>
+        {!loading && (certs.length>0 || subs.length>0) && <StatRow items={stats}/>}
 
         {error && !showForm && (
           <div style={{marginBottom:16}}>
@@ -269,7 +268,7 @@ export default function InsurancePage() {
               <Callout tone="danger" icon={<WarningCircle size={18}/>} title={`${expiredCerts.length} expired — request renewal now`}
                 text={<ul className="insList">
                   {expiredCerts.slice(0,4).map((c:any,i:number)=>(
-                    <li key={c.id||i}><b>{subOf(c)||'—'}</b> · {typeOf(c)||'—'} lapsed {fmtDay(String(expOf(c)),false)}</li>
+                    <li key={c.id||i}><b>{subOf(c)||'Unnamed sub'}</b>{typeOf(c)?` · ${typeOf(c)}`:''} lapsed {fmtDay(String(expOf(c)),false)}</li>
                   ))}
                   {expiredCerts.length>4 && <li className="insMore">+{expiredCerts.length-4} more in the table below</li>}
                 </ul>}
@@ -279,7 +278,7 @@ export default function InsurancePage() {
               <Callout tone="warning" icon={<Hourglass size={18}/>} title={`${expiringSoon.length} expiring within 30 days`}
                 text={<ul className="insList">
                   {expiringSoon.slice(0,4).map((x:any,i:number)=>(
-                    <li key={x.c.id||i}><b>{subOf(x.c)||'—'}</b> · {typeOf(x.c)||'—'} — {x.days}d left</li>
+                    <li key={x.c.id||i}><b>{subOf(x.c)||'Unnamed sub'}</b>{typeOf(x.c)?` · ${typeOf(x.c)}`:''} — {x.days}d left</li>
                   ))}
                   {expiringSoon.length>4 && <li className="insMore">+{expiringSoon.length-4} more in the table below</li>}
                 </ul>}
@@ -332,13 +331,10 @@ export default function InsurancePage() {
               <EmptyState
                 icon={<ShieldCheck size={22}/>}
                 title="No certificates yet"
-                text={subs.length>0
-                  ? `${subs.length} sub${subs.length===1?'':'s'} on the roster and no COI on file for any of them.`
-                  : 'Upload COIs to track expiration dates — flagged 30 days before they lapse.'}
-                action={<Button variant="primary" icon={<Plus size={15} weight="bold"/>} onClick={()=>openForm()}>Add first certificate</Button>}
+                action={<Button icon={<Plus size={15} weight="bold"/>} onClick={()=>openForm()}>Add certificate</Button>}
               />
             ) : (
-              <EmptyState title="Nothing matches" text="Change the search or the filters." action={<Button onClick={clearFilters}>Clear filters</Button>}/>
+              <EmptyState title="Nothing matches" onClearFilters={clearFilters}/>
             )}
           />
         </Card>
@@ -348,7 +344,7 @@ export default function InsurancePage() {
         open={showForm}
         onClose={closeForm}
         title="Add insurance certificate"
-        subtitle={subs.length>0?`${subs.length} sub${subs.length===1?'':'s'} on the roster — certificates match by company name.`:'Certificates match to roster subs by company name.'}
+        subtitle={subs.length>0?`${subs.length} sub${subs.length===1?'':'s'} on the roster`:undefined}
         onSubmit={addCert}
         submitLabel={saving?'Adding…':'Add certificate'}
         busy={saving}
