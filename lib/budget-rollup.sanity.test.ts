@@ -3,8 +3,9 @@
  *
  * Budget roll-ups through the real budget route: Committed comes from the job's
  * commitments and purchase orders, Direct costs from its bills, voided and draft
- * paper is left out, cost codes match regardless of case/spacing, and the
- * forecast never sits below what is committed plus spent.
+ * paper is left out, cost codes match regardless of case/spacing, a bill on a
+ * committed line draws the commitment down (only spend beyond it is direct
+ * cost), and the forecast never sits below committed or spent.
  */
 import { makeFakeDb } from './__fixtures__/fake-db';
 import { describe, test, expect, beforeEach } from '@jest/globals';
@@ -61,11 +62,29 @@ describe('budget roll-ups', () => {
     const e = j.lines.find((l: { id: string }) => l.id === L1);
     expect(e.committed_cost).toBe(180000 + 22500 + 7500);
     expect(e.committed_source).toBe('commitments');
-    expect(e.direct_costs).toBe(15000.55);
-    expect(e.projected_cost).toBe(225000.55);
+    expect(e.billed_to_date).toBe(15000.55);
+    expect(e.direct_costs).toBe(0); // billed against the commitment, not on top of it
+    expect(e.projected_cost).toBe(210000);
     expect(e.revised_budget).toBe(210000);
-    expect(e.forecast_cost).toBe(225000.55); // never below committed + direct
-    expect(e.over_under).toBe(-15000.55);
+    expect(e.forecast_cost).toBe(210000);
+    expect(e.over_under).toBe(0);
+  });
+
+  test('a sub billed in full counts once; spend beyond the commitment is the overrun', async () => {
+    fake.T('bills').push({ id: 'b5', tenant_id: A, project_id: JOB, cost_code: '26 05 00', amount: 200000, tax: 16500, total: 216500, status: 'paid' });
+    const e = (await get()).lines.find((l: { id: string }) => l.id === L1);
+    expect(e.billed_to_date).toBe(215000.55); // before tax
+    expect(e.direct_costs).toBe(5000.55);
+    expect(e.projected_cost).toBe(215000.55);
+    expect(e.over_under).toBe(-5000.55);
+  });
+
+  test('bills on a line with nothing committed are all direct cost', async () => {
+    fake.T('budget_lines').push({ id: 'L3', tenant_id: A, project_id: JOB, cost_code: '01 70 00', description: 'General conditions', original_budget: 50000, approved_changes: 0, committed: 0, actual: 0, projected: 0, percent_complete: 0 });
+    fake.T('bills').push({ id: 'b6', tenant_id: A, project_id: JOB, cost_code: '01 70 00', amount: 2840, tax: 234.3, total: 3074.3, status: 'paid' });
+    const g = (await get()).lines.find((l: { id: string }) => l.id === 'L3');
+    expect(g.direct_costs).toBe(2840);
+    expect(g.projected_cost).toBe(2840);
   });
 
   test("a bid award's commitment and its draft PO count once", async () => {

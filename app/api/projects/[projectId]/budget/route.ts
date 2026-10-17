@@ -122,16 +122,22 @@ export async function GET(req: NextRequest, { params }: { params: { projectId: s
     const billsByLine = new Map<string, number>();
     ((bl.data ?? []) as { cost_code: string | null; total: number | null; amount: number | null; status: string | null }[])
       .filter((x) => x.cost_code && !DEAD.has(norm(x.status)))
-      .forEach((x) => add(billsByLine, findLine(x.cost_code), Number(x.total) || Number(x.amount) || 0));
+      /* Before tax, the same basis Cost control and the line's own Actual use. */
+      .forEach((x) => add(billsByLine, findLine(x.cost_code), Number(x.amount) || Number(x.total) || 0));
     const round = (n: number) => Math.round(n * 100) / 100;
     const lines = (data ?? []).map((r) => {
       const v = toBudgetLineView(r as Record<string, unknown>);
       const liveCommitted = committedByLine.get(v.id) || 0;
       const committed = liveCommitted > 0 ? round(liveCommitted) : v.committed_cost;
-      const direct = round(billsByLine.get(v.id) || 0);
+      /* A bill on a committed line is the sub or supplier billing against that
+         commitment, not new cost: a $612,000 subcontract billed in full is
+         $612,000, not $1,224,000. Only spend beyond what is committed is a
+         direct cost (overrun, or cost on a line with nothing committed). */
+      const billed = round(billsByLine.get(v.id) || 0);
+      const direct = round(Math.max(0, billed - committed));
       const projectedCost = round(committed + direct);
       const eac = Math.max(v.forecast_cost, projectedCost);
-      return { ...v, committed_cost: committed, committed_source: liveCommitted > 0 ? 'commitments' : 'entered', direct_costs: direct, projected_cost: projectedCost, forecast_cost: round(eac), over_under: round(v.revised_budget - eac) };
+      return { ...v, committed_cost: committed, committed_source: liveCommitted > 0 ? 'commitments' : 'entered', billed_to_date: billed, direct_costs: direct, projected_cost: projectedCost, forecast_cost: round(eac), over_under: round(v.revised_budget - eac) };
     });
     return NextResponse.json({ lines, contract });
   } catch (e) {

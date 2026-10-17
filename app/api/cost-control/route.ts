@@ -43,7 +43,7 @@ export async function GET(req: NextRequest) {
       .from('projects').select('id, name').eq('id', projectId).eq('tenant_id', user.tenantId).single();
     if (pErr || !project) return NextResponse.json({ error: 'Not found' }, { status: 404 });
 
-    const [budgetRes, poRes, invRes, reportRes] = await Promise.all([
+    const [budgetRes, poRes, invRes, billRes, reportRes] = await Promise.all([
       db.from('budget_lines')
         .select('cost_code, description, original_budget, approved_changes')
         .eq('project_id', projectId).eq('tenant_id', user.tenantId),
@@ -54,6 +54,12 @@ export async function GET(req: NextRequest) {
         .select('cost_code, amount, total, status')
         .eq('project_id', projectId).eq('tenant_id', user.tenantId)
         .eq('direction', 'payable'), // a cost is what the GC pays, never what it bills the owner
+      /* Vendor and sub bills live in bills (the Bills page). Reading only
+         payable invoices left every bill entered on the Bills page out of
+         Actual here. Older rows filed as payable invoices still count. */
+      db.from('bills')
+        .select('cost_code, amount, total, status')
+        .eq('project_id', projectId).eq('tenant_id', user.tenantId),
       db.from('cost_reports')
         .select('id, report_date, lines')
         .eq('project_id', projectId).eq('tenant_id', user.tenantId)
@@ -83,7 +89,7 @@ export async function GET(req: NextRequest) {
       a.committedCents += dollarsToCents(p.total ?? p.subtotal);
     }
     // Actual (per cost code) — Σ approved/paid invoice amount, fallback total
-    for (const inv of invRes.data ?? []) {
+    for (const inv of [...(invRes.data ?? []), ...(billRes.data ?? [])]) {
       if (!ACTUAL_INV.has(String(inv.status ?? '').toLowerCase())) continue;
       const a = get(codeOf(inv.cost_code));
       a.actualCents += dollarsToCents(inv.amount ?? inv.total);
