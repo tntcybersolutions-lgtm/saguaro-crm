@@ -459,9 +459,7 @@ export default function DocumentsPage() {
         accentColor={moduleAccent('documents').hex}
         title="Project"
         accent="Documents"
-        subtitle={jobId
-          ? `Pay apps, lien waivers, payroll and closeout for ${jobName(jobId)}.`
-          : 'Every job’s pay apps, lien waivers, payroll and closeout — the ones that need you first.'}
+        subtitle={jobId ? jobName(jobId) : undefined}
       />
 
       <JobDocsBoard

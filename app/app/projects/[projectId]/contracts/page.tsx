@@ -42,14 +42,19 @@ interface Contract {
   retainage_pct: number;
   pdf_url: string | null;
   project_id: string;
+  /** The person who signs for the party (party_name), when a company is on file. */
+  contact: string;
+  number: string;
+  bid_package_id: string | null;
 }
 
-const fmt = (n: number) => '$' + ((Number(n) || 0).toLocaleString('en-US', { minimumFractionDigits: 0, maximumFractionDigits: 0 }));
+/* Currency style puts the sign first: -$2,150, never $-2,150. */
+const fmt = (n: number) => (Number(n) || 0).toLocaleString('en-US', { style: 'currency', currency: 'USD', minimumFractionDigits: 0, maximumFractionDigits: 0 });
 const isoToday = () => { const d = new Date(); return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`; };
 
 /** Date-only values parse at local noon so they never shift a day under UTC. */
 function fmtDate(iso: string | null | undefined): string {
-  if (!iso) return '—';
+  if (!iso) return '';
   const d = iso.length <= 10 ? new Date(iso + 'T12:00:00') : new Date(iso);
   if (isNaN(d.getTime())) return iso;
   return d.toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' });
@@ -60,10 +65,18 @@ const EMPTY_FORM = { sub_name: '', trade: '', amount: 0, scope: '', start_date: 
 // The `contracts` table stores party_name / scope_of_work / executed_date /
 // amount — NOT the sub_name / scope / execution_date this UI was reading, so
 // rows came back blank. Map the real DB columns onto the shape the page renders.
+// The party is the COMPANY (party_company / vendor_name); party_name is the
+// person who signed for it, so a seeded or papered contract listed a person's
+// name where the sub belongs and never matched its awarded bid package.
 function normalizeContract(r: any): Contract {
+  const company = r.party_company || r.vendor_name || '';
+  const person = r.party_name || r.counterparty_name || '';
   return {
     id: r.id,
-    sub_name: r.party_name ?? r.vendor_name ?? r.counterparty_name ?? '',
+    sub_name: company || person,
+    contact: company && person && person !== company ? person : '',
+    number: r.contract_number ?? '',
+    bid_package_id: r.bid_package_id ?? null,
     trade: r.trade ?? '',
     amount: Number(r.amount ?? r.contract_amount ?? 0),
     status: r.status ?? 'Draft',
@@ -178,8 +191,10 @@ export default function ContractsPage() {
   const money = ctx?.money;
   const roster = ((ctx?.subs || []) as any[]);
   const awardedPkgs = ((ctx?.bidPackages || []) as any[]).filter(b => b.awardedTo);
+  /* An award is papered when a contract carries its bid package, or names its company. */
+  const contractedPkgs = new Set(contracts.map(c => c.bid_package_id).filter(Boolean) as string[]);
   const contractedNames = new Set(contracts.map(c => (c.sub_name || '').toLowerCase()).filter(Boolean));
-  const unpapered = awardedPkgs.filter(b => !contractedNames.has(String(b.awardedTo).toLowerCase()));
+  const unpapered = awardedPkgs.filter(b => !contractedPkgs.has(String(b.id)) && !contractedNames.has(String(b.awardedTo).toLowerCase()));
   const selSub = party.startsWith('sub:') ? roster.find((x: any) => String(x.membershipId) === party.slice(4)) : null;
   const selPkg = party.startsWith('pkg:') ? awardedPkgs.find((x: any) => String(x.id) === party.slice(4)) : null;
 
@@ -290,11 +305,13 @@ export default function ContractsPage() {
     if (search) {
       const q = search.toLowerCase();
       const hit = (c.sub_name || '').toLowerCase().includes(q)
+        || (c.contact || '').toLowerCase().includes(q)
         || (c.trade || '').toLowerCase().includes(q)
         || (c.scope || '').toLowerCase().includes(q);
       if (!hit) return false;
     }
-    if (filterStatus !== 'all' && (c.status || 'Draft') !== filterStatus) return false;
+    // Stored statuses are lower case ("executed"); the filter offers "Executed".
+    if (filterStatus !== 'all' && (c.status || 'Draft').toLowerCase() !== filterStatus.toLowerCase()) return false;
     if (filterTrade !== 'all' && c.trade !== filterTrade) return false;
     return true;
   });
@@ -303,24 +320,26 @@ export default function ContractsPage() {
   const awardedTotal = awardedPkgs.reduce((s, b) => s + (Number(b.awardedAmount) || 0), 0);
   const approvedCoCount = Number(money?.approvedCoCount) || 0;
   const stats: StatItem[] = ctx ? [
-    { label: 'Prime contract', value: fmt(money?.revisedContract || 0), icon: <Scroll size={15} />, sub: approvedCoCount > 0 ? `${fmt(money?.originalContract || 0)} + ${approvedCoCount} approved CO${approvedCoCount === 1 ? '' : 's'}` : 'Original + approved COs' },
-    { label: 'Sub commitments', value: loading ? '—' : fmt(total), icon: <Handshake size={15} />, sub: loading ? undefined : `${contracts.length} contract${contracts.length === 1 ? '' : 's'} on the ledger`, onClick: clearFilters, active: !search && filterStatus === 'all' && filterTrade === 'all' },
-    { label: 'Subs on roster', value: String(roster.length), icon: <UsersThree size={15} />, sub: 'Available as contract parties', href: `${base}/subs` },
+    { label: 'Prime contract', value: fmt(money?.revisedContract || 0), icon: <Scroll size={15} />, sub: approvedCoCount > 0 ? `${fmt(money?.originalContract || 0)} + ${approvedCoCount} approved CO${approvedCoCount === 1 ? '' : 's'}` : undefined },
+    { label: 'Sub commitments', value: loading ? '—' : fmt(total), icon: <Handshake size={15} />, sub: loading ? undefined : `${contracts.length} contract${contracts.length === 1 ? '' : 's'}`, onClick: clearFilters, active: !search && filterStatus === 'all' && filterTrade === 'all' },
+    { label: 'Subs on roster', value: String(roster.length), icon: <UsersThree size={15} />, href: `${base}/subs` },
     { label: 'Awarded packages', value: String(awardedPkgs.length), icon: <Gavel size={15} />, sub: `${fmt(awardedTotal)} awarded`, href: `${base}/bid-packages` },
-    { label: 'Ready to paper', value: loading ? '—' : String(unpapered.length), icon: unpapered.length > 0 ? <WarningCircle size={15} /> : <CheckCircle size={15} />, tone: loading ? 'default' : unpapered.length > 0 ? 'warn' : 'good', sub: unpapered.length > 0 ? 'Awards without a contract' : 'Every award is contracted', onClick: unpapered.length > 0 ? openRecord : undefined },
+    { label: 'Ready to paper', value: loading ? '—' : String(unpapered.length), icon: unpapered.length > 0 ? <WarningCircle size={15} /> : <CheckCircle size={15} />, tone: loading ? 'default' : unpapered.length > 0 ? 'warn' : 'good', sub: unpapered.length > 0 ? 'Awards without a contract' : 'All awards contracted', onClick: unpapered.length > 0 ? openRecord : undefined },
   ] : [
-    { label: 'Total contracts', value: loading ? '—' : String(contracts.length), icon: <FileText size={15} />, sub: 'On this project' },
-    { label: 'Total value', value: loading ? '—' : fmt(total), icon: <Handshake size={15} />, sub: 'Combined contract value' },
+    { label: 'Contracts', value: loading ? '—' : String(contracts.length), icon: <FileText size={15} /> },
+    { label: 'Total value', value: loading ? '—' : fmt(total), icon: <Handshake size={15} /> },
   ];
 
   const columns: Column<Contract>[] = [
-    { key: 'sub_name', header: 'Sub / vendor', primary: true, phone: 'show', render: c => c.sub_name || '—' },
+    { key: 'number', header: '#', hidden: true, render: c => c.number },
+    { key: 'sub_name', header: 'Sub / vendor', primary: true, phone: 'show', render: c => c.sub_name },
+    { key: 'contact', header: 'Signer', hidden: true, render: c => c.contact },
     { key: 'trade', header: 'Trade' },
     { key: 'amount', header: 'Contract amount', align: 'right', total: 'sum', format: fmt, phone: 'show', accessor: c => Number(c.amount) || 0, render: c => <strong>{fmt(c.amount)}</strong> },
-    { key: 'retainage_pct', header: 'Retainage', align: 'right', hidden: true, render: c => (c.retainage_pct ? `${c.retainage_pct}%` : '—') },
+    { key: 'retainage_pct', header: 'Retainage', align: 'right', hidden: true, render: c => (c.retainage_pct ? `${c.retainage_pct}%` : '') },
     { key: 'status', header: 'Status', phone: 'show', accessor: c => c.status || 'Draft', render: c => { const st = contractBadge(c.status); return <Badge tone={st.tone} dot>{st.label}</Badge>; } },
     { key: 'execution_date', header: 'Execution date', accessor: c => c.execution_date || '', render: c => fmtDate(c.execution_date) },
-    { key: 'scope', header: 'Scope', hidden: true, render: c => <span title={c.scope} style={{ display: 'inline-block', maxWidth: 280, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap', verticalAlign: 'bottom' }}>{c.scope || '—'}</span> },
+    { key: 'scope', header: 'Scope', hidden: true, render: c => <span title={c.scope}>{c.scope}</span> },
   ];
 
   const rowActions = (c: Contract): Action[] => [
@@ -329,14 +348,14 @@ export default function ContractsPage() {
   ];
 
   const partySnapshot: [string, React.ReactNode][] | null = selSub ? [
-    ['Company', selSub.companyName || '—'],
-    ['Trade', selSub.trade || '—'],
+    ['Company', selSub.companyName || ''],
+    ['Trade', selSub.trade || ''],
     ['Roster commitment', fmt(Number(selSub.contractAmount) || 0)],
     ['Email', selSub.email || 'Not on file'],
-    ['Roster status', String(selSub.status || '—').replace(/_/g, ' ').replace(/\b\w/g, (ch: string) => ch.toUpperCase())],
+    ['Roster status', String(selSub.status || '').replace(/_/g, ' ').replace(/\b\w/g, (ch: string) => ch.toUpperCase())],
   ] : selPkg ? [
     ['Package', selPkg.name],
-    ['Awarded to', selPkg.awardedTo || '—'],
+    ['Awarded to', selPkg.awardedTo || ''],
     ['Awarded amount', fmt(Number(selPkg.awardedAmount) || 0)],
     ...(Number(selPkg.budgetEstimate) > 0 ? [
       ['Budget estimate', fmt(Number(selPkg.budgetEstimate) || 0)] as [string, React.ReactNode],
@@ -422,9 +441,7 @@ export default function ContractsPage() {
               <EmptyState
                 icon={<FileText size={22} />}
                 title="No contracts yet"
-                text={unpapered.length > 0
-                  ? `${unpapered.length} awarded bid package${unpapered.length === 1 ? ' is' : 's are'} ready to paper — pick one in Record existing and it fills itself in.`
-                  : 'Paper the first sub or vendor commitment from a template, or record one signed elsewhere.'}
+                text={unpapered.length > 0 ? `${unpapered.length} awarded bid package${unpapered.length === 1 ? '' : 's'} ready to paper` : undefined}
                 action={<Button variant="primary" icon={<Plus size={15} weight="bold" />} href={`${base}/contracts/new/subcontract`}>New subcontract</Button>}
               />
             ) : (
@@ -448,14 +465,14 @@ export default function ContractsPage() {
         open={showForm}
         onClose={closeRecord}
         title="Record existing contract"
-        subtitle="Pick the party — the form fills in what the job already knows. Lands as a Draft on the ledger."
+        subtitle="Lands as a Draft on the ledger."
         onSubmit={async () => { await handleSave(); }}
         submitLabel="Save contract"
         busy={saving}
         error={formError}
       >
         <FormGrid cols={3}>
-          <Field label="Contract party" span hint="Picking a roster sub or an awarded package auto-fills the party, trade, amount, and scope — everything stays editable.">
+          <Field label="Contract party" span>
             <select className="k-select" value={party} onChange={e => pickParty(e.target.value)}>
               <option value="">Type a new party manually…</option>
               {roster.length > 0 && (
@@ -480,7 +497,7 @@ export default function ContractsPage() {
           </Field>
           {partySnapshot && (
             <div className="k-span-all">
-              <DetailList items={partySnapshot} />
+              <DetailList items={partySnapshot.filter(([, v]) => v !== '')} />
             </div>
           )}
           <Field label="Subcontractor name" required hint={auto.name ? (selPkg ? `Awarded "${selPkg.name}".` : 'From the project sub roster.') : undefined}>

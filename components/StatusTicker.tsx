@@ -70,7 +70,7 @@ const TICKER_FX = `
 .stTickerTrack{display:inline-flex;align-items:center;will-change:transform}
 .stTickerViewport:hover .stTickerTrack{animation-play-state:paused}
 .stTickerItem{transition:background .15s ease,border-color .15s ease}
-.stTickerItem:hover{background:rgba(255,255,255,0.08)}
+.stTickerItem:hover{background:var(--bg-row-hover)}
 @media (prefers-reduced-motion: reduce){
   .stTickerTrack{animation:none}
   .stTickerViewport{overflow-x:auto}
@@ -90,12 +90,11 @@ function TickerItem({ a, ghost = false }: { a: ActivityRow; ghost?: boolean }) {
       aria-hidden={ghost || undefined}
       style={{
         display: 'inline-flex', alignItems: 'center', gap: 9, flexShrink: 0,
-        margin: '0 5px', padding: '6px 13px', borderRadius: 999,
-        background: st.bg, border: `1px solid ${st.border}`,
+        margin: '0 4px', padding: '6px 10px', borderRadius: 8, minHeight: 36,
         textDecoration: 'none', whiteSpace: 'nowrap',
       }}
     >
-      <span aria-hidden style={{ width: 7, height: 7, borderRadius: 999, flexShrink: 0, background: st.color, boxShadow: `0 0 8px ${st.color}` }} />
+      <span aria-hidden style={{ width: 7, height: 7, borderRadius: 999, flexShrink: 0, background: st.color }} />
       <span style={{ fontSize: 12, fontWeight: 900, color: st.color, flexShrink: 0 }}>
         {st.label}
       </span>
@@ -124,19 +123,18 @@ export default function StatusTicker({ style }: { style?: React.CSSProperties })
       aria-label={`${items.length} recent items`}
       style={{
         position: 'relative', display: 'flex', alignItems: 'stretch',
-        background: 'linear-gradient(160deg, rgba(255,255,255,0.045), rgba(255,255,255,0.012))',
-        border: '1px solid rgba(255,255,255,0.08)', borderRadius: 14, overflow: 'hidden',
-        boxShadow: 'inset 0 1px 0 rgba(255,255,255,0.06)',
+        // Flat: a strip between two hairlines, not a boxed card.
+        borderTop: '1px solid var(--border-default)', borderBottom: '1px solid var(--border-default)', overflow: 'hidden',
         ...style,
       }}
     >
       <style dangerouslySetInnerHTML={{ __html: TICKER_FX }} />
       <div style={{
         display: 'flex', alignItems: 'center', gap: 10, flexShrink: 0,
-        padding: '10px 16px', borderRight: '1px solid rgba(255,255,255,0.08)',
-        background: 'rgba(20,20,22,0.6)', position: 'relative', zIndex: 1,
+        padding: '10px 14px 10px 0', borderRight: '1px solid var(--border-default)',
+        background: 'var(--bg-base)', position: 'relative', zIndex: 1,
       }}>
-        <span aria-hidden style={{ width: 8, height: 8, borderRadius: 999, background: 'var(--success)', boxShadow: '0 0 10px #4ADE80', animation: 'stTickerDot 2s ease-in-out infinite' }} />
+        <span aria-hidden style={{ width: 8, height: 8, borderRadius: 999, background: 'var(--success)', animation: 'stTickerDot 2s ease-in-out infinite' }} />
         <span style={{ fontSize: 12, fontWeight: 900, color: 'var(--c-text-2)', whiteSpace: 'nowrap' }}>
           New Activity
         </span>

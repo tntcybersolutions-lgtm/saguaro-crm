@@ -6,7 +6,7 @@
  *
  *   OVERDUE         red     — anything late / past due / needs action now
  *   LEADS           amber   — a lead / opportunity / deal in the pipeline
- *   UNDER CONTRACT  blue    — awarded / under contract / bidding won, pre-build
+ *   UNDER CONTRACT  amber   — awarded / under contract / bidding won, pre-build
  *   ONGOING         green   — active / in progress on site
  *   COMPLETED       green   — finished / substantially complete
  *   CLOSED          grey    — closed / cancelled / archived / lost
@@ -44,7 +44,7 @@ export interface StatusStyle {
 export const STATUS_COLORS: Record<StatusKind, StatusStyle> = {
   overdue:        { kind: 'overdue',        label: 'Overdue',        color: '#F87171', bg: 'rgba(248,113,113,0.12)', border: 'rgba(248,113,113,0.40)' },
   lead:           { kind: 'lead',           label: 'Lead',           color: '#FBBF24', bg: 'rgba(251,191,36,0.12)',  border: 'rgba(251,191,36,0.40)' },
-  under_contract: { kind: 'under_contract', label: 'Under Contract', color: '#E8FF2A', bg: 'rgba(232,255,42,0.12)',  border: 'rgba(232,255,42,0.40)' },
+  under_contract: { kind: 'under_contract', label: 'Under Contract', color: '#FBBF24', bg: 'rgba(251,191,36,0.12)',  border: 'rgba(251,191,36,0.40)' },
   ongoing:        { kind: 'ongoing',        label: 'Ongoing',        color: '#4ADE80', bg: 'rgba(74,222,128,0.12)',  border: 'rgba(74,222,128,0.40)' },
   completed:      { kind: 'completed',      label: 'Completed',      color: '#4ADE80', bg: 'rgba(74,222,128,0.08)',  border: 'rgba(74,222,128,0.30)' },
   closed:         { kind: 'closed',         label: 'Closed',         color: '#CBD5E1', bg: 'rgba(148,163,184,0.12)', border: 'rgba(148,163,184,0.40)' },

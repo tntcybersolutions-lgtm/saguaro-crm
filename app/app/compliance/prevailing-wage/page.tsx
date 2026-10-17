@@ -6,8 +6,8 @@
  */
 import React, { useState, useEffect, useMemo, useCallback } from 'react';
 import { toCents, toDollars, extend } from '@/lib/calc';
-import { PremiumSurface, ModuleHero, SectionCard, StatCard, PremiumEmpty } from '@/components/ui/premium';
-import { Scales, MagnifyingGlass, CurrencyDollar, Calculator, CalendarBlank, CalendarCheck, Table as TableIcon, FileMagnifyingGlass } from '@phosphor-icons/react';
+import { PremiumSurface, ModuleHero, SectionCard, StatStrip, PremiumEmpty } from '@/components/ui/premium';
+import { Scales, MagnifyingGlass, CurrencyDollar, Calculator, CalendarBlank, CalendarCheck, Table as TableIcon, FileMagnifyingGlass, Warning } from '@phosphor-icons/react';
 
 const GOLD = 'var(--brand-primary)';
 const GREEN = 'var(--success)';
@@ -217,11 +217,10 @@ export default function PrevailingWagePage() {
 
       {/* Honesty disclaimer — the shared schedule is sample/reference data, not
           an official determination. Tenant-entered CUSTOM rows are authoritative. */}
-      <div style={{ background: 'color-mix(in srgb, var(--warning) 10%, transparent)', border: '1px solid color-mix(in srgb, var(--warning) 40%, transparent)', borderRadius: 10, padding: '12px 16px', marginBottom: 20, fontSize: 13, color: 'var(--text-secondary)', lineHeight: 1.55 }}>
-        <span style={{ fontWeight: 800, color: 'var(--warning)', marginRight: 6 }}>Sample / Reference Rates</span>
-        These are realistic Davis-Bacon-style rates for estimating and planning only — <strong>not an official wage determination</strong>. Before certifying payroll, verify against the official determination on{' '}
-        <a href="https://sam.gov/content/wage-determinations" target="_blank" rel="noopener noreferrer" style={{ color: 'var(--link)', fontWeight: 700 }}>SAM.gov (WDOL)</a>{' '}
-        for the exact project, county and decision number. Rows marked <span style={{ color: 'var(--text-primary)', fontWeight: 800 }}>Custom</span> are your own tenant-entered determination and override the sample schedule.
+      <div style={{ display: 'flex', alignItems: 'center', gap: 8, flexWrap: 'wrap', padding: '10px 0', marginBottom: 16, borderTop: `1px solid ${BORDER}`, borderBottom: `1px solid ${BORDER}`, fontSize: 13, color: 'var(--text-secondary)' }}>
+        <Warning size={16} weight="fill" color="var(--warning)" aria-hidden />
+        <span><b style={{ color: 'var(--text-primary)' }}>Reference rates, not an official determination.</b> Verify on{' '}
+        <a href="https://sam.gov/content/wage-determinations" target="_blank" rel="noopener noreferrer" style={{ color: 'var(--link)', fontWeight: 700 }}>SAM.gov</a> before certifying payroll. <b style={{ color: 'var(--text-primary)' }}>Custom</b> rows are yours.</span>
       </div>
       {error && (
         <div style={{ background: 'rgba(248,113,113,.1)', border: '1px solid rgba(248,113,113,.3)', borderRadius: 8, padding: '10px 16px', marginBottom: 20, fontSize: 13, color: 'var(--danger)' }}>
@@ -229,7 +228,7 @@ export default function PrevailingWagePage() {
         </div>
       )}
 
-      <div style={{ display: 'grid', gridTemplateColumns: 'minmax(280px, 1fr) minmax(300px, 1.1fr)', gap: 24 }}>
+      <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(min(100%, 320px), 1fr))', gap: 24 }}>
         {/* Left: Inputs */}
         <SectionCard title="Wage Lookup" icon={<MagnifyingGlass size={17} weight="duotone" color="var(--text-secondary)" />}>
           <div style={{ marginBottom: 18 }}>
@@ -303,11 +302,12 @@ export default function PrevailingWagePage() {
                       else { setIsCustom(false); setHoursPreset(p.hours); }
                     }}
                     style={{
-                      background: active ? 'color-mix(in srgb, var(--brand-primary) 15%, transparent)' : 'var(--bg-surface-2)',
-                      color: active ? GOLD : DIM,
-                      border: `1px solid ${active ? 'color-mix(in srgb, var(--brand-primary) 25%, transparent)' : BORDER}`,
+                      background: active ? 'var(--brand-primary)' : 'transparent',
+                      color: active ? 'var(--on-brand)' : DIM,
+                      border: `1px solid ${active ? 'var(--brand-primary)' : BORDER}`,
                       borderRadius: 8,
-                      padding: '7px 16px',
+                      minHeight: 44,
+                      padding: '0 16px',
                       fontSize: 13,
                       fontWeight: 600,
                       cursor: 'pointer',
@@ -423,20 +423,10 @@ export default function PrevailingWagePage() {
               </SectionCard>
 
               {/* Quick Reference */}
-              <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(150px, 1fr))', gap: 12 }}>
-                <StatCard
-                  icon={<CalendarBlank size={19} weight="duotone" color="var(--text-secondary)" />}
-                  label="Daily (8hr)"
-                  value={fmt(dailyCost)}
-                  sub={`${fmt(rate.total)}/hr total`}
-                 href="/app/compliance/prevailing-wage"/>
-                <StatCard
-                  icon={<CalendarCheck size={19} weight="duotone" color="var(--text-secondary)" />}
-                  label="Weekly (40hr)"
-                  value={fmt(weeklyCost)}
-                  sub={`${fmt(rate.total)}/hr total`}
-                 href="/app/compliance/prevailing-wage"/>
-              </div>
+              <StatStrip items={[
+                { label: 'Daily (8hr)', value: fmt(dailyCost), sub: `${fmt(rate.total)}/hr total` },
+                { label: 'Weekly (40hr)', value: fmt(weeklyCost), sub: `${fmt(rate.total)}/hr total` },
+              ]} />
             </>
           )}
         </div>

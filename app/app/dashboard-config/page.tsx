@@ -172,8 +172,10 @@ const btnStyle = (variant: 'primary' | 'secondary' | 'danger' | 'ghost' = 'prima
   transition: 'all .15s',
 });
 
+/* Flat: a widget block is an outline on the page (it shows the cell it
+   fills in the grid), never a filled card. */
 const cardStyle: React.CSSProperties = {
-  background: RAISED,
+  background: 'transparent',
   border: `1px solid ${BORDER}`,
   borderRadius: 10,
   padding: 16,
@@ -192,8 +194,8 @@ const inputStyle: React.CSSProperties = {
 };
 
 const miniBtn: React.CSSProperties = {
-  width: 26,
-  height: 26,
+  width: 36,
+  height: 36,
   borderRadius: 5,
   border: `1px solid ${BORDER}`,
   background: BG,
@@ -553,7 +555,6 @@ export default function DashboardConfigPage() {
           eyebrowIcon={<Gear size={13} weight="fill" color="var(--text-secondary)" />}
           title="Dashboard"
           accent="Configuration"
-          subtitle="Build and manage your home dashboard layout."
           actions={<>
             {saveMsg && (
               <span style={{ fontSize: 13, color: GREEN, fontWeight: 600, padding: '6px 12px', background: `color-mix(in srgb, ${GREEN} 8%, transparent)`, borderRadius: 8, alignSelf: 'center' }}>{saveMsg}</span>
@@ -575,16 +576,13 @@ export default function DashboardConfigPage() {
 
         {/* Layout intelligence strip — what this configuration holds right now */}
         <StatStrip items={[
-          {href: '/app/dashboard-config',  label: 'Widgets Placed', value: String(layout.widgets.length), accent: layout.widgets.length > 0 ? GOLD : undefined, sub: `${WIDGET_CATALOG.length} widget types in the gallery` },
-          {href: '/app/dashboard-config',  label: 'Grid', value: `${layout.columns} columns`, sub: `${layout.widgets.filter(w => w.size === 'full-width').length} full-width row${layout.widgets.filter(w => w.size === 'full-width').length === 1 ? '' : 's'}` },
-          {href: '/app/dashboard-config',  label: 'Coverage', value: `${new Set(layout.widgets.map(w => WIDGET_CATALOG.find(c => c.id === w.catalogId)?.category).filter(Boolean)).size} of 5`, sub: 'widget categories in use' },
-          {href: '/app/dashboard-config',  label: 'Preset', value: layout.preset ? layout.preset.replace(/-/g, ' ').replace(/\b\w/g, c => c.toUpperCase()) : 'Custom', sub: layout.preset ? 'starting template' : 'built by hand' },
-          {href: '/app/dashboard-config',  label: 'Status', value: isDirty ? 'Unsaved' : 'Saved', accent: isDirty ? AMBER : GREEN, sub: layout.updatedAt ? `last saved ${new Date(layout.updatedAt).toLocaleDateString()}` : 'save to keep this layout' },
-          {href: '/app/dashboard-config',  label: 'Preview Data', value: metricsLoading ? 'Syncing' : 'Live', accent: metricsLoading ? undefined : GREEN, sub: 'previews pull your real project metrics' },
+          {label: 'Widgets Placed', value: String(layout.widgets.length), sub: `${WIDGET_CATALOG.length} widget types in the gallery` },
+          {label: 'Coverage', value: `${new Set(layout.widgets.map(w => WIDGET_CATALOG.find(c => c.id === w.catalogId)?.category).filter(Boolean)).size} of 5`, sub: 'widget categories in use' },
+          {label: 'Status', value: isDirty ? 'Unsaved' : 'Saved', accent: isDirty ? AMBER : GREEN, sub: layout.updatedAt ? `last saved ${new Date(layout.updatedAt).toLocaleDateString()}` : 'save to keep this layout' },
         ]} />
 
         {/* ── Layout Name & Preset Row ── */}
-        <SectionCard style={{ marginBottom: 20 }}>
+        <div style={{ marginBottom: 20, paddingBottom: 16, borderBottom: `1px solid ${BORDER}` }}>
           <div style={{ display: 'flex', alignItems: 'center', gap: 16, flexWrap: 'wrap' }}>
             <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
               <label style={{ fontSize: 13, color: DIM, fontWeight: 600, whiteSpace: 'nowrap' }}>Layout Name:</label>
@@ -603,7 +601,7 @@ export default function DashboardConfigPage() {
             </div>
             <button onClick={() => setPresetModalOpen(true)} style={{ ...ghostButtonStyle, padding: '9px 16px' }} className="pmBtn">
               <span>Presets</span>
-              {layout.preset && <span style={{ fontSize: 12, background: GOLD, color: 'var(--on-brand)', padding: '1px 6px', borderRadius: 8, fontWeight: 700 }}>{layout.preset}</span>}
+              {layout.preset && <span style={{ fontSize: 13, color: DIM, fontWeight: 600 }}>· {layout.preset.replace(/-/g, ' ')}</span>}
             </button>
             <div style={{ marginLeft: 'auto', display: 'flex', gap: 10, alignItems: 'center' }}>
               <span style={{ fontSize: 13, color: DIM }}>{layout.widgets.length} widget{layout.widgets.length !== 1 ? 's' : ''}</span>
@@ -612,13 +610,12 @@ export default function DashboardConfigPage() {
               </button>
             </div>
           </div>
-        </SectionCard>
+        </div>
 
         {/* ── Widget Gallery (Catalog) ── */}
         {catalogOpen && (
           <SectionCard
             title="Widget Gallery"
-            icon={<SquaresFour size={18} weight="duotone" color="var(--text-secondary)" />}
             action={<button onClick={() => setCatalogOpen(false)} style={{ ...miniBtn, fontSize: 14 }}><X size={14} color={DIM} weight="regular" /></button>}
             style={{ marginBottom: 20 }}
           >
@@ -642,7 +639,7 @@ export default function DashboardConfigPage() {
                 const count = activeWidgetIds[cw.id] || 0;
                 return (
                   <div key={cw.id} style={{ ...cardStyle, display: 'flex', flexDirection: 'column', gap: 6, transition: 'border-color .15s' }}
-                    onMouseEnter={e => (e.currentTarget.style.borderColor = GOLD)}
+                    onMouseEnter={e => (e.currentTarget.style.borderColor = 'var(--border-strong)')}
                     onMouseLeave={e => (e.currentTarget.style.borderColor = BORDER)}
                   >
                     <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start' }}>
@@ -651,11 +648,11 @@ export default function DashboardConfigPage() {
                         <span style={{ fontSize: 14, fontWeight: 600, color: TEXT }}>{cw.name}</span>
                       </div>
                       {count > 0 && (
-                        <span style={{ fontSize: 12, background: GOLD, color: 'var(--on-brand)', padding: '2px 7px', borderRadius: 10, fontWeight: 700 }}>{count}</span>
+                        <span style={{ fontSize: 12, color: DIM, fontWeight: 700 }}>{count} placed</span>
                       )}
                     </div>
                     <div style={{ fontSize: 12, color: DIM, flex: 1 }}>{cw.description}</div>
-                    <button onClick={() => addWidget(cw.id)} style={{ ...goldButtonStyle, fontSize: 12, padding: '8px 12px', marginTop: 4, width: '100%' }} className="pmBtn">
+                    <button onClick={() => addWidget(cw.id)} style={{ ...ghostButtonStyle, fontSize: 13, minHeight: 40, marginTop: 4, width: '100%' }} className="pmBtn">
                       + Add to Dashboard
                     </button>
                   </div>
@@ -682,8 +679,7 @@ export default function DashboardConfigPage() {
           <SectionCard
             title="Live Preview"
             subtitle={`${layout.columns}-Column Layout`}
-            icon={<GridFour size={18} weight="duotone" color="var(--text-secondary)" />}
-            action={layout.preset ? <span style={{ fontSize: 12, color: PURPLE, fontWeight: 600 }}>Preset: {layout.preset}</span> : undefined}
+            action={layout.preset ? <span style={{ fontSize: 13, color: DIM, fontWeight: 600 }}>{layout.preset.replace(/-/g, ' ')}</span> : undefined}
             style={{ flex: 1, minWidth: 280 }}
           >
           {layout.widgets.length === 0 ? (
@@ -728,7 +724,7 @@ export default function DashboardConfigPage() {
                       <div>
                         <span style={{ marginRight: 6, display: 'inline-flex', verticalAlign: 'middle' }}><cat.icon size={16} color="var(--text-secondary)" weight="regular" /></span>
                         <span style={{ fontSize: 14, fontWeight: 600, color: TEXT }}>{cat.name}</span>
-                        <span style={{ fontSize: 12, color: DIM, marginLeft: 8, background: BG, padding: '2px 8px', borderRadius: 4 }}>
+                        <span style={{ fontSize: 12, color: DIM, marginLeft: 8 }}>
                           {SIZE_LABELS[w.size]}
                         </span>
                       </div>
@@ -755,31 +751,18 @@ export default function DashboardConfigPage() {
                       <WidgetBody catalogId={w.catalogId} metrics={metrics} loading={metricsLoading} settings={w.settings} />
                     </div>
 
-                    {/* Settings badges */}
-                    {Object.keys(w.settings).length > 0 && (
-                      <div style={{ marginTop: 10, display: 'flex', gap: 6, flexWrap: 'wrap' }}>
-                        {w.settings.dateRange && (
-                          <span style={{ fontSize: 12, color: DIM, background: BG, padding: '2px 8px', borderRadius: 4 }}>
-                            Range: {w.settings.dateRange}
-                          </span>
-                        )}
-                        {w.settings.projectId && (
-                          <span style={{ fontSize: 12, color: DIM, background: BG, padding: '2px 8px', borderRadius: 4 }}>
-                            Project: {w.settings.projectId}
-                          </span>
-                        )}
-                        {w.settings.limit !== undefined && (
-                          <span style={{ fontSize: 12, color: DIM, background: BG, padding: '2px 8px', borderRadius: 4 }}>
-                            Limit: {w.settings.limit}
-                          </span>
-                        )}
-                        {w.settings.location && (
-                          <span style={{ fontSize: 12, color: DIM, background: BG, padding: '2px 8px', borderRadius: 4 }}>
-                            Loc: {w.settings.location}
-                          </span>
-                        )}
-                      </div>
-                    )}
+                    {/* Settings — one plain line, in words (never a raw id) */}
+                    {(() => {
+                      const RANGE: Record<string, string> = { today: 'Today', week: 'This week', month: 'This month', quarter: 'This quarter', year: 'This year' };
+                      const job = w.settings.projectId && w.settings.projectId !== 'all' ? projectOptions.find(p => p.id === w.settings.projectId)?.name : null;
+                      const parts = [
+                        w.settings.dateRange ? (RANGE[w.settings.dateRange] || w.settings.dateRange) : null,
+                        job,
+                        w.settings.limit !== undefined ? `${w.settings.limit} items` : null,
+                        w.settings.location || null,
+                      ].filter(Boolean);
+                      return parts.length ? <div style={{ marginTop: 10, fontSize: 13, color: DIM }}>{parts.join(' · ')}</div> : null;
+                    })()}
                   </div>
                 );
               })}

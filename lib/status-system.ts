@@ -66,11 +66,11 @@ export interface ToneStyle {
 }
 
 /* Approved palette only (2026-10-12): status colours are the approved green,
-   amber and red; "waiting on you" is the info blue, because yellow is kept for
-   primary actions and the selected item. */
+   amber and red. "Waiting on you" is amber with a stronger fill — never the
+   brand yellow, which is kept for primary actions and the selected item. */
 export const TONES: Record<Tone, ToneStyle> = {
   draft:   { fg: '#94A3B8', bg: 'rgba(148,163,184,0.14)', border: 'rgba(148,163,184,0.40)', meaning: 'Not sent yet — nobody is waiting on this' },
-  active:  { fg: '#E8FF2A', bg: 'rgba(232,255,42,0.14)',  border: 'rgba(232,255,42,0.45)',  meaning: 'Waiting on you' },
+  active:  { fg: '#FBBF24', bg: 'rgba(251,191,36,0.20)',  border: 'rgba(251,191,36,0.60)',  meaning: 'Waiting on you' },
   waiting: { fg: '#FBBF24', bg: 'rgba(251,191,36,0.16)',  border: 'rgba(251,191,36,0.50)',  meaning: 'Waiting on someone else' },
   good:    { fg: '#4ADE80', bg: 'rgba(74,222,128,0.16)',  border: 'rgba(74,222,128,0.50)',  meaning: 'Approved' },
   warn:    { fg: '#FBBF24', bg: 'rgba(251,191,36,0.16)',  border: 'rgba(251,191,36,0.50)',  meaning: 'Came back needing changes' },

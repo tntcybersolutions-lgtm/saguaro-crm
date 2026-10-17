@@ -2,6 +2,8 @@ import { NextRequest, NextResponse } from 'next/server';
 import { createServerClient, getUser } from '@/lib/supabase-server';
 import { requirePermission } from '@/lib/permissions';
 import { apiError } from '@/lib/api-error';
+import { readClientId } from '@/lib/offline/client-id';
+import { fileFiledByClient, signedFileRow } from '@/lib/project-file-replay';
 
 export const runtime = 'nodejs';
 /* eslint-disable @typescript-eslint/no-explicit-any */
@@ -31,10 +33,16 @@ export async function POST(req: NextRequest) {
     const projectId = body.projectId ? String(body.projectId) : null;
     if (!fileName) return NextResponse.json({ error: 'fileName is required' }, { status: 400 });
 
+    const admin = createServerClient() as any;
+
+    // A video kept on the phone and sent again: the first send already filed it.
+    // Say so before the phone uploads the same bytes a second time.
+    const earlier = await fileFiledByClient(admin, user.tenantId, readClientId(req.headers, body));
+    if (earlier) return NextResponse.json({ existing: await signedFileRow(earlier) });
+
     const safeName = fileName.replace(/[^\w.\-() ]+/g, '_');
     const path = `${user.tenantId}/projects/${projectId || 'unfiled'}/files/${Date.now()}-${safeName}`;
 
-    const admin = createServerClient() as any;
     const { data, error } = await admin.storage.from(BUCKET).createSignedUploadUrl(path);
     if (error) throw error;
 

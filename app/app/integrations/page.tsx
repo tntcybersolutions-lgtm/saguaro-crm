@@ -3,7 +3,6 @@ import React, { useState, useEffect, useCallback } from 'react';
 import { confirmDialog } from '@/lib/ui/async-dialog';
 import { humanError } from '@/lib/errors';
 import Link from 'next/link';
-import { IntegrationStrip } from '@/components/Integrations';
 import { PremiumSurface, ModuleHero, SectionCard, StatStrip, PremiumEmpty, InsightRow, goldButtonStyle, ghostButtonStyle, goldOutlineButtonStyle, secondaryButtonStyle } from '@/components/ui/premium';
 import { Plugs, MagnifyingGlass } from '@phosphor-icons/react';
 
@@ -339,27 +338,27 @@ export default function IntegrationsPage() {
       {/* Marketplace intelligence \u2014 the imported StatStrip, live figures only */}
       {!loading && integrations.length > 0 && (
         <StatStrip items={[
-          {href: '/app/integrations',  label: 'Connected', value: String(connectedCount), accent: connectedCount > 0 ? GREEN : undefined, sub: connectedCount > 0 ? 'Live and syncing' : 'None connected yet' },
-          {href: '/app/integrations',  label: 'Available Now', value: String(availableCount), sub: 'Ready to connect' },
-          {href: '/app/integrations',  label: 'Categories', value: String(categoryCount), sub: 'Accounting to storage' },
-          {href: '/app/integrations',  label: 'Last Sync', value: lastSynced ? timeAgo(lastSynced.last_sync_at) : 'Never', sub: lastSynced ? lastSynced.name : 'No syncs recorded' },
+          {label: 'Connected', value: String(connectedCount), accent: connectedCount > 0 ? GREEN : undefined, sub: connectedCount > 0 ? 'Live and syncing' : 'None connected yet' },
+          {label: 'Available Now', value: String(availableCount), sub: 'Ready to connect' },
+          {label: 'Categories', value: String(categoryCount), sub: 'Accounting to storage' },
+          {label: 'Last Sync', value: lastSynced ? timeAgo(lastSynced.last_sync_at) : 'Never', sub: lastSynced ? lastSynced.name : 'No syncs recorded' },
         ]} />
       )}
 
-      {/* Supported Integrations Strip */}
-      <IntegrationStrip />
 
       {/* Category Tabs */}
       <div style={{ display: 'flex', gap: 6, marginBottom: 24, flexWrap: 'wrap' }}>
-        {CATEGORIES.map((cat) => (
+        {/* Only categories that hold an integration — a tab that opens onto nothing is a dead end. */}
+        {CATEGORIES.filter((cat) => cat.key === 'all' || category === cat.key || integrations.some((i) => i.category === cat.key)).map((cat) => (
           <button
             key={cat.key}
             onClick={() => setCategory(cat.key)}
+            aria-pressed={category === cat.key}
             style={{
-              padding: '7px 16px', borderRadius: 20, fontSize: 12, fontWeight: 600, cursor: 'pointer',
+              padding: '0 16px', minHeight: 40, borderRadius: 10, fontSize: 13, fontWeight: 600, cursor: 'pointer',
               border: category === cat.key ? `1px solid ${GOLD}` : `1px solid ${BORDER}`,
-              background: category === cat.key ? 'var(--brand-primary-12)' : 'transparent',
-              color: category === cat.key ? GOLD : DIM,
+              background: category === cat.key ? GOLD : 'transparent',
+              color: category === cat.key ? 'var(--on-brand)' : DIM,
               transition: 'all 0.2s',
             }}
           >
@@ -396,32 +395,24 @@ export default function IntegrationsPage() {
             key={g.key}
             title={g.label}
             subtitle={`${g.items.length} integration${g.items.length === 1 ? '' : 's'} · ${g.items.filter((i) => i.connected).length} connected`}
-            icon={<Plugs size={17} weight="duotone" color={CATEGORY_COLORS[g.key] || GOLD} />}
-            accent={CATEGORY_COLORS[g.key] || GOLD}
+            flat
             style={{ marginBottom: 18 }}
           >
-            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(340px, 1fr))', gap: 18 }}>
+            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(min(100%, 340px), 1fr))', gap: '0 32px' }}>
               {g.items.map((intg) => (
             <div
               key={intg.key}
               style={{
-                background: 'linear-gradient(160deg, rgba(255,255,255,0.045), rgba(255,255,255,0.012))',
-                border: `1px solid ${intg.connected ? 'rgba(74,222,128,0.35)' : intg.available ? 'color-mix(in srgb, var(--brand-primary) 22%, transparent)' : BORDER}`,
-                borderRadius: 16,
-                padding: 22,
+                borderBottom: `1px solid ${BORDER}`,
+                padding: '16px 0',
                 position: 'relative',
-                boxShadow: 'inset 0 1px 0 rgba(255,255,255,0.04)',
-                transition: 'all 0.25s',
               }}
-              className="lift"
             >
               {/* Header Row */}
               <div style={{ display: 'flex', alignItems: 'center', gap: 14, marginBottom: 12 }}>
                 {/* Icon */}
                 <div style={{
-                  width: 48, height: 48, borderRadius: 12,
-                  background: `linear-gradient(135deg, color-mix(in srgb, ${intg.icon_color} 13%, transparent), color-mix(in srgb, ${intg.icon_color} 27%, transparent))`,
-                  border: `1px solid color-mix(in srgb, ${intg.icon_color} 33%, transparent)`,
+                  width: 40, height: 40,
                   display: 'flex', alignItems: 'center', justifyContent: 'center',
                   fontSize: 15, fontWeight: 900, color: intg.icon_color, flexShrink: 0,
                 }}>
@@ -440,24 +431,17 @@ export default function IntegrationsPage() {
                       </span>
                     )}
                   </div>
-                  <span style={{
-                    fontSize: 12, fontWeight: 600, color: CATEGORY_COLORS[intg.category] || DIM,
-                    background: `color-mix(in srgb, ${CATEGORY_COLORS[intg.category] || DIM} 9%, transparent)`,
-                    padding: '2px 8px', borderRadius: 8, display: 'inline-block', marginTop: 3,
-                  }}>
-                    {intg.category.replace('_', ' ').replace(/\b\w/g, (c) => c.toUpperCase())}
-                  </span>
                 </div>
               </div>
 
               {/* Description */}
-              <p style={{ margin: '0 0 16px', fontSize: 13, color: DIM, lineHeight: 1.5 }}>
+              <p style={{ margin: '0 0 12px', fontSize: 13, color: DIM, lineHeight: 1.5 }}>
                 {intg.description}
               </p>
 
               {/* Connected Details */}
               {intg.connected && (
-                <div style={{ marginBottom: 14, padding: '6px 12px', background: 'rgba(74,222,128,0.06)', border: '1px solid rgba(74,222,128,0.18)', borderRadius: 10 }}>
+                <div style={{ marginBottom: 12 }}>
                   <InsightRow label="Last Sync" value={timeAgo(intg.last_sync_at)} />
                   <InsightRow label="Status" value="Active" accent={GREEN} />
                   <InsightRow label="Auth" value={String(intg.auth_type || 'credentials').replace(/_/g, ' ')} />
@@ -512,7 +496,7 @@ export default function IntegrationsPage() {
                     disabled={connectingKey === intg.key}
                     className="k-btn k-btn-secondary"
                     style={{
-                      flex: 1, justifyContent: 'center', padding: '9px 0', fontSize: 13, minHeight: 44,
+                      justifyContent: 'center', padding: '0 18px', fontSize: 13, minHeight: 44,
                       opacity: connectingKey === intg.key ? 0.6 : 1,
                     }}
                   >

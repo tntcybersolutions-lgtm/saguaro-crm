@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from 'next/server';
 import { createServerClient, getUser } from '@/lib/supabase-server';
 import { getEffectivePermissions, hasPermission } from '@/lib/permissions';
 import { apiError } from '@/lib/api-error';
+import { liveJobs } from '@/lib/live-jobs';
 import { addDays, requestDay } from '@/lib/time-zone';
 
 /* THE RAIL HID FINANCIAL; THIS ROUTE STILL HANDED IT OVER.
@@ -45,13 +46,13 @@ export async function GET(req: NextRequest) {
       rfis,
       { count: expiringInsurance },
     ] = await Promise.all([
-      db.from('projects').select('*', HEAD).eq('tenant_id', tenantId).eq('status', 'active'),
+      liveJobs(db.from('projects').select('*', HEAD).eq('tenant_id', tenantId).eq('status', 'active')),
       db.from('bid_packages').select('*', HEAD).eq('tenant_id', tenantId).eq('status', 'open'),
       canPayApps
         ? db.from('pay_applications').select('*', HEAD).eq('tenant_id', tenantId).in('status', ['submitted', 'approved'])
         : null,
       canMoney
-        ? db.from('projects').select('contract_value').eq('tenant_id', tenantId).eq('status', 'active')
+        ? liveJobs(db.from('projects').select('contract_value').eq('tenant_id', tenantId).eq('status', 'active'))
         : null,
       canRFIs
         ? db.from('rfis').select('*', HEAD).eq('tenant_id', tenantId).eq('status', 'open')

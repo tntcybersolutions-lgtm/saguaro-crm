@@ -181,6 +181,11 @@ export default function WarrantyClaimsPage() {
   /* projects — shared SWR cache */
   const { projects: liveProjects } = useProjects();
   useEffect(() => { setProjects(liveProjects as any); }, [liveProjects]);
+  /* Open on a job instead of an empty "pick a project" screen: the first job is
+     selected once the list is in (the picker still switches it). */
+  useEffect(() => {
+    if (!selectedProject && liveProjects.length > 0) setSelectedProject((liveProjects[0] as { id: string }).id);
+  }, [liveProjects, selectedProject]);
 
   /* fetch claims when project changes.
    * A failed read must never render as "no warranty claims" — that is an
@@ -469,13 +474,13 @@ export default function WarrantyClaimsPage() {
       {selectedProject && !loading && !loadError && claims.length > 0 && (
         <>
           <StatStrip items={[
-            {href: '/app/warranty-claims',  label: 'Claims', value: stats.total, sub: `${stats.open} open · ${stats.closed} closed` },
-            {href: '/app/warranty-claims', label: 'Emergency', value: stats.emergency, accent: stats.emergency > 0 ? RED : undefined, sub: stats.emergency > 0 ? 'Need immediate action' : 'None outstanding' },
+            {label: 'Claims', value: stats.total, sub: `${stats.open} open · ${stats.closed} closed` },
+            {label: 'Emergency', value: stats.emergency, accent: stats.emergency > 0 ? RED : undefined, sub: stats.emergency > 0 ? 'Need immediate action' : 'None outstanding' },
             /* An average over zero resolved claims is not "0 days" — it is unknown. */
-            {href: '/app/warranty-claims', label: 'Avg Resolution', value: stats.resolvedCount > 0 ? `${stats.avgDays}d` : '—', sub: 'Reported to completed' },
+            {label: 'Avg Resolution', value: stats.resolvedCount > 0 ? `${stats.avgDays}d` : '—', sub: 'Reported to completed' },
             /* $0 across claims that never had a cost entered is a fabrication. */
-            {href: '/app/warranty-claims',  label: 'Warranty Cost', value: stats.costedCount > 0 ? `$${(Number(stats.totalCost) || 0).toLocaleString()}` : '—', sub: `${claims.filter(c => c.covered_under_warranty).length} covered · ${claims.filter(c => !c.covered_under_warranty).length} not covered` },
-            {href: '/app/warranty-claims', label: 'Expired Coverage', value: stats.expiredCount, accent: stats.expiredCount > 0 ? RED : undefined, sub: stats.expiredCount > 0 ? 'Claims past warranty' : 'All inside warranty' },
+            {label: 'Warranty Cost', value: stats.costedCount > 0 ? `$${(Number(stats.totalCost) || 0).toLocaleString()}` : '—', sub: `${claims.filter(c => c.covered_under_warranty).length} covered · ${claims.filter(c => !c.covered_under_warranty).length} not covered` },
+            {label: 'Expired Coverage', value: stats.expiredCount, accent: stats.expiredCount > 0 ? RED : undefined, sub: stats.expiredCount > 0 ? 'Claims past warranty' : 'All inside warranty' },
           ]} />
           <StatusPipeline
             byStatus={stats.byStatus}
@@ -491,7 +496,7 @@ export default function WarrantyClaimsPage() {
           <PremiumEmpty
             icon={<Buildings size={30} weight="duotone" color="var(--text-secondary)" />}
             title="Select a project"
-            description="Choose a project above to view its warranty claims." primary={{ label: 'New Claim', icon: <PlusCircle size={16} weight="bold" />, onClick: () => { setForm(emptyForm()); setActiveTab('create'); } }} perm={['Safety', 'Edit']} />
+            description="Pick one above." secondary={{ label: 'New Claim', icon: <PlusCircle size={16} weight="bold" />, onClick: () => { setForm(emptyForm()); setActiveTab('create'); } }} perm={['Safety', 'Edit']} />
         </SectionCard>
       )}
 

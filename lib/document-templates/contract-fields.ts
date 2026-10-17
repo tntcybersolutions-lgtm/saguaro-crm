@@ -108,7 +108,7 @@ export const SUBCONTRACT_FIELDS: ContractField[] = [
     hint: 'The entity signing as Contractor. Prints on every page and in the signature block.' },
   { key: 'subName', label: 'Subcontractor', kind: 'text', section: PARTIES, required: true },
   { key: 'subAddress', label: 'Subcontractor address', kind: 'text', section: PARTIES },
-  { key: 'subLicense', label: 'Licence number', kind: 'text', section: PARTIES, half: true,
+  { key: 'subLicense', label: 'License number', kind: 'text', section: PARTIES, half: true,
     hint: 'Prints on the contract and is checked against the sub record at award.' },
   { key: 'subTrade', label: 'Trade', kind: 'text', section: PARTIES, half: true },
 

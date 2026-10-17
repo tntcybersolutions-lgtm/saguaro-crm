@@ -84,25 +84,18 @@ export default function AskDocsPage() {
         {/* Live session intelligence — what Sage can reach and what it has done */}
         {projects.length > 0 && (
           <StatStrip items={[
-            {href: '/app/ask',  label: 'Projects', value: String(projects.length), sub: 'Searchable right now' },
-            {href: '/app/ask',  label: 'Doc Types', value: String(Object.keys(TYPE_LABEL).length), sub: 'RFIs to T&M tickets' },
-            {href: '/app/ask',  label: 'Questions Asked', value: String(turns.length), sub: 'This session' },
-            {href: '/app/ask',  label: 'Records Searched', value: String(turns.reduce((s, t) => s + t.searched, 0)), sub: 'Across your questions' },
-            {href: '/app/ask',  label: 'Sources Cited', value: String(turns.reduce((s, t) => s + t.citations.length, 0)), accent: turns.some((t) => t.citations.length > 0) ? GOLD : undefined, sub: 'Every answer grounded' },
+            { label: 'Projects', value: String(projects.length), sub: 'Searchable right now' },
+            { label: 'Doc Types', value: String(Object.keys(TYPE_LABEL).length), sub: 'RFIs to T&M tickets' },
+            { label: 'Questions Asked', value: String(turns.length), sub: 'This session' },
+            { label: 'Records Searched', value: String(turns.reduce((s, t) => s + t.searched, 0)), sub: 'Across your questions' },
+            { label: 'Sources Cited', value: String(turns.reduce((s, t) => s + t.citations.length, 0)), sub: 'Every answer grounded' },
           ]} />
         )}
 
         <div style={{ flex: 1, marginTop: 20, display: 'flex', flexDirection: 'column', gap: 16 }}>
           {turns.length === 0 && !busy && (
-            <SectionCard title="Try Asking" subtitle="One tap runs the question against this project's records" icon={<Question size={17} weight="duotone" color="var(--text-secondary)" />}>
-              <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>{EXAMPLES.map((ex) => <button key={ex} onClick={() => ask(ex)} className="pmBtn" style={{ display: 'flex', alignItems: 'center', gap: 10, textAlign: 'left', background: DARK, border: `1px solid ${BORDER}`, borderRadius: 10, padding: '10px 12px', color: TEXT, cursor: 'pointer', fontSize: 14 }}><Question size={16} color="var(--text-secondary)" />{ex}</button>)}</div>
-              <div style={{ marginTop: 14, paddingTop: 12, borderTop: '1px solid rgba(255,255,255,0.08)' }}>
-                <div style={{ fontSize: 12, color: 'var(--text-tertiary)', fontWeight: 700, marginBottom: 8 }}>Sage Reads</div>
-                <div style={{ display: 'flex', flexWrap: 'wrap', gap: 6 }}>
-                  {Object.values(TYPE_LABEL).map((t) => <span key={t} style={{ padding: '3px 10px', borderRadius: 999, background: 'var(--bg-surface-2)', border: '1px solid var(--border-default)', color: DIM, fontSize: 12 }}>{t}</span>)}
-                </div>
-                <div style={{ color: DIM, fontSize: 12, marginTop: 10, lineHeight: 1.5 }}>Answers cite the exact records they came from — click a citation to open it. If the records do not contain the answer, Sage says so instead of guessing.</div>
-              </div>
+            <SectionCard flat title="Try Asking">
+              <div style={{ display: 'flex', flexDirection: 'column', borderTop: `1px solid ${BORDER}` }}>{EXAMPLES.map((ex) => <button key={ex} onClick={() => ask(ex)} className="pmBtn" style={{ display: 'flex', alignItems: 'center', gap: 10, textAlign: 'left', background: 'transparent', border: 0, borderBottom: `1px solid ${BORDER}`, borderRadius: 0, padding: '0 4px', minHeight: 48, color: TEXT, cursor: 'pointer', fontSize: 14 }}><Question size={16} color="var(--text-secondary)" />{ex}</button>)}</div>
             </SectionCard>
           )}
           {turns.map((t, i) => (
@@ -132,7 +125,6 @@ export default function AskDocsPage() {
             <input value={q} onChange={(e) => setQ(e.target.value)} onKeyDown={(e) => e.key === 'Enter' && !busy && ask()} placeholder="Ask anything about this project…" style={inp} />
             <button onClick={() => ask()} disabled={busy || !q.trim()} className="pmBtn" style={{ ...goldButtonStyle, padding: '0 18px', cursor: busy ? 'default' : 'pointer', opacity: busy || !q.trim() ? 0.6 : 1 }}><PaperPlaneRight size={20} weight="fill" /></button>
           </div>
-          <div style={{ color: DIM, fontSize: 12, marginTop: 6, textAlign: 'center' }}>Grounded in your records only — Sage cites its sources and won’t invent answers.</div>
         </div>
       </div>
     </div>

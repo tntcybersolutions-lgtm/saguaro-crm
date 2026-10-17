@@ -15,7 +15,7 @@ import {
   goldButtonStyle, goldOutlineButtonStyle,
 } from '@/components/ui/premium';
 import {
-  Code, Key, WebhooksLogo, Terminal, Plugs, BracketsCurly, Cube, Broadcast, PaperPlaneTilt,
+  Code, Key, WebhooksLogo, Terminal, Plugs, BracketsCurly, Cube, Broadcast, PaperPlaneTilt, CaretDown,
 } from '@phosphor-icons/react';
 
 const GOLD = 'var(--brand-primary)', CARD = 'var(--bg-surface)', INSET = 'var(--bg-base)', BORDER = 'rgba(255,255,255,0.12)', HAIRLINE = 'rgba(255,255,255,0.07)';
@@ -240,13 +240,13 @@ export default function ApiDocsPage() {
 
       {/* Stat strip — the platform surface at a glance, counted from the catalog */}
       <StatStrip items={[
-        {href: '/app/integrations/api-docs',  label: 'Live Endpoints', value: String(liveCount), accent: GREEN, sub: 'Accepting sk_live_ keys today', icon: <Broadcast size={11} weight="bold" color={GREEN} /> },
-        {href: '/app/integrations/api-docs',  label: 'API Modules', value: String(LIVE_MODULES.length), sub: 'Projects to takeoffs', icon: <Cube size={11} weight="bold" color={API_ACCENT} /> },
-        {href: '/app/integrations/api-docs',  label: 'Webhook Events', value: String(WEBHOOK_EVENTS.length), sub: 'All emitted by the dispatcher', icon: <WebhooksLogo size={11} weight="bold" color={API_ACCENT} /> },
+        { label: 'Live Endpoints', value: String(liveCount), accent: GREEN, sub: 'Answering live keys' },
+        { label: 'API Modules', value: String(LIVE_MODULES.length), sub: 'Projects to takeoffs' },
+        { label: 'Webhook Events', value: String(WEBHOOK_EVENTS.length) },
       ]} />
 
       {/* Section Tabs */}
-      <div style={{ display: 'flex', gap: 4, marginBottom: 24, background: CARD, border: `1px solid ${HAIRLINE}`, borderRadius: 10, padding: 4, width: 'fit-content', maxWidth: '100%', overflowX: 'auto' }}>
+      <div style={{ display: 'flex', gap: 4, marginBottom: 16, width: 'fit-content', maxWidth: '100%', overflowX: 'auto' }}>
         {[
           { key: 'endpoints' as const, label: 'Endpoints', icon: <BracketsCurly size={13} weight="bold" /> },
           { key: 'auth' as const, label: 'Authentication', icon: <Key size={13} weight="bold" /> },
@@ -273,40 +273,25 @@ export default function ApiDocsPage() {
       {activeSection === 'endpoints' && (
         <div>
           {LIVE_MODULES.map((mod) => (
-            <div key={mod.name} style={{ marginBottom: 14 }}>
+            <div key={mod.name} style={{ borderBottom: `1px solid ${HAIRLINE}` }}>
               <button
                 onClick={() => setActiveModule(activeModule === mod.name ? null : mod.name)}
+                aria-expanded={activeModule === mod.name}
                 style={{
-                  width: '100%', display: 'flex', alignItems: 'center', gap: 14, padding: '15px 20px',
-                  background: 'linear-gradient(160deg, rgba(255,255,255,0.045), rgba(255,255,255,0.012))',
-                  border: `1px solid ${activeModule === mod.name ? `color-mix(in srgb, ${API_ACCENT} 45%, transparent)` : 'rgba(255,255,255,0.08)'}`,
-                  borderRadius: activeModule === mod.name ? '14px 14px 0 0' : 14,
+                  width: '100%', display: 'flex', alignItems: 'center', gap: 14, padding: '12px 4px', minHeight: 56,
+                  background: 'transparent', border: 0,
                   cursor: 'pointer', textAlign: 'left',
                 }}
               >
-                <div style={{
-                  width: 36, height: 36, borderRadius: 10,
-                  background: `color-mix(in srgb, ${API_ACCENT} 12%, transparent)`,
-                  border: `1px solid color-mix(in srgb, ${API_ACCENT} 45%, transparent)`,
-                  display: 'flex', alignItems: 'center', justifyContent: 'center',
-                  fontSize: 13, fontWeight: 900, color: API_ACCENT, flexShrink: 0,
-                }}>
-                  {mod.icon}
-                </div>
                 <div style={{ flex: 1, minWidth: 0 }}>
                   <div style={{ fontSize: 15, fontWeight: 800, color: TEXT, letterSpacing: '-0.01em' }}>{mod.name}</div>
                   <div style={{ fontSize: 12, color: GREEN }}>{mod.endpoints.length} live</div>
                 </div>
-                <span style={{ color: DIM, fontSize: 18, transform: activeModule === mod.name ? 'rotate(180deg)' : 'rotate(0)', transition: 'transform 0.2s' }}>
-                  {'\u25BC'}
-                </span>
+                <CaretDown size={16} weight="bold" color={DIM} style={{ transform: activeModule === mod.name ? 'rotate(180deg)' : 'rotate(0)', transition: 'transform 0.2s' }} />
               </button>
 
               {activeModule === mod.name && (
-                <div style={{
-                  background: CARD, border: `1px solid rgba(255,255,255,0.08)`, borderTop: 'none',
-                  borderRadius: '0 0 14px 14px', padding: '4px 0', overflowX: 'auto',
-                }}>
+                <div style={{ padding: '0 0 8px', overflowX: 'auto' }}>
                   {mod.endpoints.map((ep, i) => {
                     return (
                       <div

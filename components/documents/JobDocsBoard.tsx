@@ -10,7 +10,7 @@ import React from 'react';
 import { CaretRight, X, Warning, CheckCircle, Clock } from '@phosphor-icons/react';
 import type { JobDocs, DocTone } from '@/lib/documents-by-job';
 import { fmtMoneyShort } from '@/lib/home/rank';
-import { projectColor, jobTileStyle } from '@/lib/project-colors';
+import { projectColor } from '@/lib/project-colors';
 
 const CSS = `
 .jdb { display: flex; flex-direction: column; gap: 10px; margin-bottom: 22px; }
@@ -19,15 +19,19 @@ const CSS = `
 .jdbLegend { display: inline-flex; gap: 12px; font-size: 13px; font-weight: 700; color: var(--text-secondary); }
 .jdbLegend span { display: inline-flex; align-items: center; gap: 6px; }
 .jdbLegend i, .jdbDot { width: 10px; height: 10px; border-radius: 50%; display: inline-block; flex: 0 0 auto; }
-[data-tone="red"] > .jdbDot, .jdbLegend i[data-tone="red"] { background: var(--c-red); box-shadow: 0 0 0 3px rgba(248,113,113,0.18); }
-[data-tone="yellow"] > .jdbDot, .jdbLegend i[data-tone="yellow"] { background: var(--warning); box-shadow: 0 0 0 3px color-mix(in srgb, var(--warning) 16%, transparent); }
-[data-tone="green"] > .jdbDot, .jdbLegend i[data-tone="green"] { background: var(--c-green); box-shadow: 0 0 0 3px rgba(74,222,128,0.16); }
-.jdbList { display: flex; flex-direction: column; border-radius: 16px; border: 1px solid var(--border-subtle); background: linear-gradient(180deg, var(--c-raised), var(--c-card)); overflow: hidden; }
-.jdbRow { display: grid; grid-template-columns: minmax(220px, 1.5fr) minmax(170px, 1.2fr) repeat(4, minmax(92px, .7fr)) 24px; align-items: center; gap: 16px; padding: 14px 16px; border: 0; border-top: 1px solid var(--border-subtle); background: transparent; color: inherit; font: inherit; text-align: left; cursor: pointer; width: 100%; }
-.jdbRow:first-child { border-top: 0; }
-.jdbRow:hover { background: rgba(255,255,255,0.03); }
+[data-tone="red"] > .jdbDot, .jdbLegend i[data-tone="red"] { background: var(--c-red); }
+[data-tone="yellow"] > .jdbDot, .jdbLegend i[data-tone="yellow"] { background: var(--warning); }
+[data-tone="green"] > .jdbDot, .jdbLegend i[data-tone="green"] { background: var(--c-green); }
+/* Flat: rows on the page between hairlines, one header row for the columns. */
+.jdbList { display: flex; flex-direction: column; border-top: 1px solid var(--border-default); border-bottom: 1px solid var(--border-default); }
+.jdbRow, .jdbCols { display: grid; grid-template-columns: minmax(220px, 1.5fr) minmax(170px, 1.2fr) repeat(4, minmax(92px, .7fr)) 24px; align-items: center; gap: 16px; padding: 12px 4px; }
+.jdbRow { border: 0; border-top: 1px solid var(--border-default); background: transparent; color: inherit; font: inherit; text-align: left; cursor: pointer; width: 100%; }
+.jdbRow:first-of-type { border-top: 0; }
+.jdbCols { padding-top: 8px; padding-bottom: 8px; border-bottom: 1px solid var(--border-default); font-size: 12px; font-weight: 700; letter-spacing: .05em; text-transform: uppercase; color: var(--text-tertiary); }
+.jdbRow:hover { background: var(--bg-row-hover); }
 .jdbRow:focus-visible { outline: 2px solid var(--focus-ring); outline-offset: -2px; }
-.jdbRow[data-sel="true"] { background: rgba(232,255,42,0.05); box-shadow: inset 3px 0 0 var(--brand-primary); cursor: default; }
+.jdbRow[data-sel="true"] { box-shadow: inset 3px 0 0 var(--brand-primary); padding-left: 12px; cursor: default; }
+.jdbSwatch { width: 10px; height: 10px; border-radius: 3px; flex: 0 0 auto; }
 .jdbJob { display: flex; align-items: center; gap: 12px; min-width: 0; }
 .jdbName { min-width: 0; }
 .jdbName b { display: block; font-size: 14.5px; font-weight: 800; color: var(--text-primary); overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
@@ -37,19 +41,23 @@ const CSS = `
 .jdbWhy[data-tone="yellow"] { color: var(--warning); }
 .jdbWhy[data-tone="green"] { color: var(--c-green); }
 .jdbM { min-width: 0; }
-.jdbM label { display: block; font-size: 12px; font-weight: 800; letter-spacing: .1em; text-transform: uppercase; color: var(--text-tertiary); margin-bottom: 4px; }
+.jdbM label { display: none; font-size: 12px; font-weight: 600; color: var(--text-tertiary); margin-bottom: 2px; }
 .jdbM b { font-size: 15px; font-weight: 900; color: var(--text-primary); font-variant-numeric: tabular-nums; }
 .jdbM small { display: block; margin-top: 2px; font-size: 12px; color: var(--text-tertiary); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
 .jdbM small[data-bad="true"] { color: var(--c-red); font-weight: 800; }
 .jdbBar { height: 6px; border-radius: 6px; background: rgba(255,255,255,0.08); overflow: hidden; margin-top: 6px; }
-.jdbBar > i { display: block; height: 100%; border-radius: 6px; background: var(--info); }
+.jdbBar > i { display: block; height: 100%; border-radius: 6px; background: var(--text-secondary); }
+.jdbBar[data-full="true"] > i { background: var(--c-green); }
 .jdbGo { color: var(--text-tertiary); }
-.jdbClear { display: inline-flex; align-items: center; gap: 6px; min-height: 36px; padding: 0 12px; border-radius: 999px; border: 1px solid var(--border-default); background: rgba(255,255,255,0.04); color: var(--text-primary); font: inherit; font-size: 13px; font-weight: 700; cursor: pointer; }
+.jdbClear { display: inline-flex; align-items: center; gap: 6px; min-height: 40px; padding: 0 12px; border-radius: 10px; border: 1px solid var(--border-default); background: transparent; color: var(--text-primary); font: inherit; font-size: 13px; font-weight: 700; cursor: pointer; }
 .jdbClear:focus-visible { outline: 2px solid var(--focus-ring); outline-offset: 2px; }
 .jdbEmpty { padding: 18px 16px; font-size: 14px; color: var(--text-tertiary); }
-@media (max-width: 1100px) { .jdbRow { grid-template-columns: minmax(200px, 1.4fr) minmax(150px, 1fr) repeat(2, minmax(88px, .7fr)) 20px; } .jdbHideMd { display: none; } }
+@media (max-width: 1100px) { .jdbRow, .jdbCols { grid-template-columns: minmax(200px, 1.4fr) minmax(150px, 1fr) repeat(2, minmax(88px, .7fr)) 20px; } .jdbHideMd { display: none; } }
 @media (max-width: 767px) {
-  .jdbRow { grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 12px 14px; padding: 14px; }
+  .jdbCols { display: none; }
+  .jdbM label { display: block; }
+  .jdbRow { grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 10px 14px; padding: 14px 0; }
+  .jdbRow[data-sel="true"] { padding-left: 12px; }
   .jdbJob { grid-column: 1 / -1; }
   .jdbBill { grid-column: 1 / -1; }
   .jdbHideMd { display: block; }
@@ -58,8 +66,6 @@ const CSS = `
 }
 `;
 
-const initials = (name: string) =>
-  name.replace(/[^A-Za-z0-9 ]+/g, ' ').trim().split(/\s+/).filter(Boolean).slice(0, 2).map((w) => w[0]!.toUpperCase()).join('') || '?';
 const phaseLabel = (p: string | null) => (p ? p.replace(/_/g, ' ').replace(/\b\w/g, (c) => c.toUpperCase()) : null);
 const TONE_ICON: Record<DocTone, React.ReactNode> = {
   red: <Warning size={13} weight="fill" />,
@@ -100,6 +106,12 @@ export default function JobDocsBoard({
         )}
       </div>
       <div className="jdbList">
+        {!loading && !error && shown.length > 0 && (
+          <div className="jdbCols" aria-hidden>
+            <span>Job</span><span>Billed</span><span>Pay apps</span><span>Lien waivers</span>
+            <span className="jdbHideMd">Payroll</span><span className="jdbHideMd">Closeout</span><span />
+          </div>
+        )}
         {loading ? (
           <div className="jdbEmpty">Loading jobs…</div>
         ) : error ? (
@@ -115,17 +127,17 @@ export default function JobDocsBoard({
               onClick={() => !sel && onPick(j.id)} aria-pressed={sel}
               aria-label={`${j.name}: ${j.why}${sel ? '' : '. Show only this job.'}`}>
               <div className="jdbJob" data-tone={j.tone}>
-                <span style={jobTileStyle(hex)} aria-hidden>{initials(j.name)}</span>
+                <span className="jdbSwatch" style={{ background: hex }} aria-hidden />
                 <span className="jdbName">
                   <b>{j.name}</b>
-                  <small>{[j.number, phaseLabel(j.phase)].filter(Boolean).join(' · ') || 'Job'}</small>
+                  {(j.number || j.phase) && <small>{[j.number, phaseLabel(j.phase)].filter(Boolean).join(' · ')}</small>}
                   <span className="jdbWhy" data-tone={j.tone}>{TONE_ICON[j.tone]} {j.why}</span>
                 </span>
               </div>
               <div className="jdbM jdbBill">
                 <label>Billed</label>
                 <b>{fmtMoneyShort(j.billed)}</b>{j.contract ? <small style={{ display: 'inline', marginLeft: 6 }}>of {fmtMoneyShort(j.contract)}{pct != null ? ` · ${pct}%` : ''}</small> : <small style={{ display: 'inline', marginLeft: 6 }}>no contract value</small>}
-                {pct != null && <div className="jdbBar" role="progressbar" aria-valuenow={pct} aria-valuemin={0} aria-valuemax={100} aria-label={`${pct}% billed`}><i style={{ width: `${pct}%` }} /></div>}
+                {pct != null && <div className="jdbBar" data-full={pct >= 100 ? 'true' : undefined} role="progressbar" aria-valuenow={pct} aria-valuemin={0} aria-valuemax={100} aria-label={`${pct}% billed`}><i style={{ width: `${pct}%` }} /></div>}
               </div>
               <div className="jdbM">
                 <label>Pay apps</label>
@@ -146,8 +158,9 @@ export default function JobDocsBoard({
               </div>
               <div className="jdbM jdbHideMd">
                 <label>Closeout</label>
-                <b>{j.closeout.total ? `${j.closeout.done}/${j.closeout.total}` : '—'}</b>
-                <small>{j.closeout.total ? (j.closeout.done === j.closeout.total ? 'complete' : 'items done') : 'no checklist'}</small>
+                {j.closeout.total
+                  ? <><b>{j.closeout.done}/{j.closeout.total}</b><small>{j.closeout.done === j.closeout.total ? 'complete' : 'items done'}</small></>
+                  : <small>No checklist</small>}
               </div>
               <span className="jdbGo" aria-hidden>{sel ? null : <CaretRight size={16} />}</span>
             </button>

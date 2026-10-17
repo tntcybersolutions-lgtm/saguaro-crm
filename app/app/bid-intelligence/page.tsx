@@ -1,4 +1,5 @@
 'use client';
+import Link from 'next/link';
 /**
  * Bid Intelligence — the AI learning engine over this tenant's REAL win/loss
  * record. Full premium anatomy (aurora surface, hero, stat strip, section
@@ -9,7 +10,7 @@
 import React, { useState, useEffect } from 'react';
 import { SUB_TRADES, SUB_TRADES_BY_DIVISION } from '@/lib/construction-intelligence';
 import {
-  PremiumSurface, ModuleHero, SectionCard, StatStrip, PremiumEmpty, FlowStrip,
+  PremiumSurface, ModuleHero, SectionCard, StatStrip, PremiumEmpty,
   goldButtonStyle, ghostButtonStyle, secondaryButtonStyle
 } from '@/components/ui/premium';
 import { Skeleton } from '@/components/ui/Skeleton';
@@ -143,11 +144,11 @@ export default function IntelligencePage() {
       {/* Stat strip — the learning engine at a glance, all from recorded outcomes */}
       {!dataLoading && hasAnyData && (
         <StatStrip items={[
-          {href: '/app/bid-intelligence',  label: 'Overall Win Rate', value: `${headlineWinRate}%`, accent: headlineWinRate >= 50 ? GREEN : undefined, sub: `${recordWins}W · ${recordLosses}L recorded`, icon: <Trophy size={11} weight="bold" color={BIDS.hex} /> },
-          {href: '/app/bid-intelligence',  label: 'Avg Winning Margin', value: `${(avgMargin||0).toFixed(1)}%`, icon: <Percent size={11} weight="bold" color={BIDS.hex} /> },
-          {href: '/app/bid-intelligence',  label: 'Bids Analyzed', value: String(bidsAnalyzed), sub: 'Marked Won or Lost', icon: <Stack size={11} weight="bold" color={BIDS.hex} /> },
-          {href: '/app/bid-intelligence',  label: 'Total Bid Value', value: `$${totalValue.toLocaleString()}`, accent: totalValue > 0 ? GOLD : undefined, sub: 'Across logged bids', icon: <CurrencyCircleDollar size={11} weight="bold" color="var(--text-secondary)" /> },
-          {href: '/app/bid-intelligence',  label: 'Trades Tracked', value: String(factors.length), sub: factors.length > 0 ? 'Learned win factors' : 'None learned yet', icon: <ChartBar size={11} weight="bold" color={BIDS.hex} /> },
+          {label: 'Overall Win Rate', value: `${headlineWinRate}%`, accent: headlineWinRate >= 50 ? GREEN : undefined, sub: `${recordWins}W · ${recordLosses}L recorded`, icon: <Trophy size={11} weight="bold" color={BIDS.hex} /> },
+          {label: 'Avg Winning Margin', value: `${(avgMargin||0).toFixed(1)}%`, icon: <Percent size={11} weight="bold" color={BIDS.hex} /> },
+          {label: 'Bids Analyzed', value: String(bidsAnalyzed), sub: 'Marked Won or Lost', icon: <Stack size={11} weight="bold" color={BIDS.hex} /> },
+          {label: 'Total Bid Value', value: `$${totalValue.toLocaleString()}`, accent: totalValue > 0 ? GOLD : undefined, sub: 'Across logged bids', icon: <CurrencyCircleDollar size={11} weight="bold" color="var(--text-secondary)" /> },
+          {label: 'Trades Tracked', value: String(factors.length), sub: factors.length > 0 ? 'Learned win factors' : 'None learned yet', icon: <ChartBar size={11} weight="bold" color={BIDS.hex} /> },
         ]} />
       )}
 
@@ -227,24 +228,18 @@ export default function IntelligencePage() {
           </div>
         </>
       ) : !hasAnyData ? (
-        <SectionCard accent={BIDS.hex}>
+        <div>
           <PremiumEmpty
-            icon={<Brain size={32} weight="duotone" color={BIDS.hex} />}
-            title="No win intelligence yet"
-            description="Mark bids Won/Lost to build your win intelligence. Saguaro learns from every outcome and shows where you win — and where you leave money on the table."
+            icon={<Brain size={32} weight="duotone" color="var(--text-secondary)" />}
+            title="No bid outcomes yet"
+            description="Mark bids Won or Lost and win rates show here."
             action={
-              <button onClick={()=>setScoring(true)} style={secondaryButtonStyle} className="pmBtn">
-                <Sparkle size={15} weight="bold" /> Score New Opportunity
-              </button>
+              <Link href="/app/bids" style={secondaryButtonStyle} className="pmBtn">
+                Open Bid Board
+              </Link>
             }
           />
-          <FlowStrip steps={[
-            { title: 'Log Outcomes', desc: 'Mark bids Won or Lost' },
-            { title: 'Engine Learns', desc: 'Win rates per trade + CSI division' },
-            { title: 'Score the Next One', desc: 'AI fit score against your record' },
-            { title: 'Sharpen the Number', desc: 'Suggested margin, honest risks' },
-          ]} />
-        </SectionCard>
+        </div>
       ) : (
       <div className="pg-stack-1" style={{display:'grid',gridTemplateColumns:'1fr 1fr',gap:24,alignItems:'start'}}>
         {/* Win rate profile — learned trade factors + real headline stats */}
