@@ -17,6 +17,7 @@ import { buildBidHistoryContext } from '@/lib/construction-intelligence';
 import { apiError } from '@/lib/api-error';
 import { requirePermission } from '@/lib/permissions';
 import { writeChangeOrder } from '@/lib/change-order-status';
+import { liveJobs } from '@/lib/live-jobs';
 // ─── CORS helpers ─────────────────────────────────────────────────────────────
 
 const APP_URL = process.env.NEXT_PUBLIC_APP_URL ?? 'https://saguarocontrol.net';
@@ -286,10 +287,10 @@ export async function GET(
       if (!tenantId) {
         return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
       }
-      const { data, error } = await supabaseAdmin
+      const { data, error } = await liveJobs(supabaseAdmin
         .from('projects')
         .select('id, name, address, project_number, status, contract_amount, start_date, substantial_completion_date, project_type, created_at')
-        .eq('tenant_id', tenantId)
+        .eq('tenant_id', tenantId))
         .order('created_at', { ascending: false })
         .limit(100);
       if (error) throw error;

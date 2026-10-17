@@ -11,6 +11,7 @@ import {
 } from '@/lib/sage-brain';
 import { requestDay } from '@/lib/time-zone';
 import { apiError } from '@/lib/api-error';
+import { liveJobs, liveJobIds } from '@/lib/live-jobs';
 
 const client = new Anthropic();
 
@@ -2235,16 +2236,17 @@ export async function POST(req: NextRequest) {
     // Pull rich live data from Supabase in parallel
     const [
       { data: projects },
-      { data: bids },
+      { data: bidRows },
       { data: contacts },
-      { data: changeOrders },
-      { data: payApps },
-      { data: openRfis },
+      { data: coRows },
+      { data: payAppRows },
+      { data: rfiRows },
       { data: userProfile },
+      liveIds,
     ] = await Promise.all([
-      db.from('projects')
+      liveJobs(db.from('projects')
         .select('id, name, status, contract_amount, start_date, end_date, address, owner_name, percent_complete, retainage_pct')
-        .eq('tenant_id', user.tenantId)
+        .eq('tenant_id', user.tenantId))
         .order('updated_at', { ascending: false })
         .limit(20),
       db.from('bids')
@@ -2277,7 +2279,15 @@ export async function POST(req: NextRequest) {
         .select('full_name, company')
         .eq('id', user.id)
         .maybeSingle(),
+      liveJobIds(db, user.tenantId),
     ]);
+    // Paper on an archived or deleted job is off Sage's picture of the company.
+    const onLive = <R extends { project_id?: string | null }>(rows: R[] | null): R[] =>
+      (rows ?? []).filter((r) => !r.project_id || liveIds.has(r.project_id));
+    const bids = onLive(bidRows as any[]);
+    const changeOrders = onLive(coRows as any[]);
+    const payApps = onLive(payAppRows as any[]);
+    const openRfis = onLive(rfiRows as any[]);
 
     // Build structured context for the Sage prompt
     // Overdue on the company's day (device, else company zone), not the server's UTC day.

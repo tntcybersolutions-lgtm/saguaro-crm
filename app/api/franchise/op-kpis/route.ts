@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from 'next/server';
 import { createServerClient, getUser } from '@/lib/supabase-server';
 import { hasFeature } from '@/lib/entitlements-server';
 import { inspectionOutcome } from '@/lib/inspection-result';
+import { liveJobs } from '@/lib/live-jobs';
 
 const DAY = 86400000;
 const days = (a: any, b: any): number | null => {
@@ -26,15 +27,20 @@ export async function GET(req: NextRequest) {
 
     const db = createServerClient() as any;
     const t = { tenant_id: user.tenantId };
-    const [{ data: cos }, { data: rfis }, { data: permits }, { data: insp }, { data: punch }, { data: projs }, { data: subs }] = await Promise.all([
-      db.from('change_orders').select('created_at,approved_at,status').match(t),
-      db.from('rfis').select('created_at,answered_at,answered_date,days_to_respond,due_date,status').match(t),
-      db.from('permits').select('application_date,applied_date,issue_date,issued_date,plan_review_submitted_date,plan_review_approved_date').match(t),
-      db.from('inspections').select('result,status').match(t),
-      db.from('punch_list').select('created_at,completed_at,status').match(t),
-      db.from('projects').select('actual_start_date,start_date,notice_to_proceed_date,ntp_date,closeout_date,occupancy_date,substantial_completion_date').match(t),
-      db.from('submittals').select('submitted_at,returned_at,reviewed_at,days_to_review,due_date,status').match(t),
+    const [{ data: cosRows }, { data: rfiRows }, { data: permitRows }, { data: inspRows }, { data: punchRows }, { data: projs }, { data: subRows }] = await Promise.all([
+      db.from('change_orders').select('project_id,created_at,approved_at,status').match(t),
+      db.from('rfis').select('project_id,created_at,answered_at,answered_date,days_to_respond,due_date,status').match(t),
+      db.from('permits').select('project_id,application_date,applied_date,issue_date,issued_date,plan_review_submitted_date,plan_review_approved_date').match(t),
+      db.from('inspections').select('project_id,result,status').match(t),
+      db.from('punch_list').select('project_id,created_at,completed_at,status').match(t),
+      liveJobs(db.from('projects').select('id,actual_start_date,start_date,notice_to_proceed_date,ntp_date,closeout_date,occupancy_date,substantial_completion_date').match(t)),
+      db.from('submittals').select('project_id,submitted_at,returned_at,reviewed_at,days_to_review,due_date,status').match(t),
     ]);
+    // Archived and deleted jobs are off the scorecard, with everything on them.
+    const live = new Set(((projs || []) as any[]).map((p) => p.id));
+    const onLive = (rows: any[] | null) => (rows || []).filter((r: any) => !r.project_id || live.has(r.project_id));
+    const cos = onLive(cosRows), rfis = onLive(rfiRows), permits = onLive(permitRows);
+    const insp = onLive(inspRows), punch = onLive(punchRows), subs = onLive(subRows);
 
     // CO approval time (created → approved)
     const coTimes = (cos || []).filter((c: any) => /approved/i.test(String(c.status || '')) && c.approved_at)
