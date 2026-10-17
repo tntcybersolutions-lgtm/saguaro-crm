@@ -12,6 +12,8 @@ import { pinEntityFor } from '@/lib/drawing-revisions';
 import { requirePermission } from '@/lib/permissions';
 import { writeChangeOrder, coDecisionLevel, coWriteFailure } from '@/lib/change-order-status';
 import { transitionPoStatus } from '@/lib/purchase-order-status';
+import { SUBMITTAL_REVIEW_STATUSES } from '@/lib/submittal-workflow';
+import { runInBackground } from '@/lib/background';
 
 export const dynamic = 'force-dynamic';
 
@@ -130,6 +132,10 @@ export async function PATCH(req: NextRequest, { params }: { params: Promise<{ to
       .select('*')
       .single();
     if (error) throw error;
+    // A submittal moved into review on its record page emails the reviewer, as the list screen's save does.
+    if (l.tool.type === 'submittals' && typeof status === 'string' && SUBMITTAL_REVIEW_STATUSES.has(status)) {
+      runInBackground(async () => (await import('@/lib/triggers')).onSubmittalSentForReview(id, String(l.item.status ?? '')), 'onSubmittalSentForReview');
+    }
     return NextResponse.json({ item: data });
   } catch (e) {
     return apiError(`items/${type}`, e, "Couldn't save your changes. Please try again.");
