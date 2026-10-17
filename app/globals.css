@@ -51,7 +51,7 @@
   --c-yellow-hi: color-mix(in srgb, #E8FF2A 86%, #F8FAFC);
   --c-yellow-hover: color-mix(in srgb, #E8FF2A 90%, #101722);
   --c-on-brand: #101722;    /* dark text on yellow */
-  --c-blue: #E8FF2A;        /* informational links */
+  --c-blue: #CBD5E1;        /* informational = slate (never yellow, never blue) */
   --c-orange: #FBBF24;      /* pending / waiting (amber) */
   --c-green: #4ADE80;       /* success / ongoing / completed */
   --c-red: #F87171;         /* errors / overdue */
@@ -72,9 +72,10 @@
   --gold-hover: var(--brand-primary-hover);
   --gold-soft: var(--brand-primary-12);
   --gold-ring: var(--brand-primary-35);
-  /* Links — blue, never the brand yellow. */
-  --link: #E8FF2A;
-  --link-hover: color-mix(in srgb, #E8FF2A 72%, #F8FAFC);
+  /* Links — the content colour, underlined where they sit in text: never the
+     action yellow, never blue (Chad, 16 Oct 2026). */
+  --link: var(--text-primary);
+  --link-hover: var(--text-secondary);
   /* Status — green success, amber pending, red errors, blue informational,
      slate closed (lib/status-colors.ts). A status always carries its word. */
   --status-overdue: #F87171;
@@ -899,7 +900,7 @@ input:-webkit-autofill:focus {
   color: var(--text-tertiary);
 }
 :where(table) thead th {
-  background: var(--bg-surface-2);
+  background: none;
   border-bottom: 1px solid var(--border-default);
 }
 :where(table) td { border-bottom: 1px solid var(--border-subtle); font-variant-numeric: tabular-nums; }
@@ -914,7 +915,6 @@ input:-webkit-autofill:focus {
 .pmTable {
   border-radius: 0;
   border: 0;
-  border-top: 1px solid var(--border-subtle);
   border-bottom: 1px solid var(--border-subtle);
   background: none;
   box-shadow: none;
@@ -1155,7 +1155,8 @@ button.k-stat[aria-pressed="true"] { box-shadow: inset 0 -2px 0 var(--brand-prim
 .k-search .k-input { padding-left: 32px; }
 
 /* Tabs */
-.k-tabs { display: flex; gap: 2px; border-bottom: 1px solid var(--border-subtle); overflow-x: auto; scrollbar-width: none; }
+.k-tabs { display: flex; gap: 4px; overflow-x: auto; scrollbar-width: none; }
+.k-tabs::-webkit-scrollbar { display: none; }
 .k-tab { all: unset; box-sizing: border-box; display: inline-flex; align-items: center; gap: 6px; padding: 9px 12px; font-size: var(--fs-md); font-weight: 600; color: var(--text-secondary); border-bottom: 2px solid transparent; margin-bottom: -1px; cursor: pointer; white-space: nowrap; }
 .k-tab:hover { color: var(--text-primary); }
 .k-tab[aria-selected="true"] { color: var(--text-primary); border-bottom-color: var(--tab-selected-indicator); }
@@ -1178,7 +1179,7 @@ button.k-stat[aria-pressed="true"] { box-shadow: inset 0 -2px 0 var(--brand-prim
    is stacked cards. */
 @media (min-width: 768px) {
   .k-table-scroll > .k-table td:first-child { position: sticky; left: 0; z-index: 1; background: var(--bg-solid); }
-  .k-table-scroll > .k-table th:first-child { left: 0; z-index: 3; }
+  .k-table-scroll > .k-table th:first-child { left: 0; z-index: 3; background: var(--bg-solid); }
   .k-table-scroll > .k-table tbody tr:hover td:first-child { background: var(--bg-row-hover); }
 }
 @media (max-width: 767px) {
@@ -1187,7 +1188,7 @@ button.k-stat[aria-pressed="true"] { box-shadow: inset 0 -2px 0 var(--brand-prim
   .k-cell-in { white-space: normal; overflow: visible; overflow-wrap: anywhere; }
 }
 .k-table { width: 100%; border-collapse: collapse; font-size: var(--fs-md); }
-.k-table th { position: sticky; top: 0; z-index: 1; background: var(--bg-surface-2); text-align: left; padding: 10px 12px; font-size: 12px; font-weight: 700; letter-spacing: .05em; text-transform: uppercase; color: var(--text-tertiary); border-bottom: 1px solid var(--border-default); white-space: nowrap; user-select: none; }
+.k-table th { position: sticky; top: 0; z-index: 1; background: none; text-align: left; padding: 8px 12px; font-size: 12px; font-weight: 700; letter-spacing: .05em; text-transform: uppercase; color: var(--text-tertiary); border-bottom: 1px solid var(--border-default); white-space: nowrap; user-select: none; }
 .k-table th[data-sortable="true"] { cursor: pointer; }
 .k-table th[data-sortable="true"]:hover, .k-table th[aria-sort="ascending"], .k-table th[aria-sort="descending"] { color: var(--text-primary); }
 .k-table td { padding: 0 12px; height: 48px; border-bottom: 1px solid rgba(51,65,85,0.7); color: var(--text-secondary); white-space: nowrap; font-variant-numeric: tabular-nums; }
@@ -1225,9 +1226,9 @@ button.k-stat[aria-pressed="true"] { box-shadow: inset 0 -2px 0 var(--brand-prim
 .k-grid-bulk { display: flex; align-items: center; gap: 8px; flex-wrap: wrap; padding: 8px var(--sp-4); border-bottom: 1px solid var(--border-default); background: var(--bg-surface-2); font-size: 14px; color: var(--text-primary); }
 .k-table th.k-td-check, .k-table td.k-td-check { width: 1%; padding-right: 0; }
 .k-table tbody tr:focus-visible td { outline: none; background: var(--bg-row-hover); box-shadow: inset 0 1px 0 var(--brand-primary), inset 0 -1px 0 var(--brand-primary); }
-.k-table tr.k-group-row td { height: 40px; background: var(--bg-surface-2); color: var(--text-primary); font-size: 13px; }
+.k-table tr.k-group-row td { height: 40px; background: none; color: var(--text-primary); font-size: 13px; font-weight: 700; border-bottom: 1px solid var(--border-default); }
 .k-table tr.k-subtotal-row td { height: 40px; color: var(--text-primary); font-weight: 600; border-bottom: 1px solid var(--border-default); }
-.k-table tfoot tr.k-total-row td { height: 44px; color: var(--text-primary); font-weight: 700; border-top: 2px solid var(--border-default); background: var(--bg-surface-2); position: sticky; bottom: 0; }
+.k-table tfoot tr.k-total-row td { height: 44px; color: var(--text-primary); font-weight: 700; border-top: 2px solid var(--border-default); background: none; }
 @media (max-width: 640px) { .k-grid-bar .k-grid-n { width: 100%; } .k-grid-menu { max-width: calc(100vw - 16px); } }
 /* List tools (kit DataTable): column picker rows, filter chips, views, resize, bulk.
    Laid on the surface — no boxes; yellow only for the selected item. */
@@ -1263,7 +1264,7 @@ button.k-stat[aria-pressed="true"] { box-shadow: inset 0 -2px 0 var(--brand-prim
 .k-fchip-text { min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
 .k-fchip button { display: inline-flex; align-items: center; justify-content: center; width: 24px; height: 24px; border: 0; border-radius: 6px; background: transparent; color: var(--text-tertiary); cursor: pointer; }
 .k-fchip button:hover { color: var(--text-primary); background: var(--bg-hover); }
-.k-fchip-clear { border: 0; background: transparent; color: var(--link); font-size: 13px; font-weight: 600; cursor: pointer; min-height: 30px; padding: 0 6px; }
+.k-fchip-clear { border: 0; background: transparent; color: var(--link); font-size: 13px; font-weight: 600; cursor: pointer; min-height: 30px; padding: 0 6px; text-decoration: underline; text-underline-offset: 3px; }
 .k-fchip-clear:hover { color: var(--link-hover); }
 .k-grid-select { display: none; }
 .k-grid-msg { display: flex; align-items: center; gap: 8px; padding: 8px var(--sp-4); border-bottom: 1px solid var(--border-default); font-size: 14px; color: var(--text-primary); }
@@ -1275,7 +1276,6 @@ button.k-stat[aria-pressed="true"] { box-shadow: inset 0 -2px 0 var(--brand-prim
   .k-lbl-desk { display: none; }
   .k-lbl-phone { display: inline; }
   .k-grid-select { display: inline-flex; }
-  .k-grid-btn { min-height: 44px; }
   /* The list tools sit on the page's left edge, wrapping left to right — the
      spacer that right-aligns them on desktop would push a wrapped row to the
      right edge on a phone. */
@@ -1366,9 +1366,9 @@ select.k-select { padding-right: 36px; }
 
 /* Detail list (label / value rows) */
 .k-dl { display: flex; flex-direction: column; }
-.k-dl-row { display: flex; justify-content: space-between; align-items: center; gap: var(--sp-3); min-height: 48px; padding: 8px 0; border-bottom: 1px solid var(--border-subtle); font-size: 14px; }
+.k-dl-row { display: flex; justify-content: space-between; align-items: baseline; gap: var(--sp-3); min-height: 40px; padding: 9px 0; border-bottom: 1px solid var(--border-subtle); font-size: 14px; box-sizing: border-box; }
 .k-dl-row:last-child { border-bottom: none; }
-.k-dl-row dt { display: inline-flex; align-items: center; gap: 10px; color: var(--text-secondary); white-space: nowrap; }
+.k-dl-row dt { flex: none; max-width: 45%; color: var(--text-tertiary); font-size: 13px; font-weight: 600; }
 .k-dl-row dd { color: var(--text-primary); font-weight: 600; text-align: right; min-width: 0; overflow-wrap: anywhere; }
 
 /* Loading placeholder + toast */
@@ -1398,6 +1398,7 @@ select.k-select { padding-right: 36px; }
 @media (max-width: 720px) {
   .k-form-grid { grid-template-columns: minmax(0, 1fr); }
   .k-search { flex: 1 1 100%; }
+  .k-toolbar[data-tools] .k-search { flex: 1 1 150px; min-width: 0; }
   /* Row actions stay reachable while the rest of the row scrolls sideways. */
   .k-table td.k-td-actions, .k-table th:last-child { position: sticky; right: 0; background: var(--bg-surface); box-shadow: -8px 0 12px -8px rgba(2,6,23,0.6); }
   .k-table th:last-child { background: var(--bg-surface-2); z-index: 2; }
@@ -1514,12 +1515,12 @@ li[data-done="true"] .pj-next-step strong { color: var(--text-tertiary); text-de
 /* .k-table-skin — the platform header/row look for edit grids and tables that
    keep their own layout class (no phone card transform). */
 .k-table-skin { width: 100%; border-collapse: collapse; font-size: 14px; }
-.k-table-skin th { position: sticky; top: 0; z-index: 1; background: var(--bg-surface-2); color: var(--text-tertiary); font-size: 12px; font-weight: 700; letter-spacing: .04em; text-transform: uppercase; text-align: left; padding: 10px 12px; border-bottom: 1px solid var(--border-default); white-space: nowrap; }
+.k-table-skin th { position: sticky; top: 0; z-index: 1; background: none; color: var(--text-tertiary); font-size: 12px; font-weight: 700; letter-spacing: .04em; text-transform: uppercase; text-align: left; padding: 10px 12px; border-bottom: 1px solid var(--border-default); white-space: nowrap; }
 .k-table-skin td { padding: 10px 12px; border-bottom: 1px solid rgba(51,65,85,0.7); color: var(--text-secondary); font-variant-numeric: tabular-nums; }
 .k-table-skin tbody tr:hover td { background: var(--bg-row-hover); }
 /* Raw tables promoted to .k-table carry their own cell styles; the header
    row still gets the platform treatment and inline fontSize is dropped. */
-.k-table th[style] { background: var(--bg-surface-2) !important; color: var(--text-tertiary) !important; font-size: 12px !important; font-weight: 700 !important; letter-spacing: .04em; text-transform: uppercase; border-bottom: 1px solid var(--border-default) !important; }
+.k-table th[style] { background: none !important; color: var(--text-tertiary) !important; font-size: 12px !important; font-weight: 700 !important; letter-spacing: .04em; text-transform: uppercase; border-bottom: 1px solid var(--border-default) !important; }
 .k-table td[style] { font-size: 14px; }
 .k-table tbody tr[style]:hover td { background: var(--bg-row-hover) !important; }
 
@@ -1716,9 +1717,20 @@ li[data-done="true"] .pj-next-step strong { color: var(--text-tertiary); text-de
      inline size always beats a stylesheet. Desktop is untouched. Switches,
      checkboxes and radios keep their own drawn size. */
   .main-content-area select { min-height: 44px; }
-  .main-content-area :is(button, [role="button"]):not([role="switch"]):not([role="checkbox"]):not([role="radio"]):not(.sr-only) { min-height: 44px !important; min-width: 44px !important; }
-  .main-content-area :is(a.k-tap, a.pmBtn, a.fl-act, a.k-chip, a.k-btn, a.jb-link) { display: inline-flex; align-items: center; min-height: 44px !important; }
-  .fl-act, .k-chip, .k-grid-btn { min-height: 44px; }
+  /* 16 Oct 2026 (second pass): 44px is the size of the TOUCH, not of the
+     drawing. Every control keeps its own drawn size and gets an invisible
+     44 × 44 hit area (a centred ::after), so a row of chips and small buttons
+     stays tight. :where() keeps this at zero specificity: a control that
+     positions itself or draws its own ::after keeps its rules. The one
+     primary action, inputs and selects stay a full 44px. */
+  .main-content-area :where(button, [role="button"], a.k-tap, a.pmBtn, a.k-chip, a.k-btn, a.jb-link, .k-grid-btn):where(:not([role="switch"]):not([role="checkbox"]):not([role="radio"]):not(.sr-only):not(.fl-act):not(.fl-sec-act):not(.jl-chip):not(.ip-link):not(.plCheck):not(.md-num):not(.mw-tl):not(.tooltip)) { position: relative; }
+  .main-content-area :where(button, [role="button"], a.k-tap, a.pmBtn, a.k-chip, a.k-btn, a.jb-link, .k-grid-btn):where(:not([role="switch"]):not([role="checkbox"]):not([role="radio"]):not(.sr-only):not(.fl-act):not(.fl-sec-act):not(.jl-chip):not(.ip-link):not(.plCheck):not(.md-num):not(.mw-tl):not(.tooltip))::after { content: ""; position: absolute; left: 50%; top: 50%; width: max(100%, 44px); height: max(100%, 44px); transform: translate(-50%, -50%); }
+  .main-content-area :is(.k-btn-primary, .pmGold, button[style*="background: var(--brand-primary)"], a[style*="background: var(--brand-primary)"]) { min-height: 44px; }
+  .main-content-area :is(a.k-tap, a.pmBtn, a.k-chip, a.k-btn, a.jb-link) { display: inline-flex; align-items: center; }
+  .fl-act { min-height: 44px; }
+  /* A table that scrolls sideways never grows a vertical scroll from a row
+     button's hit area poking past its edge. */
+  .k-table-scroll { overflow-y: hidden; }
 
   /* Tables become stacked cards: name, status, amount, one action. Columns past
      the fourth are dropped on phones — the row opens the full record. A hand-built
@@ -1761,9 +1773,9 @@ li[data-done="true"] .pj-next-step strong { color: var(--text-tertiary); text-de
   .k-table td.k-td-actions::before { content: none; }
   .k-table td.k-table-empty { display: block; padding: 32px 12px !important; }
   .k-table .k-skel { display: block; height: 12px; }
-  /* Every target 44px. */
-  .k-btn, .k-tab, select.k-select, .k-input { min-height: 44px; }
-  .k-stat { min-height: 44px; }
+  /* Fields are a full 44px (16px text — iOS never zooms); buttons and tabs
+     keep their drawn size with a 44px hit area (above). */
+  select.k-select, .k-input { min-height: 44px; }
 }
 
 /* ══ APP SHELL — navy/slate (owner-approved reference, 12 Oct 2026) ═══════
@@ -1786,16 +1798,19 @@ li[data-done="true"] .pj-next-step strong { color: var(--text-tertiary); text-de
 .sag-app .k-eyebrow { font-size: 12px; font-weight: 700; letter-spacing: .06em; text-transform: uppercase; color: var(--text-tertiary); }
 
 /* Segmented tabs — one slate track; the selected segment is yellow with dark text. */
-.sag-app .k-tabs { display: inline-flex; max-width: 100%; gap: 2px; padding: 4px; border: 1px solid var(--border-subtle); border-radius: 12px; background: var(--bg-surface); }
-.sag-app .k-tab { border: 0; border-radius: 9px; background: transparent; color: var(--text-secondary); font-weight: 600; min-height: 36px; padding: 0 14px; box-shadow: none; }
+/* Tab strips: no track — plain labels on the page, the selected one a yellow
+   pill. A strip too long for the screen scrolls inside itself, its edge fading
+   only while there is more to swipe to (data-more, components/ui/list-hub). */
+.sag-app .k-tabs { display: flex; max-width: 100%; gap: 4px; padding: 4px 0; border: 0; border-radius: 0; background: none; }
+.sag-app .k-tab { border: 0; border-radius: 10px; background: transparent; color: var(--text-secondary); font-weight: 600; min-height: 36px; padding: 0 12px; box-shadow: none; flex: none; }
 .sag-app .k-tab:hover { color: var(--text-primary); background: rgba(148,163,184,0.10); }
 .sag-app .k-tab[aria-selected="true"] { background: var(--brand-primary); color: var(--on-brand); font-weight: 700; box-shadow: none; }
 .sag-app .k-tab[aria-selected="true"] .k-tab-count { background: rgba(16,23,34,0.16); color: var(--on-brand); }
-.sag-app .hv2-seg { background: var(--bg-surface); border: 1px solid var(--border-subtle); border-radius: 12px; padding: 4px; }
+.sag-app .hv2-seg { background: none; border: 0; border-radius: 0; padding: 4px 0; }
 .sag-app .hv2-seg button { color: var(--text-secondary); border-radius: 9px; font-weight: 600; }
 .sag-app .hv2-seg button:hover { color: var(--text-primary); }
 .sag-app .hv2-seg button.on { background: var(--brand-primary); color: var(--on-brand); font-weight: 700; box-shadow: none; }
-.sag-app .pj-nav-row { background: var(--bg-surface); border: 1px solid var(--border-subtle); border-radius: 12px; padding: 4px; }
+.sag-app .pj-nav-row { background: none; border: 0; border-radius: 0; padding: 4px 0; }
 
 /* Navigation (sidebar) — slate labels; the current page is a yellow row with
    dark text (selected navigation). Group headers are quiet small caps. */
@@ -1960,13 +1975,7 @@ a.pmFig:hover,button.pmFig:hover,div.pmFig[role=button]:hover{background:rgba(14
 .pmFigL{display:flex;align-items:center;gap:4px;font-size:12px;font-weight:600;color:var(--text-tertiary);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
 .pmFigL>span:first-child{overflow:hidden;text-overflow:ellipsis}
 .pmFigS{font-size:12px;color:var(--text-secondary);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
-/* Phones: two figures per row and labels may take two lines, so a label never
-   ends in "…" (after-audit 12 Oct: "OSHA Reco…", "Days Incide…"). */
-@media (max-width:639px){
-  .pmStripGrid{grid-template-columns:repeat(2,minmax(0,1fr))}
-  .pmFigL{white-space:normal;align-items:flex-start}
-  .pmFigL>span:first-child,.pmFigS{white-space:normal;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical}
-}
+/* Phones: one sideways row of figures — see PHONE DENSITY at the end of this file. */
 .pmFigGo{margin-left:auto;flex:none;color:var(--sg-text-3);font-size:12px}
 .pmFig[aria-pressed=true] .pmFigGo{color:var(--brand-primary)}
 /* A StatCard on its own (callers lay several out in their own grid). Narrow
@@ -2019,7 +2028,8 @@ a.pmFig:hover,button.pmFig:hover,div.pmFig[role=button]:hover{background:rgba(14
 .k-meta-item { display: inline-flex; align-items: center; gap: 6px; min-width: 0; color: var(--text-secondary); text-decoration: none; }
 .k-meta-ic { display: inline-flex; color: var(--acc); }
 a.k-meta-item, .k-link { color: var(--link); }
-a.k-meta-item:hover, .k-link:hover { color: var(--link-hover); }
+.k-link { text-decoration: underline; text-decoration-color: var(--border-strong); text-underline-offset: 3px; }
+a.k-meta-item:hover, .k-link:hover { color: var(--link-hover); text-decoration-color: currentColor; }
 /* Filter / toggle chips (kit): slate until chosen, then the selected-control
    yellow with dark text — the same look as the Jobs stage chips. Use
    aria-pressed for the chosen state. */
@@ -2046,7 +2056,7 @@ a.k-meta-item:hover, .k-link:hover { color: var(--link-hover); }
 .k-item-title { font-size: 14px; font-weight: 600; color: var(--text-primary); overflow-wrap: anywhere; }
 .k-item-desc { font-size: 13px; color: var(--text-tertiary); overflow-wrap: anywhere; }
 .k-item-value { flex: none; max-width: 60%; font-size: 14px; font-weight: 600; color: var(--text-primary); text-align: right; overflow-wrap: anywhere; font-variant-numeric: tabular-nums; }
-.k-item-value a { color: var(--link); text-decoration: none; }
+.k-item-value a { color: var(--link); text-decoration: underline; text-decoration-color: var(--border-strong); text-underline-offset: 3px; }
 .k-item-action { flex: none; display: inline-flex; gap: 8px; }
 .k-item-chev { flex: none; color: var(--text-tertiary); }
 .k-callout { display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: 12px 16px; padding: 6px 0 6px 16px; border-radius: 0; background: none; border: 0; border-left: 3px solid var(--border-strong); box-shadow: none; }
@@ -2106,3 +2116,129 @@ a.k-meta-item:hover, .k-link:hover { color: var(--link-hover); }
   --job-5: #34D399; --job-6: #FDE047; --job-7: #FB7185; --job-8: #A78BFA;
   --md-planned: #64748B; --md-sheet: #141D2B; --md-sheet-foot: #121A27; --md-night: #0B1220; --md-dusk: #1E293B;
 }
+
+/* ═══════════════════════════════════════════════════════════════════════════
+   PHONE DENSITY (16 Oct 2026, second shared pass) — the phone shows the list,
+   not a screen of controls before it. components/ui/list-hub.tsx,
+   head-actions.tsx, figure.tsx; DESIGN_SYSTEM.md "Phone density".
+   ═══════════════════════════════════════════════════════════════════════════ */
+
+/* A figure: exact on desktop; a long dollar amount reads short on a phone
+   ($2.54M) with the exact value as its title and on a tap. */
+.k-fig-short { display: none; }
+@media (max-width: 767px) {
+  .k-fig { cursor: default; }
+  .k-fig:not([data-full]) .k-fig-full { display: none; }
+  .k-fig:not([data-full]) .k-fig-short { display: inline; }
+}
+
+/* Sideways strips fade their edge only while there is more to swipe to. */
+:is(.k-stats, .pmStripGrid, .k-tabs, .fl-tabs, .fl-strip, .pjx-tabs)[data-more="right"] { -webkit-mask-image: linear-gradient(90deg, black calc(100% - 28px), transparent); mask-image: linear-gradient(90deg, black calc(100% - 28px), transparent); }
+:is(.k-stats, .pmStripGrid, .k-tabs, .fl-tabs, .fl-strip, .pjx-tabs)[data-more="left"] { -webkit-mask-image: linear-gradient(90deg, transparent, black 28px); mask-image: linear-gradient(90deg, transparent, black 28px); }
+:is(.k-stats, .pmStripGrid, .k-tabs, .fl-tabs, .fl-strip, .pjx-tabs)[data-more="both"] { -webkit-mask-image: linear-gradient(90deg, transparent, black 28px, black calc(100% - 28px), transparent); mask-image: linear-gradient(90deg, transparent, black 28px, black calc(100% - 28px), transparent); }
+
+/* Phone summary strip: one compact row. Every figure on one line — the value
+   (17px) over its label — hairlines between, no caption under the number, and
+   a strip of more than fits scrolls sideways inside itself. */
+@media (max-width: 767px) {
+  .k-stats, :is(.k-frame, .k-page)[data-width=form] > .k-stats { display: flex; flex-wrap: nowrap; overflow-x: auto; overscroll-behavior-x: contain; scrollbar-width: none; margin-left: 0; row-gap: 0; }
+  .k-stats::-webkit-scrollbar { display: none; }
+  .k-stats > .k-stat { flex: 1 0 auto; max-width: none; margin: 0; padding: 2px 14px; gap: 0; min-height: 0; }
+  .k-stats > .k-stat:first-child { padding-left: 0; border-left: 0; }
+  .k-stats .k-stat-value, :is(.k-frame, .k-page)[data-width=form] > .k-stats .k-stat-value { order: 1; display: block; font-size: 17px; line-height: 1.35; white-space: nowrap; overflow: visible; text-overflow: clip; }
+  .k-stats .k-stat-top { order: 2; margin: 0; }
+  .k-stats .k-stat-label { display: block; font-size: 12px; white-space: nowrap; overflow: visible; }
+  .k-stats .k-stat-icon, .k-stats .k-stat-sub { display: none; }
+
+  /* Premium strips (StatStrip, StatGrid) and a caller's grid of StatCards. */
+  .pmStrip { margin: 0 0 12px; overflow: visible; }
+  .pmStripGrid, :where(div):has(> .pmFig.pmFigSolo):not(:has(> :not(.pmFig.pmFigSolo))) { display: flex !important; flex-wrap: nowrap !important; gap: 0 !important; overflow-x: auto; overscroll-behavior-x: contain; scrollbar-width: none; margin-left: 0; }
+  .pmStripGrid::-webkit-scrollbar { display: none; }
+  .pmStripGrid > .pmFig, .pmFig.pmFigSolo { flex: 1 0 auto; width: auto; min-width: 0; min-height: 0; padding: 2px 14px; container-type: normal; height: auto; }
+  .pmStripGrid > .pmFig:first-child, .pmFig.pmFigSolo:first-child { padding-left: 0; border-left: 0; }
+  .pmFig.pmFigSolo { border-left: 1px solid var(--border-subtle); }
+  .pmFig.pmFigSolo .pmFigIn { flex-direction: column; align-items: flex-start; gap: 0; padding: 0; min-height: 0; border: 0; }
+  .pmFig.pmFigSolo .pmFigText { display: contents; }
+  .pmFig.pmFigSolo .pmFigIn > .pmFigV { order: 0; max-width: none; }
+  .pmFigV { font-size: 17px; overflow: visible; text-overflow: clip; }
+  .pmFigL, .pmFig.pmFigSolo .pmFigIn .pmFigL { font-size: 12px; color: var(--text-tertiary); white-space: nowrap; overflow: visible; }
+  .pmFigL > span:first-child { white-space: nowrap; display: inline; overflow: visible; }
+  .pmFigS, .pmFig.pmFigSolo .pmFigIn .pmFigS { display: none; }
+}
+
+/* Phone list toolbar: ONE row — search, a quiet count, the Filter button.
+   The page's filters and the table's tools are in the sheet behind it. */
+.k-toolbar-filters, .k-toolbar-acts { display: contents; }
+.k-tools-btn, .k-grid-phone { display: none; }
+@media (max-width: 767px) {
+  /* Search, a quiet count, the Filter button — one row; a wide extra (a view
+     toggle) takes a second line rather than squeezing the search. */
+  .k-toolbar[data-tools] { flex-wrap: wrap; gap: 8px; }
+  .k-toolbar > .k-toolbar-filters { display: none; }
+  .k-toolbar:has(> .k-search) > .k-toolbar-spacer { display: none; }
+  .k-toolbar-acts { display: flex; flex: none; align-items: center; gap: 8px; font-size: 13px; color: var(--text-tertiary); white-space: nowrap; }
+  .k-tools-btn { position: relative; flex: none; display: inline-flex; align-items: center; justify-content: center; width: 44px; height: 44px; padding: 0; border-radius: var(--radius-md); border: 1px solid var(--border-default); background: transparent; color: var(--text-primary); cursor: pointer; }
+  .k-tools-btn[aria-expanded="true"] { border-color: var(--border-strong); background: var(--bg-surface-2); }
+  .k-tools-dot { position: absolute; top: -5px; right: -5px; min-width: 18px; height: 18px; padding: 0 5px; box-sizing: border-box; display: inline-flex; align-items: center; justify-content: center; border-radius: 9px; background: var(--text-primary); color: var(--on-brand); font-size: 12px; font-weight: 800; line-height: 1; }
+  .k-grid-bar[data-desk] { display: none; }
+  .k-grid-phone { display: flex; align-items: center; gap: 8px; min-height: 44px; padding: 2px 0; }
+  .k-grid-phone .k-grid-n { font-size: 13px; color: var(--text-tertiary); }
+  .k-grid-phone .k-grid-btn { min-height: 36px; }
+}
+
+/* The Filter sheet (portaled to <body>; phone only). */
+.k-lsheet-root { position: fixed; inset: 0; z-index: 890; }
+.k-lsheet-root[hidden] { display: none; }
+.k-lsheet-back { position: absolute; inset: 0; background: rgba(2,6,23,0.62); }
+.k-lsheet { position: absolute; left: 0; right: 0; bottom: 0; max-height: 82vh; display: flex; flex-direction: column; background: var(--bg-surface); border-top: 1px solid var(--border-default); border-radius: 14px 14px 0 0; box-shadow: 0 -12px 32px rgba(0,0,0,0.45); padding-bottom: env(safe-area-inset-bottom); }
+.k-lsheet-head { display: flex; align-items: center; justify-content: space-between; min-height: 52px; padding: 4px 4px 4px 16px; border-bottom: 1px solid var(--border-subtle); }
+.k-lsheet-x { display: inline-flex; align-items: center; justify-content: center; width: 44px; height: 44px; border: 0; border-radius: 10px; background: transparent; color: var(--text-secondary); cursor: pointer; }
+.k-lsheet-body { flex: 1 1 auto; overflow-y: auto; overscroll-behavior: contain; padding: 14px 16px; display: flex; flex-direction: column; gap: 14px; }
+.k-lsheet-body .k-toolbar-filters { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 8px; }
+.k-lsheet-body .k-toolbar-filters > * { width: 100% !important; min-width: 0 !important; max-width: none !important; }
+.k-lsheet-body .k-toolbar-filters select, .k-lsheet-body select, .k-lsheet-body input { min-height: 44px; font-size: 16px !important; }
+.k-lsheet-slot:empty { display: none; }
+/* A list tool opened from the sheet (Views, Fields, Filter by column) docks to
+   the bottom over it; the chat bubble stays out of the way while it is open. */
+@media (max-width: 767px) {
+  body:has(> .k-lsheet-root:not([hidden])) .k-grid-menu { bottom: 0 !important; padding-bottom: calc(12px + env(safe-area-inset-bottom)) !important; }
+  body:has(> .k-lsheet-root:not([hidden])) .sag-chat-launcher { display: none !important; }
+}
+.k-lsheet-foot { padding: 10px 16px; border-top: 1px solid var(--border-subtle); }
+.k-lsheet-foot .k-btn { width: 100%; height: 44px; }
+/* The table's tools inside the sheet. */
+.k-ptools { display: flex; flex-direction: column; gap: 12px; }
+.k-ptools .k-sortbar { display: flex; align-items: center; gap: 8px; padding: 0; }
+.k-ptools-row { display: flex; align-items: center; gap: 8px; }
+.k-ptools-label { flex: 0 0 auto; min-width: 44px; font-size: 12px; font-weight: 800; letter-spacing: .06em; text-transform: uppercase; color: var(--text-tertiary); }
+.k-ptools-row .k-select { flex: 1 1 auto; min-width: 0; }
+.k-ptools-btns { display: flex; flex-wrap: wrap; gap: 8px; }
+.k-ptools-btns > .k-grid-pop { flex: 1 1 0; min-width: 0; display: flex; }
+.k-ptools-btns > .k-grid-pop > .k-grid-btn, .k-ptools-btns > .k-grid-btn { flex: 1 1 0; width: 100%; justify-content: center; min-height: 44px; }
+
+/* Header actions on a phone: the one primary button + "⋯" for the rest. */
+.k-hacts-rest { display: contents; }
+.k-hacts-more { display: none; }
+@media (max-width: 767px) {
+  .k-hacts { position: relative; flex-wrap: nowrap; }
+  .k-hacts-more { display: inline-flex; align-items: center; justify-content: center; flex: none; width: 44px; height: 44px; padding: 0; border-radius: var(--radius-md); border: 1px solid var(--border-default); background: transparent; color: var(--text-primary); cursor: pointer; }
+  .k-hacts[data-open] .k-hacts-more { background: var(--bg-surface-2); border-color: var(--border-strong); }
+  .k-hacts-rest { display: none; }
+  .k-hacts[data-open] .k-hacts-rest { display: flex; flex-direction: column; align-items: stretch; gap: 6px; position: absolute; z-index: 200; top: calc(100% + 6px); left: 0; min-width: 240px; max-width: calc(100vw - 32px); padding: 8px; box-sizing: border-box; background: var(--bg-surface); border: 1px solid var(--border-default); border-radius: 12px; box-shadow: var(--shadow-lg); }
+  .k-hacts-rest > * { width: 100%; justify-content: flex-start !important; }
+  .k-hacts-rest :is(button, a) { min-height: 44px; }
+}
+
+/* A list with nothing in it: the empty line on the page, no header row. */
+.k-table-none { padding: 2px 0; }
+.k-table-none .k-empty { padding: 12px 0; }
+
+/* Upload drop zone (components/FileDropzone): one slim line — an icon and
+   "Drop files or browse". No dashed box, no fill; dragging a file over it
+   draws a hairline outline so the drop target is clear. */
+.k-drop { display: flex; align-items: center; gap: 8px; min-height: 44px; padding: 0 10px; margin: 0 -10px; border: 1px dashed transparent; border-radius: var(--radius-md); color: var(--text-secondary); font-size: 14px; cursor: pointer; transition: border-color .12s, background-color .12s; }
+.k-drop:hover { color: var(--text-primary); }
+.k-drop[data-over] { border-color: var(--border-strong); background: rgba(148,163,184,0.06); color: var(--text-primary); }
+.k-drop[data-busy] { cursor: wait; }
+.k-drop-text { min-width: 0; }
+.k-drop-browse { color: var(--text-primary); font-weight: 600; text-decoration: underline; text-decoration-color: var(--border-strong); text-underline-offset: 3px; }
