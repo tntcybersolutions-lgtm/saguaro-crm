@@ -1,5 +1,6 @@
 'use client';
 import { useEditRights } from '@/lib/hooks/usePermissions';
+import { apiErrorFrom } from '@/lib/api-refusal';
 import { jsonRequest } from '@/lib/list-view';
 import type { BulkEdit } from '@/components/ui/kit';
 import React, { useState, useEffect, useCallback } from 'react';
@@ -264,7 +265,7 @@ export default function DrawingsPage(){
       setLoadError('');
       const h=await getAuthHeaders();
       const r=await fetch(`/api/drawings/list?projectId=${projectId}`,{headers:h});
-      if (!r.ok) throw new Error('Failed to load data');
+      if (!r.ok) throw await apiErrorFrom(r, 'Failed to load data');
       const d=await r.json();
       setDrawings(d.drawings||[]);
     }catch{setDrawings([]);setLoadError('Failed to load. Please try again.');}
@@ -439,7 +440,7 @@ export default function DrawingsPage(){
     try{
       const h=await getAuthHeaders();
       const dr=await fetch(`/api/drawings/${drawing.id}`,{method:'DELETE',headers:h});
-      if (!dr.ok) throw new Error('Delete failed');
+      if (!dr.ok) throw await apiErrorFrom(dr, 'Delete failed');
       showToast('Drawing deleted.');closePanel();await load();
     }catch{showToast('Delete failed. Please try again.','error');}
     finally{setDeleting(false);}

@@ -1,5 +1,6 @@
 'use client';
 import { projectColor, jobRowVar } from '@/lib/project-colors';
+import { retryText, apiErrorFrom } from '@/lib/api-refusal';
 /**
  * Schedule — full construction schedule module, Pass 4 on the kit.
  *
@@ -210,7 +211,7 @@ export default function SchedulePage() {
     setLoadFailed(false);
     try {
       const res = await fetch('/api/schedule/list');
-      if (!res.ok) throw new Error('Failed to load schedule');
+      if (!res.ok) throw await apiErrorFrom(res, 'Failed to load schedule');
       const data = await res.json();
       const arr = Array.isArray(data) ? data : data.tasks ?? data.schedule_tasks ?? [];
       setTasks(arr.map(coerce));
@@ -246,7 +247,7 @@ export default function SchedulePage() {
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify(fields),
       });
-      if (!res.ok) throw new Error('Failed to save change');
+      if (!res.ok) throw await apiErrorFrom(res, 'Failed to save change');
     } catch (e: any) {
       setTasks(prev); // revert
       console.error(e); setError(humanError(e, 'Something went wrong. Please try again.'));
@@ -262,7 +263,7 @@ export default function SchedulePage() {
     setSavingId(id);
     try {
       const res = await fetch(`/api/schedule/${id}`, { method: 'DELETE' });
-      if (!res.ok) throw new Error('Failed to delete task');
+      if (!res.ok) throw await apiErrorFrom(res, 'Failed to delete task');
     } catch (e: any) {
       setTasks(prev);
       console.error(e); setError(humanError(e, 'Something went wrong. Please try again.'));
@@ -431,7 +432,7 @@ export default function SchedulePage() {
   // ── Body ──
   let body: React.ReactNode;
   if (!loading && loadFailed) {
-    body = <Card flush><EmptyState icon={<Warning size={22} />} title="Couldn't load the schedule" text={`${error} Nothing has been lost — try again.`} action={<Button onClick={() => { setLoading(true); fetchTasks(); }}>Retry</Button>} /></Card>;
+    body = <Card flush><EmptyState icon={<Warning size={22} />} title="Couldn't load the schedule" text={retryText(error)} action={<Button onClick={() => { setLoading(true); fetchTasks(); }}>Retry</Button>} /></Card>;
   } else if (!loading && tasks.length === 0) {
     body = <Card flush><EmptyState icon={<CalendarBlank size={22} />} title="No tasks scheduled yet" text="Add the first task — give it a project, dates and a predecessor, and the timeline draws itself with dependencies." action={<Button icon={<Plus size={15} weight="bold" />} onClick={openCreate}>Add First Task</Button>} /></Card>;
   } else if (view === 'list') {

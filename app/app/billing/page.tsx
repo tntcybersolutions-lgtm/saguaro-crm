@@ -21,6 +21,7 @@
  *   POST /api/billing/cancel
  */
 import React, { useState, useEffect, useCallback } from 'react';
+import { IfAllowed } from '@/lib/hooks/usePermissions';
 import { safeJsonParse } from '@/lib/safe-json';
 import { CheckCircle, Warning, CreditCard, DeviceMobile, ArrowSquareOut } from '@phosphor-icons/react';
 import {
@@ -515,7 +516,7 @@ export default function BillingPage() {
           ) : sub ? (
             <Card
               title="Current Plan"
-              actions={sub.status === 'active' && !sub.cancel_at ? <Button variant="danger" size="sm" onClick={() => setShowCancel(true)}>Cancel Plan</Button> : undefined}
+              actions={sub.status === 'active' && !sub.cancel_at ? <IfAllowed perm={['Admin', 'Full']}><Button variant="danger" size="sm" onClick={() => setShowCancel(true)}>Cancel Plan</Button></IfAllowed> : undefined}
             >
               <div className="blPlanHead">
                 <span className="blPlanName">{sub.plan_name ?? 'Free Trial'}</span>

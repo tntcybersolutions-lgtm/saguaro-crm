@@ -12,6 +12,7 @@
  * there is no activity — no filler.
  */
 import React, { useMemo } from 'react';
+import { apiErrorFrom } from '@/lib/api-refusal';
 import Link from 'next/link';
 import useSWR from 'swr';
 import { statusKindForItem, STATUS_COLORS, type StatusKind } from '@/lib/status-colors';
@@ -31,7 +32,7 @@ interface ActivityRow {
 
 const fetcher = async (url: string) => {
   const r = await fetch(url);
-  if (!r.ok) throw new Error(`Request failed (${r.status})`);
+  if (!r.ok) throw await apiErrorFrom(r, `Request failed (${r.status})`);
   return r.json();
 };
 

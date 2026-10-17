@@ -1,5 +1,7 @@
 'use client';
 import React, { useState, useEffect, useMemo, useCallback } from 'react';
+import { apiErrorFrom } from '@/lib/api-refusal';
+import { IfAllowed } from '@/lib/hooks/usePermissions';
 import { alertDialog } from '@/lib/ui/async-dialog';
 import { SUB_TRADES as ALL_TRADES } from '@/lib/construction-intelligence';
 import { humanError } from '@/lib/errors';
@@ -241,6 +243,7 @@ export default function SubPortalPage() {
   // Real tenant project names (from /api/sub-portal). Replaces a hard-coded
   // fake project list that used to seed the filters and invite pickers.
   const [projects, setProjects] = useState<string[]>([]);
+  const [projectIds, setProjectIds] = useState<Record<string, string>>({});
 
   /* filters */
   const [filterTrade, setFilterTrade] = useState('');
@@ -286,7 +289,7 @@ export default function SubPortalPage() {
       try {
         // This device's calendar day: a COI is good through the end of its expiry day (lib/calendar-day).
         const res = await fetch('/api/sub-portal', { headers: { [LOCAL_DAY_HEADER]: localDay() } });
-        if (!res.ok) throw new Error(`HTTP ${res.status}`);
+        if (!res.ok) throw await apiErrorFrom(res, `HTTP ${res.status}`);
         const data = await res.json();
         // The GET returns everything tenant-scoped and already mapped to the
         // shapes these tabs render: `data` = portal_users roster; `activity`,
@@ -302,6 +305,7 @@ export default function SubPortalPage() {
         setCompliance(Array.isArray(data?.compliance) ? data.compliance : []);
         setAnnouncements(Array.isArray(data?.announcements) ? data.announcements : []);
         setProjects(Array.isArray(data?.projects) ? data.projects : []);
+        setProjectIds(Object.fromEntries((Array.isArray(data?.projectRefs) ? data.projectRefs : []).map((p: { id: string; name: string }) => [p.name, p.id])));
         setUnavailable(Array.isArray(data?.unavailable) ? data.unavailable.map(String) : []);
       } catch {
         setUsers([]);
@@ -398,12 +402,33 @@ export default function SubPortalPage() {
   const handleInvite = useCallback(async () => {
     if (!invCompany || !invContact || !invEmail || !invTrade) return;
     setInvSending(true);
+    /* The invite is saved by the server or not at all: a refusal (no rights
+       to invite subs, a missing email) is shown, and the roster never gains a
+       sub the server did not keep. The job is sent by id — the route reads
+       project_id; it never read the names this used to send. */
+    let saved: { id?: string } | null = null;
     try {
-      await fetch('/api/sub-portal/invite', { method: 'POST', headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ company: invCompany, contactName: invContact, email: invEmail, trade: invTrade, projectAccess: invProjects }) });
-    } catch { /* fallback */ }
+      const res = await fetch('/api/sub-portal/invite', { method: 'POST', headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          company: invCompany, contactName: invContact, email: invEmail, trade: invTrade,
+          permissions: ['contract', 'schedule'],
+          project_id: invProjects.length ? projectIds[invProjects[0]] || undefined : undefined,
+        }) });
+      if (!res.ok) {
+        const body = await res.json().catch(() => ({}));
+        setInvSending(false);
+        await alertDialog({ message: humanError(body, res.status === 403 ? "You don't have permission to invite subcontractors." : "Couldn't send the invitation. Nothing was saved — try again.") });
+        return;
+      }
+      saved = ((await res.json().catch(() => ({}))) as { data?: { id?: string } }).data ?? null;
+    } catch (e) {
+      console.error('sub-portal invite failed', e);
+      setInvSending(false);
+      await alertDialog({ message: "Couldn't reach the server. Nothing was saved — try again when you have signal." });
+      return;
+    }
     const newUser: SubUser = {
-      id: uid(), company: invCompany, contactName: invContact, email: invEmail, phone: '',
+      id: saved?.id || uid(), company: invCompany, contactName: invContact, email: invEmail, phone: '',
       trade: invTrade, status: 'pending', projectAccess: invProjects,
       permissions: ['contract', 'schedule'], invitedDate: new Date().toISOString(),
       lastLogin: null, avatarColor: AVATAR_COLORS[users.length % AVATAR_COLORS.length],
@@ -413,7 +438,7 @@ export default function SubPortalPage() {
     if (projects.length === 1) { setInvProjects([projects[0]]); setInvProjAuto(true); } else { setInvProjects([]); setInvProjAuto(false); }
     setInvSending(false);
     setInviteModal(false);
-  }, [invCompany, invContact, invEmail, invTrade, invProjects, users.length, projects]);
+  }, [invCompany, invContact, invEmail, invTrade, invProjects, users.length, projects, projectIds]);
 
   const handleBulkInvite = useCallback(async () => {
     if (!bulkText.trim()) return;
@@ -430,9 +455,20 @@ export default function SubPortalPage() {
       };
     });
     try {
-      await fetch('/api/sub-portal/bulk-invite', { method: 'POST', headers: { 'Content-Type': 'application/json' },
+      const res = await fetch('/api/sub-portal/bulk-invite', { method: 'POST', headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ invites: newUsers }) });
-    } catch { /* fallback */ }
+      if (!res.ok) {
+        const body = await res.json().catch(() => ({}));
+        setBulkSending(false);
+        await alertDialog({ message: humanError(body, res.status === 403 ? "You don't have permission to invite subcontractors." : "Couldn't send the invitations. Nothing was saved — try again.") });
+        return;
+      }
+    } catch (e) {
+      console.error('sub-portal bulk invite failed', e);
+      setBulkSending(false);
+      await alertDialog({ message: "Couldn't reach the server. Nothing was saved — try again when you have signal." });
+      return;
+    }
     setUsers(prev => [...prev, ...newUsers]);
     setBulkText('');
     setBulkSending(false);
@@ -553,7 +589,7 @@ export default function SubPortalPage() {
         subtitle="What your subs send in, and what they can see."
         actions={<>
           <button onClick={() => setBulkInviteModal(true)} style={ghostButtonStyle} className="pmBtn"><UploadSimple size={15} weight="bold" /> Bulk Invite</button>
-          <button onClick={() => setInviteModal(true)} style={goldButtonStyle} className="pmBtn"><Plus size={15} weight="bold" /> Invite Sub</button>
+          <IfAllowed perm={['Projects', 'Full']}><button onClick={() => setInviteModal(true)} style={goldButtonStyle} className="pmBtn"><Plus size={15} weight="bold" /> Invite Sub</button></IfAllowed>
         </>}
       />
 
@@ -636,7 +672,7 @@ export default function SubPortalPage() {
             </thead>
             <tbody>
               {filteredUsers.length === 0 && (
-                <tr><td colSpan={7} style={{ padding: 0 }}><PremiumEmpty compact icon={<UsersThree size={30} weight="duotone" color="var(--text-secondary)" />} title="No subcontractors found" description="No subs match your current filters. Adjust the filters or invite a subcontractor." onClearFilters={filterTrade || filterProject || filterStatus || searchQuery ? () => { setFilterTrade(''); setFilterProject(''); setFilterStatus(''); setSearchQuery(''); } : undefined} primary={{ label: 'Invite Sub', onClick: () => setInviteModal(true) }} /></td></tr>
+                <tr><td colSpan={7} style={{ padding: 0 }}><PremiumEmpty compact icon={<UsersThree size={30} weight="duotone" color="var(--text-secondary)" />} title="No subcontractors found" description="No subs match your current filters. Adjust the filters or invite a subcontractor." onClearFilters={filterTrade || filterProject || filterStatus || searchQuery ? () => { setFilterTrade(''); setFilterProject(''); setFilterStatus(''); setSearchQuery(''); } : undefined} primary={{ label: 'Invite Sub', onClick: () => setInviteModal(true) }} perm={['Projects', 'Full']} /></td></tr>
               )}
               {filteredUsers.map(u => (
                 <tr key={u.id} style={{ borderBottom: `1px solid color-mix(in srgb, ${BORDER} 13%, transparent)`, cursor: 'pointer' }}
@@ -797,7 +833,7 @@ export default function SubPortalPage() {
             </thead>
             <tbody>
               {filteredUsers.length === 0 && (
-                <tr><td colSpan={ALL_PERMISSIONS_LIST.length + 2} style={{ padding: 0 }}><PremiumEmpty compact icon={<ListChecks size={30} weight="duotone" color="var(--text-secondary)" />} title="No subs found" description="Invite a subcontractor to manage their portal permissions here." onClearFilters={filterTrade || filterProject || filterStatus || searchQuery ? () => { setFilterTrade(''); setFilterProject(''); setFilterStatus(''); setSearchQuery(''); } : undefined} primary={{ label: 'Invite Sub', onClick: () => setInviteModal(true) }} /></td></tr>
+                <tr><td colSpan={ALL_PERMISSIONS_LIST.length + 2} style={{ padding: 0 }}><PremiumEmpty compact icon={<ListChecks size={30} weight="duotone" color="var(--text-secondary)" />} title="No subs found" description="Invite a subcontractor to manage their portal permissions here." onClearFilters={filterTrade || filterProject || filterStatus || searchQuery ? () => { setFilterTrade(''); setFilterProject(''); setFilterStatus(''); setSearchQuery(''); } : undefined} primary={{ label: 'Invite Sub', onClick: () => setInviteModal(true) }} perm={['Projects', 'Full']} /></td></tr>
               )}
               {filteredUsers.map(u => (
                 <tr key={u.id} style={{ borderBottom: `1px solid color-mix(in srgb, ${BORDER} 13%, transparent)` }}>
@@ -1003,7 +1039,7 @@ export default function SubPortalPage() {
         <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(320px, 1fr))', gap: 16 }}>
           {filteredUsers.length === 0 && (
             <div style={{ gridColumn: '1 / -1' }}>
-              <PremiumEmpty icon={<AddressBook size={30} weight="duotone" color="var(--text-secondary)" />} title="No subcontractors found" description="No subs match your current filters. Adjust the filters or invite a subcontractor to build your directory." onClearFilters={filterTrade || filterProject || filterStatus || searchQuery ? () => { setFilterTrade(''); setFilterProject(''); setFilterStatus(''); setSearchQuery(''); } : undefined} primary={{ label: 'Invite Sub', onClick: () => setInviteModal(true) }} />
+              <PremiumEmpty icon={<AddressBook size={30} weight="duotone" color="var(--text-secondary)" />} title="No subcontractors found" description="No subs match your current filters. Adjust the filters or invite a subcontractor to build your directory." onClearFilters={filterTrade || filterProject || filterStatus || searchQuery ? () => { setFilterTrade(''); setFilterProject(''); setFilterStatus(''); setSearchQuery(''); } : undefined} primary={{ label: 'Invite Sub', onClick: () => setInviteModal(true) }} perm={['Projects', 'Full']} />
             </div>
           )}
           {filteredUsers.map(u => (

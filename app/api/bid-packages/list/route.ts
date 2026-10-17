@@ -2,7 +2,7 @@ import { NextRequest, NextResponse } from 'next/server';
 import { requirePermission, hasAnyPermission, PROPOSAL_MONEY } from '@/lib/permissions';
 import { createServerClient } from '@/lib/supabase-server';
 import { apiError } from '@/lib/api-error';
-import { hiddenProjectIds } from '@/lib/live-projects';
+import { jobsOffFor } from '@/lib/visible-jobs';
 import { bidAmount } from '@/lib/bid-amount';
 import { inviteState } from '@/lib/bid-invite-state';
 
@@ -28,7 +28,7 @@ export async function GET(req: NextRequest) {
     if (error) throw error;
     /* The company-wide bid board leaves out an archived or deleted job's
        packages. One job's own list (projectId) still shows them. */
-    const hidden = projectId ? new Set<string>() : await hiddenProjectIds(db, user.tenantId);
+    const hidden = projectId ? new Set<string>() : await jobsOffFor(db, user);
     const rows = (data || []).filter((p: any) => !p.project_id || !hidden.has(String(p.project_id)));
 
     // Leveling aggregates (invited / responded / low bid / spread) ride on the

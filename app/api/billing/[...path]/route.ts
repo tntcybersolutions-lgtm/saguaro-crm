@@ -21,7 +21,13 @@ export async function GET(
   const { path } = await params;
   const [segment] = path;
 
-  if (segment === 'subscription') return getSubscriptionHandler(req);
+  if (segment === 'subscription') {
+    /* The plan, its price and the seat count are company billing: Admin view
+       (a PM has it; a Foreman or Subcontractor does not). */
+    const g = await requirePermission(req, 'Admin', 'View', { projectId: null });
+    if (!g.ok) return g.res;
+    return getSubscriptionHandler(req);
+  }
   // Whether "Select Plan" can open Stripe yet. The billing screen asks first, so
   // with no Stripe key it offers "Request Plan" (POST /api/billing/plan-request)
   // instead of sending people into a checkout that can only refuse.

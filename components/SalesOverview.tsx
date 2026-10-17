@@ -14,6 +14,7 @@
  * together here.
  */
 import React, { useEffect, useState, useCallback } from 'react';
+import { apiErrorFrom } from '@/lib/api-refusal';
 import Link from 'next/link';
 import {
   CurrencyDollar, Kanban, WarningCircle, Target, ArrowRight, CheckCircle,
@@ -96,7 +97,7 @@ export default function SalesOverview({ style }: { style?: React.CSSProperties }
     setLoading(true); setError(null);
     try {
       const r = await fetch('/api/sales/overview');
-      if (!r.ok) throw new Error('Could not load your sales overview.');
+      if (!r.ok) throw await apiErrorFrom(r, 'Could not load your sales overview.');
       setD(await r.json());
     } catch (e) {
       setError(e instanceof Error ? e.message : 'Could not load your sales overview.');

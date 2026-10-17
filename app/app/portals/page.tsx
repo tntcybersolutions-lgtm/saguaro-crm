@@ -16,6 +16,8 @@
  *   resend  POST /api/portal/resend-invite { sessionId, type }
  */
 import React, { useEffect, useState, useCallback } from 'react';
+import { retryText, apiErrorFrom } from '@/lib/api-refusal';
+import { IfAllowed } from '@/lib/hooks/usePermissions';
 import { confirmDialog } from '@/lib/ui/async-dialog';
 import { useProjects } from '@/lib/hooks/useProjects';
 import { CheckCircle, Plus, House, HardHat, Copy, ArrowSquareOut, PaperPlaneTilt, Prohibit, Envelope, WarningCircle } from '@phosphor-icons/react';
@@ -122,7 +124,7 @@ export default function PortalsPage() {
   const [inviteTab, setInviteTab] = useState<Tab>('client');
   const [inviteLoading, setInviteLoading] = useState(false);
   const [inviteError, setInviteError] = useState('');
-  const [inviteSuccess, setInviteSuccess] = useState<{ url: string; name: string; emailSent?: boolean } | null>(null);
+  const [inviteSuccess, setInviteSuccess] = useState<{ url: string; name: string; emailSent?: boolean; rosterHref?: string } | null>(null);
 
   // Client invite form
   const [clientForm, setClientForm] = useState({ projectId: '', clientName: '', clientEmail: '', expiresInDays: '365' });
@@ -177,7 +179,7 @@ export default function PortalsPage() {
     setRevoking(sessionId);
     try {
       const res = await fetch('/api/portal/revoke', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ sessionId, type }) });
-      if (!res.ok) throw new Error('revoke failed');
+      if (!res.ok) throw await apiErrorFrom(res, 'revoke failed');
       show('Portal access revoked.');
       await loadData();
     } catch { show('Could not revoke access. Please try again.', 'bad'); }
@@ -233,7 +235,11 @@ export default function PortalsPage() {
       if (!res.ok) {
         setInviteError(data.error || 'Failed to create portal access');
       } else {
-        setInviteSuccess({ url: data.portalUrl, name: isClient ? clientForm.clientName : subForm.companyName, emailSent: data.emailSent });
+        setInviteSuccess({
+          url: data.portalUrl, name: isClient ? clientForm.clientName : subForm.companyName, emailSent: data.emailSent,
+          // A sub not on the job's roster gets a mostly closed portal: say so, with the way to fix it.
+          rosterHref: !isClient && data.onRoster === false && data.projectId ? `/app/projects/${data.projectId}/subs` : undefined,
+        });
         if (isClient) setClientForm({ projectId: '', clientName: '', clientEmail: '', expiresInDays: '365' });
         else setSubForm({ projectId: '', companyName: '', contactName: '', email: '' });
         guard.clearDraft();
@@ -333,7 +339,7 @@ export default function PortalsPage() {
   // ── Table body ──
   let body: React.ReactNode;
   if (!loading && loadError) {
-    body = <EmptyState icon={<WarningCircle size={22} />} title="Couldn't load portal sessions" text={`${loadError} Nothing has been lost — try again.`} action={<Button onClick={loadData}>Retry</Button>} />;
+    body = <EmptyState icon={<WarningCircle size={22} />} title="Couldn't load portal sessions" text={retryText(loadError)} action={<Button onClick={loadData}>Retry</Button>} />;
   } else if (tab === 'client') {
     body = !loading && clientSessions.length === 0
       ? <EmptyState icon={<House size={22} />} title="No client portal access yet" text="Give an owner a secure, no-password window into their project — progress, schedule, photos, and invoices — through one link you can revoke at any time. The invitation email sends itself." action={<Button icon={<Plus size={15} weight="bold" />} onClick={() => openInvite('client')}>Invite First Client</Button>} />
@@ -355,7 +361,7 @@ export default function PortalsPage() {
         subtitle="No-password links for owners and subs, one job each."
         actions={
           <>
-            <Button icon={<Plus size={15} weight="bold" />} onClick={() => openInvite('sub')}>Invite Subcontractor</Button>
+            <IfAllowed perm={['Projects', 'Full']}><Button icon={<Plus size={15} weight="bold" />} onClick={() => openInvite('sub')}>Invite Subcontractor</Button></IfAllowed>
             <Button variant="primary" data-tour="invite-client" icon={<Plus size={15} weight="bold" />} onClick={() => openInvite('client')}>Invite Client</Button>
           </>
         }
@@ -396,6 +402,7 @@ export default function PortalsPage() {
             name={inviteSuccess.name}
             type={inviteTab}
             emailSent={inviteSuccess.emailSent}
+            rosterHref={inviteSuccess.rosterHref}
             onCopied={() => show('Portal link copied.')}
             onAnother={() => setInviteSuccess(null)}
             onClose={() => { setShowInvite(false); setInviteSuccess(null); }}
@@ -461,7 +468,7 @@ export default function PortalsPage() {
 
 // ─── Sub-components ───────────────────────────────────────────────────────────
 
-function SuccessCard({ url, name, type, emailSent, onCopied, onAnother, onClose }: { url: string; name: string; type: Tab; emailSent?: boolean; onCopied: () => void; onAnother: () => void; onClose: () => void; }) {
+function SuccessCard({ url, name, type, emailSent, rosterHref, onCopied, onAnother, onClose }: { url: string; name: string; type: Tab; emailSent?: boolean; rosterHref?: string; onCopied: () => void; onAnother: () => void; onClose: () => void; }) {
   const [linkCopied, setLinkCopied] = useState(false);
 
   const [copyFailed, setCopyFailed] = useState(false);
@@ -486,6 +493,12 @@ function SuccessCard({ url, name, type, emailSent, onCopied, onAnother, onClose 
         {emailSent ? <Envelope size={16} weight="fill" /> : <WarningCircle size={16} weight="fill" />}
         {emailSent ? 'Invitation email sent automatically.' : 'Email not sent automatically — copy the portal link below and share it directly.'}
       </div>
+      {rosterHref && (
+        <div className="poMail" data-ok="false" role="status">
+          <WarningCircle size={16} weight="fill" />
+          <span>{name} isn&apos;t on this job&apos;s subcontractor list, so their daily logs, RFIs and invoices stay closed. <a className="k-link" href={rosterHref}>Add them to the job</a></span>
+        </div>
+      )}
 
       {/* Link box */}
       <div className="poLink">

@@ -1,4 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server';
+import { requirePermission } from '@/lib/permissions';
 import { getUser, createServerClient } from '@/lib/supabase-server';
 import { apiError } from '@/lib/api-error';
 import type { Database } from '@/lib/database.types';
@@ -15,7 +16,9 @@ import { requestDay } from '@/lib/time-zone';
  * SAME table on clock-out. Accepts camelCase or snake_case for every field.
  */
 export async function POST(req: NextRequest) {
-  const user = await getUser(req);
+  const gate = await requirePermission(req, 'Projects', 'Edit');
+  if (!gate.ok) return gate.res;
+  const user = gate.user;
   if (!user) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
 
   let body: Record<string, any> = {};

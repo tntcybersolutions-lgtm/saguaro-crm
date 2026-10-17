@@ -1,4 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server';
+import { requirePermission } from '@/lib/permissions';
 import { createServerClient, getUser } from '@/lib/supabase-server';
 import { apiError } from '@/lib/api-error';
 
@@ -19,7 +20,9 @@ export const dynamic = 'force-dynamic';
 // GET /api/subcontractors  — list tenant subcontractors
 export async function GET(req: NextRequest) {
   try {
-    const user = await getUser(req);
+    const gate = await requirePermission(req, 'Projects', 'View', { projectId: null, companyWide: true });
+  if (!gate.ok) return gate.res;
+  const user = gate.user;
     if (!user) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
 
     const { searchParams } = new URL(req.url);
@@ -51,7 +54,9 @@ export async function GET(req: NextRequest) {
 
 // POST /api/subcontractors  — create a subcontractor for the tenant
 export async function POST(req: NextRequest) {
-  const user = await getUser(req);
+  const gate = await requirePermission(req, 'Projects', 'Edit');
+  if (!gate.ok) return gate.res;
+  const user = gate.user;
   if (!user) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
 
   try {

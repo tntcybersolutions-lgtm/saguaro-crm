@@ -1,4 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server';
+import { requirePermission } from '@/lib/permissions';
 import { createServerClient, getUser } from '@/lib/supabase-server';
 import { hasFeature } from '@/lib/entitlements-server';
 import { inspectionOutcome } from '@/lib/inspection-result';
@@ -20,7 +21,9 @@ const avg = (xs: number[]): number | null => (xs.length ? Math.round((xs.reduce(
  */
 export async function GET(req: NextRequest) {
   try {
-    const user = await getUser(req);
+    const gate = await requirePermission(req, 'Reports', 'View', { projectId: null });
+  if (!gate.ok) return gate.res;
+  const user = gate.user;
     if (!user) return NextResponse.json({ kpis: {} }, { status: 401 });
     if (!(await hasFeature(user.tenantId, 'command_center')))
       return NextResponse.json({ kpis: {}, gated: true }, { status: 403 });

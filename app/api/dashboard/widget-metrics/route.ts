@@ -4,7 +4,7 @@ import { signUrl } from '@/lib/storage-signing';
 import { addDays, requestDay } from '@/lib/time-zone';
 import { apiError } from '@/lib/api-error';
 import { liveJobs } from '@/lib/live-jobs';
-import { getEffectivePermissions, hasPermission, type PermCategory } from '@/lib/permissions';
+import { getEffectivePermissions, hasPermission, type PermCategory, requirePermission } from '@/lib/permissions';
 
 export const dynamic = 'force-dynamic';
 
@@ -16,7 +16,9 @@ export const dynamic = 'force-dynamic';
  * neutral value instead of 500ing the whole snapshot. No mock data.
  */
 export async function GET(req: NextRequest) {
-  const user = await getUser(req);
+  const gate = await requirePermission(req, 'Projects', 'View', { projectId: null });
+  if (!gate.ok) return gate.res;
+  const user = gate.user;
   if (!user) return NextResponse.json({ metrics: {} }, { status: 401 });
 
   const db = createServerClient();

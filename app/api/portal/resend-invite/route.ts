@@ -1,4 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server';
+import { companyDisplayName } from '@/lib/company-name';
 import { createServerClient, getUser } from '@/lib/supabase-server';
 import { sendClientPortalInvite, sendSubPortalInvite } from '@/lib/email';
 import { apiError } from '@/lib/api-error';
@@ -38,8 +39,9 @@ export async function POST(req: NextRequest) {
       .eq('id', user.id)
       .eq('tenant_id', user.tenantId)
       .maybeSingle();
-    const gcCompanyName = (profile as { company?: string; full_name?: string } | null)?.company
-      || (profile as { company?: string; full_name?: string } | null)?.full_name
+    // The company, not the person who clicked (live QA D18).
+    const gcCompanyName = (await companyDisplayName(db as never, user.tenantId, user.id))
+      || (profile as { company?: string; full_name?: string } | null)?.company
       || 'Your General Contractor';
 
     if (type === 'client') {
@@ -115,6 +117,7 @@ export async function POST(req: NextRequest) {
         projectName: project?.name || 'Your Project',
         portalUrl: `${appUrl}/portals/sub/${session.token}`,
         isResend: true,
+        replyTo: user.email || null,
       });
       if (!mail.sent) return NextResponse.json({ error: mail.error || 'The invite was not sent.', sentTo: to }, { status: 502 });
 

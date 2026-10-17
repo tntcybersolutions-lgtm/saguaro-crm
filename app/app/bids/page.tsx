@@ -6,6 +6,7 @@
  * page migrates to this shape.
  */
 import React, { useState, useEffect, useMemo, Suspense } from 'react';
+import { apiErrorFrom } from '@/lib/api-refusal';
 import { useRouter, useSearchParams } from 'next/navigation';
 import { Brain, ArrowRight, Eye, Copy, Trash, Archive, Trophy, PencilSimple, Robot, Plus, WarningCircle, Clipboard, CheckCircle } from '@phosphor-icons/react';
 import { useProjects } from '@/lib/hooks/useProjects';
@@ -106,7 +107,7 @@ function BidsPageInner() {
       if (outcome && outcome !== 'all') params.set('outcome', outcome);
       params.set('limit', '50');
       const r = await fetch('/api/bids/history?' + params.toString());
-      if (!r.ok) throw new Error('Failed to load bid history');
+      if (!r.ok) throw await apiErrorFrom(r, 'Failed to load bid history');
       const d = await r.json();
       setHistoryBids(d.bids || []);
       setHistoryStats(d.stats || null);
@@ -142,7 +143,7 @@ function BidsPageInner() {
       const patch: Record<string, unknown> = { bid_amount: amount };
       if (editNote.trim() !== (editBid.notes || '')) patch.notes = editNote.trim();
       const r = await fetch(`/api/bids/${editBid.id}`, { method: 'PATCH', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(patch) });
-      if (!r.ok) throw new Error('update failed');
+      if (!r.ok) throw await apiErrorFrom(r, 'update failed');
       setHistoryBids((prev) => prev.map((b) => (b.id === editBid.id ? { ...b, bid_amount: amount, notes: (patch.notes as string | undefined) ?? b.notes } : b)));
       showToast('Bid updated.');
       setEditBid(null);
@@ -321,7 +322,7 @@ function BidsPageInner() {
     setPkgError(false);
     try {
       const r = await fetch('/api/bid-packages/list');
-      if (!r.ok) throw new Error('Failed to load bid packages');
+      if (!r.ok) throw await apiErrorFrom(r, 'Failed to load bid packages');
       const d = await r.json();
       const all: Pkg[] = (d.bidPackages || []).filter((bp: Pkg) => !bp.deleted_at).map(withLeveling);
       setPackages(all);
@@ -358,7 +359,7 @@ function BidsPageInner() {
     setBusyPkg(op.id);
     try {
       const r = await fetch(`/api/bid-packages/${op.id}`);
-      if (!r.ok) throw new Error('detail failed');
+      if (!r.ok) throw await apiErrorFrom(r, 'detail failed');
       const d = await r.json();
       const src = d.bidPackage || {};
       const items: Pkg[] = d.items || [];
@@ -406,7 +407,7 @@ function BidsPageInner() {
     setBusyPkg(op.id);
     try {
       const r = await fetch(`/api/bid-packages/${op.id}/close`, { method: 'POST' });
-      if (!r.ok) throw new Error('close failed');
+      if (!r.ok) throw await apiErrorFrom(r, 'close failed');
       showToast(`Closed "${op.name || 'package'}" — it's no longer taking bids.`);
       setConfirmClose(null);
       fetchPackages();
@@ -423,7 +424,7 @@ function BidsPageInner() {
     const { kind, id } = confirmDelete;
     try {
       const r = await fetch(kind === 'package' ? `/api/bid-packages/${id}` : `/api/bids/${id}`, { method: 'DELETE' });
-      if (!r.ok) throw new Error('delete failed');
+      if (!r.ok) throw await apiErrorFrom(r, 'delete failed');
       if (kind === 'package') setPackages((prev) => prev.filter((p) => p.id !== id));
       else setHistoryBids((prev) => prev.filter((b) => b.id !== id));
       showToast(kind === 'package' ? 'Bid package deleted.' : 'Bid deleted.');

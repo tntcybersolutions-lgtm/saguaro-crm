@@ -27,7 +27,8 @@
  *   risk     POST   /api/ai/change-order-risk
  */
 import { jsonRequest } from '@/lib/list-view';
-import { useEditRights } from '@/lib/hooks/usePermissions';
+import { retryText, apiErrorFrom } from '@/lib/api-refusal';
+import { useEditRights, IfAllowed } from '@/lib/hooks/usePermissions';
 import { useProjects } from '@/lib/hooks/useProjects';
 import { confirmDialog } from '@/lib/ui/async-dialog';
 import { useProjectContext } from '@/lib/hooks/useProjectContext';
@@ -478,7 +479,7 @@ export default function ChangeOrdersPage() {
     if (selectedId === id) setSelectedId(null);
     try {
       const r = await fetch(`/api/change-orders/${id}`, { method: 'DELETE' });
-      if (!r.ok) throw new Error('Delete failed');
+      if (!r.ok) throw await apiErrorFrom(r, 'Delete failed');
       setToast({msg:'Change order deleted.',type:'success'});
     } catch { setToast({msg:'Failed to delete the change order. Please try again.',type:'error'}); load(); }
   }
@@ -706,7 +707,7 @@ export default function ChangeOrdersPage() {
       <EmptyState
         icon={<WarningCircle size={22}/>}
         title="Couldn't load change orders"
-        text={`${loadError} Nothing has been lost — try again.`}
+        text={retryText(loadError)}
         action={<Button icon={<ArrowClockwise size={15}/>} onClick={load}>Retry</Button>}
       />
     );
@@ -716,7 +717,7 @@ export default function ChangeOrdersPage() {
         icon={<Clipboard size={22}/>}
         title="No change orders yet"
         text={`Scope changes, owner requests and unforeseen conditions land here. CO-${padCo(nextCoNumber)} is numbered and ready.`}
-        action={<Button icon={<Plus size={15} weight="bold"/>} onClick={()=>setShowForm(true)}>New Change Order</Button>}
+        action={<IfAllowed perm={['Change Orders', 'Edit']}><Button icon={<Plus size={15} weight="bold"/>} onClick={()=>setShowForm(true)}>New Change Order</Button></IfAllowed>}
       />
     );
   } else {
@@ -768,9 +769,9 @@ export default function ChangeOrdersPage() {
         title="Change Orders"
         subtitle="Scope changes, owner requests, and unforeseen conditions — priced before they are built."
         actions={
-          <Button variant="primary" icon={<Plus size={15} weight="bold"/>} onClick={()=>setShowForm(true)}>
+          <IfAllowed perm={['Change Orders', 'Edit']}><Button variant="primary" icon={<Plus size={15} weight="bold"/>} onClick={()=>setShowForm(true)}>
             New Change Order
-          </Button>
+          </Button></IfAllowed>
         }
       >
         {!loadError && <StatRow items={stats}/>}

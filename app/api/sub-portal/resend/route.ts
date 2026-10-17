@@ -1,4 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
+import { companyDisplayName } from '@/lib/company-name';
+import { requirePermission } from '@/lib/permissions';
 import { createServerClient, getUser } from '@/lib/supabase-server';
 import { sendSubPortalInvite } from '@/lib/email';
 import { apiError } from '@/lib/api-error';
@@ -16,7 +18,9 @@ const APP_URL = process.env.NEXT_PUBLIC_APP_URL || 'https://saguarocontrol.net';
  */
 export async function POST(req: NextRequest) {
   try {
-    const user = await getUser(req);
+    const gate = await requirePermission(req, 'Projects', 'Full');
+  if (!gate.ok) return gate.res;
+  const user = gate.user;
     if (!user) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
 
     const body = await req.json().catch(() => ({}));
@@ -48,7 +52,8 @@ export async function POST(req: NextRequest) {
       .eq('tenant_id', user.tenantId)
       .maybeSingle();
     const prof = (profile || {}) as Record<string, any>;
-    const gcCompanyName = prof.company || prof.full_name || 'Your General Contractor';
+    // The company, not the person who clicked (live QA D18).
+    const gcCompanyName = (await companyDisplayName(db as never, user.tenantId, user.id)) || prof.company || 'Your General Contractor';
 
     // Project name (optional).
     let projectName = 'Your Project';
@@ -84,6 +89,7 @@ export async function POST(req: NextRequest) {
       projectName,
       portalUrl,
       isResend: true,
+      replyTo: user.email || null,
     });
     // "Sent" only when it was: the button used to say so even when nothing left.
     if (!mail.sent) return NextResponse.json({ error: mail.error || 'The invite was not sent.', sentTo: to }, { status: 502 });

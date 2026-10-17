@@ -17,6 +17,8 @@
  * Awards stay W-9 / COI gated server-side; nothing here auto-awards.
  */
 import React, { useState, useEffect, useRef, useMemo } from 'react';
+import { retryText, apiErrorFrom } from '@/lib/api-refusal';
+import { IfAllowed } from '@/lib/hooks/usePermissions';
 import { useProjectContext } from '@/lib/hooks/useProjectContext';
 import { humanError } from '@/lib/errors';
 import { useParams, useRouter } from 'next/navigation';
@@ -609,7 +611,7 @@ export default function BidPackagesPage() {
     setLoadError('');
     try {
       const r = await fetch(`/api/bid-packages/list?projectId=${projectId}`);
-      if (!r.ok) throw new Error('load failed');
+      if (!r.ok) throw await apiErrorFrom(r, 'load failed');
       const d = await r.json() as any;
       const rows: BidPackageRow[] = d.bidPackages || [];
       setPackages(rows);
@@ -728,14 +730,14 @@ export default function BidPackagesPage() {
 
   let listBody: React.ReactNode;
   if (!loading && loadError) {
-    listBody = <EmptyState icon={<Tray size={22} />} title="Couldn't load bid packages" text={`${loadError} Nothing has been lost — try again.`} action={<Button onClick={loadPackages}>Retry</Button>} />;
+    listBody = <EmptyState icon={<Tray size={22} />} title="Couldn't load bid packages" text={retryText(loadError)} action={<Button onClick={loadPackages}>Retry</Button>} />;
   } else if (!loading && packages.length === 0) {
     listBody = (
       <EmptyState
         icon={<Package size={22} />}
         title="No bid packages yet"
         text={rosterCount > 0 ? `Send one trade's scope to your ${rosterCount}-sub roster and level the bids here.` : "Send one trade's scope to your subs and level the bids here."}
-        action={<Button variant="primary" icon={<Plus size={15} weight="bold" />} onClick={() => { setWizardKey(k => k + 1); setShowWizard(true); }}>Create Bid Package</Button>}
+        action={<IfAllowed perm={['Projects', 'Edit']}><Button variant="primary" icon={<Plus size={15} weight="bold" />} onClick={() => { setWizardKey(k => k + 1); setShowWizard(true); }}>Create Bid Package</Button></IfAllowed>}
       />
     );
   } else {
@@ -765,7 +767,7 @@ export default function BidPackagesPage() {
           { label: 'Bid Packages' },
         ]}
         title="Bid Packages"
-        actions={<Button variant="primary" icon={<Plus size={15} weight="bold" />} onClick={() => { setWizardKey(k => k + 1); setShowWizard(true); }}>Create Bid Package</Button>}
+        actions={<IfAllowed perm={['Projects', 'Edit']}><Button variant="primary" icon={<Plus size={15} weight="bold" />} onClick={() => { setWizardKey(k => k + 1); setShowWizard(true); }}>Create Bid Package</Button></IfAllowed>}
       >
         {!loadError && stats.length > 0 && <StatRow items={stats} />}
 

@@ -5,6 +5,7 @@
  * Dark-themed, offline-capable, touch-friendly.
  */
 import React, { useState, useEffect } from 'react';
+import { apiErrorFrom } from '@/lib/api-refusal';
 import { enqueue } from '@/lib/field-db';
 
 const GOLD = 'var(--brand-primary)';
@@ -114,7 +115,7 @@ export default function EmailComposer({
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify(payload),
       });
-      if (!res.ok) throw new Error(`HTTP ${res.status}`);
+      if (!res.ok) throw await apiErrorFrom(res, `HTTP ${res.status}`);
       setStatus('sent');
       setTimeout(() => onSent(), 1500);
     } catch {

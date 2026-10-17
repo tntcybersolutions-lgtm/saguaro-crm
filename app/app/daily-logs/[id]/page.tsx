@@ -21,6 +21,7 @@
  * defensively only when the row carries a photos/photo_urls array.
  */
 import React, { useState, useEffect, useCallback } from 'react';
+import { retryText, apiErrorFrom } from '@/lib/api-refusal';
 import { confirmDialog } from '@/lib/ui/async-dialog';
 import { humanError } from '@/lib/errors';
 import { useParams, useRouter } from 'next/navigation';
@@ -192,7 +193,7 @@ export default function DailyLogDetailPage() {
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify(fields),
       });
-      if (!res.ok) throw new Error('Save failed');
+      if (!res.ok) throw await apiErrorFrom(res, 'Save failed');
       showToast(doneMsg);
       fetch(`/api/daily-logs/${id}`)
         .then(r => (r.ok ? r.json() : null))
@@ -216,7 +217,7 @@ export default function DailyLogDetailPage() {
     try {
       const res = await fetch(`/api/daily-logs/${id}`);
       if (res.status === 404) { setNotFound(true); return; }
-      if (!res.ok) throw new Error('Failed to load daily log');
+      if (!res.ok) throw await apiErrorFrom(res, 'Failed to load daily log');
       const data = await res.json();
       const row: DailyLog = data.log ?? data;
       setLog(row);
@@ -289,7 +290,7 @@ export default function DailyLogDetailPage() {
             <EmptyState
               icon={<Warning size={22} />}
               title="Couldn't load the daily log"
-              text={`${error} Nothing has been lost — try again.`}
+              text={retryText(error)}
               action={<div className="dldComposer"><Button icon={<ArrowClockwise size={15} />} onClick={loadLog}>Retry</Button>{backBtn}</div>}
             />
           </Card>

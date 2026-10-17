@@ -8,6 +8,7 @@
  *   decide   PATCH /api/timesheets/[id]/status       { status: 'approved' | 'rejected' }
  */
 import { useProjectContext } from '@/lib/hooks/useProjectContext';
+import { apiErrorFrom } from '@/lib/api-refusal';
 import React, { useState, useEffect, useCallback, useRef } from 'react';
 import SaguaroDatePicker from '@/components/SaguaroDatePicker';
 import { useParams } from 'next/navigation';
@@ -118,7 +119,7 @@ export default function TimesheetsPage() {
       /* A failed read (401 / 404 / 500) parses as { error } — without this check
          it set an empty list, so a reviewer saw "no time this week" instead of an
          error, and the composer auto-opened as if nobody had clocked in. */
-      if (!res.ok) throw new Error(`timesheets ${res.status}`);
+      if (!res.ok) throw await apiErrorFrom(res, `timesheets ${res.status}`);
       const json = await res.json();
       setEntries(json.entries || []);
     } catch (e) {
@@ -201,7 +202,7 @@ export default function TimesheetsPage() {
           work_description: [form.employee, form.classification, form.costCode ? (codeOptions.find(c => c.value === form.costCode)?.label || form.costCode) : ''].filter(Boolean).join(' — '),
         }),
       });
-      if (!res.ok) throw new Error('save failed');
+      if (!res.ok) throw await apiErrorFrom(res, 'save failed');
       setShowForm(false);
       setForm(emptyForm());
       show('Timesheet entry added.');
@@ -224,7 +225,7 @@ export default function TimesheetsPage() {
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ status: action }),
       });
-      if (!res.ok) throw new Error('update failed');
+      if (!res.ok) throw await apiErrorFrom(res, 'update failed');
       show(`Timesheet ${action}.`);
     } catch {
       show('Could not update the timesheet. Please try again.', 'bad');

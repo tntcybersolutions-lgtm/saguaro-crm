@@ -1,5 +1,6 @@
 'use client';
 import React, { useState, useEffect, useRef, useCallback } from 'react';
+import { apiErrorFrom } from '@/lib/api-refusal';
 import { useGuardedRouter } from '@/lib/navGuard';
 
 const GOLD='var(--brand-primary)',DARK='var(--bg-base)',RAISED='var(--bg-surface)',BORDER='rgba(255,255,255,0.12)',DIM='var(--text-secondary)',TEXT='var(--text-primary)',RED='var(--danger)';
@@ -75,7 +76,7 @@ export default function NotificationBell() {
     setLoadingList(true);
     try {
       const r = await fetch('/api/notifications?limit=10');
-      if (!r.ok) throw new Error('fetch failed');
+      if (!r.ok) throw await apiErrorFrom(r, 'fetch failed');
       const d = await r.json() as any;
       setNotifications(d.notifications || d.items || []);
     } catch {

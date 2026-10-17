@@ -8,6 +8,7 @@
  * View    openPdf(url)
  */
 import React, { useState, useEffect, useCallback, useRef } from 'react';
+import { apiErrorFrom } from '@/lib/api-refusal';
 import { openPdf } from '@/components/PdfViewer';
 import { useProjectContext } from '@/lib/hooks/useProjectContext';
 import { useParams } from 'next/navigation';
@@ -189,7 +190,7 @@ export default function SpecsPage() {
       fd.append('file', file);
       fd.append('specId', specId);
       const res = await fetch(`/api/specs/${specId}/upload`, { method: 'POST', body: fd });
-      if (!res.ok) throw new Error('upload failed');
+      if (!res.ok) throw await apiErrorFrom(res, 'upload failed');
       show('Spec file uploaded.');
       fetchSpecs();
     } catch {

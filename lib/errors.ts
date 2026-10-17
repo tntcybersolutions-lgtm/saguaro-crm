@@ -58,9 +58,17 @@ export function humanError(e: unknown, fallback = 'Something went wrong. Please 
   const raw = extractMessage(e).trim();
   if (!raw) return fallback;
 
+  // The server's own refusal already names what was refused — keep its words.
+  if (/^you don't have permission to /i.test(raw) && raw.length < 200) return raw;
+  // A body that was not JSON (a proxy's "upstream request failed" page) must
+  // never reach the screen as a parse error.
+  if (/Unexpected token|is not valid JSON|JSON\.parse|Unexpected end of JSON/i.test(raw)) return fallback;
+  // "Unauthorized" from our API means the session is gone, not a refusal.
+  if (/^unauthori[sz]ed$/i.test(raw)) return 'Your session expired. Sign in again to continue.';
+
   // Map common technical failures to friendly, actionable guidance.
-  if (/violates? row-level security|permission denied|not authorized|unauthorized|forbidden|not allowed/i.test(raw))
-    return "You don't have permission to do that.";
+  if (/violates? row-level security|permission denied|not authorized|forbidden|not allowed/i.test(raw))
+    return "You don't have permission to do this. Ask your company admin for access.";
   if (/duplicate key value|already exists|violates? unique constraint/i.test(raw))
     return 'That already exists.';
   if (/violates? foreign key constraint/i.test(raw))

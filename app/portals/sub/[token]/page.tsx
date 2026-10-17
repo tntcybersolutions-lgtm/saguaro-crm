@@ -3,6 +3,7 @@ import React, { useState, useEffect, useRef, useCallback } from 'react';
 import SaguaroDatePicker from '@/components/SaguaroDatePicker';
 import { humanError } from '@/lib/errors';
 import { useParams } from 'next/navigation';
+import { House, Camera, ListChecks, NotePencil, CalendarBlank, Question, Broadcast, Receipt, EnvelopeSimple, Folder, MapTrifold, ShieldCheck, Star, ChatCircle, ClockCounterClockwise, Cactus } from '@phosphor-icons/react';
 import SubEndOfDay from '@/components/portal/SubEndOfDay';
 import SubInvoiceForm from '@/components/portal/SubInvoiceForm';
 import {
@@ -734,22 +735,24 @@ export default function SubPortal(){
     </div>
   );
 
-  const TABS:{key:Tab;label:string;icon:string;section:string}[]=[
-    {key:'dashboard',label:'Dashboard',icon:'\u2302',section:'Work'},
-    {key:'photos',label:'End of Day',icon:'\u{1F4F7}',section:'Work'},
-    {key:'punch',label:'Punch List',icon:'\u2713',section:'Work'},
-    {key:'daily',label:'Daily Logs',icon:'\u270D',section:'Work'},
-    {key:'schedule',label:'Schedule',icon:'\u2630',section:'Work'},
-    {key:'rfis',label:'RFIs',icon:'\u2753',section:'Work'},
-    {key:'radio',label:'Saguaro Radio',icon:'\u224B',section:'Work'},
-    {key:'payapps',label:'Invoices',icon:'\u0024',section:'Money'},
-    {key:'bids',label:'Bid Invites',icon:'\u2709',section:'Money'},
-    {key:'documents',label:'Documents',icon:'\u2750',section:'Files'},
-    {key:'drawings',label:'Drawings',icon:'\u25A4',section:'Files'},
-    {key:'compliance',label:'Compliance',icon:'\u2714',section:'Account'},
-    {key:'scorecard',label:'Scorecard',icon:'\u2605',section:'Account'},
-    {key:'messages',label:'Messages',icon:'\u2709',section:'Account'},
-    {key:'history',label:'History',icon:'\u23F1',section:'Account'},
+  /* Designer icons from the app's one family (Phosphor), not text glyphs —
+     the menu read as emoji (live QA D19). */
+  const TABS:{key:Tab;label:string;icon:React.ReactNode;section:string}[]=[
+    {key:'dashboard',label:'Dashboard',icon:<House size={15} weight="duotone"/>,section:'Work'},
+    {key:'photos',label:'End of Day',icon:<Camera size={15} weight="duotone"/>,section:'Work'},
+    {key:'punch',label:'Punch List',icon:<ListChecks size={15} weight="duotone"/>,section:'Work'},
+    {key:'daily',label:'Daily Logs',icon:<NotePencil size={15} weight="duotone"/>,section:'Work'},
+    {key:'schedule',label:'Schedule',icon:<CalendarBlank size={15} weight="duotone"/>,section:'Work'},
+    {key:'rfis',label:'RFIs',icon:<Question size={15} weight="duotone"/>,section:'Work'},
+    {key:'radio',label:'Saguaro Radio',icon:<Broadcast size={15} weight="duotone"/>,section:'Work'},
+    {key:'payapps',label:'Invoices',icon:<Receipt size={15} weight="duotone"/>,section:'Money'},
+    {key:'bids',label:'Bid Invites',icon:<EnvelopeSimple size={15} weight="duotone"/>,section:'Money'},
+    {key:'documents',label:'Documents',icon:<Folder size={15} weight="duotone"/>,section:'Files'},
+    {key:'drawings',label:'Drawings',icon:<MapTrifold size={15} weight="duotone"/>,section:'Files'},
+    {key:'compliance',label:'Compliance',icon:<ShieldCheck size={15} weight="duotone"/>,section:'Account'},
+    {key:'scorecard',label:'Scorecard',icon:<Star size={15} weight="duotone"/>,section:'Account'},
+    {key:'messages',label:'Messages',icon:<ChatCircle size={15} weight="duotone"/>,section:'Account'},
+    {key:'history',label:'History',icon:<ClockCounterClockwise size={15} weight="duotone"/>,section:'Account'},
   ];
 
   /* ================================================================ */
@@ -1673,7 +1676,7 @@ export default function SubPortal(){
       {/* Header */}
       <header style={{background:RAISED,borderBottom:`1px solid ${BORDER}`,padding:'12px 24px',display:'flex',alignItems:'center',justifyContent:'space-between',flexWrap:'wrap',gap:12}}>
         <div style={{display:'flex',alignItems:'center',gap:12}}>
-          <span style={{fontSize:26}}>{'\u{1F335}'}</span>
+          <Cactus size={26} weight="duotone" color="var(--text-primary)" aria-hidden />
           <div><span style={{fontWeight:800,fontSize:16,color: 'var(--text-primary)',letterSpacing:'-0.01em'}}>Saguaro</span><span style={{fontSize:12,color:DIM,marginLeft:8}}>Subcontractor Portal</span></div>
         </div>
         <div style={{display:'flex',alignItems:'center',gap:12}}>
@@ -1693,7 +1696,7 @@ export default function SubPortal(){
           <React.Fragment key={t.key}>
           {i>0&&TABS[i-1].section!==t.section&&<span style={{width:1,height:20,background:BORDER,margin:'0 4px',flexShrink:0}}/>}
           <button onClick={()=>setTab(t.key)} style={{padding:'8px 14px',background:tab===t.key?'linear-gradient(180deg,color-mix(in srgb, var(--brand-primary) 22%, transparent),var(--brand-primary-12))':'rgba(255,255,255,0.03)',border:`1px solid ${tab===t.key?'color-mix(in srgb, var(--brand-primary) 50%, transparent)':BORDER}`,borderRadius:999,color:tab===t.key?'var(--brand-primary-strong)':DIM,fontSize:12,fontWeight:700,cursor:'pointer',whiteSpace:'nowrap',transition:'all .15s',display:'flex',alignItems:'center',gap:6,flexShrink:0,boxShadow:tab===t.key?'0 0 0 3px var(--brand-primary-12)':'none'}}>
-            <span style={{fontSize:14}}>{t.icon}</span><span>{t.label}</span>
+            <span style={{display:'inline-flex'}} aria-hidden>{t.icon}</span><span>{t.label}</span>
             {t.key==='messages'&&unreadCount>0&&(
               <span style={{width:8,height:8,borderRadius:'50%',background:RED,flexShrink:0}}/>
             )}

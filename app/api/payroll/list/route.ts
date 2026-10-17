@@ -2,7 +2,8 @@ import { NextRequest, NextResponse } from 'next/server';
 import { createServerClient, getUser } from '@/lib/supabase-server';
 import { requirePermission } from '@/lib/permissions';
 import { apiError } from '@/lib/api-error';
-import { hiddenJobIds, dropHiddenJobRows } from '@/lib/live-jobs';
+import { dropHiddenJobRows } from '@/lib/live-jobs';
+import { jobsOffFor } from '@/lib/visible-jobs';
 
 /**
  * GET /api/payroll/list?projectId=...
@@ -35,7 +36,7 @@ export async function GET(req: NextRequest) {
     // the list and its totals (?include_archived=1 is the explicit archive view).
     let rows = data || [];
     if (!projectId && searchParams.get('include_archived') !== '1') {
-      rows = dropHiddenJobRows(rows as Array<{ project_id?: string | null }>, await hiddenJobIds(db, user.tenantId)) as typeof rows;
+      rows = dropHiddenJobRows(rows as Array<{ project_id?: string | null }>, await jobsOffFor(db, user)) as typeof rows;
     }
 
     const records = rows.map((r) => {

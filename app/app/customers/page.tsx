@@ -1,5 +1,6 @@
 'use client';
 import { jsonRequest } from '@/lib/list-view';
+import { apiErrorFrom } from '@/lib/api-refusal';
 import { useEditRights } from '@/lib/hooks/usePermissions';
 import React, { useState, useEffect, useMemo, useCallback, useRef } from 'react';
 import { createPortal } from 'react-dom';
@@ -176,7 +177,7 @@ export default function CustomersPage() {
     setError(false);
     try {
       const res = await fetch('/api/customers/profiles');
-      if (!res.ok) throw new Error(`Request failed: ${res.status}`);
+      if (!res.ok) throw await apiErrorFrom(res, `Request failed: ${res.status}`);
       const data = await res.json();
       setCustomers(Array.isArray(data?.customers) ? data.customers : []);
     } catch {

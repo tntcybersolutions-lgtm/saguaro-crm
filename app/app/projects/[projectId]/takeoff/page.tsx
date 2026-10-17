@@ -1,6 +1,7 @@
 'use client';
 
 import { useState, useRef, useCallback, useEffect, useMemo, memo } from 'react';
+import { apiErrorFrom } from '@/lib/api-refusal';
 import { confirmDialog } from '@/lib/ui/async-dialog';
 import { useParams } from 'next/navigation';
 import { useProjectContext } from '@/lib/hooks/useProjectContext';
@@ -1080,7 +1081,7 @@ export default function TakeoffPage() {
         headers: { 'x-upsert': 'true', ...(file.type ? { 'Content-Type': file.type } : {}) },
         body: file,
       });
-      if (!put.ok) throw new Error(`Upload failed (${put.status}).`);
+      if (!put.ok) throw await apiErrorFrom(put, `Upload failed (${put.status}).`);
 
       const doneRes = await fetch(`/api/takeoff/${takeoffId}/upload-complete`, {
         method: 'POST', headers: { 'Content-Type': 'application/json' },
@@ -1465,7 +1466,7 @@ export default function TakeoffPage() {
     setGenerating('xls');
     try {
       const res = await fetch(`/api/takeoff/${takeoffId}/export-xls`);
-      if (!res.ok) throw new Error('Export failed');
+      if (!res.ok) throw await apiErrorFrom(res, 'Export failed');
       const blob = await res.blob();
       const a = document.createElement('a');
       a.href = URL.createObjectURL(blob);

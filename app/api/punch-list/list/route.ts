@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from 'next/server';
 import { createServerClient } from '@/lib/supabase-server';
 import { apiError } from '@/lib/api-error';
 import { requirePermission } from '@/lib/permissions';
+import { jobsOffFor, dropRowsOnJobs } from '@/lib/visible-jobs';
 
 export async function GET(req: NextRequest) {
   // Role check, not just sign-in: Projects: View, the rule this tool's pages,
@@ -21,7 +22,9 @@ export async function GET(req: NextRequest) {
     if (projectId) query = query.eq('project_id', projectId);
     const { data, error } = await query;
     if (error) throw error;
-    return NextResponse.json({ items: data || [], source: 'live' });
+    // Company-wide: never an item on a job closed to this person or off the books.
+    const items = projectId ? (data || []) : dropRowsOnJobs((data || []) as Array<{ project_id: string | null }>, await jobsOffFor(db, user));
+    return NextResponse.json({ items, source: 'live' });
   } catch (e) {
     return apiError('punch-list/list GET', e, undefined, 500, { items: [], source: 'error' });
   }

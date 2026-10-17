@@ -9,6 +9,8 @@
  * Sends  POST /api/documents/w9-request  { projectId, subId?, vendorName, vendorEmail }
  */
 import React, { useState, useEffect, useCallback } from 'react';
+import { apiErrorFrom } from '@/lib/api-refusal';
+import { IfAllowed } from '@/lib/hooks/usePermissions';
 import { useProjectContext } from '@/lib/hooks/useProjectContext';
 import { useParams } from 'next/navigation';
 import {
@@ -177,7 +179,7 @@ export default function W9Page() {
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ projectId, subId, vendorName: subName, vendorEmail: subEmail }),
       });
-      if (!res.ok) throw new Error('request failed');
+      if (!res.ok) throw await apiErrorFrom(res, 'request failed');
       setSubs(prev => prev.map(s => s.id === subId ? { ...s, w9_status: 'pending', requested_date: localDay() } : s));
       show(`W-9 request sent to ${subName}.`);
     } catch {
@@ -195,7 +197,7 @@ export default function W9Page() {
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ projectId, vendorName: formName, vendorEmail: formEmail }),
       });
-      if (!res.ok) throw new Error('request failed');
+      if (!res.ok) throw await apiErrorFrom(res, 'request failed');
       show(`W-9 request sent to ${formEmail}.`);
       setFormName('');
       setFormEmail('');
@@ -245,7 +247,7 @@ export default function W9Page() {
           { label: 'W-9 Requests' },
         ]}
         title="W-9 requests"
-        actions={<Button variant="primary" icon={<Plus size={15} weight="bold" />} onClick={openForm}>Send W-9 request</Button>}
+        actions={<IfAllowed perm={['Documents', 'Edit']}><Button variant="primary" icon={<Plus size={15} weight="bold" />} onClick={openForm}>Send W-9 request</Button></IfAllowed>}
       >
         {!loading && (totalSubs > 0 || untrackedRoster.length > 0) && <StatRow items={stats} />}
 

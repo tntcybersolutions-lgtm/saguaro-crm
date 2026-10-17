@@ -9,7 +9,9 @@ import { apiError } from '@/lib/api-error';
  */
 export async function GET(req: NextRequest) {
   try {
-    const user = await getUser(req);
+    const gate = await requirePermission(req, 'Sales', 'View', { projectId: null });
+  if (!gate.ok) return gate.res;
+  const user = gate.user;
     if (!user) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
 
     const { searchParams } = new URL(req.url);

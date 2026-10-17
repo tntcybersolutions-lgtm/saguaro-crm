@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from 'next/server';
 import { createServerClient } from '@/lib/supabase-server';
 import { apiError } from '@/lib/api-error';
 import { requirePermission } from '@/lib/permissions';
+import { jobsOffFor, dropRowsOnJobs } from '@/lib/visible-jobs';
 
 /**
  * GET /api/rfis?projectId=&status=open&limit=3
@@ -25,7 +26,7 @@ export async function GET(req: NextRequest) {
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
     let query: any = db
       .from('rfis')
-      .select('id, rfi_number, subject, status, due_date, created_at')
+      .select('id, rfi_number, subject, status, due_date, created_at, project_id')
       .eq('tenant_id', user.tenantId)
       .order('created_at', { ascending: false })
       .limit(limit);
@@ -36,7 +37,9 @@ export async function GET(req: NextRequest) {
     const { data, error } = await query;
     if (error) throw error;
 
-    const rfis = (data || []).map((r: Record<string, unknown>) => ({
+    // Company-wide: never an RFI on a job closed to this person or off the books.
+    const rows = (projectId ? (data || []) : dropRowsOnJobs((data || []) as Array<{ project_id: string | null }>, await jobsOffFor(db, user))) as Array<Record<string, unknown>>;
+    const rfis = rows.map((r: Record<string, unknown>) => ({
       ...r,
       is_overdue: r.status === 'open' && r.due_date && (r.due_date as string) < today,
     }));

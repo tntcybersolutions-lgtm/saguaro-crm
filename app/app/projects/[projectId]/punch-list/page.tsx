@@ -15,6 +15,7 @@
  *   delete   DELETE /api/punch-list/[id]
  */
 import { itemBulkEdit } from '@/lib/items/bulk';
+import { retryText, apiErrorFrom } from '@/lib/api-refusal';
 import { useEditRights } from '@/lib/hooks/usePermissions';
 import React, { useState, useEffect, useCallback, useRef } from 'react';
 import { confirmDialog } from '@/lib/ui/async-dialog';
@@ -209,7 +210,7 @@ export default function PunchListPage(){
       setLoadError('');
       const h=await getAuthHeaders();
       const r=await fetch(`/api/punch-list/list?projectId=${projectId}`,{headers:h});
-      if (!r.ok) throw new Error('Failed to load data');
+      if (!r.ok) throw await apiErrorFrom(r, 'Failed to load data');
       const d=await r.json();
       setItems(await withSaved(d.items||[]));
     }catch{
@@ -616,7 +617,7 @@ export default function PunchListPage(){
       <EmptyState
         icon={<WarningCircle size={22}/>}
         title="Couldn't load the punch list"
-        text={`${loadError} Nothing has been lost — try again.`}
+        text={retryText(loadError)}
         action={<Button icon={<ArrowClockwise size={15}/>} onClick={load}>Retry</Button>}
       />
     );

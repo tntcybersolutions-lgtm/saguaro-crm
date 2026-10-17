@@ -23,6 +23,7 @@
  * fan out createNotification() on the server — notify wiring is a follow-up.
  */
 import React, { useState, useRef, useEffect } from 'react';
+import { retryText, apiErrorFrom } from '@/lib/api-refusal';
 import { useParams } from 'next/navigation';
 import useSWR from 'swr';
 import SaguaroDatePicker from '@/components/SaguaroDatePicker';
@@ -107,7 +108,7 @@ interface TmTicketRow {
 
 const fetcher = async (url: string) => {
   const r = await fetch(url);
-  if (!r.ok) throw new Error(`Request failed (${r.status})`);
+  if (!r.ok) throw await apiErrorFrom(r, `Request failed (${r.status})`);
   return r.json();
 };
 
@@ -499,7 +500,7 @@ export default function TmTicketsPage() {
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ ticket_ids: ids ?? filtered.map(t => t.id), format }),
       });
-      if (!res.ok) throw new Error('Export failed');
+      if (!res.ok) throw await apiErrorFrom(res, 'Export failed');
       const blob = await res.blob();
       const url = URL.createObjectURL(blob);
       const a = document.createElement('a');
@@ -801,7 +802,7 @@ export default function TmTicketsPage() {
       <EmptyState
         icon={<WarningCircle size={22} />}
         title="Couldn't load T&M tickets"
-        text={`${humanError(loadError, 'Request failed.')} Nothing has been lost — try again.`}
+        text={retryText(humanError(loadError, 'Request failed.'))}
         action={<Button icon={<ArrowClockwise size={15} />} onClick={() => mutateTickets()}>Retry</Button>}
       />
     );

@@ -9,6 +9,7 @@
  * Renew   POST /api/insurance/request   { projectId, certId, subName }
  */
 import React, { useState, useEffect, useCallback } from 'react';
+import { IfAllowed } from '@/lib/hooks/usePermissions';
 import { useProjectContext } from '@/lib/hooks/useProjectContext';
 import { humanError } from '@/lib/errors';
 import { useParams } from 'next/navigation';
@@ -250,7 +251,7 @@ export default function InsurancePage() {
           {label:'Insurance'},
         ]}
         title="Insurance certificates"
-        actions={<Button variant="primary" icon={<Plus size={15} weight="bold"/>} onClick={()=>openForm()}>Add certificate</Button>}
+        actions={<IfAllowed perm={['Documents', 'Edit']}><Button variant="primary" icon={<Plus size={15} weight="bold"/>} onClick={()=>openForm()}>Add certificate</Button></IfAllowed>}
       >
         {!loading && (certs.length>0 || subs.length>0) && <StatRow items={stats}/>}
 
@@ -331,7 +332,7 @@ export default function InsurancePage() {
               <EmptyState
                 icon={<ShieldCheck size={22}/>}
                 title="No certificates yet"
-                action={<Button icon={<Plus size={15} weight="bold"/>} onClick={()=>openForm()}>Add certificate</Button>}
+                action={<IfAllowed perm={['Documents', 'Edit']}><Button icon={<Plus size={15} weight="bold"/>} onClick={()=>openForm()}>Add certificate</Button></IfAllowed>}
               />
             ) : (
               <EmptyState title="Nothing matches" onClearFilters={clearFilters}/>

@@ -1,5 +1,7 @@
 'use client';
 import React, { useState, useEffect, useCallback, useRef } from 'react';
+import { apiErrorFrom } from '@/lib/api-refusal';
+import { IfAllowed } from '@/lib/hooks/usePermissions';
 import { useProjectContext } from '@/lib/hooks/useProjectContext';
 import { useParams } from 'next/navigation';
 import MarkOutcomeModal from '@/components/bids/MarkOutcomeModal';
@@ -201,7 +203,7 @@ export default function ProposalPage() {
       const fd = new FormData();
       fd.append('file', file);
       const res = await fetch(`/api/proposals/${id}/upload`, { method: 'POST', body: fd });
-      if (!res.ok) throw new Error('upload failed');
+      if (!res.ok) throw await apiErrorFrom(res, 'upload failed');
       setSuccessMsg('PDF uploaded.');
       fetchProposals();
     } catch {
@@ -220,7 +222,7 @@ export default function ProposalPage() {
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ status: accepted ? 'accepted' : 'declined' }),
       });
-      if (!res.ok) throw new Error('status failed');
+      if (!res.ok) throw await apiErrorFrom(res, 'status failed');
       // Optimistic: the accepted version supersedes any earlier accepted one.
       setProposals(prev => prev.map(x => x.id === p.id
         ? { ...x, status: accepted ? 'accepted' : 'declined' }
@@ -302,7 +304,7 @@ export default function ProposalPage() {
           { label: 'Proposals' },
         ]}
         title="Proposals"
-        actions={<Button variant="primary" icon={<Plus size={15} weight="bold" />} onClick={() => { if (showForm) closeForm(); else openCreate(); }}>New Version</Button>}
+        actions={<IfAllowed perm={[['Sales', 'Edit'], ['Budget', 'Edit']]}><Button variant="primary" icon={<Plus size={15} weight="bold" />} onClick={() => { if (showForm) closeForm(); else openCreate(); }}>New Version</Button></IfAllowed>}
       >
         {stats.length > 0 && <StatRow items={stats} />}
 

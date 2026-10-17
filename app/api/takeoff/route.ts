@@ -3,7 +3,7 @@ import { createServerClient, getUser } from '@/lib/supabase-server';
 import { signFields } from '@/lib/storage-signing';
 import { ok, serverError, unauthorized } from '@/lib/api-response';
 import { withTakeoffState } from '@/lib/takeoff-status';
-import { hiddenProjectIds } from '@/lib/live-projects';
+import { jobsOffFor } from '@/lib/visible-jobs';
 
 export const dynamic = 'force-dynamic';
 
@@ -38,7 +38,7 @@ export async function GET(req: NextRequest) {
    migrated in the database; the link is minted per request and expires. */
     /* The company-wide takeoff list leaves out archived or deleted jobs'
        takeoffs; one job's own list (projectId) still shows them. */
-    const hidden = projectId ? new Set<string>() : await hiddenProjectIds(supabase, user.tenantId);
+    const hidden = projectId ? new Set<string>() : await jobsOffFor(supabase, user);
     const visible = ((data || []) as Record<string, unknown>[])
       .filter((t) => !t.project_id || !hidden.has(String(t.project_id)));
     /* status is read from what is in the takeoff (lib/takeoff-status): one

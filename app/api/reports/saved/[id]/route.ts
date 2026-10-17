@@ -13,7 +13,9 @@ function table(db: ReturnType<typeof createServerClient>) {
 
 /** GET /api/reports/saved/[id] */
 export async function GET(req: NextRequest, { params }: { params: { id: string } }) {
-  const user = await getUser(req);
+  const gate = await requirePermission(req, 'Reports', 'View', { projectId: null });
+  if (!gate.ok) return gate.res;
+  const user = gate.user;
   if (!user) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
   try {
     const db = createServerClient();

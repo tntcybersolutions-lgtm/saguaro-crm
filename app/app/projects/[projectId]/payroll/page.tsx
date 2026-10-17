@@ -12,6 +12,7 @@
  * Writes POST /api/payroll/generate               (builds the WH-347 PDF)
  */
 import React, { useState, useEffect } from 'react';
+import { IfAllowed } from '@/lib/hooks/usePermissions';
 import { useProjectContext } from '@/lib/hooks/useProjectContext';
 import { useParams } from 'next/navigation';
 import {
@@ -520,7 +521,7 @@ export default function PayrollPage() {
       subtitle="DOL WH-347 · Davis-Bacon and prevailing wage"
       actions={
         <>
-          <Button icon={<UserPlus size={15} />} onClick={openAddEmployee}>Add employee</Button>
+          <IfAllowed perm={['Budget', 'Edit']}><Button icon={<UserPlus size={15} />} onClick={openAddEmployee}>Add employee</Button></IfAllowed>
           <Button variant="primary" icon={<FileText size={15} weight="bold" />} onClick={handleGenerate} disabled={loading}>
             {loading ? 'Generating…' : 'Generate WH-347'}
           </Button>
@@ -617,7 +618,7 @@ export default function PayrollPage() {
             <EmptyState
               icon={<UserPlus size={22} />}
               title="No employees on this week"
-              action={<Button icon={<UserPlus size={15} />} onClick={openAddEmployee}>Add employee</Button>}
+              action={<IfAllowed perm={['Budget', 'Edit']}><Button icon={<UserPlus size={15} />} onClick={openAddEmployee}>Add employee</Button></IfAllowed>}
             />
           }
         />

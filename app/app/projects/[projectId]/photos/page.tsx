@@ -41,6 +41,7 @@
  * returned — nothing here publishes private media.
  */
 import React, { useState, useEffect, useCallback, useRef, useSyncExternalStore } from 'react';
+import { retryText, apiErrorFrom } from '@/lib/api-refusal';
 import dynamic from 'next/dynamic';
 import { confirmDialog } from '@/lib/ui/async-dialog';
 import { useProjectContext } from '@/lib/hooks/useProjectContext';
@@ -369,7 +370,7 @@ export default function PhotosPage(){
       setLoadError('');
       const h=await getAuthHeaders();
       const r=await fetch(`/api/photos/list?projectId=${projectId}&include=files`,{headers:h});
-      if (!r.ok) throw new Error('Failed to load data');
+      if (!r.ok) throw await apiErrorFrom(r, 'Failed to load data');
       const d=await r.json();
       setPhotos(d.photos||[]);
       signedAt.current=Date.now();
@@ -680,7 +681,7 @@ export default function PhotosPage(){
         ?await fetch(`/api/files/${photo.file_id}`,{method:'DELETE',headers:h})
         :await fetch(`/api/photos/${photo.id}`,{method:'DELETE',headers:h});
       if (dr.status===403) throw new Error('You need full Documents access to delete this.');
-      if (!dr.ok) throw new Error('Delete failed');
+      if (!dr.ok) throw await apiErrorFrom(dr, 'Delete failed');
       if(fromViewer){
         const at=ordered.findIndex((p:any)=>p.id===photo.id);
         const neighbour=ordered[at+1]||ordered[at-1];
@@ -1011,7 +1012,7 @@ export default function PhotosPage(){
       <EmptyState
         icon={<WarningCircle size={22}/>}
         title="Couldn't load photos"
-        text={`${loadError} Nothing has been lost — try again.`}
+        text={retryText(loadError)}
         action={<Button icon={<ArrowClockwise size={15}/>} onClick={()=>load()}>Retry</Button>}
       />
     );
@@ -1365,7 +1366,7 @@ export default function PhotosPage(){
             try {
               const headers = await getAuthHeaders();
               const r = await fetch(`/api/photos/${id}`, { method: 'DELETE', headers: { ...headers, 'Content-Type': 'application/json' } });
-              if (!r.ok) throw new Error('delete failed');
+              if (!r.ok) throw await apiErrorFrom(r, 'delete failed');
               setPhotos(prev => prev.filter(p => p.id !== id));
               if (selected?.id === id) closePanel();
               showToast('Photo deleted.');

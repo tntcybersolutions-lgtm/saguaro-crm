@@ -12,6 +12,7 @@
  */
 
 import React, { useEffect, useState } from 'react';
+import { IfAllowed } from '@/lib/hooks/usePermissions';
 import { useRouter } from 'next/navigation';
 import { Plus, DownloadSimple, Trophy, XCircle, Copy, Trash, Eye, Archive, PaperPlaneTilt, PencilSimple } from '@phosphor-icons/react';
 import {
@@ -98,7 +99,7 @@ function KitShowcase() {
       actions={
         <>
           <Button icon={<DownloadSimple size={15} />}>Export</Button>
-          <Button variant="primary" icon={<Plus size={15} weight="bold" />} onClick={() => setModal(true)}>New Bid Package</Button>
+          <IfAllowed perm={['Projects', 'Edit']}><Button variant="primary" icon={<Plus size={15} weight="bold" />} onClick={() => setModal(true)}>New Bid Package</Button></IfAllowed>
         </>
       }
     >

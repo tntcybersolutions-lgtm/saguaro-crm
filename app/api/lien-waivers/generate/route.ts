@@ -1,4 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server';
+import { requirePermission } from '@/lib/permissions';
 import { createServerClient, getUser } from '@/lib/supabase-server';
 import { apiError } from '@/lib/api-error';
 import { generateLienWaiver, saveDocument } from '@/lib/pdf-engine';
@@ -27,7 +28,9 @@ export async function POST(req: NextRequest) {
      project id could file a lien waiver, a legal document, into that
      company's account. The fallback is gone: the tenant comes from the
      session or the request does not proceed. */
-  const user = await getUser(req);
+  const gate = await requirePermission(req, 'Pay Apps', 'Edit');
+  if (!gate.ok) return gate.res;
+  const user = gate.user;
   if (!user) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
 
   try {

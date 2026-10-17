@@ -17,6 +17,7 @@
  * as automated monitoring, never as a human judgment.
  */
 import React, { useState, useEffect } from 'react';
+import { retryText, apiErrorFrom } from '@/lib/api-refusal';
 import { ArrowsClockwise, Robot, CheckCircle, Bell, Warning, Buildings, ListChecks, X, ArrowSquareOut } from '@phosphor-icons/react';
 import {
   PageShell, Card, StatRow, Badge, Button, Toolbar, DataTable, EmptyState, Select, Toast, useToast,
@@ -113,7 +114,7 @@ export default function AutopilotPage() {
     setLoadError('');
     try {
       const r = await fetch('/api/autopilot/alerts');
-      if (!r.ok) throw new Error('Failed to load');
+      if (!r.ok) throw await apiErrorFrom(r, 'Failed to load');
       const data = await r.json();
       const rows = Array.isArray(data.alerts) ? data.alerts : [];
       setAllAlerts(rows.map((a: any): AutopilotAlert => ({
@@ -251,7 +252,7 @@ export default function AutopilotPage() {
 
   let listBody: React.ReactNode;
   if (!loading && loadError) {
-    listBody = <EmptyState icon={<Warning size={22} />} title="Couldn't load alerts" text={`${loadError} Nothing has been lost — try again.`} action={<Button onClick={() => { setLoading(true); loadAlerts(); }}>Retry</Button>} />;
+    listBody = <EmptyState icon={<Warning size={22} />} title="Couldn't load alerts" text={retryText(loadError)} action={<Button onClick={() => { setLoading(true); loadAlerts(); }}>Retry</Button>} />;
   } else if (!loading && liveAlerts.length === 0) {
     listBody = (
       <EmptyState

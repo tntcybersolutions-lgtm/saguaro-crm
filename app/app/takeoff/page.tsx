@@ -26,6 +26,7 @@
  *   analyze   SSE  /api/takeoff/[id]/analyze
  */
 import React, { useState, useEffect, useRef, useCallback, useMemo } from 'react';
+import { apiErrorFrom } from '@/lib/api-refusal';
 import { useProjects } from '@/lib/hooks/useProjects';
 import {
   CurrencyDollar, Ruler, Stack, Check, Lightbulb, ChartBar, Question, Toolbox,
@@ -522,7 +523,7 @@ export default function TakeoffPage() {
         },
         body: file,
       });
-      if (!putRes.ok) throw new Error(`Upload failed (${putRes.status}). Please try again.`);
+      if (!putRes.ok) throw await apiErrorFrom(putRes, `Upload failed (${putRes.status}). Please try again.`);
 
       const doneRes = await fetch(`/api/takeoff/${takeoffId}/upload-complete`, {
         method: 'POST',

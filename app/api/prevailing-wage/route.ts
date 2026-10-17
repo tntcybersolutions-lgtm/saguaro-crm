@@ -1,4 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server';
+import { requireAnyPermission } from '@/lib/permissions';
 import { createServerClient, getUser } from '@/lib/supabase-server';
 import { toCents, toDollars, addCents } from '@/lib/calc';
 import { apiError } from '@/lib/api-error';
@@ -63,7 +64,9 @@ export async function GET(req: NextRequest) {
     // Reference reads are tenant-agnostic; if the request is authenticated we
     // additionally include that tenant's custom rows. Never hard-fail on auth
     // here — the seed schedule must always be readable.
-    const user = await getUser(req);
+    const gate = await requireAnyPermission(req, ['Budget', 'Admin'], 'View', { projectId: null });
+  if (!gate.ok) return gate.res;
+  const user = gate.user;
     const tenantId = user?.tenantId ?? null;
 
     // Pull seed rows (tenant_id IS NULL) OR this tenant's custom rows.

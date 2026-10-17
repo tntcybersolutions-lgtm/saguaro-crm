@@ -10,7 +10,9 @@ export const dynamic = 'force-dynamic';
  */
 export async function GET(req: NextRequest) {
   try {
-    const user = await getUser(req);
+    const gate = await requirePermission(req, 'Admin', 'View', { projectId: null });
+  if (!gate.ok) return gate.res;
+  const user = gate.user;
     if (!user) return NextResponse.json({ delegations: [], source: 'unauth' }, { status: 401 });
 
     const db = createServerClient();

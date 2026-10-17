@@ -13,6 +13,7 @@
  * is real or absent — `null` renders as an em-dash, never a fake zero.
  */
 import React, { useState, useEffect, useMemo, useRef } from 'react';
+import { apiErrorFrom } from '@/lib/api-refusal';
 import Link from 'next/link';
 import useSWR from 'swr';
 import { Lightbulb, SquaresFour, Selection, ArrowsClockwise, Robot, Check } from '@phosphor-icons/react';
@@ -157,7 +158,7 @@ function deriveRow(sp: SummaryProject, fallbackName?: string): Row {
 
 const fetcher = async (url: string) => {
   const r = await fetch(url);
-  if (!r.ok) throw new Error(`Request failed (${r.status})`);
+  if (!r.ok) throw await apiErrorFrom(r, `Request failed (${r.status})`);
   return r.json();
 };
 

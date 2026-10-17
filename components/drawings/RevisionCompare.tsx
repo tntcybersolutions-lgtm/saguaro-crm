@@ -33,6 +33,7 @@
  * GlobalWorkerOptions.workerSrc = '/pdf.worker.min.mjs').
  */
 import React, { useCallback, useEffect, useRef, useState } from 'react';
+import { apiErrorFrom } from '@/lib/api-refusal';
 import type { VectorSegment } from '@/lib/heatmap/vector-pdf';
 
 /* ── palette (machined dark; accent rides the white-label token) ─────────── */
@@ -81,7 +82,7 @@ interface SideDoc {
 
 async function loadSide(src: CompareSource): Promise<SideDoc> {
   const res = await fetch(src.url);
-  if (!res.ok) throw new Error(`Could not fetch ${src.label} (HTTP ${res.status})`);
+  if (!res.ok) throw await apiErrorFrom(res, `Could not fetch ${src.label} (HTTP ${res.status})`);
   const bytes = await res.arrayBuffer();
   if (kindOf(src) === 'pdf') {
     const pdfjs: any = await import('pdfjs-dist');

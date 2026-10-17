@@ -1,5 +1,6 @@
 'use client';
 import { CHART } from '@/components/charts/shared';
+import { apiErrorFrom } from '@/lib/api-refusal';
 import React, { useState, useCallback, useMemo, useEffect } from 'react';
 import Link from 'next/link';
 import dynamic from 'next/dynamic';
@@ -173,7 +174,7 @@ function BidScoreModal({ onClose }: { onClose: () => void }) {
           targetMargin: parseFloat(form.targetMargin),
         }),
       });
-      if (!res.ok) throw new Error('Failed to score bid');
+      if (!res.ok) throw await apiErrorFrom(res, 'Failed to score bid');
       setResult(await res.json());
     } catch { setError('Unable to reach scoring engine. Please try again.'); }
     setLoading(false);

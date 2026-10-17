@@ -27,7 +27,9 @@ function validUrl(url: unknown): url is string {
 }
 
 export async function GET(req: NextRequest) {
-  const user = await getUser(req);
+  const gate = await requirePermission(req, 'Admin', 'View', { projectId: null });
+  if (!gate.ok) return gate.res;
+  const user = gate.user;
   if (!user) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
 
   try {

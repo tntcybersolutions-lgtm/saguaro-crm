@@ -7,6 +7,7 @@ import { createClient, SupabaseClient } from '@supabase/supabase-js';
 import { NextRequest, NextResponse } from 'next/server';
 import type { Database } from './database.types';
 import { withDbRetry } from './db-retry-fetch';
+import { loadViewerScope, fetchWithScope, isUnrestricted, type ViewerScope } from './viewer-scope';
 
 const _URL     = process.env.NEXT_PUBLIC_SUPABASE_URL;
 const _ANON    = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY;
@@ -26,24 +27,20 @@ const SERVICE: string = _SERVICE;
 
 let _serviceClient: SupabaseClient<Database> | null = null;
 
+/** Set by middleware.ts on every /api request: the API request's own method. */
+export const REQUEST_METHOD_HEADER = 'x-saguaro-method';
+
 /**
- * Who is making this write — for the change history.
- *
- * The server writes with the service role, so the database cannot tell which
- * person saved an RFI or a budget line. Every write (any method but GET/HEAD)
- * carries an `x-actor-id` header naming the signed-in user of the request; the
- * database's history trigger (record_item_history) reads it. The id comes only
- * from a session getUser() has already VERIFIED for this request (the cache
- * below), never from an unchecked token, so it cannot be forged by a caller.
- * Outside a request (scripts, tests, cron) there is no header and the history
- * row records no person.
+ * The signed-in person of the request this database call is part of, and that
+ * request's method. Only a session getUser() has already VERIFIED for this
+ * request counts (the cache below) — never an unchecked token. Outside a
+ * request (scripts, tests, cron), or before getUser() ran, there is none.
  */
-async function withActor(init: { method?: string; headers?: HeadersInit } & Record<string, unknown>) {
-  const method = String(init.method || 'GET').toUpperCase();
-  if (method === 'GET' || method === 'HEAD') return init;
+async function requestContext(): Promise<{ user: CachedUser | null; method: string | null }> {
   try {
     const { headers } = await import('next/headers');
     const h = headers();
+    const method = h.get(REQUEST_METHOD_HEADER);
     const raw = h.get('authorization')?.replace('Bearer ', '').trim();
     const cookie = h.get('cookie') || '';
     const fromCookie = (name: string) => {
@@ -58,34 +55,114 @@ async function withActor(init: { method?: string; headers?: HeadersInit } & Reco
     ].filter(Boolean) as string[];
     for (const token of candidates) {
       const key = await tokenKey(token);
-      const hit = userCache.get(key) || actorCache.get(key);
-      if (hit && hit.until > Date.now()) {
-        const merged = new Headers(init.headers);
-        merged.set('x-actor-id', hit.user.id);
-        return { ...init, headers: merged };
+      for (const hit of [userCache.get(key), actorCache.get(key), verifiedForScope.get(key)]) {
+        if (hit && hit.until > Date.now()) return { user: hit.user, method };
       }
     }
+    return { user: null, method };
   } catch {
-    /* not inside a request — no actor */
+    /* not inside a request */
+    return { user: null, method: null };
   }
-  return init;
 }
 
-/** Service-role client — bypasses RLS. Server only. Typed against the live DB schema. */
+/**
+ * Who is making this write — for the change history.
+ *
+ * The server writes with the service role, so the database cannot tell which
+ * person saved an RFI or a budget line. Every write (any method but GET/HEAD)
+ * carries an `x-actor-id` header naming the signed-in user of the request; the
+ * database's history trigger (record_item_history) reads it.
+ */
+function withActor<T extends { method?: string; headers?: HeadersInit }>(init: T, user: CachedUser | null): T {
+  const method = String(init.method || 'GET').toUpperCase();
+  if (method === 'GET' || method === 'HEAD' || !user) return init;
+  const merged = new Headers(init.headers);
+  merged.set('x-actor-id', user.id);
+  return { ...init, headers: merged };
+}
+
+/* ── viewer scope (lib/viewer-scope): closed jobs, money and rates ──────────
+   Looked up once per person per 30 s per server instance; an admin's lookup
+   is one profiles read and then nothing is ever rewritten for them. */
+const SCOPE_TTL_MS = 30_000;
+const scopeCache = new Map<string, { scope: ViewerScope; until: number }>();
+const scopeInflight = new Map<string, Promise<ViewerScope>>();
+
+async function scopeFor(user: CachedUser): Promise<ViewerScope> {
+  const key = `${user.tenantId}:${user.id}`;
+  const hit = scopeCache.get(key);
+  if (hit && hit.until > Date.now()) return hit.scope;
+  const running = scopeInflight.get(key);
+  if (running) return running;
+  const p = loadViewerScope(createUnscopedServerClient(), user.id, user.tenantId)
+    .then((scope) => {
+      if (scopeCache.size > USER_CACHE_MAX) scopeCache.clear();
+      scopeCache.set(key, { scope, until: Date.now() + SCOPE_TTL_MS });
+      return scope;
+    })
+    .finally(() => { scopeInflight.delete(key); });
+  scopeInflight.set(key, p);
+  return p;
+}
+
+/** Forget a person's scope on this instance — after their access was changed here. */
+export function forgetViewerScope(userId?: string): void {
+  if (!userId) { scopeCache.clear(); return; }
+  scopeCache.forEach((_v, k) => { if (k.endsWith(`:${userId}`)) scopeCache.delete(k); });
+}
+
+/**
+ * The service client's fetch: no-store, the history actor, and the viewer's
+ * scope. A failed scope lookup refuses the read rather than serving it
+ * unscoped.
+ */
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
+async function serverFetch(input: any, init?: any): Promise<Response> {
+  const ctx = await requestContext();
+  const base = withActor({ ...(init || {}), cache: 'no-store' }, ctx.user);
+  if (!ctx.user || typeof input !== 'string') return fetch(input, base);
+  let scope: ViewerScope;
+  try {
+    scope = await scopeFor(ctx.user);
+  } catch (e) {
+    console.error('[supabase-server] viewer scope', e);
+    return new Response(JSON.stringify({ message: 'access check failed', code: 'SCOPE' }), { status: 503, headers: { 'content-type': 'application/json' } });
+  }
+  if (isUnrestricted(scope)) return fetch(input, base);
+  return fetchWithScope((u, i) => fetch(u, i), input, base, scope, ctx.method);
+}
+
+/** Service-role client — bypasses RLS, applies the viewer's scope. Server only. */
 export function createServerClient(): SupabaseClient<Database> {
   if (_serviceClient) return _serviceClient;
   _serviceClient = createClient<Database>(URL, SERVICE, {
     auth: { autoRefreshToken: false, persistSession: false },
     // The App Router caches fetch() by default, and supabase-js queries run through
-    // fetch — so a parameterless read (e.g. "select * from platform_integrations")
-    // gets frozen at its first result. Force no-store so service-role reads are
-    // ALWAYS fresh (correct for a data API; avoids stale-empty reads after a write).
-    // withDbRetry: a 503 that says the query never started (schema-cache reload
-    // after a migration, a pool timeout) is retried for ~3.5 s instead of
-    // reaching the user as a 500.
-    global: { fetch: withDbRetry(async (input: any, init?: any) => fetch(input, await withActor({ ...(init || {}), cache: 'no-store' }))) }, // eslint-disable-line @typescript-eslint/no-explicit-any
+    // fetch — so a parameterless read gets frozen at its first result. Force
+    // no-store so service-role reads are ALWAYS fresh. withDbRetry: a 503 that
+    // says the query never started is retried for ~3.5 s instead of reaching
+    // the user as a 500.
+    global: { fetch: withDbRetry(serverFetch) },
   });
   return _serviceClient;
+}
+
+let _unscopedClient: SupabaseClient<Database> | null = null;
+
+/**
+ * Service-role client WITHOUT the viewer's scope — for the permission
+ * machinery only (lib/permissions guard, lib/viewer-scope lookup), which must
+ * see a closed job to refuse it with a 403. Never hand its rows to a person.
+ */
+export function createUnscopedServerClient(): SupabaseClient<Database> {
+  if (_unscopedClient) return _unscopedClient;
+  _unscopedClient = createClient<Database>(URL, SERVICE, {
+    auth: { autoRefreshToken: false, persistSession: false },
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    global: { fetch: withDbRetry(async (input: any, init?: any) => fetch(input, { ...(init || {}), cache: 'no-store' })) },
+  });
+  return _unscopedClient;
 }
 
 /** Browser-safe anon client */
@@ -129,10 +206,30 @@ const userCache = new Map<string, { user: CachedUser; until: number }>();
 /** Users signed in through a refresh this instance verified, keyed by that refresh token (history actor only). */
 const actorCache = new Map<string, { user: CachedUser; until: number }>();
 
+/* Every database call asks who the request's person is (the viewer scope),
+   so the hash of a token is remembered rather than recomputed per call. */
+const keyMemo = new Map<string, string>();
 async function tokenKey(token: string): Promise<string> {
+  const memo = keyMemo.get(token);
+  if (memo) return memo;
   const bytes = new TextEncoder().encode(token);
   const digest = await crypto.subtle.digest('SHA-256', bytes);
-  return Array.from(new Uint8Array(digest), (b) => b.toString(16).padStart(2, '0')).join('');
+  const key = Array.from(new Uint8Array(digest), (b) => b.toString(16).padStart(2, '0')).join('');
+  if (keyMemo.size >= USER_CACHE_MAX) keyMemo.clear();
+  keyMemo.set(token, key);
+  return key;
+}
+
+/**
+ * Sessions getUser() verified in the last minute, for the viewer scope only.
+ * The sign-in cache above skips a token in its last seconds of life; the
+ * scope must still know whose request it is, or that request would read
+ * unscoped. Never used to answer getUser().
+ */
+const verifiedForScope = new Map<string, { user: CachedUser; until: number }>();
+function rememberForScope(key: string, user: CachedUser) {
+  if (verifiedForScope.size >= USER_CACHE_MAX) verifiedForScope.clear();
+  verifiedForScope.set(key, { user, until: Date.now() + USER_CACHE_TTL_MS });
 }
 
 /** The token's own expiry in ms (no signature check — used only to bound the cache). */
@@ -207,7 +304,7 @@ export async function getUser(
     if (accessToken) {
       const key = await tokenKey(accessToken);
       const hit = userCache.get(key);
-      if (hit && hit.until > Date.now()) return hit.user;
+      if (hit && hit.until > Date.now()) { rememberForScope(key, hit.user); return hit.user; }
       if (hit) userCache.delete(key);
 
       // Start the tenant lookup alongside the token check (one round trip, not
@@ -219,6 +316,7 @@ export async function getUser(
         const early = sub === user.id && tenantP ? await tenantP : null;
         const verified = { id: user.id, tenantId: early || (await getTenant(user.id)), email: user.email || '' };
         rememberUser(key, accessToken, verified);
+        rememberForScope(key, verified);
         return verified;
       }
     }

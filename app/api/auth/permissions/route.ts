@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { createServerClient, getUser } from '@/lib/supabase-server';
-import { getEffectivePermissions } from '@/lib/permissions';
+import { createUnscopedServerClient, getUser } from '@/lib/supabase-server';
+import { getEffectiveAccess, hasAnyPermission, MONEY_VIEW, RATE_VIEW } from '@/lib/permissions';
 import { apiError } from '@/lib/api-error';
 import { isUuid } from '@/lib/permission-scope';
 
@@ -31,7 +31,9 @@ export async function GET(req: NextRequest) {
   if (!user) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
 
   try {
-    const db = createServerClient();
+    /* Unscoped: a job closed to this person must still be found here, so the
+       answer for it is "None on everything" rather than the company role. */
+    const db = createUnscopedServerClient();
     /* ?projectId= → the map that applies on that job (its job role, if one is
        set). Only a job in this company counts; anything else is company-wide. */
     const asked = new URL(req.url).searchParams.get('projectId');
@@ -40,7 +42,7 @@ export async function GET(req: NextRequest) {
       const { data: own } = await db.from('projects').select('id').eq('id', asked).eq('tenant_id', user.tenantId).maybeSingle();
       projectId = own?.id ?? null;
     }
-    const permissions = await getEffectivePermissions(db, user.id, user.tenantId, projectId);
+    const { perms: permissions, jobScoped } = await getEffectiveAccess(db, user.id, user.tenantId, projectId);
 
     /* The base role travels with the map because the rail needs one thing the
        map cannot express: whether this person is staff at all. */
@@ -54,6 +56,14 @@ export async function GET(req: NextRequest) {
       permissions,
       role: (profile as { role?: string } | null)?.role ?? null,
       projectId,
+      /* Whether the money and pay-rate figures reach this person here (the
+         server nulls them otherwise — lib/money-fields). Screens hide the
+         columns instead of showing blanks. */
+      money: hasAnyPermission(permissions, MONEY_VIEW, 'View'),
+      rates: hasAnyPermission(permissions, RATE_VIEW, 'View'),
+      /* Only the jobs they are on (Subcontractor): the company directories,
+         pipeline and admin screens are not theirs. */
+      jobScoped,
       name: (profile as { full_name?: string } | null)?.full_name ?? null,
     });
   } catch (e) {

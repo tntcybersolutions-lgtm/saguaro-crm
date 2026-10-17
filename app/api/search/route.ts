@@ -3,6 +3,7 @@ import type { SupabaseClient } from '@supabase/supabase-js';
 import { createServerClient, getUser } from '@/lib/supabase-server';
 import { getEffectivePermissions } from '@/lib/permissions';
 import { apiError } from '@/lib/api-error';
+import { jobsOffFor } from '@/lib/visible-jobs';
 import {
   allowedSearchTypes, asksNumberOf, isSearchType, orderGroups, padNum, parseQuery, rankHit, sortHits,
   trailingNumber, TYPE_LABEL, type ParsedQuery, type SearchGroup, type SearchHit, type SearchResponse, type SearchType,
@@ -319,7 +320,12 @@ export async function GET(req: NextRequest) {
   try {
     const db = createServerClient();
     const started = Date.now();
-    const perms = await getEffectivePermissions(db, user.id, user.tenantId);
+    const [perms, off] = await Promise.all([
+      getEffectivePermissions(db, user.id, user.tenantId),
+      // A job closed to this person ("No access", or not on it as a Subcontractor)
+      // or off the books never shows up — not the job, not its records.
+      jobsOffFor(db, user),
+    ]);
     const allowed = new Set(allowedSearchTypes(perms));
     const wanted = SPECS.filter((s) => allowed.has(s.type) && (askedTypes.length === 0 || askedTypes.includes(s.type)));
     const permsMs = Date.now() - started;
@@ -341,6 +347,8 @@ export async function GET(req: NextRequest) {
       const slot = byType.get(o.spec.type) ?? { count: 0, hits: [], keys: new Set<string>() };
       slot.count += o.count;
       for (const r of o.rows) {
+        const onJob = o.spec.table === 'projects' ? r.id : r.project_id;
+        if (onJob && off.has(String(onJob))) { slot.count = Math.max(slot.count - 1, 0); continue; }
         const b = o.spec.build(r);
         if (b.dedupe) {
           if (slot.keys.has(b.dedupe)) { slot.count = Math.max(slot.count - 1, slot.hits.length); continue; }

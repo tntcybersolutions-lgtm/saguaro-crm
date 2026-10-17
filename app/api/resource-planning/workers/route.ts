@@ -1,4 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server';
+import { requirePermission } from '@/lib/permissions';
 import { createServerClient, getUser } from '@/lib/supabase-server';
 import { apiError } from '@/lib/api-error';
 
@@ -8,7 +9,9 @@ export async function GET(req: NextRequest) {
   const trade = searchParams.get('trade');
 
   try {
-    const user = await getUser(req);
+    const gate = await requirePermission(req, 'Projects', 'View', { projectId: null, companyWide: true });
+  if (!gate.ok) return gate.res;
+  const user = gate.user;
     if (!user) return NextResponse.json({ workers: [], source: 'unauth' }, { status: 401 });
 
     const db = createServerClient();

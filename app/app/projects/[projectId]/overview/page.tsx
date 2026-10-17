@@ -20,6 +20,8 @@
  * Wording and rules live in lib/job-page (pure, tested). Nothing here scrolls
  * the page.
  */
+import { usePermissions } from '@/lib/hooks/usePermissions';
+import { ApiError, messageFor, isRefusal, apiErrorFrom } from '@/lib/api-refusal';
 import React, { useEffect, useState } from 'react';
 import useSWR, { mutate as swrMutate } from 'swr';
 import Link from 'next/link';
@@ -85,7 +87,7 @@ const aggregateFetcher = async (url: string) => {
     let msg = '';
     try { const body = await r.json(); msg = body?.error || ''; } catch { /* non-JSON body: the status line is all there is */ }
     console.error('load job failed', r.status, msg);
-    throw new Error(msg || 'Request failed');
+    throw new ApiError(messageFor(r.status, { error: msg }, "Couldn't load this job. Please try again."), r.status);
   }
   const d = await r.json();
   if (!d?.project) return { notFound: true } as NotFound;
@@ -166,6 +168,9 @@ export default function JobPage() {
   const router = useRouter();
   const base = '/app/projects/' + projectId;
   const arrangeState = usePanelLayout('job-overview', JOB_PANELS);
+  /* Dollars only for a role with money rights on THIS job (the server nulls
+     them otherwise); without them the money panel and figures are left out. */
+  const { money: showMoney } = usePermissions();
 
   const { data: agg, error: aggError, isLoading: aggLoading, mutate: reloadAgg } = useSWR<any>(
     projectId ? '/api/projects/' + projectId : null, aggregateFetcher, { revalidateOnFocus: false, keepPreviousData: true },
@@ -211,10 +216,12 @@ export default function JobPage() {
   if (!p) {
     if ((aggError || !aggLoading) && (toolsError || !toolsLoading) && (aggError || toolsError)) {
       const why = humanError(aggError || toolsError, 'Network error. Check your connection and try again.');
+      // A refusal is not a failure — nothing to retry, so no Retry.
+      const refused = isRefusal(aggError) || isRefusal(toolsError);
       return (
         <div className="k-frame jx" role="alert">{css}
-          <header className="jx-head"><h1 className="k-title">Couldn&apos;t load this job</h1></header>
-          <Brief tone="danger" icon={<WarningCircle size={18} weight="fill" />} action={{ label: 'Retry', onClick: retryAll }}>{why}</Brief>
+          <header className="jx-head"><h1 className="k-title">{refused ? "You don't have access to this job" : <>Couldn&apos;t load this job</>}</h1></header>
+          <Brief tone={refused ? 'warning' : 'danger'} icon={<WarningCircle size={18} weight="fill" />} action={refused ? { label: 'All jobs', href: '/app/projects' } : { label: 'Retry', onClick: retryAll }}>{why}</Brief>
         </div>
       );
     }
@@ -313,7 +320,7 @@ export default function JobPage() {
     try {
       const auth = await getAuthHeaders();
       const res = await fetch('/api/autopilot/run', { method: 'POST', headers: { 'Content-Type': 'application/json', ...auth }, body: JSON.stringify({ projectId }) });
-      if (!res.ok) throw new Error('Scan failed');
+      if (!res.ok) throw await apiErrorFrom(res, 'Scan failed');
       const json = await res.json();
       setScanMsg({ ok: true, text: json.summary || 'Autopilot scan complete.' });
       await Promise.all([reloadAgg(), reloadTools()]);
@@ -368,7 +375,7 @@ export default function JobPage() {
   const retainage = Number(payApps[0]?.retainage_amount) || 0;
   const paidApps = payApps.filter((a) => String(a.status || '').toLowerCase() === 'paid').length;
   const approvedCos = Number(cm?.approvedCoTotal) || 0;
-  const money: [string, string][] = moneyState !== 'ok' ? [] : [
+  const money: [string, string][] = moneyState !== 'ok' || !showMoney ? [] : [
     ['Original contract', usd(cm ? Number(cm.originalContract) || 0 : contract - approvedCos)],
     ['Approved change orders', (approvedCos < 0 ? '−' : '+') + usd(Math.abs(approvedCos))],
     ['Contract to date', usd(contract)],
@@ -512,7 +519,7 @@ export default function JobPage() {
           stage: stageLabel(p),
           stageTone: stage === 'building' ? 'success' : stage === 'bidding' ? 'info' : undefined,
           address: addr || null,
-          contract: moneyState === 'ok' ? (contract > 0 ? fmtMoneyShort(contract) : 'Not set') : moneyState === 'failed' ? '—' : null,
+          contract: !showMoney ? null : moneyState === 'ok' ? (contract > 0 ? fmtMoneyShort(contract) : 'Not set') : moneyState === 'failed' ? '—' : null,
           pctComplete: bannerPct,
           daysLeft: closed ? null : daysLeft(end, today),
         }}
@@ -535,10 +542,10 @@ export default function JobPage() {
             </div>
             <div className="jx-health-dots"><ItemDots health={health} /></div>
           </div>
-          <div className="jx-health-ou"><span className="jx-health-k">Over / under</span><OverUnder health={health} /></div>
+          {showMoney && <div className="jx-health-ou"><span className="jx-health-k">Over / under</span><OverUnder health={health} /></div>}
         </section>
       ),
-    money: (
+    money: !showMoney ? null : (
       <div className="jx-money" aria-busy={moneyState === 'loading' || undefined}>
         <NumberStrip items={[
           { value: moneyState === 'ok' ? (contract > 0 ? fmtMoneyShort(contract) : 'Not set') : moneyState === 'failed' ? '—' : <i className="jx-skel-val" />, label: 'Contract' },

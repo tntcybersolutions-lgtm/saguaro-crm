@@ -5,6 +5,7 @@
  * numbers as iOS). Seed the SOV straight from a takeoff to close the money loop.
  */
 import { useEffect, useMemo, useState } from 'react';
+import { IfAllowed } from '@/lib/hooks/usePermissions';
 import { useProjects } from '@/lib/hooks/useProjects';
 import { useRouter } from 'next/navigation';
 import { computePayApp, estimateToSov, usd, type SovLine } from '@/lib/finance';
@@ -265,7 +266,7 @@ export default function PayAppPage() {
         title="G703 — Continuation Sheet (Schedule of Values)"
         flush
         style={{ marginBottom: 20 }}
-        action={lines.length > 0 ? <button onClick={addLine} style={{ ...ghostButtonStyle, padding: '8px 14px', fontSize: 13 }} className="pmBtn"><Plus size={14} weight="bold" /> Add SOV Line</button> : undefined}
+        action={lines.length > 0 ? <IfAllowed perm={['Pay Apps', 'Edit']}><button onClick={addLine} style={{ ...ghostButtonStyle, padding: '8px 14px', fontSize: 13 }} className="pmBtn"><Plus size={14} weight="bold" /> Add SOV Line</button></IfAllowed> : undefined}
       >
         {lines.length === 0 ? (
           <PremiumEmpty
@@ -273,7 +274,7 @@ export default function PayAppPage() {
             icon={<ListNumbers size={30} weight="duotone" color="var(--text-secondary)" />}
             title="No schedule of values yet"
             description="Add lines, or seed them from a takeoff above"
-            action={<button onClick={addLine} style={secondaryButtonStyle} className="pmBtn"><Plus size={15} weight="bold" /> Add SOV Line</button>}
+            action={<IfAllowed perm={['Pay Apps', 'Edit']}><button onClick={addLine} style={secondaryButtonStyle} className="pmBtn"><Plus size={15} weight="bold" /> Add SOV Line</button></IfAllowed>}
           />
         ) : (
           <div style={{ overflowX: 'auto', WebkitOverflowScrolling: 'touch' as const }}>

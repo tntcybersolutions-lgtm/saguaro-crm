@@ -1,5 +1,6 @@
 'use client';
 import React, { useState, useEffect, useCallback } from 'react';
+import { apiErrorFrom } from '@/lib/api-refusal';
 import Link from 'next/link';
 import { CurrencyDollar, CheckCircle, ArrowsClockwise, Warning, Question, NotePencil, Trophy, Handshake, Buildings, FileText, WarningOctagon, Clock, Bell, X, ArrowRight } from '@phosphor-icons/react';
 import { PremiumSurface, ModuleHero, PremiumEmpty, StatStrip, goldOutlineButtonStyle, ghostButtonStyle } from '@/components/ui/premium';
@@ -97,7 +98,7 @@ export default function NotificationsPage() {
     setLoadError(false);
     try {
       const r = await fetch('/api/notifications?limit=100');
-      if (!r.ok) throw new Error('fetch failed');
+      if (!r.ok) throw await apiErrorFrom(r, 'fetch failed');
       const d = await r.json();
       const items = d.notifications || d.items || [];
       setNotifications(items);

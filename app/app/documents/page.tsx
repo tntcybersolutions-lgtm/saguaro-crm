@@ -1,5 +1,6 @@
 'use client';
 import React, { useState, useEffect, useCallback, useRef } from 'react';
+import { apiErrorFrom } from '@/lib/api-refusal';
 import { alertDialog } from '@/lib/ui/async-dialog';
 import { useProjects } from '@/lib/hooks/useProjects';
 import Link from 'next/link';
@@ -223,7 +224,7 @@ export default function DocumentsPage() {
     setLoadingByJob(true);
     setErrorByJob(false);
     fetch('/api/documents/by-job')
-      .then(r => { if (!r.ok) throw new Error(`HTTP ${r.status}`); return r.json(); })
+      .then(async r => { if (!r.ok) throw await apiErrorFrom(r, `HTTP ${r.status}`); return r.json(); })
       .then(d => setByJob({ jobs: d.jobs ?? [], payAppWaiver: d.payAppWaiver ?? {} }))
       .catch(() => setErrorByJob(true))
       .finally(() => setLoadingByJob(false));
@@ -241,7 +242,7 @@ export default function DocumentsPage() {
     setLoadingCloseout(true);
     setErrorCloseout(false);
     fetch(`/api/projects/${projectId}/closeout`)
-      .then(r => { if (!r.ok) throw new Error(`HTTP ${r.status}`); return r.json(); })
+      .then(async r => { if (!r.ok) throw await apiErrorFrom(r, `HTTP ${r.status}`); return r.json(); })
       .then(d => setCloseoutItems((d.items ?? []) as CloseoutItem[]))
       .catch(() => setErrorCloseout(true))
       .finally(() => setLoadingCloseout(false));
@@ -278,7 +279,7 @@ export default function DocumentsPage() {
     setLoadingPayApps(true);
     setErrorPayApps(false);
     fetch('/api/pay-apps/list')
-      .then(r => { if (!r.ok) throw new Error(`HTTP ${r.status}`); return r.json(); })
+      .then(async r => { if (!r.ok) throw await apiErrorFrom(r, `HTTP ${r.status}`); return r.json(); })
       .then(d => setPayApps(d.payApps ?? d.items ?? []))
       .catch(() => setErrorPayApps(true))
       .finally(() => setLoadingPayApps(false));
@@ -288,7 +289,7 @@ export default function DocumentsPage() {
     setLoadingLienWaivers(true);
     setErrorLienWaivers(false);
     fetch('/api/lien-waivers/list')
-      .then(r => { if (!r.ok) throw new Error(`HTTP ${r.status}`); return r.json(); })
+      .then(async r => { if (!r.ok) throw await apiErrorFrom(r, `HTTP ${r.status}`); return r.json(); })
       .then(d => setLienWaivers(d.lienWaivers ?? d.items ?? []))
       .catch(() => setErrorLienWaivers(true))
       .finally(() => setLoadingLienWaivers(false));
@@ -302,7 +303,7 @@ export default function DocumentsPage() {
        ('wh347' / 'wh347-certified-payroll') and rows without week / gross —
        so it could never show a single filing. */
     fetch('/api/payroll/list')
-      .then(r => { if (!r.ok) throw new Error(`HTTP ${r.status}`); return r.json(); })
+      .then(async r => { if (!r.ok) throw await apiErrorFrom(r, `HTTP ${r.status}`); return r.json(); })
       .then(d => setPayroll(d.records ?? []))
       .catch(() => setErrorPayroll(true))
       .finally(() => setLoadingPayroll(false));

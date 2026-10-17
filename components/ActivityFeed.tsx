@@ -13,6 +13,7 @@
  * you should be able to take in at a glance.
  */
 import React, { useEffect, useState, useCallback } from 'react';
+import { apiErrorFrom } from '@/lib/api-refusal';
 import Link from 'next/link';
 import {
   ClockCounterClockwise, Buildings, Package, CurrencyDollar, FileText,
@@ -92,7 +93,7 @@ export default function ActivityFeed({
       const qs = new URLSearchParams({ limit: String(limit) });
       if (projectId) qs.set('project', projectId);
       const r = await fetch(`/api/activity?${qs}`);
-      if (!r.ok) throw new Error('Could not load recent activity.');
+      if (!r.ok) throw await apiErrorFrom(r, 'Could not load recent activity.');
       const d = await r.json();
       setRows(Array.isArray(d.activities) ? d.activities : []);
     } catch (e) {

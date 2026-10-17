@@ -24,6 +24,7 @@
  */
 
 import React, { useCallback, useMemo } from 'react';
+import { apiErrorFrom } from '@/lib/api-refusal';
 import Link from 'next/link';
 import useSWR from 'swr';
 import type { Suggestion, SuggestionFeed, SuggestionSeverity } from '@/lib/suggestions';
@@ -41,7 +42,7 @@ export const sevColor = (s: SuggestionSeverity): string =>
 
 const fetcher = async (url: string) => {
   const r = await fetch(url);
-  if (!r.ok) throw new Error(`Request failed (${r.status})`);
+  if (!r.ok) throw await apiErrorFrom(r, `Request failed (${r.status})`);
   return r.json();
 };
 

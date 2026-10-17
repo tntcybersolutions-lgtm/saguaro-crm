@@ -15,6 +15,7 @@
  * Today / Next 7 Days switch moved to My Work ("Coming up" links there).
  */
 import React, { Suspense, useEffect, useState } from 'react';
+import { apiErrorFrom } from '@/lib/api-refusal';
 import Link from 'next/link';
 import useSWR from 'swr';
 import { useRouter, useSearchParams } from 'next/navigation';
@@ -65,7 +66,7 @@ const fetcher = async (url: string): Promise<HomePayload> => {
 /* My Day's list — the alert line counts from it, so Home and My Day agree. */
 const dayFetcher = async (url: string): Promise<DayFeed> => {
   const r = await fetch(url);
-  if (!r.ok) throw new Error(`My Day didn't load (${r.status}).`);
+  if (!r.ok) throw await apiErrorFrom(r, `My Day didn't load (${r.status}).`);
   return r.json() as Promise<DayFeed>;
 };
 

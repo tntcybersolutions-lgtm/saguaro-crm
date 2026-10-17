@@ -15,6 +15,7 @@
  * freehand rows render read-only, best-effort, never crash.
  */
 import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react';
+import { apiErrorFrom } from '@/lib/api-refusal';
 import { useGuardedRouter } from '@/lib/navGuard';
 import type { RealtimeChannel } from '@supabase/supabase-js';
 import { enqueue } from '@/lib/field-db';
@@ -632,7 +633,7 @@ export default function DrawingViewer({ projectId, drawing, me, online, initialP
     setRevokingId(id);
     try {
       const r = await fetch(`/api/drawings/review-link?id=${encodeURIComponent(id)}`, { method: 'DELETE' });
-      if (!r.ok) throw new Error('revoke failed');
+      if (!r.ok) throw await apiErrorFrom(r, 'revoke failed');
       setShareLinks((ls) => ls.filter((l) => l.id !== id));
     } catch {
       showToast('Could not revoke that link — check your connection and try again.');
@@ -688,7 +689,7 @@ export default function DrawingViewer({ projectId, drawing, me, online, initialP
       const res = await fetch(apiBase, {
         method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(payload),
       });
-      if (!res.ok) throw new Error(`save failed (${res.status})`);
+      if (!res.ok) throw await apiErrorFrom(res, `save failed (${res.status})`);
       const d = await res.json();
       const saved: MarkupRow = { ...d.markup, comments: [] };
       idMapRef.current.set(localId, saved.id);

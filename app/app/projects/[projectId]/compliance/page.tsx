@@ -10,6 +10,7 @@
  *        POST /api/documents/prevailing-wage    { projectId } → openPdf
  */
 import React, { useState, useEffect, useCallback } from 'react';
+import { apiErrorFrom } from '@/lib/api-refusal';
 import { useProjectContext } from '@/lib/hooks/useProjectContext';
 import { useParams } from 'next/navigation';
 import {
@@ -198,7 +199,7 @@ export default function CompliancePage() {
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ subId: sub.id, subData: sub }),
       });
-      if (!res.ok) throw new Error('scoring failed');
+      if (!res.ok) throw await apiErrorFrom(res, 'scoring failed');
       const d = await res.json();
       setPrequals(prev => ({ ...prev, [sub.id]: d }));
     } catch {
@@ -215,7 +216,7 @@ export default function CompliancePage() {
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ subId, projectId }),
       });
-      if (!res.ok) throw new Error('request failed');
+      if (!res.ok) throw await apiErrorFrom(res, 'request failed');
       show(`COI request sent to ${subName}.`);
     } catch {
       show(`Could not send the COI request to ${subName}. Please try again.`, 'bad');
@@ -230,7 +231,7 @@ export default function CompliancePage() {
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ projectId }),
       });
-      if (!res.ok) throw new Error('request failed');
+      if (!res.ok) throw await apiErrorFrom(res, 'request failed');
       show('COI request emails sent to all subcontractors.');
     } catch {
       show('Could not send COI requests. Please try again.', 'bad');

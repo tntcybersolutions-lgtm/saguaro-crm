@@ -16,6 +16,7 @@
  *   JHA        POST /api/documents/jha  (opens the returned PDF)
  */
 import React, { useState, useEffect, useCallback } from 'react';
+import { apiErrorFrom } from '@/lib/api-refusal';
 import { useProjectContext } from '@/lib/hooks/useProjectContext';
 import { useParams } from 'next/navigation';
 import {
@@ -456,7 +457,7 @@ export default function SafetyPage() {
         body: JSON.stringify({ status: nextStatus }),
       });
       const json = await res.json().catch(() => ({}));
-      if (!res.ok) throw new Error('update failed');
+      if (!res.ok) throw await apiErrorFrom(res, 'update failed');
       setActions(prev => prev.map(a => a.id === action.id ? { ...a, ...json.action, status: nextStatus } : a));
       show(`Action updated to ${CA_STATUS_LABELS[nextStatus]}.`);
     } catch {

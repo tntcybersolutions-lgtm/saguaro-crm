@@ -894,6 +894,8 @@ export async function sendSubPortalInvite(opts: {
   projectName: string;
   portalUrl: string;
   isResend?: boolean;
+  /** Replies go to the GC who sent it (not a generic support box on another domain). */
+  replyTo?: string | null;
 }): Promise<SendResult> {
   const { to, contactName, companyName, gcCompanyName, projectName, portalUrl, isResend } = opts;
   const subjectPrefix = isResend ? 'Reminder: ' : '';
@@ -935,7 +937,7 @@ export async function sendSubPortalInvite(opts: {
       This link is unique to your company. Do not forward.<br>
       You can also log in at <a href="${APP_URL}/portals/sub/login" style="color:#9ca3af;">${APP_URL.replace('https://', '')}/portals/sub/login</a> using this email address.
     </p>
-  `));
+  `), { fromName: `${gcCompanyName} via Saguaro`, replyTo: opts.replyTo || null });
 }
 
 // Re-export the existing specialized functions from send.ts

@@ -1,4 +1,5 @@
 import { NextRequest } from 'next/server';
+import { requirePermission } from '@/lib/permissions';
 import { createServerClient, getUser } from '@/lib/supabase-server';
 import { ok, unauthorized, notFound, serverError } from '@/lib/api-response';
 
@@ -47,7 +48,9 @@ export async function PATCH(
   { params }: { params: Promise<{ id: string }> }
 ) {
   try {
-    const user = await getUser(req);
+    const gate = await requirePermission(req, 'Projects', 'Edit');
+  if (!gate.ok) return gate.res;
+  const user = gate.user;
     if (!user) return unauthorized();
 
     const { id } = await params;
@@ -81,7 +84,9 @@ export async function DELETE(
   { params }: { params: Promise<{ id: string }> }
 ) {
   try {
-    const user = await getUser(req);
+    const gate = await requirePermission(req, 'Projects', 'Edit');
+  if (!gate.ok) return gate.res;
+  const user = gate.user;
     if (!user) return unauthorized();
 
     const { id } = await params;

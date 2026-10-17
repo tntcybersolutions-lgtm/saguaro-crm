@@ -17,6 +17,7 @@
  *   members  POST same URL { crewId, addMember } / { removeMemberId }
  */
 import React, { useEffect, useMemo, useRef, useState } from 'react';
+import { retryText, apiErrorFrom } from '@/lib/api-refusal';
 import { confirmDialog } from '@/lib/ui/async-dialog';
 import useSWR from 'swr';
 import { useParams } from 'next/navigation';
@@ -151,7 +152,7 @@ export default function CrewsPage() {
     async (url: string) => {
       const h = await getAuthHeaders();
       const r = await fetch(url, { headers: h });
-      if (!r.ok) throw new Error('Failed to load crews.');
+      if (!r.ok) throw await apiErrorFrom(r, 'Failed to load crews.');
       return r.json();
     },
     { revalidateOnFocus: false, keepPreviousData: true }
@@ -389,7 +390,7 @@ export default function CrewsPage() {
       <EmptyState
         icon={<WarningCircle size={22} />}
         title="Couldn't load crews"
-        text={`${humanError(loadError, 'Failed to load crews.')} Nothing has been lost — try again.`}
+        text={retryText(humanError(loadError, 'Failed to load crews.'))}
         action={<Button icon={<ArrowClockwise size={15} />} onClick={() => mutate()}>Retry</Button>}
       />
     );

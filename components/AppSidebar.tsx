@@ -65,6 +65,7 @@ import { PROJECT_NAV_SECTIONS } from '@/lib/project-nav';
 import { useProjectContext, refreshProjectContext } from '@/lib/hooks/useProjectContext';
 import { isToolVisible, hiddenToolCount, type ToolSignals } from '@/lib/project-tools';
 import { isCompanyToolVisible, hiddenCompanyToolCount, type CompanySignals } from '@/lib/company-tools';
+import { ruleFor, allowedBy } from '@/lib/route-access';
 import { usePermissions } from '@/lib/hooks/usePermissions';
 import type { PermCategory } from '@/lib/permission-categories';
 import { normalisePhase, stepsForPhase, stepsDone, LEADING_SECTIONS, PHASE_LABEL } from '@/lib/project-phase';
@@ -712,7 +713,7 @@ export default function AppSidebar({
   /* Filtered sections, computed once — the render below reads these, and the
      open/closed default needs the TOTAL to decide whether collapsing is even
      warranted. */
-  const { can: canDo, resolved: permsResolved } = usePermissions();
+  const { can: canDo, resolved: permsResolved, permissions: permMap, jobScoped } = usePermissions();
 
   const renderSections = React.useMemo(() => {
     const src: any[] = inProject ? projectSections : NAV_SECTIONS;
@@ -733,6 +734,11 @@ export default function AppSidebar({
               /* A step in this phase is never hidden by the work filter — the
                  block above names it, so the toolbox must be able to show
                  it too rather than pointing at something absent. */
+              /* A tool the role on THIS job cannot open is not listed (Budget,
+                 Commitments, Pay Applications for a Foreman) — lib/route-access,
+                 the same rule the screen gate applies. Unknown permissions:
+                 listed (the screen gate and the routes still refuse). */
+              if (permsResolved && !allowedBy(ruleFor(`/app/projects/${projectId}${rel}`).rule, permMap, jobScoped)) return false;
               if (phaseSteps.some((st) => st.href === rel)) return true;
               return isToolVisible(rel, toolSignals, activeProjectHref, showAllTools);
             })
@@ -746,7 +752,10 @@ export default function AppSidebar({
                item's own `perm` wins over its section's; null means anyone. */
             .filter((item: NavItem) => {
               const cat = item.perm === undefined ? SECTION_PERMISSION[String(section.title)] : item.perm;
-              return !cat || canDo(cat, 'View');
+              if (cat && !canDo(cat, 'View')) return false;
+              // The screen's own rule (lib/route-access): Admin screens, the pipeline,
+              // and — for a job-scoped Subcontractor — every company-wide directory.
+              return !permsResolved || allowedBy(ruleFor(item.href).rule, permMap, jobScoped);
             });
         return { ...section, items };
       })
@@ -775,7 +784,7 @@ export default function AppSidebar({
         };
         return rank(a.title) - rank(b.title);
       });
-  }, [inProject, projectSections, features, projectId, toolSignals, activeProjectHref, showAllTools, companySignals, pathname, canDo, permsResolved]);
+  }, [inProject, projectSections, features, projectId, toolSignals, activeProjectHref, showAllTools, companySignals, pathname, canDo, permsResolved, permMap, jobScoped]);
 
   const totalVisible = renderSections.reduce((n: number, s2: any) => n + s2.items.length, 0);
 

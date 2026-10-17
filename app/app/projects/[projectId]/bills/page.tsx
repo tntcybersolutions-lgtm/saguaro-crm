@@ -9,7 +9,8 @@
  *         DELETE /api/bills/:id/delete
  */
 import { jsonRequest } from '@/lib/list-view';
-import { useEditRights } from '@/lib/hooks/usePermissions';
+import { apiErrorFrom } from '@/lib/api-refusal';
+import { useEditRights, IfAllowed } from '@/lib/hooks/usePermissions';
 import React, { useState, useEffect, useCallback, useRef } from 'react';
 import { useParams } from 'next/navigation';
 import { useProjectContext } from '@/lib/hooks/useProjectContext';
@@ -194,7 +195,7 @@ export default function BillsPage() {
           vendor_email: receipt?.fields?.vendor_email || null,
         }),
       });
-      if (!res.ok) throw new Error('save failed');
+      if (!res.ok) throw await apiErrorFrom(res, 'save failed');
       const json = await res.json();
       if (!json.bill) throw new Error('save failed');
       setBills(prev => [json.bill as Bill, ...prev]);
@@ -216,7 +217,7 @@ export default function BillsPage() {
     setActionLoading(id + '-approve');
     try {
       const res = await fetch(`/api/bills/${id}/approve`, { method: 'PATCH' });
-      if (!res.ok) throw new Error('approve failed');
+      if (!res.ok) throw await apiErrorFrom(res, 'approve failed');
       setBills(prev => prev.map(b => b.id === id ? { ...b, status: 'Approved' } : b));
       show('Bill approved.');
     } catch {
@@ -230,7 +231,7 @@ export default function BillsPage() {
     setActionLoading(id + '-pay');
     try {
       const res = await fetch(`/api/bills/${id}/pay`, { method: 'PATCH' });
-      if (!res.ok) throw new Error('pay failed');
+      if (!res.ok) throw await apiErrorFrom(res, 'pay failed');
       setBills(prev => prev.map(b => b.id === id ? { ...b, status: 'Paid' } : b));
       show('Bill marked as paid.');
     } catch {
@@ -247,7 +248,7 @@ export default function BillsPage() {
     setEditBill(null);
     try {
       const res = await fetch(`/api/bills/${id}/update`, { method: 'PATCH', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ amount }) });
-      if (!res.ok) throw new Error('update failed');
+      if (!res.ok) throw await apiErrorFrom(res, 'update failed');
       show('Amount updated.');
     } catch {
       show('Could not update the amount. Please try again.', 'bad');
@@ -263,7 +264,7 @@ export default function BillsPage() {
     setAdjustBill(null);
     try {
       const res = await fetch(`/api/bills/${id}/update`, { method: 'PATCH', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ amount: newAmt }) });
-      if (!res.ok) throw new Error('update failed');
+      if (!res.ok) throw await apiErrorFrom(res, 'update failed');
       show(`Adjusted ${pct > 0 ? '+' : ''}${pct}%.`);
     } catch {
       show('Could not adjust the amount. Please try again.', 'bad');
@@ -284,7 +285,7 @@ export default function BillsPage() {
     setBills(prev => prev.filter(x => x.id !== b.id));
     try {
       const res = await fetch(`/api/bills/${b.id}/delete`, { method: 'DELETE' });
-      if (!res.ok) throw new Error('delete failed');
+      if (!res.ok) throw await apiErrorFrom(res, 'delete failed');
       show('Bill deleted.');
     } catch {
       show('Could not delete the bill. Please try again.', 'bad');
@@ -452,7 +453,7 @@ export default function BillsPage() {
           <Button icon={<Camera size={15} />} onClick={() => receiptInput.current?.click()} disabled={!!scanning}>
             {scanning === 'upload' ? 'Uploading…' : scanning === 'read' ? 'Reading…' : 'Scan receipt'}
           </Button>
-          <Button variant="primary" icon={<Plus size={15} weight="bold" />} onClick={openForm}>New bill</Button>
+          <IfAllowed perm={['Budget', 'Edit']}><Button variant="primary" icon={<Plus size={15} weight="bold" />} onClick={openForm}>New bill</Button></IfAllowed>
           <input ref={receiptInput} type="file" accept="image/*,application/pdf" aria-label="Receipt photo or PDF" style={{ display: 'none' }}
             onChange={e => { const f = e.target.files?.[0]; e.target.value = ''; if (f) scanReceipt(f); }} />
         </>
@@ -507,7 +508,7 @@ export default function BillsPage() {
               <EmptyState
                 icon={<Receipt size={22} />}
                 title="No bills yet"
-                action={<Button icon={<Plus size={15} weight="bold" />} onClick={openForm}>New bill</Button>}
+                action={<IfAllowed perm={['Budget', 'Edit']}><Button icon={<Plus size={15} weight="bold" />} onClick={openForm}>New bill</Button></IfAllowed>}
               />
             ) : (
               <EmptyState title="Nothing matches" text="Change the search or the status filter." action={<Button onClick={() => { setSearch(''); setStatusFilter('all'); }}>Clear filters</Button>} />

@@ -9,6 +9,7 @@
  * carries each job's billing from its pay apps (billed_live). The page chrome
  * paints at once and the rows stand in as skeletons while the list loads.
  */
+import { usePermissions, IfAllowed } from '@/lib/hooks/usePermissions';
 import React, { useEffect, useMemo, useState } from 'react';
 import { useRouter } from 'next/navigation';
 import { DataTable, type Column } from '@/components/ui/kit';
@@ -77,6 +78,10 @@ const CHIPS: { key: StageFilter; label: string }[] = [
 
 export default function JobsPage() {
   const { projects, loading, error: loadError, degraded, revalidate } = useProjects();
+  /* Dollars only for a role with money rights (the server nulls them for
+     everyone else — lib/money-fields); without them the money columns go. */
+  const { money } = usePermissions(null);
+  const columns = useMemo(() => (money ? JOB_COLUMNS : JOB_COLUMNS.filter((c) => !['contract', 'billed', 'billed_pct'].includes(String(c.key)))), [money]);
   const rows = projects as unknown as JobRow[];
   const [q, setQ] = useState('');
   const [stage, setStage] = useState<StageFilter>('all');
@@ -123,7 +128,7 @@ export default function JobsPage() {
   } else if (loading) {
     body = <RowSkeleton rows={6} />;
   } else if (rows.length === 0) {
-    body = <FlatEmpty>No jobs yet. <Link href="/app/projects/new" className="jl-inline">Start the first one ›</Link></FlatEmpty>;
+    body = <FlatEmpty>No jobs yet.<IfAllowed perm={['Projects', 'Full']} projectId={null}> <Link href="/app/projects/new" className="jl-inline">Start the first one ›</Link></IfAllowed></FlatEmpty>;
   } else if (shown.length === 0) {
     body = <FlatEmpty>No jobs match. <button type="button" className="jl-inline" onClick={clear}>Clear the filters</button></FlatEmpty>;
   } else if (view === 'table') {
@@ -131,7 +136,7 @@ export default function JobsPage() {
       <DataTable<JobRow>
         tableId="company-jobs"
         exportName="jobs"
-        columns={JOB_COLUMNS}
+        columns={columns}
         rows={shown}
         rowKey={(p) => p.id}
         onRowClick={(p) => router.push(`/app/projects/${p.id}`)}
@@ -140,14 +145,14 @@ export default function JobsPage() {
   } else {
     body = (
       <>
-      <PortfolioBand jobs={shown.map((p) => ({ id: p.id, name: p.name, contract: Number(p.contract_amount) || 0, billed: typeof p.billed_live === 'number' ? p.billed_live : null, health: p.health }))} />
+      {money && <PortfolioBand jobs={shown.map((p) => ({ id: p.id, name: p.name, contract: Number(p.contract_amount) || 0, billed: typeof p.billed_live === 'number' ? p.billed_live : null, health: p.health }))} />}
       <div className="jt" role="table" aria-label="Jobs">
         <div className="jt-head" role="row">
           <span role="columnheader">Health</span>
           <span role="columnheader">Job · schedule</span>
-          <span role="columnheader" className="jt-money">Over / under</span>
+          <span role="columnheader" className="jt-money">{money ? 'Over / under' : ''}</span>
           <span role="columnheader" className="jt-dots-head">{ITEM_COLUMNS.map((c) => <em key={c}>{c}</em>)}</span>
-          <span role="columnheader" className="jt-money">Contract</span>
+          <span role="columnheader" className="jt-money">{money ? 'Contract' : ''}</span>
         </div>
         {shown.map((p) => {
           const s = jobStage(p);
@@ -171,11 +176,11 @@ export default function JobsPage() {
                   <small data-late={sched?.behind ? 'true' : undefined}>{schedText}</small>
                 </span>
               </span>
-              <span className="jt-ou" role="cell"><OverUnder health={h} /></span>
+              <span className="jt-ou" role="cell">{money && <OverUnder health={h} />}</span>
               <span className="jt-dots" role="cell"><ItemDots health={h} /></span>
               <span className="jt-money" role="cell">
-                {contract > 0 ? <b>{fmtMoneyWhole(contract)}</b> : <small>No contract yet</small>}
-                {contract > 0 && <small>{pct != null ? `${pct}% billed` : 'Not billed yet'}</small>}
+                {money && (contract > 0 ? <b>{fmtMoneyWhole(contract)}</b> : <small>No contract yet</small>)}
+                {money && contract > 0 && <small>{pct != null ? `${pct}% billed` : 'Not billed yet'}</small>}
               </span>
             </Link>
           );
@@ -192,9 +197,9 @@ export default function JobsPage() {
       <header className="k-head jl-head">
         <div className="jl-title">
           <h1 className="k-title">Jobs</h1>
-          <p className="k-sub">{ready ? `${plural(rows.length, 'job')}${total > 0 ? ` · ${fmtMoneyShort(total)} in contracts` : ''}` : loading ? 'Loading your jobs…' : ' '}</p>
+          <p className="k-sub">{ready ? `${plural(rows.length, 'job')}${money && total > 0 ? ` · ${fmtMoneyShort(total)} in contracts` : ''}` : loading ? 'Loading your jobs…' : ' '}</p>
         </div>
-        <RowAction kind="primary" href="/app/projects/new">New job</RowAction>
+        <IfAllowed perm={['Projects', 'Full']} projectId={null}><RowAction kind="primary" href="/app/projects/new">New job</RowAction></IfAllowed>
       </header>
 
       <div className="jl-tools">

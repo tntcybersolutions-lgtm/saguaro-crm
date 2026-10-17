@@ -38,6 +38,7 @@
  * and the recording console (date range + search + print-ready record).
  */
 import React, { useState, useEffect, useMemo, useRef, useCallback } from 'react';
+import { apiErrorFrom } from '@/lib/api-refusal';
 import { safeJsonParse } from '@/lib/safe-json';
 import useSWR from 'swr';
 import type { RealtimeChannel } from '@supabase/supabase-js';
@@ -339,7 +340,7 @@ interface ActivePatch {
 
 const fetcher = async (url: string) => {
   const r = await fetch(url);
-  if (!r.ok) throw new Error(`Request failed (${r.status})`);
+  if (!r.ok) throw await apiErrorFrom(r, `Request failed (${r.status})`);
   return r.json();
 };
 

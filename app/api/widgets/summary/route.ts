@@ -2,7 +2,8 @@ import { NextRequest, NextResponse } from 'next/server';
 import { createServerClient, getUser } from '@/lib/supabase-server';
 import { addDays, requestDay, startOfDayIn } from '@/lib/time-zone';
 import { apiError } from '@/lib/api-error';
-import { liveJobs, hiddenJobIds, notOnHiddenJobs } from '@/lib/live-jobs';
+import { liveJobs, notOnHiddenJobs } from '@/lib/live-jobs';
+import { jobsOffFor } from '@/lib/visible-jobs';
 import { receivableOnly } from '@/lib/invoice-direction';
 
 /**
@@ -26,7 +27,7 @@ export async function GET(req: NextRequest) {
       .eq('status', 'active'));
 
     // Everything below leaves out paper on archived or deleted jobs.
-    const hidden = await hiddenJobIds(db, user.tenantId);
+    const hidden = await jobsOffFor(db, user);
     const live = <Q extends { or(f: string): Q }>(q: Q) => notOnHiddenJobs(q, hidden);
 
     // Get today's stats

@@ -68,11 +68,14 @@ export async function POST(req: NextRequest) {
     if (!body.name) {
       return NextResponse.json({ error: 'name is required' }, { status: 400 });
     }
+    /* Scope: 'assigned' limits the role to the jobs the person is on (20261018r).
+       The built-in Subcontractor template is always assigned (Procore's model). */
+    const scope = body.scope === 'assigned' || (!!body.is_builtin && body.name === 'Subcontractor') ? 'assigned' : 'company';
     const { data, error } = await supabase.from('role_definitions').insert({
       tenant_id: user.tenantId, name: body.name, description: body.description || null,
       permissions: body.permissions || {}, color: body.color || null,
-      is_builtin: !!body.is_builtin, is_default: !!body.is_default,
-    }).select().single();
+      is_builtin: !!body.is_builtin, is_default: !!body.is_default, scope,
+    } as never).select().single();
     if (error) throw error;
     return NextResponse.json({ role: data }, { status: 201 });
   } catch (e) {

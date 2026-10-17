@@ -1,5 +1,6 @@
 'use client';
 import React, { useState, useEffect, useCallback } from 'react';
+import { apiErrorFrom } from '@/lib/api-refusal';
 import { confirmDialog } from '@/lib/ui/async-dialog';
 import { humanError } from '@/lib/errors';
 import Link from 'next/link';
@@ -83,7 +84,7 @@ export default function IntegrationsPage() {
   const fetchIntegrations = useCallback(async () => {
     try {
       const res = await fetch('/api/integrations/marketplace');
-      if (!res.ok) throw new Error('Failed to load integrations');
+      if (!res.ok) throw await apiErrorFrom(res, 'Failed to load integrations');
       const data = await res.json();
       // Only what can really be connected: a catalog entry that isn't built yet
       // is not a card with a dead "Coming Soon" button.
@@ -179,7 +180,7 @@ export default function IntegrationsPage() {
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ provider: intg.key }),
       });
-      if (!res.ok) throw new Error('Connection failed');
+      if (!res.ok) throw await apiErrorFrom(res, 'Connection failed');
       setNotification({ type: 'success', msg: `${intg.name} connection initiated.` });
       fetchIntegrations();
     } catch {

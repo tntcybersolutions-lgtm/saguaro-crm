@@ -1,5 +1,6 @@
 'use client';
 import { useMemo, useState } from 'react';
+import { IfAllowed } from '@/lib/hooks/usePermissions';
 import { textPrompt } from '@/lib/ui/async-dialog';
 import Link from 'next/link';
 import { useProjects } from '@/lib/hooks/useProjects';
@@ -66,7 +67,7 @@ export default function BudgetPage() {
         actions={tab === 'cos' ? (
           adding
             ? <GhostButton onClick={() => setAdding(false)}>Close</GhostButton>
-            : <GoldButton icon={<Plus size={15} weight="bold" />} onClick={() => setAdding(true)}>New Change Order</GoldButton>
+            : <IfAllowed perm={['Change Orders', 'Edit']}><GoldButton icon={<Plus size={15} weight="bold" />} onClick={() => setAdding(true)}>New Change Order</GoldButton></IfAllowed>
         ) : undefined}
       />
 
@@ -154,7 +155,7 @@ export default function BudgetPage() {
           <SectionCard>
             <PremiumEmpty icon={<NotePencil size={32} weight="duotone" color="var(--text-secondary)" />} title="No change orders"
               description="Every change routes the same way: Issued, GC Pricing, PM Review, Architect Review, Owner Approval, Executed, Schedule Updated, Budget Updated."
-              action={<GoldButton icon={<Plus size={15} weight="bold" />} onClick={() => setAdding(true)}>New Change Order</GoldButton>} />
+              action={<IfAllowed perm={['Change Orders', 'Edit']}><GoldButton icon={<Plus size={15} weight="bold" />} onClick={() => setAdding(true)}>New Change Order</GoldButton></IfAllowed>} />
           </SectionCard>
         )
         : <div style={{ display: 'flex', flexDirection: 'column', gap: 10 }}>

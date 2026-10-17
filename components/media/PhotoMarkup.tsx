@@ -9,6 +9,7 @@
  * shapes in photo pixels; the export draws them onto a full-size copy.
  */
 import React, { useCallback, useEffect, useLayoutEffect, useRef, useState } from 'react';
+import { apiErrorFrom } from '@/lib/api-refusal';
 import { createPortal } from 'react-dom';
 import {
   PencilSimple, ArrowUpRight, Square, TextT, ArrowCounterClockwise, Trash, X, FloppyDisk, CircleNotch,
@@ -146,7 +147,7 @@ export default function PhotoMarkup({ src, title, onClose, onSave }: {
     (async () => {
       try {
         const r = await fetch(src, { cache: 'no-store' });
-        if (!r.ok) throw new Error(`fetch ${r.status}`);
+        if (!r.ok) throw await apiErrorFrom(r, `fetch ${r.status}`);
         blobUrl = URL.createObjectURL(await r.blob());
         await show(blobUrl, false);
       } catch (e) {

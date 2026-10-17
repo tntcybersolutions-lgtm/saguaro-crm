@@ -1,5 +1,6 @@
 'use client';
 import React, { useState, useEffect, useMemo, useCallback } from 'react';
+import { apiErrorFrom } from '@/lib/api-refusal';
 import { useProjects } from '@/lib/hooks/useProjects';
 import { Package, FolderOpen, X, CaretUp, CaretDown, Gear, SquaresFour, GridFour } from '@phosphor-icons/react';
 import { WIDGET_CATALOG, WidgetBody, useWidgetMetrics, type WidgetSettings } from '@/components/dashboard-widgets';
@@ -335,7 +336,7 @@ export default function DashboardConfigPage() {
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify(layout),
       });
-      if (!res.ok) throw new Error('Save failed');
+      if (!res.ok) throw await apiErrorFrom(res, 'Save failed');
       const saved = await res.json();
       const savedId = saved?.layout?.id ?? layout.id;
       const updated = { ...layout, id: savedId, updatedAt: new Date().toISOString() };
@@ -361,7 +362,7 @@ export default function DashboardConfigPage() {
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify(newLayout),
       });
-      if (!res.ok) throw new Error('Save failed');
+      if (!res.ok) throw await apiErrorFrom(res, 'Save failed');
       const saved = await res.json();
       const updated = { ...newLayout, id: saved?.layout?.id, updatedAt: new Date().toISOString() };
       setLayout(updated);
@@ -382,7 +383,7 @@ export default function DashboardConfigPage() {
     setError('');
     try {
       const res = await fetch(`/api/dashboard-layout/${id}`);
-      if (!res.ok) throw new Error('Load failed');
+      if (!res.ok) throw await apiErrorFrom(res, 'Load failed');
       const data = await res.json();
       setLayout(data);
       setSavedLayout(data);
@@ -400,7 +401,7 @@ export default function DashboardConfigPage() {
     setDeletingId(id);
     try {
       const res = await fetch(`/api/dashboard-layout/${id}`, { method: 'DELETE' });
-      if (!res.ok) throw new Error('Delete failed');
+      if (!res.ok) throw await apiErrorFrom(res, 'Delete failed');
       setSavedLayouts(prev => prev.filter(l => l.id !== id));
     } catch {
       setError('Failed to delete layout.');

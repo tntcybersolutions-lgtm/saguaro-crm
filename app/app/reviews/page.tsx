@@ -6,6 +6,7 @@
  * /api/reviews (tenant-scoped; writes need Sales:Edit).
  */
 import React from 'react';
+import { apiErrorFrom } from '@/lib/api-refusal';
 import { confirmDialog } from '@/lib/ui/async-dialog';
 import { useToast } from '@/components/Toast';
 import { humanError } from '@/lib/errors';
@@ -42,7 +43,7 @@ export default function ReviewsPage() {
     setState('loading');
     try {
       const r = await fetch('/api/reviews');
-      if (!r.ok) throw new Error('load');
+      if (!r.ok) throw await apiErrorFrom(r, 'load');
       const d = await r.json();
       setReviews((d.reviews || []) as Review[]);
       setAvg(d.avgRating ?? null);
@@ -56,7 +57,7 @@ export default function ReviewsPage() {
     if (!(await confirmDialog({ title: 'Please confirm', message: `Remove the review by ${r.reviewer_name || 'Anonymous'}? This cannot be undone.`, danger: true }))) return;
     try {
       const res = await fetch(`/api/reviews/${r.id}`, { method: 'DELETE' });
-      if (!res.ok) throw new Error('delete failed');
+      if (!res.ok) throw await apiErrorFrom(res, 'delete failed');
       setReviews((prev) => prev.filter((x) => x.id !== r.id));
     } catch {
       // Not a load failure — leave the list in place; the reload below shows the truth.
