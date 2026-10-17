@@ -289,7 +289,7 @@ export const TOURS: Tour[] = [
         title: 'Start the analysis',
         body: 'Saguaro reads each discipline in parallel, so a full set comes back in a minute or two rather than an afternoon.',
         anchor: ['[data-tour="run-takeoff"]'],
-        anchorText: ['Start AI Analysis'],
+        anchorText: ['Start AI analysis', 'Start AI Analysis'],
         advance: 'click',
       },
       {

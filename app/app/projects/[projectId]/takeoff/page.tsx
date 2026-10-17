@@ -1721,8 +1721,8 @@ export default function TakeoffPage() {
           <div style={{ minWidth: 0, flex: '1 1 420px' }}>
             <h1 className="k-title" style={{ margin: 0 }}>AI Takeoff</h1>
             <p style={{ margin: '6px 0 0', fontSize: 14, color: 'var(--text-secondary)', lineHeight: 1.5, maxWidth: 640 }}>
-              Upload a plan set. Claude measures every wall, footing, fixture and column, then prices the quantities by trade.
-              {lastRun ? ` Your last run took ${lastRun}.` : ''}
+              Plan set in, priced quantities by trade out.
+              {lastRun ? ` Last run took ${lastRun}.` : ''}
             </p>
           </div>
           {/* The estimate workspace door must exist in EVERY page state — the
@@ -1803,15 +1803,18 @@ export default function TakeoffPage() {
           ))}
         </div>
 
-        <button data-tour="run-takeoff"
-          type="button"
-          onClick={() => handleAnalyze()}
-          disabled={!selectedFile}
-          className="k-btn k-btn-primary"
-          style={{ minWidth: 220 }}
-        >
-          <MagicWand size={17} weight="fill" /> {selectedFile ? 'Start AI Analysis' : 'Choose a Plan Set First'}
-        </button>
+        {/* The run button appears once a plan set is chosen; the drop zone is the
+            one action until then (no disabled "choose first" button). */}
+        {selectedFile && (
+          <button data-tour="run-takeoff"
+            type="button"
+            onClick={() => handleAnalyze()}
+            className="k-btn k-btn-primary"
+            style={{ minWidth: 220 }}
+          >
+            <MagicWand size={17} weight="fill" /> Start AI analysis
+          </button>
+        )}
       </div>
     );
   }
