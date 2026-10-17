@@ -42,7 +42,12 @@ function display(f: ItemField, v: unknown): string {
     case 'date': return new Date(`${String(v).slice(0, 10)}T12:00:00`).toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' });
     case 'datetime': return new Date(String(v)).toLocaleString('en-US', { month: 'short', day: 'numeric', year: 'numeric', hour: 'numeric', minute: '2-digit' });
     case 'select': return statusLabel(String(v));
-    default: return valueLabel(String(v));
+    default: {
+      /* A person stored as "Name <name@host>" (email replies write it that
+         way) reads as the name; the address is not shown as text. */
+      const person = /^\s*"?([^"<]+?)"?\s*<[^<>@\s]+@[^<>\s]+>\s*$/.exec(String(v));
+      return person ? person[1] : valueLabel(String(v));
+    }
   }
 }
 
@@ -304,8 +309,7 @@ export default function ItemPage() {
               )}
               {emptyCount > 0 && (
                 <p className="ip-empty">
-                  {body.length === 0 ? 'No details filled in yet.' : `${emptyCount} more field${emptyCount === 1 ? '' : 's'} not filled in.`}{' '}
-                  <button type="button" className="ip-link" onClick={startEdit}>Fill them in</button>
+                  <button type="button" className="ip-link" onClick={startEdit}>+ Add details{body.length > 0 ? ` (${emptyCount})` : ''}</button>
                 </p>
               )}
             </>
