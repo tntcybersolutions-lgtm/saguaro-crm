@@ -1,11 +1,11 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { createServerClient, getUser } from '@/lib/supabase-server';
 import { apiError } from '@/lib/api-error';
-import { onlyLiveProjects } from '@/lib/live-projects';
 import { jobHealth } from '@/lib/job-health';
 import { jobStage, billedPct } from '@/lib/job-page';
 import { isDoneStatus } from '@/lib/project-lifecycle';
 import { jobsClosedTo } from '@/lib/permissions';
+import { liveJobs } from '@/lib/live-jobs';
 
 export async function GET(req: NextRequest) {
   try {
@@ -14,8 +14,8 @@ export async function GET(req: NextRequest) {
       return NextResponse.json({ projects: [], source: 'unauth' }, { status: 401 });
     }
     const db = createServerClient();
-    // Archived and deleted jobs stay out of the list (lib/live-projects).
-    const { data, error } = await onlyLiveProjects(db
+    // Live jobs only (lib/live-jobs): archived and deleted jobs are left off.
+    const { data, error } = await liveJobs(db
       .from('projects')
       .select('*')
       .eq('tenant_id', user.tenantId))

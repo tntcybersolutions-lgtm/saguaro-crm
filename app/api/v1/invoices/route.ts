@@ -8,6 +8,7 @@
  * Query params:
  *   projectId — optional; restrict to one project
  *   limit     — max rows (default 100, capped at 200)
+ *   direction — receivable (owner billing, default) | payable (vendor / sub bills) | all
  * -------------------------------------------------------------------------
  */
 import { NextRequest, NextResponse } from 'next/server';
@@ -30,13 +31,16 @@ export async function GET(req: NextRequest) {
     let q = db
       .from('invoices')
       .select(
-        'id, project_id, invoice_number, vendor_name, category, amount, tax, total, status, due_date, paid_at, created_at',
+        'id, project_id, direction, invoice_number, vendor_name, category, amount, tax, total, status, due_date, paid_at, created_at',
       )
       .eq('tenant_id', auth.tenantId)
       .order('created_at', { ascending: false })
       .limit(limit);
 
     if (projectId) q = q.eq('project_id', projectId);
+    // direction: 'receivable' (owner billing, the default), 'payable' (vendor / sub bills) or 'all'.
+    const direction = searchParams.get('direction') || 'receivable';
+    if (direction === 'receivable' || direction === 'payable') q = q.eq('direction', direction);
 
     const { data, error } = await q;
     if (error) throw error;

@@ -21,6 +21,7 @@
 import type { SupabaseClient } from '@supabase/supabase-js';
 import type { Database } from '@/lib/database.types';
 import { must } from '@/lib/db-write';
+import { liveJobs, liveJobIds } from '@/lib/live-jobs';
 import { QboApiError, QboReconnectError, type QboClient } from './client';
 import {
   INVOICEABLE_STATUSES, customerPayload, invoiceMarker, invoicePayload, nameKey, ownerOf,
@@ -75,9 +76,11 @@ export async function pendingInvoices(db: Db, tenantId: string, startDay: string
     .order('app_number', { ascending: true })
     .limit(1000);
   if (error) throw error;
+  // A pay app on an archived or deleted job is off the books — it is not sent.
+  const live = await liveJobIds(db, tenantId);
   const ready: PayAppIn[] = [];
   let beforeStart = 0;
-  for (const pa of (data ?? []) as PayAppIn[]) {
+  for (const pa of ((data ?? []) as PayAppIn[]).filter((x) => live.has(x.project_id))) {
     const why = payAppSkipReason(pa, startDay, zone);
     if (!why) ready.push(pa);
     else if (why.includes('start date')) beforeStart++;
@@ -100,11 +103,10 @@ export async function pendingVendors(db: Db, tenantId: string, limit: number): P
 
 /** Distinct job owners (by QuickBooks name) across the company's live jobs. */
 export async function jobOwners(db: Db, tenantId: string): Promise<{ owner: Owner; projectId: string }[]> {
-  const { data, error } = await db
+  const { data, error } = await liveJobs(db
     .from('projects')
     .select(PROJECT_COLUMNS)
-    .eq('tenant_id', tenantId)
-    .is('deleted_at', null)
+    .eq('tenant_id', tenantId))
     .order('created_at', { ascending: true })
     .limit(1000);
   if (error) throw error;

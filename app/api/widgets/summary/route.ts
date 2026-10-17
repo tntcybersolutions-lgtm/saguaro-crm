@@ -2,7 +2,8 @@ import { NextRequest, NextResponse } from 'next/server';
 import { createServerClient, getUser } from '@/lib/supabase-server';
 import { addDays, requestDay, startOfDayIn } from '@/lib/time-zone';
 import { apiError } from '@/lib/api-error';
-import { liveJobs } from '@/lib/live-jobs';
+import { liveJobs, hiddenJobIds, notOnHiddenJobs } from '@/lib/live-jobs';
+import { receivableOnly } from '@/lib/invoice-direction';
 
 /**
  * GET /api/widgets/summary
@@ -24,35 +25,39 @@ export async function GET(req: NextRequest) {
       .eq('tenant_id', user.tenantId)
       .eq('status', 'active'));
 
+    // Everything below leaves out paper on archived or deleted jobs.
+    const hidden = await hiddenJobIds(db, user.tenantId);
+    const live = <Q extends { or(f: string): Q }>(q: Q) => notOnHiddenJobs(q, hidden);
+
     // Get today's stats
     // The company's day (device, else company zone); "logged today" runs from its local midnight.
     const { today, zone } = await requestDay(req.headers, db, user.tenantId, 'widgets/summary');
 
     // Open RFIs
-    const { count: openRfis } = await db
+    const { count: openRfis } = await live(db
       .from('rfis')
-      .select('*', { count: 'exact', head: true })
+      .select('*', { count: 'exact', head: true }))
       .eq('tenant_id', user.tenantId)
       .in('status', ['open', 'pending']);
 
     // Open punch items
-    const { count: openPunch } = await db
+    const { count: openPunch } = await live(db
       .from('punch_list')
-      .select('*', { count: 'exact', head: true })
+      .select('*', { count: 'exact', head: true }))
       .eq('tenant_id', user.tenantId)
       .eq('status', 'open');
 
     // Pending change orders
-    const { count: pendingCOs } = await db
+    const { count: pendingCOs } = await live(db
       .from('change_orders')
-      .select('*', { count: 'exact', head: true })
+      .select('*', { count: 'exact', head: true }))
       .eq('tenant_id', user.tenantId)
       .eq('status', 'pending');
 
     // Pending invoices
-    const { count: pendingInvoices } = await db
+    const { count: pendingInvoices } = await live(receivableOnly(db
       .from('invoices')
-      .select('*', { count: 'exact', head: true })
+      .select('*', { count: 'exact', head: true })))
       .eq('tenant_id', user.tenantId)
       .in('status', ['draft', 'sent']);
 
@@ -64,17 +69,17 @@ export async function GET(req: NextRequest) {
       .eq('read', false);
 
     // Today's daily logs
-    const { count: todayLogs } = await db
+    const { count: todayLogs } = await live(db
       .from('daily_logs')
-      .select('*', { count: 'exact', head: true })
+      .select('*', { count: 'exact', head: true }))
       .eq('tenant_id', user.tenantId)
       .gte('created_at', startOfDayIn(zone, today).toISOString());
 
     // Expiring insurance (next 30 days)
     const thirtyDays = addDays(today, 30);
-    const { count: expiringInsurance } = await db
+    const { count: expiringInsurance } = await live(db
       .from('insurance_certificates')
-      .select('*', { count: 'exact', head: true })
+      .select('*', { count: 'exact', head: true }))
       .eq('tenant_id', user.tenantId)
       .lte('expiry_date', thirtyDays)
       .gte('expiry_date', today);

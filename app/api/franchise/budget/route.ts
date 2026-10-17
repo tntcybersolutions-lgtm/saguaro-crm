@@ -3,6 +3,7 @@ import { createServerClient, getUser } from '@/lib/supabase-server';
 import { requirePermission } from '@/lib/permissions';
 import { apiError } from '@/lib/api-error';
 import { hasFeature } from '@/lib/entitlements-server';
+import { liveJobs } from '@/lib/live-jobs';
 
 const n = (v: any): number => { if (v == null || v === '') return 0; const x = typeof v === 'number' ? v : parseFloat(String(v).replace(/[$,]/g, '')); return isNaN(x) ? 0 : x; };
 // Executed + the two post-execution posting steps all count as approved for the rollup.
@@ -24,7 +25,7 @@ export async function GET(req: NextRequest) {
 
     const db = createServerClient();
     const [{ data: projs }, { data: cos }, { data: budRows }] = await Promise.all([
-      db.from('projects').select('*').eq('tenant_id', user.tenantId).or('is_archived.is.null,is_archived.eq.false').or('is_deleted.is.null,is_deleted.eq.false'),
+      liveJobs(db.from('projects').select('*').eq('tenant_id', user.tenantId)),
       db.from('change_orders').select('project_id,amount,status').eq('tenant_id', user.tenantId).or('deleted_at.is.null'),
       db.from('budgets').select('*').eq('tenant_id', user.tenantId),
     ]);

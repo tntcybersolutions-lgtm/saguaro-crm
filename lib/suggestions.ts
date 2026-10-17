@@ -37,6 +37,8 @@
  * exact suggestion here — the ticker and every NudgeRing inherit it from this
  * one server-side feed.
  */
+import { liveJobs } from '@/lib/live-jobs';
+import { receivableOnly } from '@/lib/invoice-direction';
 
 export type SuggestionSeverity = 'red' | 'amber' | 'info';
 
@@ -169,12 +171,10 @@ export async function computeSuggestions(db: Db, tenantId: string): Promise<Sugg
   /* ── projects first: names + active/completed sets scope every other rule ── */
   const projRows = await safeRows(
     'projects',
-    db
+    liveJobs(db
       .from('projects')
       .select('id, name, status, created_at, last_activity_at')
-      .eq('tenant_id', tenantId)
-      .or('is_deleted.is.null,is_deleted.eq.false')
-      .or('is_archived.is.null,is_archived.eq.false')
+      .eq('tenant_id', tenantId))
       .order('last_activity_at', { ascending: false, nullsFirst: false })
       .limit(PROJECT_CAP),
     degraded,
@@ -201,10 +201,11 @@ export async function computeSuggestions(db: Db, tenantId: string): Promise<Sugg
     await Promise.all([
       safeRows(
         'invoices',
-        db
+        // Owner billing only — a sub's bill is never chased as money owed to us.
+        receivableOnly(db
           .from('invoices')
           .select('id, project_id, vendor_name, invoice_number, amount, tax, total, paid_amount, due_date, status')
-          .eq('tenant_id', tenantId)
+          .eq('tenant_id', tenantId))
           .not('due_date', 'is', null)
           .lt('due_date', todayKey),
         degraded,

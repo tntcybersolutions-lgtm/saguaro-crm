@@ -15,6 +15,7 @@
 import { jobStage, stageLabel, billedPct } from './job-page';
 import { isClosedStatus, isDoneStatus } from './project-lifecycle';
 import type { GeoFix } from './photo-views';
+import { isLiveJob } from '@/lib/live-jobs';
 
 export interface JobPin {
   id: string;
@@ -40,7 +41,7 @@ const num = (v: unknown): number | null => {
 /** On the map: live jobs only. Archived, deleted, closed, complete, lost and cancelled jobs are left off. */
 export function isMappableJob(p: Row | null | undefined): boolean {
   if (!p || !p.id) return false;
-  if (p.is_archived === true || p.is_deleted === true || p.deleted_at) return false;
+  if (!isLiveJob(p)) return false;
   return !isClosedStatus(p.status);
 }
 
