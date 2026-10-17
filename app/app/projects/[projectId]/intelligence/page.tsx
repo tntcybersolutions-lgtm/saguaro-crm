@@ -41,7 +41,10 @@ const PAGE_CSS = `
 .intelGrid { display: grid; grid-template-columns: minmax(0, 1fr) 340px; gap: var(--section-gap); align-items: start; }
 .intelRail { display: flex; flex-direction: column; gap: var(--section-gap); min-width: 0; }
 .intelChat { display: flex; flex-direction: column; height: max(460px, calc(100vh - 380px)); }
-.intelMsgs { flex: 1; overflow-y: auto; padding: 20px; display: flex; flex-direction: column; gap: 14px; }
+.intelStart { display: flex; gap: 10px; align-items: flex-start; }
+.intelChips { display: flex; flex-wrap: wrap; gap: 8px; min-width: 0; }
+.intelChips .k-btn { white-space: normal; text-align: left; height: auto; min-height: 40px; padding-top: 8px; padding-bottom: 8px; line-height: 1.35; }
+.intelMsgs { flex: 1; overflow-y: auto; padding: 16px 0; display: flex; flex-direction: column; gap: 14px; }
 .intelRow { display: flex; gap: 8px; align-items: flex-end; }
 .intelRow[data-role="user"] { justify-content: flex-end; }
 .intelBubble { max-width: 78%; padding: 12px 16px; font-size: 14px; line-height: 1.6; white-space: pre-wrap; word-break: break-word; color: var(--text-primary); border: 1px solid var(--border-default); }
@@ -50,7 +53,7 @@ const PAGE_CSS = `
 .intelAvatar { width: 28px; height: 28px; border-radius: 50%; flex-shrink: 0; display: inline-flex; align-items: center; justify-content: center; background: var(--bg-surface-2); border: 1px solid var(--border-default); color: var(--text-secondary); }
 .intelCaret { display: inline-block; width: 2px; height: 14px; margin-left: 2px; vertical-align: middle; background: var(--text-primary); animation: intelBlink 0.8s infinite; }
 @keyframes intelBlink { 0%, 50% { opacity: 1; } 51%, 100% { opacity: 0; } }
-.intelCompose { display: flex; gap: 10px; align-items: center; padding: 12px 16px; border-top: 1px solid var(--border-subtle); }
+.intelCompose { display: flex; gap: 10px; align-items: center; padding: 12px 0; border-top: 1px solid var(--border-subtle); }
 .intelCompose .k-input { flex: 1; font-size: 16px; }
 .intelMeter { display: flex; gap: 2px; height: 14px; border-radius: 4px; overflow: hidden; background: var(--bg-surface-2); }
 .intelMeter > span { display: block; height: 100%; }
@@ -66,6 +69,7 @@ const PAGE_CSS = `
   .intelGrid { grid-template-columns: 1fr; }
   .intelChat { height: max(420px, calc(100vh - 260px)); }
   .intelBubble { max-width: 88%; }
+  .intelChips .k-btn { min-height: 44px; }
 }
 `;
 
@@ -92,12 +96,8 @@ function IntelligenceChat() {
     if (punch > 0) smartQuestions.push(`What is the fastest path to close the ${punch} open punch item${punch === 1 ? '' : 's'}?`);
   }
 
-  const [messages, setMessages] = useState<Message[]>([{
-    id: '0',
-    role: 'assistant',
-    content: "**Welcome to Saguaro Intelligence**\n\nI'm your AI construction expert with deep knowledge of CSI MasterFormat, AIA contracts, lien law, prevailing wages, estimating, and construction best practices.\n\nI have full context on this project — ask me anything about budget, RFIs, change orders, subs, schedule, or construction best practices.",
-    timestamp: new Date(),
-  }]);
+  /* No welcome speech: the chat opens on the questions worth asking right now. */
+  const [messages, setMessages] = useState<Message[]>([]);
   const [input, setInput] = useState('');
   const [isLoading, setIsLoading] = useState(false);
   const messagesEndRef = useRef<HTMLDivElement>(null);
@@ -300,9 +300,19 @@ function IntelligenceChat() {
       {ctx && <StatRow items={stats} />}
 
       <div className="intelGrid">
-        <Card flush title="Saguaro Intelligence" icon={<Brain size={17} />} subtitle={ctx?.project?.name ? `Grounded in ${ctx.project.name}` : 'Grounded in this project'}>
+        <Card flush>
           <div className="intelChat">
             <div className="intelMsgs" aria-live="polite">
+              {messages.length === 0 && (
+                <div className="intelStart">
+                  <span className="intelAvatar" aria-hidden><Brain size={15} /></span>
+                  <div className="intelChips">
+                    {[...smartQuestions, ...QUICK_QUESTIONS].slice(0, 4).map((q) => (
+                      <Button key={q} size="sm" onClick={() => sendMessage(q)} disabled={isLoading}>{q}</Button>
+                    ))}
+                  </div>
+                </div>
+              )}
               {messages.map(msg => (
                 <div key={msg.id} className="intelRow" data-role={msg.role}>
                   {msg.role === 'assistant' && <span className="intelAvatar" aria-hidden><Brain size={15} /></span>}

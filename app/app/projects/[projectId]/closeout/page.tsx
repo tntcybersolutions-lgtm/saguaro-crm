@@ -24,6 +24,10 @@ import {
   WarningCircle, ArrowCounterClockwise, Circle, Export,
 } from '@phosphor-icons/react';
 import { openPdf } from '@/components/PdfViewer';
+import { confirmDialog } from '@/lib/ui/async-dialog';
+
+/** '2026-09-18' → 'Sep 18, 2026' (read at local noon so the day never shifts). */
+const fmtYmd = (d?: string | null) => (d ? new Date(`${String(d).slice(0, 10)}T12:00:00`).toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' }) : '');
 
 /** YYYY-MM-DD on the user's device clock. */
 const localYmd = () => {
@@ -171,6 +175,7 @@ export default function CloseoutPage() {
   }
 
   async function reopenProject() {
+    if (!(await confirmDialog({ title: 'Reopen this project?', message: 'It goes back on the active list and the closeout date is cleared.', confirmLabel: 'Reopen' }))) return;
     setClosing(true);
     setCloseErr('');
     try {
@@ -332,10 +337,10 @@ export default function CloseoutPage() {
   const blockerCount = gate ? gate.blockers.reduce((s, b) => s + b.count, 0) : 0;
 
   const stats: StatItem[] = [
-    { label: 'Checklist', value: `${pct}%`, tone: pct === 100 ? 'good' : 'default', sub: remaining === 0 ? 'All complete' : `${remaining} still outstanding`, icon: <ListChecks size={15} />, onClick: () => setStatusFilter(statusFilter === 'incomplete' ? 'all' : 'incomplete'), active: statusFilter === 'incomplete' },
+    { label: 'Checklist', value: `${pct}%`, tone: pct === 100 ? 'good' : 'default', sub: remaining === 0 ? `All ${total} complete` : `${completed} of ${total} done · ${remaining} to go`, icon: <ListChecks size={15} />, onClick: () => setStatusFilter(statusFilter === 'incomplete' ? 'all' : 'incomplete'), active: statusFilter === 'incomplete' },
     ...(ctx ? [
       { label: 'Balance to finish', value: fmtM(balanceToFinish), tone: fullyBilled ? 'good' : 'default', sub: balanceSub, icon: <Wallet size={15} /> } as StatItem,
-      { label: 'Retainage held', value: `≈${fmtM(retainageHeld)}`, sub: `${Number(money?.retainagePct) || 0}% — releases at closeout`, icon: <Scales size={15} /> } as StatItem,
+      { label: 'Retainage held', value: retainageHeld > 0 ? `≈${fmtM(retainageHeld)}` : fmtM(0), sub: retainageHeld > 0 ? `${Number(money?.retainagePct) || 0}% · releases at closeout` : 'None held', icon: <Scales size={15} /> } as StatItem,
       { label: 'Open punch', value: openPunch, tone: openPunch > 0 ? 'bad' : 'good', sub: openPunch > 0 ? 'Blocks final inspection' : 'List is clear', icon: <Wrench size={15} />, href: `${base}/punch-list` } as StatItem,
       { label: 'Subs to clear', value: subCount, sub: 'Final waivers + W-9s', icon: <UsersThree size={15} /> } as StatItem,
     ] : []),
@@ -399,10 +404,9 @@ export default function CloseoutPage() {
       : clear ? 'Ready to close' : `${blockerCount} item${blockerCount === 1 ? '' : 's'} still open across ${gate.blockers.length} area${gate.blockers.length === 1 ? '' : 's'}`;
     const text = gate.closed ? (
       <>
-        Closed {gate.project?.closeout_date || '—'}.
-        {gate.project?.substantial_completion_date && <> Substantial completion {gate.project.substantial_completion_date}.</>}
-        {gate.project?.final_completion_date && <> Final completion {gate.project.final_completion_date}.</>}
-        {' '}Reopening puts it back on the active list and clears the closeout date.
+        {gate.project?.closeout_date ? <>Closed {fmtYmd(gate.project.closeout_date)}.</> : null}
+        {gate.project?.substantial_completion_date && <> Substantial completion {fmtYmd(gate.project.substantial_completion_date)}.</>}
+        {gate.project?.final_completion_date && <> Final completion {fmtYmd(gate.project.final_completion_date)}.</>}
       </>
     ) : clear ? 'Punch list, RFIs, change orders, pay applications and lien waivers are all clear.' : (
       <div className="coBlockers" style={{ marginTop: 8 }}>
@@ -459,7 +463,7 @@ export default function CloseoutPage() {
         ]}
         title="Closeout"
         badge={gate?.closed ? <Badge tone="closed" dot>Closed</Badge> : undefined}
-        subtitle={`${completed} of ${total} items complete — ${pct}% ready for handover.`}
+        subtitle={ctx?.project?.name || undefined}
         actions={
           <>
             <Menu
@@ -493,10 +497,6 @@ export default function CloseoutPage() {
         <div className="coCq">
           <div className="coGrid">
             <Card flush>
-              <div className="coProg" aria-label={`Closeout ${pct}% complete`}>
-                <span className="k-prog" aria-hidden><span style={{ width: `${pct}%`, background: pct === 100 ? 'var(--success)' : 'var(--brand-primary)' }} /></span>
-                <strong>{pct}%</strong>
-              </div>
               <DataTable<ChecklistItem>
                 tableId="project-closeout"
                 exportName="closeout-checklist"
@@ -506,7 +506,7 @@ export default function CloseoutPage() {
                 rowKey={(r) => r.id}
                 defaultSort={{ key: 'label', dir: 'asc' }}
                 rowActions={rowActions}
-                empty={<EmptyState title="No checklist items match" text="Change the search or the filter." action={<Button onClick={() => { setSearch(''); setStatusFilter('all'); }}>Clear filters</Button>} />}
+                empty={<EmptyState title="No checklist items match" action={<Button onClick={() => { setSearch(''); setStatusFilter('all'); }}>Clear filters</Button>} />}
               />
             </Card>
 
@@ -526,7 +526,7 @@ export default function CloseoutPage() {
                     ['Revised Contract', fmtM(revised)],
                     ['Billed to Date', `${fmtM(billed)} · ${billedPct}%`],
                     ['Balance to Finish', fmtM(balanceToFinish)],
-                    ['Retainage Held', `≈${fmtM(retainageHeld)}`],
+                    ['Retainage Held', retainageHeld > 0 ? `≈${fmtM(retainageHeld)}` : fmtM(0)],
                     ...(lastApp ? [[`Pay App #${lastApp.appNumber} status`, String(lastApp.status || '—').replace(/_/g, ' ').replace(/\b\w/g, (c: string) => c.toUpperCase())] as [string, React.ReactNode]] : []),
                   ]} />
                 </Card>

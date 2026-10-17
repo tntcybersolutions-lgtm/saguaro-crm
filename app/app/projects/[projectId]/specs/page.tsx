@@ -249,7 +249,7 @@ export default function SpecsPage() {
           text={pkgs.length > 0
             ? `Your ${pkgs.length} bid package${pkgs.length === 1 ? ' references' : 's reference'} ${pkgDivisions.size > 0 ? `${pkgDivisions.size} CSI division${pkgDivisions.size === 1 ? '' : 's'}` : 'the CSI divisions'} — add a section per division.`
             : 'Add sections by CSI MasterFormat number.'}
-          action={<Button variant="primary" icon={<Plus size={15} weight="bold" />} onClick={openForm}>Add section</Button>}
+          action={<Button icon={<Plus size={15} weight="bold" />} onClick={openForm}>Add section</Button>}
         />
       ) : (
         <EmptyState title="Nothing matches" text="Change the search or the status filter." action={<Button onClick={() => { setSearch(''); setStatusFilter('all'); }}>Clear filters</Button>} />
@@ -267,10 +267,10 @@ export default function SpecsPage() {
           { label: 'Specifications' },
         ]}
         title="Spec sections"
-        subtitle={specs.length > 0 ? `${specs.length} section${specs.length === 1 ? '' : 's'} across ${coveredDivisions} of ${DIV_CODES.length} CSI divisions.` : 'Project specifications organized by CSI division.'}
+        subtitle={specs.length > 0 ? `${specs.length} section${specs.length === 1 ? '' : 's'} across ${coveredDivisions} of ${DIV_CODES.length} CSI divisions.` : (ctx?.project?.name || undefined)}
         actions={<Button variant="primary" icon={<Plus size={15} weight="bold" />} onClick={openForm}>Add section</Button>}
       >
-        <StatRow items={stats} />
+        {(loading || specs.length > 0) && <StatRow items={stats} />}
 
         {!loading && specs.length > 0 && (
           <>

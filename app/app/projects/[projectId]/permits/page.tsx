@@ -421,10 +421,10 @@ export default function PermitsPage() {
           { label: 'Permits' },
         ]}
         title="Permits & Approvals"
-        subtitle={`${openCount} open${city ? ` · ${city} jurisdiction` : ''}`}
+        subtitle={[ctx?.project?.name, city ? `${city} jurisdiction` : ''].filter(Boolean).join(' · ') || undefined}
         actions={<Button variant="primary" icon={<Plus size={15} weight="bold" />} onClick={openCreate}>Add Permit</Button>}
       >
-        {!loadError && <StatRow items={stats} />}
+        {!loadError && (loading || permits.length > 0) && <StatRow items={stats} />}
 
         {expiringSoon.length > 0 && (
           <Callout

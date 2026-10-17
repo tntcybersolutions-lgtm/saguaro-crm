@@ -398,9 +398,7 @@ export default function CrewsPage() {
       <EmptyState
         icon={<UsersThree size={22} />}
         title={showArchived ? 'No archived crews' : 'No crews yet'}
-        text={showArchived
-          ? 'Archived crews land here with their rosters intact — restore one any time.'
-          : 'Build a crew with a foreman, a trade, and a roster. Daily logs then prefill their manpower-by-trade section from your active crews — no retyping headcounts.'}
+        text={showArchived ? undefined : 'Daily logs fill their manpower from your active crews.'}
         action={!showArchived ? <Button icon={<Plus size={15} weight="bold" />} onClick={openCreate}>Build First Crew</Button> : undefined}
       />
     );
@@ -449,7 +447,7 @@ export default function CrewsPage() {
           </>
         }
       >
-        {!loadError && <StatRow items={stats} />}
+        {!loadError && (loading || crews.length > 0) && <StatRow items={stats} />}
 
         {!loading && !loadError && crews.length > 0 && (
           <Toolbar
