@@ -78,7 +78,7 @@ export default function CalendarSyncPage() {
         {!links && !err && <Card><div className="pmSkeleton" style={{ height: 120, borderRadius: 10 }} aria-label="Getting your calendar link" /></Card>}
         {links && (
           <>
-            <Card title="Add to your calendar" subtitle="One tap. Your calendar app checks for changes about every hour.">
+            <Card title="Add to your calendar" subtitle="Updates about once an hour.">
               <ul style={{ listStyle: 'none', margin: 0, padding: 0 }}>
                 <ProviderRow primary icon={<GoogleLogo size={22} weight="bold" color="var(--text-primary)" />} name="Google Calendar" text="Tasks, inspections and meetings in Google." href={links.google} />
                 <ProviderRow icon={<MicrosoftOutlookLogo size={22} weight="fill" color="var(--link)" />} name="Outlook" text="Your work schedule in Outlook on the web." href={links.outlook} />
@@ -103,10 +103,7 @@ export default function CalendarSyncPage() {
                   </span>
                   <Button icon={<Copy size={16} />} onClick={copy}>{copied ? 'Copied' : 'Copy Link'}</Button>
                 </div>
-                <Button icon={<ArrowClockwise size={16} />} onClick={reset} disabled={resetting}>{resetting ? 'Making…' : 'Make New Link'}</Button>
-                <p style={{ display: 'flex', gap: 6, alignItems: 'center', margin: 0, fontSize: 13, color: 'var(--text-tertiary)' }}>
-                  <Info size={15} aria-hidden /> Updates about once an hour.
-                </p>
+                <div><Button icon={<ArrowClockwise size={16} />} onClick={reset} disabled={resetting}>{resetting ? 'Making…' : 'Make New Link'}</Button></div>
               </div>
             </Card>
           </>

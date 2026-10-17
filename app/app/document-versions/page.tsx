@@ -681,8 +681,8 @@ export default function DocumentVersionsPage() {
       <EmptyState
         icon={<FileText size={22} />}
         title="Nothing under version control yet"
-        text="Contracts, drawings, specs, and submittals belong here. Every upload becomes v1; each revision after that is checksummed and comparable, approvals gate what's current, and check-out locks stop two people revising the same file."
-        action={<div style={{ display: 'flex', gap: 10, flexWrap: 'wrap', justifyContent: 'center' }}><Button icon={<Plus size={15} weight="bold" />} onClick={() => openModal(null, 'upload')}>New Document</Button><Button icon={<Files size={15} weight="bold" />} onClick={() => openModal(null, 'bulk')}>Bulk Upload</Button><Button variant="ghost" icon={<Archive size={15} />} onClick={() => setStatusFilter('Archived')}>View Archived</Button></div>}
+        text="Each upload is v1; every revision after it is kept and comparable."
+        action={<div style={{ display: 'flex', gap: 10, flexWrap: 'wrap', justifyContent: 'center' }}><Button icon={<Plus size={15} weight="bold" />} onClick={() => openModal(null, 'upload')}>New Document</Button><Button variant="ghost" icon={<Archive size={15} />} onClick={() => setStatusFilter('Archived')}>View Archived</Button></div>}
       />
     );
   } else {
@@ -709,7 +709,7 @@ export default function DocumentVersionsPage() {
       <PageShell
         crumbs={[{ label: 'Home', href: '/app' }, { label: 'Documents', href: '/app/documents' }, { label: 'Versions' }]}
         title="Document Versions"
-        subtitle={`${documents.length} document${documents.length !== 1 ? 's' : ''} under version control — every revision checksummed, approvals tracked, check-outs locked.`}
+        subtitle={documents.length ? `${documents.length} document${documents.length !== 1 ? 's' : ''}` : undefined}
         actions={
           <>
             <Button icon={<Files size={15} weight="bold" />} onClick={() => openModal(null, 'bulk')}>Bulk Upload</Button>
@@ -717,7 +717,7 @@ export default function DocumentVersionsPage() {
           </>
         }
       >
-        {!error && <StatRow items={stats} />}
+        {!error && documents.length > 0 && <StatRow items={stats} />}
 
         {!loading && !error && (documents.length > 0 || statusFilter === 'Archived') && (
           <Toolbar
@@ -735,7 +735,7 @@ export default function DocumentVersionsPage() {
           />
         )}
 
-        <Card flush>{body}</Card>
+        {documents.length > 0 || statusFilter === 'Archived' ? <Card flush>{body}</Card> : body}
       </PageShell>
 
       {/* ── History ── */}

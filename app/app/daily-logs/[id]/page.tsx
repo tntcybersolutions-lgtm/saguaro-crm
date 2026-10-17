@@ -87,6 +87,9 @@ function shortDate(v: string | null | undefined): string {
   return isNaN(d.getTime()) ? '—' : d.toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' });
 }
 
+/** A stored phase ("closeout", "rough_in") read as words. */
+const humanPhase = (v: string) => v.replace(/_/g, ' ').replace(/\b\w/g, (c) => c.toUpperCase());
+
 function tempStr(high: number | null | undefined, low: number | null | undefined): string {
   if (high == null && low == null) return '—';
   return `${high ?? '—'}° / ${low ?? '—'}°`;
@@ -301,9 +304,9 @@ export default function DailyLogDetailPage() {
 
   const conditions: StatItem[] = [
     { label: 'Crew on Site', value: l.crew_count != null ? String(l.crew_count) : '0', sub: l.superintendent ? `Super: ${l.superintendent}` : 'No superintendent recorded' },
-    { label: 'Weather', value: l.weather || '—', sub: l.precipitation ? `Precipitation ${l.precipitation}` : 'Auto-stamped from NWS' },
-    { label: 'High / Low', value: tempStr(l.high_temp, l.low_temp), sub: l.wind_conditions ? `Wind ${l.wind_conditions}` : 'As recorded' },
-    { label: 'Phase of Work', value: l.phase_of_work || '—', sub: l.equipment ? 'Equipment notes recorded' : 'Set in report info' },
+    ...(l.weather ? [{ label: 'Weather', value: l.weather, sub: l.precipitation ? `Precipitation ${l.precipitation}` : undefined } as StatItem] : []),
+    ...(l.high_temp != null || l.low_temp != null ? [{ label: 'High / Low', value: tempStr(l.high_temp, l.low_temp), sub: l.wind_conditions ? `Wind ${l.wind_conditions}` : undefined } as StatItem] : []),
+    ...(l.phase_of_work ? [{ label: 'Phase of Work', value: humanPhase(l.phase_of_work), sub: l.equipment ? 'Equipment notes recorded' : undefined } as StatItem] : []),
   ];
 
   // ── Editor plumbing ──────────────────────────────────────────────────────
@@ -399,7 +402,7 @@ export default function DailyLogDetailPage() {
         crumbs={crumbs}
         title={dateStr(l.log_date)}
         badge={<span className="dldBadges"><Badge tone={status.tone} dot>{status.label}</Badge>{!!(l.delays || '').trim() && <Badge tone="overdue">Delays</Badge>}{!!(l.safety_notes || '').trim() && <Badge tone="neutral">Safety Note</Badge>}</span>}
-        subtitle={projectName ? `${projectName} — daily field report.` : 'Daily field report.'}
+        subtitle={projectName || undefined}
         actions={
           <Button
             variant="primary"
@@ -551,8 +554,8 @@ export default function DailyLogDetailPage() {
                 ) : (
                   <div className="dldPair">
                     {[
-                      { l: 'Materials Delivered', v: l.materials_delivered || '—', icon: <Package size={12} /> },
-                      { l: 'Visitors', v: l.visitors || '—', icon: <UserCircle size={12} /> },
+                      { l: 'Materials Delivered', v: l.materials_delivered || 'None recorded', icon: <Package size={12} /> },
+                      { l: 'Visitors', v: l.visitors || 'None recorded', icon: <UserCircle size={12} /> },
                     ].map(f => (
                       <div key={f.l}>
                         <div className="dldLabel">{f.icon} {f.l}</div>
@@ -620,7 +623,7 @@ export default function DailyLogDetailPage() {
                 ) : (
                   <div className="dldSection">
                     <DetailList items={[
-                      ['Project', projectName || l.project_id || ''],
+                      ['Project', projectName || ''],
                       ['Log Date', shortDate(l.log_date)],
                       ['Superintendent', l.superintendent || ''],
                       ['Crew on Site', l.crew_count != null ? String(l.crew_count) : '0'],
@@ -629,7 +632,7 @@ export default function DailyLogDetailPage() {
                       ['Precipitation', l.precipitation || ''],
                       ['Wind', l.wind_conditions || ''],
                       ['Created', shortDate(l.created_at)],
-                    ]} />
+                    ].filter(([, v]) => !!v && v !== '—') as [string, string][]} />
                   </div>
                 )}
                 <div className="dldSection">
