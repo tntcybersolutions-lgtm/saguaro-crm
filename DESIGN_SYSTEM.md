@@ -56,7 +56,7 @@ states are mixes of approved values (no new hex). The status values
 | Muted text | #94A3B8 → raised to #A3B1C6 (global theme pass) | #A3B1C6 (7:1 on a card) | `--text-tertiary` | labels, meta, captions, table headers |
 | Page title | #E8FF2A (14 Oct 2026, was #38BDF8) | #E8FF2A | `--title-page` | `PageShell`, `ModuleHero`, any `h1` in `.sag-app`, login |
 | Section heading | --c-yellow-hi (14 Oct 2026, was #7DD3FC) | mix #E8FF2A 86% + #F8FAFC | `--title-section` | `h2`, `.k-card-title`, `.pmSecTitle`, `.fl-sec`, sidebar group heads |
-| Card edge | (global theme pass) | #3D4F68 + top highlight | `--border-card`, `--card-highlight` | `.k-card`, `.pmSec`, `.k-stats`, `.pmStrip`, `.k-callout`, `.fl-list`, `.fl-strip`, `.fl-brief` |
+| Card edge | (global theme pass) | #3D4F68 + top highlight | `--border-card`, `--card-highlight` | `.k-card`, `.k-callout`, `.fl-list`, `.fl-brief` (summary strips carry no edge — see §3) |
 | Inverse text | #101722 | #101722 | `--text-inverse`, `--on-brand`, `--action-primary-fg` | text on yellow |
 | Primary action | #FFE000 | #FFE000 | `--brand-primary`, `--action-primary-bg` | `.k-btn-primary`, `goldButtonStyle` |
 | Primary hover / pressed | — (derived) | mix #FFE000 90% / 80% + #101722 | `--action-primary-hover`, `--action-primary-pressed` | primary buttons |
@@ -68,7 +68,7 @@ states are mixes of approved values (no new hex). The status values
 | Warning / pending | #FBBF24 | #FBBF24 | `--warning`, `--warning-fg/bg/border` | badges, callouts |
 | Error / overdue | #F87171 | #F87171 | `--danger`, `--danger-fg/bg/border`, `--action-danger-*` | badges, errors, destructive buttons |
 | Disabled | — (derived) | #243247 / #94A3B8 / #334155 | `--disabled-bg/fg/border` | disabled controls |
-| Module accents (global theme pass) | one hue per domain | core #38BDF8 · sales #A78BFA · precon #22D3EE · build #818CF8 · field #2DD4BF · money #F472B6 · docs #60A5FA · people #FB923C | `--mod-*`, `--acc`; `lib/ui/app-accent.ts` (`moduleAccent`, `accentForPath`, `DOMAIN_HEX` mirror) | every icon tile (`.k-tile`, `IconTile`, `SectionCard` icon, `ModuleHero` tile, stat icons, timeline dots, `IconChip`), sidebar glyphs, job tool rows |
+| Module accents (global theme pass) | one hue per domain | core #38BDF8 · sales #A78BFA · precon #22D3EE · build #818CF8 · field #2DD4BF · money #F472B6 · docs #60A5FA · people #FB923C | `--mod-*`, `--acc`; `lib/ui/app-accent.ts` (`moduleAccent`, `accentForPath`, `DOMAIN_HEX` mirror) | every icon tile (`.k-tile`, `IconTile`, `SectionCard` icon, `ModuleHero` tile, timeline dots, `IconChip`). Not navigation: sidebar glyphs and job tool rows are all `--text-secondary` (16 Oct 2026) |
 | Documents (PDF, print, Excel, Word) | white paper | ink #0F172A, accent #0284C7 (#38BDF8 on the navy band), rules #CBD5E1, zebra #F1F5F9 | `lib/document-palette.ts` `DOC_HEX` → `report-theme` `DOC`, `print-doc` `PRINT_TOKENS`, `report-export` | every generator in `lib/document-templates`, report exports, HTML print docs |
 | Status chips (`components/ui/Status`) | approved status values | draft #94A3B8 · waiting on you #38BDF8 · waiting/warn #FBBF24 · good/done #4ADE80 · bad #F87171 | `lib/status-system.ts` `TONES` | RFIs, header messages, Home |
 | Chart series | — (approved values only) | #38BDF8, light blue, deep blue, #CBD5E1, green, amber, #94A3B8, #334155 | `--chart-1…5`, `components/charts/shared.tsx` | every chart |
@@ -240,8 +240,8 @@ marketing pages.
 | Page frame + header | `PageShell` (kit) or `PremiumSurface` + `ModuleHero` (premium) — both are the `.k-frame` (§2a); `width="form"` for a form page | `components/ui/kit.tsx`, `components/ui/premium.tsx` |
 | Buttons | `Button` variants `primary / secondary / ghost / danger` (`.k-btn-*`); premium pages use `goldButtonStyle` for the one primary and `secondaryButtonStyle` for every other action (an empty state's button that repeats the header's is secondary) | kit / premium |
 | Card / section | `Card` (`.k-card`) or `SectionCard` (`.pmSec`); `flush` for a table | kit / premium |
-| Summary figures | `StatRow` (kit) or `StatStrip` / `StatCard` (premium) — one summary per screen, never repeated | kit / premium |
-| Tables | `DataTable` (`.k-table`); phones stack rows, a lone "…" stays in the corner, labelled actions get their own line | kit |
+| Summary figures | `StatRow` (kit) or `StatStrip` / `StatCard` (premium) — one summary per screen, never repeated. Figures sit straight on the page: no box, fill or rule above/below, a hairline between figures only, the first figure on the title's left edge; a stat icon is a plain slate glyph, never a tinted tile | kit / premium |
+| Tables | `DataTable` (`.k-table`); fits its container — text columns end in "…" (`.k-cell`, or `fit` on the column) before the row overflows, money / numbers / status badges stay whole, and only `.k-table-scroll` (never the page) scrolls when even that cannot fit. Phones stack rows, a lone "…" stays in the corner, labelled actions get their own line | kit |
 | Tabs / segmented | `.k-tabs` / `.k-tab` (segmented, yellow selected) | globals |
 | Status | `Badge` with a tone from `lib/status-colors.ts` | kit |
 | Empty / error | `EmptyState` (kit) or `PremiumEmpty` — one compact line + action | kit / premium |
@@ -250,6 +250,14 @@ marketing pages.
 | How-it-works strip | `FlowStrip` / `FlowSteps` — only in empty states | premium |
 
 Disabled primary = slate with muted text (globals), never faded yellow.
+
+Navigation glyphs (sidebar, job tool rows) are one colour: slate
+`--text-secondary`, brighter on hover; the selected row is the yellow pill.
+
+Notifications are one slim line, not a card: the kit `Toast` (status dot +
+words, 36px) and the status box (`StatusCenter`), whose DONE / WORKING heading
+is read to screen readers but not shown — only a failure or "no signal" keeps a
+visible heading.
 
 ## 4. Page hierarchy (every screen)
 

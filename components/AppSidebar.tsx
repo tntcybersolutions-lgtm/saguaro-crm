@@ -59,7 +59,6 @@ import {
 import { colors, font, radius, shadow, sidebar as sidebarTokens, z } from '../lib/design-tokens';
 import { useWhiteLabel } from './WhiteLabelProvider';
 import { useEntitlements } from '../lib/hooks/useEntitlements';
-import { moduleAccent, moduleKeyFromPath } from '@/lib/ui/app-accent';
 import { Pill } from './ui/premium';
 import { PROJECT_NAV_SECTIONS } from '@/lib/project-nav';
 import { useProjectContext, refreshProjectContext } from '@/lib/hooks/useProjectContext';
@@ -83,7 +82,7 @@ interface NavItem {
   /* Kept for the mobile rail and the command palette's ranking. It no longer
      decides what the desktop sidebar shows — everything entitled is shown. */
   core?: boolean;
-  accentKey?: string; // module-identity key -> tints the inactive icon + count badge
+  accentKey?: string; // module-identity key (kept for search / page accents; the rail's glyphs are all slate)
   /* The permission this ONE item needs, when it differs from its section's
      (SECTION_PERMISSION). null = everyone who can sign in. Company scope only. */
   perm?: PermCategory | null;
@@ -983,10 +982,10 @@ export default function AppSidebar({
                   <Icon
                     size={collapsed ? 20 : 18}
                     weight={active ? 'fill' : 'regular'}
-                    /* Each module's glyph wears its domain hue (lib/ui/app-accent —
-                       one map for the sidebar, the page tiles and the job tools);
-                       the label stays slate and the current page is the yellow pill. */
-                    color={active ? 'var(--on-brand)' : moduleAccent(item.accentKey ?? moduleKeyFromPath(item.href)).hex}
+                    /* One calm glyph colour for the whole rail: the glyph follows
+                       its row's text (slate, brighter on hover) and only the
+                       current page — the yellow pill — stands out. */
+                    color={active ? 'var(--on-brand)' : 'currentColor'}
                     style={{ flexShrink: 0, opacity: 1 }}
                   />
                   {!collapsed && (
@@ -1089,8 +1088,8 @@ export default function AppSidebar({
                 whiteSpace: 'nowrap',
               }}
             >
-              {/* Same rule as the main rail: the glyph wears its module's domain hue. */}
-              <Icon size={collapsed ? 20 : 18} weight={active ? 'fill' : 'regular'} color={active ? 'var(--on-brand)' : moduleAccent(moduleKeyFromPath(item.href)).hex} style={{ flexShrink: 0, opacity: 1 }} />
+              {/* Same rule as the main rail: the glyph follows the row's slate text. */}
+              <Icon size={collapsed ? 20 : 18} weight={active ? 'fill' : 'regular'} color={active ? 'var(--on-brand)' : 'currentColor'} style={{ flexShrink: 0, opacity: 1 }} />
               {!collapsed && <span className="sg-nav-label" data-active={active || undefined}>{item.label}</span>}
             </Link>
           );

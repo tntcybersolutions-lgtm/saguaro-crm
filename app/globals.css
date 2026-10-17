@@ -1113,13 +1113,19 @@ input:-webkit-autofill:focus {
 
 /* Stat figures — one scoreboard row on the page: hairlines above, below and
    between the figures, no box. The value leads, the label says what it is. */
-.k-stats { display: grid; grid-template-columns: repeat(auto-fit, minmax(140px, 1fr)); background: none; border: 0; border-top: 1px solid var(--border-subtle); border-bottom: 1px solid var(--border-subtle); border-radius: 0; box-shadow: none; overflow: hidden; }
-.k-stat { position: relative; display: flex; flex-direction: column; gap: 2px; min-width: 0; padding: 12px 16px; margin: 0 0 -1px -1px; border-left: 1px solid var(--border-subtle); border-bottom: 1px solid var(--border-subtle); background: none; border-radius: 0; box-shadow: none; text-decoration: none; color: inherit; }
+/* Summary figures (StatRow): numbers laid straight on the page, Procore-style.
+   No box, no fill, no rule above or below — only a hairline between figures.
+   The strip starts 16px left of the frame so the first figure's text lines up
+   with the page title; each figure's left hairline is hidden at a row start
+   (the -1px margin + overflow clip). */
+.k-stats { display: grid; grid-template-columns: repeat(auto-fit, minmax(140px, 1fr)); row-gap: 8px; margin-left: -16px; background: none; border: 0; border-radius: 0; box-shadow: none; overflow: hidden; }
+.k-stat { position: relative; display: flex; flex-direction: column; gap: 2px; min-width: 0; padding: 6px 16px; margin: 0 0 0 -1px; border-left: 1px solid var(--border-subtle); background: none; border-radius: 0; box-shadow: none; text-decoration: none; color: inherit; }
 a.k-stat:hover, button.k-stat:hover { background: rgba(148,163,184,0.06); }
 button.k-stat { text-align: left; font: inherit; border-top: 0; border-right: 0; cursor: pointer; }
 button.k-stat[aria-pressed="true"] { box-shadow: inset 0 -2px 0 var(--brand-primary); }
 .k-stat-top { order: 1; margin-bottom: 4px; display: flex; align-items: center; gap: 6px; min-width: 0; }
-.k-stat-icon { display: inline-grid; place-items: center; flex: none; width: 28px; height: 28px; border-radius: 8px; background: color-mix(in srgb, var(--acc) 14%, var(--bg-surface-2)); border: 1px solid color-mix(in srgb, var(--acc) 38%, var(--bg-surface-2)); color: var(--acc); }
+/* The figure's glyph sits beside its label in the label's slate — no tile. */
+.k-stat-icon { display: inline-flex; align-items: center; flex: none; color: var(--text-tertiary); }
 /* Labels and sublines wrap to two lines rather than cutting a word mid-way. */
 .k-stat-label { font-size: 13px; font-weight: 600; letter-spacing: normal; text-transform: none; color: var(--text-tertiary); overflow: hidden; display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow-wrap: anywhere; }
 .k-stat-value { order: 2; font-size: 22px; font-weight: 700; letter-spacing: -0.01em; color: var(--text-primary); font-variant-numeric: tabular-nums; line-height: 1.3; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
@@ -1151,15 +1157,28 @@ button.k-stat[aria-pressed="true"] { box-shadow: inset 0 -2px 0 var(--brand-prim
 .k-tab-count { font-size: 12px; font-weight: 700; padding: 1px 7px; border-radius: 999px; background: var(--bg-surface-2); color: var(--text-secondary); }
 
 /* Data table — dense rows, sticky header, row actions on the right */
-.k-table-wrap { overflow-x: auto; }
-/* A DataTable wider than its card scrolls sideways; its first column (the
-   record's name) stays pinned so a row never loses what it is (takeoff
-   divisions at 1280 had to scroll to reach Total with the item name gone).
-   Desktop only — on a phone the table is stacked cards. */
+/* A DataTable fits its container: text cells (.k-cell) add nothing to their
+   column's minimum width, so when the row is tight long text ends in "…"
+   instead of pushing the last columns off the right edge. Only when even that
+   cannot fit does the table scroll — inside .k-table-scroll, never the page;
+   the list tools above it stay put. */
+.k-table-wrap { min-width: 0; max-width: 100%; }
+.k-table-scroll { overflow-x: auto; min-width: 0; max-width: 100%; }
+.k-cell { display: grid; grid-template-columns: minmax(0, max-content); min-width: 0; }
+.k-cell-in { min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+/* When it does scroll, the first column (the record's name) stays pinned so a
+   row never loses what it is (takeoff divisions at 1280 had to scroll to
+   reach Total with the item name gone). Desktop only — on a phone the table
+   is stacked cards. */
 @media (min-width: 768px) {
-  .k-table-wrap > .k-table td:first-child { position: sticky; left: 0; z-index: 1; background: var(--bg-solid); }
-  .k-table-wrap > .k-table th:first-child { left: 0; z-index: 3; }
-  .k-table-wrap > .k-table tbody tr:hover td:first-child { background: var(--bg-row-hover); }
+  .k-table-scroll > .k-table td:first-child { position: sticky; left: 0; z-index: 1; background: var(--bg-solid); }
+  .k-table-scroll > .k-table th:first-child { left: 0; z-index: 3; }
+  .k-table-scroll > .k-table tbody tr:hover td:first-child { background: var(--bg-row-hover); }
+}
+@media (max-width: 767px) {
+  /* Stacked rows: the value wraps instead of truncating. */
+  .k-cell { display: block; }
+  .k-cell-in { white-space: normal; overflow: visible; overflow-wrap: anywhere; }
 }
 .k-table { width: 100%; border-collapse: collapse; font-size: var(--fs-md); }
 .k-table th { position: sticky; top: 0; z-index: 1; background: var(--bg-surface-2); text-align: left; padding: 10px 12px; font-size: 12px; font-weight: 700; letter-spacing: .05em; text-transform: uppercase; color: var(--text-tertiary); border-bottom: 1px solid var(--border-default); white-space: nowrap; user-select: none; }
@@ -1344,8 +1363,11 @@ select.k-select { padding-right: 36px; }
 
 /* Loading placeholder + toast */
 .k-skel { display: inline-block; height: 10px; border-radius: 4px; background: var(--bg-surface-2); animation: pulse 1.4s ease-in-out infinite; }
-.k-toast { position: fixed; left: 50%; bottom: 24px; transform: translateX(-50%); z-index: 10001; max-width: min(520px, calc(100vw - 32px)); padding: 12px 16px; border-radius: var(--radius-md); background: var(--bg-elevated); border: 1px solid var(--border-default); border-left: 3px solid var(--success); box-shadow: var(--shadow-lg); font-size: var(--fs-md); font-weight: 600; color: var(--text-primary); }
-.k-toast[data-tone="bad"] { border-left-color: var(--danger); }
+/* Toast: one quiet line — a small status dot, the words, nothing else. Not a
+   card: hairline edge, soft shadow, 36px tall. */
+.k-toast { position: fixed; left: 50%; bottom: 24px; transform: translateX(-50%); z-index: 10001; display: inline-flex; align-items: center; gap: 8px; max-width: min(480px, calc(100vw - 32px)); min-height: 36px; box-sizing: border-box; padding: 7px 14px 7px 12px; border-radius: 8px; background: var(--bg-surface-2); border: 1px solid var(--border-default); box-shadow: 0 6px 18px -8px rgba(0,0,0,0.6); font-size: 14px; font-weight: 500; line-height: 1.35; color: var(--text-primary); }
+.k-toast::before { content: ''; flex: none; width: 8px; height: 8px; border-radius: 50%; background: var(--success); }
+.k-toast[data-tone="bad"]::before { background: var(--danger); }
 
 /* Empty state — flat (2026-10-10): one plain line and one action. */
 .k-empty { display: flex; flex-wrap: wrap; align-items: center; gap: 8px 14px; padding: 14px 0; text-align: left; }
@@ -1929,10 +1951,10 @@ li[data-done="true"] .pj-next-step strong { color: var(--text-tertiary); text-de
 /* The rare raised surface (a tray in a dialog or picker) keeps its padding. */
 .pmSec.pmSecTray{padding:4px 16px 14px}
 @media (max-width:767px){.pmSec.pmSecTray{padding:4px 12px 12px}}
-/* Number strip (StatStrip / StatCard): a scoreboard row on the page — hairlines above, below and between, no box. */
-.pmStrip{background:none;border:0;border-top:1px solid var(--border-subtle);border-bottom:1px solid var(--border-subtle);border-radius:0;box-shadow:none;overflow:hidden;margin-bottom:16px;min-width:0}
-.pmStripGrid{display:grid;grid-template-columns:repeat(auto-fit,minmax(118px,1fr));margin:0 0 -1px -1px}
-.pmFig{position:relative;display:flex;flex-direction:column;gap:2px;min-width:0;min-height:44px;padding:12px 16px;border-left:1px solid var(--border-subtle);border-bottom:1px solid var(--border-subtle);background:none;color:inherit;text-decoration:none;text-align:left;font:inherit;box-sizing:border-box}
+/* Number strip (StatStrip / StatCard): figures straight on the page — a hairline between figures only, no box, no rule above or below; pulled 16px left so the first figure lines up with the title. */
+.pmStrip{background:none;border:0;border-radius:0;box-shadow:none;overflow:hidden;margin:0 0 16px -16px;min-width:0}
+.pmStripGrid{display:grid;grid-template-columns:repeat(auto-fit,minmax(118px,1fr));row-gap:8px;margin:0 0 0 -1px}
+.pmFig{position:relative;display:flex;flex-direction:column;gap:2px;min-width:0;min-height:44px;padding:6px 16px;border-left:1px solid var(--border-subtle);background:none;color:inherit;text-decoration:none;text-align:left;font:inherit;box-sizing:border-box}
 button.pmFig,a.pmFig,div.pmFig[role=button]{cursor:pointer}
 button.pmFig{border-top:0;border-right:0;border-radius:0;width:100%}
 a.pmFig:hover,button.pmFig:hover,div.pmFig[role=button]:hover{background:rgba(148,163,184,0.06)}
