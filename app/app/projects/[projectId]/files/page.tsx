@@ -12,6 +12,8 @@
  *         POST /api/files/share  { fileId, channel, to }
  *         POST /api/storage/connectors/:id/export  { fileId }
  */
+import { jsonRequest } from '@/lib/list-view';
+import { useEditRights } from '@/lib/hooks/usePermissions';
 import React, { useState, useEffect, useCallback, useMemo, useRef } from 'react';
 import { textPrompt, confirmDialog } from '@/lib/ui/async-dialog';
 import { useProjectContext } from '@/lib/hooks/useProjectContext';
@@ -103,6 +105,7 @@ export default function FilesPage() {
   const closePreview = useCallback(() => setSel(null), []);
   const [showImport, setShowImport] = useState(false);
   const { toast, show } = useToast(3500);
+  const rights = useEditRights('Documents');
   const [view, setView] = useState<'list' | 'grid'>('list');
   // "Added This Week" tile: narrows the library to the last 7 days of uploads.
   const [recentOnly, setRecentOnly] = useState(false);
@@ -254,7 +257,10 @@ export default function FilesPage() {
     ? <EmptyState icon={<Trash size={22} />} title="Trash is empty" text="Deleted files land here and can be restored." />
     : files.length > 0
       ? <EmptyState icon={<MagnifyingGlass size={22} />} title="No files match" text="Try a different search or filter." action={filtersActive ? <Button onClick={clearFilters}>Clear filters</Button> : undefined} />
-      : <EmptyState icon={<Folder size={22} />} title="No files yet" text="Drop files above or import from the cloud." />;
+      : <EmptyState icon={<Folder size={22} />} title="No files yet" text="Drop files above."
+          primary={{ label: 'Upload Files', icon: <UploadSimple size={15} weight="bold" />, onClick: () => pickUpload() }}
+          secondary={{ label: 'Import from cloud', icon: <CloudArrowDown size={15} weight="bold" />, onClick: () => setShowImport(true) }}
+          perm={['Documents', 'Edit']} />;
 
   const pickUpload = () => document.querySelector<HTMLInputElement>('.flDrop input[type="file"]')?.click();
 
@@ -362,6 +368,20 @@ export default function FilesPage() {
           <Card flush>
             <DataTable<any>
               tableId={trash ? 'project-files-trash' : 'project-files'}
+              bulkEdit={{
+                noun: 'file',
+                allowed: rights.full,
+                remove: {
+                  allowed: rights.full,
+                  label: trash ? 'Delete' : 'Move to trash',
+                  verb: trash ? 'deleted' : 'moved to trash',
+                  // Linked files belong to the record they came from; they are removed there.
+                  apply: (f) => isLinked(f)
+                    ? Promise.resolve(new Response(JSON.stringify({ error: `"${f.file_name || 'A linked file'}" belongs to another record — remove it there.` }), { status: 409 }))
+                    : jsonRequest(`/api/files/${f.id}${trash ? '?hard=1' : ''}`, 'DELETE'),
+                },
+                onDone: () => { void load(); },
+              }}
               exportName={trash ? 'files-trash' : 'files'}
               columns={columns}
               rows={filtered}

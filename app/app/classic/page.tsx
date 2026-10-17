@@ -201,7 +201,7 @@ function BidScoreModal({ onClose }: { onClose: () => void }) {
         </div>
         <div style={{ padding: 20 }}>
           {!result ? (
-            <form onSubmit={handleSubmit}>
+            <form method="post" onSubmit={handleSubmit}>
               {([
                 { label: 'Project Name', field: 'projectName' as const, placeholder: 'e.g. Tempe Office Complex' },
                 { label: 'Estimated Value ($)', field: 'estValue' as const, placeholder: 'e.g. 2,500,000' },

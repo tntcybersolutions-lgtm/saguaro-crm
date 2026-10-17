@@ -1,5 +1,9 @@
 'use client';
+import { useEditRights } from '@/lib/hooks/usePermissions';
+import { jsonRequest } from '@/lib/list-view';
+import type { BulkEdit } from '@/components/ui/kit';
 import React, { useState, useEffect, useCallback } from 'react';
+import { useOpenOnNew } from '@/lib/ui/open-on-new';
 import { confirmDialog } from '@/lib/ui/async-dialog';
 import { useProjectContext } from '@/lib/hooks/useProjectContext';
 import { humanError } from '@/lib/errors';
@@ -222,6 +226,7 @@ export default function DrawingsPage(){
   const [saving,setSaving]=useState(false);
   const [deleting,setDeleting]=useState(false);
   const [toast,setToast]=useState<{msg:string;type:'success'|'error'}|null>(null);
+  const rights = useEditRights('Documents');
   const [search,setSearch]=useState('');
   const [filterDiscipline,setFilterDiscipline]=useState('all');
   const [filterStatus,setFilterStatus]=useState('all');
@@ -291,6 +296,8 @@ export default function DrawingsPage(){
     return()=>window.removeEventListener('keydown',onKey);
   },[isPhone,railOpen,metaOpen,mode]);
 
+  // ?new=1 (the job page's empty tool row) opens the create form.
+  useOpenOnNew(openCreate, !loading);
   function openCreate(){
     setForm({...EMPTY_FORM,revision_date:todayIso()});
     setAutoFields({date:true});
@@ -531,6 +538,13 @@ export default function DrawingsPage(){
       </a>
     ):<span style={{fontSize:12,color:'var(--text-tertiary)'}}>No File</span>)},
   ];
+  /* Delete through the row's own route (Documents: Full), one sheet at a time. */
+  const drawingBulk: BulkEdit<any> = {
+    noun: 'sheet',
+    allowed: rights.full,
+    remove: { allowed: rights.full, apply: (d) => jsonRequest(`/api/drawings/${d.id}`, 'DELETE') },
+    onDone: () => { void load(); },
+  };
   const rowActions=(d:any)=>[
     {label:'Pins & Revisions',href:`/app/projects/${projectId}/drawings/${d.id}`},
     {label:'Open on Canvas',onClick:()=>viewDrawing(d)},
@@ -907,14 +921,14 @@ export default function DrawingsPage(){
               <Card flush title={loading?'Drawings':!groupByDiscipline&&filtered.length>0?'All Drawings':undefined}
                 subtitle={!loading&&filtered.length>0?`${filtered.length} of ${total} sheet${total===1?'':'s'}`:undefined}>
                 <DataTable tableId="project-drawings" exportName="drawings" columns={columns} rows={loading||loadError?[]:filtered} rowKey={d=>d.id} loading={loading}
-                  onRowClick={viewDrawing} rowActions={rowActions} empty={registerEmpty}/>
+                  onRowClick={viewDrawing} rowActions={rowActions} empty={registerEmpty} bulkEdit={drawingBulk}/>
               </Card>
             ):(
               groupOrder.map(disc=>(
                 <Card key={disc} flush
                   title={<span style={{display:'inline-flex',alignItems:'center',gap:8}}><span className="dw-dot" style={{background:DISCIPLINE_COLORS[disc]||'var(--text-tertiary)'}}/>{disc}</span>}
                   subtitle={`${grouped[disc].length} sheet${grouped[disc].length===1?'':'s'}`}>
-                  <DataTable tableId="project-drawings" exportName="drawings" columns={columns} rows={grouped[disc]} rowKey={d=>d.id} onRowClick={viewDrawing} rowActions={rowActions}/>
+                  <DataTable tableId="project-drawings" exportName="drawings" columns={columns} rows={grouped[disc]} rowKey={d=>d.id} onRowClick={viewDrawing} rowActions={rowActions} bulkEdit={drawingBulk}/>
                 </Card>
               ))
             )}

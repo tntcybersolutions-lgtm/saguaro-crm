@@ -5,6 +5,7 @@
  * their own site posts to the same API and lands back here on ?sent=1.
  * Every submission becomes a New lead in their CRM (lib/lead-intake).
  */
+import { useHydrated } from '@/lib/use-hydrated';
 import React, { Suspense, useEffect, useRef, useState } from 'react';
 import { useParams, useSearchParams } from 'next/navigation';
 import { CheckCircle, WarningCircle } from '@phosphor-icons/react';
@@ -26,6 +27,7 @@ function LeadForm() {
   const { key } = useParams<{ key: string }>();
   const search = useSearchParams();
   const [company, setCompany] = useState<string | null>(null);
+  const hydrated = useHydrated();
   const [state, setState] = useState<'loading' | 'ready' | 'gone' | 'sent'>(search.get('sent') ? 'sent' : 'loading');
   const [error, setError] = useState<string | null>(search.get('error'));
   const [busy, setBusy] = useState(false);
@@ -87,7 +89,7 @@ function LeadForm() {
         )}
 
         {state === 'ready' && (
-          <form onSubmit={submit} noValidate={false}>
+          <form method="post" onSubmit={submit} noValidate={false}>
             <div style={{ fontSize: 13, fontWeight: 800, color: 'var(--text-primary)', letterSpacing: '.04em' }}>{company}</div>
             <h1 style={{ fontSize: 28, lineHeight: 1.2, margin: '6px 0 6px' }}>Request a quote</h1>
             <p style={{ color: DIM, fontSize: 16, margin: '0 0 22px', lineHeight: 1.55 }}>Tell us about your project and we will get back to you.</p>
@@ -119,7 +121,7 @@ function LeadForm() {
               <input name="website" tabIndex={-1} autoComplete="off" aria-hidden="true" value={f.website} onChange={set('website')} style={{ position: 'absolute', left: -9999, width: 1, height: 1, opacity: 0 }} />
               <p style={{ color: DIM, fontSize: 14, margin: 0 }}>We need an email or a phone number to reach you.</p>
               {error && <div role="alert" style={{ color: 'var(--danger)', fontSize: 15, fontWeight: 700 }}>{error}</div>}
-              <button type="submit" disabled={busy} style={{ minHeight: 52, borderRadius: 12, border: 'none', background: GOLD, color: 'var(--on-brand)', fontSize: 17, fontWeight: 800, cursor: 'pointer', opacity: busy ? 0.7 : 1 }}>
+              <button type="submit" disabled={busy || !hydrated} style={{ minHeight: 52, borderRadius: 12, border: 'none', background: GOLD, color: 'var(--on-brand)', fontSize: 17, fontWeight: 800, cursor: 'pointer', opacity: busy ? 0.7 : 1 }}>
                 {busy ? 'Sending…' : 'Request a quote'}
               </button>
             </div>

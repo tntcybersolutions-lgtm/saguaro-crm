@@ -93,7 +93,7 @@ export default function DirectoryPage() {
         ) : (
           <SectionCard flat>
             <PremiumEmpty compact icon={<Users size={26} weight="duotone" color="var(--text-secondary)" />} title="Nothing matches"
-              description="No stakeholder matches this site or search. Clear the filters to see the full roster." />
+              description="No stakeholder matches this site or search." onClearFilters={() => { setSite('all'); setQ(''); }} />
           </SectionCard>
         )
       ) : (

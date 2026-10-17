@@ -1819,7 +1819,7 @@ export function AccessManager({ jump, onChanged }: { jump?: { tab: Tab; n: numbe
           </div>
         )}
         {person && personEditing && (
-          <form onSubmit={(e) => { e.preventDefault(); void savePerson(); }}>
+          <form method="post" onSubmit={(e) => { e.preventDefault(); void savePerson(); }}>
             <div style={{ marginBottom: 14 }}>
               <label style={labelStyle()} htmlFor="am-p-name">Name</label>
               <input id="am-p-name" value={pName} onChange={e => setPName(e.target.value)} placeholder={person.status === 'invited' ? 'Full name (optional)' : 'Full name'} style={inputStyle()} />

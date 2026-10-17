@@ -7,6 +7,8 @@
  * Verbs   PATCH /api/purchase-orders/:id/status   (draft → sent → received → closed)
  *         POST  /api/documents/purchase-order     (→ { pdfUrl })
  */
+import { jsonRequest } from '@/lib/list-view';
+import { useEditRights } from '@/lib/hooks/usePermissions';
 import React, { useState, useEffect, useCallback } from 'react';
 import { useParams } from 'next/navigation';
 import { openPdf } from '@/components/PdfViewer';
@@ -119,6 +121,7 @@ export default function PurchaseOrdersPage() {
   const [showForm, setShowForm] = useState(false);
   const [form, setForm] = useState(EMPTY_FORM);
   const { toast, show } = useToast(4000);
+  const rights = useEditRights('Budget');
 
   /* ── Unsaved-work guard: the composer holds real typing, so leaving this
    *    module (sidebar, field nav, ⌘K, breadcrumb, back) confirms first, and
@@ -446,6 +449,24 @@ export default function PurchaseOrdersPage() {
       ) : (
         <DataTable<PurchaseOrder>
           tableId="project-purchase-orders"
+          /* The same status door and the same one-step-at-a-time rule as the
+             row's Send / Received / Close: a PO that is not at the step before
+             the one picked is left as it is and named in the result. */
+          bulkEdit={{
+            noun: 'purchase order',
+            allowed: rights.edit,
+            status: {
+              options: [{ value: 'sent', label: 'Sent' }, { value: 'received', label: 'Received' }, { value: 'closed', label: 'Closed' }],
+              apply: (p, v) => {
+                const from = String(p.status || 'draft').toLowerCase();
+                if (NEXT_STEP[from]?.to !== v) {
+                  return Promise.resolve(new Response(JSON.stringify({ error: `PO ${p.po_num || p.id.slice(0, 8)} is ${from}; its next step is ${NEXT_STEP[from]?.to ?? 'none'}.` }), { status: 409 }));
+                }
+                return jsonRequest(`/api/purchase-orders/${p.id}/status`, 'PATCH', { status: v });
+              },
+            },
+            onDone: () => { void fetchPos(); },
+          }}
           exportName="purchase-orders"
           columns={columns}
           rows={filteredPos}

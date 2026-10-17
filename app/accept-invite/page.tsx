@@ -8,6 +8,7 @@
  *
  * Branded gold-on-navy, phosphor icons (no emoji), responsive.
  */
+import { useHydrated } from '@/lib/use-hydrated';
 import React, { useEffect, useState } from 'react';
 import Link from 'next/link';
 import {
@@ -62,6 +63,7 @@ function DetailRow({ icon, label, value }: { icon: React.ReactNode; label: strin
 
 export default function AcceptInvitePage() {
   const [token, setToken] = useState('');
+  const hydrated = useHydrated();
   const [loading, setLoading] = useState(true);
   const [invite, setInvite] = useState<Invite | null>(null);
   const [me, setMe] = useState<Me | null>(null);
@@ -298,14 +300,14 @@ export default function AcceptInvitePage() {
 
                 {/* Not logged in → set a password here and join (no separate company signup) */}
                 {!me && (
-                  <form onSubmit={handleCreateAccount}>
+                  <form method="post" onSubmit={handleCreateAccount}>
                     <label style={fieldLabel} htmlFor="inv-name">Your Name</label>
                     <input id="inv-name" value={fullName} onChange={e => setFullName(e.target.value)} autoComplete="name" style={fieldInput} placeholder="First and last name" />
                     <label style={fieldLabel} htmlFor="inv-pw">Create a Password</label>
                     <input id="inv-pw" type="password" value={password} onChange={e => setPassword(e.target.value)} autoComplete="new-password" style={fieldInput} placeholder="At least 8 characters" />
                     <label style={fieldLabel} htmlFor="inv-pw2">Confirm Password</label>
                     <input id="inv-pw2" type="password" value={password2} onChange={e => setPassword2(e.target.value)} autoComplete="new-password" style={{ ...fieldInput, marginBottom: 18 }} placeholder="Type it again" />
-                    <button type="submit" disabled={creating} style={{ ...ctaPrimary, width: '100%', justifyContent: 'center', opacity: creating ? .7 : 1, cursor: creating ? 'not-allowed' : 'pointer' }}>
+                    <button type="submit" disabled={creating || !hydrated} style={{ ...ctaPrimary, width: '100%', justifyContent: 'center', opacity: creating ? .7 : 1, cursor: creating ? 'not-allowed' : 'pointer' }}>
                       {creating ? <><Spinner /> Setting Up…</> : <><UserPlus size={16} weight="bold" /> Set Password &amp; Join {invite.company}</>}
                     </button>
                     <a href={loginHref(invite.email)} style={{ ...ctaSecondary, width: '100%', justifyContent: 'center', marginTop: 10 }}>

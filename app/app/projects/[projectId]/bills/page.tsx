@@ -8,6 +8,8 @@
  * Verbs   PATCH  /api/bills/:id/approve | /pay | /update ({ amount })
  *         DELETE /api/bills/:id/delete
  */
+import { jsonRequest } from '@/lib/list-view';
+import { useEditRights } from '@/lib/hooks/usePermissions';
 import React, { useState, useEffect, useCallback, useRef } from 'react';
 import { useParams } from 'next/navigation';
 import { useProjectContext } from '@/lib/hooks/useProjectContext';
@@ -91,6 +93,7 @@ export default function BillsPage() {
   const [showForm, setShowForm] = useState(false);
   const [form, setForm] = useState(EMPTY_FORM);
   const { toast, show } = useToast(4000);
+  const rights = useEditRights('Budget');
 
   /* ── Unsaved-work guard: the composer holds real typing, so leaving the
    *    page (sidebar, field nav, ⌘K, back) confirms first and the draft is
@@ -468,6 +471,17 @@ export default function BillsPage() {
       ) : (
         <DataTable<Bill>
           tableId="project-bills"
+          /* Approve, pay and delete use the row's own routes (each needs Full on Budget). */
+          bulkEdit={{
+            noun: 'bill',
+            allowed: rights.full,
+            status: {
+              options: [{ value: 'approve', label: 'Approved' }, { value: 'pay', label: 'Paid' }],
+              apply: (b, v) => jsonRequest(`/api/bills/${b.id}/${v === 'pay' ? 'pay' : 'approve'}`, 'PATCH'),
+            },
+            remove: { allowed: rights.full, apply: (b) => jsonRequest(`/api/bills/${b.id}/delete`, 'DELETE') },
+            onDone: () => { void fetchBills(); },
+          }}
           exportName="bills"
           columns={columns}
           rows={filteredBills}

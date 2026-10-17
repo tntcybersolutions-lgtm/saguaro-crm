@@ -119,6 +119,20 @@ becomes that colour's status icon. `ToolRow` + `FlatList grid` is the
 two-column "More project tools" tile grid. `RowAction` primary/ghost use the
 action tokens with hover, pressed, focus and disabled states.
 
+### List tools (`DataTable`, 16 Oct 2026)
+
+Every `DataTable` carries the list tools; pages do not build their own:
+Views (personal or shared with the company, a star for "open this first"),
+Filter (pick a column, tick values; chips under the bar, AND across columns),
+Group, Columns (show/hide, drag or up/down to reorder, reset; drag a header
+edge to resize) and Export (the visible columns, filters and sort). On a phone
+Columns reads **Fields** and opens as a bottom sheet, rows are a divided list
+laid on the surface, a long-press or **Select** starts selecting, and the bulk
+bar docks above the tab bar. Bulk edit is `bulkEdit` (status, assignee, due
+date, delete): each row goes through the record's own route
+(`lib/items/bulk.ts` for the item tools), and it shows only with Edit rights
+(`useEditRights`, fails closed). Pure logic: `lib/list-view.ts`.
+
 ### Rules this round (12 Oct 2026)
 
 - Yellow is for the primary action and the selected item only: never a

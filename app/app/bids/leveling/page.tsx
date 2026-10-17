@@ -921,7 +921,7 @@ function BidLevelingBoard() {
               actions={<Button onClick={addBidder} icon={<Plus size={15} />}>Add Bidder</Button>}
             >
               {bidders.length === 0 ? (
-                <EmptyState title="No Bidders Yet" text="Bids submitted through the package load here. You can also add one by hand or paste a proposal." />
+                <EmptyState title="No Bidders Yet" text="Submitted bids load here." primary={{ label: 'Add Bidder', onClick: addBidder }} perm={['Projects', 'Edit']} />
               ) : (
                 <div className="lv-stack" style={{ gap: 'var(--sp-2)' }}>
                   {bidders.map((b) => {

@@ -1,4 +1,6 @@
 'use client';
+import { jsonRequest } from '@/lib/list-view';
+import { useEditRights } from '@/lib/hooks/usePermissions';
 import { useProjectContext, refreshProjectContext } from '@/lib/hooks/useProjectContext';
 import React, { useState, useEffect, useCallback, useMemo } from 'react';
 import { humanError } from '@/lib/errors';
@@ -102,6 +104,7 @@ export default function SubsPage() {
   const [showForm, setShowForm] = useState(false);
   const [saving, setSaving] = useState(false);
   const { toast, show } = useToast(4000);
+  const rights = useEditRights('Projects');
   const setToast = (t: { msg: string; type: 'success' | 'error' }) => show(t.msg, t.type === 'success' ? 'good' : 'bad');
   const [search, setSearch] = useState('');
   const [filterTrade, setFilterTrade] = useState('all');
@@ -425,6 +428,13 @@ export default function SubsPage() {
     body = (
       <DataTable<JobSub>
         tableId="project-subs"
+        bulkEdit={{
+          noun: 'subcontractor',
+          allowed: rights.edit,
+          status: { options: STATUSES.map(s => ({ value: s, label: cap(s) })), apply: (s, v) => jsonRequest(`/api/projects/${projectId}/subs/${s.id}`, 'PATCH', { status: v }) },
+          remove: { allowed: rights.edit, label: 'Remove from job', verb: 'removed', apply: (s) => jsonRequest(`/api/projects/${projectId}/subs/${s.id}`, 'DELETE') },
+          onDone: () => { void load(); },
+        }}
         exportName="subcontractors"
         columns={columns}
         rows={filteredSubs}

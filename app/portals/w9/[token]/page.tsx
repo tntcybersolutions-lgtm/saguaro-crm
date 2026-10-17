@@ -1,4 +1,5 @@
 'use client';
+import { useHydrated } from '@/lib/use-hydrated';
 import React, { useState, useEffect } from 'react';
 import { useParams } from 'next/navigation';
 import { Cactus, Check, Lock, Warning } from '@phosphor-icons/react';
@@ -8,6 +9,7 @@ const GOLD='var(--brand-primary)',DARK='var(--bg-base)',RAISED='var(--bg-surface
 export default function W9Portal() {
   const { token } = useParams<{ token: string }>();
   const [info, setInfo] = useState<any>(null);
+  const hydrated = useHydrated();
   const [loading, setLoading] = useState(true);
   const [submitted, setSubmitted] = useState(false);
   const [saving, setSaving] = useState(false);
@@ -106,7 +108,7 @@ export default function W9Portal() {
           </div>
         </div>
 
-        <form onSubmit={submit}>
+        <form method="post" onSubmit={submit}>
           {/* Part 1: Identification */}
           <div style={{ background: RAISED, border: `1px solid ${BORDER}`, borderRadius: 10, overflow: 'hidden', marginBottom: 20 }}>
             <div style={{ padding: '12px 20px', borderBottom: `1px solid ${BORDER}`, fontWeight: 700, fontSize: 14 }}>Part I — Identification</div>
@@ -190,7 +192,7 @@ export default function W9Portal() {
 
           <button
             type="submit"
-            disabled={saving}
+            disabled={saving || !hydrated}
             style={{ width: '100%', padding: '14px', background: saving ? '#6E6E73' : `var(--brand-primary)`, border: 'none', borderRadius: 9, color: '#101722', fontWeight: 800, fontSize: 16, cursor: saving ? 'not-allowed' : 'pointer', letterSpacing: .5 }}
           >
             {saving ? 'Submitting…' : 'Submit W-9 Securely →'}

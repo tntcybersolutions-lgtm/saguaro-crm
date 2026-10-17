@@ -54,7 +54,8 @@ function pill(c: DocCheck) {
   return <StatusPill module="compliance" status="non_compliant" label="Missing" size="sm" />;
 }
 
-export default function ComplianceChecklist() {
+/** `onInvite` opens the host page's invite flow from the empty state. */
+export default function ComplianceChecklist({ onInvite }: { onInvite?: () => void } = {}) {
   const [subs, setSubs] = useState<SubRow[] | null>(null);
   const [error, setError] = useState('');
   const [onlyNeeds, setOnlyNeeds] = useState(true);
@@ -103,7 +104,8 @@ export default function ComplianceChecklist() {
       </div>
       {shown.length === 0 && (
         <PremiumEmpty compact icon={<ShieldCheck size={30} weight="duotone" />} title={subs.length ? 'Everyone is current' : 'No subs on a portal link yet'}
-          description={subs.length ? 'Every sub on a portal link has a current COI and W-9 on file.' : 'Invite a sub to a job and their COI and W-9 show here.'} />
+          description={subs.length ? 'Every sub on a portal link has a current COI and W-9 on file.' : 'Their COI and W-9 show here.'}
+          primary={!subs.length && onInvite ? { label: 'Invite Sub', onClick: onInvite } : undefined} />
       )}
       {shown.map((s) => {
         const owed = s.checks.filter((c) => c.state !== 'current');

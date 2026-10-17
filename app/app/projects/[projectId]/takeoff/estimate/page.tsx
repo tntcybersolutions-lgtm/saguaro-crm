@@ -582,7 +582,7 @@ function EstimatePage() {
               actions={<Button size="sm" icon={<Plus size={13} weight="bold" />} onClick={() => setAddingSheet(true)}>Add Sheet</Button>}
             >
               {addingSheet && (
-                <form className="tePanel" onSubmit={e => { e.preventDefault(); void addSheet(); }}>
+                <form method="post" className="tePanel" onSubmit={e => { e.preventDefault(); void addSheet(); }}>
                   <Field label="Sheet name">
                     <Input placeholder="e.g. A-101 Floor Plan" value={newSheetName} onChange={e => setNewSheetName(e.target.value)} autoFocus />
                   </Field>
@@ -597,7 +597,7 @@ function EstimatePage() {
                 </form>
               )}
               <div className="teScroll" style={{ maxHeight: 360 }}>
-                {sheets.length === 0 && <EmptyState title="No sheets yet" text="Add one to begin." />}
+                {sheets.length === 0 && <EmptyState title="No sheets yet" primary={{ label: 'Add Sheet', onClick: () => setAddingSheet(true) }} />}
                 {sheets.map(s => (
                   <button
                     key={s.id}
@@ -637,7 +637,7 @@ function EstimatePage() {
             >
               {assemblyOpen && (
                 <div className="teScroll" style={{ maxHeight: 220 }}>
-                  {assemblies.length === 0 && <EmptyState title="No assemblies found" />}
+                  {assemblies.length === 0 && <EmptyState title="No assemblies yet" primary={{ label: 'New Assembly', href: '/app/takeoff/assemblies?new=1' }} />}
                   {assemblies.map(a => (
                     <button key={a.id} type="button" className="teSheet" onClick={() => applyAssembly(a)} title="Start a line item from this assembly">
                       <span className="teSheetText">
@@ -755,7 +755,7 @@ function EstimatePage() {
                 icon={<SlidersHorizontal size={17} />}
                 actions={<Button variant="ghost" size="sm" icon={<X size={16} />} aria-label="Close item details" onClick={() => setRightOpen(false)} />}
               >
-                <form className="teForm" onSubmit={e => { e.preventDefault(); void saveDetail(); }}>
+                <form method="post" className="teForm" onSubmit={e => { e.preventDefault(); void saveDetail(); }}>
                   <FormGrid cols={1}>
                     {[
                       { label: 'Description', field: 'description', type: 'text' },

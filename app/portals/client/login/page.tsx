@@ -112,7 +112,7 @@ export default function ClientPortalLogin() {
             </div>
           </div>
         ) : (
-          <form onSubmit={handleSubmit}>
+          <form method="post" onSubmit={handleSubmit}>
             <label style={{ display: 'block', fontSize: 12, fontWeight: 600, color: DIM, marginBottom: 8 }}>
               Your Email Address
             </label>

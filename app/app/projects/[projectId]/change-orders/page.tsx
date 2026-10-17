@@ -26,6 +26,8 @@
  *   delete   DELETE /api/change-orders/[id]
  *   risk     POST   /api/ai/change-order-risk
  */
+import { jsonRequest } from '@/lib/list-view';
+import { useEditRights } from '@/lib/hooks/usePermissions';
 import { useProjects } from '@/lib/hooks/useProjects';
 import { confirmDialog } from '@/lib/ui/async-dialog';
 import { useProjectContext } from '@/lib/hooks/useProjectContext';
@@ -231,6 +233,7 @@ export default function ChangeOrdersPage() {
   const [saving,setSaving]   = useState(false);
   const [approvingId,setApprovingId] = useState<string|null>(null);
   const { toast, show } = useToast(4000);
+  const coRights = useEditRights('Change Orders');
   const setToast = (t:{msg:string;type:'success'|'error'}) => show(t.msg, t.type==='success'?'good':'bad');
   const [selectedId,setSelectedId] = useState<string|null>(null);
   const detailRef = useRef<HTMLDivElement>(null);
@@ -656,6 +659,19 @@ export default function ChangeOrdersPage() {
         onRowClick={c=>setSelectedId(c.id)}
         rowActions={coActions}
         tableId="project-change-orders"
+        /* Approve and reject go through the same routes as the row's Approve /
+           Reject — the contract and budget follow an approval there — and both
+           need Full on Change Orders, so a lesser seat gets no bulk bar. */
+        bulkEdit={{
+          noun: 'change order',
+          allowed: coRights.full,
+          status: {
+            options: [{ value: 'approved', label: 'Approved' }, { value: 'rejected', label: 'Rejected' }],
+            apply: (c: any, v) => jsonRequest(`/api/change-orders/${c.id}/${v === 'approved' ? 'approve' : 'reject'}`, 'POST', {}),
+          },
+          remove: { allowed: coRights.full, apply: (c: any) => jsonRequest(`/api/change-orders/${c.id}`, 'DELETE') },
+          onDone: () => { void load(); },
+        }}
         exportName="change-orders"
         empty={
           <EmptyState

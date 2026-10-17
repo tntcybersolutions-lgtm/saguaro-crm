@@ -9,6 +9,8 @@
  *         PATCH  /api/invoices/:id/update    ({ amount, tax })
  *         DELETE /api/invoices/:id/delete
  */
+import { jsonRequest } from '@/lib/list-view';
+import { useEditRights } from '@/lib/hooks/usePermissions';
 import React, { useState, useEffect, useCallback } from 'react';
 import { useParams } from 'next/navigation';
 import { useProjectContext } from '@/lib/hooks/useProjectContext';
@@ -88,6 +90,7 @@ export default function InvoicesPage() {
   const [showForm, setShowForm] = useState(false);
   const [form, setForm] = useState(EMPTY_FORM);
   const { toast, show } = useToast(4000);
+  const rights = useEditRights('Budget');
 
   /* ── Unsaved-work guard: the composer holds real typing, so leaving the
    *    page (sidebar, field nav, ⌘K, back) confirms first and the draft is
@@ -398,6 +401,14 @@ export default function InvoicesPage() {
       ) : (
         <DataTable<Invoice>
           tableId="project-invoices"
+          /* Send and delete use the row's own routes: send emails the client and stamps the invoice sent. */
+          bulkEdit={{
+            noun: 'invoice',
+            allowed: rights.edit,
+            status: { label: 'Send to client', options: [{ value: 'sent', label: 'Email each invoice to its client' }], apply: (inv) => jsonRequest(`/api/invoices/${inv.id}/send`, 'POST') },
+            remove: { allowed: rights.full, apply: (inv) => jsonRequest(`/api/invoices/${inv.id}/delete`, 'DELETE') },
+            onDone: () => { void fetchInvoices(); },
+          }}
           exportName="client-invoices"
           columns={columns}
           rows={filteredInvoices}

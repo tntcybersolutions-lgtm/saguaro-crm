@@ -27,6 +27,7 @@
 
 import React from 'react';
 import Link from 'next/link';
+import { reloadOnceForChunkError } from '@/lib/chunk-reload';
 
 const CARD = 'var(--bg-surface)';
 const GOLD = 'var(--brand-primary)';
@@ -49,6 +50,7 @@ export default function RouteError({
   inShell?: boolean;
 }) {
   React.useEffect(() => {
+    if (reloadOnceForChunkError(error)) return;
     console.error(`[${scope}] route error:`, error);
   }, [error, scope]);
 

@@ -1,5 +1,6 @@
 'use client';
 import { Component, ErrorInfo, ReactNode } from 'react';
+import { reloadOnceForChunkError } from '@/lib/chunk-reload';
 
 /**
  * ErrorBoundary — catches a render throw inside the signed-in shell.
@@ -37,6 +38,7 @@ export default class ErrorBoundary extends Component<Props, State> {
   }
 
   componentDidCatch(error: Error, info: ErrorInfo) {
+    if (reloadOnceForChunkError(error)) return;
     console.error('ErrorBoundary caught:', error, info);
   }
 

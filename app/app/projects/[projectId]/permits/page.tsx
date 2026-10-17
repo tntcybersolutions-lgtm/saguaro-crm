@@ -16,7 +16,10 @@
  *   list    GET  /api/projects/[id]/permits
  *   create  POST /api/permits/create
  */
+import { jsonRequest } from '@/lib/list-view';
+import { useEditRights } from '@/lib/hooks/usePermissions';
 import React, { useState, useEffect, useCallback, useRef } from 'react';
+import { useOpenOnNew } from '@/lib/ui/open-on-new';
 import { useProjectContext } from '@/lib/hooks/useProjectContext';
 import { useParams } from 'next/navigation';
 import SaguaroDatePicker from '../../../../../components/SaguaroDatePicker';
@@ -138,6 +141,7 @@ export default function PermitsPage() {
   });
   const [saving, setSaving] = useState(false);
   const { toast, show } = useToast(4000);
+  const rights = useEditRights('Projects');
   const [errorMsg, setErrorMsg] = useState('');
 
   const today = localDay(); // This device's day — toISOString() is the UTC day, tomorrow from 7 PM on in Iowa.
@@ -247,6 +251,8 @@ export default function PermitsPage() {
     }
   }
 
+  // ?new=1 (the job page's empty tool row) opens the create form.
+  useOpenOnNew(openCreate, !loading);
   function openCreate() {
     setForm({
       ...EMPTY_FORM,
@@ -385,6 +391,12 @@ export default function PermitsPage() {
     listBody = (
       <DataTable
         tableId="project-permits"
+        bulkEdit={{
+          noun: 'permit',
+          allowed: rights.full,
+          remove: { allowed: rights.full, apply: (p) => jsonRequest(`/api/permits/${p.id}`, 'DELETE') },
+          onDone: () => { void fetchPermits(); },
+        }}
         exportName="permits"
         columns={columns}
         rows={filteredPermits}

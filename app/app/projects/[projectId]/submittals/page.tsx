@@ -17,9 +17,12 @@
  *   quick   PATCH  /api/submittals/[id]   { status } / { ball_in_court }
  *   delete  DELETE /api/submittals/[id]
  */
+import { itemBulkEdit } from '@/lib/items/bulk';
+import { useEditRights } from '@/lib/hooks/usePermissions';
 import { useProjectContext } from '@/lib/hooks/useProjectContext';
 import { confirmDialog } from '@/lib/ui/async-dialog';
 import React, { useState, useEffect, useCallback, useRef } from 'react';
+import { useOpenOnNew } from '@/lib/ui/open-on-new';
 import SaguaroDatePicker from '@/components/SaguaroDatePicker';
 import { humanError } from '@/lib/errors';
 import { useParams } from 'next/navigation';
@@ -157,6 +160,7 @@ export default function SubmittalsPage(){
   const [deleting,setDeleting]=useState(false);
   const [rowBusyId,setRowBusyId]=useState<string|null>(null);
   const { toast, show: showToast } = useToast(4000);
+  const rights = useEditRights('Submittals');
   const [search,setSearch]=useState('');
   const [filterStatus,setFilterStatus]=useState<StatusFilter>('all');
   const [filterBIC,setFilterBIC]=useState('all');
@@ -190,6 +194,8 @@ export default function SubmittalsPage(){
     // eslint-disable-next-line react-hooks/exhaustive-deps
   },[submittals]);
 
+  // ?new=1 (the job page's empty tool row) opens the create form.
+  useOpenOnNew(openCreate, !loading);
   function openCreate(){
     const num=`S-${String(submittals.length+1).padStart(3,'0')}`;
     const due=isoDate(new Date(Date.now()+14*86400000));
@@ -477,6 +483,7 @@ export default function SubmittalsPage(){
         onRowClick={viewSub}
         rowActions={subActions}
         tableId="project-submittals"
+        bulkEdit={itemBulkEdit('submittals', { allowed: rights.edit, canDelete: rights.full, deleteUrl: r => `/api/submittals/${r.id}`, people: submittals.map((s: any) => String(s.ball_in_court || '')), onDone: () => { void load(); } })}
         exportName="submittals"
         empty={<EmptyState icon={<Clipboard size={22}/>} title="No submittals match these filters" text="Clear the search, status, or ball-in-court filter to see more." action={<Button onClick={clearFilters}>Clear Filters</Button>}/>}
       />

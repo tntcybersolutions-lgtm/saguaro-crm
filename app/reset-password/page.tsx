@@ -1,4 +1,5 @@
 'use client';
+import { useHydrated } from '@/lib/use-hydrated';
 import React, { useState } from 'react';
 import { createClient } from '@supabase/supabase-js';
 import { Cactus, CheckCircle, Warning } from '@phosphor-icons/react';
@@ -11,6 +12,7 @@ function getSupabase() {
 
 export default function ResetPasswordPage(){
   const [password, setPassword] = useState('');
+  const hydrated = useHydrated();
   const [confirm, setConfirm] = useState('');
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
@@ -57,7 +59,7 @@ export default function ResetPasswordPage(){
               </div>
               <div style={{background:RAISED,border:`1px solid ${BORDER}`,borderRadius:14,padding:32}}>
                 {error&&<div style={{background:'rgba(248,113,113,.1)',border:'1px solid rgba(248,113,113,.3)',borderRadius:8,padding:'10px 14px',marginBottom:20,fontSize:13,color:RED}}><Warning size={14} weight="fill" style={{verticalAlign:'middle'}} /> {error}</div>}
-                <form onSubmit={handleSubmit} style={{display:'flex',flexDirection:'column',gap:14}}>
+                <form method="post" onSubmit={handleSubmit} style={{display:'flex',flexDirection:'column',gap:14}}>
                   <div>
                     <label style={{display:'block',fontSize:12,fontWeight:700,color:DIM,marginBottom:6}}>New Password</label>
                     <input type="password" placeholder="8+ characters" value={password} onChange={e=>setPassword(e.target.value)} required autoComplete="new-password" style={inputStyle}/>
@@ -66,7 +68,7 @@ export default function ResetPasswordPage(){
                     <label style={{display:'block',fontSize:12,fontWeight:700,color:DIM,marginBottom:6}}>Confirm Password</label>
                     <input type="password" placeholder="Repeat password" value={confirm} onChange={e=>setConfirm(e.target.value)} required autoComplete="new-password" style={inputStyle}/>
                   </div>
-                  <button type="submit" disabled={loading} style={{padding:'13px',background:GOLD,border:'none',borderRadius:9,color:'var(--on-brand)',fontSize:15,fontWeight:800,cursor:loading?'not-allowed':'pointer'}}>
+                  <button type="submit" disabled={loading || !hydrated} style={{padding:'13px',background:GOLD,border:'none',borderRadius:9,color:'var(--on-brand)',fontSize:15,fontWeight:800,cursor:loading?'not-allowed':'pointer'}}>
                     {loading?'Updating…':'Update Password →'}
                   </button>
                 </form>

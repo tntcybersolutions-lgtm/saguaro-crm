@@ -18,7 +18,10 @@
  *   delete   DELETE /api/schedule/[id]
  *   baseline POST   /api/projects/[id]/schedule/baseline
  */
+import { jsonRequest } from '@/lib/list-view';
+import { useEditRights } from '@/lib/hooks/usePermissions';
 import React, { useState, useEffect, useLayoutEffect, useCallback, useRef, useMemo } from 'react';
+import { useOpenOnNew } from '@/lib/ui/open-on-new';
 import { useParams } from 'next/navigation';
 import { jobBarStyle } from '@/lib/project-colors';
 import { useProjectColor } from '@/lib/hooks/useProjectColor';
@@ -385,6 +388,7 @@ export default function SchedulePage() {
   const [saving, setSaving] = useState(false);
   const [deleting, setDeleting] = useState(false);
   const { toast, show } = useToast(4000);
+  const rights = useEditRights('Schedule');
   const [viewMode, setViewMode] = useState<'gantt' | 'list' | 'lookahead'>('gantt');
   const [critOnly, setCritOnly] = useState(false);
   const [zoom, setZoom] = useState<GanttZoom>('fit');
@@ -450,6 +454,8 @@ export default function SchedulePage() {
     return () => window.removeEventListener('keydown', onKey);
   }, [mode]);
 
+  // ?new=1 (the job page's empty tool row) opens the create form.
+  useOpenOnNew(openCreate, !loading);
   function openCreate() { setForm({ ...EMPTY }); setDuration(''); setAuto({}); setMode('create'); setSelected(null); }
   function openEdit(task: any) {
     setForm({
@@ -814,6 +820,12 @@ export default function SchedulePage() {
       <Card flush>
         <DataTable<any>
           tableId="project-schedule"
+          bulkEdit={{
+            noun: 'task',
+            allowed: rights.full,
+            remove: { allowed: rights.full, apply: (t) => jsonRequest(`/api/schedule/${t.id}`, 'DELETE') },
+            onDone: () => { void load(); },
+          }}
           exportName="schedule"
           columns={columns}
           rows={filtered}

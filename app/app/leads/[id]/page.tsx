@@ -605,7 +605,7 @@ export default function DealPage() {
         </Card>
 
         <Card icon={<Note size={17} weight="bold" />} title="Activity" subtitle="Calls, emails, meetings and notes on this deal.">
-          <form
+          <form method="post"
             className="k-toolbar"
             style={{ marginBottom: 14 }}
             onSubmit={(e) => { e.preventDefault(); void addActivity(); }}
@@ -664,7 +664,7 @@ export default function DealPage() {
           rowActions={(m) => [{ label: 'Download', icon: <DownloadSimple size={14} />, inline: true, href: m.url }, { label: 'Remove', icon: <Trash size={14} />, tone: 'danger', onClick: () => void removeMedia(m) }]}
           empty={mediaError
             ? <EmptyState icon={<WarningCircle size={22} />} title="Files didn't load" text={mediaError} action={<Button onClick={() => void loadMedia()}>Retry</Button>} />
-            : <EmptyState title="No files yet" text="Upload proposals, plans or site photos so the whole team works from the same files." />}
+            : <EmptyState title="No files yet" text="Proposals, plans and site photos." primary={uploading ? undefined : { label: 'Upload Files', icon: <UploadSimple size={15} />, onClick: () => fileRef.current?.click() }} perm={['Sales', 'Edit']} />}
         />
       </Card>
 

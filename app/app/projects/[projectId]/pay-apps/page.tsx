@@ -28,6 +28,8 @@
  * persisted drag-reorder (sort_order) stays the source of truth for row order
  * (drag the grip beside the app number while no filter is on).
  */
+import { useEditRights } from '@/lib/hooks/usePermissions';
+import { jsonRequest } from '@/lib/list-view';
 import React, { useState, useEffect, useCallback } from 'react';
 import { useProjectContext } from '@/lib/hooks/useProjectContext';
 import { confirmDialog } from '@/lib/ui/async-dialog';
@@ -98,6 +100,7 @@ export default function PayAppsPage() {
   const [downloading,setDownloading] = useState<string|null>(null);
   const [bulkBusy,setBulkBusy] = useState(false);
   const { toast, show } = useToast(4000);
+  const payRights = useEditRights('Pay Apps');
   const setToast = (t:{msg:string;type:'success'|'error'}) => show(t.msg, t.type==='success'?'good':'bad');
   const [copiedId, setCopiedId] = useState<string|null>(null);
   const [search, setSearch] = useState('');
@@ -138,30 +141,6 @@ export default function PayAppsPage() {
       }).then(r => r.ok, () => false),
     )).then(oks => { if (oks.some(ok => !ok)) setToast({ msg: "The new order didn't fully save. Reload to see the saved order.", type: 'error' }); });
   });
-
-  const handleBulkApprove = async (list:any[]) => {
-    setBulkBusy(true);
-    const approved = new Set<string>();
-    for (const pa of list) {
-      try {
-        /* The approve route — the same door as the detail page's Approve —
-           so a bulk approval also stamps approved_at and files the subs'
-           conditional lien waivers. A raw status PATCH did neither. */
-        const r = await fetch(`/api/pay-apps/${pa.id}/approve`, {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ projectId }),
-        });
-        if (r.ok) approved.add(pa.id);
-      } catch (e) {
-        console.error('bulk approve', e);
-      }
-    }
-    setPayApps(prev => prev.map(p => approved.has(p.id) ? { ...p, status: 'approved' } : p));
-    setBulkBusy(false);
-    if (approved.size === list.length) setToast({ msg: `${approved.size} pay app${approved.size===1?'':'s'} approved.`, type: 'success' });
-    else setToast({ msg: `${approved.size} of ${list.length} approved. Try the rest again.`, type: 'error' });
-  };
 
   const handleBulkExport = async (list:any[]) => {
     for (const pa of list) await downloadG702(pa);
@@ -386,10 +365,24 @@ export default function PayAppsPage() {
         onRowClick={pa=>router.push(`/app/projects/${projectId}/pay-apps/${pa.id}`)}
         rowActions={payAppActions}
         rowStyle={pa=>(dragEnabled && draggingIndex===payApps.indexOf(pa) ? { opacity: 0.5 } : undefined)}
-        bulkActions={list=>[
-          { label: bulkBusy ? 'Approving…' : 'Approve Selected', icon:<CheckCircle size={14}/>, onClick:()=>{ void handleBulkApprove(list); }, disabled: bulkBusy },
+        /* Status moves through the same doors as the detail page — submit and
+           approve both run lib/pay-app-status (stamps, owner email, the
+           conditional lien-waiver cascade) — one pay app at a time. */
+        bulkEdit={{
+          noun: 'pay application',
+          allowed: payRights.edit,
+          status: {
+            options: payRights.full
+              ? [{ value: 'submitted', label: 'Submitted to the owner' }, { value: 'approved', label: 'Approved' }]
+              : [{ value: 'submitted', label: 'Submitted to the owner' }],
+            apply: (pa, v) => jsonRequest(`/api/pay-apps/${pa.id}/${v === 'approved' ? 'approve' : 'submit'}`, 'POST', { projectId }),
+          },
+          remove: { allowed: payRights.full, apply: (pa) => jsonRequest(`/api/pay-apps/${pa.id}`, 'DELETE') },
+          onDone: () => { void load(); },
+        }}
+        bulkActions={payRights.edit ? (list => [
           { label:'Export Selected PDFs', icon:<FileText size={14}/>, onClick:()=>{ void handleBulkExport(list); }, disabled: !!downloading },
-        ]}
+        ]) : undefined}
         empty={
           <EmptyState
             icon={<Clipboard size={22}/>}

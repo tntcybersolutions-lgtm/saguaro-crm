@@ -369,6 +369,26 @@ MyWorkView.tsx, /api/my-work (+ jobs, agenda, roles, ?view=mine).
   everything) everywhere else. App Store Review (member, PM on one project) therefore reads every job's money.
   That is the TS rule, mirrored exactly; it should probably be None, not View, for a scoped-only user.
 
+## 16 Oct 2026 — list tools (feat/list-tools) — found, NOT fixed
+
+- `app/api/items/[tool]/[id]/route.ts` PATCH — for `change_orders`, setting `status: 'approved'` only stamps
+  `approved_at`; it does not run `applyChangeOrderMoney` (lib/change-order-cascade) the way
+  `POST /api/change-orders/[id]/approve` does. The record page's status field can therefore approve a CO
+  without moving the contract. List bulk approve uses the approve route, not this one.
+- `app/api/selections/[id]/route.ts` PUT / DELETE — `getUser` only, no `requirePermission`; any signed-in seat
+  can change or delete an owner selection. No bulk actions were wired to it for that reason.
+- `app/api/purchase-orders/[id]/status/route.ts` — writes any `status` string with no transition check and no
+  `approved_at` / `delivered_at` stamps (the items route stamps them). The PO screen enforces the one-step rule
+  client-side only; bulk mirrors that rule.
+- `/api/auth/permissions` returns the global map only (no projectId), so a person whose Edit grant is
+  project-scoped sees no bulk bar on that project's lists (fails closed; the routes would accept them).
+## 16 Oct 2026 — empty-state actions (feat/empty-states-add) — found, NOT fixed
+
+- `components/EmptyState.tsx` (boxed 72px-medallion card + `EmptyInvoices`…`EmptySubmittals` variants) has no importer — dead code that breaks the flat / no-card rule if anyone reaches for it. Delete it.
+- `components/ui/PremiumEmpty.tsx` (the `actionLabel` / `GradientButton` version) has no importer either; every `PremiumEmpty` comes from `components/ui/premium.tsx`. Delete it.
+- DESIGN_SYSTEM.md §3 says an empty state's button that repeats the header's is the slate secondary; the empty-state `primary` is yellow by request, so an empty list can show two yellow buttons (header + list). If Chad wants the old rule back it is one line: `variant="primary"` → `"secondary"` in `components/ui/empty-actions.tsx`.
+- Project tool pages still with no `?new=1` deep link (the job page sends their empty rows to the list instead): specs, files, photos, safety, budget, change-orders, lien-waivers, purchase-orders, invoices, bills, timesheets, tm-tickets, crews, selections.
+
 ## 16 Oct 2026 — legacy role checks replaced (fix/rls-legacy-role-checks)
 
 Closed from the entry above: `app_user_role()` no longer decides anything that matters — every table that used it

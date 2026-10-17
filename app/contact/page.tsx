@@ -266,7 +266,7 @@ export default function ContactPage() {
                   </div>
                 </div>
               ) : (
-                <form onSubmit={handleSubmit}>
+                <form method="post" onSubmit={handleSubmit}>
                   <h2 style={{ fontSize: 22, fontWeight: 600, margin: '0 0 6px' }}>Send Us a Message</h2>
                   <p style={{ fontSize: 14, color: C.dim, margin: '0 0 28px', lineHeight: 1.6 }}>
                     Fill this out and we will route it to the right person. No bots, no phone tree.

@@ -1,5 +1,6 @@
 'use client';
 import { useMemo, useState } from 'react';
+import { useOpenOnNew } from '@/lib/ui/open-on-new';
 import SaguaroDatePicker from '@/components/SaguaroDatePicker';
 import Link from 'next/link';
 import { useProjects } from '@/lib/hooks/useProjects';
@@ -19,6 +20,9 @@ export default function RolloutPipelinePage() {
   const [override, setOverride] = useState<Record<string, string>>({});
   const [busy, setBusy] = useState<Record<string, boolean>>({});
   const [launching, setLaunching] = useState(false);
+  // ?new=1 opens the launch form — the empty states on the other
+  // command-center screens send a GC straight here to start a site.
+  useOpenOnNew(() => setLaunching(true), true);
 
   // Effective stage = optimistic override, else stored, else entry stage.
   const stageOf = (p: any): string => override[p.id] || (STAGE_IDS.includes(p.rollout_stage) ? p.rollout_stage : 'site_selection');

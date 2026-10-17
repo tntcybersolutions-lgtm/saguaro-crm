@@ -1022,7 +1022,7 @@ export default function PhotosPage(){
     );
   } else if (view==='map') {
     galleryBody = clusters.length===0 ? (
-      <EmptyState icon={<MapPin size={22}/>} title="No GPS on these photos" text={`${noGeo} photo${noGeo===1?'':'s'} without a location stamp. Photos added from a phone are stamped where they were taken.`}/>
+      <EmptyState icon={<MapPin size={22}/>} title="No GPS on these photos" text={`${noGeo} photo${noGeo===1?'':'s'} without a location stamp. Phone photos are stamped where they were taken.`} primary={{ label: 'Add Photos & Video', onClick: openUpload }} perm={['Documents', 'Edit']}/>
     ) : (
       <div className="phMapWrap">
         <PhotoMap photos={ordered} onOpen={openPhoto} fitKey={`${projectId}:${ordered.length}:${search}:${filterAlbum}:${periodFilter}:${dateFrom}:${dateTo}:${uploader}:${issuesOnly}`}/>

@@ -580,7 +580,7 @@ export default function PrequalificationPage() {
               <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(min(100%, 320px), 1fr))', gap: 20 }}>
                 {/* Recent activity */}
                 <SectionCard title="Recent Submissions" icon={<Clipboard size={17} weight="duotone" color="var(--text-secondary)" />}>
-                  {submissions.length === 0 && <EmptyState title="No submissions yet" text="Send a prequal form and the answers land here." />}
+                  {submissions.length === 0 && <EmptyState title="No submissions yet" text="Answers land here." primary={{ label: 'Send Prequal Form', icon: <Envelope size={15} weight="fill" />, onClick: () => setShowInviteModal(true) }} perm={['Projects', 'Edit']} />}
                   {submissions.slice(0, 5).map(s => (
                     <div key={s.id} style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', padding: '8px 0', borderBottom: `1px solid color-mix(in srgb, ${BORDER} 13%, transparent)`, cursor: 'pointer' }} onClick={() => { setShowDetail(s.id); }}>
                       <div>

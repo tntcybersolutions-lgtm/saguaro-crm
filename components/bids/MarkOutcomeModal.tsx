@@ -206,7 +206,7 @@ function MarkOutcomeModal({
             style={{ background: 'none', border: 'none', color: DIM, cursor: 'pointer', fontSize: 22, lineHeight: 1, padding: 4 }}>×</button>
         </div>
 
-        <form onSubmit={handleSubmit} style={{ padding: 20 }}>
+        <form method="post" onSubmit={handleSubmit} style={{ padding: 20 }}>
           {/* Won / Lost segmented toggle */}
           <div style={{ display: 'flex', gap: 0, background: DARK, border: `1px solid ${BORDER}`, borderRadius: 9, padding: 4, marginBottom: 16 }}>
             {(['won', 'lost'] as Outcome[]).map(o => {

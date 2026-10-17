@@ -310,7 +310,7 @@ export default function PhotoMarkup({ src, title, onClose, onSave }: {
         </div>
       </div>
       {textAt && (
-        <form className="pmkText" onSubmit={(e) => { e.preventDefault(); placeText(); }}>
+        <form method="post" className="pmkText" onSubmit={(e) => { e.preventDefault(); placeText(); }}>
           <input autoFocus value={text} maxLength={120} onChange={(e) => setText(e.target.value)} placeholder="Label" aria-label="Label text"
             onKeyDown={(e) => { if (e.key === 'Escape') { e.preventDefault(); setTextAt(null); } }} />
           <button type="submit" className="pmkBtn" disabled={!text.trim()}>Place</button>
