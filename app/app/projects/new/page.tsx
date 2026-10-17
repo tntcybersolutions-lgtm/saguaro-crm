@@ -431,7 +431,7 @@ export default function NewProjectPage() {
         </div>
       </Card>
 
-      <form id="np-form" onSubmit={create}>
+      <form method="post" id="np-form" onSubmit={create}>
         <div className="npSplit">
           <div className="npMain">
             <div className="npCols">

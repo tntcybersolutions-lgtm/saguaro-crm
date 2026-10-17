@@ -170,7 +170,7 @@ export default function PrequalPortal() {
             This prequalification form has no questions configured yet. Please contact {info.companyName}.
           </div>
         ) : (
-          <form onSubmit={submit}>
+          <form method="post" onSubmit={submit}>
             <div style={{ background: RAISED, border: `1px solid ${BORDER}`, borderRadius: 10, overflow: 'hidden', marginBottom: 20 }}>
               <div style={{ padding: '12px 20px', borderBottom: `1px solid ${BORDER}`, fontWeight: 700, fontSize: 14 }}>Questionnaire</div>
               <div style={{ padding: 20 }}>

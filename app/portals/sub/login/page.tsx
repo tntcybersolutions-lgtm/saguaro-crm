@@ -112,7 +112,7 @@ export default function SubPortalLogin() {
             </button>
           </div>
         ) : (
-          <form onSubmit={handleSubmit}>
+          <form method="post" onSubmit={handleSubmit}>
             <label style={{ display: 'block', fontSize: 12, fontWeight: 600, color: DIM, marginBottom: 8 }}>
               Your Company Email
             </label>

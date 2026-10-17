@@ -817,7 +817,7 @@ export default function ROICalculatorPage() {
               Join hundreds of GCs already saving time and money with Saguaro. Start your free 30-day trial — no credit card required.
             </p>
 
-            <form onSubmit={handleEmailSubmit} style={{ marginBottom: 28 }}>
+            <form method="post" onSubmit={handleEmailSubmit} style={{ marginBottom: 28 }}>
               <div style={{ display: 'flex', gap: 12, maxWidth: 480, margin: '0 auto', flexWrap: 'wrap' }}>
                 <input
                   type="email"

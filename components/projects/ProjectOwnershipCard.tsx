@@ -174,7 +174,7 @@ export default function ProjectOwnershipCard({
       </FormGrid>
       {customers !== null && (adding ? (
         /* A real form: the keyboard's Go/Enter adds the customer, like the button. */
-        <form style={{ marginTop: 12 }} aria-label="New customer" noValidate onSubmit={(e) => { e.preventDefault(); void createCustomer(); }}>
+        <form method="post" style={{ marginTop: 12 }} aria-label="New customer" noValidate onSubmit={(e) => { e.preventDefault(); void createCustomer(); }}>
           <FormGrid cols={2}>
             <Field label="Customer Name" required error={addErr?.field === 'name' ? addErr.text : null}>
               <Input id="own-new-customer-name" value={newName} onChange={(e) => { setNewName(e.target.value); setAddErr(null); }} placeholder="Owner or company name" autoComplete="organization" />

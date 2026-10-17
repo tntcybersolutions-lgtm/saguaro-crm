@@ -781,7 +781,7 @@ export default function BidPackageDetailPage() {
         >
           {/* Invite composer — a package with no invites opens straight into it. */}
           {showInviteForm && !gate && (
-            <form className="bdInvite" onSubmit={(e) => { e.preventDefault(); void handleInviteMore(); }}>
+            <form method="post" className="bdInvite" onSubmit={(e) => { e.preventDefault(); void handleInviteMore(); }}>
               {/* What inviting does, before the GC does it. */}
               <div className="bdHint">
                 {pkg.jacket_generated_at

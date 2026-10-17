@@ -125,7 +125,7 @@ function EditCall({ t, data, onClose, onSaved }: { t: Ticket; data: Payload; onC
     onClose();
   };
   return (
-    <form className="sv-card sv-pad" onSubmit={submit} aria-labelledby="sv-edit-h">
+    <form method="post" className="sv-card sv-pad" onSubmit={submit} aria-labelledby="sv-edit-h">
       <div className="sv-head"><h2 id="sv-edit-h">Edit {t.ticket_number}</h2><button type="button" className="sv-icon" onClick={onClose} aria-label="Cancel editing"><X size={18} /></button></div>
       <CallFields f={f} setF={setF} data={data} autoFocus />
       {err && <p className="sv-err" role="alert">{err}</p>}
@@ -154,7 +154,7 @@ function NewCall({ data, onClose, onCreated }: { data: Payload; onClose: () => v
     } catch (e2) { setErr((e2 as Error).message); setBusy(false); }
   };
   return (
-    <form className="sv-card sv-pad" onSubmit={submit} aria-labelledby="sv-new-h">
+    <form method="post" className="sv-card sv-pad" onSubmit={submit} aria-labelledby="sv-new-h">
       <div className="sv-head"><h2 id="sv-new-h">New Service Call</h2><button type="button" className="sv-icon" onClick={onClose} aria-label="Close"><X size={18} /></button></div>
       <CallFields f={f} setF={setF} data={data} autoFocus />
       {err && <p className="sv-err" role="alert">{err}</p>}

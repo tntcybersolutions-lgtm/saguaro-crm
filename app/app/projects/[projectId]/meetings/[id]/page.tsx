@@ -305,7 +305,7 @@ export default function MeetingPage() {
             <Button variant="ghost" size="sm" icon={<Trash size={15} />} aria-label={`Remove ${p.name}`} onClick={() => removePerson(p.id)} />
           </div>
         ))}
-        <form
+        <form method="post"
           onSubmit={(e) => { e.preventDefault(); void addPerson(); }}
           style={{ ...rowLine, display: 'flex', flexWrap: 'wrap', gap: 10, alignItems: 'center' }}
         >
@@ -346,7 +346,7 @@ export default function MeetingPage() {
                 </div>
               );
             })}
-            <form onSubmit={(e) => { e.preventDefault(); void addItem(); }} style={{ ...rowLine, display: 'flex', flexWrap: 'wrap', gap: 10, alignItems: 'center' }}>
+            <form method="post" onSubmit={(e) => { e.preventDefault(); void addItem(); }} style={{ ...rowLine, display: 'flex', flexWrap: 'wrap', gap: 10, alignItems: 'center' }}>
               <Input aria-label="New item topic" placeholder="New item topic" value={newTopic} onChange={(e) => setNewTopic(e.target.value)} style={{ flex: '1 1 260px' }} />
               <Button type="submit" icon={<Plus size={15} weight="bold" />} disabled={busy === 'item' || !newTopic.trim()}>Add item</Button>
             </form>

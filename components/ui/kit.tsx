@@ -1672,7 +1672,7 @@ export function FormModal({
           <Button variant="ghost" size="sm" icon={<X size={16} />} aria-label="Close" onClick={onClose} disabled={busy} />
         </div>
         {onSubmit ? (
-          <form
+          <form method="post"
             ref={formRef}
             style={{ display: 'contents' }}
             onSubmit={(e) => { e.preventDefault(); setNativeErr(null); void onSubmit(); }}
