@@ -2,6 +2,8 @@ import { NextRequest, NextResponse } from 'next/server';
 import { createServerClient } from '@/lib/supabase-server';
 import { requirePermission } from '@/lib/permissions';
 import { apiError } from '@/lib/api-error';
+import { SUBMITTAL_REVIEW_STATUSES } from '@/lib/submittal-workflow';
+import { runInBackground } from '@/lib/background';
 
 export async function GET(req: NextRequest, { params }: { params: Promise<{ id: string }> }) {
   const { id } = await params;
@@ -59,6 +61,13 @@ export async function PATCH(req: NextRequest, { params }: { params: Promise<{ id
     for (const k of Object.keys(fieldMap)) {
       if (body[k] !== undefined) fields[fieldMap[k]] = body[k];
     }
+    // The status before this save, so moving it into review emails the reviewer once.
+    let before: string | null = null;
+    if (typeof fields.status === 'string' && SUBMITTAL_REVIEW_STATUSES.has(fields.status)) {
+      const { data: prev, error: prevErr } = await db.from('submittals').select('status').eq('id', id).eq('tenant_id', user.tenantId).maybeSingle();
+      if (prevErr) throw prevErr;
+      before = ((prev as { status?: string | null } | null)?.status ?? '') || '';
+    }
     const { data, error } = await db
       .from('submittals')
       .update(fields)
@@ -67,6 +76,7 @@ export async function PATCH(req: NextRequest, { params }: { params: Promise<{ id
       .select()
       .single();
     if (error) throw error;
+    if (before !== null) runInBackground(async () => (await import('@/lib/triggers')).onSubmittalSentForReview(id, before), 'onSubmittalSentForReview');
     return NextResponse.json({ success: true, submittal: data });
   } catch (e) {
     return apiError('submittals/[id] PATCH', e);

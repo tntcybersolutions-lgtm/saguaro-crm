@@ -4,6 +4,7 @@ import { requirePermission } from '@/lib/permissions';
 import { onRFIAnswered } from '@/lib/triggers';
 import { runInBackground } from '@/lib/background';
 import { apiError } from '@/lib/api-error';
+import { writeWithOptionalColumns } from '@/lib/optional-column';
 
 export async function POST(
   req: NextRequest,
@@ -34,9 +35,9 @@ export async function POST(
       .single();
     const ballBack = (existing?.submitted_by || '') as string;
 
-    const { error } = await db
-      .from('rfis')
-      .update({
+    // answer_source: null — an answer typed here replaces one that came by email (lib/inbound-reply).
+    const { result: { error } } = await writeWithOptionalColumns(
+      {
         answer: (body.answer || '') as string,
         // Client (RFIs page) posts `answeredBy`; also accept snake_case. Falls
         // back to the caller's email only when neither is supplied.
@@ -45,9 +46,11 @@ export async function POST(
         answered_at: new Date().toISOString(),
         answered_date: new Date().toISOString().split('T')[0],
         ...(ballBack ? { ball_in_court: ballBack } : {}),
-      })
-      .eq('id', id)
-      .eq('tenant_id', user.tenantId);
+        answer_source: null,
+      },
+      ['answer_source'],
+      (row) => db.from('rfis').update(row as never).eq('id', id).eq('tenant_id', user.tenantId),
+    );
 
     if (error) throw error;
 
